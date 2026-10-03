@@ -629,3 +629,14 @@ prüfen und gegenprüfen"*.
 - Die Mail betrifft heute **nur den Spot-Bestand** (67 von 67 Empfehlungen Spot LONG, keine Hebel). Sie wird unter **O14 Spot-Positionsführung** neu entworfen: je Position, nur echter Bestand, Regel nach heutigem Standard.
 - Sie bleibt bis dahin **an** und wird nicht verdichtet.
 - Der **doppelte Versand** an Neustart-Tagen ist behoben: Nachgeholt wird nur, wenn die Uhrzeit heute schon vorbei ist (`nachholen_jetzt`).
+
+---
+
+# E-49 · Der Hebel-Tab zeigt die REGEL0 (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„In der GUI gibt es einen Hebel-Tab, diesen sollte man wiederverwenden, wenn möglich"* und *„Ja H-1 bis H-4 wie vorgeschlagen, prüfen und gegenprüfen"* (`Voranalyse_Schritt7_Betrieb_02_10.md` §17).
+- **H-1:** Die REGEL0-Signale kommen in **dieselbe** Liste (These *REGEL0 24 h*). Das Detail ist derselbe Text wie die Mail, dazu der Mailstand. Die Ablage wird nur gelesen.
+- **H-2:** *Jetzt analysieren* ist **gesperrt**, solange der alte Hebelweg aus ist, sonst entstünde von Hand ein Parallelbetrieb (F1).
+- **H-3:** Bei offenen Positionen steht der REGEL0-Vermerk mit Ausstiegszeit. Das ist eine Brücke bis O13.
+- **H-4:** Der Tab geht mit dem nächsten Pull ans NB. Die Oberfläche berührt weder die Rechnung noch die Mails.
+- Gegenprüfung `pruefe_h17.py` 23/23. Wache `--paket Regel0Betrieb` 33/33.

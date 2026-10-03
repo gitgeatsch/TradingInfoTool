@@ -760,6 +760,28 @@ Ein neues Asset hat erst nach 240 h ein eigenes Normal (J). Vorher gibt es kein 
 | **H-3** | Bei den offenen Positionen den REGEL0-Vermerk mit Ausstiegszeit zeigen? | ➤ **Ja** (Brücke bis O13) |
 | **H-4** | Wann ans NB? | ➤ **Zusammen mit S7-5**, nach den Kontrollen K-S7-3/K-S7-4. Die Oberfläche berührt die Rechnung nicht |
 
+### 17.1 Abstimmung und Bau (Nutzer 03.10.2026: *„Ja H-1 bis H-4 wie vorgeschlagen, prüfen und gegenprüfen"*, E-49)
+
+| Teil | gebaut |
+|---|---|
+| **Anzeigemodul** | `agent/regel0_ansicht.py`, reine Funktionen von der Ablage zu den Anzeigezeilen. Die Oberfläche zeichnet nur. Die Ablage wird mit `mode=ro` geöffnet und **nie angelegt**; fehlt sie, gibt es keine Zeilen |
+| **H-1** | Die REGEL0-Signale sind die **dritte Quelle** der Liste, je Asset das jüngste. Es ersetzt eine alte Zeile desselben (Asset, LONG) nur, wenn es jünger ist, dieselbe Regel wie zwischen den beiden alten Ketten. Spalten: Bitpanda-Name, LONG. Der Status ergibt sich aus den Zeiten des Signals: *Einstieg …*, *läuft bis …*, *Ausstieg fällig* (bis 6 h danach), *beendet …*, *kein Handel* oder *nicht gemailt (Zuordnung)*. Der Hebel ist endgültig oder *vorläufig*, die These *REGEL0 24 h*. Es gelten die Filter des Tabs: Ohne Hebel-Schalter oder ohne Bitpanda-Namen fällt eine Zeile weg, außer es gibt eine offene Position. *2 Tage* blendet nur Beendetes aus, das älter ist. Das **Detail** ist derselbe Text wie die Signalmail (`regel0_mail.signal_mail`), dazu der **Mailstand**: Signalmail, Korrektur, Erinnerung, Abgleich, Regelversion. *Signal-Historie* zeigt die alten Hebelsignale desselben Assets |
+| **H-2** | `_alte_analyse_hinweis` fragt **zuerst** `regel0_ansicht.knopf_hinweis()`. Solange `alter_hebelweg_aus` an ist, ist der Knopf gesperrt, mit dem Hinweis *alter Hebelweg aus (REGEL0, E-46)*; ist der Schalter unlesbar, bleibt er ebenfalls gesperrt. Erst danach greift die Kettenregel |
+| **H-3** | In der Positionsliste gibt es eine neue Spalte **REGEL0**: *REGEL0, Ausstieg …*, wenn für das Asset in den 24 h vor der Eröffnung ein REGEL0-Signal mit Stufe > 0 feststand (nur LONG), sonst *-* |
+| **H-4** | Geht mit dem nächsten Pull ans NB |
+
+**Gegenprüfung** (`Basisinfos/Rechenkern_02_10/pruefe_h17.py <NB-Sicherung>`, Beleg `pruefung_h17.txt`): **23 von 23.** Grundlage ist eine Wegwerf-Ablage mit jedem Status. Dazu kommt eine Kopie der NB-Sicherung vom 03.10. 05:20 mit zwei Wegwerf-Positionen: am NB ist heute keine Hebelposition offen. Darauf läuft der echte Tab in einem unsichtbaren Fenster.
+
+- **Liste:** Jeder Status wird erkannt. Die Liste trägt genau die sichtbaren Zeilen, Status und Hebel gleich den reinen Funktionen. Bei *Alle* ist auch das Beendete da.
+- **Detail und Historie:** Das Detail ist der Mailtext, der Knopf ist aus. *Signal-Historie* stolpert nicht über eine REGEL0-Zeile.
+- **Positionsvermerk:** bei der Position mit Signal ja, bei der ohne nein.
+- **Zusammenführung, beide Richtungen:** Die alte Rollen-Hebelzeile von ETH (26.09.) bleibt gegen ein älteres REGEL0-Signal stehen und weicht einem jüngeren.
+- **Knopf:** gesperrt mit Schalter an; die Gegenprobe mit Schalter aus fällt auf die Kettenregel zurück.
+- **Ohne Ablage:** keine Zeile, kein Absturz.
+- **Seiteneffekte:** Die Ablage bleibt **bytegleich**, die Standard-DB unberührt.
+
+**Suite:** Die Wache `--paket Regel0Betrieb` hat 7 neue Prüfungen, darunter *der Tab liest nur* und eine Gegenprobe zu H-2; sie steht jetzt bei 33 von 33.
+
 ---
 
 ## 18. VORANALYSE — die Stop-Nachzieh-Sammelmail (03.10.2026, zur Abstimmung)

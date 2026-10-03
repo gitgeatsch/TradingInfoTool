@@ -1,0 +1,27 @@
+1) reine Funktionen (agent/regel0_ansicht.py)
+  ✔ lese: alle Zeilen, nur gelesen - 9 Zeilen
+  ✔ lese: ohne Datei eine leere Liste (und KEINE Datei angelegt)
+  ✔ jeder Status wird erkannt - Einstieg -> Einstieg 03.10. 08:00; läuft -> läuft bis 04.10. 04:00; Ausstieg fällig -> Ausstieg fällig; beendet -> beendet 01.10. 21:00; kein Handel -> kein Handel; nicht gemailt (Zuordnung) -> nicht gemailt (Zuordnung); Schalter aus -> läuft bis 04.10. 07:00; ohne Bitpanda -> läuft bis 04.10. 07:00; aelter -> beendet 01.10. 01:00
+  ✔ Hebel: endgueltig, vorlaeufig mit Vermerk, kein Handel '-'
+  ✔ je Asset das JUENGSTE Signal
+  ✔ 2 Tage: 'beendet' (60 h) weg, Schalter aus weg, ohne Bitpanda weg - ['AKT', 'ALGO', 'AVAX', 'BNB', 'BTC']
+  ✔ Alle: 'beendet' wieder da, Schalter aus bleibt weg - ['AKT', 'ALGO', 'AVAX', 'BEAMX', 'BNB', 'BTC']
+  ✔ Detail = derselbe Text wie die Signalmail, dazu der Mailstand
+  ✔ Detail: kein Handel / gesperrt mit Abgleich / Korrektur
+  ✔ H-3: Vermerk nur mit Signal in den 24 h davor, nur LONG - 'REGEL0, Ausstieg 04.10. 04:00' / '' / '' / ''
+  ✔ H-2: Schalter an -> gesperrt, Schalter aus -> frei, unlesbar -> gesperrt - Gesperrt: Schalter alter_hebelweg_aus nicht lesbar
+2) der echte Tab (ui/hebel_view.HebelView, unsichtbares Fenster)
+  ✔ die REGEL0-Zeilen stehen in DERSELBEN Liste, mit These REGEL0 24 h - ['AKT:LONG', 'ALGO:LONG', 'AVAX:LONG', 'BNB:LONG', 'BTC:LONG']
+  ✔ Status und Hebel in der Liste wie aus den reinen Funktionen
+  ✔ Auswahl zeigt den Mailtext, der Knopf ist aus
+  ✔ Signal-Historie oeffnet auch bei einer REGEL0-Zeile
+  ✔ Positionsliste: REGEL0-Vermerk bei der Position mit Signal, '-' bei der ohne - REGEL0, Ausstieg 04.10. 04:00 / -
+  ✔ Anzeige Alle: auch das beendete Signal
+  ✔ H-2 im Tab: der Knopf meldet die Sperre (Schalter in regel0_betrieb.yaml an) - Gesperrt: alter Hebelweg aus (REGEL0, E-46) - neue Hebel-Einstiege kommen nur aus der REGEL0. Der Knopf wuerde den alten Weg von Hand anstossen.
+  ✔ Gegenprobe: mit Schalter aus faellt die Pruefung auf die Kettenregel zurueck (kein REGEL0-Hinweis) - Stillgelegt: krypto laeuft ueber die Rollen-Kette (automatisch im Takt). Dieser Knopf wuerde die ALTE Pipeline starten und ein Signal der alten Kette schreiben.
+  ✔ Zusammenfuehrung: die JUENGERE Zeile gewinnt - alte bleibt gegen ein aelteres REGEL0-Signal, REGEL0 ersetzt eine aeltere - ETH: alte Zeile 2026-09-26 20:57 -> signal / regel0
+  ✔ ohne Ablage: keine REGEL0-Zeile, kein Absturz
+3) Seiteneffekte
+  ✔ die Ablage ist bytegleich (der Tab schreibt nie hinein)
+  ✔ die Standard-DB ist unberuehrt
+SCHLUSS: ✔ bestanden (23 von 23)

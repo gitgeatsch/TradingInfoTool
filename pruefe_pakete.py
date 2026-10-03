@@ -31274,6 +31274,60 @@ def paket_regel0_betrieb() -> None:
                _bq2.index("NL.neuaufnahme_faellig(ordner)") < _bq2.index("bericht = NL.lauf(ordner"))
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "S7-5: Wache lief durch", False, repr(ex))
+    # H-1 bis H-4 (03.10.): der Hebel-Tab zeigt die REGEL0 - reine Funktionen, nur lesend, Knopf gesperrt
+    try:
+        import hashlib as _hl
+        import sqlite3 as _sq
+        import datetime as _dtm
+        import agent.regel0_ablage as AB
+        import agent.regel0_ansicht as R0A
+        import agent.regel0_groesse as G
+        _j = _dtm.datetime.now(_dtm.timezone.utc).replace(minute=0, second=0, microsecond=0)
+        _f = lambda h: (_j - _dtm.timedelta(hours=h)).strftime("%Y-%m-%d %H:%M")
+        with _tf.TemporaryDirectory() as d:
+            c = AB.oeffne(d)
+            for sym, h, st, extra in (("AAA", 1, None, {}), ("BBB", 5, 5, {}), ("CCC", 28, 5, {}), ("DDD", 3, 0, {}),
+                                      ("EEE", 4, 5, {"mail_gesperrt_am": _f(3)}), ("FFF", 60, 5, {})):
+                ks = dict(symbol=sym + "X", signalstunde=_f(h), einstieg=_f(h - 1), ausstieg=_f(h - 25), stufe_vorlaeufig=5 if st is None else st,
+                          stufe=st, hebel_schalter=1, bitpanda=sym, version="regel0_1", **extra)
+                c.execute("INSERT INTO signal (%s) VALUES (%s)" % (",".join(ks), ",".join("?" * len(ks))), list(ks.values()))
+            c.commit(); c.close()
+            pf = os.path.join(d, AB.ABLAGE_NAME)
+            _h0 = _hl.sha256(open(pf, "rb").read()).hexdigest()
+            rows = R0A.lese(d)
+            _jetzt = _dtm.datetime.now(_dtm.timezone.utc)
+            st = {r["bitpanda"]: R0A.status(r, _jetzt) for r in rows}
+            pruefe(P, "H-1: jeder REGEL0-Status aus den Zeiten der Zeile (Einstieg, laeuft, Ausstieg faellig, kein Handel, Zuordnung, beendet)",
+                   st["AAA"].startswith("Einstieg") and st["BBB"].startswith("läuft") and st["CCC"] == "Ausstieg fällig"
+                   and st["DDD"] == "kein Handel" and st["EEE"] == "nicht gemailt (Zuordnung)" and st["FFF"].startswith("beendet"), str(st))
+            sch = {n: True for n in st}
+            pruefe(P, "H-1: Filter wie im Tab - 2 Tage blendet nur das Beendete aus, Schalter aus blendet aus",
+                   {r["bitpanda"] for r in rows if R0A.sichtbar(r, _jetzt, sch, set(), True)} == set(st) - {"FFF"}
+                   and not R0A.sichtbar(rows[0], _jetzt, {}, set(), False))
+            _w = G.lade()
+            _r = [r for r in rows if r["bitpanda"] == "BBB"][0]
+            pruefe(P, "H-1: das Detail ist DERSELBE Text wie die Signalmail (eine Quelle), dazu der Mailstand",
+                   R0A.detail(_r, rows, _jetzt, _w)[2].startswith(
+                       __import__("agent.regel0_mail", fromlist=["x"]).signal_mail(_r, 5, False, G.rechne(5, 0, _w), _w, _jetzt)[1])
+                   and "MAILSTAND" in R0A.detail(_r, rows, _jetzt, _w)[2])
+            _auf = (R0A._ende(_r["einstieg"]) + _dtm.timedelta(hours=1)).isoformat()
+            pruefe(P, "H-3: Positionsvermerk nur mit REGEL0-Signal in den 24 h vor der Eroeffnung",
+                   R0A.positions_vermerk("BBB", "LONG", _auf, rows).startswith("REGEL0, Ausstieg")
+                   and R0A.positions_vermerk("ZZZ", "LONG", _auf, rows) == "" and R0A.positions_vermerk("BBB", "SHORT", _auf, rows) == "")
+            pruefe(P, "⚠️ H-1: der Tab LIEST NUR - Ablage bytegleich, ohne Datei wird keine angelegt",
+                   _hl.sha256(open(pf, "rb").read()).hexdigest() == _h0 and R0A.lese(os.path.join(d, "x")) == []
+                   and not os.path.exists(os.path.join(d, "x")))
+        _hq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "hebel_view.py"), encoding="utf-8").read()
+        _hint = _hq.split("def _alte_analyse_hinweis")[1].split("def _run_analysis")[0]
+        pruefe(P, "⚠️ H-2: *Jetzt analysieren* ist gesperrt, solange der alte Hebelweg aus ist - ZUERST der Schalter, unlesbar = gesperrt",
+               R0A.knopf_hinweis(dict(G.lade(), alter_hebelweg_aus=True)) is not None
+               and R0A.knopf_hinweis(dict(G.lade(), alter_hebelweg_aus=False)) is None
+               and _hint.index("knopf_hinweis()") < _hint.index("alte_analyse_hinweis(\"krypto\")")
+               and "_R0A.lese(self._regel0_ordner)" in _hq and "def _render_regel0" in _hq)
+        pruefe(P, "Gegenprobe H-2: mit Schalter aus kaeme KEIN REGEL0-Hinweis (die Pruefung darueber kann fehlschlagen)",
+               R0A.knopf_hinweis({"alter_hebelweg_aus": False}) is None)
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "H-1..H-4: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:

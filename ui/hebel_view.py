@@ -49,6 +49,13 @@ _LIST_COLUMN_DESCRIPTIONS = {
     ),
     "zeitpunkt": "Wann die Empfehlung berechnet wurde bzw. wann der Kandidat gefunden wurde.",
 }
+# ⚠️ 03.10.2026 (H-1, Voranalyse_Schritt7 Par. 17): seit E-46 kommen neue Hebel-Einstiege nur aus der REGEL0 - ihre Zeilen
+# stehen in derselben Liste, These *REGEL0 24 h*, Status aus den Zeiten des Signals (agent/regel0_ansicht.py).
+_LIST_COLUMN_DESCRIPTIONS["status"] += (
+    " REGEL0: 'Einstieg <Zeit>' (noch nicht eingestiegen), 'läuft bis <Zeit>', 'Ausstieg fällig', 'beendet', "
+    "'kein Handel' (keine Stufe unter der Liquidationsgrenze) oder 'nicht gemailt (Zuordnung)'.")
+_LIST_COLUMN_DESCRIPTIONS["hebel_score"] += " REGEL0: die Hebelstufe - endgueltig, sonst mit Vermerk 'vorläufig'."
+_LIST_COLUMN_DESCRIPTIONS["these"] += " 'REGEL0 24 h' = Einstieg zum Schluss der Folgestunde, Ausstieg 24 h danach, ohne Stop und Ziel."
 
 _TRADE_THESIS_LABELS = {"einmal_trade": "Einmaltrade", "swing_strategie": "Swing"}
 
@@ -65,6 +72,8 @@ _POSITIONS_COLUMN_DESCRIPTIONS = {
     "eigenkapital": "Eigenkapital in der Position (EUR).",
     "eroeffnet": "Datum, an dem die Position eröffnet wurde.",
     "liquidationspreis": "Zuletzt geschätzter Liquidationspreis (EUR, konservative Schätzung).",
+    "regel0": "Kam in den 24 h vor der Eröffnung ein REGEL0-Signal für das Asset, steht hier sein Ausstieg (24 h nach dem Einstieg). "
+              "Die Führung offener Positionen kommt später (O13).",
 }
 
 
@@ -129,6 +138,10 @@ class HebelView(ttk.Frame):
         # Wiederherstellung ausgeloeste <<TreeviewSelect>>, das sonst das rechte
         # Detail-Panel bei jedem 3-Sek.-Refresh unnoetig neu aufgebaut haette.
         self._suppress_select_event = False
+        # H-1/H-3 (03.10.2026): woher die REGEL0-Zeilen kommen - nur gelesen; die Suite biegt den Ordner auf eine Wegwerfablage.
+        from agent import regel0_ansicht as _R0A
+        self._regel0_ordner = _R0A.ORDNER_VORGABE
+        self._regel0_zeilen: list = []
 
         self._build_layout()
         self.refresh()
@@ -171,16 +184,17 @@ class HebelView(ttk.Frame):
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
         ttk.Label(left, text="Offene Hebel-Positionen", font=("", 10, "bold")).pack(anchor="w", pady=(8, 2))
-        pos_columns = ("symbol", "richtung", "hebel_effektiv", "eigenkapital", "eroeffnet", "liquidationspreis")
+        pos_columns = ("symbol", "richtung", "hebel_effektiv", "eigenkapital", "eroeffnet", "liquidationspreis", "regel0")
         self.positions_tree = ttk.Treeview(left, columns=pos_columns, show="headings", height=5)
         pos_headings = {
             "symbol": "Symbol", "richtung": "Richtung", "hebel_effektiv": "Hebel",
             "eigenkapital": "Eigenkapital (EUR)", "eroeffnet": "Eröffnet am",
-            "liquidationspreis": "Liq.-Preis (EUR)",
+            "liquidationspreis": "Liq.-Preis (EUR)", "regel0": "REGEL0",
         }
         for col in pos_columns:
             self.positions_tree.heading(col, text=pos_headings[col])
-            self.positions_tree.column(col, width=110, anchor="w" if col == "symbol" else "center")
+            self.positions_tree.column(col, width=170 if col == "regel0" else 110,
+                                       anchor="w" if col in ("symbol", "regel0") else "center")
         add_heading_tooltips(self.positions_tree, _POSITIONS_COLUMN_DESCRIPTIONS)
         self.positions_tree.pack(fill="x", pady=(0, 4))
 
@@ -319,6 +333,24 @@ class HebelView(ttk.Frame):
         finally:
             conn.close()
 
+        # ---- H-1 (03.10.2026): die REGEL0-Signale als DRITTE Quelle ----------------------------------------------
+        # Nur gelesen (mode=ro). Je Asset das juengste; es ersetzt eine alte Zeile desselben (Asset, LONG) nur, wenn es
+        # juenger ist - dieselbe Regel wie zwischen den beiden alten Ketten oben. Ein Lesefehler leert nur diese Quelle.
+        from agent import regel0_ansicht as _R0A
+        try:
+            self._regel0_zeilen = _R0A.lese(self._regel0_ordner)
+        except Exception:                                    # noqa: BLE001
+            logger.exception("REGEL0-Ablage nicht lesbar - der Tab zeigt sie nicht")
+            self._regel0_zeilen = []
+        _r0_juengste = {}
+        for _n, _r in _R0A.juengste_je_asset(self._regel0_zeilen).items():
+            _alt = signals.get((_n, "LONG"))
+            if _alt is not None and _als_utc(_alt.created_at) > _als_utc(_R0A.zeitpunkt(_r)):
+                continue
+            signals.pop((_n, "LONG"), None)
+            _rollen.pop((_n, "LONG"), None)
+            _r0_juengste[_n] = _r
+
         self._offene_positionen = {(p.symbol, p.richtung): p for p in positions}
         self._rollen_signale = {k: v for k, v in _rollen.items() if v is not None}
 
@@ -334,7 +366,7 @@ class HebelView(ttk.Frame):
         # gebaut (vor dem Anzeigefilter unten) - sonst wuerde ein durch den
         # Toggle- oder Zeitfilter ausgeblendetes Signal seinen Platz faelschlich
         # wieder fuer einen "Kandidat wartet auf Analyse"-Platzhalter freigeben.
-        covered = {(s.symbol, s.richtung) for s in signals.values()}
+        covered = {(s.symbol, s.richtung) for s in signals.values()} | {(n, "LONG") for n in _r0_juengste}
 
         zeitgrenze = None
         if self._zeitfenster_var.get() == "2_tage":
@@ -383,6 +415,16 @@ class HebelView(ttk.Frame):
                 "", "end", iid=iid,
                 values=(sig.symbol, sig.richtung, sig.action, hebel_text, these_text, zeit),
             )
+
+        _jetzt = datetime.now(timezone.utc)
+        _offen_schluessel = set(self._offene_positionen)
+        for _n, _r in _r0_juengste.items():
+            if not _R0A.sichtbar(_r, _jetzt, hebel_toggle_map, _offen_schluessel, zeitgrenze is not None, _ZEITFENSTER_TAGE):
+                continue
+            iid = f"{_n}:LONG"
+            self._rows[iid] = ("regel0", _r)
+            _w = _R0A.listenzeile(_r, _jetzt)
+            self.tree.insert("", "end", iid=iid, values=_w[:5] + (format_zeitpunkt_lokal(_w[5]),), tags=("regel0",))
 
         for trig in kandidaten:
             if (trig.symbol, trig.richtung) in covered:
@@ -446,17 +488,20 @@ class HebelView(ttk.Frame):
         for item in self.positions_tree.get_children():
             self.positions_tree.delete(item)
         if not positions:
-            self.positions_tree.insert("", "end", values=("Keine offenen Positionen", "-", "-", "-", "-", "-"))
+            self.positions_tree.insert("", "end", values=("Keine offenen Positionen", "-", "-", "-", "-", "-", "-"))
             return
+        from agent import regel0_ansicht as _R0A
         for pos in positions:
             eroeffnet = pos.eroeffnet_am[:10] if pos.eroeffnet_am else "-"
             hebel_text = f"{pos.hebel_effektiv:.2f}x" if pos.hebel_effektiv else "-"
+            # H-3 (03.10.2026): Bruecke bis O13 - kam vor der Eroeffnung ein REGEL0-Signal, steht sein Ausstieg hier.
+            vermerk = _R0A.positions_vermerk(pos.symbol, pos.richtung, pos.eroeffnet_am, self._regel0_zeilen) or "-"
             self.positions_tree.insert(
                 "", "end",
                 values=(
                     pos.symbol, pos.richtung, hebel_text,
                     format_money(pos.eigenkapital_eur), eroeffnet,
-                    format_money(pos.liquidationspreis_geschaetzt_eur),
+                    format_money(pos.liquidationspreis_geschaetzt_eur), vermerk,
                 ),
             )
 
@@ -486,8 +531,19 @@ class HebelView(ttk.Frame):
         kind, obj = row
         if kind == "kandidat":
             self._render_kandidat(obj)
+        elif kind == "regel0":
+            self._render_regel0(obj)
         else:
             self._render_signal(obj)
+
+    def _render_regel0(self, r) -> None:
+        """H-1: derselbe Text wie die Mail (agent/regel0_ansicht.detail -> regel0_mail.signal_mail), dazu der Mailstand."""
+        from agent import regel0_ansicht as _R0A
+        self.analyze_button.config(state="disabled")
+        titel, meta, text = _R0A.detail(r, self._regel0_zeilen, datetime.now(timezone.utc))
+        self.action_label.config(text=titel, foreground=theme.action_color("KAUFEN"))
+        self.meta_label.config(text=meta)
+        self._set_detail_text(text)
 
     def _render_kandidat(self, trig) -> None:
         can_analyze = self._any_llm_client_available()
@@ -879,7 +935,18 @@ class HebelView(ttk.Frame):
 
     @staticmethod
     def _alte_analyse_hinweis() -> str | None:
-        """Fail-closed wie im Signale-Reiter: Regel unlesbar -> Knopf zu."""
+        """Fail-closed wie im Signale-Reiter: Regel unlesbar -> Knopf zu.
+
+        ⚠️ H-2 (03.10.2026): ZUERST der Schalter ``alter_hebelweg_aus`` (E-46) - der Knopf startet den ALTEN Hebelweg, und
+        der ist aus, auch wenn die Rollen-Kette selbst einmal ausfiele."""
+        try:
+            from agent.regel0_ansicht import knopf_hinweis
+            _h = knopf_hinweis()
+        except Exception:                                    # noqa: BLE001
+            logger.exception("REGEL0-Schalter nicht lesbar - Knopf bleibt zu")
+            return "Gesperrt: Schalter alter_hebelweg_aus nicht lesbar"
+        if _h:
+            return _h
         try:
             from scheduler.rollen_job import alte_analyse_hinweis
             return alte_analyse_hinweis("krypto")
@@ -938,14 +1005,27 @@ class HebelView(ttk.Frame):
         Ueberholt-Erkennung."""
         if self._selected_row is None:
             return
-        _, obj = self._selected_row
-        symbol, richtung = obj.symbol, obj.richtung
+        kind, obj = self._selected_row
+        if kind == "regel0":                        # H-1: die Historie der alten Hebelsignale desselben Assets
+            from agent import regel0_ansicht as _R0A
+            symbol, richtung = _R0A.name(obj), "LONG"
+        else:
+            symbol, richtung = obj.symbol, obj.richtung
         conn = self._db_conn_factory()
         try:
             history = db.get_hebel_signal_history(conn, symbol, richtung)
         finally:
             conn.close()
         HebelSignalHistoryDialog(self, symbol, richtung, history)
+
+
+def _als_utc(txt) -> datetime:
+    """ISO-Text -> datetime in UTC (ohne Zone gilt UTC) - zum Vergleich der Zeitpunkte verschiedener Quellen."""
+    try:
+        d = datetime.fromisoformat(str(txt).replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
 
 
 _HEBEL_OUTCOME_LABELS = {
