@@ -906,3 +906,126 @@ Die **Gegenprobe** mit dem alten Verhalten reproduziert den NB-Fall: Bei einem S
 ### 19.5 Abstimmung (Nutzer 03.10.2026, E-50)
 
 L-a bis L-f sind **abgelöst**: Die LLM-Ebene der REGEL0 wird **neu gebaut**. Zuerst kommt die Information je Rolle, dann der Prompt aus den Erkenntnissen des ersten Baus, dann Schatten, Rückspiel und Simulation, dann Produktion mit Mail und Charts. Spot bleibt auf der alten Kette. Die Befunde L-1 bis L-7 gelten weiter und gehen in den Neubau ein (Plan O20, Voranalyse §20).
+
+
+---
+
+## 20. VORANALYSE — der LLM-Neubau für die REGEL0 (03.10.2026, E-50, Plan O20; zur Abstimmung)
+
+**Nutzer 03.10.:** *„Sofortiger Umbau, testen, analysieren und simulieren, dann in Produktion mit eMail und Charts. Diesen Bereich können wir nicht so einfach bauen wie die REGEL0: 1. zuerst prüfen, welche Informationen jede Rolle erhalten soll, um einen sinnvollen Beitrag zu liefern, 2. wie soll dies in den Prompt, 3. weitere tragende Beiträge nachgelagert."* Und: *„Nur Informationen nutzen, welche ausreichend abgedeckt sind. Nimm in die Bewertung mit, ob und welche Informationen die LLM-Rollen aus der REGEL0 erhalten sollten oder sogar müssen. Die LLM-Rollen sollen als Gegenprüfung zur deterministischen Komponente dienen, aber falls möglich einen Vorteil über die LLM-Texte und Verarbeitung über KI liefern, oder auch nur reine Bestätigung, dass der Trade gut ist."*
+
+**Grundlage:** das Verzeichnis der Erkenntnisse aus dem ersten Bau. Ein Rechercheagent hat es erstellt (A1–A35, B1–B25, C1–C32, D1–D16, E1–E18, F1–F20, G1–G33, H1–H19, je mit Fundstelle und Status *gemessen / recherchiert / angenommen*). Die tragenden Fundstellen habe ich selbst an der Quelle gegengeprüft: R-R2/R-R3 (RWM:4603–4629), der Einbruch von 93 % auf 3 % (RWM:516), *LLM gegen Regel* (AD:812–837), R-T1 bis R-T12 (RWM:3590–3689), das Gemini-Kontingent von 500 je Tag und Modell (Memory), 2.457-w1 und 2.566. Dazu gelten die Befunde L-1 bis L-7 aus §19.
+
+⚠️ **Namen:** A, B und C sind im Hebel-Neubau **deterministische** Rollen (Richtung, Bewegung, Sperre; 2.643, 2.648). Die neuen LLM-Rollen bekommen deshalb **eigene Namen**: **P-U** (Prüfer Umfeld), **P-A** (Prüfer Asset), **P-T** (Prüfer Text). Die alten Namen Marktanalyst, Händler und Gegenprüfer bleiben der Spot-Kette.
+
+### 20.1 Was „ausreichend abgedeckt" heißt — und was danach übrig bleibt
+
+**Kriterium (Vorschlag):** Eine Information darf in eine Rolle, wenn sie **(a)** am NB **live für alle REGEL0-Assets** vorliegt **und (b)** für 2025–26 **in derselben Form** als Historie. (a) bedeutet: Betrieb und Messung haben dieselbe Grundgesamtheit. (b) braucht das Rückspiel. Was nur für einen Teil der Assets vorliegt, ändert die Eingabe von Signal zu Signal, und eine Messung mischt dann zwei Rollen (Lehre A5/G22: *Rolle A bekam am NB 12 statt 15 Aussagen*).
+
+| Information | live am NB | Historie 2025–26 | abgedeckt? |
+|---|---|---|---|
+| **Kurs und Volumen stündlich**, daraus Struktur: Verlauf 5/20/60 Tage, Marken in ATR, Volumen relativ zur eigenen Vergangenheit, Lage zu langen Schnitten | ✔ **537** Assets (`stundenkurse_alle`) | ✔ ab 2023, dieselbe Datei | ✔ **ja** |
+| **Marktumfeld**: Leitmärkte (BTC, US-Aktien, Rohstoffe), Makro (Netto-Liquidität, Zinskurve, Inflation), Fear & Greed; für alle Assets **dasselbe** | ✔ (`marktlage.py`, aus der Datenbank) | ✔ (Makrohistorie in der Datenbank, nie live gelesen, A3) | ✔ **ja** |
+| Markpreis gegen Kassakurs (Basis) | 411 von 537 | ✔ 411 | ✗ (77 %) |
+| Funding | nur Watchlist; **alle** Futures-Paare wären mit **einem** Binance-Abruf live zu haben | 302 Symbole, nur **täglich** (Tageswert an einem Stundenanker ist Vorgriff) | ✗ heute; ◐ mit Ausbau |
+| Terminmarkt (offene Kontrakte, Long-Konten) | **40** Symbole | 122 Symbole bis 02.09. | ✗ |
+| Käuferanteil, Premium, BTC-Dominanz stündlich | fehlt am NB | 116 Symbole | ✗ |
+| Umlaufmenge (Umschlag) | Betriebskopie, nur Teil | Teil | ✗ |
+| **Nachrichtentext** (Börsenmeldungen, Delistings, Token-Freigaben, Hacks) | **keine** Quelle angebunden | — | ✗ heute |
+
+➤ **Abgedeckt sind heute genau zwei Informationsarten:** das **Marktumfeld** und die **eigene Kurs- und Volumenstruktur** des Assets. Die heutige Rolle G (Gegenprüfer) fällt damit heraus: Ihre Grundlage (Terminmarkt) gibt es für 40 von 537 Assets.
+
+⚠️ **Ehrlich dazu:** Beide Informationsarten sind **deterministisch schon geprüft** und trugen auf dem Kern **nicht**: A/B/L ohne Verbesserung (2.702–2.704), der Marktzustand ist nicht vorab erkennbar (2.599), die Dominanzsperren wurden umgestoßen (2.670/2.672). Ein Sprachmodell bekommt dieselben Zahlen nur in Worten. Sein möglicher Vorteil ist allein die **Abwägung** mehrerer Angaben gegeneinander, die keine einzelne Formel abbildet. Ob es diesen Vorteil gibt, sagt nur die Messung.
+
+### 20.2 Was die Rollen aus der REGEL0 bekommen MÜSSEN, DÜRFEN und NICHT DÜRFEN
+
+| | was | warum |
+|---|---|---|
+| **MUSS** | **der geplante Handel:** LONG, Hebel n×, Einstieg zum Schluss der Folgestunde, **Ausstieg nach 24 h, ohne Stop und Ziel** | Ohne ihn prüft die Rolle nichts Bestimmtes (L-1). Ohne den **Horizont** beurteilt sie einen anderen Handel. Ein *Einstieg* ohne 24 h wird als Swing gelesen (*Messgeometrie ist nicht Betrieb*) |
+| **DARF** | der **Hebel** als Teil des Plans (*gehebelt, also teuer, wenn es schiefgeht*) | Damit ist die Frage richtig gestellt. Gefragt wird **nicht** nach der Höhe: Der Hebel ist ein Risikoparameter und gehört nicht dem Modell (C11, R-A2) |
+| **NICHT** | v̂, Schwelle, rsi-Ersteintritt, Normal, Liquidationsgefahr je Stufe, historische Trefferquote oder Erwartung der REGEL0 | (1) **Selbstauskunft des Systems (R-T4):** Ein Systemgüte-Fakt verschob gemessen −8,86 Konfidenzpunkte und drückte die LONG-Wahl von 56 % auf 44 % (B6). (2) **Anker (C12):** Ein vorgegebenes Urteil verankert das Modell, und keine Gegenmaßnahme half. (3) **R-R2:** Das ist die Information der REGEL0 selbst. Eine Prüfung darauf ist ein **Echo**, und eine *Bestätigung* wäre eine Selbstbestätigung. Die Zahlen stehen getrennt im **deterministischen Teil der Mail**, du siehst beide nebeneinander |
+
+➤ **Daraus folgt der Sinn einer „Bestätigung":** Sie ist nur dann eine, wenn die Rolle **unabhängig** von der REGEL0 urteilt, also auf Information, die die REGEL0 nicht nutzt, und ohne deren Urteil zu kennen. Genau so lässt sie sich auch **messen**: Trennt *stützt* gegen *spricht dagegen* den 24-h-Ausgang der REGEL0-Handel?
+
+### 20.3 Die Rollen
+
+| Rolle | Frage | Eingabe | Aufruf | Abdeckung |
+|---|---|---|---|---|
+| **P-U Prüfer Umfeld** | *Spricht das Marktumfeld für oder gegen einen gehebelten 24-h-LONG in Krypto?* | Leitmärkte, Makro, Fear & Greed als Sätze nach R-T1 bis R-T12. Die Datenschicht von `marktlage.py` wird übernommen, sie ist gemessen und gegengeprüft (Befunde, kein Prompt-Code). **Kein** Asset, **kein** REGEL0-Wert | **einmal je Stunde**, für alle Signale dieser Stunde wiederverwendet | ✔ 100 % |
+| **P-A Prüfer Asset** | *Spricht die eigene Kurs- und Volumenlage DIESES Werts für oder gegen den geplanten 24-h-LONG?* | **anonym:** kein Name, kein Datum, keine absoluten Kurse. Verlauf 5/20/60 Tage, Marken (Widerstand und Unterstützung in ATR, mit Zahl der Berührungen), Lage zu den Schnitten, Volumen relativ zur eigenen Vergangenheit, Schwankung als Perzentil. **Kein** rsi und **kein** Normal (das nutzt die REGEL0), **kein** Umfeld (das hat P-U, A12-Lehre: eine Rolle, ein Eingang) | je Signal | ✔ 100 % |
+| **P-T Prüfer Text** | *Gibt es eine Meldung, die gegen diesen Handel spricht?* (Delisting, Hack, Token-Freigabe, Umstellung) | Nachrichtentext. Das ist die **einzige** Information, bei der ein Sprachmodell **grundsätzlich** mehr kann als eine Regel | je Signal | ✗ heute. **Nachgelagert** (deine Nummer 3), siehe 20.7 |
+
+**Ausgabe beider Rollen:**
+- **Urteil in drei Stufen:** *stützt den Handel*, *neutral* oder *spricht dagegen*.
+- **Beleg mit Zahl.**
+- **Stärkster Gegengrund** in einem eigenen Feld (C18).
+
+*Neutral* ist dabei ein **Urteil** über vorhandene Angaben (*„ein Teil spricht dafür, ein Teil dagegen"*). Es ist **keine** „unklar"-Option. Eine solche führte gemessen zur Enthaltung (C5: 93 % auf 3 %). Wie oft *neutral* kommt, zeigt die Messung. Liegt es über 70 % (wie *gemischt* bei der heutigen Rolle A), unterscheidet die Rolle nichts (R-T6).
+
+### 20.4 Der Prompt — was aus dem ersten Bau übernommen wird (Auszug; vollständig im Verzeichnis)
+
+| Regel | Beleg |
+|---|---|
+| Fakten als **Sätze** mit **Fenster**, **relativ**, Perzentil **mit** Einordnungswort aus **denselben** Grenzen; **keine** Werturteile, Etiketten, konstanten Felder oder rohen Zahlenreihen; der Prompt **rechnet nicht vor** | R-T1 bis R-T12; einordnung −4,60 Punkte und −16 pp LONG (B4); regime 1.022 von 1.022 *baer* (B8); Volumen-Perzentil erfunden nach Umbenennung (B18) |
+| **Keine** Konfidenz, **kein** Betrag, **kein** Hebel, **kein** Stop, **keine** Rechnung vom Modell; **keine** Vorsichtssprache | C1 (77,5 % gegen 33,3 %), C9/C10, C11, R-A4 |
+| Gefragt wird **nur, was die Fakten tragen**. Prompt, Schema, Vorlage und Validator **wandern gemeinsam** | G1–G4 (Betragsfrage, Marktbreite, W4, W5) |
+| **Ausführungsbeschränkung nicht in den Prompt** | C29 (93 % → 3 %) |
+| **Persona:** keine. Neutrale Rahmung, wie bei Z.ai entschieden (C26). Beim Händler nie gemessen (C25) | |
+| **Reihenfolge:** Belege → Urteil → Gegengrund. **Positionsbias** prüfen, mit vertauschter Reihenfolge der Sätze als eigenem Arm | B11–B13 (Z.ai U-Kurve) |
+| **JSON:** Gemini mit `json_object` (ein striktes Schema kostete 16 pp), Z.ai mit `json_object`. Das Schema wird aus den Validator-Konstanten **abgeleitet** | D5–D7, D10 |
+| **Validierung:** Formfehler korrigieren, Sinnfehler ablehnen, alles vermerkt. Das Urteil wird **nie geraten**. Ausfall ist **nicht** Zustimmung (grau in der Mail) | D1–D3, D15, G20 |
+| **Temperatur 0** und Wiederholungsprobe. Der Nichtdeterminismus bleibt auch bei t = 0 | E13, E14, L-4 (84 %) |
+| **Modell an der Quelle festhalten** (Messung auf 3.5, Betrieb auf 3.1: *ein Befund überträgt sich nicht*), Prompt-Hash an jeder Zeile, Kanarienvogel gegen Drift | E1, E9 (Mistral-Bruch 31.07.), E16 |
+| **Ende zu Ende nachweisen:** im gerenderten Faktentext und in der fertigen Mail (*Rolle G lief nie, 853 grüne Prüfungen*) | G14, Regel 10 |
+
+### 20.5 Messung — „wirken die neuen Aufrufe?"
+
+| | |
+|---|---|
+| **Anker** | die REGEL0-Einstiege 2025–26 auf **allen** Assets der Datenbasis. Je Rolle werden **1.000–1.500** zufällig und vorab gezogen. Die Stichprobe ist eingefroren |
+| **Arme** | (1) **neue Rolle**, (2) **Regel auf denselben Eingaben** (für P-A z. B. Verlauf 20 Tage und Lage zur Marke, für P-U der gerechnete Gleichlauf; F6: *das LLM lag hinter jeder Regel*), (3) **Zufall** mit gleicher Stufenquote, (4) **Rauschboden:** Wiederholung derselben Eingabe (A/A′) und vertauschte Reihenfolge |
+| **Kontaminationsprobe** | (a) Erkennt das Modell aus der anonymen Eingabe Asset oder Zeitraum? Gefragt wird direkt, an 50 Ankern. (b) Trennt eine **benannte** Fassung an 100 Ankern besser als die anonyme? Fällt eine der beiden Proben durch, gilt nur die Vorwärtsmessung |
+| **Zielgröße** | 24-h-Ertrag ohne Hebel, wie in der REGEL0-Spur |
+| **Messregel (vorab)** | Unterschied *stützt* gegen *spricht dagegen*. Nullwelt durch Vertauschen der Urteile **innerhalb des Tages** (tagestreu), Band 5./95. Perzentil, **je Jahr** (2025 und 2026 getrennt), dazu die Signalbilanz je Asset. **Trägt** heißt: über dem Band in **beiden** Jahren **und** besser als der Regel-Arm. Ausgewertet wird **einmal**, ohne Zwischenblick |
+| **Kalibrierlauf** | 50 Anker vorher: Antworten formgültig, Stufenverteilung, Laufzeit (F16) |
+| **Budget und Modell** | Gemini 500 je Tag **und Modell**. Die Spot-Kette braucht auf **gemini-3.1-flash-lite** zurzeit **320–450** je Tag (am 30.09. 453), dort ist kaum Luft. **gemini-3.5-flash-lite** ist fast frei (rund 460 je Tag). ➤ Die neuen Rollen laufen in Messung **und** Betrieb auf **3.5**, ein Befund überträgt sich nicht zwischen Modellen (E1). Je Rolle etwa 1.500 Aufrufe plus Wiederholung, also rund **4 Tage** je Rolle, mit Deckel unter dem Limit, damit der Betrieb nichts merkt |
+| **danach vorwärts** | Schatten auf **allen** live entstehenden REGEL0-Signalen (12–15 je Tag). Er bestätigt das Rückspiel, nach rund 3 Monaten n ≈ 1.000 |
+
+### 20.6 Produktion — Mail und Charts
+
+| | |
+|---|---|
+| **Mail** | Ein Block **PRÜFUNG** unter dem deterministischen Teil: je Rolle Stufe, Beleg und Gegengrund, dazu der **Messstand** der Rolle (*„trennt in 2025 und 2026, n = …"* oder *„trennt nicht, n = …"*). Ausfall erscheint grau. Die Mail wartet höchstens 90 s, sonst geht sie ohne den Block raus (P-8) |
+| **Charts** | Eingebettet als Bild, die Technik besteht schon (`send_notification_email(inline_images=…)`, seit der Grafik zu den Liquiditätszonen). Gezeigt werden: Stundenkurs der letzten 5 Tage mit **Einstieg** und **Ausstieg nach 24 h**, Liquidationsgrenze je Stufe und die Marken aus P-A. **Dasselbe Bild im Hebel-Tab** (eine Quelle) |
+| **Signalwirkung** | **keine.** Die REGEL0 löst aus (F2). Ein Filter aus einer Rolle wäre eine REGEL1 und bräuchte eine eigene Messung mit Signalbilanz |
+
+### 20.7 Nachgelagert (deine Nummer 3)
+
+1. **P-T Text:** eine Quelle mit voller Abdeckung suchen, z. B. die Börsenmeldungen von Binance (alle Binance-Assets). 2.566 hat **nicht** Nachrichtentext gemessen, sondern Systemfakten im Prompt. Nachrichtentext ist also **ungeprüft**, nicht widerlegt. ⚠️ Er nennt das Asset beim Namen. Ein Rückspiel ist damit kontaminiert, gemessen werden kann nur vorwärts. Meldungen sind zudem selten.
+2. **Funding für alle Futures-Paare** (live ein Abruf, Historie je Paar) und dann eine Prüfung, ob es in P-A gehört (R-R4: Aufnehmen ist ein Tausch).
+3. Weitere tragende Beiträge aus der deterministischen Seite, sobald sie gemessen sind.
+
+### 20.8 Bauplan
+
+| Schritt | Inhalt |
+|---|---|
+| **N1** | Faktentexte P-U und P-A aus den Betriebsdaten, **ein Erbauer** für Betrieb und Rückspiel. Wächter: Werturteile, Konstanten, Perzentil-Einordnung, Zahlenprüfung, Anonymität |
+| **N2** | Prompt, Schema und Validator zusammen, mit Version |
+| **N3** | Kalibrierlauf (50), Stabilität (A/A′), Kontaminationsprobe |
+| **N4** | Rückspiel 1.000–1.500 je Rolle, vier Arme, Messregel vorab, eine Auswertung |
+| **N5** | Schatten live auf allen Signalen, Ende zu Ende in der gerenderten Mail |
+| **N6** | Produktion: Mailblock und Charts, Hebel-Tab mit demselben Bild |
+| **N7** | nachgelagert: P-T, Funding, weitere Beiträge |
+
+### 20.9 Zur Abstimmung
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **N-a** | Abdeckungskriterium: *live für alle REGEL0-Assets und in derselben Form für 2025–26*? Damit bleiben **Umfeld** und **Kurs-/Volumenstruktur** | ➤ **Ja** |
+| **N-b** | Zwei Rollen **P-U** (Umfeld, einmal je Stunde) und **P-A** (Asset, anonym, je Signal); die heutige Rolle G entfällt für die REGEL0 mangels Abdeckung | ➤ **Ja** |
+| **N-c** | Aus der REGEL0 bekommen die Rollen **nur den geplanten Handel** (LONG, Hebel, Ein- und Ausstieg 24 h), **nicht** deren Bewertung | ➤ **Ja**, sonst ist die Bestätigung eine Selbstbestätigung |
+| **N-d** | Messung: Rückspiel mit Kontaminationsprobe, vier Arme, Messregel vorab, danach Schatten | ➤ **Ja** |
+| **N-e** | **In die Produktion** geht der Block **in jedem Fall**, als Auskunft mit dem Messstand. *Trägt* er, steht dort *trennt*. *Trägt* er nicht, steht dort *trennt nicht*, und der Block wird zur reinen Beschreibung | ➤ **deine Entscheidung**. Mein Rat: ja, mit Messstand. Du wolltest ausdrücklich auch die *reine Bestätigung*, und der Vermerk verhindert, dass sie mehr wiegt, als sie trägt |
+| **N-f** | Charts in der Mail und im Hebel-Tab: Kurs 5 Tage, Ein- und Ausstieg, Liquidationsgrenze je Stufe, Marken | ➤ **Ja**, als eigener Baustein. Er kann **sofort** gebaut werden, weil er nicht von der Messung abhängt |
+| **N-g** | P-T (Text) und Funding nachgelagert | ➤ **Ja** |
+| **N-h** | Die neuen Rollen laufen auf **gemini-3.5-flash-lite** (Messung und Betrieb gleich, dort ist das Kontingent frei) | ➤ **Ja** |
