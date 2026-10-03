@@ -22,7 +22,9 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                # S7-4 (E-46, 03.10.2026): die REGEL0 ersetzt den Hebel - der alte Hebelvorschlag der Rollen-Kette ist aus (F1)
                alter_hebelweg_aus=True,
                # D4: bis zu diesem Tag (einschliesslich) tragen die REGEL0-Mails den Vermerk TESTWOCHE (E-43)
-               testwoche_bis="2026-10-10")
+               testwoche_bis="2026-10-10",
+               # R-4 (E-51, 03.10.2026): die Rollen-Kette (Spot) anhalten, ohne den alten Weg freizugeben - Vorgabe: sie laeuft
+               spot_kette_angehalten=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -46,6 +48,15 @@ def lade(pfad: str | None = None) -> dict:
     if werte["testwoche_bis"] and len(werte["testwoche_bis"]) != 10:
         raise ValueError("regel0_betrieb.yaml: testwoche_bis als JJJJ-MM-TT oder leer")
     return werte
+
+
+def spot_kette_angehalten(werte: dict | None = None) -> bool:
+    """Ist die Rollen-Kette (Spot, alle Gruppen) angehalten? (R-4, E-51) - im Zweifel (Datei unlesbar) NEIN: ein stiller
+    Halt der Produktion waere der schlimmere Fehler. Der alte Weg bleibt in beiden Faellen aus (`aktiv_fuer` unberuehrt)."""
+    try:
+        return bool((werte if werte is not None else lade())["spot_kette_angehalten"])
+    except Exception:                                          # noqa: BLE001
+        return False
 
 
 def alter_hebelweg_aus(werte: dict | None = None) -> bool:

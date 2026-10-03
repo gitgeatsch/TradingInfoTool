@@ -31239,6 +31239,17 @@ def paket_regel0_betrieb() -> None:
                z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0)
                and z3["erinnerung"] == 1 and len(post) == 2 and "AAA" in post[0], "%s %s %s %s" % (z0, z1, z2, z3))
         _rq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "rollen_lauf.py"), encoding="utf-8").read()
+        _bqs = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        _i_zweig = _bqs.find("if any(bedient_neue_kette(g, config_dict)")
+        _i_halt = _bqs.find("if _R0G_spot.spot_kette_angehalten():")
+        _i_umlauf = _bqs.find("            fuehre_umlauf(\n                conn_factory=conn_factory, config=config_dict,")
+        _i_alt = _bqs.find("from agent.krypto.budget_allocator import run_budget_allocator")
+        pruefe(P, "R-4: Schalter spot_kette_angehalten - Vorgabe AUS (Kette laeuft), unlesbar ebenfalls AUS (kein stiller Halt)",
+               G.spot_kette_angehalten() is False and G.spot_kette_angehalten({"spot_kette_angehalten": True}) is True
+               and G.spot_kette_angehalten({}) is False, "jetzt: %s" % G.spot_kette_angehalten())
+        pruefe(P, "⚠️ R-4: angehalten wird NUR im umgestellt-Zweig, VOR dem Umlauf - der alte Weg (Budget-Allocator) uebernimmt NICHT",
+               0 < _i_zweig < _i_halt < _i_umlauf < _i_alt and "return True" in _bqs[_i_halt:_i_halt + 400],
+               "Zweig %d < Halt %d < Umlauf %d < alter Weg %d" % (_i_zweig, _i_halt, _i_umlauf, _i_alt))
         pruefe(P, "alter Hebelweg aus (F1/E-46): Etikett UND Rechnung der Rollen-Kette lesen den Schalter aus regel0_betrieb.yaml",
                "_alt_hebel_aus = _R0G.alter_hebelweg_aus()" in _rq and 'if _etikett == "hebel" and _alt_hebel_aus:' in _rq
                and "and not _alt_hebel_aus" in _rq and G.alter_hebelweg_aus() is True,
@@ -31481,6 +31492,25 @@ def paket_regel0_betrieb() -> None:
                any("(Auskunft)" in x and "Umfeldtext" in x for x in _z4) and not any("stützt" in x for x in _z4)
                and LLM.system_fuer("entscheider", dict(_k, rollen=dict(_k["rollen"], entscheider={"an": True, "eingaenge": ["trader"]})))
                == LLM.SYSTEM_ENTSCHEIDER_EIN)
+        import agent.marktlage as _ML
+        import agent.rollen_eingabe as _RE
+        import backtest_llm1_historisch as _BT
+        _gesehen = {}
+        _o = (_ML.beschreibe_marktlage, _RE.lade_makro, _RE.lade_stimmung, _BT.lade_reihen_aus_db)
+        try:
+            _ML.beschreibe_marktlage = lambda reihen, tag, st, mk: (_gesehen.update(tag=tag, mk=mk), ["s"])[1]
+            _RE.lade_makro = lambda db: {"monatsreihen": {"spx_trend_deviation_std": {"2026-08": 1.0, "2026-09": 2.0, "2026-10": 3.0}}}
+            _RE.lade_stimmung = lambda db: {}
+            _BT.lade_reihen_aus_db = lambda db: {}
+            LLM._REIHEN.clear()
+            LLM.markt_eingabe(dict(_r, signalstunde="2026-09-14 10:00"), "zeitpunkt_probe.db")
+        finally:
+            _ML.beschreibe_marktlage, _RE.lade_makro, _RE.lade_stimmung, _BT.lade_reihen_aus_db = _o
+            LLM._REIHEN.clear()
+        pruefe(P, "⚠️ Zeitpunkttreue (N4): der Markt sieht nur ABGESCHLOSSENE Monate vor dem Ankertag - kein Monatsschluss aus der Zukunft",
+               _gesehen.get("tag") == "2026-09-13"
+               and sorted((_gesehen.get("mk") or {}).get("monatsreihen", {}).get("spx_trend_deviation_std", {})) == ["2026-08"],
+               str(_gesehen)[:160])
         pruefe(P, "Schatten: der Block wird je Signalmail GERECHNET, die Mail bleibt unveraendert (kein Text angehaengt)",
                _gerechnet == ["SSSX"] and _post and "PRUEFUNG" not in _post[0])
         pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",

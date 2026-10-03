@@ -4342,6 +4342,13 @@ def hebel_screening_job(
             # ALLE TOEPFE UEBERGEBEN, nicht einen Client: welcher dran ist,
             # entscheidet das Restkontingent, und diese Entscheidung gehoert an
             # EINE Stelle (`rollen_job.waehle_client`).
+            # R-4 (E-51, 03.10.2026): die Rollen-Kette ANHALTEN, ohne den alten Weg freizugeben - dieser Zweig bleibt der
+            # "umgestellt"-Zweig, der Budget-Allocator laeuft also weiterhin NICHT. Der Grund steht im Log, kein stiller Halt.
+            from agent import regel0_groesse as _R0G_spot
+            if _R0G_spot.spot_kette_angehalten():
+                logger.info("Rollen-Kette ANGEHALTEN (regel0_betrieb.yaml spot_kette_angehalten) - kein Umlauf; "
+                            "der alte Weg bleibt aus, die REGEL0 laeuft weiter.")
+                return True        # der Job ist gelaufen (wie am Ende der Funktion); `finally` gibt die Sperre frei
             fuehre_umlauf(
                 conn_factory=conn_factory, config=config_dict,
                 clients={"gemini": gemini_client,

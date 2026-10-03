@@ -1,0 +1,4 @@
+Rueckspiel-Anker N4, gezogen 2026-10-03 17:34 mit Saat 20261004 aus 7376 REGEL0-Einstiegen 2025-26 (Spur b0_spur_bestand.csv)
+gesehen (Kalibrierlaeufe, nur Entwicklungsmenge): 80
+n4_anker_entwicklung.csv  1000 Anker  je Jahr {'2025': 500, '2026': 500}  113 Symbole  SHA-256 125bdfdd44d0980baefd44fda65dc98039d49f38749120db099a76b1fe70b33a
+n4_anker_bestaetigung.csv  1000 Anker  je Jahr {'2025': 500, '2026': 500}  113 Symbole  SHA-256 f8a54fc25516c094177b4873023e4d52517dfa883bb11b72f136e54ca5aa585e

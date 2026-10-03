@@ -72,6 +72,12 @@ def main(quelle: str, ausgabe: str) -> int:
     jahre = os.environ.get("KAL_JAHRE", "2026").split(",")
     roh_sp = [r for r in csv.DictReader(open(os.path.join(HIER, "data", "_vergleich", "b0_spur_bestand.csv")), delimiter=";")
               if r["jahr"] in jahre and int(r["stufe"]) > 0]
+    # ⚠️ DIE BESTAETIGUNGSMENGE BLEIBT UNBERUEHRT (ziehe_n4_anker.py): kein Kalibrierlauf darf einen ihrer Anker sehen
+    _best = os.path.join(os.path.dirname(os.path.abspath(__file__)), "n4_anker_bestaetigung.csv")
+    if os.path.exists(_best):
+        _gesperrt = {(r["symbol"], r["std"]) for r in csv.DictReader(open(_best, encoding="utf-8"), delimiter=";")}
+        roh_sp = [r for r in roh_sp if (r["symbol"], r["std"]) not in _gesperrt]
+        print("Bestaetigungsmenge ausgesperrt: %d Anker" % len(_gesperrt))
     random.Random(20261003).shuffle(roh_sp)
     # GLEICH VERTEILT ueber die Jahre (0.1d, 04.10.): sonst bestimmt das Jahr mit mehr Einstiegen die Verteilung
     sp = []

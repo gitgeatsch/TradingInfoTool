@@ -242,6 +242,13 @@ def markt_eingabe(r: dict, db: str) -> dict | None:
         _REIHEN.clear()
         _REIHEN[schl] = (lade_reihen_aus_db(db), RE.lade_stimmung(db), RE.lade_makro(db))
     reihen, stimmung, makro = _REIHEN[schl]
+    # ⚠️ ZEITPUNKTTREUE (03.10.2026, Vorbereitung N4): `makro_historie_monat` fuehrt den LAUFENDEN Monat (Teilmonat, z. B. S&P
+    # 2026-10). In einer spaeteren Sicherung stuende fuer einen Anker vom 13.09. schon der Monatsschluss September - ein Vorgriff von
+    # bis zu einem Monat. Deshalb Monatswerte nur aus ABGESCHLOSSENEN Monaten (< Ankermonat) - im Betrieb UND im Rueckspiel gleich.
+    if isinstance(makro, dict) and isinstance(makro.get("monatsreihen"), dict):
+        grenze_m = tag[:7]
+        makro = dict(makro, monatsreihen={f: {m: v for m, v in (d or {}).items() if m < grenze_m}
+                                          for f, d in makro["monatsreihen"].items()})
     try:
         saetze = list(beschreibe_marktlage(reihen, tag, stimmung, makro))
     except Exception:                                        # noqa: BLE001
