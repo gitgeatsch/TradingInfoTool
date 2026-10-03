@@ -31370,9 +31370,9 @@ def paket_regel0_betrieb() -> None:
         import sqlite3 as _sq
         import agent.regel0_llm as LLM
         _k = LLM.lade()
-        pruefe(P, "E-52: Rollenkatalog gueltig - Fassung, Modell gemini-3.5, drei Rollen, Entscheider sieht Markt und Trader, Riegel gesetzt",
+        pruefe(P, "E-52: Rollenkatalog gueltig - Fassung, Modell gemini-3.5, drei Rollen, Entscheider sieht den Trader (0.1d: Markt nur Auskunft), Riegel gesetzt",
                _k["modell"] == "gemini-3.5-flash-lite" and set(_k["rollen"]) == {"markt", "trader", "entscheider"}
-               and _k["rollen"]["entscheider"]["eingaenge"] == ["markt", "trader"]
+               and set(_k["rollen"]["entscheider"]["eingaenge"]) <= {"markt", "trader"} and "trader" in _k["rollen"]["entscheider"]["eingaenge"]
                and all(_k.get(x) for x in ("tageslimit_aufrufe", "max_signale_je_lauf", "lauf_zeitgrenze_s", "ausfall_schwelle")), str(_k)[:200])
         _r = dict(symbol="ETH", bitpanda="ETH", signalstunde="2026-09-14 10:00", einstieg="2026-09-14 11:00", ausstieg="2026-09-15 11:00",
                   stufe=3, kurs=2513.17, vh=0.041, p2=0.001, p3=0.004, p5=0.012)
@@ -31403,7 +31403,7 @@ def paket_regel0_betrieb() -> None:
                 self.n += 1
                 if self.kaputt:
                     raise ConnectionError("weg")
-                if msgs[0]["content"].startswith("Zwei Pruefer"):
+                if "bestaetigt|mit_vorbehalt|einwand" in msgs[0]["content"]:
                     return '{"urteil": "bestaetigt", "begruendung": "b", "gegengrund": "g"}'
                 return '{"belege": [{"fakt": "f", "richtung": "dafuer"}], "urteil": "neutral", "begruendung": "b", "gegengrund": "g"}'
         with _tf.TemporaryDirectory() as d:
@@ -31474,6 +31474,13 @@ def paket_regel0_betrieb() -> None:
             _gerechnet, _post = [], []
             _RMs.versende(d3, lambda b_, t_: _post.append(t_) or True, _dts.datetime(2026, 9, 15, 12, 30, tzinfo=_dts.timezone.utc),
                           None, kurse=lambda: (None, None), pruefung=lambda r: (_gerechnet.append(r["symbol"]), [])[1])
+        _z4 = LLM.mail_zeilen({"markt": {"urteil": "stuetzt", "begruendung": "Umfeldtext"}, "trader": {"urteil": "neutral", "begruendung": "t"}},
+                              dict(_k, rollen=dict(_k["rollen"], markt=dict(_k["rollen"]["markt"], nur_auskunft=True))))
+        pruefe(P, "0.1d: das Umfeld steht als AUSKUNFT ohne Urteilswort (es urteilte ueber 2025/26 zu 85 % gleich); der Entscheider "
+               "mit nur dem Trader bekommt den passenden Prompt",
+               any("(Auskunft)" in x and "Umfeldtext" in x for x in _z4) and not any("stützt" in x for x in _z4)
+               and LLM.system_fuer("entscheider", dict(_k, rollen=dict(_k["rollen"], entscheider={"an": True, "eingaenge": ["trader"]})))
+               == LLM.SYSTEM_ENTSCHEIDER_EIN)
         pruefe(P, "Schatten: der Block wird je Signalmail GERECHNET, die Mail bleibt unveraendert (kein Text angehaengt)",
                _gerechnet == ["SSSX"] and _post and "PRUEFUNG" not in _post[0])
         pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",

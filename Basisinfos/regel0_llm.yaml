@@ -5,7 +5,8 @@
 #
 # Die Rollen pruefen und kommentieren nur (F2) - KEIN Urteil aendert das REGEL0-Signal.
 
-fassung: "0.1c-sofort"           # E-52: Sofortfassung, ungemessen. 0.1c: drei Stimmen je Rolle (P1-c 65 % gleich). 0.1b: Plan nennt die Wette,
+fassung: "0.1d-sofort"           # E-52: Sofortfassung, ungemessen. 0.1d: Markt nur Auskunft, Entscheider nur auf dem Trader (P1 Markt 85 %
+                                 # stuetzt ueber 2025/26). 0.1c: drei Stimmen je Rolle (P1-c 65 % gleich). 0.1b: Plan nennt die Wette,
                                  # Trader ohne die rsi-Spiegel (Verlauf 5/20 Tage, Abstand 20/50-Tage-Schnitt) - Par. 20.12
 modell: "gemini-3.5-flash-lite"   # N-h: Messung und Betrieb auf demselben Modell (E1); 3.1 ist durch die Spot-Kette ausgelastet
 temperatur: 0.0
@@ -22,9 +23,10 @@ ausfall_schwelle: 3               # so viele Fehler in Folge -> der Rest des Lau
 rollen:
   markt:
     an: true                      # Umfeld (Leitmaerkte, Makro, Stimmung), neu nur bei geaenderten Fakten
+    nur_auskunft: true            # 0.1d (K-b, P1 03.10.): unterscheidet nicht (85 % stuetzt ueber 2025 UND 2026) - Begruendung ja, Urteilswort nein
   trader:
     an: true                      # eigene Kurs- und Volumenlage, anonym
     bausteine: [struktur, lange_sicht, marken, schwankung, volumen]   # 0.1b: bewegung/schnitte spiegeln den rsi (R-R2)
   entscheider:
     an: true                      # Gesamturteil aus den ERGEBNISSEN, keine Rohdaten
-    eingaenge: [markt, trader]
+    eingaenge: [trader]           # 0.1d: der Markt traegt als Konstante nichts zum Gesamturteil bei (R-T6)

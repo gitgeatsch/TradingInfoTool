@@ -1,0 +1,26 @@
+Fassung 0.1c-sofort, Modell gemini-3.5-flash-lite, Stimmen 3
+  2025-01  stuetzt          Stimmen ['stuetzt', 'neutral', 'stuetzt']  Die Daten zeigen einen intakten uebergeordneten Aufwärtstrend von Bitcoin nahe an seinen Höchstständen, was gü
+  2025-02  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Die extreme Furcht der Anleger in Kombination mit dem vorhergegangenen Rueckgang schafft statistisch günstige 
+  2025-03  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Der deutliche Rueckgang von Bitcoin bei gleichzeitig gednaempfter Anlegerstimmung im unteren Perzentil beguest
+  2025-04  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Die extreme Furcht der Anleger bei gleichzeitig deutlichem Rueckgang von Bitcoin bietet statistisch eine solid
+  2025-05  stuetzt          Stimmen ['neutral', 'stuetzt', 'stuetzt']  Der nahe am Jahreshoch stehende Bitcoin profitiert von einem starken makroekonomischen Umfeld und hoher US-Akt
+  2025-06  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Der moderate Rueckgang von Bitcoin nach vorherigem Aufwärtstrend in Kombination mit positiver makroökonomische
+  2025-07  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'neutral']  Der leichte Rueckgang nahe am Jahreshoch trifft auf ein robustes makroökonomisches Umfeld und einen starken üb
+  2025-08  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Der moderate Rueckgang von knapp fuenf Prozent nach einem frischen Verlaufshoch trifft auf ein intaktes ueberg
+  2025-09  uneinig          Stimmen ['spricht_dagegen', 'stuetzt', 'neutral']  Die aussergewoehnliche Marktenge und sinkende Liquiditaet bieten keinen hinreichenden Impuls fuer eine verlaes
+  2025-10  uneinig          Stimmen ['stuetzt', 'neutral']  Der juengste Rueckgang von Bitcoin um knapp 10 Prozent vom Jahreshoch bietet eine statistisch begruendete Basi
+  2025-11  stuetzt          Stimmen ['stuetzt', 'neutral', 'stuetzt']  Die extreme Furcht der Anleger bei gleichzeitig deutlichem Rueckgang schafft statistisch ideale Voraussetzunge
+  2025-12  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Die extreme Furcht der Anleger nach einem deutlichen Rueckgang bietet historisch gute Voraussetzungen fuer ein
+  2026-01  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Der deutliche Rueckgang von Bitcoin in Verbindung mit einer pessimistischen Anlegerstimmung schafft eine guens
+  2026-02  neutral          Stimmen ['neutral', 'neutral', 'stuetzt']  Die extreme Furcht der Anleger und der vorherige Rueckgang eroeffnen statistisch Chancen auf eine kurzfristige
+  2026-03  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Die extreme Furcht der Anleger nach einem deutlichen Rueckgang bietet statistisch eine gute Ausgangslage fuer 
+  2026-04  stuetzt          Stimmen ['neutral', 'stuetzt', 'stuetzt']  Die stark pessimistische Anlegerstimmung in Kombination mit einem frischen Tief im Kursverlauf beguenstigt sta
+  2026-05  stuetzt          Stimmen ['stuetzt', 'neutral', 'stuetzt']  Der deutliche Abstand zum Jahreshoch bei moderater Anlegerstimmung bietet eine guenstige Ausgangslage fuer ein
+  2026-06  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Die stark negative Anlegerstimmung in Kombination mit der naehe zum Tief nach einem signifikanten Rueckgang be
+  2026-07  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Der deutliche Rueckgang von Bitcoin in Kombination mit einer skeptischen Anlegerstimmung und einem robusten ma
+  2026-08  stuetzt          Stimmen ['stuetzt', 'stuetzt', 'stuetzt']  Der vorherige Rückgang bei Bitcoin trifft auf eine gedämpfte Stimmung und ein unterstützendes makroökonomische
+  2025: {'stuetzt': 10, 'uneinig': 2}
+  2026: {'stuetzt': 7, 'neutral': 1}
+
+P1-b Markt ueber Phasen: 20 gueltig · Verteilung {'stuetzt': 17, 'uneinig': 2, 'neutral': 1} · groesste Stufe 85 % -> NICHT erfuellt
+Aufrufe gesamt: 60 (Deckel 75) · Standard-DB unberuehrt: True

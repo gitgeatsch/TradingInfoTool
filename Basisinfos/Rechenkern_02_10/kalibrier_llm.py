@@ -55,6 +55,9 @@ def main(quelle: str, ausgabe: str) -> int:
     import agent.regel0_mail as RM
     import agent.regel0_groesse as G
     K = L.lade()
+    if os.environ.get("KAL_OHNE_MARKT") == "1":
+        # der Markt ist ueber Phasen schon gemessen (kalibrierung_markt_phasen.txt) - hier nicht noch einmal Kontingent dafuer
+        K = dict(K, rollen=dict(K["rollen"], markt=dict(K["rollen"]["markt"], an=False)))
     client = GeminiClient(api_key=os.environ["GEMINI_API_KEY"])
     zaehl = {"n": 0}
     roh_chat = client.chat
@@ -66,9 +69,17 @@ def main(quelle: str, ausgabe: str) -> int:
         return roh_chat(*a, **kw)
     client.chat = chat
 
-    sp = [r for r in csv.DictReader(open(os.path.join(HIER, "data", "_vergleich", "b0_spur_bestand.csv")), delimiter=";")
-          if r["jahr"] == "2026" and int(r["stufe"]) > 0]
-    random.Random(20261003).shuffle(sp)
+    jahre = os.environ.get("KAL_JAHRE", "2026").split(",")
+    roh_sp = [r for r in csv.DictReader(open(os.path.join(HIER, "data", "_vergleich", "b0_spur_bestand.csv")), delimiter=";")
+              if r["jahr"] in jahre and int(r["stufe"]) > 0]
+    random.Random(20261003).shuffle(roh_sp)
+    # GLEICH VERTEILT ueber die Jahre (0.1d, 04.10.): sonst bestimmt das Jahr mit mehr Einstiegen die Verteilung
+    sp = []
+    toepfe = {j: [r for r in roh_sp if r["jahr"] == j] for j in jahre}
+    while any(toepfe.values()):
+        for j in jahre:
+            if toepfe[j]:
+                sp.append(toepfe[j].pop())
     ablage = os.path.join(tmp, "ablage")
     os.makedirs(ablage)
     um = L.Umlauf(dict(K, max_signale_je_lauf=10 ** 6, lauf_zeitgrenze_s=10 ** 6, tageslimit_aufrufe=10 ** 6), client, ablage)
@@ -118,6 +129,18 @@ def main(quelle: str, ausgabe: str) -> int:
             rolle, len(urteile), n, 100 * gueltig, dict(vert), 100 * top, "OK" if okr else "NICHT erfuellt"))
         if fehlt:
             print("               Fehlgruende:", C.Counter(str(f)[:60] for f in fehlt).most_common(3))
+
+    # ECHO-MASS (0.1d): sieht der Entscheider nur den Trader, darf er ihm nicht bloss folgen (R-R2). Gleiche Richtung = stuetzt/bestaetigt,
+    # neutral/mit_vorbehalt, spricht_dagegen/einwand. Vorab: ueber 90 % gleiche Richtung -> der Entscheider fuegt nichts hinzu.
+    _paar = {"stuetzt": "bestaetigt", "neutral": "mit_vorbehalt", "spricht_dagegen": "einwand"}
+    _beide = [(e["trader"]["urteil"], e["entscheider"]["urteil"]) for _r, e, _z in ergebnisse
+              if "urteil" in e.get("trader", {}) and "urteil" in e.get("entscheider", {})]
+    _gl = sum(1 for t_, e_ in _beide if _paar.get(t_) == e_)
+    print("\nECHO: Entscheider folgt dem Trader in %d von %d Faellen (%.0f %%) -> %s" % (
+        _gl, len(_beide), 100.0 * _gl / max(len(_beide), 1), "ECHO (fuegt nichts hinzu)" if len(_beide) and _gl / len(_beide) > 0.90 else "eigenstaendig"))
+    print("  Paare:", dict(C.Counter(_beide)))
+    for jahr in jahre:
+        print("  %s Trader: %s" % (jahr, dict(C.Counter(e["trader"].get("urteil") for _r, e, z in ergebnisse if z["jahr"] == jahr))))
 
     print("\nP1-c: Wiederholung (dieselbe Eingabe ein zweites Mal, ohne Wiederverwendung)")
     gleich = gesamt = 0

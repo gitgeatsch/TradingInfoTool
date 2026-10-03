@@ -37,13 +37,13 @@ import agent.regel0_ablage as AB
 HIER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KATALOG = os.path.join(HIER, "Basisinfos", "regel0_llm.yaml")
 VORGABE = {
-    "fassung": "0.1c-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": False, "schatten": True,
+    "fassung": "0.1d-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": False, "schatten": True,
     "zeitgrenze_s": 90,
     "stimmen": 3,
     "tageslimit_aufrufe": 150, "max_signale_je_lauf": 6, "lauf_zeitgrenze_s": 600, "ausfall_schwelle": 3,
-    "rollen": {"markt": {"an": True}, "trader": {"an": True, "bausteine": ["struktur", "lange_sicht", "marken", "schwankung",
+    "rollen": {"markt": {"an": True, "nur_auskunft": True}, "trader": {"an": True, "bausteine": ["struktur", "lange_sicht", "marken", "schwankung",
                                                                         "volumen"]},
-               "entscheider": {"an": True, "eingaenge": ["markt", "trader"]}},
+               "entscheider": {"an": True, "eingaenge": ["trader"]}},
 }
 URTEILE_PRUEFER = ("stuetzt", "neutral", "spricht_dagegen")
 URTEILE_ENTSCHEIDER = ("bestaetigt", "mit_vorbehalt", "einwand")
@@ -294,7 +294,29 @@ Antworte AUSSCHLIESSLICH mit JSON:
  "begruendung": "<ein Satz>",
  "gegengrund": "<der staerkste Grund gegen dein Urteil>"}"""
 
+# 0.1d (K-b): sieht der Entscheider NUR den Trader, bekommt er einen Prompt, der genau das sagt - der Zwei-Pruefer-Text haette
+# ihn bei jedem Aufruf *eine Sicht fehlt* melden lassen.
+SYSTEM_ENTSCHEIDER_EIN = """Ein Pruefer hat einen geplanten Handel anhand der Kurs- und Volumenlage des Werts beurteilt. Du bekommst \
+sein Urteil, seine Belege und seinen Gegengrund, nicht die Rohdaten.
+
+DEINE AUFGABE: Waege seine Belege und seinen Gegengrund gegeneinander ab und sage, ob du den geplanten Handel bestaetigst. \
+Waehle GENAU EINES: bestaetigt, mit_vorbehalt oder einwand.
+
+Dann ein Satz Begruendung - ohne Einschraenkung im Nachsatz - und der staerkste Gegengrund in einem eigenen Feld.
+
+Antworte AUSSCHLIESSLICH mit JSON:
+{"urteil": "bestaetigt|mit_vorbehalt|einwand",
+ "begruendung": "<ein Satz>",
+ "gegengrund": "<der staerkste Grund gegen dein Urteil>"}"""
+
 SYSTEM = {"markt": SYSTEM_MARKT, "trader": SYSTEM_TRADER, "entscheider": SYSTEM_ENTSCHEIDER}
+
+
+def system_fuer(rolle: str, katalog: dict) -> str:
+    """Der Prompt einer Rolle in DIESER Fassung (0.1d: Entscheider mit nur einem Eingang)."""
+    if rolle == "entscheider" and list((katalog.get("rollen") or {}).get("entscheider", {}).get("eingaenge") or []) == ["trader"]:
+        return SYSTEM_ENTSCHEIDER_EIN
+    return SYSTEM[rolle]
 
 
 def pruefsumme(text: str) -> str:
@@ -457,7 +479,7 @@ def _merke(c, r: dict, rolle: str, katalog: dict, eingabe: dict | None, ergebnis
     c.execute("INSERT OR REPLACE INTO pruefung (symbol, signalstunde, rolle, fassung, modell, prompt_pruefsumme, eingabe_pruefsumme, "
               "eingabe, antwort, urteil, ergebnis, sekunden, fehler, ungedeckt, am, gefragt, tag_pazifik, aufrufe) "
               "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-              (r["symbol"], r["signalstunde"], rolle, katalog["fassung"], katalog["modell"], pruefsumme(SYSTEM[rolle]),
+              (r["symbol"], r["signalstunde"], rolle, katalog["fassung"], katalog["modell"], pruefsumme(system_fuer(rolle, katalog)),
                pruefsumme(ein) if ein else None, ein, json.dumps(roh, ensure_ascii=False) if roh is not None else None,
                (ergebnis or {}).get("urteil"), json.dumps(ergebnis, ensure_ascii=False) if ergebnis is not None else None,
                round(sekunden, 2), fehler, json.dumps(deckung) if deckung else None,
@@ -520,7 +542,7 @@ def pruefe_signal(r: dict, client, ordner_ablage: str, ordner_daten: str, db: st
                 if _ and (umlauf.gesperrt() or time.time() > grenze):
                     break
                 try:
-                    roh = frage(client, katalog["modell"], SYSTEM[name], eingabe, float(katalog.get("temperatur") or 0.0))
+                    roh = frage(client, katalog["modell"], system_fuer(name, katalog), eingabe, float(katalog.get("temperatur") or 0.0))
                     umlauf.gebucht(True)
                     rohe.append(roh)
                     gueltig.append(validiere(name, roh))
@@ -572,8 +594,9 @@ def pruefe_signal(r: dict, client, ordner_ablage: str, ordner_daten: str, db: st
             if all(v == "keine Auskunft" for v in sichten.values()):
                 aus["entscheider"] = {"fehlt": "keine der beiden Sichten liegt vor"}
             else:
-                ein_e = {"geplant": plan_text(r), "umfeld_der_maerkte": sichten.get("markt", "keine Auskunft"),
-                         "lage_des_werts": sichten.get("trader", "keine Auskunft")}
+                ein_e = {"geplant": plan_text(r), "lage_des_werts": sichten.get("trader", "keine Auskunft")}
+                if "markt" in sichten:
+                    ein_e["umfeld_der_maerkte"] = sichten["markt"]
                 if anonym_verletzt(ein_e, r):
                     aus["entscheider"] = {"fehlt": "Eingabe nicht anonym - nicht gefragt"}
                 else:
@@ -595,10 +618,18 @@ def mail_zeilen(ergebnis: dict, katalog: dict | None = None) -> list:
         if "urteil" not in x:
             z.append("  %-12s (keine Auskunft: %s)" % (titel, x.get("fehlt", "?")))
             continue
+        if rolle == "markt" and katalog["rollen"].get("markt", {}).get("nur_auskunft"):
+            # 0.1d: das Umfeld als BESCHREIBUNG - ohne Urteilswort, weil es ueber alle Phasen dasselbe sagte (R-T6)
+            z.append("  %-12s %-16s %s" % ("Umfeld", "(Auskunft)", x.get("begruendung") or ""))
+            if x.get("gegengrund"):
+                z.append("  %-12s %-16s Gegengrund: %s" % ("", "", x["gegengrund"]))
+            continue
         st = x.get("stimmen") or []
         einig = "" if len(set(st)) <= 1 else " (%s)" % "/".join(WORT.get(s_, s_) for s_ in st)
         z.append("  %-12s %-16s %s" % (titel, WORT.get(x["urteil"], x["urteil"]) + einig, x.get("begruendung") or ""))
         if x.get("gegengrund"):
             z.append("  %-12s %-16s Gegengrund: %s" % ("", "", x["gegengrund"]))
+    if katalog["rollen"].get("markt", {}).get("nur_auskunft") and "markt" in ergebnis:
+        z.append("  (Umfeld nur als Beschreibung: es urteilte im Kalibrierlauf ueber 2025 und 2026 zu 85 % gleich - P1, 03.10.)")
     z += ["", "  Messstand: noch nicht gemessen (Sofortfassung E-52; die gemessene Fassung folgt nach Rueckspiel und Bestaetigung)."]
     return z

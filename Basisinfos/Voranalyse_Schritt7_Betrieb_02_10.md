@@ -1298,3 +1298,33 @@ Laufzeit je Aufruf: Trader 5,8 s, Markt 6,2 s, Entscheider 1,1 s. Alle Antworten
 | **K-a** | Block **jetzt** in die Mail (Fassung 0.1c, *ungemessen*), obwohl P1-b bei Markt und Entscheider nicht erfüllt ist? | ➤ **Erst Schatten, dann einschalten.** Nach einem Kalibrierlauf mit Ankern aus **2025 und 2026**: Unterscheidet der Markt über Phasen, ist er kein Defekt |
 | **K-b** | Den Entscheider in 0.1d nur auf den **Trader** stützen und den Markt als Auskunft daneben stellen? | ➤ prüfen, wenn K-a zeigt, dass der Markt auch über Phasen konstant bleibt |
 | **K-c** | Die Rollen kennen jetzt auch, **worauf** der Plan setzt (*Gegenbewegung nach Rückgang*). Ist das als Teil des Plans in Ordnung (Erweiterung von N-c)? | ➤ **Ja.** Ohne diese Angabe beurteilten die Rollen einen anderen Handel |
+
+
+#### 20.12.2 Der Markt über Marktphasen, Fassung 0.1d (03.10.2026; Nutzer: *„prüfe ob deine Fragen Entscheidungen für mich sind oder aus der Fachlichkeit beantwortet werden sollten. K-a ja, Prüfblock so schnell wie möglich kalibrieren"*)
+
+**Einordnung der Fragen K-a bis K-c:**
+
+| Frage | gehört | Antwort |
+|---|---|---|
+| K-a | dem Nutzer nur beim **Tempo** (so schnell wie möglich). Das **Einschalten** folgt aus P1 | sofort kalibrieren; eingeschaltet wird, wenn P1 besteht |
+| K-b | der **Fachlichkeit**, als vorab festgelegte Folge | umgesetzt, siehe unten |
+| K-c | der **Fachlichkeit**: durch P1 gemessen begründet | bleibt. Der Plan nennt die Gegenbewegung |
+
+**Markt über Phasen** (`Basisinfos/Rechenkern_02_10/kalibrier_markt.py`, Beleg `kalibrierung_markt_phasen.txt`): ein Anker je Monat von 2025-01 bis 2026-08, drei Stimmen, 60 Aufrufe, Standard-DB unberührt.
+
+| | stützt | neutral | uneinig |
+|---|---|---|---|
+| 2025 (nahe am Hoch) | 10 | – | 2 |
+| 2026 (Angstphase) | 7 | 1 | – |
+| gesamt | **85 %** | 5 % | 10 % |
+
+⛔ **Der Markt unterscheidet nicht.** Er sagt in jeder Phase *stützt* und begründet es jeweils passend: 2025 *„intakter Aufwärtstrend nahe an den Höchstständen"*, 2026 *„extreme Furcht schafft günstige Voraussetzungen"*. Das ist eine Rechtfertigung im Nachhinein, keine Prüfung. Als Urteil ist es eine Konstante (R-T6).
+
+**Fassung 0.1d (Folge K-b):**
+- Der **Markt** steht nur als **Auskunft** in der Mail, mit Begründung und Gegengrund, aber **ohne Urteilswort**. Darunter steht ein Vermerk zum Grund. Das passt zur Nutzervorgabe *übergeordnete Kräfte gewichtet der Nutzer selbst*.
+- Der **Entscheider** sieht nur noch den **Trader**, mit einem eigenen Prompt (*ein Prüfer*).
+- Wache **48 von 48**.
+
+⚠️ **Fachlicher Hinweis zum Rollenmodell:** Ein Entscheider, der nur den Trader sieht, hat keine eigene Information. Er kann ein **Echo** des Traders sein (R-R2). Der nächste Kalibrierlauf misst das mit dem **Echo-Maß**: Wie oft folgt der Entscheider der Richtung des Traders? **Vorab festgelegt:** Über 90 % heißt, er fügt nichts hinzu. Das Modell wäre dann faktisch M1 (Trader und Umfeld als Auskunft). Diese Änderung am **Rollenmodell entscheidet der Nutzer**, und zwar erst mit der Zahl.
+
+**Nächster Kalibrierlauf** (bereit, ab 09:00 Ortszeit, wenn das Gemini-Kontingent zurückgesetzt ist): `KAL_JAHRE=2025,2026 KAL_OHNE_MARKT=1`, 40 Anker gleich verteilt auf beide Jahre, Trader und Entscheider mit je drei Stimmen, Wiederholung, Echo-Maß. Etwa 300 Aufrufe.
