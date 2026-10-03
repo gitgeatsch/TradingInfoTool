@@ -632,3 +632,69 @@ Lauf zu **kontrollieren** (K-S7-3).
    - Eine Stunde später kommt höchstens eine Korrektur, nach 24 h die Erinnerung.
    - Im NB-Export: keine Zeile *REGEL0-Mails: … nicht zugestellt*, keine Fehlermail für `regel0_mails`.
 3. Erwartung: Bei 25 Assets mit Hebel-Schalter sind es nach der Referenz **rund 2–3 Signale am Tag**. Davon sind fast alle handelbar (3x/5x).
+
+
+---
+
+## 16. VORANALYSE S7-5 — neue Listings, Zuordnung und Abgleich im Betrieb (03.10.2026, zur Abstimmung)
+
+**Nutzer:** *„Ja, Voranalyse S7-5 starten, prüfen und gegenprüfen."*
+
+**Ziel:** Am Notebook kommt **jedes** neue Binance-Krypto-Asset automatisch in die Datenbasis (E-40: *alles, was es gibt*). Und eine REGEL0-Mail geht **nie**
+für einen falschen Coin raus.
+
+**Stand:** Die Datenbasis wächst nur zeitlich. Der Nachlader führt fort, was schon in den Dateien steht. Abgeglichen wird nur am Desktop und von Hand.
+
+**Test oder Betrieb:** Gebaut und geprüft wird am Desktop auf Wegwerfkopien. Die Änderung am Betrieb kommt erst nach den Kontrollen K-S7-3/K-S7-4 und mit deinem Ja.
+
+### 16.1 Ist-Stand (am Code)
+
+| | |
+|---|---|
+| **Auswahlregel** | `hole_stundenkurse_alle.universum()` (`:61-94`) ist EINE Regel: (1) jedes Spot-Paar in USDT im Handel ohne Stablecoins, Fiat und Edelmetall (`OHNE`); (2) dazu jedes USDT-Perpetual mit `underlyingType = COIN`, dessen Basis es nicht als Spot gibt; (3) je Asset der Markt mit der **längeren** Historie ab 2023; (4) ohne die Messbasis. Die Funktion lässt sich im Betrieb unverändert nutzen |
+| **Nachlader** | Er lädt je Datei nur Symbole, die schon darin stehen (`agent/regel0_nachlader.py`). ⛔ **Ein neu gelistetes Paar kommt nie dazu** |
+| **Markpreis** | `hole_markpreis.py` lädt Monatsarchive (data.binance.vision) und sperrt Monate mit fremdem Instrument (`_abweichung`, Markpreis gegen Spot). Für ein **neues** Listing reicht die Live-Schnittstelle, die der Nachlader schon benutzt (gegengeprüft: Archiv = live) |
+| **Zuordnung** | `Basisinfos/symbol_zuordnung.csv` (im Repo). Ausnahmen CANTON→CC, CAT→1000CAT, **gesperrt** LIT, NEIRO, ONE, QUICK, ZK: Bitpanda führt dort einen **anderen Coin** als Binance. `pruefe_bitpanda_katalog.py` und `pruefe_symbol_zuordnung.py` gibt es nur zum Aufruf von Hand, mit `--eintragen` schreibend in die Repo-Datei |
+| **Bitpanda-Ticker** | öffentlich, USD-Kurse aller Bitpanda-Krypto-Assets (`api.bitpanda.com/v1/ticker`). Damit lässt sich je Asset prüfen, ob der Binance-Kurs zum Bitpanda-Coin gehört |
+
+### 16.2 ⚠️ Befunde
+
+| # | Befund | Folge |
+|---|---|---|
+| **N-1** ⛔ | **Neue Listings fehlen.** E-40 heißt *alles, was Binance führt*. Ein heute gelistetes Paar bekäme aber nie Daten und damit nie ein Signal | Neuaufnahme im Betrieb (S7-5a) |
+| **N-2** ⛔ | **ZK steht in der Messbasis** (19.901 Stunden), ist aber für Bitpanda **gesperrt** (anderer Coin unter gleichem Kürzel). Gesperrt wird bisher nur bei den Zusatz-Assets. Der Stundenlauf ordnet das Binance-ZK dem Bitpanda-Namen „ZK" zu. Wäre der Hebel-Schalter von Bitpanda-ZK an, käme eine Mail für den **falschen Coin**. Heute ist ZK nicht unter deinen 25, es passiert also nichts | Sofortpunkt (S7-5c) |
+| **N-3** | **Eine Zuordnung kann sich ändern**: Umbenennung, Umstellung auf 1000er-Paar, ein neues Bitpanda-Asset mit gleichem Kürzel wie ein anderer Binance-Coin. Bisher fällt das nur beim Abgleich von Hand auf | Preisabgleich zur Mail (S7-5b) |
+| **N-4** | **Tokenisierte Aktien und Wrapped Token** (ARMB, COINB, NOKB, QCOMB, SOXLB, WDCB, alle seit Juli 2026; WBTC) kamen über die Spot-Regel herein. Binance kennzeichnet sie **nicht** (gleiche Felder wie BTC). Mails lösen sie nicht aus (kein Hebel-Schalter), sie stehen aber in Auskunft und Signalbilanz | Frage F-3 |
+| **N-5** | **Die Repo-Datei am NB beschreiben** hieße beim nächsten `git pull` ein Konflikt. Das kennen wir von der `config.yaml` | Am NB wird **nichts** in die Zuordnung geschrieben, die Sicherung läuft über den Kurs (S7-5b) |
+| **N-6** | Assets mit Hebel-Schalter **ohne REGEL0-Daten** (heute XDC) bekommen still nie ein Signal | täglich ausweisen (S7-5d) |
+
+### 16.2b Gegenprüfung der Befunde (03.10.2026, öffentliche Daten, nur gelesen)
+
+| Aussage | gemessen |
+|---|---|
+| N-1 neue Listings | Die Regel ergibt heute **537** Assets, genau die in der Datei. Seit der Erstbefüllung am 01.10. kam **noch keines** dazu. Die Lücke ist real, sie hat heute aber noch keinen Fall |
+| N-2/N-3 der Kursabgleich trennt | ZK **+101,6 %**, LIT +428 %, NEIRO −70 %, ONE +25 %, QUICK −100 % gegen BTC −0,1 % und ETH −0,1 %. Die Grenze von 5 % liegt weit zwischen *gleich* und *anderer Coin* |
+| gesperrte Kürzel auf der Hebel-Liste (NB) | keines - es passiert heute also nichts |
+| Erreichbarkeit | Bei `universum()` liefen 2 von 3 Versuchen am Desktop in Zeitgrenzen (viele Einzelabfragen). ➤ Der Tageslauf braucht eine **Wiederholung**, und er darf **nie halb** anlegen: Ein Asset wird erst eingetragen, wenn seine Historie vollständig geladen ist |
+
+### 16.3 Bauplan nach deinem Ja (je mit eigener Prüfung)
+
+| # | Was | Prüfung (muss fehlschlagen **können**) |
+|---|---|---|
+| **S7-5a** | **Neuaufnahme**, täglich am NB (z. B. 02:30 UTC, im Stundenjob nach dem Nachlader): `universum()` gegen die Dateien. Jedes **neue** Asset wird ab Listing (frühestens 2023) in `stundenkurse_alle.db` mit `_quelle` geladen, bei Futures auch der Markpreis in `markpreis_alle.db`. Nie in die Messbasis (Grundgesamtheit). Bewertet, nicht trainiert. Ein eingestelltes Paar bleibt, wie heute | Wegwerfkopie: ein vorhandenes Asset herausnehmen. Die Neuaufnahme muss es als neu erkennen und **zeilengleich** wieder laden |
+| **S7-5b** | **Preisabgleich vor jeder Signalmail**: Bitpanda-Ticker (USD) gegen den Binance-Kurs der Signalstunde (mit Faktor). Abweichung > 5 % → **keine** Mail, Vermerk in der Ablage, Fehlermail *Zuordnung zweifelhaft*. Ein Aufruf je Mailrunde. Das fängt N-2, N-3 und neue Kollisionen genau dort, wo sie schaden | gestellter Ticker mit falschem Kurs → keine Mail; echter Kurs → Mail |
+| **S7-5c** | **Gesperrte Kürzel gelten für alle Mengen**, auch für die Messbasis. Ein Binance-Symbol, dessen Bitpanda-Kürzel gesperrt ist, bekommt keinen Bitpanda-Namen und damit keine Mail | ZK-Signal (Live-Probe 18.06.2026) → in der Ablage ohne Bitpanda-Namen, keine Mail |
+| **S7-5d** | **Täglicher Abgleich als Auskunft** (Teilexport, Log): neu aufgenommene Assets, Hebel-Schalter-Assets ohne Daten, Zuordnungen mit Abweichung. **Kein** Schreiben in die Repo-Datei. Die Pflege der Zuordnung bleibt am Desktop | Ausgabe mit gestelltem Zustand |
+
+**Last:** Neue Listings gibt es wenige je Woche, mit kurzer Historie, also Sekunden. Der Ticker ist ein Abruf je Stunde mit Mail. Der Rechenkern bleibt unverändert.
+Ein neues Asset hat erst nach 240 h ein eigenes Normal (J). Vorher gibt es kein Signal, das ist richtig so.
+
+### 16.4 Zur Abstimmung
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **F-1** | S7-5a bis S7-5d so bauen? | ➤ **Ja.** |
+| **F-2** | S7-5b: Ist der **Bitpanda-Ticker nicht erreichbar**, was dann? | ➤ Die Mail geht **trotzdem** raus, mit dem Vermerk *Kurs nicht gegengeprüft*. Die Mail ist Information und kein Auftrag, ein Ausfall des Tickers soll dir kein Signal nehmen |
+| **F-3** | **Tokenisierte Aktien und Wrapped Token** (N-4): aufnehmen oder ausschließen? | ➤ **Vorerst belassen.** Mails sind unmöglich (kein Hebel-Schalter), und eine Regel ohne Aufzählung gibt es nicht. Eine Liste veraltet still (stehende Regel 4). In der **Signalbilanz** weise ich sie getrennt aus. Neu prüfen, wenn Bitpanda solche Token anbietet |
+| **F-4** | Zeitpunkt der Neuaufnahme | ➤ **Täglich**, im Stundenjob um 02:05 UTC. Ein neues Asset braucht ohnehin 10 Tage bis zum ersten Signal, stündlich bringt nichts |
+| **F-5** | Wann ans Notebook? | ➤ Nach den Kontrollen K-S7-3/K-S7-4, also wenn die laufende Kette bestätigt ist. **S7-5c** (ZK) ist klein und schützt sofort, das kann gleich mit |
