@@ -31364,6 +31364,81 @@ def paket_regel0_betrieb() -> None:
                and "_CH.bild(r, self._regel0_ordner)" in _hq)
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "N-f: Wache lief durch", False, repr(ex))
+    # E-52 (03.10.): die LLM-Sofortfassung - Rollenmodell M3, nur der Plan aus der REGEL0, anonym, Riegel gegen Stau, nie geraten
+    try:
+        import json as _js
+        import sqlite3 as _sq
+        import agent.regel0_llm as LLM
+        _k = LLM.lade()
+        pruefe(P, "E-52: Rollenkatalog gueltig - Fassung, Modell gemini-3.5, drei Rollen, Entscheider sieht Markt und Trader, Riegel gesetzt",
+               _k["modell"] == "gemini-3.5-flash-lite" and set(_k["rollen"]) == {"markt", "trader", "entscheider"}
+               and _k["rollen"]["entscheider"]["eingaenge"] == ["markt", "trader"]
+               and all(_k.get(x) for x in ("tageslimit_aufrufe", "max_signale_je_lauf", "lauf_zeitgrenze_s", "ausfall_schwelle")), str(_k)[:200])
+        _r = dict(symbol="ETH", bitpanda="ETH", signalstunde="2026-09-14 10:00", einstieg="2026-09-14 11:00", ausstieg="2026-09-15 11:00",
+                  stufe=3, kurs=2513.17, vh=0.041, p2=0.001, p3=0.004, p5=0.012)
+        _plan = LLM.plan_text(_r)
+        pruefe(P, "E-52 / N-c: aus der REGEL0 kommt NUR der geplante Handel - kein v-dach, keine Liquidationsgefahr, kein Kurs, kein Datum",
+               "24 Stunden" in _plan and "3-fach" in _plan and not any(x in _plan for x in ("0,041", "0.041", "2513", "2026", "rsi", "Liquidation")))
+        _t = LLM.trader_eingabe(_r, "data", _k)
+        if _t is not None:
+            _tx = _js.dumps(_t, ensure_ascii=False).lower()
+            pruefe(P, "E-52: die Trader-Eingabe ist ANONYM (kein Name, kein Jahr, kein Kurs) und kennt weder rsi noch den Markt",
+                   LLM.anonym_verletzt(_t, _r) == [] and "rsi" not in _tx and "bitcoin" not in _tx and "us-aktien" not in _tx, _tx[:160])
+        pruefe(P, "Gegenprobe Anonymitaet: ein Name in der Eingabe wird gefunden",
+               bool(LLM.anonym_verletzt({"x": "ETH steht 2026 bei 2513.17"}, _r)))
+        _gueltig = LLM.validiere("trader", {"urteil": "Spricht dagegen", "begruendung": "x", "belege": [{"fakt": "a", "richtung": "x"}]})
+        try:
+            LLM.validiere("entscheider", {"urteil": "eher ja"})
+            _geraten = True
+        except LLM.AntwortUngueltig:
+            _geraten = False
+        pruefe(P, "E-52: das Urteil wird NIE geraten (nur die genannten Woerter), Belege ohne Richtung werden neutral",
+               _gueltig["urteil"] == "spricht_dagegen" and _gueltig["belege"][0]["richtung"] == "neutral" and not _geraten)
+
+        class _Fake:
+            def __init__(self, kaputt=False):
+                self.n, self.kaputt = 0, kaputt
+
+            def chat(self, msgs, model=None, temperature=None, response_format=None):
+                self.n += 1
+                if self.kaputt:
+                    raise ConnectionError("weg")
+                if msgs[0]["content"].startswith("Zwei Pruefer"):
+                    return '{"urteil": "bestaetigt", "begruendung": "b", "gegengrund": "g"}'
+                return '{"belege": [{"fakt": "f", "richtung": "dafuer"}], "urteil": "neutral", "begruendung": "b", "gegengrund": "g"}'
+        with _tf.TemporaryDirectory() as d:
+            _ein = {"geplant": "p", "lage_des_werts": ["s"]}
+            _orig_t, _orig_m = LLM.trader_eingabe, LLM.markt_eingabe
+            try:
+                LLM.trader_eingabe = lambda r, o, k: dict(_ein)
+                LLM.markt_eingabe = lambda r, db: {"geplant": "p", "marktlage": ["m"]}
+                f1 = _Fake()
+                e1 = LLM.pruefe_signal(dict(_r, symbol="AAA", bitpanda="AAA"), f1, d, d, "x", _k)
+                f2 = _Fake()
+                e2 = LLM.pruefe_signal(dict(_r, symbol="BBB", bitpanda="BBB"), f2, d, d, "x", _k)
+                fk = _Fake(kaputt=True)
+                um = LLM.Umlauf(_k, fk, d)
+                for s_ in ("C1", "C2", "C3", "C4"):
+                    ek = LLM.pruefe_signal(dict(_r, symbol=s_, bitpanda=s_, signalstunde="2026-09-14 11:00"), fk, d, d, "x", _k, umlauf=um)
+            finally:
+                LLM.trader_eingabe, LLM.markt_eingabe = _orig_t, _orig_m
+            _c = _sq.connect(os.path.join(d, "regel0_signale.db"))
+            _n = _c.execute("SELECT COUNT(*) FROM pruefung WHERE gefragt=1").fetchone()[0]
+            _c.close()
+        pruefe(P, "E-52: drei Rollen, der Entscheider bekommt die Ergebnisse; der Markt wird bei gleichen Fakten NICHT neu gefragt (R-2)",
+               f1.n == 3 and f2.n == 2 and e1["entscheider"]["urteil"] == "bestaetigt" and "wiederverwendet" in e2["markt"]["quelle"])
+        pruefe(P, "E-52: kein Abfragestau - nach 3 Fehlern in Folge fragt der Lauf nicht mehr, der Grund steht im Block",
+               fk.n == 3 and "Fehler in Folge" in str(ek.get("trader", {}).get("fehlt")) and _n >= 5)
+        _z = LLM.mail_zeilen({"markt": {"fehlt": "Zeitgrenze erreicht"}, "trader": {"urteil": "stuetzt", "begruendung": "b"},
+                              "entscheider": {"urteil": "mit_vorbehalt", "begruendung": "x", "gegengrund": "y"}}, _k)
+        pruefe(P, "E-52: der Mailblock sagt SOFORTFASSUNG, UNGEMESSEN; ein Ausfall steht als *keine Auskunft*, nie als Zustimmung",
+               "SOFORTFASSUNG, UNGEMESSEN" in _z[0] and any("keine Auskunft" in x for x in _z) and any("mit Vorbehalt" in x for x in _z))
+        _bq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",
+               "_um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)" in _bq and "pruefung=_pruef" in _bq
+               and "_regel0_llm_client_ref = gemini_client" in _bq)
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "E-52: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:

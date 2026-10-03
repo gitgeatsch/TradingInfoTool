@@ -4600,6 +4600,33 @@ lässt sich weder prüfen noch widerlegen.
 > dem 10.08. in einem Aufruf. **Z.ai ist NICHT dieses C.** Es hieß bis zum
 > 17.08. so und war eine Namenskollision.
 
+> ## ⚠️ NACHTRAG 03.10.2026 — die LLM-Ebene der REGEL0 ist eine EIGENE (E-50, E-51, E-52)
+>
+> Die Tabelle oben gilt für die **Spot-Kette**. Für den Hebel löst seit E-46 die
+> **REGEL0** aus (deterministisch, gemessen). Ihre LLM-Ebene ist **neu gebaut**:
+> Übernommen sind die Befunde dieses Manuals, kein Prompt-Code.
+>
+> | | **Markt** | **Trader** | **Entscheider** | Gegenprüfer (nachgelagert) |
+> |---|---|---|---|---|
+> | Frage | Trägt das **Umfeld** eine Gegenbewegung in Krypto über 24 h? | Trägt die eigene Kurs- und Volumenlage **dieses Werts** die Gegenbewegung? | **Bestätigst** du den Handel? | Spricht etwas außerhalb der Kursdaten dagegen? |
+> | Eingabe | Leitmärkte, Makro, Stimmung; **kein** Asset | **anonym**, ohne rsi-Spiegel, **ohne** Markt | nur die **Ergebnisse** von Markt und Trader | nur Fremdquellen (Text) |
+> | Ausgabe | *stützt / neutral / spricht dagegen* + Beleg + Gegengrund | dasselbe | *bestätigt / mit Vorbehalt / Einwand* | Einwand |
+> | darf NICHT | das Signal kippen (F2), Hebel oder Größe wählen | dasselbe | dasselbe | befürworten |
+>
+> Aus der REGEL0 kennen die Rollen **nur den Plan**: LONG, Hebel, Ein- und
+> Ausstieg nach 24 h und, seit 0.1b, **dass auf eine Gegenbewegung gesetzt
+> wird**. Ohne diese Angabe beurteilten sie einen Trendhandel und urteilten
+> konstant dagegen (P1, 03.10.). **Nicht** übergeben werden v̂, rsi, Normal,
+> Liquidationsgefahr und Trefferquote (R-T4, Anker, R-R2).
+>
+> **Namen im Code:** `agent/regel0_llm.py`, Rollenkatalog
+> `Basisinfos/regel0_llm.yaml`. Sie sind nicht zu verwechseln mit der
+> deterministischen Stufe `entscheider` der Spot-Kette oder mit den
+> deterministischen Rollen A/B/C des Hebel-Neubaus (Richtung, Bewegung, Sperre).
+> **Riegel gegen Abfragestau:** derselbe Client wie die Spot-Kette, Tageslimit,
+> höchstens 6 Signale je Lauf, Abbruch nach 3 Fehlern in Folge. Ausführlich:
+> `Voranalyse_Schritt7_Betrieb_02_10.md` §20 bis §20.12.
+
 ## R-R2 Die Konstruktionsbedingung
 
 **Ein Parameter gehört zu GENAU EINEM Modell.**

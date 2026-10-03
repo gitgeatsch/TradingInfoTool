@@ -1211,3 +1211,56 @@ Darüber steht wie heute der deterministische Teil: Asset, Einstieg, Ausstieg, H
 | Bestätigung (einmal) | ~4.200 | ~9 Tage |
 
 ⚠️ **Ehrlich:** Mit Anpassungen sind es eher **3–5 Wochen** bis zur gemessenen Fassung in der Mail. **Vorher** kann der Block schon **live im Schatten** mitlaufen (N5), und die **Charts** gehen sofort in die Mail, weil sie von keiner Messung abhängen.
+
+
+### 20.12 BAU der Sofortfassung, Charts und Kalibrierlauf P1 (03.10.2026; E-52)
+
+**Nutzer:** *„Ok, Charts und N1 bauen, prüfen und gegenprüfen. Zur Dauer: Hier brauchen wir eine Sofortlösung (Simulation etc.), mit dieser gehen wir in die Produktion, und die adaptierte und gemessene Lösung muss später final kommen."* Dazu *„optimal wäre dann ein selbstjustierendes System"* (→ Plan O21) und *„berücksichtige auch die Erfahrungen der Quellenabfrage für die LLM-Kette, damit es keinen Ressourcen- und Abfragestau gibt"*.
+
+#### Gebaut
+
+| Baustein | Inhalt |
+|---|---|
+| **Charts** (N-f), `agent/regel0_chart.py` | Stundenkurs 5 Tage, Signal, Einstieg ▲, Ausstieg nach 24 h, Liquidationsgrenze je Stufe mit Preis und Abstand in %. Die Achse folgt dem Kurs, Zeiten in Ortszeit. **Dasselbe Bild** in der Signalmail (eingebettet über `inline_images`) und im Hebel-Tab. Die Liquidationsformel ist dieselbe wie in der Messung (`messe_k6_hebelstufe.liq_schwelle`, Marge 0,09, Finanzierung 0,0018), eine Wache hält beide gleich. `regel0_mail.versende` hat jetzt optional `bild` und `pruefung`. Scheitert eines davon, geht die Mail trotzdem raus (P-8) |
+| **Rollenkatalog** `Basisinfos/regel0_llm.yaml` | Fassung, Modell gemini-3.5-flash-lite, Temperatur 0, Rollen an/aus, Satzbausteine des Traders, Eingänge des Entscheiders, Zeitgrenzen und Riegel |
+| **LLM-Ebene** `agent/regel0_llm.py` | **Markt:** Datenschicht `marktlage` (Leitmärkte, Makro, Stimmung), alles aus **einer** Datenbank, neu nur bei geänderten Fakten (Prüfsumme). **Trader:** anonym, 24-h-Kerzen bis zur Signalstunde, Bausteine aus `lagebeschreibung`. **Entscheider:** nur die Ergebnisse. Validierung: das Urteil wird **nie geraten**, Belege gekürzt, Zahlendeckung gezählt. Anonymitätswächter (Name, Jahr, Kurs). Mailblock *SOFORTFASSUNG, UNGEMESSEN*. Ein Ausfall erscheint als *keine Auskunft* |
+| **Kein Ressourcen- und Abfragestau** (`Umlauf`) | **kein** Nebenfaden, alles nacheinander im Stundenjob. **Derselbe** Gemini-Client wie die Spot-Kette (eine Minutendrossel, Tagesbudget je Modell). Eigenes **Tageslimit 150** (in der Ablage gezählt, kein Schreiben in die Produktion), **höchstens 6 Signale je Lauf**, **600 s je Lauf**, **90 s je Signal**. Nach **3 Fehlern in Folge** fragt der Lauf nicht mehr. Ein Kontingent, das schon erschöpft ist, wird vorher erkannt. Lehren: 2.454-gemini (34× HTTP 503), G19 (Warteschlange länger als der Hauptfaden), `zweite_meinung.AUSFALL_SCHWELLE` |
+| **Ablage** | Tabelle `pruefung` in `regel0_signale.db`: je Signal und Rolle Fassung, Prompt- und Eingabe-Prüfsumme, Eingabe, Antwort, Urteil, Laufzeit, Fehler, ungedeckte Zahlen, Pazifik-Tag |
+| **Verdrahtung** | `_regel0_mails`: **ein** Umlauf je Stundenlauf. Der Gemini-Client kommt aus `build_scheduler` (`_regel0_llm_client_ref`). Der Prüfblock gilt nur für die **Signal**mail. Der Hebel-Tab zeigt Prüfblock und Chart im Detail (nur gelesen) |
+| **Teilexport** | Abschnitt *REGEL0-PRUEFUNG (LLM)*: Aufrufe je Tag, Urteile je Rolle, Ausfälle, Laufzeit |
+| **Wache** `--paket Regel0Betrieb` | **45 von 45**. Neu: Chart = Messformel; Mail mit Bild und Block, beides darf scheitern; Rollenkatalog; nur der Plan aus der REGEL0; Trader anonym ohne rsi und ohne Markt (mit Gegenprobe); das Urteil wird nie geraten; Markt wird wiederverwendet; Abbruch nach 3 Fehlern; Mailblock *ungemessen*; Verdrahtung |
+| **Kalibrierlauf** `Basisinfos/Rechenkern_02_10/kalibrier_llm.py` | 50 REGEL0-Einstiege 2026 (Spur, feste Saat), **echte** Aufrufe auf gemini-3.5, Deckel 260. Prüft P1-a bis P1-e und schreibt eine HTML-Mailvorschau. Er schreibt **nicht** in die Standard-DB (Wegwerf-DB, am Seiteneffekt geprüft) |
+
+#### Kalibrierlauf P1 der Fassung 0.1 — ⛔ NICHT bestanden (nach 10 von 50 Ankern angehalten, um das Kontingent zu schonen)
+
+| Rolle | Verteilung (10 Anker) | P1-b (keine Stufe über 70 %) |
+|---|---|---|
+| Trader | 9× *spricht dagegen*, 1× *neutral* | ⛔ 90 % |
+| Entscheider | 8× *Einwand*, 2× *mit Vorbehalt* | ⛔ 80 % |
+| Markt | 5× *spricht dagegen*, 4× *neutral*, 1× *stützt* | ✔ 50 % |
+
+Laufzeit je Aufruf: Trader 5,8 s, Markt 6,2 s, Entscheider 1,1 s. Alle Antworten waren formgültig.
+
+⛔ **Die Ursache ist fachlich, aus den Begründungen gelesen:** Die REGEL0 kauft **nach einem Rückgang** (rsi-Ersteintritt), sie setzt also auf eine **Gegenbewegung**. Die Rollen wussten das nicht und beurteilten einen **Trendhandel**: *„steht im Widerspruch zum intakten Abwärtstrend"*. Die Gegenbewegung nannten sie selbst nur als *Gegengrund* (*„Short Squeeze"*, *„Kontraindikator"*). Dazu kommt ein **Echo** (R-R2): Verlauf über 5 und 20 Tage und Abstand zum 20/50-Tage-Schnitt sind fast dieselbe Information wie der rsi, nur mit umgekehrtem Vorzeichen gelesen.
+
+#### Fassung 0.1b (die vorab festgelegte Folge von P1: anpassen, neue Fassung, P1 wiederholen)
+
+| | 0.1 | 0.1b |
+|---|---|---|
+| Plan | *gehebelter Kauf, ohne Stop und ohne Kursziel* | *Kauf auf eine **Gegenbewegung nach einem Rückgang**, Hebel n-fach, 24 h; Hebel und Risiko werden gesondert gerechnet; zu beurteilen ist nur, ob die Gegenbewegung in diesen 24 Stunden trägt* |
+| Trader-Bausteine | Struktur, Verlauf 5/20/60, Marken, Schnitte 20/50/200, Schwankung, Volumen | Struktur, **lange Sicht** (60 Tage, 200-Tage-Schnitt), Marken, Schwankung, Volumen. **Ohne** die rsi-Spiegel |
+| Frage | *stützt die Lage den Handel?* | *spricht die Lage dafür, dass **die Gegenbewegung** in 24 h trägt?* |
+
+⚠️ **Das erweitert N-c leicht:** Aus der REGEL0 kommt jetzt auch, **worauf** der Handel setzt. Das gehört zum Plan, wie der Horizont. Es ist keine Zahl und keine Güte der REGEL0. Zur Bestätigung beim Nutzer.
+
+**Zwischenstand 0.1b nach 10 Ankern:** Markt 6× *stützt*, 4× *neutral*. Trader 8× *spricht dagegen*, 2× *neutral*. Entscheider 5× *Einwand*, 5× *mit Vorbehalt*. ➤ Der Markt unterscheidet jetzt. Der **Trader bleibt fast konstant** und fällt P1-b voraussichtlich wieder. Das volle Ergebnis steht unten (20.12.1), sobald der Lauf fertig ist.
+
+#### ⚠️ Fund nebenbei: Makro am Desktop und am NB verschieden
+
+`rollen_eingabe.baue_lagebild_eingabe` liest Stimmung und Makro **immer** aus dem Standardpfad. Im Rückspiel kamen so Kurse aus der NB-Kopie und Makro aus der Desktop-DB. Die Werte unterscheiden sich deutlich, zum Beispiel Fear & Greed im 90. gegen das 68. Perzentil am selben Tag. Im **Betrieb am NB** ist das unschädlich (eine Datei). Der LLM-Erbauer liest jetzt **alles aus einer** Datenbank. ➤ **Für das Rückspiel (N4) zu prüfen:** Enthalten die Makroreihen nur Werte, die zum Ankerdatum schon bekannt waren? *1.186 gegen 1.184 Monate* ist nicht von selbst erklärt.
+
+#### Nächste Schritte
+
+1. Ergebnis 0.1b auswerten. Bleibt der Trader konstant, folgt der nächste Schritt nach P1: die Eingabe des Traders weiter auf das ausrichten, was **eine Gegenbewegung** trägt oder bricht. Das sind etwa Marken unter dem Kurs, Volumen im Rückgang und die Struktur. Danach P1 erneut.
+2. Sobald P1 bestanden ist: volle Suite, Commit, NB-Pull, Kontrolle **K-LLM-1** (erste Signalmail mit Block und Chart, Teilexport *REGEL0-PRUEFUNG*).
+3. Vor N4: Schalter zum Anhalten der Spot-Kette (R-4), Prüfung der Makroreihen auf Zeitpunkttreue, Teilung in Entwicklungs- und Bestätigungsmenge.

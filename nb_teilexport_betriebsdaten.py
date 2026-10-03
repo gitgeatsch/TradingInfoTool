@@ -305,6 +305,30 @@ def _inhalt() -> int:
             c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Rechnung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # E-52 (03.10.2026): die LLM-Sofortfassung - Aufrufe je Tag, Urteile je Rolle, Ausfaelle, Laufzeit (nur lesen)
+    print()
+    print("-" * 100)
+    try:
+        ab = os.path.join(DATEN, "regel0_signale.db")
+        c = ro(ab) if os.path.exists(ab) else None
+        if c is None or "pruefung" not in tabellen(c):
+            print("REGEL0-PRUEFUNG (LLM): noch kein Lauf")
+        else:
+            for r in c.execute("SELECT tag_pazifik, COUNT(*) FROM pruefung WHERE gefragt=1 GROUP BY tag_pazifik ORDER BY tag_pazifik DESC LIMIT 5"):
+                print("REGEL0-PRUEFUNG (LLM) %s · Aufrufe %d" % r)
+            for r in c.execute("SELECT rolle, fassung, COUNT(*), SUM(urteil IS NOT NULL), SUM(fehler IS NOT NULL), ROUND(AVG(CASE WHEN gefragt=1 "
+                               "THEN sekunden END), 1) FROM pruefung GROUP BY rolle, fassung ORDER BY rolle"):
+                print("    %-11s Fassung %s · Zeilen %d · mit Urteil %d · ohne (Fehler/Sperre) %d · Laufzeit im Mittel %s s" % r)
+            for r in c.execute("SELECT rolle, urteil, COUNT(*) FROM pruefung WHERE urteil IS NOT NULL GROUP BY rolle, urteil ORDER BY rolle, 3 DESC"):
+                print("      %-11s %-16s %d" % r)
+            for r in c.execute("SELECT fehler, COUNT(*) FROM pruefung WHERE fehler IS NOT NULL GROUP BY fehler ORDER BY 2 DESC LIMIT 6"):
+                print("      ⚠️ %s · %d" % (str(r[0])[:90], r[1]))
+            for r in c.execute("SELECT symbol, signalstunde, rolle, urteil, fehler FROM pruefung ORDER BY am DESC LIMIT 9"):
+                print("      %-9s %s %-11s %s" % (r[0], r[1], r[2], r[3] or ("(%s)" % str(r[4])[:60])))
+        if c is not None:
+            c.close()
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ REGEL0-Pruefung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # S7-5d (03.10.2026): taeglicher Abgleich als Auskunft - Neuaufnahme, gesperrte Mails, Hebel-Schalter-Assets ohne Daten (nur lesen)
     print()
     print("-" * 100)

@@ -149,6 +149,9 @@ _scheduler_ref = None
 # `_scheduler_ref` - gesetzt beim Aufbau, sonst None, und dann tut der
 # Horcher schlicht nichts.
 _conn_factory_ref = None
+# E-52 (03.10.2026): der Gemini-Client fuer die LLM-Sofortfassung der REGEL0 - DERSELBE wie fuer die Spot-Kette (eine Drossel,
+# ein Tagesbudget je Modell). Gesetzt in build_scheduler; None heisst: der Block steht als *keine Auskunft* in der Mail.
+_regel0_llm_client_ref = None
 _consecutive_failures: dict[str, int] = {}
 # Bewusst NUR die drei haeufig getakteten Jobs (15-30 Min) - bei den beiden
 # 24-Stunden-Jobs (Historie/OHLC) und den Cron-getakteten Jobs (Marktscan/
@@ -1592,9 +1595,17 @@ def _regel0_mails() -> None:
         import agent.regel0_mail as _RM
         import agent.regel0_nachlader as _NL
         import agent.regel0_chart as _CH
+        import agent.regel0_llm as _LLM
+        # E-52: der Pruefblock der LLM-Sofortfassung - EIN Umlauf je Stundenlauf (Grenzen gegen Ressourcen- und Abfragestau)
+        _kat = _LLM.lade()
+        _um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)
+        _pruef = ((lambda r: _LLM.mail_zeilen(_LLM.pruefe_signal(r, _regel0_llm_client_ref, _NL.DATEN_VORGABE, _NL.DATEN_VORGABE,
+                                                                 db.DB_PATH, _kat, umlauf=_um), _kat))
+                  if _kat.get("mail_block") else None)
         z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail,
                          melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t),
-                         bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE))      # E-50 N-f: das Chart in der Signalmail
+                         bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE),       # E-50 N-f: das Chart in der Signalmail
+                         pruefung=_pruef)
         if any(z.values()):
             logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d nicht zugestellt, %d gesperrt (Zuordnung)",
                         z["signal"], z["korrektur"], z["erinnerung"], z["fehlgeschlagen"], z["gesperrt"])
@@ -5450,7 +5461,8 @@ def build_scheduler(
         _log_job_event,
         EVENT_JOB_ERROR | EVENT_JOB_MISSED | EVENT_JOB_EXECUTED)
 
-    global _scheduler_ref, _conn_factory_ref
+    global _scheduler_ref, _conn_factory_ref, _regel0_llm_client_ref
     _scheduler_ref = scheduler
     _conn_factory_ref = db_conn_factory
+    _regel0_llm_client_ref = gemini_client
     return scheduler

@@ -163,8 +163,33 @@ def mailstand(r: dict) -> list:
     return z
 
 
-def detail(r: dict, rows: list, jetzt: datetime, werte: dict | None = None) -> tuple:
-    """-> (Titel, Metazeile, Text). Der Text ist DERSELBE wie in der Signalmail (eine Quelle), dazu der Mailstand."""
+def pruefung_zeilen(ordner: str, r: dict) -> list:
+    """E-52: der Pruefblock der LLM-Rollen zu diesem Signal, wie in der Mail - nur gelesen; ohne Eintrag eine leere Liste."""
+    p = os.path.join(ordner, AB.ABLAGE_NAME)
+    if not os.path.exists(p):
+        return []
+    c = sqlite3.connect("file:%s?mode=ro" % p.replace("\\", "/"), uri=True, timeout=10)
+    try:
+        if not c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='pruefung'").fetchone():
+            return []
+        rows = c.execute("SELECT rolle, fassung, ergebnis, fehler FROM pruefung WHERE symbol=? AND signalstunde=? ORDER BY am",
+                         (r["symbol"], r["signalstunde"])).fetchall()
+    except sqlite3.Error:
+        return []
+    finally:
+        c.close()
+    if not rows:
+        return []
+    import json
+    import agent.regel0_llm as LLM
+    erg = {}
+    for rolle, _f, e, fehler in rows:
+        erg[rolle] = json.loads(e) if e else {"fehlt": fehler or "?"}
+    return [""] + LLM.mail_zeilen(erg, dict(LLM.lade(), fassung=rows[-1][1]))
+
+
+def detail(r: dict, rows: list, jetzt: datetime, werte: dict | None = None, pruefzeilen: list | None = None) -> tuple:
+    """-> (Titel, Metazeile, Text). Der Text ist DERSELBE wie in der Signalmail (eine Quelle), dazu Pruefblock und Mailstand."""
     werte = werte if werte is not None else G.lade()
     s, v = stufe(r)
     titel = "%s LONG: REGEL0 · %s" % (name(r), status(r, jetzt))
@@ -177,7 +202,7 @@ def detail(r: dict, rows: list, jetzt: datetime, werte: dict | None = None) -> t
         zeilen = ["REGEL0.1 - SIGNAL OHNE HANDEL", "",
                   "Fuer %s lag zur Signalstunde keine Hebelstufe unter der Liquidationsgrenze 2 %% (24 h)." % name(r),
                   "Geschaetzte Liquidationsgefahr: 2x %s · 3x %s · 5x %s" % (RM._pct(r.get("p2")), RM._pct(r.get("p3")), RM._pct(r.get("p5")))]
-    return titel, meta, "\n".join(zeilen + mailstand(r))
+    return titel, meta, "\n".join(zeilen + list(pruefzeilen or []) + mailstand(r))
 
 
 def positions_vermerk(symbol: str, richtung: str, eroeffnet_am: str | None, rows: list) -> str:

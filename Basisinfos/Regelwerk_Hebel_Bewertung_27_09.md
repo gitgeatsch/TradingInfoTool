@@ -24,7 +24,7 @@ Faktenteil: `python hebel_neubau.py`
 | ✔ **Betrieb, Daten** | Nachlader und Stundenjob am NB (S7-1/S7-1b), Positionsgröße als Startwerte (E-44, `regel0_betrieb.yaml`). Die REGEL0 selbst ist **unverändert** |
 | ✔ **Fassung 0.1** | kausale Schrumpfung (2.708). Die Bewertung vergleicht praktisch gegen die **Marktmitte** des Monats (τ² in 31/33 Monaten null) |
 | ✔ **Betrieb** | Rechenkern, Betriebslauf und Mails (S7-2 bis S7-4, E-45/E-46); der alte Hebelweg der Rollen-Kette ist aus. **Am NB seit 03.10. 06:22**, K-S7-3 bestanden, K-S7-4 fehlerfrei (erste REGEL0-Mail steht aus). S7-5 (E-47) gebaut: neue Listings, Preisabgleich Bitpanda/Binance vor jeder Mail, gesperrte Kürzel für alle Mengen |
-| ➤ **nächster Schritt** | S7-5 ans NB, Testwoche bis 10.10., dann S7-6/S7-7. ✔ Hebel-Tab zeigt die REGEL0 (E-49), ✔ Sammelmail abgestimmt (E-48), beides zum nächsten Pull. Alles Offene: `Voranalyse_Schritt7_Betrieb_02_10.md` §11–§18 |
+| ➤ **nächster Schritt** | S7-5 ans NB, Testwoche bis 10.10., dann S7-6/S7-7. ✔ Hebel-Tab zeigt die REGEL0 (E-49), ✔ Sammelmail abgestimmt (E-48), beides am NB. ◐ **LLM-Ebene der REGEL0 neu** (E-50 bis E-52: Rollenmodell M3 Markt/Trader/Entscheider, Sofortfassung mit Charts gebaut, Kalibrierlauf P1, §20.12). Alles Offene: `Voranalyse_Schritt7_Betrieb_02_10.md` §11–§18 |
 
 ---
 

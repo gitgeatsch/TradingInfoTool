@@ -540,7 +540,8 @@ class HebelView(ttk.Frame):
         """H-1: derselbe Text wie die Mail (agent/regel0_ansicht.detail -> regel0_mail.signal_mail), dazu der Mailstand."""
         from agent import regel0_ansicht as _R0A
         self.analyze_button.config(state="disabled")
-        titel, meta, text = _R0A.detail(r, self._regel0_zeilen, datetime.now(timezone.utc))
+        titel, meta, text = _R0A.detail(r, self._regel0_zeilen, datetime.now(timezone.utc),
+                                        pruefzeilen=_R0A.pruefung_zeilen(self._regel0_ordner, r))
         self.action_label.config(text=titel, foreground=theme.action_color("KAUFEN"))
         self.meta_label.config(text=meta)
         self._set_detail_text(text)

@@ -1,0 +1,28 @@
+# Rollenkatalog der LLM-Ebene zur REGEL0 (E-50, E-51, E-52; Voranalyse_Schritt7 Par. 20.11).
+#
+# EINE Aenderung hier ist EINE NEUE FASSUNG: `fassung` hochzaehlen, sonst sind Urteile alter und neuer Fassung nicht zu
+# trennen (jede Zeile in regel0_signale.db/pruefung traegt Fassung, Prompt- und Eingabe-Pruefsumme).
+#
+# Die Rollen pruefen und kommentieren nur (F2) - KEIN Urteil aendert das REGEL0-Signal.
+
+fassung: "0.1b-sofort"           # E-52: Sofortfassung, ungemessen. 0.1b nach P1 (03.10.): Plan nennt die Wette (Gegenbewegung),
+                                 # Trader ohne die rsi-Spiegel (Verlauf 5/20 Tage, Abstand 20/50-Tage-Schnitt) - Par. 20.12
+modell: "gemini-3.5-flash-lite"   # N-h: Messung und Betrieb auf demselben Modell (E1); 3.1 ist durch die Spot-Kette ausgelastet
+temperatur: 0.0
+mail_block: true                  # der Block PRUEFUNG in der Signalmail
+zeitgrenze_s: 90                  # laenger wartet die Signalmail nicht (P-8)
+# KEIN RESSOURCEN- UND ABFRAGESTAU (Nutzer 03.10.; Lehren 2.454-gemini, G19, zweite_meinung AUSFALL_SCHWELLE):
+tageslimit_aufrufe: 150           # hoechstens so viele Aufrufe je Tag (Pazifik-Tag wie Googles Grenze), gezaehlt in der Ablage
+max_signale_je_lauf: 6            # mehr Signale in einer Stunde bekommen den Block nicht (Vermerk), die Mail geht trotzdem
+lauf_zeitgrenze_s: 600            # alle LLM-Aufrufe eines Stundenlaufs zusammen
+ausfall_schwelle: 3               # so viele Fehler in Folge -> der Rest des Laufs fragt nicht mehr
+
+rollen:
+  markt:
+    an: true                      # Umfeld (Leitmaerkte, Makro, Stimmung), neu nur bei geaenderten Fakten
+  trader:
+    an: true                      # eigene Kurs- und Volumenlage, anonym
+    bausteine: [struktur, lange_sicht, marken, schwankung, volumen]   # 0.1b: bewegung/schnitte spiegeln den rsi (R-R2)
+  entscheider:
+    an: true                      # Gesamturteil aus den ERGEBNISSEN, keine Rohdaten
+    eingaenge: [markt, trader]

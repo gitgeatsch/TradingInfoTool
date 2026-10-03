@@ -33,6 +33,10 @@ def oeffne(ordner: str) -> sqlite3.Connection:
               "frisch INTEGER, veraltet INTEGER, veraltet_liste TEXT, nicht_im_handel INTEGER, neu INTEGER, endgueltig INTEGER, meldung TEXT)")
     c.execute("CREATE TABLE IF NOT EXISTS signal (%s, PRIMARY KEY (symbol, signalstunde))"
               % ", ".join("%s %s" % sp for sp in _SIGNAL_SPALTEN[:17]))
+    # E-52 (03.10.2026): die Urteile der LLM-Rollen je Signal und Rolle - Fassung, Pruefsummen, Eingabe, Antwort, Laufzeit, Fehler
+    c.execute("CREATE TABLE IF NOT EXISTS pruefung (symbol TEXT, signalstunde TEXT, rolle TEXT, fassung TEXT, modell TEXT, "
+              "prompt_pruefsumme TEXT, eingabe_pruefsumme TEXT, eingabe TEXT, antwort TEXT, urteil TEXT, ergebnis TEXT, sekunden REAL, "
+              "fehler TEXT, ungedeckt TEXT, am TEXT, gefragt INTEGER, tag_pazifik TEXT, PRIMARY KEY (symbol, signalstunde, rolle, fassung))")
     da = {r[1] for r in c.execute("PRAGMA table_info(signal)")}
     for name, typ in _SIGNAL_SPALTEN:
         if name not in da:
