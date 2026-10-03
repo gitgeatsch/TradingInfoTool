@@ -640,3 +640,17 @@ prüfen und gegenprüfen"*.
 - **H-3:** Bei offenen Positionen steht der REGEL0-Vermerk mit Ausstiegszeit. Das ist eine Brücke bis O13.
 - **H-4:** Der Tab geht mit dem nächsten Pull ans NB. Die Oberfläche berührt weder die Rechnung noch die Mails.
 - Gegenprüfung `pruefe_h17.py` 23/23. Wache `--paket Regel0Betrieb` 33/33.
+
+---
+
+# E-50 · Die LLM-Ebene der REGEL0 wird NEU gebaut (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„Lege den LLM Block so an, dass wir diesen analog zur deterministischen Komponente neu konstruieren und die alte ab sofort vollständig ersetzen"* und *„sofortiger Umbau, testen, analysieren und simulieren - dann in Produktion mit eMail und Charts. Diesen Bereich können wir nicht so einfach bauen wie die REGEL0: 1. zuerst prüfen, welche Informationen jede Rolle erhalten soll, um einen sinnvollen Beitrag zu liefern, 2. wie soll dies in den Prompt - hier gab es bereits Erkenntnisse aus dem 1. Bau, 3. weitere tragende Beiträge werden nachgelagert eingebaut. Spot kann vorerst so bleiben, wenn es einfacher ist - ich brauche diesen nicht."*
+- Die LLM-Ebene der REGEL0 wird **neu gebaut**. Übernommen werden die Befunde des ersten Baus, nicht der Prompt-Code. Sie löst §19 L-a bis L-f ab.
+- Reihenfolge:
+  1. Information je Rolle.
+  2. Prompt aus den Erkenntnissen des ersten Baus.
+  3. Bau im Schatten, testen und simulieren: Rückspiel mit anonymer Eingabe samt Kontaminationsprobe, gegen eine Regel auf denselben Eingaben und gegen den Zufall.
+  4. Produktion mit Mail und Charts.
+  5. Weitere tragende Beiträge nachgelagert, etwa Text.
+- **Spot bleibt** auf der alten Rollen-Kette, bis O14 sie ablöst. Der Nutzer braucht ihn nicht.

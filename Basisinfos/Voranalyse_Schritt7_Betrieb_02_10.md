@@ -902,3 +902,7 @@ Die **Gegenprobe** mit dem alten Verhalten reproduziert den NB-Fall: Bei einem S
 | **L-f** | Die Positionierung (offene Kontrakte, Finanzierung, Long-Konten) für **alle** Futures-Assets stündlich holen, damit P-2 schneller entscheidbar wird? | ➤ **Nein, vorerst nicht.** Erst wenn V-1 einen Beitrag findet. Sonst wäre es eine neue Datenquelle für eine Prüfung mit geringer Erwartung |
 | **L-d** | BC und das historische Rückspiel zurückstellen? | ➤ **Ja** (Begründung oben) |
 | **L-e** | ⚠️ **M1-Kriterium 4 lesen als:** *Block gebaut und als ungemessen ausgewiesen, Schattenmessung läuft mit fester Regel; das Urteil folgt bei n = 1.000*? Wörtlich verlangt M1-4 ein **Ergebnis** vor M1, und das ist nach L-5 vor M1 nicht erreichbar | ➤ **deine Entscheidung**, denn M1 ist deine Definition. Ohne diese Lesart steht M1 rund ein Jahr auf diesem einen Kriterium |
+
+### 19.5 Abstimmung (Nutzer 03.10.2026, E-50)
+
+L-a bis L-f sind **abgelöst**: Die LLM-Ebene der REGEL0 wird **neu gebaut**. Zuerst kommt die Information je Rolle, dann der Prompt aus den Erkenntnissen des ersten Baus, dann Schatten, Rückspiel und Simulation, dann Produktion mit Mail und Charts. Spot bleibt auf der alten Kette. Die Befunde L-1 bis L-7 gelten weiter und gehen in den Neubau ein (Plan O20, Voranalyse §20).
