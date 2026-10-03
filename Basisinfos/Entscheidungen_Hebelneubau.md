@@ -654,3 +654,26 @@ prüfen und gegenprüfen"*.
   4. Produktion mit Mail und Charts.
   5. Weitere tragende Beiträge nachgelagert, etwa Text.
 - **Spot bleibt** auf der alten Rollen-Kette, bis O14 sie ablöst. Der Nutzer braucht ihn nicht.
+
+---
+
+# E-51 · Das Rollenmodell M3 als Startfassung des LLM-Neubaus (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„Ja N-a bis N-h wie vorgeschlagen"*, *„Ja R-1 bis R-4 wie vorgeschlagen, prüfen und gegenprüfen. Wichtig: Das Rollenmodell soll beim Testen und Simulieren u. U. noch einmal geprüft und angepasst werden können"* (`Voranalyse_Schritt7_Betrieb_02_10.md` §20, §20.10, §20.11).
+- **N-a bis N-h:**
+  - Nur Information, die live für alle REGEL0-Assets und für 2025–26 in derselben Form vorliegt. Das sind Umfeld und Kurs-/Volumenstruktur.
+  - Aus der REGEL0 bekommen die Rollen nur den geplanten Handel, nicht deren Bewertung.
+  - Rückspiel mit Kontaminationsprobe und Vergleichsarmen.
+  - Der Mail-Block geht in jedem Fall mit Messstand in die Produktion. Die Charts kommen sofort.
+  - P-T (Text) und Funding nachgelagert, Modell gemini-3.5-flash-lite.
+- **R-1:** Rollenmodell **M3**.
+  - Markt und Trader unabhängig voneinander.
+  - Der LLM-Entscheider gibt das **Gesamturteil** über den REGEL0-Handel aus den Ergebnissen der beiden. Er kippt nichts.
+  - Der Gegenprüfer mit Fremdquellen kommt nachgelagert.
+- **R-2:** Der Markt wird nur bei geänderten Fakten neu gefragt.
+- **R-3:** Rückspiel mit fest n = 1.000 je Rolle, ohne Aufstocken.
+- **R-4:** Die Spot-Kette wird vor dem Rückspiel mit einem **eigenen** Schalter angehalten, nicht über `aktiv_fuer`. Ich gebe vorher Bescheid.
+- **M3 ist eine Startfassung.**
+  - Das Modell steht als Rollenkatalog in einer Konfigurationsdatei, Anpassen ist eine neue Fassung.
+  - Die Einstiege werden vorab in eine **Entwicklungsmenge** und eine **unberührte Bestätigungsmenge** geteilt.
+  - Prüfpunkte P1 bis P4 mit vorab festgelegten Folgen. Eine Änderung am Rollenmodell selbst entscheidet der Nutzer.

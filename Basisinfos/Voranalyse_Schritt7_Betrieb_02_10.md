@@ -1110,3 +1110,104 @@ L-a bis L-f sind **abgelöst**: Die LLM-Ebene der REGEL0 wird **neu gebaut**. Zu
 | ⚠️ **Wie NICHT** | `rollen_kette.aktiv_fuer` leeren. Dann **übernimmt der alte Weg wieder** (`rollen_job.py:48-63`, *„der dokumentierte Rückfallweg"*), mit Budget-Allocator und alter Pipeline. Das wäre das Gegenteil einer Stilllegung |
 | **Wie** | ein **eigener Schalter** in `Basisinfos/regel0_betrieb.yaml`, der die Spot-Rollen-Kette anhält, ohne den alten Weg freizugeben. Vorher die Prüfung *Stilllegung: wer schreibt das noch?*: Bestandsmails, Stop-Nachzieh-Sammelmail (sie hängt an **offenen** Signalen und läuft weiter), Führungsprotokoll, Ausstiegsverfolgung, Hebel-Tab. Die REGEL0 und ihre Mails sind davon **nicht** berührt |
 | **Wann** | **vor N4** (Rückspiel). N1 bis N3 (Erbauer, Prompt, Kalibrierlauf mit 50 Ankern) gehen ohne Stilllegung. ➤ **Ich gebe Bescheid**, bevor N4 startet, mit der fertigen Prüfung, was stillsteht |
+
+
+### 20.11 Abstimmung R-1 bis R-4 und das ROLLENMODELL M3 zum Nachlesen (Nutzer 03.10.2026)
+
+**Nutzer:** *„Ja R-1 bis R-4 wie vorgeschlagen, prüfen und gegenprüfen. Wichtig: Das Rollenmodell soll beim Testen und Simulieren u. U. noch einmal geprüft und angepasst werden können. Ich kann zum aktuellen noch zu wenig sagen, u. U. kannst du mir das noch in der Voranalyse fachlich und technisch sauber vorlegen."*
+
+**R-1 bis R-4 sind abgestimmt (E-51).** M3 ist damit die **Startfassung**, keine endgültige. Unten steht, wie das Modell arbeitet, an einem Beispiel, wo es angepasst werden kann und nach welchen Regeln das geschieht.
+
+#### 20.11.1 Der Ablauf in einem Bild
+
+```
+REGEL0 (deterministisch, gemessen)  ── löst aus: Asset X, LONG, Hebel 3×, Einstieg 14:00, Ausstieg +24 h
+        │
+        ├──► DER PLAN (für alle Rollen gleich): "gehebelter LONG, Hebel 3×, Ausstieg nach 24 h, kein Stop, kein Ziel"
+        │
+        ├──► MARKT      Eingabe: Leitmärkte, Makro, Stimmung            (für alle Assets gleich)
+        │               Ausgabe: stützt | neutral | spricht dagegen  + Beleg + Gegengrund
+        │               neu nur, wenn sich seine Fakten ändern
+        │
+        ├──► TRADER     Eingabe: NUR die eigene Kurs-/Volumenlage von X, anonym
+        │               Ausgabe: stützt | neutral | spricht dagegen  + Beleg + Gegengrund
+        │
+        └──► ENTSCHEIDER  Eingabe: der Plan + die ERGEBNISSE von Markt und Trader (keine Rohdaten)
+                          Ausgabe: bestätigt | mit Vorbehalt | Einwand  + Begründung + stärkster Gegengrund
+                               │
+                               ▼
+        MAIL: der deterministische Teil (wie heute) + Block PRÜFUNG (drei Urteile + Messstand) + CHART
+        ⚠️ Kein Urteil ändert das Signal (F2). Die REGEL0 hat schon entschieden.
+                          (nachgelagert: GEGENPRÜFER mit Fremdquellen, nur Einwand)
+```
+
+#### 20.11.2 Jede Rolle fachlich: was sie kann und was nicht
+
+| | **Markt** | **Trader** | **Entscheider** |
+|---|---|---|---|
+| **Zweck in einem Satz** | Sagt, ob das **Umfeld** einen gehebelten Kurzzeit-LONG trägt | Sagt, ob **dieser Wert** in seiner eigenen Lage einen solchen Handel trägt | Wägt beide Urteile **gegeneinander ab** und sagt, ob er den Handel bestätigt |
+| **Was er sieht, die REGEL0 aber nicht** | Leitmärkte, Makro, Fear & Greed | Marken, Verlauf über Wochen, Volumen, Lage zu den Schnitten | nichts Neues. Er **verbindet** zwei Sichten, die die REGEL0 beide nicht hat |
+| **Was er NICHT sieht** | kein Asset, keine REGEL0-Zahl | keinen Markt, keinen Namen, kein Datum, kein rsi, keine REGEL0-Zahl | keine Rohdaten, keine REGEL0-Zahl |
+| **Warum so getrennt** | Ein Marktzustand ist für alle Assets gleich. Er darf den Trader nicht färben, sonst ist der Trader nicht mehr messbar | Nur so ist er der **messbare Beitrag je Asset** (Querschnitt in derselben Stunde) | Ein ganzheitliches Urteil gehört einem Modell, nicht einer Zählregel (Synthese-Regel). Ob es mehr leistet als eine Zählregel, misst der Vergleichsarm |
+| **Messbar als** | **nur Auskunft** (Stabilität, Verteilung). Als Beitrag nicht, weil er ein Marktzustand ist | **Beitrag:** trennt *stützt* gegen *spricht dagegen* den 24-h-Ausgang? | **Beitrag über dem Trader:** trennt er besser als der Trader allein und als die Zählregel? |
+| **Bekannte Gefahr** | 16 % Eigenrauschen bei gleichen Fakten (L-4). Dagegen hilft, ihn nur bei geänderten Fakten neu zu fragen | Positionsbias (Reihenfolge der Sätze). Dagegen der Arm mit vertauschter Reihenfolge | **Anker** auf dem Trader-Urteil, **Hedging** (*„ja, aber …"*). Dagegen das eigene Feld für den Gegengrund und der Arm *Trader allein* |
+
+#### 20.11.3 Ein Beispiel, wie es in der Mail aussähe (⚠️ ausgedacht, keine Messwerte)
+
+```
+PRÜFUNG DURCH DIE ROLLEN  (Auskunft - löst nichts aus; Messstand: noch nicht gemessen)
+
+  Markt        neutral          Fear & Greed im 74. Perzentil (hoch), US-Aktien 1,6 Std.-Abw. über Trend;
+                                Gegengrund: die Netto-Liquidität sinkt seit 26 Wochen
+  Trader       stützt           Kurs 0,4 ATR über der Unterstützung (9-mal berührt), Volumen der letzten
+                                20 Tage im 71. Perzentil; Gegengrund: nächster Widerstand nur 0,9 ATR höher
+  Entscheider  mit Vorbehalt    Der Wert steht gut, das Umfeld trägt nicht mit; der Widerstand nahe dem
+                                Einstieg begrenzt den 24-h-Spielraum
+
+  [Chart: Stundenkurs 5 Tage, Einstieg ▲, Ausstieg nach 24 h ▼, Liquidationsgrenze 3×, Marken]
+```
+
+Darüber steht wie heute der deterministische Teil: Asset, Einstieg, Ausstieg, Hebel, Einsatz, Liquidationsgefahr. **Beides steht getrennt**, und du siehst, was gerechnet und was beurteilt ist.
+
+#### 20.11.4 Technisch: wie das Modell gebaut wird, damit es anpassbar bleibt
+
+| Baustein | Inhalt |
+|---|---|
+| **Rollenkatalog** `Basisinfos/regel0_llm.yaml` (neu) | je Rolle: an/aus, Modell, Prompt-Fassung, **Satzbausteine** der Eingabe (einzeln zuschaltbar), Eingänge des Entscheiders (welche Ergebnisse er sieht). Eine Änderung hier ist **eine neue Fassung** mit Nummer |
+| **Ein Erbauer** je Rolle (`agent/regel0_llm_*.py`) | baut die Eingabe aus den Betriebsdaten, **derselbe Code** für Betrieb und Rückspiel. Es gibt also keine zweite Messgeometrie |
+| **Ablage** `regel0_signale.db`, neue Tabelle `pruefung` | je Signal und Rolle: Fassung, Prompt-Prüfsumme, Eingabe-Prüfsumme, Eingabetext, Antwort, Urteil, Laufzeit, Fehler. Jedes Urteil ist damit einer Fassung zuordenbar |
+| **Wächter** (Suite) | keine Werturteile, keine konstanten Felder, Perzentil mit Einordnung, **Anonymität** (kein Name, kein Datum, kein absoluter Kurs), **kein Satzbaustein in zwei Rollen** (R-R2), Schema = Validator |
+| **Rückspiel** | ein eigener Lauf, der dieselben Erbauer auf den REGEL0-Einstiegen 2025–26 anwendet. Er schreibt nur in eine **Wegwerf-Ablage** |
+| **Schalter** | Mail-Block an/aus, je Rolle an/aus, **Spot-Kette angehalten** (eigener Schalter, nicht `aktiv_fuer`) |
+
+➤ **Anpassen heißt dann:** einen Baustein zu- oder abschalten, eine Rolle an- oder ausschalten, die Eingänge des Entscheiders ändern, oder zur Kette M2 oder zu den zwei Rollen M1 wechseln. Alles das ist eine **Zeile im Rollenkatalog**, kein Umbau.
+
+#### 20.11.5 Wann geprüft und angepasst wird, und nach welchen Regeln (vorab festgelegt)
+
+⚠️ **Die Gefahr beim Anpassen:** Wer nach dem ersten Ergebnis die Rollen ändert und **auf denselben Ankern** erneut misst, findet irgendwann zufällig eine Fassung, die trägt (Mehrfachtesten, F19). **Deshalb werden die REGEL0-Einstiege 2025–26 vorab geteilt:**
+
+| Menge | Zweck |
+|---|---|
+| **Entwicklungsmenge** (1.000 je Rolle) | hier wird gemessen und angepasst, so oft wie nötig. Jeder Versuch wird gezählt (Versuchszähler) |
+| **Bestätigungsmenge** (1.000 je Rolle, **unberührt**) | hier wird **einmal** gemessen, mit der **endgültigen** Fassung. Nur dieses Ergebnis steht in der Mail als Messstand |
+
+| Prüfpunkt | Was geprüft wird | Folge, vorab festgelegt |
+|---|---|---|
+| **P1 nach dem Kalibrierlauf** (50 Anker, N3) | Antworten formgültig (≥ 95 %)? Je Rolle **keine Stufe über 70 %** (der heutige Marktanalyst sagt zu 72 % *gemischt* und unterscheidet damit nichts)? Wiederholung gleich (≥ 90 %, gemessen beim heutigen Marktanalysten: 84 %)? Anonym (0 Treffer, wenn das Modell Asset oder Zeitraum nennen soll)? | Fällt ein Punkt durch: Eingabe oder Prompt der Rolle anpassen (neue Fassung) und P1 wiederholen. Erst dann folgt das Rückspiel |
+| **P2 nach dem Rückspiel** (Entwicklungsmenge, N4) | Trägt der **Trader**? Trägt der **Entscheider** über Trader und Zählregel? | **T ✔, E ✔:** M3 bleibt. **T ✔, E ✗:** Der Entscheider fällt weg oder wird reine Beschreibung, das ergibt M1. **T ✗, E ✔:** Verdacht auf Zufall, der Entscheider wird erst vorwärts bestätigt. **T ✗, E ✗:** Der Block bleibt **Auskunft** mit *trennt nicht* (N-e). Es wird nicht weiter am Prompt gefeilt, der nächste Hebel ist **neue Information** (Gegenprüfer mit Text) |
+| **P2b Kontaminationsprobe** | Erkennt das Modell Asset oder Zeitraum? Trennt die benannte Fassung besser? | Fällt sie durch: **nur noch vorwärts** messen (Schatten, N5) |
+| **P3 Bestätigung** (unberührte Menge) | die **endgültige** Fassung, einmal | Dieses Ergebnis ist der Messstand in der Mail |
+| **P4 nach 3 Monaten Schatten** (N5) | Verteilung und Trennung live wie im Rückspiel? | Abweichung bedeutet Drift. Kanarienvogel und Ursache prüfen, bevor etwas geändert wird |
+
+**An jedem Prüfpunkt lege ich dir das Ergebnis vor**: was gemessen wurde, was die vorab festgelegte Folge ist, und ob ich eine Änderung am Rollenmodell vorschlage. Eine Änderung am Rollenmodell selbst (M3 → M1, M2 oder eine neue Rolle) entscheidest **du**.
+
+#### 20.11.6 Was das kostet, wenn angepasst wird
+
+| | Aufrufe | auf gemini-3.5, Spot-Kette angehalten (500 je Tag) |
+|---|---|---|
+| Kalibrierlauf je Fassung | ~200 | < 1 Tag |
+| Rückspiel Entwicklungsmenge | ~4.200 | ~9 Tage |
+| jede weitere Fassung (nur die geänderte Rolle) | ~1.500–2.500 | 3–5 Tage |
+| Bestätigung (einmal) | ~4.200 | ~9 Tage |
+
+⚠️ **Ehrlich:** Mit Anpassungen sind es eher **3–5 Wochen** bis zur gemessenen Fassung in der Mail. **Vorher** kann der Block schon **live im Schatten** mitlaufen (N5), und die **Charts** gehen sofort in die Mail, weil sie von keiner Messung abhängen.
