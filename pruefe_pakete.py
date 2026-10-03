@@ -7752,7 +7752,7 @@ def paket_15() -> None:
     # der Test hing am falschen Gegenstand.
     import re as _re7
     _versatz = {m.group(1): int(m.group(2)) for m in
-                _re7.finditer(r'_nachholen\("(\w+)",\s*(\d+)\)', _q7)}
+                _re7.finditer(r'_nachholen\("(\w+)",\s*(\d+)[,)]', _q7)}
     pruefe(P, "und der Nachholer haelt die Reihenfolge ein",
            _versatz.get("backward_tracking", 9e9)
            < _versatz.get("portfolio_wert", 9e9)
@@ -7760,6 +7760,48 @@ def paket_15() -> None:
            f"Versatz gemessen: {_versatz}. 'Die Reihenfolge ist noetig, nicht "
            f"kosmetisch' - die Ausstiegsregel rechnet auf Werten, die das "
            f"Backward-Tracking vorher fortschreibt")
+    # ⚠️ 03.10.2026 (SN-2, Voranalyse_Schritt7 Par. 18): NUR NACHHOLEN, WENN
+    # DIE UHRZEIT HEUTE SCHON VORBEI IST. Vorher kam die Sammelmail an jedem
+    # Neustart-Tag vor 07:15 doppelt (Nachholer + Cron). Geprueft am
+    # Verhalten der reinen Funktion, und die Uhrzeit jedes Nachholers gegen
+    # die seines Crons - abgeleitet aus dem Quelltext, nicht aufgezaehlt.
+    from datetime import datetime as _dtn
+    _nj = _BG7.nachholen_jetzt
+    _f = [
+        ("Start 06:22, gestern gelaufen, Job 07:15 -> NICHT (Cron kommt)",
+         _nj("2026-10-02T05:18:33+00:00", _dtn(2026, 10, 3, 6, 22), 7, 15), False),
+        ("Start 07:30, gestern gelaufen, Job 07:15 -> nachholen",
+         _nj("2026-10-02T05:18:33+00:00", _dtn(2026, 10, 3, 7, 30), 7, 15), True),
+        ("Start 07:15 genau -> nachholen (der Cron ist schon durch)",
+         _nj(None, _dtn(2026, 10, 3, 7, 15), 7, 15), True),
+        ("Start 07:30, heute schon gelaufen -> NICHT",
+         _nj(_dtn(2026, 10, 3, 7, 15).isoformat(), _dtn(2026, 10, 3, 7, 30), 7, 15), False),
+        ("nie gelaufen, Start 05:00, Job 06:00 -> NICHT (Cron kommt)",
+         _nj(None, _dtn(2026, 10, 3, 5, 0), 6, 0), False),
+    ]
+    pruefe(P, "⚠️⚠️ nachgeholt wird nur, wenn die Uhrzeit HEUTE schon vorbei ist "
+           "(sonst doppelter Lauf, doppelte Mail)",
+           all(ist == soll for _t, ist, soll in _f),
+           " · ".join("%s: %s" % (_t, "ok" if ist == soll else "FALSCH") for _t, ist, soll in _f))
+    import ast as _astn
+    _paare = []
+    for _c in _astn.walk(_astn.parse(_q7)):
+        if not (isinstance(_c, _astn.Call) and getattr(_c.func, "attr", "") == "add_job"):
+            continue
+        _kw = {k.arg: k.value for k in _c.keywords if k.arg}
+        for _k in _c.keywords:
+            if (_k.arg is None and isinstance(_k.value, _astn.Call)
+                    and getattr(_k.value.func, "id", "") == "_nachholen"):
+                _nk = {k.arg: getattr(k.value, "value", None) for k in _k.value.keywords}
+                _paare.append((getattr(_kw.get("id"), "value", "?"),
+                               (getattr(_kw.get("hour"), "value", None), getattr(_kw.get("minute"), "value", None)),
+                               (_nk.get("stunde"), _nk.get("minute"))))
+    pruefe(P, "⚠️ jeder Nachholer kennt die Uhrzeit SEINES Crons",
+           bool(_paare) and all(c == n for _j, c, n in _paare),
+           "; ".join("%s Cron %s Nachholer %s" % x for x in _paare))
+    _gp = _nj("2026-10-02T05:18:33+00:00", _dtn(2026, 10, 3, 6, 22), 0, 0)
+    pruefe(P, "Gegenprobe: mit Uhrzeit 00:00 waere der Start um 06:22 ein Nachholfall",
+           _gp is True, "sonst koennte die Pruefung darueber nie fehlschlagen")
     pruefe(P, "im Zweifel wird NICHT nachgeholt",
            "Job laeuft wie bisher zur Uhrzeit" in _q7,
            "ein Nachholer, der bei einer Luecke feuert, macht aus einem "

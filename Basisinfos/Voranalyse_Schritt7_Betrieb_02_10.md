@@ -796,3 +796,28 @@ Die Auswahl trifft `backward_tracking.compute_ausstiegs_empfehlungen`. Sie wähl
 | **SN-2** | Bis dahin den **doppelten Versand** beheben? Nachgeholt wird nur, wenn die Uhrzeit des Jobs heute schon vorbei ist. Das gilt für alle Tagesjobs mit Nachholer, samt Prüfung | ➤ **Ja**, ein kleiner, eigener Schritt. Er ändert keine Bewertung |
 | **SN-3** | Bis dahin die Mail auf **eine Zeile je Position** verdichten (höchster MFE je Symbol) und Nicht-Bestand weglassen? | ➤ **Nein, jetzt nicht.** Das wäre schon ein Teil der Neugestaltung unter O14. Heute reicht es, beim Lesen zu wissen: mehrere Zeilen je Symbol sind dieselbe Position |
 | **SN-4** | Oder die Mail bis O14 **ganz abschalten** (nur die Mail; Protokoll und Verfolgung laufen weiter)? | ➤ deine Wahl als Nutzer der Mail. Fachlich spricht nichts dagegen, sie ist Information, kein Signal |
+
+### 18.1 Abstimmung und Bau (Nutzer 03.10.2026: *„ok zu SN1 bis 4 — Abschalten nicht zwingend notwendig, da geringe Anzahl an Mails kommt, und dann vergisst man den Punkt nicht"*)
+
+| # | entschieden |
+|---|---|
+| SN-1 | Die Sammelmail gehört zu **O14 Spot-Positionsführung** und wird dort neu entworfen (je Position, nur echter Bestand, Regel nach heutigem Standard) |
+| SN-2 | ✔ **gebaut:** Der doppelte Versand ist behoben, siehe unten |
+| SN-3 | Die Mail wird jetzt **nicht** verdichtet, das gehört zum Neuentwurf |
+| SN-4 | Die Mail bleibt **an**. Es kommen nur wenige, und so bleibt der Punkt sichtbar |
+
+**SN-2 im Code:** `scheduler/background.nachholen_jetzt(zuletzt, jetzt, stunde, minute)` ist die eine Stelle, an der entschieden wird. Nachgeholt wird nur, wenn der Job heute noch nicht lief **und** seine Uhrzeit heute schon vorbei ist, sonst feuert der Cron selbst. `_nachholen` bekommt die Uhrzeit seines Crons mit. Das betrifft alle vier Tagesjobs mit Nachholer: Kursreihen 05:30, Backward-Tracking 06:00, Portfoliowert 06:30, Ausstieg 07:15.
+
+**Gegenprüfung** (`Basisinfos/Rechenkern_02_10/pruefe_sn2.py`, Beleg `pruefung_sn2.txt`): Der echte `build_scheduler` läuft auf einer Wegwerf-DB, die Uhr wird gestellt, der Scheduler wird nicht gestartet.
+
+| Start | nachgeholt | zur Uhrzeit |
+|---|---|---|
+| 06:22 | Kursreihen, Backward-Tracking | Portfoliowert 06:30, Ausstieg 07:15 |
+| 07:30 | alle vier, in der alten Reihenfolge (Versatz 10/30/120/240 s) | — |
+| 04:00 | keiner | alle vier |
+
+Die **Gegenprobe** mit dem alten Verhalten reproduziert den NB-Fall: Bei einem Start um 06:22 käme der Ausstieg **um 06:26 und um 07:15**. Die Standard-DB bleibt unberührt.
+
+**Suite** (Paket 15): Das Verhalten wird an fünf Zeitpunkten geprüft. Dazu kommt die Uhrzeit jedes Nachholers gegen die seines Crons, aus dem Quelltext abgeleitet, und eine Gegenprobe.
+
+➤ **Kontrolle K-SN-2** nach Pull und Neustart **vor 07:15**: Im NB-Log gibt es an diesem Tag **genau eine** Zeile *Stop-Nachzieh-Empfehlung(en)*.

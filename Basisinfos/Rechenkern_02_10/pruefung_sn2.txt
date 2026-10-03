@@ -1,0 +1,5 @@
+OK   Start 06:22 nachgeholt: ['backward_tracking', 'refresh_aktien_ohlc'] | naechste Laeufe: {'refresh_aktien_ohlc': '03. 06:22:10', 'backward_tracking': '03. 06:22:30', 'portfolio_wert': '03. 06:30:00', 'ausstiegs_empfehlungen': '03. 07:15:00'}
+OK   Start 07:30 nachgeholt: ['ausstiegs_empfehlungen', 'backward_tracking', 'portfolio_wert', 'refresh_aktien_ohlc'] | naechste Laeufe: {'refresh_aktien_ohlc': '03. 07:30:10', 'backward_tracking': '03. 07:30:30', 'portfolio_wert': '03. 07:32:00', 'ausstiegs_empfehlungen': '03. 07:34:00'}
+OK   Start 04:00 nachgeholt: [] | naechste Laeufe: {'refresh_aktien_ohlc': '03. 05:30:00', 'backward_tracking': '03. 06:00:00', 'portfolio_wert': '03. 06:30:00', 'ausstiegs_empfehlungen': '03. 07:15:00'}
+SCHLUSS: bestanden
+GEGENPROBE altes Verhalten, Start 06:22 -> nachgeholt ['ausstiegs_empfehlungen', 'backward_tracking', 'portfolio_wert', 'refresh_aktien_ohlc'] | Ausstieg 06:26:00 -> faellt auf

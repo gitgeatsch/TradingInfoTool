@@ -784,6 +784,31 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provi
     return True
 
 
+def nachholen_jetzt(zuletzt, jetzt: datetime, stunde: int, minute: int) -> bool:
+    """Soll ein taeglicher Cron-Job beim Start SOFORT nachgeholt werden?
+
+    Nur wenn er heute noch nicht lief UND seine Uhrzeit heute schon vorbei
+    ist. Liegt sie noch vor uns, feuert der Cron selbst.
+
+    ⚠️ 03.10.2026 (Voranalyse_Schritt7 Par. 18, SN-2): Bis dahin wurde auch
+    VOR der Uhrzeit nachgeholt, und der Cron lief trotzdem. Ein Start um
+    06:22 brachte die Stop-Nachzieh-Sammelmail um 06:27 UND um 07:15 (am
+    01.10. und am 03.10.), und der Portfoliowert lief doppelt.
+
+    Die Reihenfolge der Tagesjobs bleibt dabei erhalten: Was schon faellig
+    war, kommt mit dem Versatz, alles andere zur Uhrzeit.
+
+    `zuletzt`: ISO-Zeitstempel aus `db.letzter_joblauf` oder None (nie).
+    `jetzt`: lokale Zeit ohne Zone, wie die Cron-Uhrzeiten."""
+    if zuletzt is not None:
+        dann = datetime.fromisoformat(str(zuletzt))
+        if dann.tzinfo is not None:
+            dann = dann.astimezone().replace(tzinfo=None)
+        if dann.date() >= jetzt.date():
+            return False                    # heute schon gelaufen
+    return (jetzt.hour, jetzt.minute) >= (int(stunde), int(minute))
+
+
 def ausstiegs_job(conn_factory, watchlist_provider) -> None:
     """Taegliche Ausstiegs-Empfehlungen (2026-08-05, Punkt 3 scharfgeschaltet).
 
@@ -5139,8 +5164,10 @@ def build_scheduler(
     # kosmetisch" - die Regel rechnet auf Werten, die das Backward-Tracking
     # vorher fortschreibt. Wuerden alle fuenf gleichzeitig nachgeholt, liefe
     # sie auf dem Stand von gestern. Deshalb der Versatz.
-    def _nachholen(job_id: str, versatz_sekunden: int) -> dict:
-        """kwargs fuer `add_job` - sofort, wenn heute noch nicht gelaufen.
+    def _nachholen(job_id: str, versatz_sekunden: int, *, stunde: int,
+                   minute: int) -> dict:
+        """kwargs fuer `add_job` - sofort, wenn heute noch nicht gelaufen
+        UND die Uhrzeit heute schon vorbei ist (`nachholen_jetzt`).
 
         IM ZWEIFEL NICHT NACHHOLEN. Faellt die Abfrage aus, kommt ein leeres
         dict und der Job laeuft wie bisher zur Uhrzeit. Ein Nachholer, der bei
@@ -5151,12 +5178,8 @@ def build_scheduler(
                 zuletzt = db.letzter_joblauf(c, job_id)
             finally:
                 c.close()
-            if zuletzt is not None:
-                dann = datetime.fromisoformat(str(zuletzt))
-                if dann.tzinfo is not None:
-                    dann = dann.astimezone().replace(tzinfo=None)
-                if dann.date() >= datetime.now().date():
-                    return {}          # heute schon gelaufen
+            if not nachholen_jetzt(zuletzt, datetime.now(), stunde, minute):
+                return {}          # heute schon gelaufen, oder der Cron kommt noch
             logger.info("Job %s heute noch nicht gelaufen (zuletzt %s) - "
                         "wird in %d s nachgeholt", job_id, zuletzt or "nie",
                         versatz_sekunden)
@@ -5180,7 +5203,7 @@ def build_scheduler(
         minute=15,
         args=[db_conn_factory, watchlist_provider],
         id="ausstiegs_empfehlungen",
-        **_nachholen("ausstiegs_empfehlungen", 240),
+        **_nachholen("ausstiegs_empfehlungen", 240, stunde=7, minute=15),
     )
     scheduler.add_job(
         backward_tracking_job,
@@ -5189,7 +5212,7 @@ def build_scheduler(
         minute=0,
         args=[db_conn_factory, watchlist_provider],
         id="backward_tracking",
-        **_nachholen("backward_tracking", 30),
+        **_nachholen("backward_tracking", 30, stunde=6, minute=0),
     )
     # Kursreihen der Boersentitel (2026-07-16; seit 15.09.2026 taeglich 05:30,
     # Befund 2.387-fortschreibung). Vorher alle 24 h AB APP-START - am Notebook
@@ -5205,7 +5228,7 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory, watchlist_provider],
         id="refresh_aktien_ohlc",
-        **_nachholen("refresh_aktien_ohlc", 10),
+        **_nachholen("refresh_aktien_ohlc", 10, stunde=5, minute=30),
     )
     # Portfolio-Wert + Z-3/RM-7 (2026-08-04, Task #612) - taeglich 6:30, aus
     # demselben Grund wie das Backward-Tracking darueber nach dem naechtlichen
@@ -5219,7 +5242,7 @@ def build_scheduler(
         minute=30,
         args=[db_conn_factory, watchlist_provider],
         id="portfolio_wert",
-        **_nachholen("portfolio_wert", 120),
+        **_nachholen("portfolio_wert", 120, stunde=6, minute=30),
     )
     # Marktscan-Erfolgsmessung (2026-07-30, Teil 2 der Reifegrad-/Erfolgsmessung-
     # Runde) - taeglich, 1 Std. nach dem Spot/Hebel-Backward-Tracking (analoges

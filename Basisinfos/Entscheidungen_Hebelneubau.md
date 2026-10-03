@@ -620,3 +620,12 @@ prüfen und gegenprüfen"*.
 - **F-4:** Die Neuaufnahme läuft täglich, ab 02:00 UTC im Stundenjob, vor dem Nachladen.
 - **F-5:** S7-5 kommt ans NB **nach** den Kontrollen K-S7-3/K-S7-4. Am 03.10. ist K-S7-3 bestanden und K-S7-4 fehlerfrei; die erste REGEL0-Mail steht noch aus.
 - Gegenprüfung `Basisinfos/Rechenkern_02_10/pruefe_s75.py` 15/15. Wache `--paket Regel0Betrieb` 26/26.
+
+---
+
+# E-48 · Stop-Nachzieh-Sammelmail: Spot-Positionsführung, bleibt an, kein Doppelversand (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„ok zu SN1 bis 4 — Abschalten nicht zwingend notwendig, da geringe Anzahl an Mails kommt, und dann vergisst man den Punkt nicht"* (`Voranalyse_Schritt7_Betrieb_02_10.md` §18).
+- Die Mail betrifft heute **nur den Spot-Bestand** (67 von 67 Empfehlungen Spot LONG, keine Hebel). Sie wird unter **O14 Spot-Positionsführung** neu entworfen: je Position, nur echter Bestand, Regel nach heutigem Standard.
+- Sie bleibt bis dahin **an** und wird nicht verdichtet.
+- Der **doppelte Versand** an Neustart-Tagen ist behoben: Nachgeholt wird nur, wenn die Uhrzeit heute schon vorbei ist (`nachholen_jetzt`).
