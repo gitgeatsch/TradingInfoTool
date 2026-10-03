@@ -314,6 +314,10 @@ def _inhalt() -> int:
         if c is None or "pruefung" not in tabellen(c):
             print("REGEL0-PRUEFUNG (LLM): noch kein Lauf")
         else:
+            # die Kopfzeile IMMER - ein leerer Abschnitt sah am 03.10. aus wie ein fehlender (Tabelle da, noch kein Signal geprueft)
+            n_p = c.execute("SELECT COUNT(*) FROM pruefung").fetchone()[0]
+            print("REGEL0-PRUEFUNG (LLM): %d Zeilen%s" % (n_p, " - noch kein Signal geprueft (Schatten wartet auf ein Signal mit Hebel-Schalter an)"
+                                                         if not n_p else ""))
             for r in c.execute("SELECT tag_pazifik, COUNT(*) FROM pruefung WHERE gefragt=1 GROUP BY tag_pazifik ORDER BY tag_pazifik DESC LIMIT 5"):
                 print("REGEL0-PRUEFUNG (LLM) %s · Aufrufe %d" % r)
             for r in c.execute("SELECT rolle, fassung, COUNT(*), SUM(urteil IS NOT NULL), SUM(fehler IS NOT NULL), ROUND(AVG(CASE WHEN gefragt=1 "
