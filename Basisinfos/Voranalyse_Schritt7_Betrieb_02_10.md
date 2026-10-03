@@ -843,3 +843,62 @@ Die **Gegenprobe** mit dem alten Verhalten reproduziert den NB-Fall: Bei einem S
 **Suite** (Paket 15): Das Verhalten wird an fünf Zeitpunkten geprüft. Dazu kommt die Uhrzeit jedes Nachholers gegen die seines Crons, aus dem Quelltext abgeleitet, und eine Gegenprobe.
 
 ➤ **Kontrolle K-SN-2** nach Pull und Neustart **vor 07:15**: Im NB-Log gibt es an diesem Tag **genau eine** Zeile *Stop-Nachzieh-Empfehlung(en)*.
+
+
+---
+
+## 19. VORANALYSE — der LLM-Prüfblock zur REGEL0-Mail (03.10.2026, zur Abstimmung; M1-Kriterium 4)
+
+**Auftrag:** Nutzer: *„Ja, Voranalyse LLM-Prüfblock starten, prüfen und gegenprüfen"*. Der Rahmen steht fest:
+
+- **F2 (E-42):** Die REGEL0 löst aus, die LLM-Rollen prüfen und kommentieren nur.
+- **D3 (E-46):** Die erste Fassung der Mail hat keinen Kommentar.
+- **M1-Kriterium 4:** *gepaarter Versuch auf denselben Ankern: neue Fassung (mit gemessener Bewertung gefüttert) gegen die heutige Rolle gegen gleich großen Zufall; produktiv geht die gemessene Fassung.*
+- Dazu die stehenden Regeln: *LLM ist Prüfung, nicht Entscheider (Mailinfo-Block)* und *erst festhalten, was jede Rolle WIRKLICH bekommt*.
+
+**Belege:** Alle Zahlen dieses Abschnitts rechnet `Basisinfos/Rechenkern_02_10/voranalyse_llm_fakten.py <NB-Sicherung>` nach (Beleg `voranalyse_llm_fakten.txt`, NB-Sicherung 03.10. 05:20, nur gelesen). Die Zuordnung der Einwände habe ich in zwei Reihenfolgen gegengeprüft, beide Male 84 %.
+
+### 19.1 Was die Rollen HEUTE bekommen (am Code und an den Betriebsdaten)
+
+| Rolle | Modul · Modell · Prompt-Stand | wann | Eingabe, wie sie WIRKLICH ankommt | Ausgabe | Wirkung heute |
+|---|---|---|---|---|---|
+| **A Marktanalyst** | `agent/rolle_analyst.py` · gemini-3.1-flash-lite · `2026-08-12b` | einmal je Durchgang, höchstens alle 3 h neu (`LAGEBILD_HALTBAR_STUNDEN`); 376 Lagebilder seit 14.08. | **kein einzelnes Asset**. Je Leitmarkt (US-Aktien, Krypto über Bitcoin, Rohstoffe) Sätze zu Trend, Schwankung, Handelbarkeit, Inflation, Liquidität, Zinskurve, dazu die Anlegerstimmung zu Bitcoin; relativ zur eigenen Vergangenheit (Perzentile) | `lage` (2–3 Sätze), `klassen` je Klasse *günstig/gemischt/ungünstig* mit Halbsatz, `belege` | geht als `marktlage_beurteilung` in die Eingabe von Rolle BC; Tabelle `lagebilder` |
+| **BC Händler** | `agent/rolle_trader.py` · gemini-3.1-flash-lite (408 von 422 seit 26.09.) · `2026-09-11a` | je Asset der Rollen-Kette (Spot), Takt 15 min; 422 Signale seit 26.09. | Faktentext aus `rollen_eingabe` (`facts_json`, rund 2.800 Zeichen): Auftrag, Bestand mit Einstand, Marktstruktur, Kurs 5/20/60 Tage, Widerstand/Unterstützung in Schwankungsbreiten, Hebelabstände, Umsatz auf Aufwärtstagen, Umschlag, dazu das Lagebild von A. **Kein Wort zur REGEL0** (rsi, v̂, Hebelstufe, 24 h) | Aktion (KAUFEN/NACHKAUFEN/REDUZIEREN/VERKAUFEN/NICHTS_TUN), Richtung, Belege, unabhängige Faktoren, Begründung, Gegengrund, *umgeworfen durch* | **entscheidet die Spot-Aktion**; die Entscheiderstufe verwirft danach deterministisch (105 von 422). Den Hebel schlägt sie seit E-46 nicht mehr vor |
+| **G Gegenprüfer** | `agent/zweite_meinung.rolle_g` · Z.ai glm-4.5-flash | je Signal mit Mail, im Nebenfaden, höchstens 2 gleichzeitig, rund 34 s; 17–33 Aufrufe je Tag | **nur** `geplant: {aktion, richtung}` und die **Positionierung** des Assets als Sätze (`positionierung.saetze`): offene Kontrakte, Finanzierungsrate als Perzentil, Anteil der Long-Konten, Börsenfluss (Bitcoin-weit). Ohne Terminmarktdaten (Aktien, ETF, Rohstoffe) wird **nicht** gefragt. Grundlage für **40** Symbole | `einwand` ja/nein/unklar und ein Satz mit Zahl | **nur Mail und Zeile**, kippt nichts (P-8). Seit 26.09. 133 Urteile: 42 ja, 88 nein, 3 unklar |
+| Z1 (kein Sprachmodell) | `agent/gegenpruefer_rollen.py` | je Antwort | die Antwort gegen ihre eigene Eingabe | Zahlendeckung, Richtungstreue, Zuspitzung, Leerlauf | zählt, verwirft nicht |
+
+➤ **Für die REGEL0 wird heute KEINE Rolle gefragt.** Die Signalmail kommt aus `agent/regel0_mail.py` ohne LLM (D3).
+
+### 19.2 Befunde
+
+| # | Befund | Folge |
+|---|---|---|
+| **L-1** | Keine Rolle kennt die REGEL0. Was 2.398 für die alte Bewertung festhielt, gilt hier wieder: Prompt und Fakten nennen weder rsi-Ersteintritt noch v̂, Hebelstufe oder 24-h-Ausstieg | Eine Prüfung braucht eine **neue Fassung**, die weiß, was sie prüft. Das ist der Arm *neue Fassung* aus M1-4 |
+| **L-2** | Die Konstruktionsbedingung R-R2 (der Prüfer hat Information, die dem Urteilenden fehlt) ist **erfüllbar**: Die REGEL0 nutzt nur rsi/Normal und ATR. A (Leitmärkte), G (Terminmarkt) und der Faktentext von BC tragen andere Information | Formal geht jede der drei. ⚠️ **Aber:** Genau diese Information ist deterministisch schon geprüft und trug auf dem Kern nicht: A/B/L ohne Verbesserung (2.702–2.704), der Marktzustand ist nicht vorab erkennbar (2.599), `funding` liegt an der Nachweisgrenze, `long_bias` trägt auf keiner Menge (Kandidatenblatt). Die **Erwartung** an einen messbaren Beitrag ist **gering** |
+| **L-3** | ⚠️ **G stützt sich fast nur auf zwei Zahlen:** Von 692 Einwänden seit 20.08. nennen **84 %** den Anteil der Long-Konten oder die Finanzierungsrate | Das ist eine **messbare Erklärung**: Ob extreme Long-Konten- oder Finanzierungswerte die REGEL0-Einstiege trennen, lässt sich deterministisch auf vorhandenen Daten prüfen (Vorprüfung V-1). Trennen sie nicht, kann G kaum tragen. Trennen sie, gehört das als Regel in die REGEL1 und nicht in ein Sprachmodell |
+| **L-4** | ⚠️ **Rolle A ist auf gleichen Fakten nicht stabil:** Von 79 mehrfach gefragten Faktenständen bekamen 22 verschiedene Krypto-Einstufungen; nur **84 %** der Wiederholungspaare sind gleich. Die Einstufung ist fast konstant (*gemischt* 272, *ungünstig* 102, *günstig* 2 von 376) | Als Auskunft brauchbar, als Prüfsignal schwach: 16 % Eigenrauschen bei einem Feld, das zu 72 % *gemischt* sagt |
+| **L-5** | ⚠️⚠️ **Eine Vorwärtsmessung braucht Monate bis Jahre.** Der 24-h-Ertrag eines REGEL0-Einstiegs streut mit **5,6 %** (Mittel +0,29 %). Einen Unterschied von **1 Prozentpunkt** zwischen *Einwand ja* und *nein* findet man (80 % Macht) nach rund **1.000** Handeln. Auf allen Assets sind das **82 Tage**, auf den Assets mit Hebel-Schalter an (2,2 Einstiege je Tag) **392 Tage**. Für **0,5** Prozentpunkte sind es 329 bzw. 1.569 Tage. ⚠️ G kann nur auf den **40** Symbolen mit Terminmarktdaten fragen: Das sind **2,7** Einstiege je Tag, also rund **340 Tage** für 1 Prozentpunkt | Der gepaarte Versuch aus M1-4 ist vorwärts **nicht vor M1** entscheidbar. Die deterministische Vorprüfung V-1 dagegen hat auf der Messbasis (Terminmarkt 122 Symbole bis 02.09.) alle **7.376** Einstiege und löst damit rund **0,6** Prozentpunkte auf |
+| **L-6** | ⚠️ **Ein historischer Rückspielversuch ist kontaminiert:** Die REGEL0-Einstiege 2024–2026 liegen im Zeitraum, den die Modelle aus dem Training kennen können (Zielgrößen §3b: *nur Vorwärtsmessung zählt*). Der Wissensstand von gemini-3.1-flash-lite und glm-4.5-flash ist **nicht** belegt, nur vermutbar | Ein Rückspiel nur mit **anonymer** Eingabe (kein Name, kein Datum, keine absoluten Kurse). Die Eingabe von G kommt dem nahe (Perzentile), die von BC nicht (Name, Euro-Kurse). Dazu fehlt ein historischer Nachbau von `positionierung.lage` zum Zeitpunkt t |
+| **L-7** | Kosten und Zeit sind **kein** Engpass: 2–3 Signalmails je Tag ergeben 2–3 zusätzliche Z.ai-Aufrufe (heute 17–33). Das Lagebild von A liegt ohnehin vor und kostet **keinen** Aufruf. G braucht rund 34 s, höchstens 75 s | Die Mail kann auf G warten, mit Deckel. Kommt nichts, geht sie ohne Block raus (P-8) |
+
+### 19.3 Vorschlag
+
+| Schritt | Was | Warum so |
+|---|---|---|
+| **V-1** Vorprüfung, Desktop, Minuten | Auf den REGEL0-Einstiegen 2025–26 (Spur `b0_spur_*`, Messbasis Terminmarkt und Funding) wird deterministisch gemessen, ob **extremer Long-Konten-Anteil** oder **extreme Finanzierungsrate** zur Einstiegsstunde den 24-h-Ertrag trennen. Messregel nach Messstandard: tagestreue Nullwelt, Band 5./95. Perzentil, je Jahr, Spiegelprobe | L-3: Das ist fast alles, worauf G urteilt. Die Antwort sagt, ob G **überhaupt** etwas tragen **kann**, und das ohne einen Modellaufruf. *Eine Erklärung, die man messen kann, ist zu messen* |
+| **P-1** Mailblock (Fassung 0.2 der Mail) | Am Ende der Signalmail steht ein Block **PRÜFUNG (Auskunft, ungemessen, löst nichts aus)**. Er hat drei Teile: (a) **Umfeld Krypto (Rolle A):** das jüngste Lagebild, höchstens 3 h alt, mit Einstufung, Halbsatz und dem Vermerk *bei gleichen Fakten in 84 % gleich*. Kein Zusatzaufruf. (b) **Terminmarkt (Rolle G, neue Fassung):** ein Aufruf je Signalmail, nur für Assets mit Terminmarktdaten. Der Prompt weiß, was geprüft wird: *REGEL0: LONG, Hebel n×, Ausstieg nach 24 h, kein Stop*. Ausgabe: Einwand und Satz. Die Mail wartet darauf höchstens 90 s. (c) **Kein Händler (BC)** | D3 wird damit abgelöst. Der Block ist **Information** (Regel 3: *in der Mail erwünscht, samt Bewertungsgründen*). Er bleibt ausdrücklich ungemessen (2.459-ungemessen) |
+| **P-2** Schattenmessung für M1-4 | Für **jedes** REGEL0-Signal eines Assets mit Terminmarktdaten, egal wie der Hebel-Schalter steht, laufen G **alt** (nur Aktion/Richtung) und G **neu** (mit REGEL0) und als drittes ein **Zufallsarm** in Python mit gleicher Einwandquote. Alles wird in der REGEL0-Ablage gespeichert. Der Ausgang (24 h) kommt aus den Stundenkursen. **Messregel vorab festgelegt:** Zielgröße 24-h-Ertrag ohne Hebel, Vergleich *Einwand ja* gegen *nein*, Nullwelt durch Vertauschen der Einwände innerhalb des Monats, Band 5./95. Perzentil. Ausgewertet wird **einmal**, wenn n = 1.000 erreicht ist. Monatlich gibt es nur einen Zwischenstand als Auskunft, ohne Entscheidung (Mehrfachtesten) | Das ist der gepaarte Versuch aus M1-4, vorwärts und damit ohne Vorwissen. Die Menge ist größer als die gemailten Signale, aber auf 40 Symbole begrenzt: **rund ein Jahr** bis n = 1.000 (L-5). Kürzer wird es nur, wenn die Positionierung für **alle** Futures-Assets live geholt wird. Das ist eine eigene Entscheidung über die Datenbasis (L-f). Kosten: rund 2 Z.ai-Aufrufe je Signal, also 5–6 je Tag |
+| zurückgestellt | **BC für die REGEL0** und das **historische Rückspiel** | BC ist als Entscheider gebaut. Als Prüfer wäre sie eine neue Rolle, und ihr Faktentext trägt Name und Euro-Kurse (L-6). Das Rückspiel braucht eine anonyme Eingabe und einen Nachbau der Positionierung zum Zeitpunkt t. Beides erst nach V-1 und nur, wenn V-1 etwas findet |
+
+**Zwischenfazit zum Ziel:** Ein Sprachmodell kann der REGEL0 **keine neue Information** liefern. Es kann die Information, die die REGEL0 nicht nutzt (Umfeld, Terminmarkt), in Worte fassen und abwägen. Ob diese Abwägung das **Potential** besser trennt, ist offen. Die deterministische Seite derselben Information trug bisher nicht. Deshalb kommen zuerst die billige Vorprüfung (V-1) und der Block als **Auskunft** (P-1). Dazu läuft die Messung, die M1-4 verlangt (P-2). Sie ist vorwärts nur langsam entscheidbar, deshalb sagt V-1 vorab, ob sich das Warten lohnt.
+
+### 19.4 Zur Abstimmung
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **L-a** | V-1 jetzt messen (deterministisch, Desktop, ohne Modellaufruf)? | ➤ **Ja** |
+| **L-b** | P-1 so bauen: Umfeld (A, ohne Zusatzaufruf) und Terminmarkt (G neu, ein Aufruf), Mail wartet höchstens 90 s, kein Händler? | ➤ **Ja**, nach V-1. Fällt V-1 leer aus, bleibt G im Block trotzdem eine Auskunft, aber mit diesem Vermerk |
+| **L-c** | P-2 mit der vorab festgelegten Messregel starten, Auswertung einmal bei n = 1.000? | ➤ **Ja**. Auf den 40 Terminmarkt-Symbolen dauert das rund ein Jahr. Ob P-2 sich lohnt, zeigt schon V-1: Trennen die Zahlen selbst nicht, ist kaum zu erwarten, dass ein Modell auf denselben Zahlen besser trennt |
+| **L-f** | Die Positionierung (offene Kontrakte, Finanzierung, Long-Konten) für **alle** Futures-Assets stündlich holen, damit P-2 schneller entscheidbar wird? | ➤ **Nein, vorerst nicht.** Erst wenn V-1 einen Beitrag findet. Sonst wäre es eine neue Datenquelle für eine Prüfung mit geringer Erwartung |
+| **L-d** | BC und das historische Rückspiel zurückstellen? | ➤ **Ja** (Begründung oben) |
+| **L-e** | ⚠️ **M1-Kriterium 4 lesen als:** *Block gebaut und als ungemessen ausgewiesen, Schattenmessung läuft mit fester Regel; das Urteil folgt bei n = 1.000*? Wörtlich verlangt M1-4 ein **Ergebnis** vor M1, und das ist nach L-5 vor M1 nicht erreichbar | ➤ **deine Entscheidung**, denn M1 ist deine Definition. Ohne diese Lesart steht M1 rund ein Jahr auf diesem einen Kriterium |

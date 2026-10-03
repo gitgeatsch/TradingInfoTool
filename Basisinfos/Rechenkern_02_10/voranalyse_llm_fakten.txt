@@ -1,0 +1,19 @@
+1) DIE ROLLEN-KETTE IM BETRIEB (Signale ab 26.09.)
+   Signale 422 | Aktionen [('NACHKAUFEN', 235), ('REDUZIEREN', 129), ('HALTEN', 42), ('VERKAUFEN', 16)]
+   Modell Rolle BC [('gemini-3.1-flash-lite', 408), ('gemini-3.5-flash-lite', 14)] | Prompt-Stand [('2026-09-11a', 422)]
+   Instrument [('spot', 415), ('hebel', 6), ('absicherung', 1)] | Rolle G geurteilt [(None, 289), ('nein', 88), ('ja', 42), ('unklar', 3)]
+   Z.ai-Aufrufe je Tag [('2026-10-03', 4), ('2026-10-02', 22), ('2026-10-01', 19), ('2026-09-30', 17), ('2026-09-29', 18), ('2026-09-28', 18), ('2026-09-27', 33), ('2026-09-26', 26)]
+   Terminmarkt-Symbole (Grundlage von Rolle G) 40
+2) ROLLE A - Lagebilder (live aufgezeichnet)
+   Lagebilder 376 von 2026-08-14T07:13 bis 2026-10-03T02:35 | Modell [('gemini-3.1-flash-lite', 373), ('gemini-3.5-flash-lite', 3)] | Prompt [('2026-08-12b', 376)]
+   krypto-Einstufung [('gemischt', 272), ('unguenstig', 102), ('guenstig', 2)]
+   bei IDENTISCHEN Fakten: 79 Faktenstaende mehrfach gefragt, 22 davon mit verschiedener Einstufung; 625 von 746 Wiederholungspaaren gleich (84 %)
+3) ROLLE G - worauf sich ihre Einwaende stuetzen (ab 20.08.)
+   Urteile 1641 | Einwand ja 692 | ja je Grundlage [('Long-Konten', 438), ('Finanzierungsrate', 143), ('sonst', 49), ('offene Kontrakte', 36), ('Boersenfluss', 26)] | Long-Konten + Finanzierungsrate 84 % der Einwaende
+4) WIE LANGE EINE VORWAERTSMESSUNG BRAUCHT (REGEL0-Spur 2025-26, Ertrag 24 h ohne Hebel)
+   alle Assets der Messung: n=7376, 12.1 je Tag, Mittel +0.290 %, Streuung 5.64 %
+      Unterschied 0.5 Prozentpunkte zwischen zwei gleich grossen Gruppen (80 % Macht, 5 %): n=3992 Handel = 329 Tage
+      Unterschied 1.0 Prozentpunkte zwischen zwei gleich grossen Gruppen (80 % Macht, 5 %): n=998 Handel = 82 Tage
+   Assets mit Hebel-Schalter an (Namensgleichheit): n=1326, 2.2 je Tag, Mittel +0.535 %, Streuung 5.22 %
+      Unterschied 0.5 Prozentpunkte zwischen zwei gleich grossen Gruppen (80 % Macht, 5 %): n=3423 Handel = 1569 Tage
+      Unterschied 1.0 Prozentpunkte zwischen zwei gleich grossen Gruppen (80 % Macht, 5 %): n=855 Handel = 392 Tage
