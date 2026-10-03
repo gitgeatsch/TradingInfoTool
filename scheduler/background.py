@@ -1601,7 +1601,11 @@ def _regel0_mails() -> None:
         _um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)
         _pruef = ((lambda r: _LLM.mail_zeilen(_LLM.pruefe_signal(r, _regel0_llm_client_ref, _NL.DATEN_VORGABE, _NL.DATEN_VORGABE,
                                                                  db.DB_PATH, _kat, umlauf=_um), _kat))
-                  if _kat.get("mail_block") else None)
+                  if _kat.get("mail_block") else
+                  # SCHATTEN (03.10.): rechnen und ablegen, aber NICHTS an die Mail anhaengen (leere Zeilenliste)
+                  (lambda r: (_LLM.pruefe_signal(r, _regel0_llm_client_ref, _NL.DATEN_VORGABE, _NL.DATEN_VORGABE, db.DB_PATH, _kat,
+                                                 umlauf=_um), [])[1])
+                  if _kat.get("schatten") else None)
         z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail,
                          melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t),
                          bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE),       # E-50 N-f: das Chart in der Signalmail

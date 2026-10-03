@@ -1264,3 +1264,37 @@ Laufzeit je Aufruf: Trader 5,8 s, Markt 6,2 s, Entscheider 1,1 s. Alle Antworten
 1. Ergebnis 0.1b auswerten. Bleibt der Trader konstant, folgt der nächste Schritt nach P1: die Eingabe des Traders weiter auf das ausrichten, was **eine Gegenbewegung** trägt oder bricht. Das sind etwa Marken unter dem Kurs, Volumen im Rückgang und die Struktur. Danach P1 erneut.
 2. Sobald P1 bestanden ist: volle Suite, Commit, NB-Pull, Kontrolle **K-LLM-1** (erste Signalmail mit Block und Chart, Teilexport *REGEL0-PRUEFUNG*).
 3. Vor N4: Schalter zum Anhalten der Spot-Kette (R-4), Prüfung der Makroreihen auf Zeitpunkttreue, Teilung in Entwicklungs- und Bestätigungsmenge.
+
+
+#### 20.12.1 Ergebnis P1 über drei Fassungen (03.10.2026; Belege `Basisinfos/Rechenkern_02_10/kalibrierung_0_1b.txt`, `kalibrierung_0_1c.txt`)
+
+| Prüfpunkt | 0.1 (10 Anker) | 0.1b (50) | **0.1c (20)** | Ziel |
+|---|---|---|---|---|
+| P1-a formgültig | 100 % | 100 % | **100 %** | ≥ 95 % ✔ |
+| P1-c Wiederholung gleich | – | 65 % (15/23) | **89 % (8/9)** | ≥ 90 % ◐ |
+| P1-b Trader, größte Stufe | 90 % dagegen | 60 % dagegen | **70 % dagegen** | ≤ 70 % ✔ knapp |
+| P1-b Entscheider | 80 % Einwand | 60 % mit Vorbehalt | **75 % mit Vorbehalt** | ⛔ |
+| P1-b Markt (über verschiedene Tage) | 50 % | 72 % stützt | **82 % stützt** | ⛔ |
+| P1-d Anonymität | – | 0 Funde, 0 von 12 erkannt | (nicht wiederholt) | ✔ |
+
+**0.1c = Selbstkonsistenz:** drei Aufrufe je Rolle, das Mehrheitsurteil zählt, ohne Mehrheit steht *uneinig* (wird nie geraten). Der Entwurf vom 10.08. hatte das gestrichen, mit der Bedingung, es zu messen, wenn eine Rolle schwankt. Die Bedingung war mit 65 % erfüllt.
+
+**Einordnung:**
+- Die Mehrheit **stabilisiert** (65 % → 89 %), **verdichtet** aber auf die häufigste Antwort.
+- **Markt:** Die Anker 2026 (Februar bis August) stammen aus **einer** langen Angstphase. Der Markt liest die Furcht als Chance auf eine Gegenbewegung und sagt fast immer *stützt*. Für einen **Marktzustand** kann das richtig sein. P1-b ist für ihn erst über **mehrere Marktphasen** prüfbar (z. B. 2025 dazunehmen).
+- **Entscheider:** Er vereint einen fast immer positiven Markt mit einem überwiegend negativen Trader und landet deshalb meist bei *mit Vorbehalt*. Er erbt also die Konstanz des Markts.
+- **Die eigentliche Information** steckt im **Trader**-Urteil und in den Begründungen und Gegengründen.
+
+**Stand und Vorgehen (bis zur Nutzerentscheidung):**
+- `mail_block: false`, **`schatten: true`**. Der Block wird bei jeder Signalmail **berechnet und in der Ablage gespeichert**, steht aber **nicht** in der Mail. So sammeln wir ab dem Pull echte Live-Urteile. Einschalten ist eine Zeile im Rollenkatalog.
+- Die **Charts** gehen sofort in die Mail, weil sie von keiner Messung abhängen.
+- Wache **47 von 47** (neu: Mehrheitsregel, Schatten ändert die Mail nicht).
+- **Kontingent:** 3.5 am 03.10. mit rund 415 von 500 Aufrufen nahezu erschöpft. Weitere Kalibrierläufe gehen ab 09:00 Uhr Ortszeit (Pazifik-Mitternacht).
+
+**Zur Entscheidung beim Nutzer:**
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **K-a** | Block **jetzt** in die Mail (Fassung 0.1c, *ungemessen*), obwohl P1-b bei Markt und Entscheider nicht erfüllt ist? | ➤ **Erst Schatten, dann einschalten.** Nach einem Kalibrierlauf mit Ankern aus **2025 und 2026**: Unterscheidet der Markt über Phasen, ist er kein Defekt |
+| **K-b** | Den Entscheider in 0.1d nur auf den **Trader** stützen und den Markt als Auskunft daneben stellen? | ➤ prüfen, wenn K-a zeigt, dass der Markt auch über Phasen konstant bleibt |
+| **K-c** | Die Rollen kennen jetzt auch, **worauf** der Plan setzt (*Gegenbewegung nach Rückgang*). Ist das als Teil des Plans in Ordnung (Erweiterung von N-c)? | ➤ **Ja.** Ohne diese Angabe beurteilten die Rollen einen anderen Handel |

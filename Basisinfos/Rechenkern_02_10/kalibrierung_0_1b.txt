@@ -1,0 +1,79 @@
+   1 BABY     2026-03-03 11:00  M=neutral          T=neutral          E=mit_vorbehalt  (Aufrufe 3)
+   2 BIO      2026-02-13 07:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 6)
+   3 API3     2026-02-21 04:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 9)
+   4 GALA     2026-07-15 08:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 12)
+   5 1000CAT  2026-05-14 05:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 15)
+   6 PORTAL   2026-03-03 17:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 17)
+   7 IO       2026-03-13 11:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 20)
+   8 CTSI     2026-04-12 04:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 23)
+   9 BIGTIME  2026-04-21 13:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 26)
+  10 AVAX     2026-07-19 02:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 29)
+  11 NOT      2026-08-13 12:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 32)
+  12 BAND     2026-02-07 15:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 35)
+  13 COW      2026-02-06 15:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 38)
+  14 SXT      2026-05-20 09:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 41)
+  15 RUNE     2026-03-31 14:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 44)
+  16 ETH      2026-08-19 00:00  M=neutral          T=neutral          E=mit_vorbehalt  (Aufrufe 47)
+  17 BTC      2026-05-20 09:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 50)
+  18 SXT      2026-04-29 13:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 53)
+  19 QTUM     2026-05-14 04:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 55)
+  20 RUNE     2026-05-15 18:00  M=stuetzt          T=stuetzt          E=bestaetigt     (Aufrufe 58)
+  21 CVC      2026-03-02 08:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 61)
+  22 GMX      2026-03-10 03:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 64)
+  23 GALA     2026-08-20 17:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 67)
+  24 GALA     2026-05-14 04:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 69)
+  25 ICP      2026-04-07 03:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 72)
+  26 KAITO    2026-03-15 15:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 75)
+  27 MEME     2026-05-29 23:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 78)
+  28 SNX      2026-03-13 11:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 80)
+  29 T        2026-04-27 10:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 83)
+  30 SNX      2026-03-25 01:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 86)
+  31 PEOPLE   2026-05-29 20:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 89)
+  32 KAVA     2026-05-02 13:00  M=stuetzt          T=stuetzt          E=mit_vorbehalt  (Aufrufe 92)
+  33 RENDER   2026-04-07 01:00  M=neutral          T=neutral          E=mit_vorbehalt  (Aufrufe 95)
+  34 FLOW     2026-05-07 00:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 98)
+  35 IOTX     2026-05-18 10:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 101)
+  36 LUMIA    2026-03-28 15:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 104)
+  37 SEI      2026-02-07 17:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 106)
+  38 SCR      2026-02-24 19:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 109)
+  39 ARPA     2026-03-03 19:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 112)
+  40 MORPHO   2026-02-07 14:00  M=stuetzt          T=stuetzt          E=bestaetigt     (Aufrufe 114)
+  41 EDU      2026-04-04 01:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 117)
+  42 ADA      2026-05-30 02:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 120)
+  43 SAND     2026-04-20 14:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 123)
+  44 ROSE     2026-03-23 14:00  M=stuetzt          T=stuetzt          E=bestaetigt     (Aufrufe 126)
+  45 DOGS     2026-03-24 21:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 129)
+  46 PORTAL   2026-04-02 01:00  M=stuetzt          T=stuetzt          E=bestaetigt     (Aufrufe 132)
+  47 RSR      2026-08-18 17:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 135)
+  48 CRV      2026-06-30 21:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 138)
+  49 ETHFI    2026-03-30 05:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 141)
+  50 SNX      2026-02-03 22:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 144)
+
+P1-a/b: Formgueltigkeit und Stufenverteilung je Rolle
+  markt        gueltig 50/50 (100 %) · Verteilung {'stuetzt': 29, 'neutral': 11} · groesste Stufe 72 % -> NICHT erfuellt
+  trader       gueltig 50/50 (100 %) · Verteilung {'neutral': 15, 'spricht_dagegen': 30, 'stuetzt': 5} · groesste Stufe 60 % -> OK
+  entscheider  gueltig 50/50 (100 %) · Verteilung {'mit_vorbehalt': 30, 'einwand': 16, 'bestaetigt': 4} · groesste Stufe 60 % -> OK
+
+P1-c: Wiederholung (dieselbe Eingabe ein zweites Mal, ohne Wiederverwendung)
+  gleich 15 von 23 (65 %) -> NICHT erfuellt
+
+P1-d: Anonymitaet
+  Eingaben mit Name/Jahr/Kurs: 0
+   BABY     2026-03 -> geraten TSLA 05/2024 
+   BIO      2026-02 -> geraten BTC 11/2022 
+   API3     2026-02 -> geraten BTCUSDT 09/2023 
+   GALA     2026-07 -> geraten BTCUSDT 01/2024 
+   1000CAT  2026-05 -> geraten DAX 11/2023 
+   PORTAL   2026-03 -> geraten BTC 09/2023 
+   IO       2026-03 -> geraten AAPL 11/2022 
+   CTSI     2026-04 -> geraten BTC 11/2022 
+   BIGTIME  2026-04 -> geraten DAX 11/2023 
+   AVAX     2026-07 -> geraten NVDA 04/2024 
+   NOT      2026-08 -> geraten TSLA 11/2023 
+   BAND     2026-02 -> geraten BTCUSDT 11/2022 
+  erkannt 0 von 12 -> OK
+
+P1-e: Ende zu Ende - drei fertige Signalmails mit Block und Chart
+  geschrieben: C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/kalibrier_01b\mailvorschau_llm_0_1.html
+
+Aufrufe gesamt: 179 (Deckel 260) · Standard-DB unberuehrt: True

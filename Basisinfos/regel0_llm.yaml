@@ -5,11 +5,13 @@
 #
 # Die Rollen pruefen und kommentieren nur (F2) - KEIN Urteil aendert das REGEL0-Signal.
 
-fassung: "0.1b-sofort"           # E-52: Sofortfassung, ungemessen. 0.1b nach P1 (03.10.): Plan nennt die Wette (Gegenbewegung),
+fassung: "0.1c-sofort"           # E-52: Sofortfassung, ungemessen. 0.1c: drei Stimmen je Rolle (P1-c 65 % gleich). 0.1b: Plan nennt die Wette,
                                  # Trader ohne die rsi-Spiegel (Verlauf 5/20 Tage, Abstand 20/50-Tage-Schnitt) - Par. 20.12
 modell: "gemini-3.5-flash-lite"   # N-h: Messung und Betrieb auf demselben Modell (E1); 3.1 ist durch die Spot-Kette ausgelastet
 temperatur: 0.0
-mail_block: true                  # der Block PRUEFUNG in der Signalmail
+stimmen: 3                        # 0.1c: Selbstkonsistenz - Mehrheit aus drei Aufrufen, ohne Mehrheit *uneinig* (P1-c, E14)
+mail_block: false                 # der Block PRUEFUNG in der Signalmail - AUS bis zur Nutzerentscheidung (P1 0.1c: Markt 82 %, Entscheider 75 %)
+schatten: true                    # Block wird je Signalmail BERECHNET und in der Ablage gespeichert, aber NICHT gemailt (Live-Urteile sammeln)
 zeitgrenze_s: 90                  # laenger wartet die Signalmail nicht (P-8)
 # KEIN RESSOURCEN- UND ABFRAGESTAU (Nutzer 03.10.; Lehren 2.454-gemini, G19, zweite_meinung AUSFALL_SCHWELLE):
 tageslimit_aufrufe: 150           # hoechstens so viele Aufrufe je Tag (Pazifik-Tag wie Googles Grenze), gezaehlt in der Ablage

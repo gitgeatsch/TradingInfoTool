@@ -32,7 +32,9 @@ from datetime import datetime, timedelta, timezone
 HIER = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, HIER)
 os.chdir(HIER)
-DECKEL = 260
+DECKEL = int(os.environ.get("KAL_DECKEL", "260"))
+ANKER = int(os.environ.get("KAL_ANKER", "50"))
+WIEDER = int(os.environ.get("KAL_WIEDER", "15"))
 B0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
 
 
@@ -72,7 +74,7 @@ def main(quelle: str, ausgabe: str) -> int:
     um = L.Umlauf(dict(K, max_signale_je_lauf=10 ** 6, lauf_zeitgrenze_s=10 ** 6, tageslimit_aufrufe=10 ** 6), client, ablage)
     ergebnisse, eingaben, anonym_funde = [], {}, 0
     for z in sp:
-        if len(ergebnisse) >= 50:
+        if len(ergebnisse) >= ANKER:
             break
         sig = B0 + timedelta(hours=int(z["std"]))
         s = sig.strftime("%Y-%m-%d %H:%M")
@@ -119,26 +121,36 @@ def main(quelle: str, ausgabe: str) -> int:
 
     print("\nP1-c: Wiederholung (dieselbe Eingabe ein zweites Mal, ohne Wiederverwendung)")
     gleich = gesamt = 0
-    for r, e, _z in ergebnisse[:15]:
+    def _mehrheit(rolle, eingabe):
+        """Wie die Rolle im Betrieb urteilt: `stimmen` Aufrufe, Mehrheit, sonst *uneinig* (0.1c)."""
+        st = []
+        for _ in range(max(1, int(K.get("stimmen") or 1))):
+            st.append(L.validiere(rolle, L.frage(client, K["modell"], L.SYSTEM[rolle], eingabe, 0.0))["urteil"])
+        z_ = C.Counter(st).most_common(1)[0]
+        return z_[0] if (z_[1] * 2 > len(st) or len(st) == 1) else "uneinig"
+
+    for r, e, _z in ergebnisse[:WIEDER]:
         for rolle in ("trader",):
             if "urteil" not in e.get(rolle, {}):
                 continue
             try:
-                a2 = L.validiere(rolle, L.frage(client, K["modell"], L.SYSTEM[rolle], eingaben[r["symbol"] + r["signalstunde"]], 0.0))
+                u2 = _mehrheit(rolle, eingaben[r["symbol"] + r["signalstunde"]])
                 gesamt += 1
-                gleich += a2["urteil"] == e[rolle]["urteil"]
+                gleich += u2 == e[rolle]["urteil"]
+                print("   Wiederholung %-8s %s: %s -> %s" % (r["symbol"], rolle, e[rolle]["urteil"], u2))
             except Exception as exc:                         # noqa: BLE001
                 print("   Wiederholung", r["symbol"], type(exc).__name__)
     tage_gesehen = {}
     for r, e, _z in ergebnisse:
-        if "urteil" in e.get("markt", {}) and r["signalstunde"][:10] not in tage_gesehen and len(tage_gesehen) < 8:
+        if "urteil" in e.get("markt", {}) and r["signalstunde"][:10] not in tage_gesehen and len(tage_gesehen) < max(3, WIEDER // 2):
             tage_gesehen[r["signalstunde"][:10]] = (r, e["markt"]["urteil"])
     for tag, (r, u) in tage_gesehen.items():
         try:
             m = L.markt_eingabe(r, nb)
-            a2 = L.validiere("markt", L.frage(client, K["modell"], L.SYSTEM["markt"], m, 0.0))
+            u2 = _mehrheit("markt", m)
             gesamt += 1
-            gleich += a2["urteil"] == u
+            gleich += u2 == u
+            print("   Wiederholung Markt %s: %s -> %s" % (tag, u, u2))
         except Exception as exc:                             # noqa: BLE001
             print("   Wiederholung Markt", tag, type(exc).__name__)
     anteil = gleich / gesamt if gesamt else 0
@@ -148,7 +160,7 @@ def main(quelle: str, ausgabe: str) -> int:
     print("  Eingaben mit Name/Jahr/Kurs: %d" % anonym_funde)
     treffer = 0
     gefragt = 0
-    for r, _e, z in ergebnisse[:12]:
+    for r, _e, z in ergebnisse[:int(os.environ.get("KAL_RATEN", "12"))]:
         ein = eingaben[r["symbol"] + r["signalstunde"]]
         try:
             a = L.frage(client, K["modell"], "Du bekommst die Kurs- und Volumenlage eines Werts ohne Namen und ohne Datum. "

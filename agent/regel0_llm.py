@@ -37,7 +37,9 @@ import agent.regel0_ablage as AB
 HIER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KATALOG = os.path.join(HIER, "Basisinfos", "regel0_llm.yaml")
 VORGABE = {
-    "fassung": "0.1b-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": True, "zeitgrenze_s": 90,
+    "fassung": "0.1c-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": False, "schatten": True,
+    "zeitgrenze_s": 90,
+    "stimmen": 3,
     "tageslimit_aufrufe": 150, "max_signale_je_lauf": 6, "lauf_zeitgrenze_s": 600, "ausfall_schwelle": 3,
     "rollen": {"markt": {"an": True}, "trader": {"an": True, "bausteine": ["struktur", "lange_sicht", "marken", "schwankung",
                                                                         "volumen"]},
@@ -45,7 +47,7 @@ VORGABE = {
 }
 URTEILE_PRUEFER = ("stuetzt", "neutral", "spricht_dagegen")
 URTEILE_ENTSCHEIDER = ("bestaetigt", "mit_vorbehalt", "einwand")
-WORT = {"stuetzt": "stützt", "neutral": "neutral", "spricht_dagegen": "spricht dagegen",
+WORT = {"stuetzt": "stützt", "neutral": "neutral", "spricht_dagegen": "spricht dagegen", "uneinig": "uneinig",
         "bestaetigt": "bestätigt", "mit_vorbehalt": "mit Vorbehalt", "einwand": "Einwand"}
 MAX_BELEGE = 6
 
@@ -401,7 +403,8 @@ class Umlauf:
         try:
             c = AB.oeffne(self.ablage)
             try:
-                return int(c.execute("SELECT COUNT(*) FROM pruefung WHERE tag_pazifik=? AND gefragt=1", (_pazifik_tag(),)).fetchone()[0])
+                return int(c.execute("SELECT COALESCE(SUM(COALESCE(aufrufe, 1)), 0) FROM pruefung WHERE tag_pazifik=? AND gefragt=1",
+                                     (_pazifik_tag(),)).fetchone()[0])
             finally:
                 c.close()
         except Exception:                                    # noqa: BLE001
@@ -448,16 +451,18 @@ def _schluessel(r: dict) -> tuple:
 
 
 def _merke(c, r: dict, rolle: str, katalog: dict, eingabe: dict | None, ergebnis: dict | None, roh: dict | None,
-           sekunden: float, fehler: str | None, deckung: list | None = None, gefragt: bool = False) -> None:
+           sekunden: float, fehler: str | None, deckung: list | None = None, gefragt: bool = False,
+           aufrufe: int = 1) -> None:
     ein = json.dumps(eingabe, ensure_ascii=False) if eingabe is not None else None
     c.execute("INSERT OR REPLACE INTO pruefung (symbol, signalstunde, rolle, fassung, modell, prompt_pruefsumme, eingabe_pruefsumme, "
-              "eingabe, antwort, urteil, ergebnis, sekunden, fehler, ungedeckt, am, gefragt, tag_pazifik) "
-              "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              "eingabe, antwort, urteil, ergebnis, sekunden, fehler, ungedeckt, am, gefragt, tag_pazifik, aufrufe) "
+              "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
               (r["symbol"], r["signalstunde"], rolle, katalog["fassung"], katalog["modell"], pruefsumme(SYSTEM[rolle]),
                pruefsumme(ein) if ein else None, ein, json.dumps(roh, ensure_ascii=False) if roh is not None else None,
                (ergebnis or {}).get("urteil"), json.dumps(ergebnis, ensure_ascii=False) if ergebnis is not None else None,
                round(sekunden, 2), fehler, json.dumps(deckung) if deckung else None,
-               datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), 1 if gefragt else 0, _pazifik_tag()))
+               datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), 1 if gefragt else 0, _pazifik_tag(),
+               int(aufrufe) if gefragt else 0))
     c.commit()
 
 
@@ -505,21 +510,43 @@ def pruefe_signal(r: dict, client, ordner_ablage: str, ordner_daten: str, db: st
                 aus[name] = {"fehlt": sperre}
                 _merke(c, r, name, katalog, eingabe, None, None, 0.0, "nicht gefragt: " + sperre)
                 return
+            # ⚠️ 0.1c (P1, 03.10.2026): SELBSTKONSISTENZ. Bei identischer Eingabe und Temperatur 0 waren nur 15 von 23
+            # Wiederholungen gleich (65 %, Ziel 90 %; vgl. E14: 30 % Kippen bei t = 0). Deshalb `stimmen` Aufrufe je Rolle und
+            # das MEHRHEITSurteil; ohne Mehrheit steht *uneinig* da - ein Fakt ueber das Modell, kein geratenes Urteil.
             t0 = time.time()
-            try:
-                roh = frage(client, katalog["modell"], SYSTEM[name], eingabe, float(katalog.get("temperatur") or 0.0))
-                umlauf.gebucht(True)
-                erg = validiere(name, roh)
-                deck = zahlendeckung(erg, eingabe) if name != "entscheider" else []
-                aus[name] = dict(erg, quelle="neu")
-                _merke(c, r, name, katalog, eingabe, erg, roh, time.time() - t0, None, deck, gefragt=True)
-            except AntwortUngueltig as exc:
-                aus[name] = {"fehlt": "Antwort ungueltig: %s" % str(exc)[:160]}
-                _merke(c, r, name, katalog, eingabe, None, None, time.time() - t0, aus[name]["fehlt"], gefragt=True)
-            except Exception as exc:                         # noqa: BLE001
-                umlauf.gebucht(False)
-                aus[name] = {"fehlt": "%s: %s" % (type(exc).__name__, str(exc)[:160])}
-                _merke(c, r, name, katalog, eingabe, None, None, time.time() - t0, aus[name]["fehlt"], gefragt=True)
+            n_st = max(1, int(katalog.get("stimmen") or 1))
+            gueltig, rohe, fehler_letzt = [], [], None
+            for _ in range(n_st):
+                if _ and (umlauf.gesperrt() or time.time() > grenze):
+                    break
+                try:
+                    roh = frage(client, katalog["modell"], SYSTEM[name], eingabe, float(katalog.get("temperatur") or 0.0))
+                    umlauf.gebucht(True)
+                    rohe.append(roh)
+                    gueltig.append(validiere(name, roh))
+                except AntwortUngueltig as exc:
+                    fehler_letzt = "Antwort ungueltig: %s" % str(exc)[:160]
+                except Exception as exc:                     # noqa: BLE001
+                    umlauf.gebucht(False)
+                    fehler_letzt = "%s: %s" % (type(exc).__name__, str(exc)[:160])
+                    break
+            if not gueltig:
+                aus[name] = {"fehlt": fehler_letzt or "keine gueltige Antwort"}
+                _merke(c, r, name, katalog, eingabe, None, rohe or None, time.time() - t0, aus[name]["fehlt"], gefragt=True,
+                       aufrufe=len(rohe) or 1)
+                return
+            zahl = {}
+            for g_ in gueltig:
+                zahl[g_["urteil"]] = zahl.get(g_["urteil"], 0) + 1
+            best, k = max(zahl.items(), key=lambda x: x[1])
+            if k * 2 > len(gueltig) or len(gueltig) == 1:
+                erg = dict(next(g_ for g_ in gueltig if g_["urteil"] == best))
+            else:
+                erg = dict(gueltig[0], urteil="uneinig")
+            erg["stimmen"] = [g_["urteil"] for g_ in gueltig]
+            deck = zahlendeckung(erg, eingabe) if name != "entscheider" else []
+            aus[name] = dict(erg, quelle="neu")
+            _merke(c, r, name, katalog, eingabe, erg, rohe, time.time() - t0, None, deck, gefragt=True, aufrufe=len(rohe))
 
         try:
             ein_m = markt_eingabe(r, db)
@@ -568,7 +595,9 @@ def mail_zeilen(ergebnis: dict, katalog: dict | None = None) -> list:
         if "urteil" not in x:
             z.append("  %-12s (keine Auskunft: %s)" % (titel, x.get("fehlt", "?")))
             continue
-        z.append("  %-12s %-16s %s" % (titel, WORT.get(x["urteil"], x["urteil"]), x.get("begruendung") or ""))
+        st = x.get("stimmen") or []
+        einig = "" if len(set(st)) <= 1 else " (%s)" % "/".join(WORT.get(s_, s_) for s_ in st)
+        z.append("  %-12s %-16s %s" % (titel, WORT.get(x["urteil"], x["urteil"]) + einig, x.get("begruendung") or ""))
         if x.get("gegengrund"):
             z.append("  %-12s %-16s Gegengrund: %s" % ("", "", x["gegengrund"]))
     z += ["", "  Messstand: noch nicht gemessen (Sofortfassung E-52; die gemessene Fassung folgt nach Rueckspiel und Bestaetigung)."]

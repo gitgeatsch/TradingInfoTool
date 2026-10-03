@@ -1,0 +1,46 @@
+   1 BABY     2026-03-03 11:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 9)
+   2 BIO      2026-02-13 07:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 18)
+   3 API3     2026-02-21 04:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 27)
+   4 GALA     2026-07-15 08:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 36)
+   5 1000CAT  2026-05-14 05:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 45)
+   6 PORTAL   2026-03-03 17:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 51)
+   7 IO       2026-03-13 11:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 60)
+   8 CTSI     2026-04-12 04:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 69)
+   9 BIGTIME  2026-04-21 13:00  M=neutral          T=neutral          E=mit_vorbehalt  (Aufrufe 78)
+  10 AVAX     2026-07-19 02:00  M=stuetzt          T=spricht_dagegen  E=einwand        (Aufrufe 87)
+  11 NOT      2026-08-13 12:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 96)
+  12 BAND     2026-02-07 15:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 105)
+  13 COW      2026-02-06 15:00  M=neutral          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 114)
+  14 SXT      2026-05-20 09:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 123)
+  15 RUNE     2026-03-31 14:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 132)
+  16 ETH      2026-08-19 00:00  M=stuetzt          T=neutral          E=mit_vorbehalt  (Aufrufe 141)
+  17 BTC      2026-05-20 09:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 150)
+  18 SXT      2026-04-29 13:00  M=neutral          T=spricht_dagegen  E=einwand        (Aufrufe 159)
+  19 QTUM     2026-05-14 04:00  M=stuetzt          T=spricht_dagegen  E=mit_vorbehalt  (Aufrufe 165)
+  20 RUNE     2026-05-15 18:00  M=stuetzt          T=stuetzt          E=bestaetigt     (Aufrufe 174)
+
+P1-a/b: Formgueltigkeit und Stufenverteilung je Rolle
+  markt        gueltig 20/20 (100 %) · Verteilung {'stuetzt': 14, 'neutral': 3} · groesste Stufe 82 % -> NICHT erfuellt
+  trader       gueltig 20/20 (100 %) · Verteilung {'neutral': 5, 'spricht_dagegen': 14, 'stuetzt': 1} · groesste Stufe 70 % -> OK
+  entscheider  gueltig 20/20 (100 %) · Verteilung {'mit_vorbehalt': 15, 'einwand': 4, 'bestaetigt': 1} · groesste Stufe 75 % -> NICHT erfuellt
+
+P1-c: Wiederholung (dieselbe Eingabe ein zweites Mal, ohne Wiederverwendung)
+   Wiederholung BABY     trader: neutral -> neutral
+   Wiederholung BIO      trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung API3     trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung GALA     trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung 1000CAT  trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung PORTAL   trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung Markt 2026-03-03: stuetzt -> stuetzt
+   Wiederholung Markt 2026-02-13: stuetzt -> stuetzt
+   Wiederholung Markt 2026-02-21: stuetzt -> neutral
+  gleich 8 von 9 (89 %) -> NICHT erfuellt
+
+P1-d: Anonymitaet
+  Eingaben mit Name/Jahr/Kurs: 0
+  erkannt 0 von 0 -> OK
+
+P1-e: Ende zu Ende - drei fertige Signalmails mit Block und Chart
+  geschrieben: C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/kalibrier_01c\mailvorschau_llm_0_1.html
+
+Aufrufe gesamt: 201 (Deckel 210) · Standard-DB unberuehrt: True

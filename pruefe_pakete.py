@@ -31425,8 +31425,37 @@ def paket_regel0_betrieb() -> None:
             _c = _sq.connect(os.path.join(d, "regel0_signale.db"))
             _n = _c.execute("SELECT COUNT(*) FROM pruefung WHERE gefragt=1").fetchone()[0]
             _c.close()
-        pruefe(P, "E-52: drei Rollen, der Entscheider bekommt die Ergebnisse; der Markt wird bei gleichen Fakten NICHT neu gefragt (R-2)",
-               f1.n == 3 and f2.n == 2 and e1["entscheider"]["urteil"] == "bestaetigt" and "wiederverwendet" in e2["markt"]["quelle"])
+        _st = max(1, int(_k.get("stimmen") or 1))
+        pruefe(P, "E-52: drei Rollen, je `stimmen` Aufrufe, der Entscheider bekommt die Ergebnisse; der Markt wird bei gleichen Fakten "
+               "NICHT neu gefragt (R-2)",
+               f1.n == 3 * _st and f2.n == 2 * _st and e1["entscheider"]["urteil"] == "bestaetigt"
+               and "wiederverwendet" in e2["markt"]["quelle"], "Aufrufe %d / %d bei %d Stimmen" % (f1.n, f2.n, _st))
+
+        class _Wechsel(_Fake):
+            """Antwortet je Aufruf anders - fuer die Mehrheitsregel (0.1c)."""
+            def __init__(self, folge):
+                super().__init__()
+                self.folge = list(folge)
+
+            def chat(self, msgs, model=None, temperature=None, response_format=None):
+                self.n += 1
+                u = self.folge[(self.n - 1) % len(self.folge)]
+                return '{"belege": [{"fakt": "f", "richtung": "dafuer"}], "urteil": "%s", "begruendung": "b", "gegengrund": "g"}' % u
+        with _tf.TemporaryDirectory() as d2:
+            _orig_t, _orig_m = LLM.trader_eingabe, LLM.markt_eingabe
+            try:
+                LLM.trader_eingabe = lambda r, o, k: dict(_ein)
+                LLM.markt_eingabe = lambda r, db: None
+                _k3 = dict(_k, stimmen=3, rollen=dict(_k["rollen"], entscheider=dict(_k["rollen"]["entscheider"], an=False)))
+                e_m = LLM.pruefe_signal(dict(_r, symbol="MMM", bitpanda="MMM"), _Wechsel(["stuetzt", "neutral", "stuetzt"]), d2, d2, "x", _k3)
+                e_u = LLM.pruefe_signal(dict(_r, symbol="UUU", bitpanda="UUU"), _Wechsel(["stuetzt", "neutral", "spricht_dagegen"]), d2, d2,
+                                        "x", _k3)
+            finally:
+                LLM.trader_eingabe, LLM.markt_eingabe = _orig_t, _orig_m
+        pruefe(P, "0.1c: Selbstkonsistenz - 2 von 3 ergibt die Mehrheit, drei verschiedene ergeben *uneinig* (nie geraten)",
+               e_m["trader"]["urteil"] == "stuetzt" and e_u["trader"]["urteil"] == "uneinig"
+               and e_u["trader"]["stimmen"] == ["stuetzt", "neutral", "spricht_dagegen"],
+               "%s / %s" % (e_m["trader"].get("urteil"), e_u["trader"].get("urteil")))
         pruefe(P, "E-52: kein Abfragestau - nach 3 Fehlern in Folge fragt der Lauf nicht mehr, der Grund steht im Block",
                fk.n == 3 and "Fehler in Folge" in str(ek.get("trader", {}).get("fehlt")) and _n >= 5)
         _z = LLM.mail_zeilen({"markt": {"fehlt": "Zeitgrenze erreicht"}, "trader": {"urteil": "stuetzt", "begruendung": "b"},
@@ -31434,6 +31463,19 @@ def paket_regel0_betrieb() -> None:
         pruefe(P, "E-52: der Mailblock sagt SOFORTFASSUNG, UNGEMESSEN; ein Ausfall steht als *keine Auskunft*, nie als Zustimmung",
                "SOFORTFASSUNG, UNGEMESSEN" in _z[0] and any("keine Auskunft" in x for x in _z) and any("mit Vorbehalt" in x for x in _z))
         _bq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        import agent.regel0_mail as _RMs
+        import agent.regel0_ablage as _ABs
+        import datetime as _dts
+        with _tf.TemporaryDirectory() as d3:
+            c3 = _ABs.oeffne(d3)
+            c3.execute("INSERT INTO signal (symbol,signalstunde,einstieg,ausstieg,stufe_vorlaeufig,stufe,hebel_schalter,bitpanda,version,kurs) "
+                       "VALUES ('SSSX','2026-09-15 10:00','2026-09-15 11:00','2026-09-16 11:00',3,3,1,'SSS','regel0_1',1.0)")
+            c3.commit(); c3.close()
+            _gerechnet, _post = [], []
+            _RMs.versende(d3, lambda b_, t_: _post.append(t_) or True, _dts.datetime(2026, 9, 15, 12, 30, tzinfo=_dts.timezone.utc),
+                          None, kurse=lambda: (None, None), pruefung=lambda r: (_gerechnet.append(r["symbol"]), [])[1])
+        pruefe(P, "Schatten: der Block wird je Signalmail GERECHNET, die Mail bleibt unveraendert (kein Text angehaengt)",
+               _gerechnet == ["SSSX"] and _post and "PRUEFUNG" not in _post[0])
         pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",
                "_um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)" in _bq and "pruefung=_pruef" in _bq
                and "_regel0_llm_client_ref = gemini_client" in _bq)

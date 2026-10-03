@@ -37,6 +37,8 @@ def oeffne(ordner: str) -> sqlite3.Connection:
     c.execute("CREATE TABLE IF NOT EXISTS pruefung (symbol TEXT, signalstunde TEXT, rolle TEXT, fassung TEXT, modell TEXT, "
               "prompt_pruefsumme TEXT, eingabe_pruefsumme TEXT, eingabe TEXT, antwort TEXT, urteil TEXT, ergebnis TEXT, sekunden REAL, "
               "fehler TEXT, ungedeckt TEXT, am TEXT, gefragt INTEGER, tag_pazifik TEXT, PRIMARY KEY (symbol, signalstunde, rolle, fassung))")
+    if "aufrufe" not in {r[1] for r in c.execute("PRAGMA table_info(pruefung)")}:
+        c.execute("ALTER TABLE pruefung ADD COLUMN aufrufe INTEGER")          # 0.1c: Zahl der Aufrufe je Zeile (Stimmen)
     da = {r[1] for r in c.execute("PRAGMA table_info(signal)")}
     for name, typ in _SIGNAL_SPALTEN:
         if name not in da:
