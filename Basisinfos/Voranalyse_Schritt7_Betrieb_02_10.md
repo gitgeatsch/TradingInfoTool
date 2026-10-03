@@ -1029,3 +1029,84 @@ L-a bis L-f sind **abgelöst**: Die LLM-Ebene der REGEL0 wird **neu gebaut**. Zu
 | **N-f** | Charts in der Mail und im Hebel-Tab: Kurs 5 Tage, Ein- und Ausstieg, Liquidationsgrenze je Stufe, Marken | ➤ **Ja**, als eigener Baustein. Er kann **sofort** gebaut werden, weil er nicht von der Messung abhängt |
 | **N-g** | P-T (Text) und Funding nachgelagert | ➤ **Ja** |
 | **N-h** | Die neuen Rollen laufen auf **gemini-3.5-flash-lite** (Messung und Betrieb gleich, dort ist das Kontingent frei) | ➤ **Ja** |
+
+
+### 20.10 Abstimmung N-a bis N-h und PRÜFUNG DES ROLLENMODELLS (Nutzer 03.10.2026, Hauptentscheidung)
+
+**Nutzer:** *„Ja N-a bis N-h wie vorgeschlagen, prüfen und gegenprüfen. Nur das neue Rollenmodell solltest du noch einmal fachlich und technisch prüfen. Wir hatten drei Rollen: Markt, Trader und Entscheider. Dies noch einmal sauber prüfen und gegenprüfen, es ist eine Hauptentscheidung."*
+
+**N-a bis N-h sind abgestimmt.** Offen bleibt allein das Rollenmodell, das bisher in N-b stand.
+
+#### 20.10.1 Woher die drei Rollen kommen (an der Quelle gelesen)
+
+| Stand | Markt | Trader | Entscheider | Gegenprüfer |
+|---|---|---|---|---|
+| **Entwurf 10.08.** (`Rollenkonzept_Entwurf_10_08.md` §3) | **A Analyst**: einmal je Durchgang, kein Asset, Ausgabe Neigung | **B Trader**: je Asset, Aufbau und Belege, **sieht die Marktlage als Ergebnis, nicht als Rohdaten** | **C Entscheider**: Aktion und Vertrag | — |
+| **10.08.** Zusammenlegung | A | **BC in EINEM Aufruf**. Nutzer: *5-faches Kontingent nicht tragbar*. Begründung: B und C *„widersprechen nicht, sie sind zwei Schritte derselben Aufgabe"*. Der ernste Einwand ist **Hedging** und gilt als **messbarer Zustand** | | — |
+| **16./17.08.** R-R1 (verbindlich) | **A Marktanalyst** | **BC Händler** | | **G Gegenprüfer**: *„Spricht etwas AUSSERHALB unserer Kursdaten dagegen?"*, nur Fremdquellen, kann **nur einwenden**, nie befürworten |
+| **Betrieb seit August** | A | BC schlägt die Aktion vor | die Stufe `entscheider` ist **deterministisch** (*„Trefferquote schlägt den Breakeven"*, `rollen_gate.py:125`) | G |
+| **REGEL0 (E-42 F2, E-46)** | — | — | **die REGEL0 löst aus**, deterministisch | — |
+
+➤ **Der Entscheider war im Betrieb nie ein Sprachmodell.** Mit der REGEL0 ist die Entscheidung über das Signal **deterministisch und gemessen**, und F2 hält das fest. Ein LLM-„Entscheider" kann deshalb nur eines sein: ein **Gesamturteil** über den REGEL0-Handel in der Mail. Genau das ist die *Bestätigung*, die du willst.
+
+#### 20.10.2 Vier Modelle im Vergleich
+
+| | **M1** (mein Vorschlag in §20) | **M2** Kette wie 10.08. | **M3** drei Rollen, Markt und Trader **unabhängig** | **M4** zwei Rollen + Regel |
+|---|---|---|---|---|
+| Aufbau | Markt, Trader, kein Gesamturteil | Markt → Trader (sieht das Markt-Ergebnis) → LLM-Entscheider | Markt ‖ Trader → **LLM-Entscheider** (sieht beide **Ergebnisse**, keine Rohdaten) | Markt ‖ Trader → **Zählregel** fasst zusammen |
+| beantwortet *„ist der Trade gut?"* | ✗, du fasst selbst zusammen | ✔ | ✔ | ◐ mechanisch |
+| R-R2 (ein Eingang je Rolle) | ✔ | ⚠️ Trader trägt den Markt mit | ✔ Markt und Trader exklusiv, der Entscheider **verbindet** nur, wie C am 10.08. | ✔ |
+| **Messbarkeit** | Trader messbar, Markt nur Auskunft | ⚠️ **Trader nicht mehr sauber messbar.** Der Markt ist ein Marktzustand, für alle Assets in der Stunde gleich, und nach stehender Regel **kein Beitrag je Asset**. Effektiv zählt nur die Zahl der Regimewechsel (2.599). In der Kette färbt er den Trader und vermischt beide | ✔ **Trader rein messbar** (Querschnitt, stundentreue Nullwelt). Beim Entscheider zeigt der Vergleich mit dem Trader allein, ob er etwas hinzufügt | ✔ |
+| Synthese-Regel (Memory: *ganzheitliches LLM-Urteil nicht durch Zählregel überschreiben*) | — | ✔ | ✔ | ⛔ **verletzt** als Produktionsurteil. Zulässig nur als **Vergleichsarm** der Messung |
+| Fehlerrisiko | gering | Kette: A12 *(die Einstufung von A kam beim Händler nie an)*, 2.457-w8 *(fällt A aus, fällt die Gruppe aus)* | **Hedging** im Entscheider (C18) → eigenes Feld für den Gegengrund. **Anker** auf dem Trader-Urteil → Messarm *Trader allein*. Ausfall des Markts ergibt *keine Auskunft* (grau), **kein Abbruch** | gering |
+| Aufrufe je Signal | 1 (+ Markt je Stunde) | 2 (+ Markt) | 2 (+ Markt) | 1 (+ Markt) |
+| Laufzeit bis zur Mail | ~5 s | ~10–15 s | ~10–15 s (Median Gemini 5,5 s je Aufruf, RWM:3392) | ~5 s |
+
+#### 20.10.3 Ergebnis der Prüfung — Empfehlung **M3**, mit dem Gegenprüfer als vierter Rolle (nachgelagert)
+
+| Rolle | Frage | Eingabe | darf NICHT | Aufruf |
+|---|---|---|---|---|
+| **Markt** | *Spricht das Umfeld für oder gegen einen gehebelten 24-h-LONG in Krypto?* | Leitmärkte, Makro, Fear & Greed (Datenschicht `marktlage.py`) und der Plan **ohne** Asset | ein Asset beurteilen | **neu nur, wenn sich die Fakten ändern** (Prüfsumme). Gleiche Fakten bekommen dasselbe Urteil, gegen die gemessenen 16 % Eigenrauschen (L-4) |
+| **Trader** | *Spricht die eigene Kurs- und Volumenlage DIESES Werts für oder gegen den geplanten Handel?* | **anonym**: Verlauf, Marken in ATR, Schnitte, Volumen relativ, Schwankung als Perzentil. Dazu der Plan | den Markt sehen (bleibt exklusiv und messbar), rsi/Normal sehen (Eingang der REGEL0) | je Signal |
+| **Entscheider** (Gesamturteil, **entscheidet nicht über das Signal**) | *Bestätigst du diesen REGEL0-Handel?* Antwort *bestätigt / mit Vorbehalt / Einwand*, dazu Begründung und stärkster Gegengrund (getrennte Felder) | der Plan und die **Ergebnisse** von Markt und Trader (Stufe, Belege, Gegengrund), **keine Rohdaten**, **keine REGEL0-Bewertung** | das Signal kippen (F2), Hebel oder Größe wählen | je Signal, **eigener Aufruf** nach den beiden. Fehlt eine Rolle, urteilt er mit dem Vermerk *Markt fehlt* |
+| **Gegenprüfer** (nachgelagert, N7) | *Spricht etwas AUSSERHALB unserer Kursdaten dagegen?* (R-R1) | **nur Fremdquellen**: Text (Meldungen), später Positionierung, sobald voll abgedeckt | befürworten (er ist einseitig), die anderen Rollen sehen (R-R2) | je Signal |
+
+**Warum M3 und nicht M1:** M1 lässt dir das Zusammenfassen. Du hast aber ausdrücklich ein **Urteil über den Trade** verlangt (*„reine Bestätigung, dass der Trade gut ist"*). Das liefert nur ein Gesamturteil, und ein ganzheitliches Urteil gehört nach der stehenden Regel einem Sprachmodell, nicht einer Zählregel.
+
+**Warum M3 und nicht M2:** In M2 liest der Trader das Markt-Ergebnis mit. Dann ist er nicht mehr der **messbare Beitrag je Asset**, weil ein Marktzustand ihn färbt, der für alle Assets gleich ist. Der Entwurf vom 10.08. wollte die Marktlage beim Trader. Mit einem eigenen Entscheider zieht diese Verbindung **eine Stufe weiter**, zu ihm, wie C am 10.08.
+
+**Warum nicht M4 in der Produktion:** Eine Zählregel als *Gesamturteil* wäre die *„zweite, primitivere Bewertung"*, die die Synthese-Regel verbietet. Sie bleibt aber der **Vergleichsarm**: Der Entscheider muss sie schlagen, sonst trägt er nichts.
+
+#### 20.10.4 Gegenprüfung — was das Modell kosten und kippen könnte
+
+| Prüfpunkt | Ergebnis |
+|---|---|
+| **Kontingent** | Live: Markt nur bei geänderten Fakten (wenige je Tag), Trader und Entscheider je 12–15 Signale, also **~30–40 Aufrufe je Tag** auf gemini-3.5-flash-lite (frei ~460). ✔ |
+| **Rückspiel** | Trader 1.500 + Entscheider 1.500 + Wiederholungen ~600 + Markt je verschiedenem Faktenstand (~600 Tage) ≈ **4.200 Aufrufe ≈ 9–10 Tage** bei 460 je Tag. Mit n = 1.000 je Rolle rund **7 Tage**. ⚠️ Das ist länger als in §20.5 genannt (dort für eine Rolle) |
+| **Messarme Entscheider** | (1) LLM-Entscheider, (2) **Zählregel** auf denselben zwei Stufen, (3) **Trader allein**, (4) Zufall, (5) Rauschboden. *Trägt* heißt: über dem Band in beiden Jahren **und** besser als (2) **und** (3) |
+| **Messarme Trader** | wie §20.5: Regel auf denselben Eingaben, Zufall, Rauschboden, vertauschte Reihenfolge |
+| **Markt** | **nicht** als Beitrag messbar (Marktzustand). Gemessen werden nur Stabilität und Stufenverteilung. In der Mail steht er als **Auskunft** mit dem Vermerk |
+| **Anonymität** | Der Entscheider sieht Belege mit relativen Zahlen, ohne Namen und ohne Datum. ✔ (Kontaminationsprobe gilt mit) |
+| **Ausfall** | Fällt der Markt aus, folgt *keine Auskunft* und der Entscheider urteilt mit Vermerk. Fällt der Trader aus, entfällt der Entscheider, und die Mail geht ohne Block raus (P-8). **Kein** Abbruch der Mail (Lehre 2.457-w8) |
+| **Namen** | Im Code `regel0_llm_markt`, `regel0_llm_trader`, `regel0_llm_entscheider`, damit nichts mit der deterministischen Stufe `entscheider` der Spot-Kette verwechselt wird (`rollen_gate.py`) |
+
+#### 20.10.5 Zur Abstimmung
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **R-1** | **Rollenmodell M3**: Markt und Trader unabhängig, dazu ein LLM-Entscheider als **Gesamturteil** über den REGEL0-Handel (er kippt nichts), der Gegenprüfer mit Fremdquellen nachgelagert. Das ersetzt N-b | ➤ **Ja** |
+| **R-2** | Der Markt wird nur bei **geänderten Fakten** neu gefragt | ➤ **Ja** |
+| **R-3** | Rückspiel mit **fest** n = 1.000 je Rolle, ausgewertet **einmal** | ➤ **Ja.** Das reicht für 1 Prozentpunkt (L-5). ⚠️ **Kein Aufstocken nach einem Zwischenblick.** Ich hatte es zuerst vorgeschlagen, es wäre aber Mehrfachtesten (F19: kleine Stichproben erzeugen Scheinbefunde in die erwartete Richtung) |
+| **R-4** | **Spot-Kette zum Rückspiel stilllegen** (siehe 20.10.6), mit einem **eigenen** Schalter, der **nicht** auf den alten Weg zurückfällt | ➤ **Ja**, ich sage Bescheid, bevor N4 startet |
+
+#### 20.10.6 Nutzerhinweis: Stilllegung der Spot-Kette für die LLM-Ressourcen
+
+**Nutzer:** *„Wenn wir LLM-Ressourcen benötigen, wäre eine Stilllegung der aktuellen Kette sogar ein Vorteil. Wenn nicht, gib Bescheid, wenn es so weit ist, dass ich die Produktion für LLM-Tests stoppe."*
+
+| | |
+|---|---|
+| **Brauchen wir sie?** | **Ja, für das Rückspiel (N4).** Das Kontingent hängt am **Schlüssel**, nicht am Gerät: Ein Lauf am Desktop verbraucht das Budget des NB (Memory *gemini_limits*). Die Spot-Kette braucht auf gemini-3.1-flash-lite 320–450 Aufrufe je Tag. Ist 3.1 erschöpft, weicht sie auf **3.5** aus (30.09.: 39 Aufrufe). Das ist genau das Modell, auf dem wir messen. Ein Rückspiel mit vollem Tempo auf 3.5 könnte damit die Spot-Kette lahmlegen, und eine laufende Spot-Kette die Messung |
+| **Wirkung** | Ohne Spot-Kette ist 3.5 **ganz** frei (500 je Tag). Das Rückspiel (~4.200 Aufrufe) ist dann in **rund 9 Tagen** sicher durch, ohne Deckel-Rechnerei und ohne Störung. Ein zweites Modell zu nehmen, um es schneller zu machen, ist **nicht** zulässig (E1: ein Befund überträgt sich nicht zwischen Modellen) |
+| ⚠️ **Wie NICHT** | `rollen_kette.aktiv_fuer` leeren. Dann **übernimmt der alte Weg wieder** (`rollen_job.py:48-63`, *„der dokumentierte Rückfallweg"*), mit Budget-Allocator und alter Pipeline. Das wäre das Gegenteil einer Stilllegung |
+| **Wie** | ein **eigener Schalter** in `Basisinfos/regel0_betrieb.yaml`, der die Spot-Rollen-Kette anhält, ohne den alten Weg freizugeben. Vorher die Prüfung *Stilllegung: wer schreibt das noch?*: Bestandsmails, Stop-Nachzieh-Sammelmail (sie hängt an **offenen** Signalen und läuft weiter), Führungsprotokoll, Ausstiegsverfolgung, Hebel-Tab. Die REGEL0 und ihre Mails sind davon **nicht** berührt |
+| **Wann** | **vor N4** (Rückspiel). N1 bis N3 (Erbauer, Prompt, Kalibrierlauf mit 50 Ankern) gehen ohne Stilllegung. ➤ **Ich gebe Bescheid**, bevor N4 startet, mit der fertigen Prüfung, was stillsteht |
