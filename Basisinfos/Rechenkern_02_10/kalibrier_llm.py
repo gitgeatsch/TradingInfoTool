@@ -118,6 +118,9 @@ def main(quelle: str, ausgabe: str) -> int:
         urteile = [e[rolle]["urteil"] for _r, e, _z in ergebnisse if rolle in e and "urteil" in e[rolle]]
         fehlt = [e[rolle].get("fehlt") for _r, e, _z in ergebnisse if rolle in e and "urteil" not in e[rolle]]
         n = len(urteile) + len(fehlt)
+        if n == 0:
+            print("  %-12s nicht gefragt (in diesem Lauf abgeschaltet) - zaehlt nicht" % rolle)
+            continue
         gueltig = len(urteile) / n if n else 0
         vert = C.Counter(urteile)
         top = (vert.most_common(1)[0][1] / len(urteile)) if urteile else 1.0
