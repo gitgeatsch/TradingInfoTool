@@ -31072,6 +31072,9 @@ def paket_regel0_betrieb() -> None:
                 NL.lauf = lambda *a, **k: aufrufe.append(a[0]) or {}
                 # ⚠️ der Prozessstart wird ABGEFANGEN - ein echter Start rechnete im Datenordner (02.10. passiert)
                 BG._regel0_rechnung_starten = lambda: starts.append(1)
+                # ⚠️ und die taegliche Neuaufnahme (S7-5a) - sie fragte sonst Binance ab und schriebe in die Wegwerfdateien
+                _alt_nf = NL.neuaufnahme_faellig
+                NL.neuaufnahme_faellig = lambda *a, **k: False
                 NL.DATEN_VORGABE = dd
                 BG.regel0_nachlader_job()
                 NL.DATEN_VORGABE = dn
@@ -31079,6 +31082,7 @@ def paket_regel0_betrieb() -> None:
             finally:
                 NL.lauf, NL.DATEN_VORGABE = alt_lauf, alt_ordner
                 BG._regel0_rechnung_starten = alt_start
+                NL.neuaufnahme_faellig = _alt_nf
         pruefe(P, "Stundenjob: Desktop-Zustand (volle terminmarkt_historie.db) wird NICHT beschrieben, Betriebszustand schon",
                erk and aufrufe == [dn] and starts == [1],
                "Aufrufe des Nachladers: %d (erwartet 1, nur Betriebszustand) · Rechnung gestartet %d (erwartet 1)" % (len(aufrufe), len(starts)))
@@ -31184,13 +31188,13 @@ def paket_regel0_betrieb() -> None:
             c.commit(); c.close()
             _j = _dt.datetime(2026, 10, 5, 11, 5, tzinfo=_tz.utc)
             _w = dict(G.lade(), testwoche_bis="")
-            z0 = RM.versende(d, lambda b, t: False, _j, _w)
+            z0 = RM.versende(d, lambda b, t: False, _j, _w, kurse=lambda: (None, None))
             post = []
-            z1 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w)
-            z2 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w)
-            z3 = RM.versende(d, lambda b, t: post.append(b) or True, _j + _dt.timedelta(hours=25), _w)
+            z1 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w, kurse=lambda: (None, None))
+            z2 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w, kurse=lambda: (None, None))
+            z3 = RM.versende(d, lambda b, t: post.append(b) or True, _j + _dt.timedelta(hours=25), _w, kurse=lambda: (None, None))
         pruefe(P, "REGEL0-Mails: nur Schalter an; gescheiterter Versand wiederholt; kein Doppel; Erinnerung nach 24 h",
-               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0)
+               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0)
                and z3["erinnerung"] == 1 and len(post) == 2 and "AAA" in post[0], "%s %s %s %s" % (z0, z1, z2, z3))
         _rq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "rollen_lauf.py"), encoding="utf-8").read()
         pruefe(P, "alter Hebelweg aus (F1/E-46): Etikett UND Rechnung der Rollen-Kette lesen den Schalter aus regel0_betrieb.yaml",
@@ -31203,6 +31207,31 @@ def paket_regel0_betrieb() -> None:
                and "hebel_toggle_map.get(sig.symbol, True)" not in io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "hebel_view.py"), encoding="utf-8").read())
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "S7-4: Wache lief durch", False, repr(ex))
+    # S7-5 (03.10.): gesperrte Kuerzel fuer alle Mengen, Preisabgleich, Neuaufnahme nie in die Messbasis
+    try:
+        import inspect as _ins
+        import agent.regel0_stundenlauf as SL
+        import agent.regel0_mail as RM
+        import agent.regel0_nachlader as NL
+        _zu, _fk = SL._binance_zu_bitpanda()
+        pruefe(P, "S7-5c: gesperrte Kuerzel bekommen KEINEN Bitpanda-Namen (auch ZK der Messbasis), Ausnahmen bleiben",
+               _zu.get("ZK", "x") is None and _zu.get("LIT", "x") is None and _zu.get("CC") == "CANTON" and _fk.get("1000CAT") == 1000.0,
+               "ZK %r · CC %r · 1000CAT Faktor %r" % (_zu.get("ZK", "x"), _zu.get("CC"), _fk.get("1000CAT")))
+        _ok_btc = RM.abgleich({"bitpanda": "BTC", "paar": "BTCUSDT", "faktor": 1}, {"BTC": 100.0}, {"BTCUSDT": 104.0})[0]
+        _ok_zk = RM.abgleich({"bitpanda": "ZK", "paar": "ZKUSDT", "faktor": 1}, {"ZK": 0.0062}, {"ZKUSDT": 0.0125})[0]
+        _ok_cat = RM.abgleich({"bitpanda": "CAT", "paar": "1000CATUSDT", "faktor": 1000}, {"CAT": 3e-5}, {"1000CATUSDT": 0.0301})[0]
+        _ok_weg = RM.abgleich({"bitpanda": "X", "paar": "XUSDT", "faktor": 1}, None, None)
+        pruefe(P, "S7-5b: Preisabgleich - 4 % ok, Kollision (+101,6 %) gesperrt, Faktor 1000 gerechnet, Ticker weg = *nicht gegengeprueft* (F-2)",
+               _ok_btc and not _ok_zk and _ok_cat and _ok_weg[0] and "nicht gegengeprueft" in _ok_weg[1])
+        _qn = _ins.getsource(NL.neuaufnahme)
+        pruefe(P, "S7-5a: die Neuaufnahme schreibt nur stundenkurse_alle.db und markpreis_alle.db - NIE die Messbasis",
+               '_pruefe_ziel(ordner, "stundenkurse_alle.db")' in _qn and '_pruefe_ziel(ordner, "markpreis_alle.db")' in _qn
+               and '"stundenkurse.db"' not in _qn and "markpreis_historie" not in _qn and "with ca:" in _qn)
+        _bq2 = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        pruefe(P, "S7-5a: der Stundenjob nimmt einmal je Tag (ab 02:00 UTC) neue Listings auf, VOR dem Nachladen",
+               _bq2.index("NL.neuaufnahme_faellig(ordner)") < _bq2.index("bericht = NL.lauf(ordner"))
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "S7-5: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:

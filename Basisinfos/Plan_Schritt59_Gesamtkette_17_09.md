@@ -2398,3 +2398,5 @@ Nächster Schritt: **Schritt 7 Betriebsvorbereitung** am Notebook (E-41). **M1-K
 als eigener Prozess nach dem Nachlader (S7-2b), REGEL0-Mails mit Testwoche bis 10.10. und der alte Hebelweg der Rollen-Kette aus (S7-4, E-46). **M1-Kriterium 2:**
 Die REGEL0 ist am Notebook verdrahtet, sobald der Pull gezogen ist. Bestätigt ist das erst mit den Kontrollen K-S7-3/K-S7-4 und der Testwoche (S7-7).
 Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
+
+**Nachtrag 03.10.2026 (11) — die REGEL0 läuft am Notebook:** Pull 6ab545c, Neustart 06:22. Kontrollen **K-S7-3/K-S7-4 bestanden**: Monatspaket 2026-10 trainiert (628 s), Stundenläufe 855 s und 215 s, frisch 635/635, 0 Fehler, keine alte Hebelmail. 27 Signale bisher, **keines** für ein Asset mit Hebel-Schalter an, daher noch **keine** REGEL0-Mail. **M1-Kriterium 2** ist damit am NB verdrahtet; bestätigt wird es mit der Testwoche (S7-7). ✔ **S7-5** gebaut und geprüft (E-47, §16). Zur Abstimmung: Hebel-Tab (§17) und Stop-Nachzieh-Sammelmail (§18; fachlich Spot-Positionsführung, Plan Hebel O19 und O14).

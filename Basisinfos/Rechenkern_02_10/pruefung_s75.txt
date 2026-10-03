@@ -1,0 +1,21 @@
+1) S7-5a Neuaufnahme
+      Neuaufnahme: FLOKI spot FLOKIUSDT - 29915 Stunden ab 2023-05-05 18:00, Markpreis 1000FLOKIUSDT
+      Neuaufnahme: HYPE futures HYPEUSDT - 11779 Stunden ab 2025-05-30 10:00, Markpreis HYPEUSDT
+  ✔ die zwei fehlenden Assets werden als neu erkannt und geladen - ['FLOKI(spot, 29915 h ab 2023-05-05 18:00)', 'HYPE(futures, 11779 h ab 2025-05-30 10:00)']
+  ✔ HYPE Kerzen zeilengleich zur echten Datei bis 2026-10-01 16:00 (ohne deren letzte, damals offene Stunde), Quelle ('futures', 'HYPEUSDT') - 11742 / 11742 Zeilen
+  ✔ HYPE Markpreis: gemeinsame Stunden wertgleich, keine Archivstunde fehlt, zusaetzlich nur ganze Archiv-Luecken - 10982 Archiv / 11006 neu · zusaetzlich ['2026-06-29'] · ('HYPEUSDT', 1.0)
+  ✔ FLOKI Kerzen zeilengleich zur echten Datei bis 2026-10-01 16:00 (ohne deren letzte, damals offene Stunde), Quelle ('spot', 'FLOKIUSDT') - 29878 / 29878 Zeilen
+  ✔ FLOKI Markpreis: gemeinsame Stunden wertgleich, keine Archivstunde fehlt, zusaetzlich nur ganze Archiv-Luecken - 29099 Archiv / 29123 neu · zusaetzlich ['2026-06-29'] · ('1000FLOKIUSDT', 1000.0)
+  ✔ zweiter Lauf: nichts Neues - {'regel': 4, 'datei': 4, 'neu': [], 'fehler': [], 'markpreis': []}
+  ✔ ein gescheiterter Abruf hinterlaesst NICHTS und wird gemeldet - ['PLUME: Probe']
+  ✔ ... und der naechste Lauf holt es nach - ['PLUME(futures, 13456 h ab 2025-03-21 13:00)']
+  ✔ faellig: vor 02:00 UTC nein, heute nach dem Lauf nein, morgen ja
+  ✔ die Neuaufnahme schreibt NIE in die Messbasis (nur stundenkurse_alle.db und markpreis_alle.db)
+2) S7-5b Preisabgleich vor der Signalmail
+  ✔ Kollision (ZK, +101,6 %) -> keine Mail, eine Meldung; BTC und CAT (Faktor 1000) -> Mail; ETH ohne Binance-Kurs -> Mail *nicht gegengeprueft* - ['BTC', 'CAT', 'ETH'] · {'signal': 3, 'korrektur': 0, 'erinnerung': 0, 'fehlgeschlagen': 0, 'gesperrt': 1} · ['REGEL0-Signal ZKX (Binance ZK) NICHT gemailt - Zuordnung zweifelhaft: Bitpanda 0.0062 USD, Binance ZKUSDT 0.0125 (Abweichung +101.6 %). Pruefen: Basisinfos/symbol_zuordnung.csv (gesperrt, wenn Bitpanda einen anderen Coin unter dem Kuerzel fuehrt)']
+  ✔ die Mail nennt den Abgleich (BTC mit Abweichung, ETH *nicht gegengeprueft*)
+  ✔ zweiter Durchgang: keine Mail und KEINE zweite Meldung fuer ZK - {'signal': 0, 'korrektur': 0, 'erinnerung': 0, 'fehlgeschlagen': 0, 'gesperrt': 0}
+  ✔ Ticker nicht erreichbar -> die Mail geht mit Vermerk raus (F-2)
+3) S7-5c gesperrtes Kuerzel in der Messbasis (ZK, echter Stundenlauf)
+  ✔ ZK-Signal: in der Ablage OHNE Bitpanda-Namen und ohne Schalter, keine Mail - [('ZK', None, None)] · Mails []
+SCHLUSS: ✔ bestanden (15 von 15)

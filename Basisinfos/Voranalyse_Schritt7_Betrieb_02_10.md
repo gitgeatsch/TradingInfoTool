@@ -698,3 +698,101 @@ Ein neues Asset hat erst nach 240 h ein eigenes Normal (J). Vorher gibt es kein 
 | **F-3** | **Tokenisierte Aktien und Wrapped Token** (N-4): aufnehmen oder ausschließen? | ➤ **Vorerst belassen.** Mails sind unmöglich (kein Hebel-Schalter), und eine Regel ohne Aufzählung gibt es nicht. Eine Liste veraltet still (stehende Regel 4). In der **Signalbilanz** weise ich sie getrennt aus. Neu prüfen, wenn Bitpanda solche Token anbietet |
 | **F-4** | Zeitpunkt der Neuaufnahme | ➤ **Täglich**, im Stundenjob um 02:05 UTC. Ein neues Asset braucht ohnehin 10 Tage bis zum ersten Signal, stündlich bringt nichts |
 | **F-5** | Wann ans Notebook? | ➤ Nach den Kontrollen K-S7-3/K-S7-4, also wenn die laufende Kette bestätigt ist. **S7-5c** (ZK) ist klein und schützt sofort, das kann gleich mit |
+
+
+### 16.5 Abstimmung und Bau (Nutzer 03.10.2026: *„Ja F-1 bis F-5 wie vorgeschlagen, prüfen und gegenprüfen"*)
+
+| Teil | gebaut |
+|---|---|
+| **S7-5a** | `agent/regel0_nachlader.neuaufnahme`: `universum()` mit 3 Versuchen. Jedes neue Asset bekommt die ganze Historie ab dem Listing (frühestens 2023), Kerzen und `_quelle` in **einer** Transaktion. Den Markpreis holt sie über die Live-Schnittstelle, mit Paar und Faktor wie die Erstbefüllung (eigenes Paar, sonst 1000er). Jeder Lauf wird in `_neuaufnahme` vermerkt. Der Stundenjob ruft sie einmal je Tag ab 02:00 UTC auf (`neuaufnahme_faellig`, nachgeholt), **vor** dem Nachladen. Ein Fehlschlag meldet sich und hält das Nachladen nicht auf |
+| **S7-5b** | `agent/regel0_mail.abgleich`: Vor jeder Signalmail werden Bitpanda- und Binance-Ticker **zum selben Moment** verglichen (Faktor aus der Zuordnung). Ab 5 % geht **keine** Mail raus; stattdessen wird es in der Ablage vermerkt und kommt **einmal** die Mail *REGEL0 Zuordnung zweifelhaft*. Ist der Ticker weg, geht die Mail mit *Kurs nicht gegengeprüft* raus (F-2). Die Mail nennt den Abgleich |
+| **S7-5c** | `regel0_stundenlauf._binance_zu_bitpanda`: Gesperrte Kürzel bekommen **für jede Menge** keinen Bitpanda-Namen (ZK) |
+| **S7-5d** | Teilexport: Neuaufnahme (letzte 3 Läufe), Signale *nicht gemailt wegen Zuordnung*, **Hebel-Schalter an ohne REGEL0-Daten** (Desktop heute: AIOZ, SUPRA, VSN). Am NB wird nichts in die Repo-Datei geschrieben |
+| F-3 | Die tokenisierten Aktien und WBTC bleiben in der Datenbasis. In der Signalbilanz stehen sie ohnehin nicht, die zählt nur Watchlist, Bestand und Hebel-Liste |
+
+**Gegenprüfung** (`Basisinfos/Rechenkern_02_10/pruefe_s75.py`, Beleg `pruefung_s75.txt`): **15 von 15.**
+
+- **Neuaufnahme:** Die herausgenommenen Assets HYPE (Futures) und FLOKI (Spot, Markpreis 1000FLOKI) werden als neu erkannt. Die Kerzen sind **zeilengleich** zur echten Datei (11.742 und 29.878).
+- **Markpreise:** auf allen gemeinsamen Stunden **wertgleich**. Zusätzlich nur der **29.06.2026**, den das Monatsarchiv nicht hat (siehe unten).
+- **Zweiter Lauf:** nichts Neues.
+- **Alles oder nichts:** Ein gescheiterter Abruf (PLUME) hinterlässt nichts, und der nächste Lauf holt ihn nach.
+- **Fälligkeit:** einmal am Tag, ab 02:00 UTC.
+- **Messbasis:** wird nie beschrieben.
+- **Abgleich:** Bei einer Kollision geht keine Mail raus, es kommt eine Meldung, und die nur einmal. BTC und CAT (Faktor 1000) gehen durch. Ohne Ticker kommt der Vermerk.
+- **ZK:** Der echte Stundenlauf am 18.06.2026 mit Bitpanda-ZK-Schalter an legt ZK **ohne** Bitpanda-Namen ab, keine Mail.
+- **Wache:** `--paket Regel0Betrieb` mit 4 Prüfungen zu S7-5.
+
+⚠️ **Befund nebenbei:** Das Binance-**Monatsarchiv** der Markpreise hat eine **Lücke am 29.06.2026** (24 Stunden, alle geprüften Symbole). Die Live-Schnittstelle hat den Tag. Für die REGEL0 ist das unschädlich: Messung und Betrieb lesen dieselbe Datei, und Markpreise neuer Assets gehen nicht ins Training. Die erste Prüfung hatte das als *24 Stunden zu wenig* gelesen. Tatsächlich hatte die Neuaufnahme 24 Stunden **mehr**, und das Kriterium wurde entsprechend gefasst.
+
+---
+
+## 17. VORANALYSE — der Hebel-Tab der Oberfläche zeigt die REGEL0 (03.10.2026, zur Abstimmung)
+
+**Nutzer:** *„In der GUI gibt es einen Hebel-Tab, diesen sollte man wiederverwenden, wenn möglich. Zeigt Signale und offene Positionen an."*
+
+**Ist-Stand** (`ui/hebel_view.py`):
+
+| | |
+|---|---|
+| Liste oben | Sie führt **zwei** Quellen zusammen, je (Symbol, Richtung) gewinnt die jüngere (`:257-282`): `hebel_signals` (alte Hebelkette) und `signals` mit Hebel (Rollen-Kette). Dazu kommen die wartenden **Kandidaten** des alten Screenings (`hebel_triggers`). Filter: 2 Tage oder alle, *handelbar* blendet SHORT aus, abgeschaltete Assets ohne offene Position sind ausgeblendet |
+| Liste unten | **offene echte Positionen** (`hebel_positions`): Hebel, Eigenkapital, eröffnet, Liquidationspreis |
+| Detail rechts | Text der Empfehlung, Charts der Liquiditätszonen und der Stabilität, Signal-Historie |
+| ⚠️ Knopf *Jetzt analysieren* | erzeugt per LLM ein Signal auf dem **alten** Hebelweg. Mit `alter_hebelweg_aus` ist dieser Weg in der Kette aus, über den Knopf ließe er sich von Hand wieder anstoßen |
+
+**Was fehlt:** Die REGEL0-Signale stehen nur in `data/regel0_signale.db` und in der Mail. Der Tab bliebe auf der Signalseite leer, weil der alte Weg keine neuen Signale mehr erzeugt.
+
+**Vorschlag** (eine Quelle mehr, kein Umbau des Tabs):
+
+| | |
+|---|---|
+| **Liste** | Die REGEL0-Signale als **dritte Quelle**, gelesen nur über `mode=ro`: Bitpanda-Name, LONG, Status (*Einstieg dd.mm. HH:MM* · *läuft bis …* · *Ausstieg fällig* · *kein Handel* · *nicht gemailt (Zuordnung)*), Hebel (endgültig, sonst vorläufig mit Vermerk), These *REGEL0 24 h*, Zeitpunkt. Es gelten dieselben Filter (2 Tage, Schalter) |
+| **Detail** | **derselbe Text wie die Mail** (`regel0_mail.signal_mail`, eine Quelle), dazu der Mailstand (gemailt, Korrektur, Erinnerung, Abgleich) |
+| **Positionen** | unverändert. Zusätzlich der Vermerk *REGEL0, Ausstieg …*, wenn für das Asset in den 24 h vor der Eröffnung ein REGEL0-Signal kam. Das ist eine Brücke bis O13 |
+| **Knopf** | ist der alte Weg aus, ist er **gesperrt**, mit dem Hinweis *alter Hebelweg aus (REGEL0, E-46)*. Die alten Zeilen bleiben als Historie sichtbar |
+| **Prüfung** | Die Zeilen entstehen in einer reinen Funktion (Ablage → Anzeigezeilen), die die Suite prüft. Die Oberfläche zeichnet nur. Dazu ein Rauchtest der Ansicht mit einer Wegwerfablage |
+
+**Zur Abstimmung:**
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **H-1** | REGEL0-Signale in **derselben** Liste (mit These *REGEL0*) statt in einer eigenen? | ➤ **Ja.** So bleibt ein Ort für Hebel, wie bisher |
+| **H-2** | Den Knopf *Jetzt analysieren* sperren, solange der alte Weg aus ist? | ➤ **Ja.** Sonst entstünde von Hand ein Parallelbetrieb (F1) |
+| **H-3** | Bei den offenen Positionen den REGEL0-Vermerk mit Ausstiegszeit zeigen? | ➤ **Ja** (Brücke bis O13) |
+| **H-4** | Wann ans NB? | ➤ **Zusammen mit S7-5**, nach den Kontrollen K-S7-3/K-S7-4. Die Oberfläche berührt die Rechnung nicht |
+
+---
+
+## 18. VORANALYSE — die Stop-Nachzieh-Sammelmail (03.10.2026, zur Abstimmung)
+
+**Nutzer:** *„Prüfe die alten Stop-Nachzieh-Mails (Sammelmail). Diese ist veraltet bzw. benötigen wir diese nur mehr für den Bestand und sollte eher nachgelagert unter dem Thema Spot-Positionsführung fallen, oder?"*
+
+**Ist-Stand am Code:** `scheduler/background.ausstiegs_job` läuft täglich um 07:15, nach dem Backward-Tracking. Er macht drei Dinge:
+
+1. Er protokolliert die Führung (`agent/fuehrung_protokoll`).
+2. Er zieht die Ausstiege nach (`agent/ausstieg_verfolgung`).
+3. Er verschickt `_sende_ausstiegs_email`.
+
+Die Auswahl trifft `backward_tracking.compute_ausstiegs_empfehlungen`. Sie wählt alle **offenen Signale** aus `signals` und `hebel_signals`, die je über 1,0 R standen (Trailing ab 1,0 R, Abstand 1,0 R; Regel vom 04.08.). Abgeschaltet wird sie in `config.yaml` über `risiko.ausstieg_trailing_ausloese_r = 0`.
+
+**Gemessen am NB-Export vom 03.10. 07:20** (67 Empfehlungen von 179 geprüften Signalen):
+
+| | |
+|---|---|
+| Hebel | **0** — die Mail betrifft heute nur **Spot** |
+| Richtung | 67 LONG, 0 SHORT |
+| Ursprung | 63 NACHKAUFEN, 4 KAUFEN — also die Spot-Bestandskette |
+| im Bestand | 61 Zeilen; **6 nicht** (PLTR, nur Signalverfolgung, fiktiv) |
+| ⚠️ Zeilen je Position | **eine je SIGNAL, nicht je Position**: 67 Zeilen für **15** Symbole, davon HYPE 16, BRETT 16, BIO 7. Für dieselbe Position stehen also mehrere, leicht verschiedene Stops in der Mail |
+| ⚠️ doppelter Versand | an Neustart-Tagen kommt die Mail **zweimal** (01.10.: 07:13 und 07:15; 03.10.: 06:27 und 07:15). Ursache: Der Nachholer (`_nachholen`, 16.08.) setzt bei einem Start **vor** 07:15 den Lauf sofort an, und der Cron feuert um 07:15 trotzdem. Dasselbe gilt für die anderen nachgeholten Tagesjobs. Dort ist ein zweiter Lauf harmlos, hier ist es eine zweite Mail |
+| Grundlage | Die Trailing-Regel vom 04.08. (495 echte Signale, eine Marktphase) stammt aus dem **Altbestand vor dem Hebelneubau** (*als Vergleich gültig, als Grundlage nicht*). Für die REGEL0 gilt ein eigener Ausstieg (24 h). Die Positionsführung A ist dort nicht bestätigt (2.702) |
+
+**Einordnung:** Ja, die Mail ist **Spot-Bestandsführung** und gehört zu **O14** (Spot-Kette ersetzen) als Teil *Spot-Positionsführung*. Für den Hebel hat sie heute keine Aufgabe mehr: Der alte Hebelweg ist aus (E-46), und echte Hebelpositionen gehören zu **O13** (2). ⚠️ Sie ist aber **nicht folgenlos stillzulegen**: Am selben Job hängen das Führungsprotokoll und die Ausstiegsverfolgung, und beide sind Messreihen (Befund 2.401, *Stilllegung: wer SCHREIBT das noch*). Abschalten hieße deshalb, nur die Mail abzuschalten, nicht den Job.
+
+**Zur Abstimmung:**
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **SN-1** | Die Sammelmail fachlich unter **O14 Spot-Positionsführung** führen, nicht unter Schritt 7? | ➤ **Ja.** Beim Ersatz der Spot-Kette wird sie neu entworfen: je **Position** statt je Signal, nur echter Bestand, Regel aus einer Messung nach heutigem Standard |
+| **SN-2** | Bis dahin den **doppelten Versand** beheben? Nachgeholt wird nur, wenn die Uhrzeit des Jobs heute schon vorbei ist. Das gilt für alle Tagesjobs mit Nachholer, samt Prüfung | ➤ **Ja**, ein kleiner, eigener Schritt. Er ändert keine Bewertung |
+| **SN-3** | Bis dahin die Mail auf **eine Zeile je Position** verdichten (höchster MFE je Symbol) und Nicht-Bestand weglassen? | ➤ **Nein, jetzt nicht.** Das wäre schon ein Teil der Neugestaltung unter O14. Heute reicht es, beim Lesen zu wissen: mehrere Zeilen je Symbol sind dieselbe Position |
+| **SN-4** | Oder die Mail bis O14 **ganz abschalten** (nur die Mail; Protokoll und Verfolgung laufen weiter)? | ➤ deine Wahl als Nutzer der Mail. Fachlich spricht nichts dagegen, sie ist Information, kein Signal |

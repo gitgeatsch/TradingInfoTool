@@ -206,6 +206,103 @@ def lauf(ordner: str, symbole: set | None = None, ausgabe=print) -> dict:
     return bericht
 
 
+# ══ S7-5a: NEUAUFNAHME neu gelisteter Assets (E-40 *alles, was Binance fuehrt*; Voranalyse_Schritt7 Par. 16, F-1/F-4) ══════════
+NEU_AB = "2023-01-01 00:00"          # wie die Erstbefuellung (hole_stundenkurse_alle.AB)
+NEU_VERSUCHE = 3                     # gemessen 03.10.: 2 von 3 Laeufen von universum() liefen am Desktop in Zeitgrenzen
+
+
+def _universum_mit_wiederholung(ausgabe=print):
+    """Die Auswahlregel der Erstbefuellung (``hole_stundenkurse_alle.universum``) - EINE Regel, keine Liste - mit Wiederholung."""
+    import hole_stundenkurse_alle as H
+    letzter = None
+    for v in range(NEU_VERSUCHE):
+        try:
+            return H.universum()
+        except requests.RequestException as ex:
+            letzter = ex
+            ausgabe("  Neuaufnahme: Binance nicht erreichbar (Versuch %d/%d: %s)" % (v + 1, NEU_VERSUCHE, type(ex).__name__))
+            time.sleep(20)
+    raise letzter
+
+
+def neuaufnahme(ordner: str, ausgabe=print, universum=None) -> dict:
+    """Neu gelistete Binance-Assets in ``stundenkurse_alle.db`` (und ihren Markpreis in ``markpreis_alle.db``) aufnehmen.
+
+    Neu ist, was die Regel heute ergibt und in der Datei noch fehlt. Je Asset wird die GANZE Historie ab dem Listing (fruehestens
+    2023) geholt, nur abgeschlossene Stunden, und erst DANACH eingetragen (Kerzen und ``_quelle`` in einer Transaktion) - ein
+    Aussetzer hinterlaesst nichts Halbes, das Asset wird beim naechsten Lauf wieder versucht. Nie in die Messbasis
+    (``universum`` nimmt die Messbasis aus; Grundgesamtheit). Bewertet, nicht trainiert. ``universum`` nur fuer die Probe."""
+    jetzt = int(time.time() * 1000)
+    aus, _ns, _nf, _nm = (universum or (lambda: _universum_mit_wiederholung(ausgabe)))()
+    pa = _pruefe_ziel(ordner, "stundenkurse_alle.db")
+    pm = _pruefe_ziel(ordner, "markpreis_alle.db")
+    ca = sqlite3.connect(pa, timeout=30)
+    da = {r[0] for r in ca.execute("SELECT symbol FROM _quelle")}
+    neu = [(b, m_, p_) for b, m_, p_ in aus if b not in da]
+    bericht = dict(regel=len(aus), datei=len(da), neu=[], fehler=[], markpreis=[])
+    if not neu:
+        ca.execute("CREATE TABLE IF NOT EXISTS _neuaufnahme (lauf_am TEXT, regel INTEGER, datei INTEGER, neu TEXT, fehler TEXT)")
+        ca.execute("INSERT INTO _neuaufnahme VALUES (?,?,?,?,?)", (_stunde(jetzt), len(aus), len(da), "", ""))
+        ca.commit(); ca.close()
+        ausgabe("  Neuaufnahme: Regel %d Assets, Datei %d - nichts Neues" % (len(aus), len(da)))
+        return bericht
+    _sp, fu = _im_handel()
+    cm = sqlite3.connect(pm, timeout=30)
+    try:
+        for b, markt, paar in neu:
+            url = SPOT[1] if markt == "spot" else FUT[1]
+            try:
+                k = _hole(url, paar, _ms(NEU_AB), jetzt)
+                if not k:
+                    raise ValueError("keine Kerzen")
+                # Markpreis: das eigene Paar (Faktor 1), sonst das 1000er (Faktor 1000) - wie hole_markpreis.lade
+                mp, mpaar, mfak = [], None, None
+                for p_, f_ in ((paar, 1.0), ("1000" + paar, 1000.0)):
+                    if p_ in fu:
+                        mp = _hole(MARK, p_, _ms(NEU_AB), jetzt)
+                        if mp:
+                            mpaar, mfak = p_, f_
+                            break
+            except Exception as ex:                                     # noqa: BLE001
+                bericht["fehler"].append("%s: %s" % (b, str(ex)[:60]))
+                ausgabe("  ⚠️ Neuaufnahme %s: %s - naechster Lauf versucht es wieder" % (b, str(ex)[:80]))
+                continue
+            with ca:                                                    # EINE Transaktion: alles oder nichts
+                ca.executemany("INSERT OR REPLACE INTO stundenkurse VALUES (?,?,?,?,?,?,?)",
+                               [(b, _stunde(int(x[0])), float(x[1]), float(x[2]), float(x[3]), float(x[4]), float(x[5])) for x in k])
+                ca.execute("INSERT OR REPLACE INTO _quelle VALUES (?,?,?,?)", (b, markt, paar, _stunde(jetzt)))
+            if mp:
+                with cm:
+                    cm.executemany("INSERT OR REPLACE INTO markpreis VALUES (?,?,?,?,?,?,?,?)",
+                                   [(b, _stunde(int(x[0])), float(x[1]), float(x[2]), float(x[3]), float(x[4]), mpaar, mfak) for x in mp])
+                bericht["markpreis"].append(b)
+            bericht["neu"].append("%s(%s, %d h ab %s)" % (b, markt, len(k), _stunde(int(k[0][0]))))
+            ausgabe("  Neuaufnahme: %s %s %s - %d Stunden ab %s%s" % (b, markt, paar, len(k), _stunde(int(k[0][0])),
+                                                                    ", Markpreis %s" % mpaar if mp else ", ohne Markpreis"))
+    finally:
+        cm.close()
+    ca.execute("CREATE TABLE IF NOT EXISTS _neuaufnahme (lauf_am TEXT, regel INTEGER, datei INTEGER, neu TEXT, fehler TEXT)")
+    ca.execute("INSERT INTO _neuaufnahme VALUES (?,?,?,?,?)", (_stunde(jetzt), len(aus), len(da), ", ".join(bericht["neu"]), " | ".join(bericht["fehler"])))
+    ca.commit(); ca.close()
+    return bericht
+
+
+def neuaufnahme_faellig(ordner: str, jetzt_utc: datetime | None = None, stunde: int = 2) -> bool:
+    """Taeglich ab ``stunde`` UTC (F-4), einmal je Tag - auch nachgeholt, wenn die App zur Stunde nicht lief."""
+    jetzt_utc = jetzt_utc or datetime.now(timezone.utc)
+    if jetzt_utc.hour < stunde:
+        return False
+    try:
+        c = sqlite3.connect("file:%s?mode=ro" % os.path.join(ordner, "stundenkurse_alle.db").replace("\\", "/"), uri=True)
+        try:
+            r = c.execute("SELECT MAX(lauf_am) FROM _neuaufnahme").fetchone()
+        finally:
+            c.close()
+    except sqlite3.Error:
+        return True                       # Tabelle gibt es noch nicht - also nie gelaufen
+    return not (r and r[0] and r[0][:10] == jetzt_utc.strftime("%Y-%m-%d"))
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")

@@ -1526,6 +1526,18 @@ def regel0_nachlader_job() -> None:
     if not erlaubt:
         logger.info("REGEL0-Nachlader: uebersprungen - %s", grund)
         return
+    # S7-5a (03.10.2026): einmal je Tag (ab 02:00 UTC, nachgeholt) neu gelistete Assets aufnehmen - VOR dem Nachladen, damit
+    # sie gleich die aktuelle Stunde mitbekommen. Ein Fehlschlag haelt das Nachladen nicht auf.
+    try:
+        if NL.neuaufnahme_faellig(ordner):
+            _nb = NL.neuaufnahme(ordner, ausgabe=lambda s: logger.info("REGEL0-Neuaufnahme: %s", s.strip()))
+            logger.info("REGEL0-Neuaufnahme: Regel %d, Datei %d, neu %d%s, Fehler %d", _nb["regel"], _nb["datei"], len(_nb["neu"]),
+                        (" (%s)" % ", ".join(_nb["neu"])) if _nb["neu"] else "", len(_nb["fehler"]))
+            if _nb["fehler"]:
+                _notify_job_failure("regel0_neuaufnahme", "nicht aufgenommen: " + " | ".join(_nb["fehler"])[:500])
+    except Exception as exc:                                 # noqa: BLE001
+        logger.exception("REGEL0-Neuaufnahme: fehlgeschlagen")
+        _notify_job_failure("regel0_neuaufnahme", "%s: %s" % (type(exc).__name__, exc))
     t0 = time.time()
     try:
         bericht = NL.lauf(ordner, ausgabe=lambda s: logger.info("REGEL0-Nachlader: %s", s.strip()))
@@ -1554,10 +1566,11 @@ def _regel0_mails() -> None:
     try:
         import agent.regel0_mail as _RM
         import agent.regel0_nachlader as _NL
-        z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail)
+        z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail,
+                         melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t))
         if any(z.values()):
-            logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d nicht zugestellt",
-                        z["signal"], z["korrektur"], z["erinnerung"], z["fehlgeschlagen"])
+            logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d nicht zugestellt, %d gesperrt (Zuordnung)",
+                        z["signal"], z["korrektur"], z["erinnerung"], z["fehlgeschlagen"], z["gesperrt"])
         if z["fehlgeschlagen"]:
             logger.error("REGEL0-Mails: %d nicht zugestellt - naechster Versuch in einer Stunde", z["fehlgeschlagen"])
     except Exception as exc:                                 # noqa: BLE001

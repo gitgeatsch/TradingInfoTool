@@ -18,6 +18,10 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️⚠️⚠️ NACHTRAG 03.10.2026 — der HEBEL kommt nicht mehr aus dieser Kette
+>
+> Seit S7-4 (E-46, am NB seit 03.10.) kommen **neue Hebel-Einstiege nur noch aus der REGEL0**: `agent/regel0_rechnung.py` stündlich nach dem Nachlader, Ablage `data/regel0_signale.db`, Mail `agent/regel0_mail.py`. In der Rollen-Kette ist der Hebelvorschlag über den Schalter `alter_hebelweg_aus` (`Basisinfos/regel0_betrieb.yaml`) **aus**: Eine Hebel-Etikettierung wird zu Spot, SHORT entfällt, es gibt keine Hebelrechnung (`rollen_lauf._ein_asset`). **Unverändert** sind die Spot-Kette und die Führung **echter** Hebelpositionen. Die LLM-Rollen sehen die REGEL0 noch **nicht** (D3; ihr Prüfblock kommt in der zweiten Fassung, M1-Kriterium 4). Alles, was unten über *Hebel* aus den Rollen steht, beschreibt den alten Weg.
+>
 > ## ⚠️⚠️ NACHTRAG 23.09.2026 — zwei weitere Aussagen sind überholt
 >
 > | Hier steht | Richtig ist seit | Befund |

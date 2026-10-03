@@ -608,3 +608,15 @@ prüfen und gegenprüfen"*.
 - **D3:** **kein** Kommentar der LLM-Rollen in dieser Fassung (F2 kommt in der zweiten).
 - **D4:** **Testwoche** bis 10.10. als Vermerk in Betreff und Text (E-43). **O18** behoben: Die Migration der Hebel-Schalter läuft nur einmal, ohne Eintrag gilt *aus*.
 - Mit S7-4 gilt F1 vollständig: **Neue Hebel-Einstiege kommen nur noch aus der REGEL0.** Schalter `alter_hebelweg_aus` in `Basisinfos/regel0_betrieb.yaml`.
+
+---
+
+# E-47 · S7-5: neue Listings, Preisabgleich, gesperrte Kürzel (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„Ja F-1 bis F-5 wie vorgeschlagen, prüfen und gegenprüfen"* (`Voranalyse_Schritt7_Betrieb_02_10.md` §16).
+- **F-1:** S7-5a bis S7-5d werden gebaut. Neu gelistete Binance-Paare kommen am NB **täglich** in `stundenkurse_alle.db`/`markpreis_alle.db`, nie in die Messbasis. Vor jeder Signalmail werden die Kurse von Bitpanda und Binance verglichen, ab 5 % geht keine Mail raus. Gesperrte Kürzel gelten für alle Mengen. Der Teilexport zeigt, was nicht gemailt wurde.
+- **F-2:** Ist der Ticker nicht erreichbar, geht die Mail **trotzdem** raus, mit dem Vermerk *Kurs nicht gegengeprüft*.
+- **F-3:** Tokenisierte Aktien und Wrapped Token **bleiben** in der Datenbasis, ohne Aufzählungsliste. In der Signalbilanz werden sie getrennt ausgewiesen.
+- **F-4:** Die Neuaufnahme läuft täglich, ab 02:00 UTC im Stundenjob, vor dem Nachladen.
+- **F-5:** S7-5 kommt ans NB **nach** den Kontrollen K-S7-3/K-S7-4. Die sind am 03.10. bestanden.
+- Gegenprüfung `Basisinfos/Rechenkern_02_10/pruefe_s75.py` 15/15. Wache `--paket Regel0Betrieb` 26/26.

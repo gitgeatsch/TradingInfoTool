@@ -305,6 +305,46 @@ def _inhalt() -> int:
             c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Rechnung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # S7-5d (03.10.2026): taeglicher Abgleich als Auskunft - Neuaufnahme, gesperrte Mails, Hebel-Schalter-Assets ohne Daten (nur lesen)
+    print()
+    print("-" * 100)
+    try:
+        pa = os.path.join(DATEN, "stundenkurse_alle.db")
+        if os.path.exists(pa):
+            c = ro(pa)
+            if "_neuaufnahme" in tabellen(c):
+                for r in c.execute("SELECT * FROM _neuaufnahme ORDER BY lauf_am DESC LIMIT 3"):
+                    print("REGEL0-NEUAUFNAHME %s · Regel %d · Datei %d · neu: %s%s" % (r[0], r[1], r[2], r[3] or "-", (" · ⚠️ " + r[4]) if r[4] else ""))
+            else:
+                print("REGEL0-NEUAUFNAHME: noch kein Lauf")
+            daten = {x for (x,) in c.execute("SELECT symbol FROM _quelle")}
+            c.close()
+        else:
+            daten = set()
+        pm = os.path.join(DATEN, "stundenkurse.db")
+        if os.path.exists(pm):
+            c = ro(pm); daten |= {x for (x,) in c.execute("SELECT DISTINCT symbol FROM stundenkurse")}; c.close()
+        ab = os.path.join(DATEN, "regel0_signale.db")
+        if os.path.exists(ab):
+            c = ro(ab)
+            if "mail_gesperrt_am" in {r[1] for r in c.execute("PRAGMA table_info(signal)")}:
+                g = c.execute("SELECT symbol, bitpanda, signalstunde, abgleich FROM signal WHERE mail_gesperrt_am IS NOT NULL ORDER BY signalstunde DESC LIMIT 10").fetchall()
+                print("REGEL0 Signale NICHT gemailt wegen Zuordnung: %d%s" % (len(g), "".join(chr(10) + "    %s (%s) %s · %s" % x for x in g)))
+            c.close()
+        if os.path.exists(prod):
+            import csv as _csv
+            zu = {}
+            pz = os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv")
+            if os.path.exists(pz):
+                for r in _csv.DictReader(open(pz, encoding="utf-8"), delimiter=";"):
+                    zu[r["bitpanda"]] = None if r["markt"] == "gesperrt" else r["binance"]
+            c = ro(prod)
+            an = [r[0] for r in c.execute("SELECT symbol FROM asset_hebel_settings WHERE hebel_pruefung_erlaubt=1 ORDER BY symbol")]
+            c.close()
+            ohne = [s_ for s_ in an if zu.get(s_, s_) not in daten]
+            print("Hebel-Schalter AN, aber OHNE REGEL0-Daten (kein Signal moeglich): %d - %s" % (len(ohne), ", ".join(ohne) or "-"))
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ REGEL0-Abgleich nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     print()
     print("SCHLUSS: vollstaendig")
     return 0

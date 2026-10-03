@@ -21,6 +21,7 @@ import agent.regel0_ablage as AB
 import agent.regel0_groesse as G
 
 NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stunden vorbei ist, wird nicht mehr gemailt
+ABGLEICH_GRENZE = 0.05    # S7-5b: Bitpanda gegen Binance zum selben Moment - gemessen 03.10.: gleiche Coins -0,1 %, Kollisionen +25 bis +428 %
 ERINNERUNG_BIS_H = 6      # eine Erinnerung, deren Ausstieg laenger vorbei ist, entfaellt (z. B. nach langem Stillstand)
 
 
@@ -53,6 +54,29 @@ def _vermerke(r: dict) -> list:
     return v
 
 
+def kurse_live() -> tuple:
+    """-> ({Bitpanda-Symbol: USD}, {Binance-Paar: Kurs}) - oeffentliche Ticker, zum selben Moment. Wirft bei Netzfehlern."""
+    import requests
+    bp = requests.get("https://api.bitpanda.com/v1/ticker", timeout=20).json()
+    bpu = {k: float(v["USD"]) for k, v in bp.items() if isinstance(v, dict) and v.get("USD")}
+    bn = {x["symbol"]: float(x["price"]) for x in requests.get("https://api.binance.com/api/v3/ticker/price", timeout=20).json()}
+    for x in requests.get("https://fapi.binance.com/fapi/v1/ticker/price", timeout=20).json():
+        bn.setdefault(x["symbol"], float(x["price"]))
+    return bpu, bn
+
+
+def abgleich(r: dict, bpu: dict | None, bn: dict | None) -> tuple:
+    """-> (ok, text): gehoert der Binance-Kurs zum Bitpanda-Coin? Fehlt ein Kurs, ist das KEIN Fehler, sondern *nicht gegengeprueft*."""
+    if bpu is None or bn is None:
+        return True, "Kurs nicht gegengeprueft (Ticker nicht erreichbar)"
+    b, n = bpu.get(r.get("bitpanda") or ""), bn.get(r.get("paar") or "")
+    if not b or not n:
+        return True, "Kurs nicht gegengeprueft (%s)" % ("kein Bitpanda-Kurs" if not b else "kein Binance-Kurs %s" % r.get("paar"))
+    d = n / (b * float(r.get("faktor") or 1.0)) - 1.0
+    txt = "Bitpanda %.6g USD, Binance %s %.6g (Abweichung %+.1f %%)" % (b, r.get("paar"), n, 100 * d)
+    return abs(d) <= ABGLEICH_GRENZE, txt.replace(".", ",", 0)
+
+
 def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime) -> tuple:
     tw = _testwoche(werte, jetzt)
     ein = _t(r["einstieg"]) + timedelta(hours=1)          # Schlusskurs der Einstiegsstunde
@@ -82,6 +106,8 @@ def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jet
         z.append("Kurs zur Signalstunde: %s USDT (Binance %s, nur Orientierung - Bitpanda handelt in EUR)" % (
             ("%.6g" % r["kurs"]), "Futures" if r.get("kurs_markt") == "futures" else "Spot"))
     vm = _vermerke(r)
+    if r.get("abgleich"):
+        vm.append("Zuordnung: " + r["abgleich"])
     if vm:
         z += ["", "Vermerke:"] + ["  - " + x for x in vm]
     z += ["", "Regel: REGEL0.1 (rsi-Ersteintritt, v-dach %s, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %%)" % (
@@ -118,29 +144,51 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
     return betreff, text
 
 
-def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None) -> dict:
-    """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende."""
+def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None) -> dict:
+    """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
+
+    S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
+    Weicht der Kurs mehr als 5 % ab, gehoert der Binance-Kurs zu einem ANDEREN Coin: keine Mail, Vermerk in der Ablage,
+    ``melden(text)`` einmal je Signal. Ist der Ticker nicht erreichbar, geht die Mail mit Vermerk raus (F-2)."""
     jetzt = jetzt or datetime.now(timezone.utc)
     werte = werte if werte is not None else G.lade()
     jt = jetzt.strftime("%Y-%m-%d %H:%M")
     grenze_alt = (jetzt - timedelta(hours=NICHT_AELTER_H)).strftime("%Y-%m-%d %H:%M")
     grenze_erin = (jetzt - timedelta(hours=ERINNERUNG_BIS_H + 1)).strftime("%Y-%m-%d %H:%M")
-    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0)
+    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0)
+    _kurse = {}
+
+    def _live():
+        if "v" not in _kurse:
+            try:
+                _kurse["v"] = (kurse or kurse_live)()
+            except Exception:                                   # noqa: BLE001
+                _kurse["v"] = (None, None)
+        return _kurse["v"]
     c = AB.oeffne(ordner_ablage)
     c.row_factory = __import__("sqlite3").Row
     try:
         # 1  SIGNAL: Schalter an, Stufe > 0, noch nicht gemailt, Einstieg nicht laenger als NICHT_AELTER_H vorbei
-        for r in c.execute("SELECT * FROM signal WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND COALESCE(stufe, stufe_vorlaeufig) > 0 "
-                           "AND einstieg >= ? ORDER BY signalstunde", (grenze_alt,)).fetchall():
+        for r in c.execute("SELECT * FROM signal WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND mail_gesperrt_am IS NULL "
+                           "AND COALESCE(stufe, stufe_vorlaeufig) > 0 AND einstieg >= ? ORDER BY signalstunde", (grenze_alt,)).fetchall():
             r = dict(r)
+            ok, txt = abgleich(r, *_live())
+            r["abgleich"] = txt
+            if not ok:
+                c.execute("UPDATE signal SET mail_gesperrt_am=?, abgleich=? WHERE symbol=? AND signalstunde=?", (jt, txt, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["gesperrt"] += 1
+                if melden:
+                    melden("REGEL0-Signal %s (Binance %s) NICHT gemailt - Zuordnung zweifelhaft: %s. Pruefen: Basisinfos/symbol_zuordnung.csv "
+                           "(gesperrt, wenn Bitpanda einen anderen Coin unter dem Kuerzel fuehrt)" % (r.get("bitpanda"), r["symbol"], txt))
+                continue
             stufe = int(r["stufe"] if r["stufe"] is not None else r["stufe_vorlaeufig"])
             offen = c.execute("SELECT COUNT(*) FROM signal WHERE mail_signal_am IS NOT NULL AND COALESCE(stufe, mail_signal_stufe) > 0 "
                               "AND ausstieg > ? AND NOT (symbol=? AND signalstunde=?)", (jt, r["symbol"], r["signalstunde"])).fetchone()[0]
             g = G.rechne(stufe, int(offen), werte)
             b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt)
             if senden(b, t):
-                c.execute("UPDATE signal SET mail_signal_am=?, mail_signal_stufe=? WHERE symbol=? AND signalstunde=?",
-                          (jt, stufe, r["symbol"], r["signalstunde"]))
+                c.execute("UPDATE signal SET mail_signal_am=?, mail_signal_stufe=?, abgleich=? WHERE symbol=? AND signalstunde=?",
+                          (jt, stufe, txt, r["symbol"], r["signalstunde"]))
                 c.commit(); zaehl["signal"] += 1
             else:
                 zaehl["fehlgeschlagen"] += 1

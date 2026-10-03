@@ -84,15 +84,41 @@ def _hebel_schalter(ordner: str) -> dict:
         return {}
 
 
-def _binance_zu_bitpanda() -> dict:
+def _binance_zu_bitpanda() -> tuple:
+    """-> ({Binance-Symbol: Bitpanda-Symbol oder None}, {Binance-Symbol: Faktor}) aus Basisinfos/symbol_zuordnung.csv.
+
+    ⚠️ S7-5c (N-2, 03.10.2026): ein GESPERRTES Kuerzel (Bitpanda fuehrt darunter einen ANDEREN Coin) bekommt KEINEN Bitpanda-Namen -
+    fuer JEDE Menge, auch die Messbasis (ZK liegt dort; Kurs Binance gegen Bitpanda +101,6 %). Ohne Namen kein Schalter, keine Mail.
+    Faktor: Kurs des Binance-Paars je Bitpanda-Stueck (CAT -> 1000CAT: 1000)."""
     pz = os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv")
-    aus = {}
+    aus, fak = {}, {}
     if os.path.exists(pz):
         with open(pz, encoding="utf-8") as f_:
             for r in csv.DictReader(f_, delimiter=";"):
-                if r.get("markt") != "gesperrt":
+                if r.get("markt") == "gesperrt":
+                    aus[r["binance"]] = None
+                    aus.setdefault(r["bitpanda"], None)
+                else:
                     aus[r["binance"]] = r["bitpanda"]
-    return aus
+                    try:
+                        fak[r["binance"]] = float(r.get("faktor") or 1)
+                    except ValueError:
+                        fak[r["binance"]] = 1.0
+    return aus, fak
+
+
+def _kurs_paar(ordner: str) -> dict:
+    """{Symbol: Binance-Paar} der Zusatz-Assets (stundenkurse_alle.db, _quelle); die Messbasis handelt <SYMBOL>USDT am Spot."""
+    p = os.path.join(ordner, "stundenkurse_alle.db")
+    if not os.path.exists(p):
+        return {}
+    c = _ro(p)
+    try:
+        return {r[0]: r[1] for r in c.execute("SELECT symbol, paar FROM _quelle")}
+    except sqlite3.Error:
+        return {}
+    finally:
+        c.close()
 
 
 def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | None = None, ordner_modelle: str | None = None,
@@ -124,8 +150,9 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
     B = bewerte(ordner, pakete, jetzt, zusatz=zus)
     fr = B["frische"]
     schalter = _hebel_schalter(ordner)
-    zu_bp = _binance_zu_bitpanda()
+    zu_bp, fak = _binance_zu_bitpanda()
     markt = _kurs_markt(ordner)
+    paare = _kurs_paar(ordner)
     meldung = ""
     if fr["aktiv"] and len(fr["veraltet"]) / fr["aktiv"] > VERALTET_MELDEN_AB:
         meldung = "%d von %d aktiven Assets ohne die Stunde %s - Datenbasis veraltet (Nachlader?)" % (
@@ -135,15 +162,15 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
         jetzt_txt = datetime.now(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M")
         for x in B["neu"]:
             bp = zu_bp.get(x["symbol"], x["symbol"])
-            sch = schalter.get(bp.upper())
+            sch = schalter.get(bp.upper()) if bp else None
             c.execute("INSERT OR IGNORE INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, stufe_vorlaeufig, p2, p3, p5, hebel_schalter, "
-                      "bitpanda, zusatz, btc, version, erfasst_am, kurs, kurs_markt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                      "bitpanda, zusatz, btc, version, erfasst_am, kurs, kurs_markt, paar, faktor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                       (x["symbol"], x["signalstunde"], x["einstieg"], x["ausstieg"], x["vh"], x["stufe"], x["p2"], x["p3"], x["p5"],
                        None if sch is None else int(sch), bp, int(x["zusatz"]), int(x["btc"]), REGELVERSION, jetzt_txt,
-                       x.get("kurs"), markt.get(x["symbol"], "spot")))
+                       x.get("kurs"), markt.get(x["symbol"], "spot"), paare.get(x["symbol"], x["symbol"] + "USDT"), fak.get(x["symbol"], 1.0)))
         for x in B["endgueltig"]:
             bp = zu_bp.get(x["symbol"], x["symbol"])
-            sch = schalter.get(bp.upper())
+            sch = schalter.get(bp.upper()) if bp else None
             c.execute("INSERT OR IGNORE INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, hebel_schalter, bitpanda, zusatz, btc, version, "
                       "erfasst_am) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                       (x["symbol"], x["signalstunde"], x["einstieg"], x["ausstieg"], x["vh"], None if sch is None else int(sch), bp,
@@ -157,7 +184,8 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
     finally:
         c.close()
     zus_ = dict(jetzt=_stunde_txt(jetzt), sekunden=round(time.time() - t0, 1), neu=len(B["neu"]), endgueltig=len(B["endgueltig"]),
-                neu_schalter_an=sum(1 for x in B["neu"] if schalter.get(zu_bp.get(x["symbol"], x["symbol"]).upper())),
+                neu_schalter_an=sum(1 for x in B["neu"] if (zu_bp.get(x["symbol"], x["symbol"]) or "") and
+                                    schalter.get(zu_bp.get(x["symbol"], x["symbol"]).upper())),
                 aktiv=fr["aktiv"], frisch=fr["frisch"], veraltet=len(fr["veraltet"]), trainiert=neu_trainiert, meldung=meldung)
     ausgabe("REGEL0-ERGEBNIS " + json.dumps(zus_, ensure_ascii=False))
     return zus_
