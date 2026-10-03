@@ -544,6 +544,19 @@ class HebelView(ttk.Frame):
         self.action_label.config(text=titel, foreground=theme.action_color("KAUFEN"))
         self.meta_label.config(text=meta)
         self._set_detail_text(text)
+        # E-50 N-f (03.10.2026): DASSELBE Bild wie in der Signalmail (agent/regel0_chart.bild) - eine Quelle. Scheitert es, bleibt der Text.
+        try:
+            import base64
+            from agent import regel0_chart as _CH
+            png = _CH.bild(r, self._regel0_ordner)
+            if png:
+                self._r0_bild = tk.PhotoImage(data=base64.b64encode(png).decode("ascii"))
+                self.detail_text.config(state="normal")
+                self.detail_text.insert("end", "\n\n")
+                self.detail_text.image_create("end", image=self._r0_bild)
+                self.detail_text.config(state="disabled")
+        except Exception:                                    # noqa: BLE001
+            logger.exception("REGEL0-Chart im Hebel-Tab nicht darstellbar")
 
     def _render_kandidat(self, trig) -> None:
         can_analyze = self._any_llm_client_available()

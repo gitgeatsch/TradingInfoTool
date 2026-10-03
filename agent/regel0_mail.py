@@ -22,6 +22,7 @@ import agent.regel0_groesse as G
 
 NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stunden vorbei ist, wird nicht mehr gemailt
 ABGLEICH_GRENZE = 0.05    # S7-5b: Bitpanda gegen Binance zum selben Moment - gemessen 03.10.: gleiche Coins -0,1 %, Kollisionen +25 bis +428 %
+NL = chr(10)
 ERINNERUNG_BIS_H = 6      # eine Erinnerung, deren Ausstieg laenger vorbei ist, entfaellt (z. B. nach langem Stillstand)
 
 
@@ -144,12 +145,16 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
     return betreff, text
 
 
-def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None) -> dict:
+def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
+             bild=None, pruefung=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
     Weicht der Kurs mehr als 5 % ab, gehoert der Binance-Kurs zu einem ANDEREN Coin: keine Mail, Vermerk in der Ablage,
-    ``melden(text)`` einmal je Signal. Ist der Ticker nicht erreichbar, geht die Mail mit Vermerk raus (F-2)."""
+    ``melden(text)`` einmal je Signal. Ist der Ticker nicht erreichbar, geht die Mail mit Vermerk raus (F-2).
+
+    E-50 N-f (03.10.2026): ``bild(r) -> PNG | None`` haengt das Chart an die SIGNALmail (``senden(betreff, text, bilder)``).
+    ``pruefung(r) -> [Zeilen]`` haengt den Block der LLM-Rollen an (E-52). Beides darf scheitern, ohne die Mail aufzuhalten (P-8)."""
     jetzt = jetzt or datetime.now(timezone.utc)
     werte = werte if werte is not None else G.lade()
     jt = jetzt.strftime("%Y-%m-%d %H:%M")
@@ -186,7 +191,23 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                               "AND ausstieg > ? AND NOT (symbol=? AND signalstunde=?)", (jt, r["symbol"], r["signalstunde"])).fetchone()[0]
             g = G.rechne(stufe, int(offen), werte)
             b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt)
-            if senden(b, t):
+            if pruefung is not None:
+                try:
+                    _z = pruefung(r) or []
+                except Exception as exc:                        # noqa: BLE001
+                    _z = ["PRUEFUNG DURCH DIE ROLLEN: nicht verfuegbar (%s)" % type(exc).__name__]
+                if _z:
+                    t = t + NL + NL + NL.join(_z)
+            bilder = None
+            if bild is not None:
+                try:
+                    _png = bild(r)
+                except Exception:                               # noqa: BLE001
+                    _png = None
+                if _png:
+                    bilder = [{"png": _png, "alt": "REGEL0 %s" % (r.get("bitpanda") or r["symbol"]),
+                               "filename": "regel0_%s_%s.png" % (r["symbol"], r["signalstunde"][:13].replace(" ", "_").replace(":", ""))}]
+            if (senden(b, t, bilder) if bilder else senden(b, t)):
                 c.execute("UPDATE signal SET mail_signal_am=?, mail_signal_stufe=?, abgleich=? WHERE symbol=? AND signalstunde=?",
                           (jt, stufe, txt, r["symbol"], r["signalstunde"]))
                 c.commit(); zaehl["signal"] += 1

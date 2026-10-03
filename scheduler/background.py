@@ -1591,8 +1591,10 @@ def _regel0_mails() -> None:
     try:
         import agent.regel0_mail as _RM
         import agent.regel0_nachlader as _NL
+        import agent.regel0_chart as _CH
         z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail,
-                         melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t))
+                         melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t),
+                         bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE))      # E-50 N-f: das Chart in der Signalmail
         if any(z.values()):
             logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d nicht zugestellt, %d gesperrt (Zuordnung)",
                         z["signal"], z["korrektur"], z["erinnerung"], z["fehlgeschlagen"], z["gesperrt"])
@@ -2895,7 +2897,7 @@ def _pruefe_hebel_abgleich(conn_factory) -> None:
         logger.exception("Pruefung des Hebel-Abgleichs fehlgeschlagen")
 
 
-def _sende_hinweismail(betreff: str, text: str) -> bool:
+def _sende_hinweismail(betreff: str, text: str, bilder: list | None = None) -> bool:
     """Eine Hinweismail mit EIGENEM Betreff - True nur bei echtem Versand.
 
     Nicht ueber `_notify_job_failure`: dessen Betreff lautet ,Job X
@@ -2907,7 +2909,7 @@ def _sende_hinweismail(betreff: str, text: str) -> bool:
     email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
     if not email_cfg.get("aktiv", False) or not email_cfg.get("empfaenger"):
         return False
-    return bool(send_notification_email(betreff, text, email_cfg["empfaenger"]))
+    return bool(send_notification_email(betreff, text, email_cfg["empfaenger"], inline_images=bilder or None))
 
 
 def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:

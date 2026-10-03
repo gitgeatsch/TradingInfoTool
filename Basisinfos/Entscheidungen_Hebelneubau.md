@@ -677,3 +677,14 @@ prüfen und gegenprüfen"*.
   - Das Modell steht als Rollenkatalog in einer Konfigurationsdatei, Anpassen ist eine neue Fassung.
   - Die Einstiege werden vorab in eine **Entwicklungsmenge** und eine **unberührte Bestätigungsmenge** geteilt.
   - Prüfpunkte P1 bis P4 mit vorab festgelegten Folgen. Eine Änderung am Rollenmodell selbst entscheidet der Nutzer.
+
+---
+
+# E-52 · Sofortfassung des LLM-Blocks geht vor der Messung in die Produktion (Nutzer 03.10.2026)
+
+**03.10.2026** · Nutzer: *„Ok, Charts und N1 bauen, prüfen und gegenprüfen. Zur Dauer: Hier brauchen wir eine Sofortlösung (Simulation etc.), mit dieser gehen wir in die Produktion, und die adaptierte und gemessene Lösung muss später final kommen."* Nachgereicht: *„optimal wäre dann ein selbstjustierendes System."*
+- Die **Sofortfassung** (Rollenmodell M3, Fassung `0.1-sofort`) geht nach dem Bau (N1, N2) und einem **Kalibrierlauf mit Simulation** in die Mail. Der Kalibrierlauf prüft P1: Antworten formgültig, Stufenverteilung, Wiederholung, Anonymität, Ende zu Ende in der gerenderten Mail.
+- In der Mail steht sie ausdrücklich als **Sofortfassung, ungemessen**.
+- Die **gemessene Fassung** ersetzt sie später, nach Rückspiel (N4) und Bestätigung (P3).
+- Die **Charts** kommen sofort.
+- *Selbstjustierend:* als Planpunkt aufgenommen (O21), zur fachlichen Prüfung. Siehe dort.

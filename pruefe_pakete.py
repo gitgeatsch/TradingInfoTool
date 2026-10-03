@@ -31328,6 +31328,42 @@ def paket_regel0_betrieb() -> None:
                R0A.knopf_hinweis({"alter_hebelweg_aus": False}) is None)
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "H-1..H-4: Wache lief durch", False, repr(ex))
+    # E-50 N-f (03.10.): das Chart - dieselbe Liquidationsformel wie die Messung, in Mail und Tab, scheitert ohne Folgen
+    try:
+        import datetime as _dtc
+        import agent.regel0_ablage as AB
+        import agent.regel0_chart as CH
+        import agent.regel0_groesse as G
+        import agent.regel0_mail as RM
+        import messe_k6_hebelstufe as K6
+        pruefe(P, "N-f: Liquidationsgrenze im Chart = Messung (liq_schwelle, Marge, Finanzierung, Stufen)",
+               all(abs(CH.liq_schwelle(L, CH.MARGE, s_) - K6.liq_schwelle(L, CH.MARGE, s_)) < 1e-12 for L in K6.STUFEN for s_ in range(25))
+               and CH.FIN == K6.FIN and tuple(CH.STUFEN) == tuple(K6.STUFEN) and CH.MARGE == 0.09)
+        with _tf.TemporaryDirectory() as d:
+            c = AB.oeffne(d)
+            c.execute("INSERT INTO signal (symbol,signalstunde,einstieg,ausstieg,stufe_vorlaeufig,stufe,hebel_schalter,bitpanda,version,kurs) "
+                      "VALUES ('AAAX','2026-09-15 10:00','2026-09-15 11:00','2026-09-16 11:00',3,3,1,'AAA','regel0_1',1.0)")
+            c.commit(); c.close()
+            _j = _dtc.datetime(2026, 9, 15, 12, 30, tzinfo=_dtc.timezone.utc)
+            post = []
+
+            def _kaputt(r):
+                raise RuntimeError("Probe")
+            z = RM.versende(d, lambda b_, t_, bi=None: post.append((b_, t_, bi)) or True, _j, G.lade(), kurse=lambda: (None, None),
+                            bild=lambda r: b"PNG", pruefung=lambda r: ["PRUEFUNG-PROBE"])
+            c = AB.oeffne(d); c.execute("UPDATE signal SET mail_signal_am=NULL"); c.commit(); c.close()
+            z2 = RM.versende(d, lambda b_, t_, bi=None: post.append((b_, t_, bi)) or True, _j, G.lade(), kurse=lambda: (None, None),
+                             bild=_kaputt, pruefung=_kaputt)
+        pruefe(P, "N-f: Signalmail traegt Bild und Pruefblock; scheitern beide, geht sie trotzdem raus (P-8)",
+               z["signal"] == 1 and post[0][2] and post[0][2][0]["png"] == b"PNG" and "PRUEFUNG-PROBE" in post[0][1]
+               and z2["signal"] == 1 and post[1][2] is None and "nicht verfuegbar" in post[1][1])
+        _bq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        _hq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "hebel_view.py"), encoding="utf-8").read()
+        pruefe(P, "N-f: Mail und Hebel-Tab nehmen DASSELBE Bild (regel0_chart.bild), die Hinweismail reicht Bilder durch",
+               "bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE)" in _bq and "inline_images=bilder or None" in _bq
+               and "_CH.bild(r, self._regel0_ordner)" in _hq)
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "N-f: Wache lief durch", False, repr(ex))
 
 
 def paket_alarmmail(B=None) -> None:
