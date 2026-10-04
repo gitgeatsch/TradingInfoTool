@@ -1599,6 +1599,30 @@ def _regel0_positionsstand() -> dict:
     return {"stand": f.get("stand"), "veraltet": bool(f.get("veraltet")), "stunden": f.get("stunden"), "positionen": pos}
 
 
+def _regel0_spot_hinweis(r: dict) -> str | None:
+    """O25 M-f (Nutzer 04.10.2026): hat die ALTE Spot-Kette in den letzten 24 h zu diesem Asset gemailt? Dann ein Satz in der
+    REGEL0-Mail - ein anderes Geschaeft (Spot), nicht diese Wette. NUR LESEND (``signals``, Mailvermerk ``zugestellt``)."""
+    name = (r.get("bitpanda") or r.get("symbol") or "").upper()
+    if not name:
+        return None
+    grenze = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    conn = db.get_connection()
+    try:
+        z = conn.execute("SELECT action, mail_versand_am FROM signals WHERE UPPER(symbol)=? AND mail_versand='zugestellt' "
+                         "AND mail_versand_am >= ? AND COALESCE(instrument, 'spot') != 'hebel' ORDER BY mail_versand_am DESC LIMIT 1",
+                         (name, grenze)).fetchone()
+    finally:
+        conn.close()
+    if not z:
+        return None
+    try:
+        am = datetime.fromisoformat(str(z[1])).astimezone().strftime("%d.%m. %H:%M")
+    except ValueError:
+        am = str(z[1])[:16]
+    return ("Die alte Spot-Kette hat am %s zu %s „%s“ gemailt - ein anderes Geschäft (Spot, ohne Hebel), "
+            "nicht diese Wette" % (am, name, z[0]))
+
+
 def _regel0_mails() -> None:
     """S7-4 (E-46, 03.10.2026): faellige REGEL0-Mails aus der Ablage verschicken - Signal (Hebel-Schalter an, Stufe > 0),
     Korrektur (endgueltige Stufe weicht ab), Erinnerung (24 h um). Laeuft auch, wenn die Rechnung dieser Stunde scheiterte -
@@ -1612,8 +1636,9 @@ def _regel0_mails() -> None:
         # E-52: der Pruefblock der LLM-Sofortfassung - EIN Umlauf je Stundenlauf (Grenzen gegen Ressourcen- und Abfragestau)
         _kat = _LLM.lade()
         _um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)
-        _pruef = ((lambda r: _LLM.mail_zeilen(_LLM.pruefe_signal(r, _regel0_llm_client_ref, _NL.DATEN_VORGABE, _NL.DATEN_VORGABE,
-                                                                 db.DB_PATH, _kat, umlauf=_um), _kat))
+        # O25: gegliedert (kurz fuer die Einschaetzung, lang fuer die Begruendung) - regel0_llm.mail_teile
+        _pruef = ((lambda r: _LLM.mail_teile(_LLM.pruefe_signal(r, _regel0_llm_client_ref, _NL.DATEN_VORGABE, _NL.DATEN_VORGABE,
+                                                                db.DB_PATH, _kat, umlauf=_um), _kat))
                   if _kat.get("mail_block") else
                   # SCHATTEN (03.10.): rechnen und ablegen, aber NICHTS an die Mail anhaengen (leere Zeilenliste)
                   (lambda r: (_LLM.pruefe_signal(r, _regel0_llm_client_ref, _NL.DATEN_VORGABE, _NL.DATEN_VORGABE, db.DB_PATH, _kat,
@@ -1623,7 +1648,9 @@ def _regel0_mails() -> None:
                          melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t),
                          bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE),       # E-50 N-f: das Chart in der Signalmail
                          pruefung=_pruef,
-                         position=_regel0_positionsstand)   # 04.10.: Ausstiegserinnerung nur bei offener Hebelposition
+                         position=_regel0_positionsstand,   # 04.10.: Ausstiegserinnerung nur bei offener Hebelposition
+                         spot=_regel0_spot_hinweis,          # O25 M-f: die alte Spot-Kette mailte zum selben Asset
+                         senden_html=lambda b, t, h, bi: _sende_hinweismail(b, t, bi, h))   # O25 M-d: eigenes HTML
         if any(z.values()):
             logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d Erinnerung entfallen (keine offene Position), "
                         "%d nicht zugestellt, %d gesperrt (Zuordnung)",
@@ -2927,7 +2954,7 @@ def _pruefe_hebel_abgleich(conn_factory) -> None:
         logger.exception("Pruefung des Hebel-Abgleichs fehlgeschlagen")
 
 
-def _sende_hinweismail(betreff: str, text: str, bilder: list | None = None) -> bool:
+def _sende_hinweismail(betreff: str, text: str, bilder: list | None = None, html: str | None = None) -> bool:
     """Eine Hinweismail mit EIGENEM Betreff - True nur bei echtem Versand.
 
     Nicht ueber `_notify_job_failure`: dessen Betreff lautet ,Job X
@@ -2939,7 +2966,7 @@ def _sende_hinweismail(betreff: str, text: str, bilder: list | None = None) -> b
     email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
     if not email_cfg.get("aktiv", False) or not email_cfg.get("empfaenger"):
         return False
-    return bool(send_notification_email(betreff, text, email_cfg["empfaenger"], inline_images=bilder or None))
+    return bool(send_notification_email(betreff, text, email_cfg["empfaenger"], inline_images=bilder or None, html=html))
 
 
 def _notify_marktscan_kaufkandidaten(kaufkandidaten: list) -> None:

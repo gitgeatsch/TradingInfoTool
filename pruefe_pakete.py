@@ -31536,16 +31536,22 @@ def paket_regel0_betrieb() -> None:
         _tf = _RMf.signal_mail(_rf, 3, True, _gf, {}, _dt.datetime(2026, 10, 4, 9, 9, tzinfo=_dt.timezone.utc))[1]
         _lq = 222.5 * _CHf.liq_schwelle(3, _CHf.MARGE, 0)
         pruefe(P, "Mailfehler 04.10.: Kurs JETZT in EUR (Bitpanda) und Liquidationskurs der gewaehlten Stufe in EUR, USD nur als Messgrundlage",
-               "KURS JETZT  222,50 EUR" in _tf and ("LIQUIDATION 3x bei etwa %s EUR" % _CHf._zahl(_lq)) in _tf and "259,64 USD" in _tf
+               # O25 (04.10.): Wortlaut des neuen Aufbaus (Abschnitt *Was zu tun ist*), Inhalt wie zuvor
+               "Kurs jetzt      222,50 EUR" in _tf and ("Liquidation     bei etwa %s EUR" % _CHf._zahl(_lq)) in _tf and "259,64 USD" in _tf
                and "USDT (" not in _tf, _tf[-600:])
         _tf2 = _RMf.signal_mail(dict(_rf, kurs_eur=None), 3, True, _gf, {}, _dt.datetime(2026, 10, 4, 9, 9, tzinfo=_dt.timezone.utc))[1]
         pruefe(P, "Mailfehler 04.10.: ohne Bitpanda-Ticker steht *nicht verfuegbar* da, kein erfundener EUR-Kurs",
-               "KURS JETZT  nicht verfuegbar" in _tf2 and "LIQUIDATION" not in _tf2, _tf2[-300:])
+               "Kurs jetzt      nicht verfuegbar" in _tf2 and "bei etwa" not in _tf2, _tf2[-300:])
         _bq_c = _quelltext("agent/regel0_chart.py")
         pruefe(P, "Chartfehler 04.10. (QNT 3x zeigte die 5x-Linie): nur die GEWAEHLTE Stufe wird gezeichnet, ausserhalb des Ausschnitts als Hinweis",
                "if not gew:" in _bq_c and "unterhalb des Ausschnitts" in _bq_c and "eur_je_usd" in _bq_c and "FuncFormatter" in _bq_c)
         pruefe(P, "Mailfehler 04.10.: lange Zeilen brechen am Handy um (pre-wrap) und das Chart passt in die Breite (max-width)",
                "pre-wrap" in _rdh("x") and "max-width:100%" in _quelltext("api/email_notify.py"))
+        # O25 (04.10.2026, M-a bis M-f): der neue Aufbau der Signalmail - am Seiteneffekt, Wegwerf-Ablage, Versand abgefangen
+        _o25 = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_o25.py")],
+                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        pruefe(P, "O25: Signalmail Handlung -> Chart -> Einschaetzung -> Begruendung -> Technik, EUR und Ortszeit oben, HTML mit Bildplatz, Spot-Hinweis",
+               "ALLE BESTANDEN" in (_o25.stdout or ""), ((_o25.stdout or "") + (_o25.stderr or ""))[-500:])
         # 04.10.2026 (Nutzer: Ausstiegsmails von nicht offenen Hebelpositionen sofort aendern) - am Seiteneffekt, Wegwerf-Ablage
         _er = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_erinnerung_offen.py")],
                        capture_output=True, text=True, timeout=120)

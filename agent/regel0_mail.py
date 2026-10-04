@@ -86,53 +86,158 @@ def abgleich(r: dict, bpu: dict | None, bn: dict | None) -> tuple:
     return abs(d) <= ABGLEICH_GRENZE, txt
 
 
-def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime) -> tuple:
+_WTAG = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
+
+
+def _wann(dt: datetime, jetzt: datetime) -> str:
+    """O25 (04.10.2026): Ortszeit zuerst und in Worten - 'heute 14:00', 'morgen 14:00', sonst 'Di 06.10. 14:00'."""
+    o, j = dt.astimezone(), jetzt.astimezone()
+    tage = (o.date() - j.date()).days
+    tag = {0: "heute", 1: "morgen", -1: "gestern"}.get(tage, "%s %s" % (_WTAG[o.weekday()], o.strftime("%d.%m.")))
+    return "%s %s" % (tag, o.strftime("%H:%M"))
+
+
+def _prozent(x: float) -> str:
+    return ("%+.1f %%" % (100.0 * x)).replace(".", ",")
+
+
+def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None) -> dict:
+    """O25 (Nutzer 04.10.2026: *nicht die bisherige Form uebernehmen*; M-a bis M-f): EINE Gliederung fuer Text und HTML.
+
+    Reihenfolge M-a: (1) was zu tun ist - (2) Chart - (3) Einschaetzung - (4) Begruendung der Rollen - (5) Technik.
+    M-b alles in EUR (Bitpanda), M-c Ortszeit zuerst, M-e Fachbegriffe nur in der Technik, M-f Hinweis auf die alte Spot-Kette.
+    ``pruefung``: {"kurz": [(Rolle, Text)], "lang": [Zeilen]} (regel0_llm.mail_teile) oder eine Zeilenliste (alte Form) oder
+    {"fehler": Grund}. ``spot``: ein Satz ueber eine Spot-Mail zum selben Asset (oder None)."""
     tw = _testwoche(werte, jetzt)
     ein = _t(r["einstieg"]) + timedelta(hours=1)          # Schlusskurs der Einstiegsstunde
     aus = _t(r["ausstieg"]) + timedelta(hours=1)
     sig = _t(r["signalstunde"])
-    betreff = "%sREGEL0 Hebel LONG %s %dx - Einstieg %s" % ("[TESTWOCHE] " if tw else "", r["bitpanda"] or r["symbol"], stufe,
+    name = r.get("bitpanda") or r["symbol"]
+    betreff = "%sREGEL0 Hebel LONG %s %dx - Einstieg %s" % ("[TESTWOCHE] " if tw else "", name, stufe,
                                                             ein.astimezone().strftime("%d.%m. %H:%M"))
-    z = ["REGEL0.1 - HEBEL-SIGNAL LONG%s" % ("   ·   TESTWOCHE bis %s" % tw if tw else ""), "",
-         "Asset:      %s%s" % (r["bitpanda"] or r["symbol"], "" if (r["bitpanda"] or r["symbol"]) == r["symbol"] else " (Binance %s)" % r["symbol"]),
-         "Signal:     Stunde ab %s, abgeschlossen um %s" % (_zeit(sig), _zeit(sig + timedelta(hours=1))),
-         "",
-         "EINSTIEG    zum Schlusskurs der Folgestunde: %s" % _zeit(ein),
-         "            (so ist die REGEL0 gemessen - wer frueher oder spaeter einsteigt, handelt etwas anderes)",
-         "AUSSTIEG    24 Stunden danach: %s - ohne Stop, ohne Ziel (REGEL0)" % _zeit(aus),
-         "",
-         "HEBEL       %dx%s" % (stufe, "  (VORLAEUFIG aus der ATR der Signalstunde - die endgueltige Stufe steht eine Stunde spaeter fest;"
-                                     " weicht sie ab, kommt eine kurze Korrektur)" if vorlaeufig else "  (endgueltig)"),
-         "            geschaetzte Liquidationsgefahr binnen 24 h: 2x %s · 3x %s · 5x %s (Grenze 2 %%)" % (
-             _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5"))),
-         "            ⚠️ Pruefe, welche Hebelstufen Bitpanda fuer dieses Asset anbietet - die Stufen je Asset sind noch nicht als Daten"
-         " hinterlegt (D2). Bietet Bitpanda weniger an, die naechst kleinere nehmen.",
-         "EINSATZ     %s EUR  (Positionswert %s EUR / %dx, Startwerte in regel0_betrieb.yaml)" % (
-             ("%.0f" % groesse.einsatz_eur), ("%.0f" % groesse.positionswert_eur), stufe)]
-    if groesse.vermerk:
-        z.append("            %s" % groesse.vermerk)
-    # 04.10.2026 (Nutzer: *USD statt Euro*): Bitpanda handelt in EUR - der EUR-Kurs zum Mailzeitpunkt und der Liquidationskurs der
-    # gewaehlten Stufe in EUR (dieselbe Formel wie die Messung der Hebelstufe und das Chart, regel0_chart.liq_schwelle)
+    p_st = r.get("p%d" % stufe)
+    tun = [("Einstieg", "%s - zum Schlusskurs der Stunde %s-%s Uhr" % (
+                _wann(ein, jetzt), (ein - timedelta(hours=1)).astimezone().strftime("%H:%M"), ein.astimezone().strftime("%H:%M")))]
     if r.get("kurs_eur"):
-        z.append("KURS JETZT  %s EUR (Bitpanda, beim Versand dieser Mail)" % CH._zahl(r["kurs_eur"]))
-        if stufe > 0:
-            lq = r["kurs_eur"] * CH.liq_schwelle(stufe, CH.MARGE, 0)
-            z.append("LIQUIDATION %dx bei etwa %s EUR (%s %%), geschaetzt ab diesem Kurs; steigt bis zum Ausstieg leicht (Finanzierung)" % (
-                stufe, CH._zahl(lq), ("%+.1f" % (100.0 * (lq / r["kurs_eur"] - 1.0))).replace(".", ",")))
+        tun.append(("Kurs jetzt", "%s EUR (Bitpanda, beim Versand dieser Mail)" % CH._zahl(r["kurs_eur"])))
     else:
-        z.append("KURS JETZT  nicht verfuegbar (Bitpanda-Ticker nicht erreichbar) - bitte in Bitpanda nachsehen")
+        tun.append(("Kurs jetzt", "nicht verfuegbar (Bitpanda-Ticker nicht erreichbar) - bitte in Bitpanda nachsehen"))
+    tun.append(("Hebel", "%dx  %s" % (stufe, ("VORLÄUFIG - endgültig, sobald die Einstiegsstunde abgeschlossen ist (%s); weicht "
+                                             "die Stufe ab, kommt eine Korrektur" % _wann(ein, jetzt)) if vorlaeufig else "(endgültig)")))
+    tun.append(("Einsatz", "%s EUR  →  Position %s EUR" % (("{:,.0f}".format(groesse.einsatz_eur)).replace(",", "."),
+                                                          ("{:,.0f}".format(groesse.positionswert_eur)).replace(",", "."))))
+    if groesse.vermerk:
+        tun.append(("", groesse.vermerk))
+    tun.append(("Ausstieg", "%s - nach 24 Stunden, ohne Stop und ohne Ziel" % _wann(aus, jetzt)))
+    if r.get("kurs_eur") and stufe > 0:
+        lq = r["kurs_eur"] * CH.liq_schwelle(stufe, CH.MARGE, 0)
+        tun.append(("Liquidation", "bei etwa %s EUR (%s) - Gefahr binnen 24 h %s (Grenze 2 %%)" % (
+            CH._zahl(lq), _prozent(lq / r["kurs_eur"] - 1.0), _pct(p_st))))
+    else:
+        tun.append(("Liquidation", "Gefahr binnen 24 h %s (Grenze 2 %%) - Kurs in EUR nicht verfuegbar" % _pct(p_st)))
+    tun.append(("Bitpanda", "Hebelstufen prüfen: wird %dx nicht angeboten, die nächst kleinere nehmen" % stufe))
+
+    detail, hinweise = [], []
+    ein_z = [("Regel", "Gegenbewegung nach einem Rückgang erwartet - Signalstärke %s (gehandelt ab 0,035)" % (
+        ("%.3f" % r["vh"]).replace(".", ",") if r.get("vh") is not None else "-"))]
+    lang = []
+    if isinstance(pruefung, dict) and "fehler" in pruefung:
+        ein_z.append(("Rollen", "PRUEFUNG DURCH DIE ROLLEN: nicht verfuegbar (%s)" % pruefung["fehler"]))
+    elif isinstance(pruefung, dict):
+        ein_z += list(pruefung.get("kurz") or [])
+        lang = list(pruefung.get("lang") or [])
+        detail, hinweise = list(pruefung.get("detail") or []), list(pruefung.get("hinweise") or [])
+    elif pruefung:
+        lang = list(pruefung)
+    if spot:
+        ein_z.append(("Achtung", spot))
+    ein_z.append(("Gefahr je Stufe", "2x %s · 3x %s · 5x %s binnen 24 h (Grenze 2 %%)" % (
+        _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5")))))
+
+    technik = [("Asset", "%s%s" % (name, "" if name == r["symbol"] else " (Binance %s)" % r["symbol"])),
+               ("Signal", "Stunde ab %s, abgeschlossen %s" % (_zeit(sig), _zeit(sig + timedelta(hours=1)))),
+               ("Einstieg", "%s (so ist die REGEL0 gemessen - wer früher oder später einsteigt, handelt etwas anderes)" % _zeit(ein)),
+               ("Ausstieg", _zeit(aus))]
     if r.get("kurs"):
-        z.append("Kurs zur Signalstunde: %s USD (Binance %s, Messgrundlage der REGEL0)" % (
-            CH._zahl(r["kurs"]), "Futures" if r.get("kurs_markt") == "futures" else "Spot"))
+        technik.append(("Kurs Signal", "%s USD (Binance %s, Messgrundlage der REGEL0)" % (
+            CH._zahl(r["kurs"]), "Futures" if r.get("kurs_markt") == "futures" else "Spot")))
     vm = _vermerke(r)
     if r.get("abgleich"):
         vm.append("Zuordnung: " + r["abgleich"])
-    if vm:
-        z += ["", "Vermerke:"] + ["  - " + x for x in vm]
-    z += ["", "Regel: REGEL0.1 (rsi-Ersteintritt, v-dach %s, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %%)" % (
-              ("%+.4f" % r["vh"]).replace(".", ",") if r.get("vh") is not None else "-"),
-          "Das ist eine Auskunft deines Systems, kein Auftrag - du entscheidest."]
-    return betreff, "\n".join(z)
+    technik += [("Vermerk", x) for x in vm]
+    technik += [("Regel", "REGEL0.1 (rsi-Ersteintritt, v-dach %s, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %%)" % (
+                    ("%+.4f" % r["vh"]).replace(".", ",") if r.get("vh") is not None else "-")),
+                ("Einsatz", "Startwerte in regel0_betrieb.yaml; die Hebelstufen je Asset bei Bitpanda sind noch nicht als Daten hinterlegt (D2)")]
+    kopf = "REGEL0.1 - HEBEL-SIGNAL LONG · %s%s" % (name, ("   ·   TESTWOCHE bis %s" % tw) if tw else "")
+    return {"betreff": betreff, "kopf": kopf, "tun": tun, "ein": ein_z, "lang": lang, "detail": detail, "hinweise": hinweise,
+            "technik": technik,
+            "fuss": "Das ist eine Auskunft deines Systems, kein Auftrag - du entscheidest."}
+
+
+def _als_text(t: dict) -> str:
+    import textwrap
+
+    def blk(titel, paare):
+        z = ["", titel]
+        for k, v in paare:
+            z += textwrap.wrap(v, 96, initial_indent="  %-16s" % k, subsequent_indent=" " * 18) or ["  %-16s" % k]
+        return z
+    z = [t["kopf"]]
+    z += blk("1  WAS ZU TUN IST", t["tun"])
+    z += ["", "2  CHART  (in der HTML-Ansicht der Mail)"]
+    z += blk("3  EINSCHÄTZUNG", t["ein"])
+    if t["lang"]:
+        z += ["", "4  BEGRÜNDUNG DER ROLLEN"] + ["  " + x if x else "" for x in t["lang"]]
+    z += blk("5  TECHNIK", t["technik"])
+    z += ["", t["fuss"]]
+    return NL.join(z)
+
+
+def _als_html(t: dict, bilder: int = 0) -> str:
+    """O25 M-d: echtes HTML statt eines einzigen <pre> - Abschnitte, Tabellen, bricht am Handy um. ``{{BILD:0}}`` setzt der Versand."""
+    from html import escape as e
+    sans = "font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;"
+
+    def tab(paare, klein=False):
+        zs = "".join("<tr><td style='padding:3px 10px 3px 0;vertical-align:top;color:#555;white-space:nowrap;%s'>%s</td>"
+                     "<td style='padding:3px 0;vertical-align:top;%s'>%s</td></tr>" % (
+                         "font-size:12px;" if klein else "", e(k), "font-size:12px;" if klein else "", e(v)) for k, v in paare)
+        return "<table style='border-collapse:collapse;width:100%%;%s'>%s</table>" % (sans, zs)
+
+    def h(text, farbe="#1f4e79"):
+        return "<div style='%sfont-weight:bold;font-size:15px;color:%s;margin:18px 0 6px;border-bottom:2px solid %s'>%s</div>" % (
+            sans, farbe, farbe, e(text))
+    teile = ["<div style='max-width:680px;%s color:#1a1a1a'>" % sans,
+             "<div style='font-weight:bold;font-size:17px;margin-bottom:4px'>%s</div>" % e(t["kopf"]),
+             h("1 · Was zu tun ist", "#1e8449"), tab(t["tun"]),
+             h("2 · Chart"), "".join("{{BILD:%d}}" % i for i in range(bilder)) or "<div style='color:#888'>(kein Chart verfügbar)</div>",
+             h("3 · Einschätzung"), tab(t["ein"])]
+    if t.get("detail"):
+        teile.append(h("4 · Begründung der Rollen"))
+        for titel, urteil, begr, gegen in t["detail"]:
+            teile.append("<div style='margin:6px 0 10px'><b>%s</b> · %s%s%s</div>" % (
+                e(titel), e(urteil), ("<br>" + e(begr)) if begr else "",
+                ("<br><span style='color:#555'><i>Gegengrund:</i> %s</span>" % e(gegen)) if gegen else ""))
+        teile += ["<div style='font-size:12px;color:#666'>%s</div>" % e(x) for x in t.get("hinweise") or []]
+    elif t["lang"]:
+        teile += [h("4 · Begründung der Rollen"),
+                  "<pre style='font-family:monospace;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:0'>%s</pre>"
+                  % e(NL.join(t["lang"]))]
+    teile += [h("5 · Technik", "#7f8c8d"), tab(t["technik"], klein=True),
+              "<div style='margin-top:14px;color:#555;font-size:12px'>%s</div>" % e(t["fuss"]), "</div>"]
+    return "".join(teile)
+
+
+def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None) -> tuple:
+    """-> (Betreff, Text). Der Text ist auch das Detail im Hebel-Tab (eine Quelle). Aufbau O25: ``_signal_teile``."""
+    t = _signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot)
+    return t["betreff"], _als_text(t)
+
+
+def signal_html(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
+                bilder: int = 0) -> str:
+    """Die HTML-Fassung derselben Gliederung (O25 M-d)."""
+    return _als_html(_signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot), bilder)
 
 
 def korrektur_mail(r: dict, alt: int, neu: int, werte: dict, jetzt: datetime) -> tuple:
@@ -145,7 +250,7 @@ def korrektur_mail(r: dict, alt: int, neu: int, werte: dict, jetzt: datetime) ->
     else:
         kern = "Endgueltig KEIN HANDEL: mit der ATR der Einstiegsstunde liegt keine Stufe unter der Liquidationsgrenze 2 %."
     betreff = "%sREGEL0 KORREKTUR %s: %s" % ("[TESTWOCHE] " if tw else "", name, ("%dx statt %dx" % (neu, alt)) if neu > 0 else "kein Handel")
-    text = "\n".join(["REGEL0.1 - KORREKTUR zum Signal %s (Einstieg %s)" % (name, _zeit(ein)), "", kern, "",
+    text = "\n".join(["REGEL0.1 - KORREKTUR zum Signal %s (Einstieg %s)" % (name, _wann(ein, jetzt)), "", kern, "",
                       "Grund: die vorlaeufige Stufe kam aus der ATR der Signalstunde, die endgueltige aus der ATR der Einstiegsstunde"
                       " - so wie die REGEL0 gemessen ist (B-9)."])
     return betreff, text
@@ -179,14 +284,15 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
     name = r["bitpanda"] or r["symbol"]
     betreff = "%sREGEL0 AUSSTIEG faellig: %s %dx" % ("[TESTWOCHE] " if tw else "", name, stufe)
     text = "\n".join(["REGEL0.1 - AUSSTIEG FAELLIG", "",
-                      "%s, Hebel %dx, Einstieg %s" % (name, stufe, _zeit(_t(r["einstieg"]) + timedelta(hours=1))),
-                      "Die 24 Stunden sind um: Ausstieg zum Schlusskurs %s." % _zeit(aus), "",
+                      "%s, Hebel %dx, Einstieg %s" % (name, stufe, _wann(_t(r["einstieg"]) + timedelta(hours=1), jetzt)),
+                      "Die 24 Stunden sind um: Ausstieg zum Schlusskurs %s." % _wann(aus, jetzt), "",
+                      "Zeiten in UTC: Einstieg %s, Ausstieg %s." % (_zeit(_t(r["einstieg"]) + timedelta(hours=1)), _zeit(aus)),
                       "Die Fuehrung offener Positionen kommt spaeter (O13)."])
     return betreff, text
 
 
 def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
-             bild=None, pruefung=None, position=None) -> dict:
+             bild=None, pruefung=None, position=None, spot=None, senden_html=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
@@ -197,7 +303,11 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
     ``pruefung(r) -> [Zeilen]`` haengt den Block der LLM-Rollen an (E-52). Beides darf scheitern, ohne die Mail aufzuhalten (P-8).
 
     04.10.2026: ``position() -> befund`` (siehe ``position_stand``) - die ERINNERUNG geht nur bei offener Position; ohne
-    ``position`` bleibt es beim alten Verhalten (jede Erinnerung)."""
+    ``position`` bleibt es beim alten Verhalten (jede Erinnerung).
+
+    O25 (04.10.2026): ``pruefung(r)`` darf ``{"kurz", "lang"}`` liefern (Einschaetzung und Begruendung getrennt), ``spot(r)`` einen
+    Satz ueber eine Spot-Mail zum selben Asset (M-f), ``senden_html(betreff, text, html, bilder) -> bool`` verschickt die
+    HTML-Fassung (M-d). Ohne ``senden_html`` bleibt der alte Weg ``senden``. Jede dieser Zutaten darf scheitern (P-8)."""
     jetzt = jetzt or datetime.now(timezone.utc)
     werte = werte if werte is not None else G.lade()
     jt = jetzt.strftime("%Y-%m-%d %H:%M")
@@ -241,14 +351,19 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
             offen = c.execute("SELECT COUNT(*) FROM signal WHERE mail_signal_am IS NOT NULL AND COALESCE(stufe, mail_signal_stufe) > 0 "
                               "AND ausstieg > ? AND NOT (symbol=? AND signalstunde=?)", (jt, r["symbol"], r["signalstunde"])).fetchone()[0]
             g = G.rechne(stufe, int(offen), werte)
-            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt)
+            _pr = None
             if pruefung is not None:
                 try:
-                    _z = pruefung(r) or []
+                    _pr = pruefung(r) or None
                 except Exception as exc:                        # noqa: BLE001
-                    _z = ["PRUEFUNG DURCH DIE ROLLEN: nicht verfuegbar (%s)" % type(exc).__name__]
-                if _z:
-                    t = t + NL + NL + NL.join(_z)
+                    _pr = {"fehler": type(exc).__name__}
+            _sp = None
+            if spot is not None:
+                try:
+                    _sp = spot(r)
+                except Exception:                               # noqa: BLE001
+                    _sp = None
+            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp)
             bilder = None
             if bild is not None:
                 try:
@@ -258,7 +373,15 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                 if _png:
                     bilder = [{"png": _png, "alt": "REGEL0 %s" % (r.get("bitpanda") or r["symbol"]),
                                "filename": "regel0_%s_%s.png" % (r["symbol"], r["signalstunde"][:13].replace(" ", "_").replace(":", ""))}]
-            if (senden(b, t, bilder) if bilder else senden(b, t)):
+            if senden_html is not None:
+                try:
+                    _h = signal_html(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, len(bilder or []))
+                except Exception:                               # noqa: BLE001
+                    _h = None
+                _ok = senden_html(b, t, _h, bilder)
+            else:
+                _ok = senden(b, t, bilder) if bilder else senden(b, t)
+            if _ok:
                 c.execute("UPDATE signal SET mail_signal_am=?, mail_signal_stufe=?, abgleich=? WHERE symbol=? AND signalstunde=?",
                           (jt, stufe, txt, r["symbol"], r["signalstunde"]))
                 c.commit(); zaehl["signal"] += 1

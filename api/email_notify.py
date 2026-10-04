@@ -29,8 +29,19 @@ SMTP_TIMEOUT_SECONDS = 15
 _INLINE_IMAGE_CID = "liquiditaetszonen-chart"
 
 
+def html_mit_bildern(html: str, bild_tags: str) -> str:
+    """O25 (04.10.2026): jedes Bild an seine Stelle ``{{BILD:i}}``; ein Bild ohne Stelle kommt ans Ende, eine Stelle ohne
+    Bild verschwindet - nie bleibt ein Platzhalter in der Mail stehen."""
+    import re
+    inhalt = html
+    for i, tag in enumerate(bild_tags.split("<img")[1:]):
+        stelle = "{{BILD:%d}}" % i
+        inhalt = inhalt.replace(stelle, "<img" + tag) if stelle in inhalt else inhalt + "<img" + tag
+    return re.sub(r"\{\{BILD:\d+\}\}", "", inhalt)
+
+
 def send_notification_email(
-    subject: str, body: str, empfaenger: str, inline_images: list[dict] | None = None,
+    subject: str, body: str, empfaenger: str, inline_images: list[dict] | None = None, html: str | None = None,
 ) -> bool:
     """Best-effort - faengt JEDE Exception selbst ab (P-10: ein E-Mail-Fehlschlag
     darf niemals den eigentlichen Fehlerpfad ueberdecken oder die App zum Absturz
@@ -96,12 +107,16 @@ def send_notification_email(
         msg = MIMEMultipart("related")
         alternative = MIMEMultipart("alternative")
         alternative.attach(MIMEText(body, "plain", "utf-8"))
+        # `html` (04.10.2026, O25): eine Mail mit EIGENEM Aufbau (REGEL0) bringt ihr HTML mit; die Bilder stehen dort, wo
+        # `{{BILD:i}}` steht - der Rest unten wie bisher. Ohne `html` bleibt alles wie zuvor (der Text als <pre>).
+        inhalt = html_mit_bildern(html, bild_tags) if html else render_detail_html(body) + bild_tags
         html_body = (
             "<html><head>"
             "<meta name=\"color-scheme\" content=\"light\">"
             "<meta name=\"supported-color-schemes\" content=\"light\">"
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "</head><body style=\"background:#ffffff;color:#1a1a1a;margin:0;padding:12px;\">"
-            + render_detail_html(body) + bild_tags +
+            + inhalt +
             "</body></html>"
         )
         alternative.attach(MIMEText(html_body, "html", "utf-8"))

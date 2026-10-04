@@ -1472,3 +1472,35 @@ Geprüft an den Mails QNT, NEAR, KAIA (Signal) und SEI (Erinnerung) aus `eMail_B
 **Bewusst NICHT jetzt** (das ist der Neuaufbau O25, M-a bis M-f, abgestimmt mit *„ja“*): Reihenfolge Handlung → Chart → Einschätzung → Begründung → Technik, Ortszeit zuerst, Fachbegriffe in die Fußzeile, echtes HTML statt `<pre>`, Hinweis auf die Spot-Mail zum selben Asset.
 
 **Nebenbefund geprüft:** QNT 67,88 USD am 22.09. (Desktop) gegen 259,64 am 04.10. (NB) ist **echt**. Die Reihe steigt bis 24.09. auf 82, und Bitpanda und Binance zeigen am 04.10. unabhängig 261,17 bzw. 260,84.
+
+### 21.4 O25: die REGEL0-Signalmail neu aufgebaut (04.10.2026; Nutzer: M-a bis M-f *ja*, *nicht die bisherige Form übernehmen*)
+
+**Aufbau** (eine Gliederung `regel0_mail._signal_teile` für Text, HTML und das Detail im Hebel-Tab):
+
+| Abschnitt | Inhalt |
+|---|---|
+| **1 · Was zu tun ist** | Einstieg *heute 14:00* (Schlusskurs der Stunde 13–14 Uhr) · **Kurs jetzt … EUR (Bitpanda)** · Hebel (vorläufig, wann endgültig) · Einsatz → Position · Ausstieg *morgen 14:00* · **Liquidation bei etwa … EUR** mit Gefahr binnen 24 h · Bitpanda-Hebelstufen prüfen |
+| **2 · Chart** | in EUR, direkt nach der Handlung (HTML: das Bild an seinem Platz, `email_notify.html_mit_bildern`) |
+| **3 · Einschätzung** | Regel (Signalstärke in Worten) · Trader in einer Zeile mit Stimmen *(5 von 5)* · Umfeld in einer Zeile *(nur Beschreibung)* · **M-f** *Achtung: die alte Spot-Kette hat am … zu … „NACHKAUFEN“ gemailt – ein anderes Geschäft* · Gefahr je Stufe |
+| **4 · Begründung der Rollen** | je Rolle Urteil, Begründung, Gegengrund; darunter Fassung, Hinweise, Messstand (HTML gegliedert, Text wie bisher) |
+| **5 · Technik** | UTC-Zeiten, Kurs zur Signalstunde in USD (Messgrundlage), Zuordnung, Vermerke, Regel mit v-dach, Startwerte, D2 |
+
+**Technik:**
+- `send_notification_email(..., html=)` bringt ein eigenes HTML mit, die übrigen Mails bleiben unverändert.
+- `versende(..., spot=, senden_html=)`: Ohne diese beiden bleibt der alte Weg bestehen, alle Prüfskripte laufen weiter.
+- `regel0_llm.mail_teile` liefert kurz, lang, detail und hinweise.
+- `background._regel0_spot_hinweis` liest `signals` nur (Mailvermerk *zugestellt*, letzte 24 h, nicht Hebel).
+- Jede Zutat darf scheitern, ohne die Mail aufzuhalten (P-8).
+- Betreff unverändert, damit bestehende Mailfilter weiter greifen.
+- Echte Umlaute im Mailtext.
+
+**Geprüft:**
+- Prüfstand mit echten Kursen und den echten Rollentexten der KAIA-Mail vom 04.10.; am Handy-Format (375 px) im Browser: kein seitlicher Bildlauf, Chart 351 px.
+- `pruefe_o25.py` 12/12 am Seiteneffekt, auch der Spot-Hinweis gegen die NB-Kopie (vor 2 h → Hinweis, vor 30 h → keiner).
+- `pruefe_s74` 19/19 (zwei Erwartungen bewusst auf *VORLÄUFIG/endgültig* nachgezogen), `pruefe_s75` 15/15, `pruefe_h17` 23/23, `pruefe_erinnerung_offen` 10/10.
+- Wache Regel0Betrieb 60/60.
+- Eigener Fehler unterwegs: Die erste Fassung der Prüfung erwartete *13:00* statt *14:00* Ortszeit. Die Prüfung rechnet die Ortszeit jetzt selbst aus.
+
+**Grenze:** Der Spot-Hinweis sieht nur Spot-Mails **vor** der REGEL0-Mail. Kommt die Spot-Mail danach, steht in ihr kein Hinweis. Das gehört zu O24/O23 (die Spot-Kette ist angehalten und wird nicht mehr umgebaut).
+
+**NB-Kontrolle K-MAIL-2:** Die nächste REGEL0-Signalmail sieht am Handy so aus wie oben. Fehlt das Bild an Platz 2 oder steht `{{BILD:0}}` sichtbar in der Mail, ist der Versandweg falsch.

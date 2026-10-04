@@ -649,3 +649,45 @@ def mail_zeilen(ergebnis: dict, katalog: dict | None = None) -> list:
         z.append("  (Entscheider ausgesetzt: er wiederholte den Trader in 39 von 40 Faellen - E-53, Neupruefung mit dem Rueckspiel)")
     z += ["", "  Messstand: noch nicht gemessen (Sofortfassung E-52/E-53; die gemessene Fassung folgt nach Rueckspiel und Bestaetigung)."]
     return z
+
+
+def _erster_satz(text: str, grenze: int = 220) -> str:
+    t = " ".join(str(text or "").split())
+    for trenner in (". ", "! ", "? "):
+        i = t.find(trenner)
+        if 0 < i < grenze:
+            return t[:i + 1]
+    return t if len(t) <= grenze else t[:grenze].rsplit(" ", 1)[0] + " …"
+
+
+def mail_teile(ergebnis: dict, katalog: dict | None = None) -> dict:
+    """O25 (04.10.2026): die Rollen fuer die neue REGEL0-Mail getrennt in KURZ (eine Zeile je Rolle, Abschnitt Einschaetzung)
+    und LANG (der ganze Block wie bisher, Abschnitt Begruendung). Ein Ausfall steht als *keine Auskunft*, nie als Zustimmung."""
+    katalog = katalog or lade()
+    kurz, detail = [], []
+    for rolle, titel in (("trader", "Trader"), ("markt", "Umfeld"), ("entscheider", "Entscheider")):
+        x = ergebnis.get(rolle)
+        if x is None:
+            continue
+        if "urteil" not in x:
+            kurz.append((titel, "keine Auskunft (%s)" % x.get("fehlt", "?")))
+            detail.append((titel, "keine Auskunft (%s)" % x.get("fehlt", "?"), "", ""))
+            continue
+        if rolle == "markt" and katalog["rollen"].get("markt", {}).get("nur_auskunft"):
+            kurz.append((titel, "%s (nur Beschreibung)" % _erster_satz(x.get("begruendung"))))
+            detail.append((titel, "nur Beschreibung", x.get("begruendung") or "", x.get("gegengrund") or ""))
+            continue
+        st = x.get("stimmen") or []
+        if len(st) <= 1:
+            einig = ""
+        elif x["urteil"] != "uneinig":
+            einig = " (%d von %d)" % (st.count(x["urteil"]), len(st))      # auch einstimmig: *(5 von 5)* sagt, wie sicher
+        else:
+            einig = " (%s)" % ", ".join("%d %s" % (st.count(s_), WORT.get(s_, s_)) for s_ in sorted(set(st), key=st.index))
+        kurz.append((titel, "%s%s - %s" % (WORT.get(x["urteil"], x["urteil"]), einig, _erster_satz(x.get("begruendung")))))
+        detail.append((titel, "%s%s" % (WORT.get(x["urteil"], x["urteil"]), einig), x.get("begruendung") or "", x.get("gegengrund") or ""))
+    lang = mail_zeilen(ergebnis, katalog)
+    # fuer die HTML-Fassung: dieselben Saetze gegliedert, dazu die Hinweiszeilen (Fassung, Umfeld, Entscheider, Messstand)
+    hinweise = [lang[0].strip()] + [z.strip() for z in lang[1:] if z.strip().startswith(("(", "Messstand"))]
+    return {"kurz": kurz, "lang": lang, "detail": detail, "hinweise": hinweise}
+

@@ -711,3 +711,10 @@ prüfen und gegenprüfen"*.
 - **Ausstiegserinnerung (REGEL0, 24 h):** Sie geht nur noch, wenn bei Bitpanda eine **offene LONG-Hebelposition** in diesem Asset besteht. Fachliche Ausgestaltung (meine Entscheidung, Begründung in Voranalyse_Schritt7 §21):
   - Ist der Positionsstand **unbekannt** (Bitpanda-Abgleich veraltet ≥ 1 h, nie gelaufen, nicht lesbar), geht sie **mit Vermerk** raus. Eine fehlende Ausstiegsmeldung bei echtem Geld wiegt schwerer als eine überflüssige Mail.
   - Eine entfallene Erinnerung wird als **Fakt** abgelegt (Zeitpunkt und Grund) und **nie nachgeschickt**.
+
+# E-56 · Neuer Aufbau der REGEL0-Signalmail (O25, M-a bis M-f; Nutzer 04.10.2026)
+
+**04.10.2026** · Nutzer zu den Mails des Tages: *„die Infos sind nicht optimal gruppiert – USD statt Euro“*, *„nein, nicht die bisherige Form übernehmen“*, zum Vorschlag M-a bis M-f mit Spot-Hinweis: *„ja, zuerst die offensichtlichen Fehler prüfen und fixen“*.
+- **Zuerst** die offensichtlichen Fehler behoben (§21.3, 335470a): Umbruch, Bildbreite, deutsche Zahlen, EUR, die falsche Liquidationslinie.
+- **Dann** der Neuaufbau (§21.4): Handlung → Chart → Einschätzung → Begründung → Technik; alles Handlungsrelevante in **EUR und Ortszeit**; Fachbegriffe nur in der Technik; echtes HTML; Hinweis, wenn die alte Spot-Kette zum selben Asset gemailt hat.
+- Der **Betreff bleibt**, damit Mailfilter weiter greifen. Die Korrektur- und die Erinnerungsmail sagen die Zeit ebenfalls zuerst in Ortszeit.

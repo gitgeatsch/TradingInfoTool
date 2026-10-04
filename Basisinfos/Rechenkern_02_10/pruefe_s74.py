@@ -72,7 +72,7 @@ pruef("Testwoche im Betreff und im Text", b_aaa.startswith("[TESTWOCHE]") and "T
 pruef("Einstieg = Schluss der Folgestunde (05.10. 12:00 UTC), Ausstieg 24 h danach (06.10. 12:00 UTC)",
       "05.10. 12:00 UTC" in t_aaa and "06.10. 12:00 UTC" in t_aaa)
 pruef("vorlaeufige Stufe vermerkt, Bitpanda-Hinweis (D2), Einsatz 500 EUR bei 3x",
-      "VORLAEUFIG" in t_aaa and "Bitpanda" in t_aaa and "500 EUR" in t_aaa)
+      "VORLÄUFIG" in t_aaa and "Bitpanda" in t_aaa and "500 EUR" in t_aaa)   # O25 (04.10.): echte Umlaute
 t_cc = [t for b, t in post if "CANTON" in b][0]
 pruef("Zusatz-Asset: Bitpanda-Name, Kurs aus Futures, bewertet nicht trainiert",
       "CANTON (Binance CC)" in t_cc and "Kurs aus Futures" in t_cc and "nicht trainiert" in t_cc)
@@ -88,7 +88,7 @@ k = [b for b, _t in post]
 pruef("Korrektur nur fuer BBB (5x -> 3x), EEE bekommt jetzt die Signalmail (Stufe erst endgueltig > 0)",
       any("KORREKTUR BBB" in b and "3x statt 5x" in b for b in k) and any(" EEE 3x" in b for b in k) and len(k) == 2, "%s" % k)
 e_txt = [t for b, t in post if " EEE " in b][0]
-pruef("die spaete Signalmail nennt die Stufe endgueltig", "(endgueltig)" in e_txt)
+pruef("die spaete Signalmail nennt die Stufe endgueltig", "(endgültig)" in e_txt)   # O25 (04.10.): echte Umlaute
 post.clear()
 
 fail = []

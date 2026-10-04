@@ -1,0 +1,14 @@
+O25 - neuer Aufbau der REGEL0-Signalmail, Pruefung am Seiteneffekt
+  OK    HTML-Weg: genau eine Mail, mit Text, HTML und Bild
+  OK    M-a Reihenfolge: Handlung, Chart, Einschaetzung, Begruendung, Technik
+  OK    M-b/M-c: Handlungsteil in EUR und Ortszeit (heute/morgen) - kein USD, kein UTC vor der Technik
+  OK    M-e: Fachbegriffe (v-dach, regel0_betrieb.yaml, D2) nur in der Technik
+  OK    Rollen: kurz in der Einschaetzung (5 von 5), ausfuehrlich in der Begruendung (Gegengrund, Fassung, Messstand)
+  OK    M-f: der Spot-Hinweis steht in der Einschaetzung
+  OK    M-d: HTML hat die fuenf Abschnitte, gegliederte Begruendung (kein <pre>) und den Bildplatz
+  OK    M-d: der Versand setzt das Bild AN DEN Bildplatz und laesst keinen Platzhalter stehen
+  OK    P-8: Pruefblock und Spot-Hinweis scheitern - die Mail geht trotzdem, *nicht verfuegbar*, kein Hinweis
+  OK    alter Weg ohne senden_html und alte Zeilenliste bleiben moeglich
+  OK    gescheiterter HTML-Versand wird NICHT als verschickt vermerkt
+  OK    M-f gegen die NB-Kopie: Spot-Mail vor 2 h -> Hinweis; vor 30 h -> keiner; ohne Spot-Mail -> keiner
+12 Pruefungen, ALLE BESTANDEN
