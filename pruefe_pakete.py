@@ -31423,10 +31423,13 @@ def paket_regel0_betrieb() -> None:
             try:
                 LLM.trader_eingabe = lambda r, o, k: dict(_ein)
                 LLM.markt_eingabe = lambda r, db: {"geplant": "p", "marktlage": ["m"]}
+                # eigener Katalog MIT Entscheider: die Verdrahtung der drei Rollen bleibt pruefbar, auch wenn der Betrieb ihn
+                # (0.1e, E-53) ausgeschaltet hat
+                _k3r = dict(_k, rollen=dict(_k["rollen"], entscheider=dict(_k["rollen"]["entscheider"], an=True)))
                 f1 = _Fake()
-                e1 = LLM.pruefe_signal(dict(_r, symbol="AAA", bitpanda="AAA"), f1, d, d, "x", _k)
+                e1 = LLM.pruefe_signal(dict(_r, symbol="AAA", bitpanda="AAA"), f1, d, d, "x", _k3r)
                 f2 = _Fake()
-                e2 = LLM.pruefe_signal(dict(_r, symbol="BBB", bitpanda="BBB"), f2, d, d, "x", _k)
+                e2 = LLM.pruefe_signal(dict(_r, symbol="BBB", bitpanda="BBB"), f2, d, d, "x", _k3r)
                 fk = _Fake(kaputt=True)
                 um = LLM.Umlauf(_k, fk, d)
                 for s_ in ("C1", "C2", "C3", "C4"):
@@ -31511,6 +31514,15 @@ def paket_regel0_betrieb() -> None:
                _gesehen.get("tag") == "2026-09-13"
                and sorted((_gesehen.get("mk") or {}).get("monatsreihen", {}).get("spx_trend_deviation_std", {})) == ["2026-08"],
                str(_gesehen)[:160])
+        pruefe(P, "E-53 (0.1e): Betrieb mit 5 Stimmen, OHNE Entscheider, Block IN der Mail - der Entscheider bleibt pruefbar (s. o.)",
+               _k.get("stimmen") == 5 and _k["rollen"]["entscheider"]["an"] is False and _k.get("mail_block") is True, str(_k)[:160])
+        # R-4 AM SEITENEFFEKT (04.10.): hebel_screening_job mit Platzhaltern - im UNTERPROZESS, weil die Probe Modulwerte
+        # ersetzt, die in diesem Lauf nicht in andere Pakete durchsickern duerfen. Kein Netz, keine Datei, keine Mail.
+        import subprocess as _sp4
+        _r4 = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_r4.py")],
+                       capture_output=True, text=True, timeout=120)
+        pruefe(P, "R-4 am SEITENEFFEKT: Schalter an -> kein Umlauf, kein alter Weg; Schalter aus -> Umlauf laeuft",
+               "R-4 am Seiteneffekt: BESTANDEN" in (_r4.stdout or ""), ((_r4.stdout or "") + (_r4.stderr or ""))[-300:])
         pruefe(P, "Schatten: der Block wird je Signalmail GERECHNET, die Mail bleibt unveraendert (kein Text angehaengt)",
                _gerechnet == ["SSSX"] and _post and "PRUEFUNG" not in _post[0])
         pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",

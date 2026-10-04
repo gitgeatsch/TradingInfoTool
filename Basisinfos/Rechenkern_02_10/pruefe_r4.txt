@@ -1,0 +1,3 @@
+Schalter True  -> Rueckgabe True, Umlauf 0, alter Weg 0, Fehler [], Sperre gehalten False
+Schalter False -> Rueckgabe True, Umlauf 1, alter Weg 0, Fehler [], Sperre gehalten False
+R-4 am Seiteneffekt: BESTANDEN

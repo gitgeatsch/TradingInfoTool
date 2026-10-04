@@ -688,3 +688,11 @@ prüfen und gegenprüfen"*.
 - Die **gemessene Fassung** ersetzt sie später, nach Rückspiel (N4) und Bestätigung (P3).
 - Die **Charts** kommen sofort.
 - *Selbstjustierend:* als Planpunkt aufgenommen (O21), zur fachlichen Prüfung. Siehe dort.
+
+# E-53 · Fassung 0.1e: Trader mit fünf Stimmen, Entscheider ausgesetzt, Block in der Mail (Nutzer 04.10.2026)
+
+**04.10.2026** · Nutzer: *„Ja, nur für die aktuelle Messung und Bewertung. Halte im Plan fest, dass die LLM-Stufen und der Entscheider erneut fachlich und technisch geprüft werden."*
+- **M1 vorläufig:** Der Entscheider ist ausgesetzt, weil er mit nur dem Trader als Eingang ein Echo war (39 von 40). Er ist nicht gestrichen: Prompt, Code und Wache bleiben, der Rollenkatalog schaltet ihn.
+- **5 Stimmen** je Rolle (P1-c 90 %), Zeitgrenze je Signal **120 s** (aus der Messung), der Block steht **in der Mail** als *Sofortfassung, ungemessen*.
+- **Neuprüfung festgelegt (O22):** Die Urteilsstufen und der Entscheider werden mit dem Rückspiel N4 erneut fachlich und technisch geprüft. Vorher wird nicht optimiert, weil ohne Ausgang keine Zielgröße da ist (Voranalyse_Schritt7 §20.12.5).
+

@@ -4623,6 +4623,12 @@ lässt sich weder prüfen noch widerlegen.
 > `Basisinfos/regel0_llm.yaml`. Sie sind nicht zu verwechseln mit der
 > deterministischen Stufe `entscheider` der Spot-Kette oder mit den
 > deterministischen Rollen A/B/C des Hebel-Neubaus (Richtung, Bewegung, Sperre).
+>
+> **Stand 04.10.2026 (E-53, Fassung 0.1e):** In der Mail stehen der **Trader** (5 Stimmen, Mehrheit, sonst *uneinig*)
+> und das **Umfeld** nur als Beschreibung, ohne Urteilswort (es urteilte über 2025/26 zu 85 % gleich). Der
+> **Entscheider ist ausgesetzt**: Mit nur dem Trader als Eingang wiederholte er ihn (39 von 40). Er ist nicht gestrichen.
+> Die Urteilsstufen und der Entscheider werden mit dem Rückspiel neu geprüft (Plan Hebel O22). Bis dahin ist der Block
+> **Auskunft, ungemessen**.
 > **Riegel gegen Abfragestau:** derselbe Client wie die Spot-Kette, Tageslimit,
 > höchstens 6 Signale je Lauf, Abbruch nach 3 Fehlern in Folge. Ausführlich:
 > `Voranalyse_Schritt7_Betrieb_02_10.md` §20 bis §20.12.

@@ -1380,3 +1380,39 @@ Dieselben ersten 20 Anker wie 0.1d, nur der Trader, 5 Stimmen, 10 Wiederholungen
 - Der **Entscheider** ist ein Echo (98 %).
 
 ➤ **Nutzerentscheidung M1** (ohne Entscheider). Danach Fassung **0.1e**: `stimmen: 5`, Entscheider aus (bei M1), dann `mail_block: true`, Wache, Suite, Push, NB-Pull.
+
+#### 20.12.5 Fassung 0.1e in der Mail — M1 nur für diese Messung, Neuprüfung festgelegt (04.10.2026; E-53)
+
+Nutzer 04.10.: *„Ja, nur für die aktuelle Messung und Bewertung. Halte im Plan fest, dass die LLM-Stufen und der Entscheider erneut fachlich und technisch geprüft werden, oder du sagst, wir können das jetzt noch optimieren. Was sagst du, ist alles gegengeprüft?"*
+
+**Fassung 0.1e** (`Basisinfos/regel0_llm.yaml`, Vorgabe in `agent/regel0_llm.py` gleich):
+
+| | 0.1d | **0.1e** |
+|---|---|---|
+| Stimmen je Rolle | 3 | **5** (P1-c 83 % → 90 %) |
+| Entscheider | an, Eingang nur der Trader | **ausgesetzt** (Echo 39/40), nicht gestrichen: Prompt, Code und Wache bleiben |
+| Block in der Mail | aus (Schatten) | **an**, als *Sofortfassung, ungemessen*; die Mail nennt den ausgesetzten Entscheider |
+| Zeitgrenze je Signal | 90 s | **120 s**, aus der Messung: Trader mit 5 Stimmen im Mittel 27 s, höchstens 52 s, dazu der erste Markt des Tages (~25 s). Bei 90 s wären Grenzfälle mit weniger Stimmen entschieden worden als gemessen |
+| Aufrufe je Signal | 6 (+ Markt einmal je Faktenstand) | 5 (+ Markt einmal je Faktenstand); Riegel unverändert (150 je Tag, 6 Signale und 600 s je Lauf) |
+
+**Jetzt optimieren oder später prüfen? → später, mit dem Rückspiel.** Alles, was ohne Ausgang messbar ist, ist gemessen: Form, Verteilung, Wiederholung, Anonymität, Echo. Die offene Frage ist, ob das Trader-Urteil den 24-h-Ausgang der REGEL0-Handel **trennt**. Sie ist nur im Rückspiel (N4) zu beantworten. Jede Prompt- oder Stufenänderung vorher wäre Anpassen ohne Zielgröße: Man verbessert dann, wie gleichmäßig die Stufen verteilt sind, nicht ihren Wert. Und auf derselben Entwicklungsmenge wäre das Mehrfachtesten. Der Entscheider bekommt erst wieder eine Aufgabe, wenn er eine **zweite unabhängige Sicht** hat: Text (P-T), Funding oder ein Umfeld, das unterscheidet. Planpunkt **O22**.
+
+**Was gegengeprüft ist — und was nicht:**
+
+| | Stand |
+|---|---|
+| ✔ Kalibrierläufe P1 (0.1 bis 0.1e) | Belege in `Rechenkern_02_10/kalibrierung_*.txt`, jeder Lauf mit eigener Wegwerf-Ablage, Standard-DB unberührt |
+| ✔ Echo-Auszählung | 39/40 Paare ausgezählt, nicht geschätzt |
+| ✔ Bestätigungsmenge unberührt | Kalibrierlauf sperrt sie aus (Trockenlauf 0 von 6) |
+| ✔ Zeitpunkttreue der Makroreihen | Wache (nur abgeschlossene Monate) |
+| ✔ Riegel gegen Abfragestau | Wache: Tageslimit, Ausfallschwelle, Laufgrenze |
+| ✔ Mailblock 0.1e | gerendert geprüft, Entscheider-Hinweis; bei fünf Stimmen die Auszählung (*neutral (4 von 5)*, ohne Mehrheit jede Stufe mit Zahl) |
+| ✔ Wache Regel0Betrieb | 53/53 mit 0.1e (dazu R-4 am Seiteneffekt), der Entscheider bleibt über einen eigenen Katalog prüfbar |
+| ✔ volle Suite | 3195 Prüfungen, 5 rot: die 4 bekannten und **neu** *Nennersperre: gesperrte Symbole ohne Sperre da*. Ursache ist das Datum, nicht 0.1e: `onchain_historie.db` (splycur) endet am 12.09., die Frischegrenze ist 21 Tage, seit 04.10. ist die Probe leer. Dieselbe Ursache wie die bekannte Zeile *Messbasis veraltet*; die Messbasen werden am Desktop von Hand nachgeladen |
+| ◐ P1-c Wiederholung | 90 % auf **nur 10** Wiederholungen, genau auf der Grenze. Ein Grenzfall (JTO) kippt weiter |
+| ◐ Trader sagt fast nie *stützt* | 2 von 20 — fachlich erklärbar (REGEL0 kauft nach Rückgang), aber ob das Urteil trennt, ist **ungemessen** |
+| ◐ Markt-Phasenlauf | lief noch mit dem kleinen Vorgriff des laufenden Teilmonats (vor der Zeitpunkttreue); das Urteil *85 % gleich* ändert das kaum, nachgemessen ist es nicht |
+| ⛔ Nutzen der Urteile | **nicht gemessen** — Rückspiel N4 / P2 fehlt. Bis dahin ist der Block Auskunft |
+| ⛔ Betrieb am NB | K-LLM-1 offen: erstes Signal mit eingeschaltetem Block |
+| ✔ R-4 (Spot-Kette anhalten) | **am Seiteneffekt** nachgewiesen (`Rechenkern_02_10/pruefe_r4.py`, Beleg `pruefe_r4.txt`, in der Wache als Unterprozess): `hebel_screening_job` mit Platzhaltern, Schalter an → Umlauf 0, alter Weg 0; Schalter aus → Umlauf 1, alter Weg 0; keine Fehlermeldung, Sperre freigegeben. Die Probe schlug zweimal fehl, bevor sie lief (fehlende Platzhalter): Sie **kann** fehlschlagen |
+

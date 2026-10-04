@@ -37,13 +37,13 @@ import agent.regel0_ablage as AB
 HIER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KATALOG = os.path.join(HIER, "Basisinfos", "regel0_llm.yaml")
 VORGABE = {
-    "fassung": "0.1d-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": False, "schatten": True,
-    "zeitgrenze_s": 90,
-    "stimmen": 3,
+    "fassung": "0.1e-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": True, "schatten": True,
+    "zeitgrenze_s": 120,
+    "stimmen": 5,
     "tageslimit_aufrufe": 150, "max_signale_je_lauf": 6, "lauf_zeitgrenze_s": 600, "ausfall_schwelle": 3,
     "rollen": {"markt": {"an": True, "nur_auskunft": True}, "trader": {"an": True, "bausteine": ["struktur", "lange_sicht", "marken", "schwankung",
                                                                         "volumen"]},
-               "entscheider": {"an": True, "eingaenge": ["trader"]}},
+               "entscheider": {"an": False, "eingaenge": ["trader"]}},
 }
 URTEILE_PRUEFER = ("stuetzt", "neutral", "spricht_dagegen")
 URTEILE_ENTSCHEIDER = ("bestaetigt", "mit_vorbehalt", "einwand")
@@ -632,11 +632,20 @@ def mail_zeilen(ergebnis: dict, katalog: dict | None = None) -> list:
                 z.append("  %-12s %-16s Gegengrund: %s" % ("", "", x["gegengrund"]))
             continue
         st = x.get("stimmen") or []
-        einig = "" if len(set(st)) <= 1 else " (%s)" % "/".join(WORT.get(s_, s_) for s_ in st)
+        # 0.1e: bei fuenf Stimmen die Auszaehlung statt der Liste - *neutral (4 von 5)*; ohne Mehrheit jede Stufe mit Zahl
+        if len(set(st)) <= 1:
+            einig = ""
+        elif x["urteil"] != "uneinig":
+            einig = " (%d von %d)" % (st.count(x["urteil"]), len(st))
+        else:
+            einig = " (%s)" % ", ".join("%d %s" % (st.count(s_), WORT.get(s_, s_)) for s_ in sorted(set(st), key=st.index))
         z.append("  %-12s %-16s %s" % (titel, WORT.get(x["urteil"], x["urteil"]) + einig, x.get("begruendung") or ""))
         if x.get("gegengrund"):
             z.append("  %-12s %-16s Gegengrund: %s" % ("", "", x["gegengrund"]))
     if katalog["rollen"].get("markt", {}).get("nur_auskunft") and "markt" in ergebnis:
         z.append("  (Umfeld nur als Beschreibung: es urteilte im Kalibrierlauf ueber 2025 und 2026 zu 85 % gleich - P1, 03.10.)")
-    z += ["", "  Messstand: noch nicht gemessen (Sofortfassung E-52; die gemessene Fassung folgt nach Rueckspiel und Bestaetigung)."]
+    if not katalog["rollen"].get("entscheider", {}).get("an"):
+        # 0.1e (E-53): mit nur dem Trader als Eingang war er ein Echo (39 von 40) - ausgesetzt, nicht gestrichen
+        z.append("  (Entscheider ausgesetzt: er wiederholte den Trader in 39 von 40 Faellen - E-53, Neupruefung mit dem Rueckspiel)")
+    z += ["", "  Messstand: noch nicht gemessen (Sofortfassung E-52/E-53; die gemessene Fassung folgt nach Rueckspiel und Bestaetigung)."]
     return z
