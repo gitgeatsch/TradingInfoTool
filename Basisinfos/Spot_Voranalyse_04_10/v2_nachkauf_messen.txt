@@ -1,0 +1,74 @@
+V-2 Spot-Kaufsignale gegen den weiteren Kursverlauf (NB-Kopie nb_0310.db, Kurse bis 2026-10-01 17:00)
+Signale roh 3212 -> je Symbol/Aktion/Tag 1188, mit Kursen 868; ohne Kurse: {'PLTR': 28, 'TAO': 27, 'MORPHO': 22, 'OD7N': 20, 'NEAR': 17, 'SEI': 15, 'OD7L': 14, 'LINK': 14, 'BIO': 10, 'XLM': 10, 'AIOZ': 9, 'OD7H': 9}
+
+== ALLE Spot-Kaufsignale (n = 868, 40 Symbole)
+    24 h  n= 849  Median  +0.31 %  Mittel  +1.11 %  im Minus  45 %  | gegen Markt: Median  +0.30 %, schlechter  44 %
+   168 h  n= 757  Median  +4.97 %  Mittel  +6.95 %  im Minus  32 %  | gegen Markt: Median  +2.33 %, schlechter  37 %
+   336 h  n= 644  Median  +5.29 %  Mittel  +7.26 %  im Minus  30 %  | gegen Markt: Median  +1.66 %, schlechter  41 %
+   672 h  n= 383  Median +10.89 %  Mittel +13.04 %  im Minus  18 %  | gegen Markt: Median  +4.35 %, schlechter  39 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  +0.42 %, schlechter  46 % | Symbol-Wochen 162, Mittel  +0.50 % +- 0.56 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  +0.38 %, schlechter  47 % | Symbol-Wochen 144, Mittel  +0.55 % +- 0.84 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg  99 %, mindestens 5 % tiefer  45 %, 10 % tiefer  17 % (n=798)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.36, im unteren Fuenftel  28 % (n=757)
+== ERÖFFNEN (n = 183, 24 Symbole)
+    24 h  n= 183  Median  +0.93 %  Mittel  +2.18 %  im Minus  39 %  | gegen Markt: Median  +0.67 %, schlechter  40 %
+   168 h  n= 183  Median +15.56 %  Mittel +13.70 %  im Minus  17 %  | gegen Markt: Median  +6.04 %, schlechter  22 %
+   336 h  n= 175  Median +12.36 %  Mittel +11.09 %  im Minus  20 %  | gegen Markt: Median  +4.18 %, schlechter  30 %
+   672 h  n= 140  Median +13.43 %  Mittel +14.03 %  im Minus  16 %  | gegen Markt: Median  +7.22 %, schlechter  35 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  +0.88 %, schlechter  46 % | Symbol-Wochen 45, Mittel  +0.51 % +- 1.30 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  +0.53 %, schlechter  46 % | Symbol-Wochen 45, Mittel  +0.55 % +- 1.69 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg  98 %, mindestens 5 % tiefer  29 %, 10 % tiefer  16 % (n=183)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.18, im unteren Fuenftel  52 % (n=183)
+== KAUFEN (n = 97, 26 Symbole)
+    24 h  n=  97  Median  +0.24 %  Mittel  +0.97 %  im Minus  42 %  | gegen Markt: Median  +0.08 %, schlechter  46 %
+   168 h  n=  97  Median  +2.68 %  Mittel  +4.99 %  im Minus  36 %  | gegen Markt: Median  +0.71 %, schlechter  47 %
+   336 h  n=  94  Median  +2.72 %  Mittel  +4.71 %  im Minus  35 %  | gegen Markt: Median  -0.03 %, schlechter  50 %
+   672 h  n=  88  Median  +9.39 %  Mittel +10.47 %  im Minus  23 %  | gegen Markt: Median  +2.92 %, schlechter  40 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  -0.91 %, schlechter  56 % | Symbol-Wochen 46, Mittel  -0.44 % +- 1.05 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  -0.20 %, schlechter  52 % | Symbol-Wochen 46, Mittel  +0.19 % +- 1.79 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg  99 %, mindestens 5 % tiefer  55 %, 10 % tiefer  27 % (n=97)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.43, im unteren Fuenftel  24 % (n=97)
+== NACHKAUFEN (n = 588, 24 Symbole)
+    24 h  n= 569  Median  +0.17 %  Mittel  +0.78 %  im Minus  47 %  | gegen Markt: Median  +0.26 %, schlechter  45 %
+   168 h  n= 477  Median  +2.98 %  Mittel  +4.75 %  im Minus  37 %  | gegen Markt: Median  +1.20 %, schlechter  41 %
+   336 h  n= 375  Median  +3.83 %  Mittel  +6.10 %  im Minus  34 %  | gegen Markt: Median  +1.11 %, schlechter  44 %
+   672 h  n= 155  Median +11.77 %  Mittel +13.61 %  im Minus  17 %  | gegen Markt: Median  +3.24 %, schlechter  43 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  +0.54 %, schlechter  44 % | Symbol-Wochen 105, Mittel  +1.22 % +- 0.67 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  +0.39 %, schlechter  46 % | Symbol-Wochen 87, Mittel  +1.61 % +- 0.94 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg 100 %, mindestens 5 % tiefer  49 %, 10 % tiefer  15 % (n=518)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.39, im unteren Fuenftel  20 % (n=477)
+== Monat 2026-07 (n = 22, 15 Symbole)
+    24 h  n=  22  Median  +0.24 %  Mittel  +1.10 %  im Minus  32 %  | gegen Markt: Median  +0.08 %, schlechter  41 %
+   168 h  n=  22  Median  -0.52 %  Mittel  -0.72 %  im Minus  50 %  | gegen Markt: Median  +0.60 %, schlechter  50 %
+   336 h  n=  22  Median  +0.47 %  Mittel  -2.85 %  im Minus  45 %  | gegen Markt: Median  +1.29 %, schlechter  41 %
+   672 h  n=  22  Median +14.23 %  Mittel  +9.45 %  im Minus  32 %  | gegen Markt: Median  +2.74 %, schlechter  32 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  +0.56 %, schlechter  45 % | Symbol-Wochen 18, Mittel  +0.37 % +- 1.06 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  +3.35 %, schlechter  27 % | Symbol-Wochen 18, Mittel  -0.37 % +- 2.72 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg 100 %, mindestens 5 % tiefer  55 %, 10 % tiefer  23 % (n=22)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.40, im unteren Fuenftel  27 % (n=22)
+== Monat 2026-08 (n = 525, 40 Symbole)
+    24 h  n= 525  Median  +0.67 %  Mittel  +1.35 %  im Minus  43 %  | gegen Markt: Median  +0.40 %, schlechter  43 %
+   168 h  n= 515  Median  +5.88 %  Mittel  +7.85 %  im Minus  30 %  | gegen Markt: Median  +2.74 %, schlechter  35 %
+   336 h  n= 490  Median  +5.80 %  Mittel  +7.64 %  im Minus  29 %  | gegen Markt: Median  +2.13 %, schlechter  39 %
+   672 h  n= 350  Median +10.97 %  Mittel +13.13 %  im Minus  17 %  | gegen Markt: Median  +4.74 %, schlechter  39 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  +0.66 %, schlechter  45 % | Symbol-Wochen 108, Mittel  +0.22 % +- 0.69 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  +0.81 %, schlechter  45 % | Symbol-Wochen 106, Mittel  +1.05 % +- 0.95 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg  99 %, mindestens 5 % tiefer  41 %, 10 % tiefer  17 % (n=521)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.36, im unteren Fuenftel  31 % (n=515)
+== Monat 2026-09 (n = 316, 23 Symbole)
+    24 h  n= 302  Median  +0.00 %  Mittel  +0.69 %  im Minus  49 %  | gegen Markt: Median  +0.26 %, schlechter  45 %
+   168 h  n= 220  Median  +4.62 %  Mittel  +5.59 %  im Minus  35 %  | gegen Markt: Median  +1.37 %, schlechter  41 %
+   336 h  n= 132  Median  +4.14 %  Mittel  +7.51 %  im Minus  32 %  | gegen Markt: Median  +0.14 %, schlechter  49 %
+   672 h  n=  11  Median  +6.22 %  Mittel +17.52 %  im Minus   0 %  | gegen Markt: Median  -6.52 %, schlechter  64 %
+   168 h  gegen DIESELBEN Watchlist-Assets: Median  +0.01 %, schlechter  47 % | Symbol-Wochen 56, Mittel  +1.16 % +- 1.07 (2 SE schliesst null ein)
+   336 h  gegen DIESELBEN Watchlist-Assets: Median  -1.36 %, schlechter  59 % | Symbol-Wochen 39, Mittel  +0.43 % +- 1.58 (2 SE schliesst null ein)
+  in den 7 Tagen danach: tiefer als der Einstieg 100 %, mindestens 5 % tiefer  52 %, 10 % tiefer  16 % (n=255)
+  Lage im 15-Tage-Bereich (0 Boden, 1 Gipfel): Median 0.35, im unteren Fuenftel  22 % (n=220)
+== Monat 2026-10 (n = 5, 5 Symbole)
+  in den 7 Tagen danach: tiefer als der Einstieg nan %, mindestens 5 % tiefer nan %, 10 % tiefer nan % (n=0)
+
+BEZUG Zufallseinstieg: Lage aller Stunden derselben 40 Assets seit 2026-07-14 20:00: Median 0.42, im unteren Fuenftel  19 % (n=61334)
+BEZUG   24 h: Median  -0.07 %, im Minus  51 %
+BEZUG  168 h: Median  +0.24 %, im Minus  49 %
+BEZUG  336 h: Median  +2.21 %, im Minus  42 %
+BEZUG  672 h: Median +10.99 %, im Minus  27 %

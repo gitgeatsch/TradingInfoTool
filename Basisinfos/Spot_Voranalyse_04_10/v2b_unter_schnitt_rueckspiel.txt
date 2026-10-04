@@ -1,0 +1,25 @@
+V-2b Rueckspiel UNTER dem 200-Tage-Schnitt - Messbasis 116 Assets, Tage 2021-12-01 bis 2026-09-23
+
+== 2024
+  JEDER Tag (Bezug)      Asset-Tage  24282 | 30 T roh   -2.2 % Minus  54 % | Rang 0.525 +- 0.008 (AM 812, besser) | 90 T roh  -11.6 % Minus  61 % | Rang 0.529 +- 0.009 (AM 812, besser) | Lage 0.39, Boden-Fuenftel 21 %
+  UNTER Schnitt          Asset-Tage  12613 | 30 T roh   +0.5 % Minus  49 % | Rang 0.546 +- 0.010 (AM 557, besser) | 90 T roh   +2.4 % Minus  48 % | Rang 0.529 +- 0.011 (AM 557, besser) | Lage 0.32, Boden-Fuenftel 27 %
+  TIEF (< -30 %)         Asset-Tage   4739 | 30 T roh   +2.6 % Minus  42 % | Rang 0.572 +- 0.014 (AM 294, besser) | 90 T roh  +20.4 % Minus  30 % | Rang 0.546 +- 0.014 (AM 294, besser) | Lage 0.27, Boden-Fuenftel 31 %
+  SEHR TIEF (< -50 %)    Asset-Tage    657 | 30 T roh   +5.5 % Minus  37 % | Rang 0.596 +- 0.030 (AM 65, besser) | 90 T roh  +32.1 % Minus  17 % | Rang 0.558 +- 0.033 (AM 65, ~Zufall) | Lage 0.21, Boden-Fuenftel 48 %
+  WEIT DARUEBER (> +30 %) Asset-Tage   6013 | 30 T roh  -11.1 % Minus  64 % | Rang 0.477 +- 0.013 (AM 368, ~Zufall) | 90 T roh  -32.7 % Minus  80 % | Rang 0.514 +- 0.014 (AM 368, ~Zufall) | Lage 0.58, Boden-Fuenftel  9 %
+
+== 2025
+  JEDER Tag (Bezug)      Asset-Tage  34891 | 30 T roh  -10.3 % Minus  69 % | Rang 0.516 +- 0.006 (AM 1162, besser) | 90 T roh  -27.2 % Minus  77 % | Rang 0.515 +- 0.008 (AM 1162, besser) | Lage 0.40, Boden-Fuenftel 16 %
+  UNTER Schnitt          Asset-Tage  27644 | 30 T roh   -8.8 % Minus  66 % | Rang 0.527 +- 0.007 (AM 1069, besser) | 90 T roh  -23.2 % Minus  74 % | Rang 0.515 +- 0.008 (AM 1069, ~Zufall) | Lage 0.36, Boden-Fuenftel 19 %
+  TIEF (< -30 %)         Asset-Tage  14987 | 30 T roh   -6.4 % Minus  60 % | Rang 0.523 +- 0.009 (AM 708, besser) | 90 T roh  -17.8 % Minus  69 % | Rang 0.503 +- 0.010 (AM 708, ~Zufall) | Lage 0.31, Boden-Fuenftel 26 %
+  SEHR TIEF (< -50 %)    Asset-Tage   5231 | 30 T roh   -1.5 % Minus  52 % | Rang 0.535 +- 0.014 (AM 314, besser) | 90 T roh  -18.0 % Minus  65 % | Rang 0.491 +- 0.016 (AM 314, ~Zufall) | Lage 0.25, Boden-Fuenftel 38 %
+  WEIT DARUEBER (> +30 %) Asset-Tage   1517 | 30 T roh  -20.6 % Minus  87 % | Rang 0.449 +- 0.024 (AM 139, SCHLECHTER) | 90 T roh  -46.3 % Minus  97 % | Rang 0.494 +- 0.025 (AM 139, ~Zufall) | Lage 0.65, Boden-Fuenftel  3 %
+
+== 2026
+  JEDER Tag (Bezug)      Asset-Tage  29953 | 30 T roh   -5.7 % Minus  62 % | Rang 0.505 +- 0.007 (AM 925, ~Zufall) | 90 T roh  -17.0 % Minus  73 % | Rang 0.505 +- 0.010 (AM 693, ~Zufall) | Lage 0.37, Boden-Fuenftel 24 %
+  UNTER Schnitt          Asset-Tage  26504 | 30 T roh   -5.3 % Minus  61 % | Rang 0.519 +- 0.008 (AM 900, besser) | 90 T roh  -16.5 % Minus  73 % | Rang 0.511 +- 0.010 (AM 677, ~Zufall) | Lage 0.36, Boden-Fuenftel 26 %
+  TIEF (< -30 %)         Asset-Tage  15714 | 30 T roh   -5.2 % Minus  61 % | Rang 0.526 +- 0.009 (AM 660, besser) | 90 T roh  -15.1 % Minus  70 % | Rang 0.513 +- 0.012 (AM 545, ~Zufall) | Lage 0.31, Boden-Fuenftel 30 %
+  SEHR TIEF (< -50 %)    Asset-Tage   6057 | 30 T roh   -5.6 % Minus  61 % | Rang 0.528 +- 0.014 (AM 324, besser) | 90 T roh   -9.1 % Minus  63 % | Rang 0.525 +- 0.016 (AM 301, ~Zufall) | Lage 0.26, Boden-Fuenftel 36 %
+  WEIT DARUEBER (> +30 %) Asset-Tage    607 | 30 T roh  -21.0 % Minus  77 % | Rang 0.311 +- 0.046 (AM 47, SCHLECHTER) | 90 T roh  -25.2 % Minus  85 % | Rang 0.307 +- 0.048 (AM 32, SCHLECHTER) | Lage 0.60, Boden-Fuenftel  5 %
+
+Lesart: *roh* = was ein Kauf gebracht haette (Median); *Rang* = Platz des Ertrags unter allen Assets desselben Tages,
+0,50 = Zufall, Mittel ueber Asset-Monate mit Standardfehler (Urteil bei 2 SE). *Minus* = Anteil, der nach h Tagen tiefer stand. Lage 0,5 = Zufall, < 0,2 = Boden.

@@ -696,3 +696,10 @@ prüfen und gegenprüfen"*.
 - **5 Stimmen** je Rolle (P1-c 90 %), Zeitgrenze je Signal **120 s** (aus der Messung), der Block steht **in der Mail** als *Sofortfassung, ungemessen*.
 - **Neuprüfung festgelegt (O22):** Die Urteilsstufen und der Entscheider werden mit dem Rückspiel N4 erneut fachlich und technisch geprüft. Vorher wird nicht optimiert, weil ohne Ausgang keine Zielgröße da ist (Voranalyse_Schritt7 §20.12.5).
 
+# E-54 · Spot-Neubau analog dem Hebel – zuerst nur Voranalyse und Analyse (Nutzer 04.10.2026)
+
+**04.10.2026** · Nutzer: *„Ich würde gerne den Spot-Ast neu umbauen, analog dem Hebelablauf"* und dann *„Ok, ja, vorerst nur eine Voranalyse und Analyse, damit wir die Grundlage aus fachlicher und technischer Sicht haben. Trage dies in die Planung ein."*
+- Plan O23 (Inhalt V-1 bis V-6), Dokument `Voranalyse_Spot_Neubau_04_10.md`. Gebaut wird erst nach Abstimmung. Am Betrieb kommt Spot **nach** der Hebel-Umstellung (Schritt 8): Der Hebel hat Vorrang.
+- Nur lesend und deterministisch am Desktop, parallel zum LLM-Rückspiel N4 (das hängt am Kontingent, nicht an der Rechenzeit).
+- Die alte Spot-Kette läuft unverändert weiter. Ob sie angehalten wird, ist offen beim Nutzer.
+
