@@ -71,7 +71,12 @@ def daten(r: dict, ordner: str, jetzt: datetime | None = None, tage: int = TAGE_
     kurse = reihe(ordner, r["symbol"], sig_ende - timedelta(days=tage), bis - timedelta(hours=1))
     if not kurse:
         return None
-    ref = r.get("kurs") or next((k for t, k in reversed(kurse) if t <= sig_ende), kurse[-1][1])
+    # 04.10.2026 (Nutzer: *USD statt Euro*): liegt EUR je USD dieses Assets vor (Bitpanda-Ticker beim Versand, regel0_mail),
+    # zeigt das Bild EUR - Binance-USDT mal dieses Verhaeltnis. Ohne (Hebel-Tab, Ticker weg) bleibt es USDT und sagt das.
+    fx = r.get("eur_je_usd")
+    if fx:
+        kurse = [(t, k * float(fx)) for t, k in kurse]
+    ref = (r["kurs"] * float(fx or 1.0)) if r.get("kurs") else next((k for t, k in reversed(kurse) if t <= sig_ende), kurse[-1][1])
     gew = stufe_von(r)
     liq = {}
     for L in STUFEN:
@@ -79,7 +84,7 @@ def daten(r: dict, ordner: str, jetzt: datetime | None = None, tage: int = TAGE_
         liq[L] = pts
     ein_kurs = next((k for t, k in kurse if t == ein), None)
     return {"kurse": kurse, "signal": sig_ende, "einstieg": ein, "ausstieg": aus, "ref": float(ref), "einstieg_kurs": ein_kurs,
-            "stufe": gew, "liq": liq, "name": r.get("bitpanda") or r["symbol"]}
+            "stufe": gew, "liq": liq, "name": r.get("bitpanda") or r["symbol"], "waehrung": "EUR" if fx else "USDT"}
 
 
 def _zahl(x: float) -> str:
@@ -111,7 +116,8 @@ def bild(r: dict, ordner: str, jetzt: datetime | None = None, marken: list | Non
     try:
         xs = [t.astimezone().replace(tzinfo=None) for t, _k in d["kurse"]]
         ys = [k for _t2, k in d["kurse"]]
-        ax.plot(xs, ys, color="#1f4e79", linewidth=1.3, label="Stundenkurs (Binance, USDT)")
+        ax.plot(xs, ys, color="#1f4e79", linewidth=1.3,
+                label="Stundenkurs (Binance, in EUR umgerechnet)" if d["waehrung"] == "EUR" else "Stundenkurs (Binance, USDT)")
         # Die Achse folgt dem KURS: Liquidationsgrenzen liegen 12-45 % tiefer und wuerden den Verlauf sonst zu einem Strich
         # zusammendruecken (erstes Probebild 03.10.). Gezeichnet wird eine Grenze nur, wenn sie im sichtbaren Bereich liegt;
         # alle drei stehen mit Preis und Abstand im Kasten unten.
@@ -122,12 +128,22 @@ def bild(r: dict, ordner: str, jetzt: datetime | None = None, marken: list | Non
         for L, pts in d["liq"].items():
             gew = (L == d["stufe"])
             preis = pts[0][1]
-            kasten.append("%s%dx: %s (%+.1f %%)" % ("▶ " if gew else "", L, _zahl(preis), 100.0 * (preis / d["ref"] - 1.0)))
+            kasten.append("%s%dx: %s (%s %%)" % ("▶ " if gew else "", L, _zahl(preis),
+                                                 ("%+.1f" % (100.0 * (preis / d["ref"] - 1.0))).replace(".", ",")))
+            # ⚠️ 04.10.2026 (QNT 3x): gezeichnet war die NICHT gewaehlte 5x-Linie, die gewaehlte 3x lag unter dem Ausschnitt und
+            # fehlte. Jetzt: nur die GEWAEHLTE Stufe, und liegt sie ausserhalb, steht sie als Hinweis am unteren Rand.
+            if not gew:
+                continue
             if lo - rand <= preis <= hi + rand:
                 ax.plot([t.astimezone().replace(tzinfo=None) for t, _ in pts], [p for _, p in pts], color="#c0392b",
-                        linewidth=2.0 if gew else 0.8, linestyle="-" if gew else ":",
-                        label=("Liquidation %dx (gewählt)" % L) if gew else ("Liquidation %dx" % L))
-        ax.text(0.99, 0.97, "Liquidation (Kurs zur Signalstunde %s)" % _zahl(d["ref"]) + chr(10) + "   ".join(kasten),
+                        linewidth=2.0, linestyle="-", label="Liquidation %dx (gewählt)" % L)
+            else:
+                ax.text(0.01, 0.02, "▼ Liquidation %dx bei %s %s (%s %%) - unterhalb des Ausschnitts" % (
+                    L, _zahl(preis), d["waehrung"], ("%+.1f" % (100.0 * (preis / d["ref"] - 1.0))).replace(".", ",")),
+                    transform=ax.transAxes, ha="left", va="bottom", fontsize=8, color="#c0392b",
+                    bbox=dict(boxstyle="round", facecolor="white", edgecolor="#c0392b", alpha=0.9))
+        ax.text(0.99, 0.97, "Liquidation je Stufe, ab Kurs zur Signalstunde %s %s" % (_zahl(d["ref"]), d["waehrung"]) + chr(10)
+                + "   ".join(kasten),
                 transform=ax.transAxes, ha="right", va="top", fontsize=7.5, color="#c0392b",
                 bbox=dict(boxstyle="round", facecolor="white", edgecolor="#c0392b", alpha=0.9))
         ax.axvline(d["signal"].astimezone().replace(tzinfo=None), color="#7f8c8d", linewidth=0.8, linestyle="--")
@@ -138,13 +154,16 @@ def bild(r: dict, ordner: str, jetzt: datetime | None = None, marken: list | Non
                 label="Einstieg %s%s" % (d["einstieg"].astimezone().strftime("%d.%m. %H:%M"),
                                          "" if d["einstieg_kurs"] is not None else " (geplant)"))
         ax.plot([], [], color="#8e44ad", linewidth=1.2, label="Ausstieg %s (24 h)" % d["ausstieg"].astimezone().strftime("%d.%m. %H:%M"))
+        ax.plot([], [], color="#7f8c8d", linewidth=0.8, linestyle="--", label="Signal (Ende der Signalstunde)")
         for preis, art, n in (marken or []):
             ax.axhline(preis, color="#e67e22" if art.startswith("W") else "#16a085", linewidth=0.7, alpha=0.8)
             ax.text(xs[0], preis, " %s (%dx berührt)" % (art, n), fontsize=7, va="bottom",
                     color="#e67e22" if art.startswith("W") else "#16a085")
-        ax.set_title("%s · REGEL0 LONG %s · Zeiten in Ortszeit" % (
-            d["name"], ("%dx" % d["stufe"]) if d["stufe"] else "kein Handel"), fontsize=10)
+        ax.set_title("%s · REGEL0 LONG %s · Kurse in %s · Zeiten in Ortszeit" % (
+            d["name"], ("%dx" % d["stufe"]) if d["stufe"] else "kein Handel", d["waehrung"]), fontsize=10)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m.\n%H:%M"))
+        from matplotlib.ticker import FuncFormatter
+        ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _pos: _zahl(v)))     # 04.10.: deutsche Achse (0,031 statt 0.031)
         ax.grid(alpha=0.25)
         ax.legend(fontsize=7, loc="upper left", ncol=2, framealpha=0.85)
         fig.tight_layout()

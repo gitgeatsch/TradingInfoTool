@@ -31523,6 +31523,29 @@ def paket_regel0_betrieb() -> None:
                        capture_output=True, text=True, timeout=120)
         pruefe(P, "R-4 am SEITENEFFEKT: Schalter an -> kein Umlauf, kein alter Weg; Schalter aus -> Umlauf laeuft",
                "R-4 am Seiteneffekt: BESTANDEN" in (_r4.stdout or ""), ((_r4.stdout or "") + (_r4.stderr or ""))[-300:])
+        # 04.10.2026 (Nutzer: *USD statt Euro*, *Infos nicht optimal*) - die offensichtlichen Fehler der Mails vom 04.10.
+        import agent.regel0_mail as _RMf
+        import agent.regel0_chart as _CHf
+        from ui.formatting import render_detail_html as _rdh
+        _ab = _RMf.abgleich({"bitpanda": "QNT", "paar": "QNTUSDT", "faktor": 1}, {"QNT": 261.168}, {"QNTUSDT": 260.84})[1]
+        pruefe(P, "Mailfehler 04.10.: Zuordnung in deutscher Schreibweise (vorher *261.168 USD*, *+0.0 %* - replace(..., 0) ersetzte nichts)",
+               "261,17 USD" in _ab and "-0,1 %" in _ab and "." not in _ab.split("QNTUSDT")[1], _ab)
+        _rf = dict(symbol="QNT", bitpanda="QNT", signalstunde="2026-10-04 08:00", einstieg="2026-10-04 09:00", ausstieg="2026-10-05 09:00",
+                   kurs=259.64, kurs_markt="spot", p2=0.001, p3=0.007, p5=0.107, vh=0.0411, kurs_eur=222.5)
+        _gf = __import__("agent.regel0_groesse", fromlist=["rechne"]).rechne(3, 0, __import__("agent.regel0_groesse", fromlist=["lade"]).lade())
+        _tf = _RMf.signal_mail(_rf, 3, True, _gf, {}, _dt.datetime(2026, 10, 4, 9, 9, tzinfo=_dt.timezone.utc))[1]
+        _lq = 222.5 * _CHf.liq_schwelle(3, _CHf.MARGE, 0)
+        pruefe(P, "Mailfehler 04.10.: Kurs JETZT in EUR (Bitpanda) und Liquidationskurs der gewaehlten Stufe in EUR, USD nur als Messgrundlage",
+               "KURS JETZT  222,50 EUR" in _tf and ("LIQUIDATION 3x bei etwa %s EUR" % _CHf._zahl(_lq)) in _tf and "259,64 USD" in _tf
+               and "USDT (" not in _tf, _tf[-600:])
+        _tf2 = _RMf.signal_mail(dict(_rf, kurs_eur=None), 3, True, _gf, {}, _dt.datetime(2026, 10, 4, 9, 9, tzinfo=_dt.timezone.utc))[1]
+        pruefe(P, "Mailfehler 04.10.: ohne Bitpanda-Ticker steht *nicht verfuegbar* da, kein erfundener EUR-Kurs",
+               "KURS JETZT  nicht verfuegbar" in _tf2 and "LIQUIDATION" not in _tf2, _tf2[-300:])
+        _bq_c = _quelltext("agent/regel0_chart.py")
+        pruefe(P, "Chartfehler 04.10. (QNT 3x zeigte die 5x-Linie): nur die GEWAEHLTE Stufe wird gezeichnet, ausserhalb des Ausschnitts als Hinweis",
+               "if not gew:" in _bq_c and "unterhalb des Ausschnitts" in _bq_c and "eur_je_usd" in _bq_c and "FuncFormatter" in _bq_c)
+        pruefe(P, "Mailfehler 04.10.: lange Zeilen brechen am Handy um (pre-wrap) und das Chart passt in die Breite (max-width)",
+               "pre-wrap" in _rdh("x") and "max-width:100%" in _quelltext("api/email_notify.py"))
         # 04.10.2026 (Nutzer: Ausstiegsmails von nicht offenen Hebelpositionen sofort aendern) - am Seiteneffekt, Wegwerf-Ablage
         _er = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_erinnerung_offen.py")],
                        capture_output=True, text=True, timeout=120)

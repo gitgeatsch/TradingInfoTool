@@ -21,6 +21,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 import agent.regel0_ablage as AB
+import agent.regel0_chart as CH
 import agent.regel0_groesse as G
 
 NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stunden vorbei ist, wird nicht mehr gemailt
@@ -59,14 +60,16 @@ def _vermerke(r: dict) -> list:
 
 
 def kurse_live() -> tuple:
-    """-> ({Bitpanda-Symbol: USD}, {Binance-Paar: Kurs}) - oeffentliche Ticker, zum selben Moment. Wirft bei Netzfehlern."""
+    """-> ({Bitpanda-Symbol: USD}, {Binance-Paar: Kurs}, {Bitpanda-Symbol: EUR}) - oeffentliche Ticker, zum selben Moment.
+    Wirft bei Netzfehlern. Der EUR-Kurs (04.10.2026) ist der Kurs, zu dem bei Bitpanda gehandelt wird."""
     import requests
     bp = requests.get("https://api.bitpanda.com/v1/ticker", timeout=20).json()
     bpu = {k: float(v["USD"]) for k, v in bp.items() if isinstance(v, dict) and v.get("USD")}
+    bpe = {k: float(v["EUR"]) for k, v in bp.items() if isinstance(v, dict) and v.get("EUR")}
     bn = {x["symbol"]: float(x["price"]) for x in requests.get("https://api.binance.com/api/v3/ticker/price", timeout=20).json()}
     for x in requests.get("https://fapi.binance.com/fapi/v1/ticker/price", timeout=20).json():
         bn.setdefault(x["symbol"], float(x["price"]))
-    return bpu, bn
+    return bpu, bn, bpe
 
 
 def abgleich(r: dict, bpu: dict | None, bn: dict | None) -> tuple:
@@ -77,8 +80,10 @@ def abgleich(r: dict, bpu: dict | None, bn: dict | None) -> tuple:
     if not b or not n:
         return True, "Kurs nicht gegengeprueft (%s)" % ("kein Bitpanda-Kurs" if not b else "kein Binance-Kurs %s" % r.get("paar"))
     d = n / (b * float(r.get("faktor") or 1.0)) - 1.0
-    txt = "Bitpanda %.6g USD, Binance %s %.6g (Abweichung %+.1f %%)" % (b, r.get("paar"), n, 100 * d)
-    return abs(d) <= ABGLEICH_GRENZE, txt.replace(".", ",", 0)
+    # ⚠️ 04.10.2026: hier stand `txt.replace(".", ",", 0)` - die 0 ersetzt NICHTS, die Mail zeigte *261.168 USD*, *+0.0 %*
+    txt = "Bitpanda %s USD, Binance %s %s (Abweichung %s %%)" % (CH._zahl(b), r.get("paar"), CH._zahl(n),
+                                                             ("%+.1f" % (100 * d)).replace(".", ","))
+    return abs(d) <= ABGLEICH_GRENZE, txt
 
 
 def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime) -> tuple:
@@ -106,9 +111,19 @@ def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jet
              ("%.0f" % groesse.einsatz_eur), ("%.0f" % groesse.positionswert_eur), stufe)]
     if groesse.vermerk:
         z.append("            %s" % groesse.vermerk)
+    # 04.10.2026 (Nutzer: *USD statt Euro*): Bitpanda handelt in EUR - der EUR-Kurs zum Mailzeitpunkt und der Liquidationskurs der
+    # gewaehlten Stufe in EUR (dieselbe Formel wie die Messung der Hebelstufe und das Chart, regel0_chart.liq_schwelle)
+    if r.get("kurs_eur"):
+        z.append("KURS JETZT  %s EUR (Bitpanda, beim Versand dieser Mail)" % CH._zahl(r["kurs_eur"]))
+        if stufe > 0:
+            lq = r["kurs_eur"] * CH.liq_schwelle(stufe, CH.MARGE, 0)
+            z.append("LIQUIDATION %dx bei etwa %s EUR (%s %%), geschaetzt ab diesem Kurs; steigt bis zum Ausstieg leicht (Finanzierung)" % (
+                stufe, CH._zahl(lq), ("%+.1f" % (100.0 * (lq / r["kurs_eur"] - 1.0))).replace(".", ",")))
+    else:
+        z.append("KURS JETZT  nicht verfuegbar (Bitpanda-Ticker nicht erreichbar) - bitte in Bitpanda nachsehen")
     if r.get("kurs"):
-        z.append("Kurs zur Signalstunde: %s USDT (Binance %s, nur Orientierung - Bitpanda handelt in EUR)" % (
-            ("%.6g" % r["kurs"]), "Futures" if r.get("kurs_markt") == "futures" else "Spot"))
+        z.append("Kurs zur Signalstunde: %s USD (Binance %s, Messgrundlage der REGEL0)" % (
+            CH._zahl(r["kurs"]), "Futures" if r.get("kurs_markt") == "futures" else "Spot"))
     vm = _vermerke(r)
     if r.get("abgleich"):
         vm.append("Zuordnung: " + r["abgleich"])
@@ -205,8 +220,16 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
         for r in c.execute("SELECT * FROM signal WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND mail_gesperrt_am IS NULL "
                            "AND COALESCE(stufe, stufe_vorlaeufig) > 0 AND einstieg >= ? ORDER BY signalstunde", (grenze_alt,)).fetchall():
             r = dict(r)
-            ok, txt = abgleich(r, *_live())
+            _v = _live()
+            ok, txt = abgleich(r, _v[0], _v[1])
             r["abgleich"] = txt
+            # 04.10.2026: EUR-Kurs und EUR je USD dieses Assets aus DEMSELBEN Bitpanda-Abruf - fuer Mailtext und Chart
+            _e = (_v[2] if len(_v) > 2 and _v[2] else {}).get(r.get("bitpanda") or "")
+            _u = (_v[0] or {}).get(r.get("bitpanda") or "")
+            if _e:
+                r["kurs_eur"] = _e
+                if _u:
+                    r["eur_je_usd"] = _e / _u
             if not ok:
                 c.execute("UPDATE signal SET mail_gesperrt_am=?, abgleich=? WHERE symbol=? AND signalstunde=?", (jt, txt, r["symbol"], r["signalstunde"]))
                 c.commit(); zaehl["gesperrt"] += 1

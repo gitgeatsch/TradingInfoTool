@@ -1453,3 +1453,22 @@ Nutzer 04.10.: *„Ja, nur für die aktuelle Messung und Bewertung. Halte im Pla
 **Prüfung am Seiteneffekt:** `Rechenkern_02_10/pruefe_erinnerung_offen.py` (Wegwerf-Ablage, Versand ersetzt). Fälle A bis E, dazu *nie nachgeschickt*, *nicht doppelt*, *nie gelaufen = unbekannt*, *SHORT zählt nicht*, und gegen die **NB-Kopie** (03.10.): Abgleich dort veraltet → *unbekannt* → Mail mit Vermerk, wie verlangt. 11/11. In der Wache als Unterprozess; Regel0Betrieb 54/54.
 
 **NB-Kontrolle K-ERIN** (nach Pull und Neustart): Die Erinnerungen QNT/NEAR/KAIA (fällig 05.10. ab etwa 11:00 Ortszeit) **entfallen**. Im Teilexport steht dann *Erinnerung entfallen: … keine offene Hebelposition*, im Log *… Erinnerung entfallen (keine offene Position)*. Eröffnest du eine Position, kommt ihre Erinnerung mit Vermerk.
+
+### 21.3 Die offensichtlichen Fehler der REGEL0-Mails vom 04.10. — behoben (Nutzer: *„ja, zuerst die offensichtlichen Fehler prüfen und fixen“*)
+
+Geprüft an den Mails QNT, NEAR, KAIA (Signal) und SEI (Erinnerung) aus `eMail_Beispiele`, Text- **und** HTML-Teil, dazu die Chart-Anhänge.
+
+| # | Fehler | Ursache | Behoben |
+|---|---|---|---|
+| F1 | *„REGEL0-Mail ohne LLM“* — der Block **stand drin** (Text und HTML), aber am Ende eines `<pre>` ohne Umbruch: Zeilen über 200 Zeichen liefen am Handy aus dem Bild | `ui/formatting.render_detail_html` ohne `white-space` | `pre-wrap` + `overflow-wrap` (gilt für alle Mails; am breiten Bildschirm unverändert). Am Prüfstand bei 375 px: Seitenbreite 375, kein seitlicher Bildlauf |
+| F2 | Chart 900 px breit → seitlicher Bildlauf am Handy | `api/email_notify` Bildstil ohne `max-width` | `max-width:100%; height:auto` |
+| F3 | Dezimalpunkte: *261.168 USD*, *+0.0 %*, *0.0375 USDT* | `txt.replace(".", ",", 0)` — die **0 ersetzt nichts** | deutsche Schreibweise (`regel0_chart._zahl`) |
+| F4 | **USD statt EUR**: kein Kurs, kein Liquidationskurs in EUR | der Bitpanda-Ticker lieferte nur USD in die Mail | `kurse_live` liefert auch **EUR**. Die Mail zeigt **KURS JETZT … EUR (Bitpanda)** und **LIQUIDATION 3x bei etwa … EUR (−26,7 %)** (Formel wie Messung und Chart). Ohne Ticker steht *nicht verfügbar*, kein erfundener Kurs. USD bleibt nur als *Messgrundlage der REGEL0* |
+| F5 | **Chart QNT 3x zeigte die 5x-Liquidationslinie**, die gewählte 3x fehlte (lag unter dem Ausschnitt) | gezeichnet wurde jede Stufe im Ausschnitt | nur die **gewählte** Stufe; außerhalb des Ausschnitts als Hinweis am unteren Rand (*▼ Liquidation 3x bei … – unterhalb des Ausschnitts*). Die übrigen Stufen stehen im Kasten |
+| F6 | Chart in USDT, Achse mit Dezimalpunkt, Signal-Linie ohne Legende | — | Chart in **EUR** (Binance × EUR/USD aus demselben Bitpanda-Abruf), deutsche Achse, Legende *Signal*. Im Hebel-Tab (ohne Ticker) bleibt es USDT und sagt das |
+
+**Geprüft:** Prüfstand mit echten Desktop-Kursen (QNT, KAIA), Wegwerf-Ablage, Versand abgefangen, mit und ohne Ticker; Charts angesehen; HTML am Handy-Format (375 px) im Browser. Wache Regel0Betrieb 59/59, darunter fünf neue Zeilen *Mailfehler/Chartfehler 04.10.*.
+
+**Bewusst NICHT jetzt** (das ist der Neuaufbau O25, M-a bis M-f, abgestimmt mit *„ja“*): Reihenfolge Handlung → Chart → Einschätzung → Begründung → Technik, Ortszeit zuerst, Fachbegriffe in die Fußzeile, echtes HTML statt `<pre>`, Hinweis auf die Spot-Mail zum selben Asset.
+
+**Nebenbefund geprüft:** QNT 67,88 USD am 22.09. (Desktop) gegen 259,64 am 04.10. (NB) ist **echt**. Die Reihe steigt bis 24.09. auf 82, und Bitpanda und Binance zeigen am 04.10. unabhängig 261,17 bzw. 260,84.

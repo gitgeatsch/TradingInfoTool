@@ -88,7 +88,9 @@ def send_notification_email(
         # ungeschuetzt ausgesetzt waren.
         bild_tags = "".join(
             f"<img src=\"cid:{_INLINE_IMAGE_CID}-{i}\" alt=\"{bild.get('alt', '')}\" "
-            "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;\">"
+            # max-width/height:auto (04.10.2026): ein 900 px breites Chart erzwang am Handy den seitlichen Bildlauf
+            "style=\"background:#ffffff;border:1px solid #dddddd;padding:8px;margin-top:12px;display:block;"
+            "max-width:100%;height:auto;box-sizing:border-box;\">"
             for i, bild in enumerate(inline_images or [])
         )
         msg = MIMEMultipart("related")

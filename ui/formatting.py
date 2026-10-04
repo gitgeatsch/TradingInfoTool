@@ -432,7 +432,9 @@ def render_detail_html(text: str) -> str:
     Hervorhebung zeigt wie das App-Detail-Panel. Fazit-Zeilen werden in ZWEI
     Spans gesplittet (siehe _split_fazit_label()), damit nur das Wort
     "Fazit:" unterstrichen ist, nicht der gesamte Text."""
-    teile = ["<pre style=\"font-family: monospace; color:#1a1a1a; margin:0;\">"]
+    # white-space:pre-wrap (04.10.2026): ohne Umbruch liefen Zeilen ueber 200 Zeichen am Handy aus dem Bild - der LLM-Block der
+    # REGEL0-Mail stand dadurch unsichtbar am Ende. Am breiten Bildschirm bleibt alles wie bisher (Umbruch nur bei Bedarf).
+    teile = ["<pre style=\"font-family: monospace; color:#1a1a1a; margin:0; white-space:pre-wrap; overflow-wrap:anywhere;\">"]
     for line in text.split("\n"):
         tag = classify_detail_line(line)
         split = _split_fazit_label(line) if tag in _FAZIT_LABEL_STYLE_BY_TAG else None
