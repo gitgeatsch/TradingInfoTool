@@ -117,7 +117,12 @@ RM.versende(d, lambda b, t: post.append((b, t)) or True, U("2026-10-07 09:00"), 
 pruef("eine Erinnerung, die laenger als 6 h ueberfaellig ist, entfaellt", not [b for b, _t in post if "AUSSTIEG" in b])
 b_nach, _t = RM.signal_mail(dict(symbol="X", bitpanda="X", signalstunde="2026-10-12 10:00", einstieg="2026-10-12 11:00",
                                  ausstieg="2026-10-13 11:00", vh=0.04, p2=0.0, p3=0.0, p5=0.0), 3, False, G.rechne(3, 0, W), W, U("2026-10-12 11:05"))
-pruef("nach der Testwoche kein TESTWOCHE-Vermerk", not b_nach.startswith("[TESTWOCHE]"), b_nach)
+pruef("nach dem geplanten Tag OHNE Freigabe bleibt der Vermerk, mit *Freigabe ausstehend* (S-2, E-57)",
+      b_nach.startswith("[TESTWOCHE]") and "Freigabe ausstehend" in _t, b_nach)
+b_frei, _t2 = RM.signal_mail(dict(symbol="X", bitpanda="X", signalstunde="2026-10-12 10:00", einstieg="2026-10-12 11:00",
+                                  ausstieg="2026-10-13 11:00", vh=0.04, p2=0.0, p3=0.0, p5=0.0), 3, False, G.rechne(3, 0, W),
+                             dict(W, testwoche_freigegeben=True), U("2026-10-12 11:05"))
+pruef("mit Freigabe kein TESTWOCHE-Vermerk", not b_frei.startswith("[TESTWOCHE]") and "TESTWOCHE" not in _t2, b_frei)
 c.close()
 
 print("B) Ende zu Ende: Stundenlauf -> Ablage -> Mails")

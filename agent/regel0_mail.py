@@ -28,6 +28,10 @@ NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stu
 ABGLEICH_GRENZE = 0.05    # S7-5b: Bitpanda gegen Binance zum selben Moment - gemessen 03.10.: gleiche Coins -0,1 %, Kollisionen +25 bis +428 %
 NL = chr(10)
 ERINNERUNG_BIS_H = 6      # eine Erinnerung, deren Ausstieg laenger vorbei ist, entfaellt (z. B. nach langem Stillstand)
+# N-1 (E-57): eine Signalmail entfaellt erst, wenn der gemessene Einstieg (Schluss der Einstiegsstunde) LAENGER als dies vorbei ist.
+# Die Grenze folgt aus dem Takt, sie ist keine Wahl: ein regulaerer Lauf (vorlaeufig 0 -> endgueltig > 0, D1/E-46, oder eine aufgefangene
+# Stunde) mailt hoechstens etwa 10 min nach dem Einstieg; ein nach einem Ausfall nachgeholtes Signal liegt mindestens 1 h dahinter.
+VERPASST_NACH = timedelta(hours=1)
 
 
 def _t(txt: str) -> datetime:
@@ -44,8 +48,12 @@ def _pct(x) -> str:
 
 
 def _testwoche(werte: dict, jetzt: datetime) -> str:
+    """Vermerk TESTWOCHE oder "". S-2 (E-57, 04.10.2026): sie endet NUR mit ``testwoche_freigegeben: true`` (Nutzer-Ja) -
+    nach dem geplanten Tag bleibt der Vermerk stehen, mit *Freigabe ausstehend*. Leeres ``testwoche_bis`` = keine Testwoche."""
     bis = werte.get("testwoche_bis") or ""
-    return bis if (bis and jetzt.strftime("%Y-%m-%d") <= bis) else ""
+    if not bis or werte.get("testwoche_freigegeben"):
+        return ""
+    return bis if jetzt.strftime("%Y-%m-%d") <= bis else "%s - Freigabe ausstehend" % bis
 
 
 def _vermerke(r: dict) -> list:
@@ -118,6 +126,10 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     p_st = r.get("p%d" % stufe)
     tun = [("Einstieg", "%s - zum Schlusskurs der Stunde %s-%s Uhr" % (
                 _wann(ein, jetzt), (ein - timedelta(hours=1)).astimezone().strftime("%H:%M"), ein.astimezone().strftime("%H:%M")))]
+    if jetzt > ein:
+        # D1-Weg (die Stufe stand erst mit der Einstiegsstunde fest) oder eine aufgefangene Stunde: die Mail kommt nach dem Einstieg
+        tun.append(("", "⚠ dieser Einstieg ist seit %d min vorbei - gemessen ist er; ein späterer Einstieg weicht davon ab"
+                    % int((jetzt - ein).total_seconds() // 60)))
     if r.get("kurs_eur"):
         tun.append(("Kurs jetzt", "%s EUR (Bitpanda, beim Versand dieser Mail)" % CH._zahl(r["kurs_eur"])))
     else:
@@ -313,7 +325,7 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
     jt = jetzt.strftime("%Y-%m-%d %H:%M")
     grenze_alt = (jetzt - timedelta(hours=NICHT_AELTER_H)).strftime("%Y-%m-%d %H:%M")
     grenze_erin = (jetzt - timedelta(hours=ERINNERUNG_BIS_H + 1)).strftime("%Y-%m-%d %H:%M")
-    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0, entfallen=0)
+    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0, entfallen=0, verpasst=0)
     _kurse = {}
 
     def _live():
@@ -326,10 +338,26 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
     c = AB.oeffne(ordner_ablage)
     c.row_factory = __import__("sqlite3").Row
     try:
+        # 0  VERPASST (N-1, E-57): jedes ungemailte Signal der letzten 24 h, dessen gemessener Einstieg laenger als VERPASST_NACH
+        #    vorbei ist, bekommt den Vermerk - auch die nach einem Ausfall nachgeholten, die das Fenster unten (NICHT_AELTER_H) nie
+        #    sieht. Sonst stuenden sie als *ohne Mail* da, als waere etwas schiefgegangen.
+        _v = c.execute("UPDATE signal SET mail_verpasst_am=? WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND mail_gesperrt_am IS NULL "
+                       "AND mail_verpasst_am IS NULL AND COALESCE(stufe, stufe_vorlaeufig) > 0 AND einstieg < ? AND einstieg >= ?",
+                       (jt, (jetzt - timedelta(hours=1) - VERPASST_NACH).strftime("%Y-%m-%d %H:%M"),
+                        (jetzt - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M"))).rowcount
+        if _v:
+            c.commit(); zaehl["verpasst"] += _v
         # 1  SIGNAL: Schalter an, Stufe > 0, noch nicht gemailt, Einstieg nicht laenger als NICHT_AELTER_H vorbei
         for r in c.execute("SELECT * FROM signal WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND mail_gesperrt_am IS NULL "
+                           "AND mail_verpasst_am IS NULL "
                            "AND COALESCE(stufe, stufe_vorlaeufig) > 0 AND einstieg >= ? ORDER BY signalstunde", (grenze_alt,)).fetchall():
             r = dict(r)
+            # N-1 (E-57): ist der Einstiegszeitpunkt (Schluss der Einstiegsstunde) schon vorbei - nach einem Ausfall nachgeholt -,
+            # geht KEINE Signalmail: gemessen ist dieser Einstieg, ein spaeterer ist ein anderer Handel. Vermerk als Fakt.
+            if jetzt >= _t(r["einstieg"]) + timedelta(hours=1) + VERPASST_NACH:
+                c.execute("UPDATE signal SET mail_verpasst_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["verpasst"] += 1
+                continue
             _v = _live()
             ok, txt = abgleich(r, _v[0], _v[1])
             r["abgleich"] = txt
@@ -389,8 +417,13 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                 zaehl["fehlgeschlagen"] += 1
         # 2  KORREKTUR: die endgueltige Stufe weicht von der gemailten ab
         for r in c.execute("SELECT * FROM signal WHERE mail_signal_am IS NOT NULL AND stufe IS NOT NULL AND mail_korrektur_am IS NULL "
-                           "AND stufe != mail_signal_stufe").fetchall():
+                           "AND korrektur_verpasst_am IS NULL AND stufe != mail_signal_stufe").fetchall():
             r = dict(r)
+            # N-1: kam die endgueltige Stufe erst nach einem Ausfall, ist der Einstieg laengst vorbei - keine Korrekturmail, Vermerk
+            if jetzt >= _t(r["einstieg"]) + timedelta(hours=1) + VERPASST_NACH:
+                c.execute("UPDATE signal SET korrektur_verpasst_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["verpasst"] += 1
+                continue
             b, t = korrektur_mail(r, int(r["mail_signal_stufe"]), int(r["stufe"]), werte, jetzt)
             if senden(b, t):
                 c.execute("UPDATE signal SET mail_korrektur_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))

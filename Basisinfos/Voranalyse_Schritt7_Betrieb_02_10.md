@@ -1520,6 +1520,7 @@ Der **Ersatz ist schon passiert**: Seit S7-4 (E-46, am NB seit 03.10.) kommen ne
 
 Jeder Stundenlauf legt **nur die Signalstunde davor** ab (`agent/regel0_rechnung.py:530`, `sh = jetzt - 1`). Ein Nachholen gibt es nicht. Daraus folgt:
 - Ist die App über einen vollen Stundenwechsel hinaus weg (z. B. 10:00–12:30 UTC), sind die Signale der Stunden 9 und 10 **endgültig verloren**. Der Lauf nach dem Start rechnet nur Stunde 11.
+  - ⚠️ **Berichtigt beim Bau (§22.6):** Der Lauf legt auch die Stunde jetzt−2 (*endgültig*) an, wenn sie fehlt (`regel0_stundenlauf`, INSERT OR IGNORE). Im Beispiel ist also nur Stunde 9 verloren, Stunde 10 wird aufgefangen, allerdings ohne Kurs, Börsenpaar und Faktor. Verloren geht ein Signal erst, wenn **zwei** Läufe hintereinander fehlen.
 - Dasselbe gilt für ein Asset, dessen Kurs in dieser Stunde verspätet kommt (`frisch`).
 - Kurze Neustarts schaden nicht: Der Job läuft 10 s nach dem Start und rechnet die Stunde davor.
 
@@ -1568,3 +1569,43 @@ Ausgewertet wird an einer **Kopie** von `data/regel0_signale.db` am Desktop, ohn
 | **S-3** | Fällt eine Bedingung | Ursache beheben (bei kritischen Punkten auch unter der Woche, E-43, neue Version mit Vermerk). Die Woche wird um die betroffene Zeit verlängert, nicht neu gestartet. Eine **Regeländerung** (REGEL0 selbst) startet sie neu |
 | **S-4** | **N-1** verpasste Stunden bis 3 h nachrechnen | ja, jetzt (Betrieb, keine Regeländerung; Prüfung R-R11-gleich) |
 | **S-5** | Was du dafür tust | zum Ende der Woche einen Teilexport und die Kopie `data/regel0_signale.db` in den Austauschordner. Für F5 die vier REGEL0-Dateien per USB, oder ich lade die Desktop-Messbasis von Hand nach |
+
+### 22.6 Abgestimmt und gebaut (Nutzer 04.10.: *„Ja, S-1 bis S-5 wie vorgeschlagen, prüfen und gegenprüfen“*; E-57)
+
+**S-1:** Die Bedingungen und Auskünfte gelten wie in §22.3. Werkzeug `pruefe_testwoche.py`, Gegenprobe `pruefe_testwoche_gegenprobe.py` **14/14**.
+- Beim Bau zwei Regeln berichtigt:
+  - **T1:** Eine Signalstunde ist verloren, wenn weder der Lauf danach noch der übernächste lief noch sie nachgeholt wurde. Die erste Fassung zählte jede fehlende Laufstunde.
+  - **F2:** *rechtzeitig* heißt spätestens 75 min nach Schluss der Signalstunde (zwei Läufe), siehe N-1 unten.
+
+**S-2:** Die Testwoche endet **nur** mit `testwoche_freigegeben: true` in `regel0_betrieb.yaml`. Bis dahin bleibt der Vermerk TESTWOCHE auch nach dem 10.10. stehen, dann mit *Freigabe ausstehend*. Ich setze den Schalter erst nach deinem Ja.
+
+**S-3:** Fällt eine Bedingung, wird die Ursache behoben und die Woche verlängert. Nur eine Änderung an der REGEL0 selbst startet sie neu.
+
+**S-4 / N-1 Nachholen:**
+- Der Stundenlauf rechnet die Signalstunden **jetzt−5 bis jetzt−3** nach, die kein Lauf abgelegt hat (`regel0_stundenlauf.verpasste_stunden`, `regel0_rechnung.bewerte(nachholen=)`).
+  - Die Bewertung kommt aus demselben Fenster wie zur richtigen Zeit, die Stufe aus der ATR der Einstiegsstunde (wie *endgültig*).
+  - Fehlt ein Modellpaket, wird die Stunde ausgelassen und im Lauf genannt.
+- Neue Tabelle `nachgeholt` in der Ablage (für T1).
+- Fehlende Zeilen werden jetzt **vollständig** angelegt: mit Kurs, Markt, Paar und Faktor. Bisher fehlten diese bei der aufgefangenen Stunde, und der Preisabgleich vor der Mail ging ins Leere.
+- **Mail:** Beim Bau fiel auf, dass schon der freigegebene D1-Weg (E-46: vorläufig 0, endgültig > 0) etwa 5–10 min **nach** dem Einstieg mailt. Das bleibt so, die Mail sagt es jetzt: *⚠ dieser Einstieg ist seit … min vorbei*.
+  - Keine Signalmail geht nur, wenn der Einstieg **länger als 1 h** vorbei ist (`VERPASST_NACH`). Das ist der Fall eines nach einem Ausfall nachgeholten Signals.
+  - Stattdessen wird es als **verpasst** vermerkt: Spalte `mail_verpasst_am`, Hebel-Tab *verpasst (nachgerechnet nach Ausfall)*, Teilexport *Nachgeholt / verpasste Signale*.
+  - Die Grenze folgt aus dem Takt, sie ist keine Wahl.
+- **R-R11-Nachweis an echten Daten** (`pruefe_n1.py`, Beleg `pruefe_n1.txt`):
+  - Stundenläufe am Desktop, einmal lückenlos, einmal mit 5 h Ausfall, an **drei** Zeitpunkten (19.08., 24.08., 23.09.).
+  - Der Wiederanlauf legt **dieselben Signale mit derselben v̂ und endgültigen Stufe** ab: **182, 98 und 2 Signale**, davon 165, 75 und 2 in nachgerechneten Stunden.
+  - Verloren ist genau die eine Stunde außerhalb des Fensters, und T1 nennt sie.
+  - ⚠️ **Gefunden erst an vielen Signalen:** Der erste Nachweis lief auf nur 2 Signalen und war grün. Auf 182 Signalen zeigte sich, dass die Stunde **vor** dem Ausfall ihre **endgültige Stufe** nie bekam: Der Lauf sh+2 fiel aus, und das Nachholen übersprang sie, weil sie schon eine Zeile hatte.
+    - **Behoben:** Zeilen der letzten 24 h ohne endgültige Stufe werden nachgerechnet.
+    - Eine dadurch fällige **Korrektur**, deren Einstieg länger als 1 h vorbei ist, geht nicht als Mail raus. Sie wird vermerkt (`korrektur_verpasst_am`), F3 zählt sie als begründet.
+
+**S-5 (dein Teil):** zum Ende der Woche ein Teilexport und eine Kopie von `data/regel0_signale.db` in den Austauschordner. Für F5 die vier REGEL0-Dateien per USB, oder ich lade die Desktop-Messbasis von Hand nach.
+
+**Geprüft:**
+- Wache Regel0Betrieb **64/64**, darunter neu: S-2, N-1 Stundenbestimmung, N-1 Mail, Gegenprobe Testwoche.
+- `pruefe_s74` **20/20**:
+  - neu: *nach dem geplanten Tag ohne Freigabe bleibt der Vermerk*, *mit Freigabe nicht*;
+  - drei Wachzeilen mit fachlich falscher Testzeit (Mail **nach** dem Einstieg) auf 11:30 berichtigt.
+- `pruefe_s75` 15/15, `pruefe_h17` 23/23, `pruefe_o25` 11/11, `pruefe_erinnerung_offen` 10/10.
+
+**NB-Kontrolle K-N1** (nach Pull und Neustart): Im Teilexport steht die Zeile *Nachgeholt (N-1): 0 Signalstunden · verpasste Signale: 0*, solange kein Ausfall war. Wer es sehen will: die App einmal **über zwei volle Stundenwechsel** beenden. Dann sagt der Lauf danach *nachgeholt: …*, und die Stillstandsmail kommt (K-ALARM-2).

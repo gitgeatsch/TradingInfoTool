@@ -9,7 +9,7 @@ festgelegte Regel (Voranalyse_Schritt7 Par. 22); was nur Auskunft ist, steht als
     T2  Frische                      kein Lauf mit veralteten Assets (veraltet = 0)
     T3  Laufzeit                     kein Lauf ueber 1.500 s (halbe Zeitgrenze 50 min); der Monatslauf mit Training ausgenommen
     F1  Signalmail vollstaendig      jedes Signal mit Schalter an und Stufe > 0 ist gemailt ODER begruendet gesperrt (Zuordnung)
-    F2  Signalmail rechtzeitig       vor dem Schluss der Einstiegsstunde verschickt
+    F2  Signalmail rechtzeitig       spaetestens 75 min nach Schluss der Signalstunde (zwei Laeufe: regulaer ~9 min, D1-Weg ~69 min)
     F3  Korrektur                    weicht die endgueltige Stufe ab, ist die Korrektur verschickt
     F4  Ausstieg                     jede faellige Erinnerung ist verschickt ODER als *entfallen* vermerkt - nie beides, nie keins
     L1  Pruefblock                   zu jedem gemailten Signal eine Trader-Zeile (Urteil oder Grund), Aufrufe je Tag <= 150
@@ -42,6 +42,7 @@ def auswerten(pfad: str, von: str | None = None, bis: str | None = None) -> dict
     sig = [dict(r) for r in c.execute("SELECT * FROM signal ORDER BY signalstunde")]
     tabs = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     pr = [dict(r) for r in c.execute("SELECT * FROM pruefung")] if "pruefung" in tabs else []
+    nachgeholt = {r[0] for r in c.execute("SELECT signalstunde FROM nachgeholt")} if "nachgeholt" in tabs else set()
     c.close()
     if not laeufe:
         return {"fehler": "keine Laeufe in der Ablage"}
@@ -52,12 +53,19 @@ def auswerten(pfad: str, von: str | None = None, bis: str | None = None) -> dict
     erg = {"von": v, "bis": b, "bedingungen": {}, "auskunft": {}}
     B = erg["bedingungen"]
 
-    # T1 - eine Signalstunde h ist abgelegt, wenn es einen Lauf mit jetzt = h+1 gibt
+    # T1 - eine Signalstunde sh ist abgelegt, wenn der Lauf sh+1 (neu) ODER sh+2 (endgueltig, legt eine fehlende Zeile an) lief
+    #      ODER ein spaeterer Lauf sie nachgeholt hat (N-1, Tabelle nachgeholt). Verloren ist sie nur, wenn nichts davon gilt.
+    #      ⚠️ 04.10.: die erste Fassung zaehlte jede fehlende LAUFstunde als verlorene Signalstunde - eine einzelne fing aber schon
+    #      der endgueltig-Weg auf (regel0_stundenlauf, INSERT OR IGNORE)
     gerechnet = {_t(r["jetzt"]) for r in laeufe}
     soll = [v + timedelta(hours=i) for i in range(int((b - v).total_seconds() // 3600) + 1)]
     fehlt = [h for h in soll if h not in gerechnet]
-    B["T1 jede Stunde gerechnet"] = (not fehlt, "%d von %d Stunden gerechnet; verlorene Signalstunden: %s" % (
-        len(soll) - len(fehlt), len(soll), ", ".join((h - timedelta(hours=1)).strftime("%d.%m. %H:00") for h in fehlt[:12]) or "keine"))
+    verloren = [h - timedelta(hours=1) for h in fehlt
+                if (h + timedelta(hours=1)) not in gerechnet and (h + timedelta(hours=1)) <= b
+                and (h - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M") not in nachgeholt]
+    B["T1 jede Stunde gerechnet"] = (not verloren, "%d von %d Laufstunden gerechnet, nachgeholt %d; verlorene Signalstunden: %s" % (
+        len(soll) - len(fehlt), len(soll), len([x for x in nachgeholt if v <= _t(x) <= b]),
+        ", ".join(h.strftime("%d.%m. %H:00") for h in verloren[:12]) or "keine"))
     # T2
     alt = [r for r in laeufe if (r.get("veraltet") or 0) > 0]
     B["T2 Frische"] = (not alt, "%d Laeufe mit veralteten Assets%s" % (len(alt), (": " + "; ".join(
@@ -73,17 +81,19 @@ def auswerten(pfad: str, von: str | None = None, bis: str | None = None) -> dict
         sek[len(sek) // 2], sek[-1], LAUF_GRENZE_S, len(lang)))
     # F1/F2/F3/F4
     an = [r for r in sig if r.get("hebel_schalter") == 1 and ((r.get("stufe") if r.get("stufe") is not None else r.get("stufe_vorlaeufig")) or 0) > 0]
-    offen = [r for r in an if not r.get("mail_signal_am") and not r.get("mail_gesperrt_am")]
-    B["F1 Signalmail vollstaendig"] = (not offen, "%d Signale mit Schalter an und Stufe > 0, gemailt %d, gesperrt %d, OHNE Mail %d%s" % (
-        len(an), sum(1 for r in an if r.get("mail_signal_am")), sum(1 for r in an if r.get("mail_gesperrt_am")), len(offen),
+    offen = [r for r in an if not r.get("mail_signal_am") and not r.get("mail_gesperrt_am") and not r.get("mail_verpasst_am")]
+    B["F1 Signalmail vollstaendig"] = (not offen, "%d Signale mit Schalter an und Stufe > 0, gemailt %d, gesperrt %d, verpasst %d, OHNE Mail %d%s" % (
+        len(an), sum(1 for r in an if r.get("mail_signal_am")), sum(1 for r in an if r.get("mail_gesperrt_am")),
+        sum(1 for r in an if r.get("mail_verpasst_am")), len(offen),
         (": " + ", ".join("%s %s" % (r.get("bitpanda") or r["symbol"], r["signalstunde"]) for r in offen[:8])) if offen else ""))
-    spaet = [r for r in an if r.get("mail_signal_am") and _t(r["mail_signal_am"]) >= _t(r["einstieg"]) + timedelta(hours=1)]
+    # zwei Laeufe: der regulaere mailt ~9 min nach Schluss der Signalstunde, der D1-Weg (Stufe erst endgueltig > 0) ~69 min
+    spaet = [r for r in an if r.get("mail_signal_am") and _t(r["mail_signal_am"]) > _t(r["signalstunde"]) + timedelta(hours=1, minutes=75)]
     verzug = sorted((_t(r["mail_signal_am"]) - _t(r["signalstunde"]) - timedelta(hours=1)).total_seconds() / 60 for r in an if r.get("mail_signal_am"))
-    B["F2 Signalmail rechtzeitig"] = (not spaet, "nach Schluss der Signalstunde im Median %s min; nach dem Einstiegszeitpunkt verschickt: %d" % (
+    B["F2 Signalmail rechtzeitig"] = (not spaet, "nach Schluss der Signalstunde im Median %s min; spaeter als 75 min: %d" % (
         ("%.0f" % verzug[len(verzug) // 2]) if verzug else "-", len(spaet)))
     korr = [r for r in an if r.get("mail_signal_am") and r.get("stufe") is not None and r.get("mail_signal_stufe") is not None
             and int(r["stufe"]) != int(r["mail_signal_stufe"])]
-    korr_offen = [r for r in korr if not r.get("mail_korrektur_am")]
+    korr_offen = [r for r in korr if not r.get("mail_korrektur_am") and not r.get("korrektur_verpasst_am")]
     B["F3 Korrektur"] = (not korr_offen, "%d Abweichungen vorlaeufig/endgueltig, Korrektur fehlt bei %d" % (len(korr), len(korr_offen)))
     faellig = [r for r in an if r.get("mail_signal_am") and _t(r["ausstieg"]) + timedelta(hours=2) <= b
                and ((r.get("stufe") if r.get("stufe") is not None else r.get("mail_signal_stufe")) or 0) > 0]

@@ -36,6 +36,35 @@ from agent.regel0_rechnung import (DATEN_VORGABE, REGELVERSION, _ro, _stunde_txt
 # ══ S7-2b═════════════════════════════════
 ABLAGE_NAME = _AB.ABLAGE_NAME
 MODELL_ORDNER = "regel0_modelle"
+NACHHOLEN_H = 3                    # N-1 (E-57): verpasste Signalstunden bis so weit zurueck nachrechnen (Nutzer 04.10.: *bis 3 h*)
+
+
+def verpasste_stunden(ablage_pfad: str, jetzt: int) -> list:
+    """N-1: Signalstunden zwischen jetzt-2-NACHHOLEN_H und jetzt-3, die KEIN frueherer Lauf abgelegt hat. Ein Lauf zur Stunde t legt
+    t-1 (neu) und t-2 (endgueltig) ab. Ohne jeden Lauf in den letzten 24 h wird nichts nachgeholt (Erststart, kein Ausfall)."""
+    import sqlite3 as _sq
+    if not os.path.exists(ablage_pfad):
+        return []
+    c = _sq.connect("file:%s?mode=ro" % ablage_pfad.replace("\\", "/"), uri=True)
+    try:
+        lt = {int((datetime.strptime(r[0], "%Y-%m-%d %H:%M") - datetime(2020, 1, 1)).total_seconds() // 3600)
+              for r in c.execute("SELECT jetzt FROM lauf WHERE jetzt >= ?", (_stunde_txt(jetzt - 24),))}
+        schon = {r[0] for r in c.execute("SELECT signalstunde FROM nachgeholt")} if c.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='nachgeholt'").fetchone() else set()
+        # Zeilen OHNE endgueltige Stufe (der Lauf sh+2 fiel aus): R-R11 am 04.10. (19.08./24.08.) - die Stunde VOR einem Ausfall
+        # hatte nur die vorlaeufige Stufe, das Nachholen sah sie nicht, weil sie schon eine Zeile hatte
+        ohne_stufe = {int((datetime.strptime(r[0], "%Y-%m-%d %H:%M") - datetime(2020, 1, 1)).total_seconds() // 3600)
+                      for r in c.execute("SELECT DISTINCT signalstunde FROM signal WHERE stufe IS NULL AND signalstunde >= ? AND signalstunde <= ?",
+                                         (_stunde_txt(jetzt - 24), _stunde_txt(jetzt - 3)))}
+    finally:
+        c.close()
+    if not lt:
+        return []
+    gedeckt = {t - 1 for t in lt} | {t - 2 for t in lt}
+    fehlend = {sh for sh in range(jetzt - 2 - NACHHOLEN_H, jetzt - 2) if sh not in gedeckt and _stunde_txt(sh) not in schon}
+    # die endgueltige Stufe ergaenzen, wo der Lauf sh+2 fehlte (der Lauf sh+1 legte nur die vorlaeufige ab) - bis 24 h zurueck
+    ohne_endg = {sh for sh in ohne_stufe if (sh + 2) not in lt}
+    return sorted(fehlend | ohne_endg)
 VERALTET_MELDEN_AB = 0.10          # Anteil veralteter aktiver Assets, ab dem der Lauf eine Meldung verlangt
 
 
@@ -147,7 +176,13 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
             neu_trainiert.append(mt)
             ausgabe("REGEL0-Rechnung: Monatspaket %s trainiert in %.0f s (%d Assets, Pruefsumme %s)" % (mt, time.time() - t1, RK_pk["assets"], sha[:12]))
         pakete[mt] = lade_paket(pf)
-    B = bewerte(ordner, pakete, jetzt, zusatz=zus)
+    nachholen = verpasste_stunden(os.path.join(ordner_ablage, _AB.ABLAGE_NAME), jetzt)
+    for sh in nachholen:                       # die Modellpakete der verpassten Stunden (Monatsgrenze) - nur laden, nie trainieren
+        for mt in benoetigte_pakete(sh + 1):
+            pf = os.path.join(ordner_modelle, "regel0_modell_%s.pkl" % mt)
+            if mt not in pakete and os.path.exists(pf):
+                pakete[mt] = lade_paket(pf)
+    B = bewerte(ordner, pakete, jetzt, zusatz=zus, nachholen=tuple(nachholen))
     fr = B["frische"]
     schalter = _hebel_schalter(ordner)
     zu_bp, fak = _binance_zu_bitpanda()
@@ -168,15 +203,25 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
                       (x["symbol"], x["signalstunde"], x["einstieg"], x["ausstieg"], x["vh"], x["stufe"], x["p2"], x["p3"], x["p5"],
                        None if sch is None else int(sch), bp, int(x["zusatz"]), int(x["btc"]), REGELVERSION, jetzt_txt,
                        x.get("kurs"), markt.get(x["symbol"], "spot"), paare.get(x["symbol"], x["symbol"] + "USDT"), fak.get(x["symbol"], 1.0)))
-        for x in B["endgueltig"]:
+        # endgueltig (jetzt-2) und nachgeholt (N-1): fehlt die Zeile, wird sie VOLLSTAENDIG angelegt (mit Kurs, Markt, Paar, Faktor -
+        # bis 04.10. fehlten diese bei der aufgefangenen Stunde, die Mail konnte dann den Preis nicht gegenpruefen)
+        for x in B["endgueltig"] + B.get("nachgeholt", []):
             bp = zu_bp.get(x["symbol"], x["symbol"])
             sch = schalter.get(bp.upper()) if bp else None
-            c.execute("INSERT OR IGNORE INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, hebel_schalter, bitpanda, zusatz, btc, version, "
-                      "erfasst_am) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                      (x["symbol"], x["signalstunde"], x["einstieg"], x["ausstieg"], x["vh"], None if sch is None else int(sch), bp,
-                       int(x["zusatz"]), int(x["btc"]), REGELVERSION, jetzt_txt))
+            c.execute("INSERT OR IGNORE INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, stufe_vorlaeufig, hebel_schalter, bitpanda, "
+                      "zusatz, btc, version, erfasst_am, kurs, kurs_markt, paar, faktor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                      (x["symbol"], x["signalstunde"], x["einstieg"], x["ausstieg"], x["vh"], x["stufe"], None if sch is None else int(sch),
+                       bp, int(x["zusatz"]), int(x["btc"]), REGELVERSION, jetzt_txt, x.get("kurs"), markt.get(x["symbol"], "spot"),
+                       paare.get(x["symbol"], x["symbol"] + "USDT"), fak.get(x["symbol"], 1.0)))
             c.execute("UPDATE signal SET stufe=?, p2=?, p3=?, p5=?, endgueltig_am=? WHERE symbol=? AND signalstunde=?",
                       (x["stufe"], x["p2"], x["p3"], x["p5"], jetzt_txt, x["symbol"], x["signalstunde"]))
+        for sh_txt in B.get("nachgeholt_stunden", []):
+            c.execute("INSERT OR REPLACE INTO nachgeholt VALUES (?,?,?)",
+                      (sh_txt, _stunde_txt(jetzt), sum(1 for x in B["nachgeholt"] if x["signalstunde"] == sh_txt)))
+        if B.get("nachgeholt_stunden") or B.get("nachholen_ausgelassen"):
+            meldung = (meldung + " · " if meldung else "") + "nachgeholt: %s%s" % (
+                ", ".join(B.get("nachgeholt_stunden") or []) or "-",
+                (" · NICHT nachholbar (Modellpaket fehlt): " + ", ".join(B["nachholen_ausgelassen"])) if B.get("nachholen_ausgelassen") else "")
         c.execute("INSERT OR REPLACE INTO lauf VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                   (_stunde_txt(jetzt), jetzt_txt, round(time.time() - t0, 1), ",".join(sorted(pakete)), fr["aktiv"], fr["frisch"],
                    len(fr["veraltet"]), ",".join(fr["veraltet"][:50]), fr["nicht_im_handel"], len(B["neu"]), len(B["endgueltig"]), meldung))
@@ -184,6 +229,7 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
     finally:
         c.close()
     zus_ = dict(jetzt=_stunde_txt(jetzt), sekunden=round(time.time() - t0, 1), neu=len(B["neu"]), endgueltig=len(B["endgueltig"]),
+                nachgeholt=B.get("nachgeholt_stunden") or [],
                 neu_schalter_an=sum(1 for x in B["neu"] if (zu_bp.get(x["symbol"], x["symbol"]) or "") and
                                     schalter.get(zu_bp.get(x["symbol"], x["symbol"]).upper())),
                 aktiv=fr["aktiv"], frisch=fr["frisch"], veraltet=len(fr["veraltet"]), trainiert=neu_trainiert, meldung=meldung)

@@ -65,6 +65,8 @@ def status(r: dict, jetzt: datetime) -> str:
     """Der Stand des Signals in einem Wort - aus den Zeiten der Zeile, nie aus einer Annahme."""
     if r.get("mail_gesperrt_am"):
         return "nicht gemailt (Zuordnung)"
+    if r.get("mail_verpasst_am"):
+        return "verpasst (nachgerechnet nach Ausfall)"           # N-1 (E-57): Einstieg schon vorbei, keine Signalmail
     s, _v = stufe(r)
     if s <= 0:
         return "kein Handel"
@@ -144,6 +146,9 @@ def mailstand(r: dict) -> list:
     z = ["", "MAILSTAND"]
     if r.get("mail_gesperrt_am"):
         z.append("  Signalmail: NICHT verschickt (%s UTC) - Zuordnung zweifelhaft" % r["mail_gesperrt_am"])
+    elif r.get("mail_verpasst_am"):
+        z.append("  Signalmail: KEINE (%s UTC) - nach einem Ausfall nachgerechnet, der Einstiegszeitpunkt war schon vorbei (N-1)"
+                 % r["mail_verpasst_am"])
     elif r.get("mail_signal_am"):
         z.append("  Signalmail: verschickt %s UTC mit %sx" % (r["mail_signal_am"], r.get("mail_signal_stufe")))
     elif not r.get("hebel_schalter"):

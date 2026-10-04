@@ -23,6 +23,8 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                alter_hebelweg_aus=True,
                # D4: bis zu diesem Tag (einschliesslich) tragen die REGEL0-Mails den Vermerk TESTWOCHE (E-43)
                testwoche_bis="2026-10-10",
+               # S-2 (E-57, 04.10.2026): die Testwoche endet NUR mit der Freigabe des Nutzers - nicht still mit dem Datum
+               testwoche_freigegeben=False,
                # R-4 (E-51, 03.10.2026): die Rollen-Kette (Spot) anhalten, ohne den alten Weg freizugeben - Vorgabe: sie laeuft
                spot_kette_angehalten=False)
 
@@ -44,6 +46,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: positionswert_eur > 0 und richtwert_gleichzeitig >= 1")
     if not isinstance(werte["alter_hebelweg_aus"], bool):
         raise ValueError("regel0_betrieb.yaml: alter_hebelweg_aus muss true oder false sein")
+    if not isinstance(werte["testwoche_freigegeben"], bool):
+        raise ValueError("regel0_betrieb.yaml: testwoche_freigegeben muss true oder false sein")
     werte["testwoche_bis"] = str(werte["testwoche_bis"] or "")
     if werte["testwoche_bis"] and len(werte["testwoche_bis"]) != 10:
         raise ValueError("regel0_betrieb.yaml: testwoche_bis als JJJJ-MM-TT oder leer")

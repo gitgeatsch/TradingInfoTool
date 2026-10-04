@@ -21,10 +21,12 @@ sperre_ab_richtwert: false     # false = Signal kommt trotzdem, die Mail vermerk
 
 # S7-4 (E-46, Nutzer 03.10.2026: "Ja D1 bis D4 wie vorgeschlagen")
 alter_hebelweg_aus: true       # die REGEL0 ersetzt den Hebel (F1): die Rollen-Kette schlaegt keinen Hebel mehr vor; Spot laeuft weiter
-testwoche_bis: "2026-10-10"    # bis einschliesslich diesem Tag tragen die REGEL0-Mails den Vermerk TESTWOCHE (E-43); leer = aus
+testwoche_bis: "2026-10-10"    # GEPLANT bis einschliesslich diesem Tag tragen die REGEL0-Mails den Vermerk TESTWOCHE (E-43); leer = aus
+testwoche_freigegeben: false   # S-2 (E-57, Nutzer 04.10.): die Testwoche endet NUR mit deinem Ja - erst dann true. Bis dahin bleibt der
+                               # Vermerk auch nach dem geplanten Tag stehen (*Freigabe ausstehend*); Auswertung: pruefe_testwoche.py
 
 # R-4 (E-51, Nutzer 03.10.2026: "Ja R-1 bis R-4 wie vorgeschlagen"; Nutzer: "eine Stilllegung der aktuellen Kette waere sogar ein Vorteil")
 spot_kette_angehalten: false   # true = die Rollen-Kette (Spot, alle Gruppen) laeuft NICHT - der alte Weg bleibt trotzdem aus (aktiv_fuer
                                # unveraendert). Es entstehen keine Spot-Signale, keine Spot-/Bestands-Verkaufsmails, keine Lagebilder; die
                                # REGEL0 (Rechnung, Mails, LLM-Block) und der Ausstiegsjob (Stop-Nachzieh-Sammelmail) laufen weiter.
-                               # Wirkt nach dem Neustart der App (die Datei wird je Umlauf gelesen). Voranalyse_Schritt7 Par. 20.13
+                               # Wirkt ab dem naechsten Umlauf (15 min) - die Datei wird je Umlauf gelesen, kein Neustart noetig. Par. 20.13

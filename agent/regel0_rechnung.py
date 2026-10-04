@@ -492,7 +492,7 @@ def lade_paket(pfad: str) -> dict:
     return paket
 
 
-def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -> dict:
+def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None, nachholen: tuple = ()) -> dict:
     """Stundenlauf zur Stunde ``jetzt`` (Stunden seit 2020-01-01): bewertet wird die juengste ABGESCHLOSSENE Stunde jetzt-1.
 
     -> neu:      Signale zur Stunde jetzt-1 (Einstieg zum Schluss der Stunde jetzt, also jetzt+1:00), vorlaeufige Stufe aus der
@@ -500,7 +500,11 @@ def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -
        endgueltig: Signale der Stunde jetzt-2 mit der Stufe aus der ATR der Einstiegsstunde jetzt-1 - wie die Messung
        frische:  je Asset die letzte Stunde; ein aktives Asset ohne die Stunde jetzt-1 bekommt KEIN Signal (B-8)
     ``pakete`` {"JJJJ-MM": Paket}: das rsi-Modell kommt aus dem Paket des Monats der SIGNALstunde, das ATR-Modell aus dem
-    Paket des Monats der EINSTIEGSstunde (an der Monats- und Quartalsgrenze sind das zwei verschiedene) - wie die Messung."""
+    Paket des Monats der EINSTIEGSstunde (an der Monats- und Quartalsgrenze sind das zwei verschiedene) - wie die Messung.
+
+    N-1 (E-57, 04.10.2026): ``nachholen`` = verpasste Signalstunden (aelter als jetzt-2, von keinem Lauf abgelegt). Sie werden aus
+    DEMSELBEN Fenster bewertet wie zur richtigen Zeit, mit der Stufe aus der ATR der Einstiegsstunde (wie *endgueltig*) ->
+    ``nachgeholt``. Fehlt das Modellpaket eines Monats, wird die Stunde ausgelassen und genannt (``nachholen_ausgelassen``)."""
     zusatz = betriebs_zusatz(ordner) if zusatz is None else zusatz
     unterwegs = {}
 
@@ -522,12 +526,27 @@ def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -
     for sh in (jetzt - 2, jetzt - 1):
         mi_, pk_ = _paket(sh)
         rsi_m.update(pk_["rsi"])
+    nach_ok, nach_weg = [], []
+    for sh in sorted(set(int(h) for h in nachholen) - {jetzt - 1, jetzt - 2}):
+        try:
+            mi_, pk_ = _paket(sh)
+            _paket(sh + 1)
+        except SystemExit:
+            nach_weg.append(_stunde_txt(sh))
+            continue
+        rsi_m.update(pk_["rsi"])
+        nach_ok.append(sh)
     mi, paket = _paket(jetzt - 1)
-    monate = [((m_ // 12), (m_ % 12) + 1) for m_ in sorted({mi - 1, mi, int(monat_von(np.array([jetzt - 2]))[0])})]
+    monate = [((m_ // 12), (m_ % 12) + 1) for m_ in sorted({mi - 1, mi, int(monat_von(np.array([jetzt - 2]))[0])}
+                                                          | {int(monat_von(np.array([h]))[0]) for h in nach_ok})]
     R = rechne(A, set(zusatz), monate, modelle=rsi_m, jahre=None, erster_anker=paket["erster_anker"])
     atr = atr_je_stunde([(s, r30) for s, (_lt, r30) in unterwegs.items()], mindest=24)     # die letzten 24 Zeilen genuegen
     aus = {}
-    for name, sh, atr_h in (("neu", jetzt - 1, jetzt - 1), ("endgueltig", jetzt - 2, jetzt - 1)):
+    _kurs_von = {}
+    for s_, (_lt, r30) in unterwegs.items():
+        _kurs_von[s_] = {row[0]: row[3] for row in r30}
+    aus["nachgeholt"] = []
+    for name, sh, atr_h in [("neu", jetzt - 1, jetzt - 1), ("endgueltig", jetzt - 2, jetzt - 1)] + [("nachgeholt", h, h + 1) for h in nach_ok]:
         ix = R["signale"][R["STD"][R["signale"]] == sh]
         syms = [R["syms"][int(R["SYM"][i])] for i in ix]
         ok = [s in frisch for s in syms]
@@ -536,13 +555,19 @@ def bewerte(ordner: str, pakete: dict, jetzt: int, zusatz: list | None = None) -
         a_ = np.array([atr.get(s, {}).get(atr_h, np.nan) for s in syms])
         me_, pe_ = _paket(sh + 1)                      # Quartal der EINSTIEGSstunde
         P, L = hebelstufe(a_, np.full(len(syms), me_), pe_["atr"]) if syms else ({2: [], 3: [], 5: []}, [])
-        aus[name] = [dict(symbol=s, signalstunde=_stunde_txt(sh), einstieg=_stunde_txt(sh + 1), ausstieg=_stunde_txt(sh + 25),
-                          vh=float(R["VH"][i]), stufe=int(L[k]), p2=float(P[2][k]), p3=float(P[3][k]), p5=float(P[5][k]),
-                          zusatz=s in zusatz, btc=s.upper() == "BTC",
-                          # Schlusskurs der Signalstunde (Binance, USDT) - nur Orientierung fuer die Mail
-                          kurs=(float(unterwegs[s][1][-1][3]) if unterwegs.get(s) and unterwegs[s][1]
-                                and unterwegs[s][1][-1][0] == _stunde_txt(sh) else None))
-                     for k, (s, i) in enumerate(zip(syms, ix))]
+        liste = [dict(symbol=s, signalstunde=_stunde_txt(sh), einstieg=_stunde_txt(sh + 1), ausstieg=_stunde_txt(sh + 25),
+                      vh=float(R["VH"][i]), stufe=int(L[k]), p2=float(P[2][k]), p3=float(P[3][k]), p5=float(P[5][k]),
+                      zusatz=s in zusatz, btc=s.upper() == "BTC",
+                      # Schlusskurs der Signalstunde (Binance, USDT) - die Zeile DIESER Stunde, auch fuer endgueltig/nachgeholt
+                      # (bis 04.10. nur fuer die juengste Stunde - die endgueltig angelegte Zeile einer verpassten Stunde hatte keinen)
+                      kurs=(float(_kurs_von[s][_stunde_txt(sh)]) if _kurs_von.get(s, {}).get(_stunde_txt(sh)) is not None else None))
+                 for k, (s, i) in enumerate(zip(syms, ix))]
+        if name == "nachgeholt":
+            aus["nachgeholt"] += liste
+        else:
+            aus[name] = liste
+    aus["nachgeholt_stunden"] = [_stunde_txt(h) for h in nach_ok]
+    aus["nachholen_ausgelassen"] = nach_weg
     aus["frische"] = dict(jetzt=_stunde_txt(jetzt), aktiv=len(aktiv), frisch=len(frisch),
                           veraltet=sorted(aktiv - frisch), nicht_im_handel=len(letzte) - len(aktiv))
     aus["R"] = R

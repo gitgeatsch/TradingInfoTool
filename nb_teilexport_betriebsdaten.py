@@ -296,6 +296,13 @@ def _inhalt() -> int:
             if mail_:
                 m_ = c.execute("SELECT COUNT(mail_signal_am), COUNT(mail_korrektur_am), COUNT(mail_erinnerung_am) FROM signal").fetchone()
                 print("    Mails (S7-4): Signal %d · Korrektur %d · Erinnerung %d" % m_)
+                if "mail_verpasst_am" in sp_:
+                    # N-1 (E-57): nach einem Ausfall nachgerechnet, Einstieg schon vorbei - keine Signalmail
+                    v_ = c.execute("SELECT COUNT(*) FROM signal WHERE mail_verpasst_am IS NOT NULL").fetchone()[0]
+                    nh_ = c.execute("SELECT COUNT(*), GROUP_CONCAT(signalstunde, ', ') FROM (SELECT signalstunde FROM nachgeholt "
+                                    "ORDER BY signalstunde DESC LIMIT 12)").fetchone() if "nachgeholt" in tabellen(c) else (0, "")
+                    print("    Nachgeholt (N-1): %d Signalstunden%s · verpasste Signale (keine Mail): %d" % (
+                        nh_[0] or 0, (" - " + nh_[1]) if nh_[1] else "", v_))
                 if "erinnerung_entfallen_am" in sp_:
                     # 04.10.2026: Ausstiegserinnerung nur bei offener Hebelposition - die entfallenen mit Grund
                     for e_ in c.execute("SELECT bitpanda, symbol, ausstieg, erinnerung_entfallen_am, erinnerung_grund FROM signal "

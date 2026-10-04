@@ -25,6 +25,11 @@ _SIGNAL_SPALTEN = (
     # 04.10.2026 (Nutzer: *Ausstiegsmails von nicht offenen Hebelpositionen* sofort aendern): die Erinnerung ENTFAELLT ohne offene
     # Position - festgehalten als Fakt, nicht still uebergangen
     ("erinnerung_entfallen_am", "TEXT"), ("erinnerung_grund", "TEXT"),
+    # N-1 (E-57, 04.10.2026): ein Signal, dessen Einstiegszeitpunkt beim Mailen schon vorbei ist (nachgeholt nach einem Ausfall),
+    # bekommt KEINE Signalmail - gemessen ist der Einstieg zum Schluss der Folgestunde; spaeter ist ein anderer Handel
+    ("mail_verpasst_am", "TEXT"),
+    # ... ebenso eine Korrektur, deren Einstieg laenger als VERPASST_NACH vorbei ist (die endgueltige Stufe kam erst nach einem Ausfall)
+    ("korrektur_verpasst_am", "TEXT"),
 )
 
 
@@ -40,6 +45,9 @@ def oeffne(ordner: str) -> sqlite3.Connection:
     c.execute("CREATE TABLE IF NOT EXISTS pruefung (symbol TEXT, signalstunde TEXT, rolle TEXT, fassung TEXT, modell TEXT, "
               "prompt_pruefsumme TEXT, eingabe_pruefsumme TEXT, eingabe TEXT, antwort TEXT, urteil TEXT, ergebnis TEXT, sekunden REAL, "
               "fehler TEXT, ungedeckt TEXT, am TEXT, gefragt INTEGER, tag_pazifik TEXT, PRIMARY KEY (symbol, signalstunde, rolle, fassung))")
+    # N-1 (E-57): welche Signalstunden ein spaeterer Lauf nachgerechnet hat - fuer die Auswertung T1 (verloren = weder gerechnet
+    # noch nachgeholt), auch wenn in der Stunde kein Signal lag
+    c.execute("CREATE TABLE IF NOT EXISTS nachgeholt (signalstunde TEXT PRIMARY KEY, lauf TEXT, signale INTEGER)")
     if "aufrufe" not in {r[1] for r in c.execute("PRAGMA table_info(pruefung)")}:
         c.execute("ALTER TABLE pruefung ADD COLUMN aufrufe INTEGER")          # 0.1c: Zahl der Aufrufe je Zeile (Stimmen)
     da = {r[1] for r in c.execute("PRAGMA table_info(signal)")}

@@ -718,3 +718,18 @@ prüfen und gegenprüfen"*.
 - **Zuerst** die offensichtlichen Fehler behoben (§21.3, 335470a): Umbruch, Bildbreite, deutsche Zahlen, EUR, die falsche Liquidationslinie.
 - **Dann** der Neuaufbau (§21.4): Handlung → Chart → Einschätzung → Begründung → Technik; alles Handlungsrelevante in **EUR und Ortszeit**; Fachbegriffe nur in der Technik; echtes HTML; Hinweis, wenn die alte Spot-Kette zum selben Asset gemailt hat.
 - Der **Betreff bleibt**, damit Mailfilter weiter greifen. Die Korrektur- und die Erinnerungsmail sagen die Zeit ebenfalls zuerst in Ortszeit.
+
+# E-57 · S7-7 Mindestbedingungen der Testwoche, Freigabe nur mit Ja, verpasste Stunden nachrechnen (Nutzer 04.10.2026)
+
+**04.10.2026** · Nutzer: *„Ja, S-1 bis S-5 wie vorgeschlagen, prüfen und gegenprüfen.“* (Voranalyse_Schritt7 §22)
+- **S-1 Bedingungen:**
+  - T1 jede Stunde gerechnet, T2 Frische, T3 Laufzeit, T4 fehlerfrei;
+  - F1 Signalmail vollständig, F2 rechtzeitig, F3 Korrektur, F4 Ausstieg, F5 R-R11 am NB;
+  - L1 Prüfblock; K Mail am Handy;
+  - **Auskunft** A1–A4: Signalbilanz-Summe (erwartet 19,5 je Woche, je Asset nicht prüfbar), Korrekturquote, Ertrag (in einer Woche nicht entscheidbar), Urteile der Rollen.
+- **S-2 Freigabe nur mit Ja:** Schalter `testwoche_freigegeben` (Vorgabe false). Die Testwoche läuft nie still aus.
+- **S-3 Fällt eine Bedingung:** beheben (kritische Punkte auch unter der Woche, E-43) und die Woche verlängern. Eine Änderung an der REGEL0 selbst startet sie neu.
+- **S-4 N-1:** verpasste Signalstunden bis 3 h zurück nachrechnen, R-R11-gleich.
+  - Fachlich ergänzt beim Bau: Ist der gemessene Einstieg **mehr als 1 h** vorbei, geht keine Signalmail, sondern der Vermerk *verpasst*.
+  - Der freigegebene D1-Weg (Mail wenige Minuten nach dem Einstieg) bleibt und nennt die Verspätung.
+- **S-5:** Am Ende der Woche liefert der Nutzer Teilexport und Ablage-Kopie, für F5 die Daten.

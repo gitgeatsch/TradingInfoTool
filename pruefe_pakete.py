@@ -31236,7 +31236,7 @@ def paket_regel0_betrieb() -> None:
             z2 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w, kurse=lambda: (None, None))
             z3 = RM.versende(d, lambda b, t: post.append(b) or True, _j + _dt.timedelta(hours=25), _w, kurse=lambda: (None, None))
         pruefe(P, "REGEL0-Mails: nur Schalter an; gescheiterter Versand wiederholt; kein Doppel; Erinnerung nach 24 h",
-               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0, entfallen=0)
+               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0, entfallen=0, verpasst=0)
                and z3["erinnerung"] == 1 and len(post) == 2 and "AAA" in post[0], "%s %s %s %s" % (z0, z1, z2, z3))
         _rq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "rollen_lauf.py"), encoding="utf-8").read()
         _bqs = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
@@ -31355,7 +31355,8 @@ def paket_regel0_betrieb() -> None:
             c.execute("INSERT INTO signal (symbol,signalstunde,einstieg,ausstieg,stufe_vorlaeufig,stufe,hebel_schalter,bitpanda,version,kurs) "
                       "VALUES ('AAAX','2026-09-15 10:00','2026-09-15 11:00','2026-09-16 11:00',3,3,1,'AAA','regel0_1',1.0)")
             c.commit(); c.close()
-            _j = _dtc.datetime(2026, 9, 15, 12, 30, tzinfo=_dtc.timezone.utc)
+            # 11:30 - VOR dem Schluss der Einstiegsstunde (12:00), wie im Betrieb; um 12:30 waere das Signal seit N-1 *verpasst*
+            _j = _dtc.datetime(2026, 9, 15, 11, 30, tzinfo=_dtc.timezone.utc)
             post = []
 
             def _kaputt(r):
@@ -31486,7 +31487,7 @@ def paket_regel0_betrieb() -> None:
                        "VALUES ('SSSX','2026-09-15 10:00','2026-09-15 11:00','2026-09-16 11:00',3,3,1,'SSS','regel0_1',1.0)")
             c3.commit(); c3.close()
             _gerechnet, _post = [], []
-            _RMs.versende(d3, lambda b_, t_: _post.append(t_) or True, _dts.datetime(2026, 9, 15, 12, 30, tzinfo=_dts.timezone.utc),
+            _RMs.versende(d3, lambda b_, t_: _post.append(t_) or True, _dts.datetime(2026, 9, 15, 11, 30, tzinfo=_dts.timezone.utc),
                           None, kurse=lambda: (None, None), pruefung=lambda r: (_gerechnet.append(r["symbol"]), [])[1])
         _z4 = LLM.mail_zeilen({"markt": {"urteil": "stuetzt", "begruendung": "Umfeldtext"}, "trader": {"urteil": "neutral", "begruendung": "t"}},
                               dict(_k, rollen=dict(_k["rollen"], markt=dict(_k["rollen"]["markt"], nur_auskunft=True))))
@@ -31547,6 +31548,45 @@ def paket_regel0_betrieb() -> None:
                "if not gew:" in _bq_c and "unterhalb des Ausschnitts" in _bq_c and "eur_je_usd" in _bq_c and "FuncFormatter" in _bq_c)
         pruefe(P, "Mailfehler 04.10.: lange Zeilen brechen am Handy um (pre-wrap) und das Chart passt in die Breite (max-width)",
                "pre-wrap" in _rdh("x") and "max-width:100%" in _quelltext("api/email_notify.py"))
+        # S-2 (E-57): die Testwoche endet NUR mit der Freigabe - nicht still mit dem Datum
+        import agent.regel0_mail as _RMs
+        _w2 = G.lade()
+        _nach = _dt.datetime(2026, 10, 11, 10, 0, tzinfo=_dt.timezone.utc)
+        pruefe(P, "S-2 (E-57): nach dem geplanten Tag OHNE Freigabe bleibt TESTWOCHE (*Freigabe ausstehend*), MIT Freigabe nicht",
+               "Freigabe ausstehend" in _RMs._testwoche(dict(_w2, testwoche_freigegeben=False, testwoche_bis="2026-10-10"), _nach)
+               and _RMs._testwoche(dict(_w2, testwoche_freigegeben=True, testwoche_bis="2026-10-10"), _nach) == ""
+               and _RMs._testwoche(dict(_w2, testwoche_freigegeben=False, testwoche_bis=""), _nach) == "")
+        # N-1 (E-57): welche Signalstunden nachgeholt werden - aus den Laeufen der Ablage abgeleitet
+        import agent.regel0_stundenlauf as _SLn
+        import agent.regel0_ablage as _ABn
+        import tempfile as _tfn
+        _dn = _tfn.mkdtemp(prefix="r0_n1w_")
+        _cn = _ABn.oeffne(_dn)
+        _Tn = 59000
+        _cn.execute("INSERT INTO lauf (jetzt) VALUES (?)", (_SLn._stunde_txt(_Tn - 6),))
+        _cn.commit()
+        _v1 = _SLn.verpasste_stunden(os.path.join(_dn, _ABn.ABLAGE_NAME), _Tn)
+        _cn.execute("INSERT INTO nachgeholt VALUES (?,?,?)", (_SLn._stunde_txt(_Tn - 4), "x", 0)); _cn.commit()
+        _v2 = _SLn.verpasste_stunden(os.path.join(_dn, _ABn.ABLAGE_NAME), _Tn)
+        # die Stunde VOR einem Ausfall: Zeile mit nur vorlaeufiger Stufe, der Lauf sh+2 fehlt -> endgueltige Stufe nachrechnen
+        _cn.execute("INSERT INTO signal (symbol, signalstunde, stufe_vorlaeufig) VALUES ('VOR', ?, 3)", (_SLn._stunde_txt(_Tn - 7),))
+        _cn.commit()
+        _v4 = _SLn.verpasste_stunden(os.path.join(_dn, _ABn.ABLAGE_NAME), _Tn)
+        _cn.execute("DELETE FROM lauf"); _cn.commit()
+        _v3 = _SLn.verpasste_stunden(os.path.join(_dn, _ABn.ABLAGE_NAME), _Tn)
+        _cn.close()
+        pruefe(P, "N-1 (E-57): nach 5 h Ausfall werden die Signalstunden jetzt-5..jetzt-3 nachgeholt, schon nachgeholte nicht doppelt, "
+                  "die Stunde VOR dem Ausfall bekommt ihre endgueltige Stufe, ohne jeden Lauf (Erststart) nichts",
+               _v1 == [_Tn - 5, _Tn - 4, _Tn - 3] and _v2 == [_Tn - 5, _Tn - 3] and _v4 == [_Tn - 7, _Tn - 5, _Tn - 3] and _v3 == [],
+               "%s %s %s %s" % (_v1, _v2, _v4, _v3))
+        _bq_n = _quelltext("agent/regel0_mail.py")
+        pruefe(P, "N-1 (E-57): keine Signalmail nach dem Einstiegszeitpunkt - Vermerk *verpasst* (Nachweis: Rechenkern_02_10/pruefe_n1.py)",
+               "mail_verpasst_am IS NULL" in _bq_n and "if jetzt >= _t(r[\"einstieg\"]) + timedelta(hours=1) + VERPASST_NACH:" in _bq_n
+               and "VERPASST_NACH = timedelta(hours=1)" in _bq_n)
+        _tw = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_testwoche_gegenprobe.py")],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
+        pruefe(P, "S7-7: die Auswertung der Testwoche kann bei JEDER Bedingung fehlschlagen (Gegenprobe), eine Laufluecke oder eine "
+                  "nachgeholte Stunde ist kein Verlust", "ALLE BESTANDEN" in (_tw.stdout or ""), ((_tw.stdout or "") + (_tw.stderr or ""))[-400:])
         # O25 (04.10.2026, M-a bis M-f): der neue Aufbau der Signalmail - am Seiteneffekt, Wegwerf-Ablage, Versand abgefangen
         _o25 = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_o25.py")],
                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
