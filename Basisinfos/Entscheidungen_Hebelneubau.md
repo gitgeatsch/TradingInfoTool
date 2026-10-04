@@ -703,3 +703,11 @@ prüfen und gegenprüfen"*.
 - Nur lesend und deterministisch am Desktop, parallel zum LLM-Rückspiel N4 (das hängt am Kontingent, nicht an der Rechenzeit).
 - Die alte Spot-Kette läuft unverändert weiter. Ob sie angehalten wird, ist offen beim Nutzer.
 
+# E-55 · Halt bei Spot; zuerst Hebel (Mails und LLM); Ausstiegserinnerung nur bei offener Hebelposition (Nutzer 04.10.2026)
+
+**04.10.2026** · Nutzer: *„So, wir machen nun Halt bei Spot. Notiere alles bisher Vorgeschlagene in den jeweiligen Dokumentationen und im Plan, mit dem Hinweis, dass eine Totalüberarbeitung, die Machbarkeit und die offenen Punkte behandelt werden müssen. Zuerst kümmern wir uns darum, dass die Hebelfunktion – E-Mails und LLM – sauber funktioniert.“* *„Einen Punkt werden wir sofort ändern: Ausstiegsmails von nicht offenen Hebelpositionen.“*
+- **Spot (O23) ist angehalten.** Die Voranalyse und alle Vorschläge stehen als **notiert, nicht abgestimmt** in `Voranalyse_Spot_Neubau_04_10.md`. Vor einer Wiederaufnahme: Totalüberarbeitung, Machbarkeit, offene Punkte. Die alte Spot-Kette läuft weiter (O24 regelt den rechtzeitigen Stopp ihrer LLM-Aufrufe).
+- **Vorrang:** Die Hebelfunktion – REGEL0-Mails und LLM-Prüfblock – muss sauber laufen.
+- **Ausstiegserinnerung (REGEL0, 24 h):** Sie geht nur noch, wenn bei Bitpanda eine **offene LONG-Hebelposition** in diesem Asset besteht. Fachliche Ausgestaltung (meine Entscheidung, Begründung in Voranalyse_Schritt7 §21):
+  - Ist der Positionsstand **unbekannt** (Bitpanda-Abgleich veraltet ≥ 1 h, nie gelaufen, nicht lesbar), geht sie **mit Vermerk** raus. Eine fehlende Ausstiegsmeldung bei echtem Geld wiegt schwerer als eine überflüssige Mail.
+  - Eine entfallene Erinnerung wird als **Fakt** abgelegt (Zeitpunkt und Grund) und **nie nachgeschickt**.

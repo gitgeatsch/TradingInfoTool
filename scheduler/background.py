@@ -1586,6 +1586,19 @@ def regel0_nachlader_job() -> None:
     _regel0_mails()
 
 
+def _regel0_positionsstand() -> dict:
+    """04.10.2026: offene Hebelpositionen und Stand des Bitpanda-Abgleichs fuer die REGEL0-Erinnerung - NUR LESEND
+    (``agent.regel0_mail.position_stand`` entscheidet). Wirft bei einem Lesefehler; dann geht die Erinnerung mit Vermerk raus."""
+    from agent import hebel_abgleich as _HA
+    conn = db.get_connection()
+    try:
+        f = _HA.frische(conn)
+        pos = [(p.symbol, p.richtung, p.eroeffnet_am) for p in db.get_open_hebel_positions(conn)]
+    finally:
+        conn.close()
+    return {"stand": f.get("stand"), "veraltet": bool(f.get("veraltet")), "stunden": f.get("stunden"), "positionen": pos}
+
+
 def _regel0_mails() -> None:
     """S7-4 (E-46, 03.10.2026): faellige REGEL0-Mails aus der Ablage verschicken - Signal (Hebel-Schalter an, Stufe > 0),
     Korrektur (endgueltige Stufe weicht ab), Erinnerung (24 h um). Laeuft auch, wenn die Rechnung dieser Stunde scheiterte -
@@ -1609,10 +1622,12 @@ def _regel0_mails() -> None:
         z = _RM.versende(_NL.DATEN_VORGABE, _sende_hinweismail,
                          melden=lambda t: _sende_hinweismail("TradingInfoTool: REGEL0 Zuordnung zweifelhaft - Signal nicht gemailt", t),
                          bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE),       # E-50 N-f: das Chart in der Signalmail
-                         pruefung=_pruef)
+                         pruefung=_pruef,
+                         position=_regel0_positionsstand)   # 04.10.: Ausstiegserinnerung nur bei offener Hebelposition
         if any(z.values()):
-            logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d nicht zugestellt, %d gesperrt (Zuordnung)",
-                        z["signal"], z["korrektur"], z["erinnerung"], z["fehlgeschlagen"], z["gesperrt"])
+            logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d Erinnerung entfallen (keine offene Position), "
+                        "%d nicht zugestellt, %d gesperrt (Zuordnung)",
+                        z["signal"], z["korrektur"], z["erinnerung"], z["entfallen"], z["fehlgeschlagen"], z["gesperrt"])
         if z["fehlgeschlagen"]:
             logger.error("REGEL0-Mails: %d nicht zugestellt - naechster Versuch in einer Stunde", z["fehlgeschlagen"])
     except Exception as exc:                                 # noqa: BLE001

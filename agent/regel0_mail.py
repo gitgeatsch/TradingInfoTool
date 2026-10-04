@@ -5,7 +5,10 @@ Drei Mails, alle aus der Ablage ``data/regel0_signale.db`` (agent/regel0_ablage.
     SIGNAL       je neuem Signal mit eingeschaltetem Hebel-Schalter und Stufe > 0 - Asset, Einstieg und Ausstieg (wie gemessen),
                  Hebelstufe, Einsatz (regel0_betrieb.yaml), Vermerke. Die Stufe ist zuerst VORLAEUFIG (ATR der Signalstunde, D1)
     KORREKTUR    nur wenn die ENDGUELTIGE Stufe (eine Stunde spaeter) von der gemailten abweicht (B-9: rund 1,6 %)
-    ERINNERUNG   wenn die 24 h um sind: Ausstieg faellig (E-43 Punkt 2)
+    ERINNERUNG   wenn die 24 h um sind: Ausstieg faellig (E-43 Punkt 2) - seit 04.10.2026 NUR bei einer OFFENEN Hebelposition
+                 in diesem Asset (Nutzer: *Ausstiegsmails von nicht offenen Hebelpositionen* sofort aendern). Ist der Positionsstand
+                 unbekannt (Bitpanda-Abgleich veraltet oder nie gelaufen), geht sie MIT Vermerk raus - lieber eine Mail zu viel als
+                 eine fehlende Ausstiegsmeldung bei echtem Geld
 
 D2: die Stufen, die Bitpanda je Asset anbietet, sind noch nicht als Daten da - die Mail sagt das. D3: kein LLM-Kommentar in
 dieser Fassung. D4: bis ``testwoche_bis`` (regel0_betrieb.yaml) tragen Betreff und Text den Vermerk TESTWOCHE.
@@ -133,6 +136,28 @@ def korrektur_mail(r: dict, alt: int, neu: int, werte: dict, jetzt: datetime) ->
     return betreff, text
 
 
+def position_stand(r: dict, befund: dict | None) -> tuple:
+    """-> (offen, vermerk) fuer die ERINNERUNG: True (offene LONG-Position in diesem Asset), False (Abgleich frisch, keine
+    offene Position - die Erinnerung entfaellt), None (unbekannt - sie geht mit Vermerk raus).
+
+    ``befund``: {"stand": datetime|None, "veraltet": bool, "stunden": float|None, "positionen": [(symbol, richtung, eroeffnet_am)]}
+    - Positionen mit status 'offen' aus ``hebel_positions``, Stand aus dem Bitpanda-Abgleich (agent/hebel_abgleich.py).
+    ⚠️ Bekannte Grenze (2.679): der Importer wertet eine Teilschliessung als Vollschluss - dann gilt die Restposition als zu."""
+    if not befund:
+        return None, "Positionsstand nicht lesbar - Erinnerung vorsichtshalber verschickt"
+    if befund.get("stand") is None:
+        return None, "Positionsstand unbekannt (Bitpanda-Abgleich noch nie erfolgreich) - Erinnerung vorsichtshalber verschickt"
+    if befund.get("veraltet"):
+        return None, ("Positionsstand unbekannt (Bitpanda-Abgleich seit %.1f h nicht erfolgreich) - Erinnerung vorsichtshalber verschickt"
+                      % (befund.get("stunden") or 0.0))
+    name = (r.get("bitpanda") or r.get("symbol") or "").upper()
+    pos = [p for p in (befund.get("positionen") or []) if str(p[0]).upper() == name and str(p[1] or "LONG").upper() == "LONG"]
+    if not pos:
+        return False, "keine offene Hebelposition %s LONG bei Bitpanda (Abgleich %s UTC)" % (
+            name, befund["stand"].astimezone(timezone.utc).strftime("%d.%m. %H:%M"))
+    return True, "offene Hebelposition %s LONG seit %s" % (name, ", ".join(str(p[2])[:16].replace("T", " ") for p in pos))
+
+
 def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
     tw = _testwoche(werte, jetzt)
     aus = _t(r["ausstieg"]) + timedelta(hours=1)
@@ -141,12 +166,12 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
     text = "\n".join(["REGEL0.1 - AUSSTIEG FAELLIG", "",
                       "%s, Hebel %dx, Einstieg %s" % (name, stufe, _zeit(_t(r["einstieg"]) + timedelta(hours=1))),
                       "Die 24 Stunden sind um: Ausstieg zum Schlusskurs %s." % _zeit(aus), "",
-                      "Gilt nur, wenn du die Position eroeffnet hast. Die Fuehrung offener Positionen kommt spaeter (O13)."])
+                      "Die Fuehrung offener Positionen kommt spaeter (O13)."])
     return betreff, text
 
 
 def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
-             bild=None, pruefung=None) -> dict:
+             bild=None, pruefung=None, position=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
@@ -154,13 +179,16 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
     ``melden(text)`` einmal je Signal. Ist der Ticker nicht erreichbar, geht die Mail mit Vermerk raus (F-2).
 
     E-50 N-f (03.10.2026): ``bild(r) -> PNG | None`` haengt das Chart an die SIGNALmail (``senden(betreff, text, bilder)``).
-    ``pruefung(r) -> [Zeilen]`` haengt den Block der LLM-Rollen an (E-52). Beides darf scheitern, ohne die Mail aufzuhalten (P-8)."""
+    ``pruefung(r) -> [Zeilen]`` haengt den Block der LLM-Rollen an (E-52). Beides darf scheitern, ohne die Mail aufzuhalten (P-8).
+
+    04.10.2026: ``position() -> befund`` (siehe ``position_stand``) - die ERINNERUNG geht nur bei offener Position; ohne
+    ``position`` bleibt es beim alten Verhalten (jede Erinnerung)."""
     jetzt = jetzt or datetime.now(timezone.utc)
     werte = werte if werte is not None else G.lade()
     jt = jetzt.strftime("%Y-%m-%d %H:%M")
     grenze_alt = (jetzt - timedelta(hours=NICHT_AELTER_H)).strftime("%Y-%m-%d %H:%M")
     grenze_erin = (jetzt - timedelta(hours=ERINNERUNG_BIS_H + 1)).strftime("%Y-%m-%d %H:%M")
-    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0)
+    zaehl = dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0, entfallen=0)
     _kurse = {}
 
     def _live():
@@ -224,11 +252,26 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
             else:
                 zaehl["fehlgeschlagen"] += 1
         # 3  ERINNERUNG: 24 h um (Schluss der Ausstiegsstunde erreicht), Handel nicht auf 0 korrigiert
+        _bef = {}
         for r in c.execute("SELECT * FROM signal WHERE mail_signal_am IS NOT NULL AND mail_erinnerung_am IS NULL "
+                           "AND erinnerung_entfallen_am IS NULL "
                            "AND COALESCE(stufe, mail_signal_stufe) > 0 AND ausstieg <= ? AND ausstieg >= ?",
                            ((jetzt - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M"), grenze_erin)).fetchall():
             r = dict(r)
             b, t = erinnerung_mail(r, int(r["stufe"] if r["stufe"] is not None else r["mail_signal_stufe"]), werte, jetzt)
+            if position is not None:
+                if "v" not in _bef:                              # EIN Positionsstand je Lauf
+                    try:
+                        _bef["v"] = position()
+                    except Exception:                           # noqa: BLE001
+                        _bef["v"] = None
+                offen, vm = position_stand(r, _bef["v"])
+                if offen is False:
+                    c.execute("UPDATE signal SET erinnerung_entfallen_am=?, erinnerung_grund=? WHERE symbol=? AND signalstunde=?",
+                              (jt, vm, r["symbol"], r["signalstunde"]))
+                    c.commit(); zaehl["entfallen"] += 1
+                    continue
+                t = t + NL + NL + "Position: " + vm
             if senden(b, t):
                 c.execute("UPDATE signal SET mail_erinnerung_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
                 c.commit(); zaehl["erinnerung"] += 1

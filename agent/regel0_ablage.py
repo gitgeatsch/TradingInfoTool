@@ -22,6 +22,9 @@ _SIGNAL_SPALTEN = (
     ("mail_signal_am", "TEXT"), ("mail_signal_stufe", "INTEGER"), ("mail_korrektur_am", "TEXT"), ("mail_erinnerung_am", "TEXT"),
     # S7-5b (03.10.2026): Preisabgleich Bitpanda gegen Binance vor der Signalmail
     ("paar", "TEXT"), ("faktor", "REAL"), ("abgleich", "TEXT"), ("mail_gesperrt_am", "TEXT"),
+    # 04.10.2026 (Nutzer: *Ausstiegsmails von nicht offenen Hebelpositionen* sofort aendern): die Erinnerung ENTFAELLT ohne offene
+    # Position - festgehalten als Fakt, nicht still uebergangen
+    ("erinnerung_entfallen_am", "TEXT"), ("erinnerung_grund", "TEXT"),
 )
 
 

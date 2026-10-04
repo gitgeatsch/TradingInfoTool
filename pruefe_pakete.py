@@ -31236,7 +31236,7 @@ def paket_regel0_betrieb() -> None:
             z2 = RM.versende(d, lambda b, t: post.append(b) or True, _j, _w, kurse=lambda: (None, None))
             z3 = RM.versende(d, lambda b, t: post.append(b) or True, _j + _dt.timedelta(hours=25), _w, kurse=lambda: (None, None))
         pruefe(P, "REGEL0-Mails: nur Schalter an; gescheiterter Versand wiederholt; kein Doppel; Erinnerung nach 24 h",
-               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0)
+               z0["fehlgeschlagen"] == 1 and z1["signal"] == 1 and z2 == dict(signal=0, korrektur=0, erinnerung=0, fehlgeschlagen=0, gesperrt=0, entfallen=0)
                and z3["erinnerung"] == 1 and len(post) == 2 and "AAA" in post[0], "%s %s %s %s" % (z0, z1, z2, z3))
         _rq = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "agent", "rollen_lauf.py"), encoding="utf-8").read()
         _bqs = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
@@ -31523,6 +31523,11 @@ def paket_regel0_betrieb() -> None:
                        capture_output=True, text=True, timeout=120)
         pruefe(P, "R-4 am SEITENEFFEKT: Schalter an -> kein Umlauf, kein alter Weg; Schalter aus -> Umlauf laeuft",
                "R-4 am Seiteneffekt: BESTANDEN" in (_r4.stdout or ""), ((_r4.stdout or "") + (_r4.stderr or ""))[-300:])
+        # 04.10.2026 (Nutzer: Ausstiegsmails von nicht offenen Hebelpositionen sofort aendern) - am Seiteneffekt, Wegwerf-Ablage
+        _er = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_erinnerung_offen.py")],
+                       capture_output=True, text=True, timeout=120)
+        pruefe(P, "Ausstiegserinnerung NUR bei offener Hebelposition; unbekannter Stand -> mit Vermerk; entfallen als Fakt, nie nachgeschickt",
+               "ALLE BESTANDEN" in (_er.stdout or ""), ((_er.stdout or "") + (_er.stderr or ""))[-400:])
         pruefe(P, "Schatten: der Block wird je Signalmail GERECHNET, die Mail bleibt unveraendert (kein Text angehaengt)",
                _gerechnet == ["SSSX"] and _post and "PRUEFUNG" not in _post[0])
         pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",

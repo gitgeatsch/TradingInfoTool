@@ -156,6 +156,9 @@ def mailstand(r: dict) -> list:
         z.append("  Korrektur:  verschickt %s UTC (endgueltig %sx)" % (r["mail_korrektur_am"], r.get("stufe")))
     if r.get("mail_erinnerung_am"):
         z.append("  Erinnerung: verschickt %s UTC" % r["mail_erinnerung_am"])
+    elif r.get("erinnerung_entfallen_am"):
+        # 04.10.2026: ohne offene Hebelposition keine Ausstiegsmail - der Grund steht als Fakt in der Ablage
+        z.append("  Erinnerung: entfallen %s UTC - %s" % (r["erinnerung_entfallen_am"], r.get("erinnerung_grund") or "keine offene Position"))
     if r.get("abgleich"):
         z.append("  Abgleich:   %s" % r["abgleich"])
     z.append("  Regelversion %s · gerechnet %s UTC%s" % (r.get("version") or "-", r.get("erfasst_am") or "-",

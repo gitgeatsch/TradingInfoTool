@@ -296,6 +296,11 @@ def _inhalt() -> int:
             if mail_:
                 m_ = c.execute("SELECT COUNT(mail_signal_am), COUNT(mail_korrektur_am), COUNT(mail_erinnerung_am) FROM signal").fetchone()
                 print("    Mails (S7-4): Signal %d · Korrektur %d · Erinnerung %d" % m_)
+                if "erinnerung_entfallen_am" in sp_:
+                    # 04.10.2026: Ausstiegserinnerung nur bei offener Hebelposition - die entfallenen mit Grund
+                    for e_ in c.execute("SELECT bitpanda, symbol, ausstieg, erinnerung_entfallen_am, erinnerung_grund FROM signal "
+                                        "WHERE erinnerung_entfallen_am IS NOT NULL ORDER BY erinnerung_entfallen_am DESC LIMIT 8"):
+                        print("      Erinnerung entfallen: %s (Ausstieg %s) am %s - %s" % (e_[0] or e_[1], e_[2], e_[3], e_[4]))
             for r in c.execute("SELECT symbol, bitpanda, signalstunde, einstieg, vh, stufe_vorlaeufig, stufe, p5, hebel_schalter%s FROM signal "
                                "ORDER BY signalstunde DESC LIMIT 15" % (", mail_signal_am, mail_korrektur_am, mail_erinnerung_am" if mail_ else "")):
                 print("      %-9s (%s) Signal %s · Einstieg %s · v %.4f · Stufe vorl. %s / endg. %s · p5 %s · Schalter %s%s" % (
@@ -318,8 +323,11 @@ def _inhalt() -> int:
             n_p = c.execute("SELECT COUNT(*) FROM pruefung").fetchone()[0]
             print("REGEL0-PRUEFUNG (LLM): %d Zeilen%s" % (n_p, " - noch kein Signal geprueft (Schatten wartet auf ein Signal mit Hebel-Schalter an)"
                                                          if not n_p else ""))
-            for r in c.execute("SELECT tag_pazifik, COUNT(*) FROM pruefung WHERE gefragt=1 GROUP BY tag_pazifik ORDER BY tag_pazifik DESC LIMIT 5"):
-                print("REGEL0-PRUEFUNG (LLM) %s · Aufrufe %d" % r)
+            # ⚠️ 04.10.: bis dahin zaehlte diese Zeile ZEILEN statt Aufrufe (5 statt 25 bei 5 Stimmen) - jetzt die Spalte `aufrufe`
+            _auf = "aufrufe" in {x[1] for x in c.execute("PRAGMA table_info(pruefung)")}
+            for r in c.execute("SELECT tag_pazifik, %s, COUNT(*) FROM pruefung WHERE gefragt=1 GROUP BY tag_pazifik "
+                               "ORDER BY tag_pazifik DESC LIMIT 5" % ("SUM(COALESCE(aufrufe, 1))" if _auf else "COUNT(*)")):
+                print("REGEL0-PRUEFUNG (LLM) %s · Aufrufe %d · gefragte Rollen %d" % r)
             for r in c.execute("SELECT rolle, fassung, COUNT(*), SUM(urteil IS NOT NULL), SUM(fehler IS NOT NULL), ROUND(AVG(CASE WHEN gefragt=1 "
                                "THEN sekunden END), 1) FROM pruefung GROUP BY rolle, fassung ORDER BY rolle"):
                 print("    %-11s Fassung %s · Zeilen %d · mit Urteil %d · ohne (Fehler/Sperre) %d · Laufzeit im Mittel %s s" % r)

@@ -1416,3 +1416,40 @@ Nutzer 04.10.: *„Ja, nur für die aktuelle Messung und Bewertung. Halte im Pla
 | ⛔ Betrieb am NB | K-LLM-1 offen: erstes Signal mit eingeschaltetem Block |
 | ✔ R-4 (Spot-Kette anhalten) | **am Seiteneffekt** nachgewiesen (`Rechenkern_02_10/pruefe_r4.py`, Beleg `pruefe_r4.txt`, in der Wache als Unterprozess): `hebel_screening_job` mit Platzhaltern, Schalter an → Umlauf 0, alter Weg 0; Schalter aus → Umlauf 1, alter Weg 0; keine Fehlermeldung, Sperre freigegeben. Die Probe schlug zweimal fehl, bevor sie lief (fehlende Platzhalter): Sie **kann** fehlschlagen |
 
+## 21. Prüfung der NB-Exporte 04.10. und die Ausstiegserinnerung nur bei offener Position (04.10.2026; E-55)
+
+### 21.1 Die Exporte (Teilexport 16:30, NB-Export 16:33; Neustart 10:26 auf 2afdca4)
+
+| Punkt | Ergebnis |
+|---|---|
+| Laufzeit seit Neustart | ✔ 1.701 Logzeilen, **9 Tracebacks = 3 Zeitüberschreitungen bei Z.ai** (Rolle G der Spot-Kette, P-8 abgefangen), sonst keine ERROR-Zeile |
+| REGEL0-Datenbasis | ✔ vier Dateien je Stunde, 0 Fehler, Stand 13:00 UTC |
+| REGEL0-Rechnung | ✔ 159–162 s je Stunde, frisch 635/635, 79 Signale, 4 mit Hebel-Schalter an |
+| Mails | ✔ 4 Signalmails (u. a. QNT, NEAR, KAIA), 1 Erinnerung, 0 nicht zugestellt, 0 gesperrt |
+| **K-LLM-1** | ◐ Prüfblock 0.1e lief bei allen drei Signalen nach dem Neustart: Trader 3× (stützt, neutral, spricht dagegen), Umfeld 2× (einmal wiederverwendet), **0 Fehler**, Trader im Mittel 22 s. gemini-3.5 am NB **25 Aufrufe** = 2 × 10 + 5, also genau 5 Stimmen je Rolle. ➤ Offen: dass Block und Chart **in der Mail** stehen, sieht nur der Nutzer |
+| ⚠️ Anzeigefehler Teilexport | Die Zeile *Aufrufe 5* zählte **Zeilen** statt Aufrufe (richtig: 25). **Behoben** (Spalte `aufrufe`), an einer Wegwerf-Ablage geprüft (10 bei 2 Rollen × 5) |
+| **K-SN-2** | ✔ Stop-Nachzieh-Sammelmail **genau einmal** 07:15 (75 Empfehlungen); der Neustart um 10:26 hat sie nicht wiederholt |
+| K-ALARM-2 | ohne Anlass (keine Lücke > 45 min seit 02.10.) |
+| Bitpanda-Abgleich | ✔ frisch (0,1 h), **keine offene Hebelposition** |
+| ⚠️ Kontingent | Der Zähler am NB kennt nur die **eigenen** Aufrufe. Google zählt den Schlüssel gemeinsam: Die Kalibrierläufe am Desktop (04.10. rund 410 auf 3.5) stehen im NB-Zähler **nicht**. Das Tageslimit 150 des Prüfblocks schützt also nur vor dem eigenen Stau, nicht vor dem fremden. Folge, wenn es knapp wird: Der Block steht grau da (*keine Auskunft*), die Mail geht trotzdem. ➤ Für N4 (O24) mitzählen |
+| Nebenbefund Spot | weiterhin Verkaufsvorschlags-Mails je Lauf; 07:15-Mail mit 75 Spot-Stops (O19) – angehalten mit O23, nicht Teil dieser Runde |
+
+### 21.2 Ausstiegserinnerung nur bei offener Hebelposition (Nutzer: *„sofort ändern“*)
+
+**Ist (bis 04.10.):** Jede Signalmail zog nach 24 h eine Erinnerung *„AUSSTIEG fällig“* nach, egal ob eine Position eröffnet war. Text: *„Gilt nur, wenn du die Position eröffnet hast.“* Am NB gab es am 04.10. **keine** offene Hebelposition; die eine Erinnerung war überflüssig. Bis zum 05.10. wären es drei weitere (QNT, NEAR, KAIA).
+
+**Neu:**
+
+| Positionsstand | Erinnerung |
+|---|---|
+| offene **LONG**-Hebelposition in diesem Asset (`hebel_positions` status *offen*, Bitpanda-Kürzel) | ✔ geht raus, mit Vermerk *offene Hebelposition … seit …* |
+| Abgleich frisch, **keine** offene Position | ✖ **entfällt** – Zeitpunkt und Grund in der Ablage (`erinnerung_entfallen_am`, `erinnerung_grund`), sichtbar im Hebel-Tab und im Teilexport, **nie nachgeschickt** |
+| Abgleich veraltet (≥ 1 h), nie gelaufen oder nicht lesbar | ✔ geht raus, mit Vermerk *Positionsstand unbekannt – vorsichtshalber verschickt* |
+
+**Warum so:** Die Erinnerung ist bei echtem Geld die einzige Ausstiegsmeldung, solange die Positionsführung (O13) fehlt. Ein **falsches Weglassen** kostet, eine überflüssige Mail nicht. Deshalb entfällt sie nur bei **nachgewiesen** fehlender Position. ⚠️ Bekannte Grenze: Der Importer wertet eine Teilschließung als Vollschluss (2.679). Eine Restposition gälte dann als zu, und ihre Erinnerung entfiele. Das gehört zu O13.
+
+**Code:** `agent/regel0_mail.position_stand` (Regel, rein), `versende(..., position=)` (EIN Positionsstand je Lauf), `scheduler/background._regel0_positionsstand` (nur lesend: `hebel_abgleich.frische`, `get_open_hebel_positions`), Ablage zwei Spalten, Hebel-Tab und Teilexport zeigen *entfallen*.
+
+**Prüfung am Seiteneffekt:** `Rechenkern_02_10/pruefe_erinnerung_offen.py` (Wegwerf-Ablage, Versand ersetzt). Fälle A bis E, dazu *nie nachgeschickt*, *nicht doppelt*, *nie gelaufen = unbekannt*, *SHORT zählt nicht*, und gegen die **NB-Kopie** (03.10.): Abgleich dort veraltet → *unbekannt* → Mail mit Vermerk, wie verlangt. 11/11. In der Wache als Unterprozess; Regel0Betrieb 54/54.
+
+**NB-Kontrolle K-ERIN** (nach Pull und Neustart): Die Erinnerungen QNT/NEAR/KAIA (fällig 05.10. ab etwa 11:00 Ortszeit) **entfallen**. Im Teilexport steht dann *Erinnerung entfallen: … keine offene Hebelposition*, im Log *… Erinnerung entfallen (keine offene Position)*. Eröffnest du eine Position, kommt ihre Erinnerung mit Vermerk.
