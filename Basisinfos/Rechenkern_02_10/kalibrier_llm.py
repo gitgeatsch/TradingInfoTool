@@ -55,6 +55,11 @@ def main(quelle: str, ausgabe: str) -> int:
     import agent.regel0_mail as RM
     import agent.regel0_groesse as G
     K = L.lade()
+    if os.environ.get("KAL_STIMMEN"):
+        K = dict(K, stimmen=int(os.environ["KAL_STIMMEN"]))           # Messung einer anderen Stimmenzahl, ohne den Katalog zu aendern
+    if os.environ.get("KAL_OHNE_ENTSCHEIDER") == "1":
+        K = dict(K, rollen=dict(K["rollen"], entscheider=dict(K["rollen"]["entscheider"], an=False)))
+    print("Lauf mit Stimmen %s · Rollen an: %s" % (K.get("stimmen"), [r for r, e in K["rollen"].items() if e.get("an")]))
     if os.environ.get("KAL_OHNE_MARKT") == "1":
         # der Markt ist ueber Phasen schon gemessen (kalibrierung_markt_phasen.txt) - hier nicht noch einmal Kontingent dafuer
         K = dict(K, rollen=dict(K["rollen"], markt=dict(K["rollen"]["markt"], an=False)))

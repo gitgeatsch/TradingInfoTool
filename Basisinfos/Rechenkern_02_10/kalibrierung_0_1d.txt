@@ -1,0 +1,69 @@
+Bestaetigungsmenge ausgesperrt: 1000 Anker
+   1 SUN      2025-03-25 16:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 6)
+   2 ARPA     2026-05-11 18:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 12)
+   3 STX      2025-08-27 11:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 18)
+   4 1INCH    2026-03-10 09:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 24)
+   5 MANA     2025-06-14 16:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 30)
+   6 JTO      2026-07-13 20:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 36)
+   7 CVC      2025-08-27 11:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 42)
+   8 AXL      2026-08-04 23:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 48)
+   9 HBAR     2025-07-03 06:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 54)
+  10 MAGIC    2026-04-30 05:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 60)
+  11 TURBO    2025-05-05 16:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 66)
+  12 CHR      2026-05-22 00:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 72)
+  13 AVAX     2025-08-23 03:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 78)
+  14 BLUR     2026-03-07 08:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 84)
+  15 PYTH     2025-10-20 15:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 90)
+  16 SEI      2026-06-07 09:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 96)
+  17 ALGO     2025-09-29 21:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 102)
+  18 IOTX     2026-02-21 04:00  M=-                T=neutral          E=einwand        (Aufrufe 108)
+  19 BIO      2025-07-09 20:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 114)
+  20 INIT     2026-04-14 10:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 120)
+  21 SCR      2025-04-05 02:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 126)
+  22 DYM      2026-06-20 16:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 132)
+  23 KAVA     2025-03-27 04:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 138)
+  24 CHZ      2026-02-25 14:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 144)
+  25 TURBO    2025-04-02 10:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 150)
+  26 LUMIA    2026-05-10 01:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 156)
+  27 TRX      2025-11-05 22:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 162)
+  28 W        2026-07-10 06:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 168)
+  29 MANA     2025-07-06 09:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 174)
+  30 USTC     2026-06-23 14:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 180)
+  31 XTZ      2025-08-22 02:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 186)
+  32 STX      2026-02-02 10:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 192)
+  33 T        2025-10-02 13:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 198)
+  34 SSV      2026-02-13 07:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 204)
+  35 COW      2025-10-26 19:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 210)
+  36 BAND     2026-03-22 09:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 216)
+  37 PEOPLE   2025-04-05 03:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 222)
+  38 RSR      2026-08-11 14:00  M=-                T=neutral          E=mit_vorbehalt  (Aufrufe 228)
+  39 DYM      2025-08-31 04:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 234)
+  40 WCT      2026-03-16 15:00  M=-                T=spricht_dagegen  E=einwand        (Aufrufe 240)
+
+P1-a/b: Formgueltigkeit und Stufenverteilung je Rolle
+  markt        nicht gefragt (in diesem Lauf abgeschaltet) - zaehlt nicht
+  trader       gueltig 40/40 (100 %) · Verteilung {'spricht_dagegen': 22, 'neutral': 18} · groesste Stufe 55 % -> OK
+  entscheider  gueltig 40/40 (100 %) · Verteilung {'einwand': 23, 'mit_vorbehalt': 17} · groesste Stufe 57 % -> OK
+
+ECHO: Entscheider folgt dem Trader in 39 von 40 Faellen (98 %) -> ECHO (fuegt nichts hinzu)
+  Paare: {('spricht_dagegen', 'einwand'): 22, ('neutral', 'mit_vorbehalt'): 17, ('neutral', 'einwand'): 1}
+  2025 Trader: {'spricht_dagegen': 12, 'neutral': 8}
+  2026 Trader: {'neutral': 10, 'spricht_dagegen': 10}
+
+P1-c: Wiederholung (dieselbe Eingabe ein zweites Mal, ohne Wiederverwendung)
+   Wiederholung SUN      trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung ARPA     trader: neutral -> neutral
+   Wiederholung STX      trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung 1INCH    trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung MANA     trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung JTO      trader: spricht_dagegen -> neutral
+  gleich 5 von 6 (83 %) -> NICHT erfuellt
+
+P1-d: Anonymitaet
+  Eingaben mit Name/Jahr/Kurs: 0
+  erkannt 0 von 0 -> OK
+
+P1-e: Ende zu Ende - drei fertige Signalmails mit Block und Chart
+  geschrieben: C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/kalibrier_01d\mailvorschau_llm_0_1.html
+
+Aufrufe gesamt: 258 (Deckel 330) · Standard-DB unberuehrt: True

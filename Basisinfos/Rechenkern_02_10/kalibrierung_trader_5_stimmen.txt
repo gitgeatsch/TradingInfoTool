@@ -1,0 +1,54 @@
+Lauf mit Stimmen 5 · Rollen an: ['markt', 'trader']
+Bestaetigungsmenge ausgesperrt: 1000 Anker
+   1 SUN      2025-03-25 16:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 5)
+   2 ARPA     2026-05-11 18:00  M=-                T=stuetzt          E=-              (Aufrufe 10)
+   3 STX      2025-08-27 11:00  M=-                T=neutral          E=-              (Aufrufe 15)
+   4 1INCH    2026-03-10 09:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 20)
+   5 MANA     2025-06-14 16:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 25)
+   6 JTO      2026-07-13 20:00  M=-                T=neutral          E=-              (Aufrufe 30)
+   7 CVC      2025-08-27 11:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 35)
+   8 AXL      2026-08-04 23:00  M=-                T=neutral          E=-              (Aufrufe 40)
+   9 HBAR     2025-07-03 06:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 45)
+  10 MAGIC    2026-04-30 05:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 50)
+  11 TURBO    2025-05-05 16:00  M=-                T=neutral          E=-              (Aufrufe 55)
+  12 CHR      2026-05-22 00:00  M=-                T=neutral          E=-              (Aufrufe 60)
+  13 AVAX     2025-08-23 03:00  M=-                T=neutral          E=-              (Aufrufe 65)
+  14 BLUR     2026-03-07 08:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 70)
+  15 PYTH     2025-10-20 15:00  M=-                T=neutral          E=-              (Aufrufe 75)
+  16 SEI      2026-06-07 09:00  M=-                T=neutral          E=-              (Aufrufe 80)
+  17 ALGO     2025-09-29 21:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 85)
+  18 IOTX     2026-02-21 04:00  M=-                T=spricht_dagegen  E=-              (Aufrufe 90)
+  19 BIO      2025-07-09 20:00  M=-                T=stuetzt          E=-              (Aufrufe 95)
+  20 INIT     2026-04-14 10:00  M=-                T=neutral          E=-              (Aufrufe 100)
+
+P1-a/b: Formgueltigkeit und Stufenverteilung je Rolle
+  markt        nicht gefragt (in diesem Lauf abgeschaltet) - zaehlt nicht
+  trader       gueltig 20/20 (100 %) · Verteilung {'spricht_dagegen': 9, 'stuetzt': 2, 'neutral': 9} · groesste Stufe 45 % -> OK
+  entscheider  nicht gefragt (in diesem Lauf abgeschaltet) - zaehlt nicht
+
+ECHO: Entscheider folgt dem Trader in 0 von 0 Faellen (0 %) -> eigenstaendig
+  Paare: {}
+  2025 Trader: {'spricht_dagegen': 5, 'neutral': 4, 'stuetzt': 1}
+  2026 Trader: {'stuetzt': 1, 'spricht_dagegen': 4, 'neutral': 5}
+
+P1-c: Wiederholung (dieselbe Eingabe ein zweites Mal, ohne Wiederverwendung)
+   Wiederholung SUN      trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung ARPA     trader: stuetzt -> stuetzt
+   Wiederholung STX      trader: neutral -> neutral
+   Wiederholung 1INCH    trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung MANA     trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung JTO      trader: neutral -> spricht_dagegen
+   Wiederholung CVC      trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung AXL      trader: neutral -> neutral
+   Wiederholung HBAR     trader: spricht_dagegen -> spricht_dagegen
+   Wiederholung MAGIC    trader: spricht_dagegen -> spricht_dagegen
+  gleich 9 von 10 (90 %) -> OK
+
+P1-d: Anonymitaet
+  Eingaben mit Name/Jahr/Kurs: 0
+  erkannt 0 von 0 -> OK
+
+P1-e: Ende zu Ende - drei fertige Signalmails mit Block und Chart
+  geschrieben: C:/Users/Geatsch/AppData/Local/Temp/claude/D--CLAUDE-Projects-SoftwareProjekte-TradingInfoTool/db18e928-7ab8-4d7a-a4da-6a068bf34900/scratchpad/kalibrier_5st\mailvorschau_llm_0_1.html
+
+Aufrufe gesamt: 150 (Deckel 170) · Standard-DB unberuehrt: True

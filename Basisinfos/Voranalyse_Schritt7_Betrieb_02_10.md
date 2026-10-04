@@ -1339,3 +1339,44 @@ Laufzeit je Aufruf: Trader 5,8 s, Markt 6,2 s, Entscheider 1,1 s. Alle Antworten
 | **Zeitpunkttreue der Makroreihen** (vor N4) | ⚠️ `makro_historie_monat` führt den **laufenden** Monat (S&P als Teilmonat). In einer späteren Sicherung stünde für einen Anker vom 13.09. schon der Monatsschluss September, ein **Vorgriff** von bis zu einem Monat. Die Inflation ist harmlos: Sie bleibt leer, bis sie veröffentlicht ist. ➤ Der Markt-Erbauer nimmt Monatswerte nur noch aus **abgeschlossenen** Monaten, im Betrieb **und** im Rückspiel gleich. Beim Anker 13.09. sind es jetzt 1.185 statt 1.186 Monate | Wache: Nachweis am Verhalten, mit einem Monatswert aus der Zukunft in der Eingabe. Der Markt-Lauf über Phasen (85 % *stützt*) lief noch mit dem kleinen Vorgriff; an der Aussage *konstant* ändert das nichts |
 | **Anker des Rückspiels eingefroren** | `ziehe_n4_anker.py`: aus 7.376 REGEL0-Einstiegen 2025–26 je **1.000** für die Entwicklungsmenge und die **unberührte** Bestätigungsmenge, je Jahr 500, 113 Symbole, disjunkt. Die 80 Kalibrieranker sind *gesehen* und stehen nur in der Entwicklungsmenge. Beleg `n4_anker_beleg.txt` mit SHA-256 | Der Kalibrierlauf sperrt die Bestätigungsmenge aus |
 | **Kalibrierlauf P1 für 0.1d** (bereit) | ab 09:00 Uhr Ortszeit (Gemini-3.5-Kontingent): `KAL_ANKER=40 KAL_JAHRE=2025,2026 KAL_OHNE_MARKT=1 KAL_WIEDER=6 KAL_RATEN=0 KAL_DECKEL=330 python Basisinfos/Rechenkern_02_10/kalibrier_llm.py <NB-Sicherung> <ordner>`. Er misst P1-b bei Trader und Entscheider, P1-c, und das **Echo-Maß** (folgt der Entscheider dem Trader zu über 90 %, ist er ein Echo, und M1 liegt zur Nutzerentscheidung vor). Besteht P1, wird `mail_block: true` gesetzt | – |
+
+#### 20.12.3 Kalibrierlauf P1 der Fassung 0.1d (04.10.2026; Beleg `Basisinfos/Rechenkern_02_10/kalibrierung_0_1d.txt`)
+
+Der Lauf war als geplante Aufgabe für 09:10 eingerichtet. Diese Sitzung hing beim ersten Befehl, vermutlich an einer unbeantworteten Freigabe-Rückfrage, und rief Gemini nicht auf. Sie wurde angehalten, und der Lauf wurde in der Hauptsitzung gestartet. 40 Anker aus 2025 und 2026, gleich verteilt, die Bestätigungsmenge ausgesperrt. Trader und Entscheider mit je drei Stimmen, der Markt nicht gefragt (schon gemessen). 258 Aufrufe, Standard-DB unberührt.
+
+| Prüfpunkt | Ergebnis | Ziel | |
+|---|---|---|---|
+| P1-a formgültig | 100 % (Trader, Entscheider) | ≥ 95 % | ✔ |
+| P1-b Trader | 55 % *spricht dagegen*, 45 % *neutral*, **0 % *stützt*** | ≤ 70 % | ✔ |
+| P1-b Entscheider | 57 % *Einwand*, 43 % *mit Vorbehalt* | ≤ 70 % | ✔ |
+| **Echo-Maß** | **39 von 40 (98 %)**: Der Entscheider übersetzt nur (*spricht dagegen* → *Einwand*, *neutral* → *mit Vorbehalt*) | ≤ 90 % | ⛔ **Echo** |
+| P1-c Wiederholung | 5 von 6 (83 %); mit 0.1c zusammen 13 von 15 (87 %) | ≥ 90 % | ⛔ knapp |
+| Anonymität | 0 Funde | | ✔ |
+
+**Folgen (vorab festgelegt):**
+1. **Echo:** Der Entscheider fügt mit nur einem Eingang nichts hinzu. Vorschlag **M1**: Trader plus Umfeld als Auskunft, ohne Entscheider. Das spart 3 Aufrufe je Signal. ➤ **Nutzerentscheidung**, weil es das Rollenmodell ändert.
+2. **P1-c knapp verfehlt:** anpassen und neu messen, mit **5 Stimmen beim Trader**. Ohne Entscheider kostet das 5 statt bisher 6 Aufrufe je Signal. Der Lauf mit 20 Ankern und 10 Wiederholungen läuft, Ergebnis in 20.12.4.
+3. **Fachlicher Hinweis:** Der Trader sagt **nie *stützt***. Die REGEL0 kauft immer nach einem Rückgang, und die Lage des Werts sieht dann selten gut aus. Ob *spricht dagegen* gegen *neutral* den 24-h-Ausgang trennt, kann nur das Rückspiel sagen.
+
+#### 20.12.4 Trader mit fünf Stimmen — P1 bestanden (04.10.2026; Beleg `kalibrierung_trader_5_stimmen.txt`)
+
+Dieselben ersten 20 Anker wie 0.1d, nur der Trader, 5 Stimmen, 10 Wiederholungen. 150 Aufrufe, Standard-DB unberührt.
+
+| Prüfpunkt | 3 Stimmen | **5 Stimmen** | Ziel |
+|---|---|---|---|
+| P1-a | 100 % | **100 %** | ✔ |
+| P1-b größte Stufe | 55 % | **45 %** (9 dagegen, 9 neutral, 2 stützt) | ✔ |
+| P1-c Wiederholung | 83 % | **90 % (9/10)** | ✔ knapp |
+| P1-d | 0 Funde | 0 Funde | ✔ |
+
+⚠️ **Vorbehalte:**
+- Die 90 % liegen genau auf der Grenze, gemessen an nur 10 Wiederholungen.
+- Derselbe Grenzfall kippt wie bei 3 Stimmen (JTO).
+- Das Mehrheitsurteil hängt an der Stimmenzahl: Bei mehreren Ankern unterscheidet sich die Mehrheit aus 5 von der aus 3. In Grenzfällen bleibt Rauschen. Die Mail nennt die Einzelstimmen, wenn sie nicht einig sind.
+
+**Stand vor dem Einschalten:**
+- Der **Trader** besteht P1 mit 5 Stimmen.
+- Der **Markt** steht nur als Auskunft (85 % konstant).
+- Der **Entscheider** ist ein Echo (98 %).
+
+➤ **Nutzerentscheidung M1** (ohne Entscheider). Danach Fassung **0.1e**: `stimmen: 5`, Entscheider aus (bei M1), dann `mail_block: true`, Wache, Suite, Push, NB-Pull.
