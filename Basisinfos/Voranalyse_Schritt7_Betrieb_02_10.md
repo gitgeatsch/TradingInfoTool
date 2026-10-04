@@ -1504,3 +1504,67 @@ Geprüft an den Mails QNT, NEAR, KAIA (Signal) und SEI (Erinnerung) aus `eMail_B
 **Grenze:** Der Spot-Hinweis sieht nur Spot-Mails **vor** der REGEL0-Mail. Kommt die Spot-Mail danach, steht in ihr kein Hinweis. Das gehört zu O24/O23 (die Spot-Kette ist angehalten und wird nicht mehr umgebaut).
 
 **NB-Kontrolle K-MAIL-2:** Die nächste REGEL0-Signalmail sieht am Handy so aus wie oben. Fehlt das Bild an Platz 2 oder steht `{{BILD:0}}` sichtbar in der Mail, ist der Versandweg falsch.
+
+## 22. S7-7 — Mindestbedingungen der Testwoche, VORSCHLAG zur Abstimmung (04.10.2026; Nutzer: *„Ja, S7-7-Vorschlag vorbereiten, prüfen und gegenprüfen“*)
+
+### 22.1 Was „Schritt 8 Umstellung“ heute noch heißt
+
+Der **Ersatz ist schon passiert**: Seit S7-4 (E-46, am NB seit 03.10.) kommen neue Hebel-Einstiege nur aus der REGEL0, der alte Hebelweg ist aus (F4: *„die neue Ablaufkette soll die alte sofort ersetzen“*). Schritt 8 ist damit nur noch die **Freigabe**:
+- Vermerk TESTWOCHE aus.
+- Die Fassung festgeschrieben: REGEL0.1, Prüfblock 0.1e, Mail O25 (E-43: versionierte Regeln).
+- Start der Einstiegskette für M1.
+
+⚠️ **Die Testwoche endet von selbst:** `testwoche_bis: 2026-10-10` in `regel0_betrieb.yaml`. Ab dem 11.10. fällt der Vermerk weg, **ohne** dass jemand freigegeben hat. ➤ Vorschlag S-2.
+
+### 22.2 Gefunden beim Gegenprüfen am Code — verlorene Signalstunden
+
+Jeder Stundenlauf legt **nur die Signalstunde davor** ab (`agent/regel0_rechnung.py:530`, `sh = jetzt - 1`). Ein Nachholen gibt es nicht. Daraus folgt:
+- Ist die App über einen vollen Stundenwechsel hinaus weg (z. B. 10:00–12:30 UTC), sind die Signale der Stunden 9 und 10 **endgültig verloren**. Der Lauf nach dem Start rechnet nur Stunde 11.
+- Dasselbe gilt für ein Asset, dessen Kurs in dieser Stunde verspätet kommt (`frisch`).
+- Kurze Neustarts schaden nicht: Der Job läuft 10 s nach dem Start und rechnet die Stunde davor.
+
+Das ist **kein** Fehler der Regel, sondern des Betriebs. Gemessen ist die REGEL0 auf **jeder** Stunde. ➤ Vorschlag **N-1**: die verpassten Stunden bis 3 h zurück nachrechnen. Das passt zu `NICHT_AELTER_H = 3`: Ältere Signale werden ohnehin nicht mehr gemailt. Die Nachrechnung ist R-R11-gleich, denn dieselben Daten liefern dieselben Signale.
+
+### 22.3 Die Bedingungen — Vorschlag
+
+Ausgewertet wird an einer **Kopie** von `data/regel0_signale.db` am Desktop, ohne Seiteneffekt am NB. Das Werkzeug ist `Rechenkern_02_10/pruefe_testwoche.py`. Die Gegenprobe `pruefe_testwoche_gegenprobe.py` besteht 12/12: Jede Bedingung **kann** fehlschlagen, ein eingebauter Fehler macht genau seine Bedingung rot.
+
+| # | Bedingung | Regel (vorab fest) | Quelle | Stand bis 04.10. |
+|---|---|---|---|---|
+| **T1** | jede Stunde gerechnet | 0 verlorene Signalstunden (außer einem Stillstand, den du angekündigt hast) | Ablage `lauf` | Teilexport: lückenlos 09–14 UTC; die ganze Woche erst mit der Kopie |
+| **T2** | Frische | kein Lauf mit veralteten Assets | `lauf.veraltet` | 0 (Teilexport) |
+| **T3** | Laufzeit | kein Lauf über 1.500 s (halbe Zeitgrenze); der Trainingslauf ist ausgenommen | `lauf.sekunden` | 159–162 s |
+| **T4** | keine Fehler | kein Traceback aus `regel0_*`, Mail oder Nachlader; Nachlader-Fehler 0 | NB-Export, Teilexport | ✔ 04.10. (nur Z.ai der Spot-Kette) |
+| **F1** | Signalmail vollständig | jedes Signal mit Schalter an und Stufe > 0 gemailt **oder** begründet gesperrt | `signal` | 4 gemailt, 0 gesperrt |
+| **F2** | rechtzeitig | vor dem Schluss der Einstiegsstunde | `mail_signal_am` | ~9 min nach der Signalstunde |
+| **F3** | Korrektur | weicht die endgültige Stufe ab, ist die Korrektur verschickt | `signal` | 0 Abweichungen |
+| **F4** | Ausstieg | jede fällige Erinnerung verschickt **oder** als *entfallen* vermerkt (K-ERIN) | `signal` | ab 05.10. |
+| **F5** | R-R11 am NB (**S7-6**) | die Signale der Woche zeilengleich mit der Nachrechnung am Desktop | Ablage + NB-Daten | offen; braucht die Kopie **und** die NB-Stundenkurse (USB) oder ein Nachladen von Hand am Desktop |
+| **L1** | Prüfblock | zu jedem gemailten Signal eine Trader-Zeile (Urteil oder Grund); ≤ 150 Aufrufe je Tag | `pruefung` | ✔ 3/3, 25 Aufrufe |
+| **K** | Mail am Handy | du bestätigst K-MAIL-2 (Aufbau O25 lesbar) | du | offen |
+
+**Auskunft, keine Bedingung:**
+
+| # | | Warum keine Bedingung |
+|---|---|---|
+| A1 | **Signalbilanz** (deine Vorgabe 01.10.): Summe über die Hebel-Liste gegen die Messung, **erwartet 19,5 je Woche** (26 Messbasis-Assets; CAT, XDC ohne Rate) | **Je Asset ist eine Woche nicht prüfbar** (erwartet 0,4–0,9 je Asset). Die Liste je Asset steht trotzdem da |
+| A2 | Korrekturquote gegen B-9 (1,6 %), gesperrte Zuordnungen mit Grund | bei ~20 Signalen nicht unterscheidbar |
+| A3 | **Ertrag** der Wochensignale (24 h, Liquidationen) | Streuung 5,6 % je Handel → bei ~20 Handeln ±2,5 % auf den Mittelwert. **Eine Woche sagt nichts über den Ertrag** (L-5). Geprüft wird nur, ob eine Liquidation vorkam, die nach der Stufe nicht hätte vorkommen dürfen |
+| A4 | Urteile der Rollen gegen den Ausgang | erst im Rückspiel N4 |
+
+### 22.4 Simulation (F4: *„ggf. weitere Simulationen zur Stabilität“*)
+
+| | |
+|---|---|
+| **Monatswechsel** | Er liegt **nach** der Testwoche (01.11.) und kommt in der Woche nicht vor. Vorschlag: der Monatswechsel 31.08./01.09. am Desktop als Probelauf (`--ablage/--modelle` in Wegwerfordnern), dazu die Kontrolle **K-MONAT** am 01.11. |
+| **Ausfall** | Stillstand > 1 h (K-ALARM-2): Mail *Stillstand*, danach T1 mit N-1 (Nachholen) |
+
+### 22.5 Zur Abstimmung
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **S-1** | Gelten T1–T4, F1–F5, L1 und K als Bedingungen, A1–A4 als Auskunft? | ja |
+| **S-2** | Was am 10.10.? | Freigabe **nur mit deinem Ja** nach der Auswertung. Liegt die Auswertung bis dahin nicht vor oder fällt eine Bedingung, verlängere ich `testwoche_bis` und sage dir, warum. Nie still auslaufen lassen |
+| **S-3** | Fällt eine Bedingung | Ursache beheben (bei kritischen Punkten auch unter der Woche, E-43, neue Version mit Vermerk). Die Woche wird um die betroffene Zeit verlängert, nicht neu gestartet. Eine **Regeländerung** (REGEL0 selbst) startet sie neu |
+| **S-4** | **N-1** verpasste Stunden bis 3 h nachrechnen | ja, jetzt (Betrieb, keine Regeländerung; Prüfung R-R11-gleich) |
+| **S-5** | Was du dafür tust | zum Ende der Woche einen Teilexport und die Kopie `data/regel0_signale.db` in den Austauschordner. Für F5 die vier REGEL0-Dateien per USB, oder ich lade die Desktop-Messbasis von Hand nach |
