@@ -949,3 +949,82 @@ Belege `Spot_Voranalyse_04_10/g1_m1_eigenes_handeln.py` / `g1_m2_grundrate_altco
 | **Deine BTC-Käufe** | ⭐ waren **gut getimt** (0,77, besser als jeder Zufallszug), deine ETH-Käufe schlecht (1,19). Für die Akkumulation heißt das: Das Kaufen der Kernwerte kann **schlechter oder besser** als regelmäßiges Kaufen laufen, je nach Wert |
 | ⚠️ **Nicht** folgt | dass Altcoin-Spot **nie** trägt: E3 ist im Grunde **eine** Marktphase (1–2 unabhängige Fenster). Eine neue Altcoin-Saison ist nicht ausgeschlossen, aber **nicht belegt** |
 | ⚠️ **Nicht** belastbar | deine BTC/ETH-**Verkäufe** und Ergebnisse, weil sie mit dem Hebel vermischt sind; die Daten nach dem 01.08. fehlen |
+
+## 11. Breiter denken — das Schichtenmodell für Krypto-Spot und Akkumulation (05.10.2026; E-67)
+
+Nutzer 05.10.: *„Schalter A setzen, dann mit D1 und D2 starten. Wichtig: Wenn wir alles anhalten, brauchen wir Alternativen. Zuerst bauen wir Krypto fertig, dann die Multiasset-Schiene. Deine Anmerkung zu BTC und Altcoins finde ich gut – aber meines Erachtens ist das ein Auftrag für das Regelwerk: Welche Spotwerte, mit welcher Diversifikation bringen mehr Rendite und schlagen BTC. Schwierig – OB und WIEVIEL Rendite über Altcoins möglich ist, hängt am Zeitpunkt des Kaufes; meistens ist antizyklisch kaufen und auch korrekt verkaufen zielführend, manchmal können kurzfristige Einstiege kurz nach dem Bärenmarkt oder bei Korrekturen die bessere Wahl sein. Ich denke, wir müssen etwas breiter denken, wie wir die Probleme angehen können.“*
+
+### 11.1 Meine Einschätzung als Fachmann
+
+**Du hast recht, und unsere Messungen stützen das:**
+- Die Grundrate der Altcoins hängt stark an der **Marktphase**: Ein Korb lag 2019–2020 vorn, 2021–2026 klar hinten (§10.8).
+- Beim Hebel war das **Regime zwölfmal wichtiger als die Lage** (2.598).
+- Ob es bei Altcoins etwas zu holen gibt, entscheidet also zuerst **das Wann**, erst danach **das Welche**.
+
+**Die Schwierigkeit, ehrlich:**
+- Phasen sind **selten**. Seit 2019 gab es eine echte Altcoin-Saison, und der Marktzustand war vorab nicht besser als Zufall zu erkennen (2.599).
+- Das Klima erkennt den Boden, meldet die Wende aber erst 30–78 Tage später (§8.7).
+- **Eine Regel, die die Phase vorhersagt, ist mit unseren Daten nicht belegbar.**
+
+**Daraus folgt der Ansatz: zwei Arten von Fragen trennen.**
+
+| | Fragen **über die Phase** | Fragen **innerhalb einer Phase** |
+|---|---|---|
+| Beispiele | Beginnt eine Altcoin-Saison? Ist das der Boden? | Welche Coins? Wie breit streuen? Antizyklisch oder nach der Korrektur einsteigen? Wann verkaufen? |
+| Fallzahl | wenige Phasen | **viele**: Hunderte Coins × viele Tage je Phase |
+| Behandlung | **Fakt und Ampel**, du gewichtest (S-b, *übergeordnete Kräfte gewichten*) | **messbar**, mit Nullwelt, je Phase getrennt, Maßstab **BTC halten** |
+
+### 11.2 Das Schichtenmodell — Vorschlag für das Spot-Regelwerk Krypto
+
+| Schicht | Frage | Messbarkeit | bisheriger Stand |
+|---|---|---|---|
+| **S1 Klima und Phase** | BTC-Zyklus (Zone, Wende, überhitzt) und **Altcoin-Phase** (BTC-Dominanz im Trend, ETH/BTC, Breite) | beschreibend, Fakt | Klima gebaut (§8); Altcoin-Phase noch nicht |
+| **S2 Akkumulation der Kernwerte** | D1 welche und wie gewichtet, D2 Teilverkauf | wenige Zyklen, beschreibend; Kaufseite gemessen | regelmäßiges Kaufen ist nicht zu schlagen (F2/F3); deine BTC-Käufe 0,77 |
+| **S3 Auswahl der Altcoins** | Welche schlagen BTC **innerhalb** der Phase: relative Stärke gegen BTC, Liquidität, Überleben? | **gut messbar** (Querschnitt je Phase) | M-0 auf 20/90 T nichts; auf deinem Horizont ungemessen |
+| **S4 Einstiegsform** | (a) antizyklisch in der Zone · (b) **früh nach Bärenmarkt oder Korrektur im Aufwärtstrend** (deine Idee) · (c) Ereignis je Asset | gut messbar als Ereignis × Phase | (a) gemessen ohne Auswahl; (b) ungemessen |
+| **S5 Ausstieg und Teilverkauf** | Bei Altcoins **entscheidend**, weil die Gewinne sonst zurückgegeben werden (E2/E3) | messbar je Ereignis | ungemessen |
+| **S6 Streuung und Größe** | Die Gewinne kamen als **Lotterie**, von wenigen 100- bis 500-fachen Coins: viele kleine Positionen mit konsequentem Ausstieg oder wenige große? | gut messbar (Korb-Simulation) | ungemessen |
+
+⭐ **Der Kern für Altcoin-Spot ist die Verbindung S3 × S4 × S5 × S6 innerhalb einer Phase**, gemessen gegen BTC halten nach Kosten (~2,5 % je Hin- und Rückweg). Das ist wie beim Hebel: *der Einzelbeitrag ist schwach, die Kombination ist die Anwendung*.
+
+### 11.3 Reihenfolge (Nutzer: Krypto zuerst, dann Multiasset)
+
+1. **S2 Akkumulation (D1, D2):** jetzt im Gespräch.
+2. **S1 Altcoin-Phase** als Fakt dazubauen: BTC-Dominanz, ETH/BTC, Breite. Die Daten sind da.
+3. **S3–S6 gemeinsam** als Korb-Simulation je Phase (E1/E2/E3 getrennt), mit eingestellten Werten, Kosten und Maßstab BTC.
+   - Erst das zeigt, ob deine Einstiegsform (b) und eine Streuung die Grundrate schlagen.
+   - Ein Messplan dafür kommt vorab zur Abstimmung.
+4. Danach die **Multiasset-Schiene**.
+
+### 11.4 Alternativen für die angehaltene Kette (O27)
+
+| weggefallen (Schalter A) | Ersatz |
+|---|---|
+| Krypto KAUFEN/NACHKAUFEN | **bewusst nichts.** NACHKAUFEN war gemessen schädlich (V-2), dein Altcoin-Spot −30.048 EUR gegen BTC |
+| Krypto-Verkaufs- und Bestands-Sammelmail | ⭐ **Übergangsvorschlag: eine Fakt-Mail *Bestand und Klima*** (täglich oder wöchentlich). Inhalt: Klima-Ampel BTC (Zone, Wende, überhitzt), Kernwerte (MVRV-Perzentil, Abstand zum Hoch), jeder Altcoin im Bestand **gegen BTC seit Kauf**. **Kein Auslöser**, nur Fakt. Baubedarf: MVRV am NB (CoinMetrics ist dort für Börsenflüsse schon angebunden) |
+| Führung echter Hebelpositionen (alte Kette) | Für REGEL0-Trades gibt es die Ausstiegserinnerung. **Manuelle** Hebelpositionen außerhalb der REGEL0 haben bis O13 keine Führungsmail; heute ist keine offen |
+| Aktien, Rohstoffe, ETF, Absicherung | ruhen bis zur Multiasset-Schiene. Bitpanda-Abgleich und Stop-Nachzieh 07:15 laufen weiter |
+
+### 11.5 Einstieg in D1 und D2 — die Fakten, die wir haben
+
+**D1 — welche Kernwerte, wie gewichtet?**
+
+| Fakt | Quelle |
+|---|---|
+| ETH gegen BTC: 2019–2020 vorn (365 T +56 %, 730 T +146 %), **seit 2021 hinten** (E2 −13/−33 %, E3 −8/−42 %, 0 von 8 Starts vorn auf 730 T) | G1-M2 |
+| Deine Kaufqualität: BTC **0,77** (sehr gut), ETH **1,19** (schlecht), SOL 1,00 | G1-M1 |
+| Dein Bestand am 01.08.: BTC 0,05, ETH 0,96 (überwiegend gestakt), SOL 5,9 (gestakt) | Bitpanda |
+
+- **Mögliche Formen:** (i) nur BTC · (ii) BTC und ETH fest, z. B. 70/30 · (iii) BTC, ETH, SOL · (iv) dynamisch nach relativer Stärke (dann ist es schon Auswahl, S3).
+- ⚠️ Seit 2021 hat BTC allein alles andere geschlagen. Das ist **eine** Phase; eine Gewichtung von ETH oder SOL ist deshalb eine **Bewertung, kein Fakt**.
+
+**D2 — was soll der Teilverkauf leisten?** Der Zweck bestimmt den Maßstab:
+
+| Zweck | Maßstab |
+|---|---|
+| (a) Risiko senken | kleinerer größter Rückgang bei vertretbarem Ertragsverzicht |
+| (b) Geld für den nächsten Boden | Endbestand **in BTC-Stück** (mehr Stück durch Rückkauf in der Zone) |
+| (c) Umschichten in Altcoins in einer Altcoin-Saison | Ertrag gegen BTC halten (S1 × S3) |
+| (d) Gewinne entnehmen | gesicherter EUR-Betrag |
+
+⚠️ Aus F3 bekannt: *überhitzt* kam 2017, 2021 und 2024 **früh**; danach stieg der Kurs weiter. Ein Teilverkauf muss deshalb **gestaffelt** sein. Ein Rückkauf in der Zone ist Teil der Regel, nicht nachgelagert.

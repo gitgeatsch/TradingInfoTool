@@ -31250,8 +31250,11 @@ def paket_regel0_betrieb() -> None:
         _i_umlauf = _bqs.find("            fuehre_umlauf(\n                conn_factory=conn_factory, config=config_dict,")
         _i_alt = _bqs.find("from agent.krypto.budget_allocator import run_budget_allocator")
         pruefe(P, "R-4: Schalter spot_kette_angehalten - Vorgabe AUS (Kette laeuft), unlesbar ebenfalls AUS (kein stiller Halt)",
-               G.spot_kette_angehalten() is False and G.spot_kette_angehalten({"spot_kette_angehalten": True}) is True
-               and G.spot_kette_angehalten({}) is False, "jetzt: %s" % G.spot_kette_angehalten())
+               # 05.10.2026 (E-67, Schalter A GESETZT): die Zeile verlangte den Stand AUS - eine Pruefung, die einen Stand VERLANGT, friert
+               # ihn ein. Geprueft wird das VERHALTEN: Vorgabe AUS, leere/unlesbare Werte AUS, gesetzt AN; der echte Wert ist Auskunft.
+               G.VORGABE["spot_kette_angehalten"] is False and G.spot_kette_angehalten({"spot_kette_angehalten": True}) is True
+               and G.spot_kette_angehalten({}) is False and isinstance(G.spot_kette_angehalten(), bool),
+               "echte Datei jetzt: %s" % ("ANGEHALTEN (true)" if G.spot_kette_angehalten() else "laeuft (false)"))
         pruefe(P, "⚠️ R-4: angehalten wird NUR im umgestellt-Zweig, VOR dem Umlauf - der alte Weg (Budget-Allocator) uebernimmt NICHT",
                0 < _i_zweig < _i_halt < _i_umlauf < _i_alt and "return True" in _bqs[_i_halt:_i_halt + 400],
                "Zweig %d < Halt %d < Umlauf %d < alter Weg %d" % (_i_zweig, _i_halt, _i_umlauf, _i_alt))

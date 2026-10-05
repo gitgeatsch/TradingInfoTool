@@ -810,3 +810,13 @@ prüfen und gegenprüfen"*.
   - Akkumulation der Kernwerte: über mehrere Zyklen, mit Teilverkauf.
 - **Die Nutzereinschätzung zur heutigen Akkumulation:** *eher nicht* tragfähig, um darauf aufzusetzen. Zu prüfen ist das im Vergleich.
 - Die Diskussionsgrundlage steht in Voranalyse_Spot §10. Anschluss an den Richtungsentscheid vom 24.09. (drei Geschäfte: Hebel, Akkumulation, Spot).
+
+# E-67 · Schalter A gesetzt, Krypto vor Multiasset, Spot-Regelwerk breiter (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Schalter A setzen, dann mit D1 und D2 starten. Wichtig: Wenn wir alles anhalten, brauchen wir Alternativen. Zuerst bauen wir Krypto fertig, dann die Multiasset-Schiene. Deine Anmerkung zu BTC und Altcoins finde ich gut – aber meines Erachtens ist das ein Auftrag für das Regelwerk: Welche Spotwerte, mit welcher Diversifikation bringen mehr Rendite und schlagen BTC. Schwierig – OB und WIEVIEL Rendite über Altcoins möglich ist, hängt am Zeitpunkt des Kaufes; meistens ist antizyklisch kaufen und auch korrekt verkaufen zielführend, manchmal können kurzfristige Einstiege kurz nach dem Bärenmarkt oder bei Korrekturen die bessere Wahl sein. Ich denke, wir müssen etwas breiter denken, wie wir die Probleme angehen können.“*
+- **`spot_kette_angehalten: true`** (`regel0_betrieb.yaml`): Die alte Rollen-Kette läuft in **allen** Gruppen nicht mehr. REGEL0 läuft weiter, nachgewiesen mit `pruefe_r4.py`.
+  - Die Wachzeile R-4 verlangte bis dahin den Stand *aus* und hätte ihn eingefroren. Sie prüft jetzt das Verhalten.
+- **Reihenfolge:** zuerst **Krypto** fertig (Hebel, Akkumulation, Spot), **danach** die Multiasset-Schiene (Aktien, Rohstoffe, ETF, Absicherung).
+- **Alternativen** für das Angehaltene: Plan Hebel **O27**, Voranalyse_Spot §11.6.
+- **Auftrag ans Regelwerk:** Welche Spotwerte schlagen BTC, mit welcher Diversifikation? Der Zeitpunkt (antizyklisch oder früh nach Bärenmarkt und Korrektur) und der Verkauf gehören dazu. Breiter denken: das Schichtenmodell in Voranalyse_Spot §11.
+- Weiter mit **D1** (Kernwerte und Gewichte) und **D2** (Teilverkauf).

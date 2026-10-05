@@ -26,7 +26,7 @@ testwoche_freigegeben: false   # S-2 (E-57, Nutzer 04.10.): die Testwoche endet 
                                # Vermerk auch nach dem geplanten Tag stehen (*Freigabe ausstehend*); Auswertung: pruefe_testwoche.py
 
 # R-4 (E-51, Nutzer 03.10.2026: "Ja R-1 bis R-4 wie vorgeschlagen"; Nutzer: "eine Stilllegung der aktuellen Kette waere sogar ein Vorteil")
-spot_kette_angehalten: false   # true = die Rollen-Kette (Spot, alle Gruppen) laeuft NICHT - der alte Weg bleibt trotzdem aus (aktiv_fuer
+spot_kette_angehalten: true    # GESETZT 05.10.2026 (Nutzer: *Schalter A setzen*, E-67) - true = die Rollen-Kette (Spot, alle Gruppen) laeuft NICHT - der alte Weg bleibt trotzdem aus (aktiv_fuer
                                # unveraendert). Es entstehen keine Spot-Signale, keine Spot-/Bestands-Verkaufsmails, keine Lagebilder; die
                                # REGEL0 (Rechnung, Mails, LLM-Block) und der Ausstiegsjob (Stop-Nachzieh-Sammelmail) laufen weiter.
                                # Wirkt ab dem naechsten Umlauf (15 min) - die Datei wird je Umlauf gelesen, kein Neustart noetig. Par. 20.13
