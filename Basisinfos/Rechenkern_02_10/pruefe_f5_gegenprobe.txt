@@ -1,0 +1,7 @@
+REGEL0-ERGEBNIS {"jetzt": "2026-08-19 13:00", "sekunden": 58.9, "neu": 3, "endgueltig": 0, "nachgeholt": [], "neu_schalter_an": 1, "aktiv": 624, "frisch": 624, "veraltet": 0, "trainiert": [], "meldung": ""}
+  OK    parallele Bloecke = Stundenlauf nacheinander (231 Signale)
+  OK    eingebauter Fehler *v-dach* -> genau vh rot (['vh'])
+  OK    eingebauter Fehler *endgueltige Stufe* -> genau endg rot (['endg'])
+  OK    eingebauter Fehler *fehlendes Signal* -> genau nur_desk rot (['nur_desk'])
+  OK    eingebauter Fehler *erfundenes Signal* -> genau nur_nb rot (['nur_nb'])
+5 Pruefungen, ALLE BESTANDEN

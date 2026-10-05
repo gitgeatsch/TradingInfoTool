@@ -1,0 +1,10 @@
+Gegenprobe nb_kopie_regel0 - Kopie vollstaendig, stimmig, Quelle unberuehrt
+  OK    Quelle bitgleich und unberuehrt (Pruefsumme und Aenderungszeit)
+  OK    Kopie vollstaendig: Ablage, beide Kursdateien, Modell, KOPIE_INFO.txt, Rueckgabe 0
+  OK    Inhalt gleich (30 Signale) und die Begleitdatei nennt letzten Lauf, Pruefung und Prüfsumme
+  OK    --ohne-kurse: nur Ablage und Modelle
+  OK    Ziel im Projekt wird VERWEIGERT, es entsteht nichts
+  OK    Ziel in data/ wird VERWEIGERT
+  OK    Schreiber waehrend der Kopie: Integritaet ok und EIN stimmiger Stand (zwischen vorher und nachher)
+  OK    echte Desktop-Messbasis (346 MB) in 3 s kopiert, quick_check ok, Quelle unberuehrt
+8 Pruefungen, ALLE BESTANDEN

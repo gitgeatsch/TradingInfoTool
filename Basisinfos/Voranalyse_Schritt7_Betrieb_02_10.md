@@ -1636,3 +1636,30 @@ Ausgewertet wird an einer **Kopie** von `data/regel0_signale.db` am Desktop, ohn
 3. Für Token ist die Zuordnung zur Kursquelle unsicher (vier Symbolwelten, 2.612). CT wäre auf Binance erst seit vier Tagen da, ohne Preisabgleich.
 
 Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.
+
+### 22.7 F5 (S7-6) — das Werkzeug und die Kopie vom NB (05.10.2026; Nutzer: *„F5-Werkzeug bauen, prüfen und gegenprüfen“*, *„Kopierskript … in ein bestehendes integrieren?“*)
+
+**Wenige Hebel-Signale sind kein Engpass für die Prüfungen.**
+- Das NB bewertet jede Stunde **alle** 635 Assets. Seit 03.10. sind das 105 Signale, gemailt wurden nur die 4 mit Hebel-Schalter.
+- F5 vergleicht **alle** Signale. Bis zum Wochenende sind es einige hundert.
+
+**Werkzeug** `Rechenkern_02_10/pruefe_f5_rr11_nb.py`:
+- Es nimmt eine Kopie der NB-Ablage und eine Kopie der NB-Daten (`stundenkurse.db`, `stundenkurse_alle.db`, ~1,3 GB).
+- Je Laufstunde rechnet es am Desktop **denselben** Stundenlauf (`betrieb_lauf`) nach, in Wegwerfordnern, auf 4 Prozesse in zusammenhängenden Blöcken mit Überhang.
+- Verglichen werden je Signal v̂, vorläufige und endgültige Stufe.
+- **Mit** den NB-Modellpaketen (`--modelle`) prüft es den Rechenkern, **ohne** zusätzlich das Training. Maßstab sind gleiche Signale, nicht gleiche Bits (numpy-Fassung).
+
+**Gegenprobe** (`--gegenprobe`, Beleg `pruefe_f5_gegenprobe.txt`) **5/5** an echten Daten vom 19.08.:
+- Parallel = nacheinander auf **231 Signalen**.
+- Je ein eingebauter Fehler (v̂, endgültige Stufe, fehlendes, erfundenes Signal) macht genau seine Zeile rot.
+
+**Kopie vom NB, in den Teilexport eingebaut** (kein neues Skript für dich):
+- `nb_teilexport_betriebsdaten.py` legt bei jedem Lauf Ablage und Modelle (~0,1 MB) nach `Austauschordner/Notebook_Analysedaten/regel0_kopie_<Gerät>/`, dazu `KOPIE_INFO.txt` mit Prüfsummen und Integritätsprüfung.
+- Mit `--mit-kurse <Ordner>` kommen die Stundenkurse dazu, auf den **USB-Stick**, nie in den Drive.
+- Kopiert wird nur lesend über die SQLite-Sicherung (`nb_kopie_regel0.py`). Das ergibt einen stimmigen Stand, auch während ein Stundenlauf schreibt. Ein Ziel im Projekt wird verweigert.
+- Gegenprobe `pruefe_nb_kopie.py` **8/8**: Quelle unberührt, Kopie vollständig, stimmig auch bei einem Schreiber, Ziel im Projekt und in `data/` verweigert, echte Messbasis 346 MB in 3 s.
+
+**Erste echte F5-Prüfung jetzt, nicht erst am Wochenende** (Nutzer: *„sollte man bereits eine erste Gegenprobe durchführen“*):
+1. Am NB nach dem Pull: `python nb_teilexport_betriebsdaten.py --mit-kurse <USB>\regel0_kopie`
+2. Den Stick an den Desktop. Ich rechne `pruefe_f5_rr11_nb.py <USB>\regel0_kopie\regel0_signale.db <USB>\regel0_kopie --modelle <USB>\regel0_kopie\regel0_modelle`.
+3. Dauer am Desktop etwa 1–2 h für die Stunden seit 03.10. (4 Prozesse).

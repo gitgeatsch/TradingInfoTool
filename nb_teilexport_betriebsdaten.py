@@ -18,6 +18,13 @@ Historie, welche Symbole (Grundgesamtheit), die aktuelle Hebel-Liste, Python-Pak
 
 Aufruf am Notebook nach ``git pull``:
         python nb_teilexport_betriebsdaten.py
+        python nb_teilexport_betriebsdaten.py --mit-kurse E:\regel0_kopie     dazu die Stundenkurse (~1,3 GB) auf den USB-Stick
+
+KOPIE FUER DIE PRUEFUNGEN AM DESKTOP (F5/S7-6 und Testwoche, E-57; Nutzer 05.10.: *in ein bestehendes integrieren*): bei jedem Lauf
+gehen die REGEL0-Ablage und die Modellpakete (zusammen ~0,1 MB) als KOPIE nach
+        <Google Drive>/Claude_Austauschordner/Notebook_Analysedaten/regel0_kopie_<GERAET>/
+- nur lesend ueber die SQLite-Sicherung (``nb_kopie_regel0.py``), mit KOPIE_INFO.txt (Pruefsummen, Integritaet). Die grossen
+Stundenkurse nur mit ``--mit-kurse <Ordner>`` (USB), nie in den Drive.
 Am Desktop zum Test unschaedlich (dieselben Regeln, eigene Datei ``..._9900K.txt``). ``--ohne-ablage``: nur stdout.
 """
 from __future__ import annotations
@@ -81,6 +88,7 @@ def main() -> int:
     rc = 1
     try:
         rc = _inhalt()
+        _kopie_fuer_pruefungen()
     finally:
         sys.stdout = zw.a
         w = _drive_wurzel()
@@ -94,6 +102,34 @@ def main() -> int:
                 f.write("".join(zw.teile))
             print("➤ geschrieben nach %s" % pf)
     return rc
+
+
+def _kopie_fuer_pruefungen() -> None:
+    """Ablage + Modelle (klein) in den Austauschordner; mit --mit-kurse dazu die Stundenkurse in den angegebenen Ordner (USB)."""
+    print()
+    print("-" * 100)
+    if not os.path.exists(os.path.join(DATEN, "regel0_signale.db")):
+        print("REGEL0-KOPIE: keine REGEL0-Ablage auf diesem Geraet - uebersprungen")
+        return
+    import nb_kopie_regel0 as K
+    w = _drive_wurzel()
+    if w is None:
+        print("REGEL0-KOPIE: Google Drive nicht gefunden - uebersprungen")
+    else:
+        ziel = os.path.join(w, "Claude_Austauschordner", "Notebook_Analysedaten", "regel0_kopie_%s" % platform.node())
+        zeilen = []
+        rc = K.kopiere(ziel, ohne_kurse=True, daten=DATEN, ausgabe=zeilen.append)
+        print("REGEL0-KOPIE (Ablage + Modelle) %s -> %s" % ("vollstaendig" if rc == 0 else "MIT FEHLER (rc %d)" % rc, ziel))
+        for z in zeilen[3:]:
+            if z:
+                print("    " + z)
+    if "--mit-kurse" in sys.argv:
+        i = sys.argv.index("--mit-kurse")
+        if i + 1 >= len(sys.argv):
+            print("⛔ --mit-kurse ohne Zielordner")
+            return
+        print("REGEL0-KOPIE MIT STUNDENKURSEN -> %s (dauert 1-2 min)" % sys.argv[i + 1])
+        K.kopiere(sys.argv[i + 1], ohne_kurse=False, daten=DATEN, ausgabe=lambda z: print("    " + z) if z else None)
 
 
 def _inhalt() -> int:

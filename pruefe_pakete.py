@@ -31592,6 +31592,12 @@ def paket_regel0_betrieb() -> None:
                        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
         pruefe(P, "S7-7: die Auswertung der Testwoche kann bei JEDER Bedingung fehlschlagen (Gegenprobe), eine Laufluecke oder eine "
                   "nachgeholte Stunde ist kein Verlust", "ALLE BESTANDEN" in (_tw.stdout or ""), ((_tw.stdout or "") + (_tw.stderr or ""))[-400:])
+        # F5-Kopie (05.10.2026): Ablage, Modelle, Stundenkurse NUR LESEND kopiert - stimmig auch bei einem Schreiber, Ziel nie im Projekt
+        _kp = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_nb_kopie.py")],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+        pruefe(P, "F5-Kopie (nb_kopie_regel0 im Teilexport): Quelle unberuehrt, Kopie vollstaendig und stimmig, Ziel im Projekt verweigert",
+               "ALLE BESTANDEN" in (_kp.stdout or "") and "_kopie_fuer_pruefungen()" in _quelltext("nb_teilexport_betriebsdaten.py"),
+               ((_kp.stdout or "") + (_kp.stderr or ""))[-400:])
         # O25 (04.10.2026, M-a bis M-f): der neue Aufbau der Signalmail - am Seiteneffekt, Wegwerf-Ablage, Versand abgefangen
         _o25 = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_o25.py")],
                         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
