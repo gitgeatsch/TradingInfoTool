@@ -771,3 +771,14 @@ prüfen und gegenprüfen"*.
   - BTC als Wiederholung, ETH als teilweise unabhängige Menge, ab 2023 als Auskunft;
   - Kauf zu t+1.
 - **Gemessen wird erst nach dem Ja zum Plan.** Die Folgen sind vorab festgelegt.
+
+# E-63 · Hypothesen nicht starr, Fassung n+1 mit Begründung (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer (Ja zu Fassung 2): *„Ja, wir müssen an einem Punkt starten. Sollten wir während der Messungen zur Erkenntnis gelangen, dass die Annahmen und Hypothesen geändert werden müssen, dies bitte berücksichtigen. Nicht, dass wir starr an diesen festhalten.“*
+- **Regel:** Zeigt eine Messung, *woran* eine Annahme scheitert, wird sie geändert (**Fassung n+1**).
+- **Voraussetzungen:**
+  - eine Begründung aus der Ursache, nie aus dem Wunschergebnis;
+  - die alte Fassung und ihr Ergebnis bleiben stehen;
+  - die Zahl der Blicke auf dieselbe Menge wird ausgewiesen;
+  - auf derselben Menge ist eine Fassung n+1 **Beschreibung**, der Test kommt aus neuen Daten.
+- **Ersetzt** in §8.8 die Folge *„kein neuer Anlauf auf derselben Menge“*: Ein Anlauf ist erlaubt, zählt aber nicht als Nachweis.

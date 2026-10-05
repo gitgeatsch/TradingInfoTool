@@ -520,3 +520,37 @@ Nutzer 05.10.: *„Ja, prüfen und gegenprüfen.“* (auf den Vorschlag nach §8
 - **Startpunkt:** 7 Startjahre.
 - **Regeln 1–4:** Takt und Zufluss sind kein Signal, keine Gebühren, kein Asset-Rang. Die Zone ist ein Fakt; bewertet wird **was danach kam**.
 - **Grenze:** Der Plan prüft das Klima für BTC und ETH. Welches Altcoin, ist eine eigene Frage, und M-0 fand dort nichts.
+
+### 8.9 Ergebnis Fassung 2 (05.10.2026, nach dem vorab festen Plan §8.8)
+
+Nutzer 05.10. (Ja zum Plan, E-63): *„Ja, wir müssen an einem Punkt starten. Sollten wir während der Messungen zur Erkenntnis gelangen, dass die Annahmen und Hypothesen geändert werden müssen, dies bitte berücksichtigen. Nicht, dass wir starr an diesen festhalten.“*
+
+Beleg: `Spot_Voranalyse_04_10/k2_zone_aufbau.py` → `k2_zone_aufbau.txt`.
+
+**Gegenprobe:** Eine unabhängige Schleife über Kalendertage ergibt für V2 und DCA bei Start 2017 dieselben Werte (BTC 906,6 / 1.110,4 = 0,82). Die Kurse am Ende passen zu 86,5 k.
+
+| | BTC | ETH | Urteil nach §8.8 |
+|---|---|---|---|
+| **F2-H1 Zone-Ertrag** seit 2017 | 180 T +19 Pp (Rang 0,65) · 365 T +9 Pp (0,60) | 180 T −69 Pp (0,33) · 365 T −244 Pp (0,23) | **nicht gestützt** (0 von 4 besser, keiner umgekehrt) |
+| *ab 2023 (Auskunft)* | *+37 Pp (0,94) · +67 Pp (0,94)* | *+71 Pp (**1,00**) · +6 Pp (0,49)* | — |
+| **F2-H2 fallendes Messer** | 3 von 4 Episoden nach 365 T im Plus; **weitere −20 % in 2 von 4** (2018: −30 %, 2022: −46 %) | 6 von 9 im Plus; **weitere −20 % in 8 von 11**, 2018 dreimal −86 bis −90 % | **gestützt**, das Risiko ist groß |
+| **F2-H3 Aufbau V2 gegen DCA** | V2 vorn in **3 von 7** Startjahren (0,82 bis 1,21) | **3 von 7** (0,39 bis 1,35) | **nicht gestützt** |
+
+**Folge nach dem vorab festen Plan:** Spot über das Klima ist **in dieser Form** nicht nachweisbar. Das wird so festgehalten.
+
+#### WORAN es liegt — an den Kapitalflüssen nachgesehen (Gegenprobe, Start 2017)
+
+1. **Warten kostet mehr, als gutes Timing bringt.** Zufallszonen gleicher Länge erreichen nur das **0,59-Fache (BTC)** bzw. **0,47-Fache (ETH)** von DCA. Jedes Warten auf ein Fenster verliert in einem Asset, das langfristig steigt. Die echte BTC-Zone liegt mit 0,82 **über** dem Zufall (Rang 0,885), aber unter DCA. ⇒ Die Annahme *„das ganze Kapital wartet auf die Zone“* ist die Ursache, nicht die Zone selbst.
+2. **Die günstigste Gelegenheit wurde verpasst.** BTC im März 2020: Die Zone dauerte 12 Tage, mit der 1/30-Staffel flossen nur 4,2 Einheiten. Das gesparte Geld aus 2020–2022 (43,6 Einheiten) ging erst 05.2022–03.2023 hinein, zum Mittel 22,7 k, und dort lag das *fallende Messer* (−46 %).
+3. **ETH mit kurzer Vorgeschichte meldet zu früh.** Die erste Zone kam 2018 bei 474–789 $, danach −86 %. Den Anstieg 2017 von 8 $ auf 700 $ hat die Zone ganz verpasst (Start 2017: 0,39). Ab 2019 ist ETH unauffällig (+0 / −29 Pp).
+4. **Auskunft:** Der größte Rückgang ist bei V2 in allen 14 Läufen kleiner (BTC 2020: −54 % gegen −84 %). Das ist teilweise **mechanisch**, weil Bargeld gehalten wird, also kein Befund.
+
+#### Was daraus für die Annahmen folgt (E-63: nicht starr)
+
+| Annahme bisher | Erkenntnis | Vorschlag Fassung 3 |
+|---|---|---|
+| Die Zone ist ein **Fenster**, außerhalb wird nicht gekauft | Die Wartekosten dominieren (Punkt 1) | **Gewichten statt warten**, wie bei den Achsen (*Gewichte, keine Blocker*): Es wird immer gekauft, in der Zone mehr. Der Anteil folgt stetig dem MVRV-Perzentil, ohne neue Schwelle |
+| Jedes Asset hat **sein eigenes** Klima | ETH-Perzentile auf 1–3 Jahren melden falsch (Punkt 3) | **Das Klima kommt aus BTC**, der längsten Reihe, und gilt als Marktklima für jeden Kauf (ETH, später Altcoins) |
+| Staffel 1/30 je Zonentag | Kurze Episoden lassen Kapital liegen (Punkt 2) | Entfällt mit dem Gewichten |
+
+⚠️ **Ehrlich zum Mehrfachtesten:** Fassung 3 wäre der **dritte Blick auf dieselben Daten**. Ihr Ergebnis ist eine **Beschreibung**. Ein unabhängiger Test entsteht erst **ab heute**, wenn die Regel laufend mitgeschrieben wird, oder auf anderen Assets. Die Ergebnisse von Fassung 1 und 2 bleiben stehen.

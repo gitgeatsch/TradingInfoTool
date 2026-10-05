@@ -1,0 +1,66 @@
+Spot K-2 Zone als Aufbaufenster - Messplan Fassung 2 (Voranalyse_Spot §8.8), BTC und ETH, Messbeginn 2017-01-01
+
+==================== BTC (Daten bis 2026-10-04) ====================
+F2-H1 Zone-Ertrag: Folgeertrag ab t+1, A-Tage gegen alle Tage, zweiseitig (>= 0,95 besser, <= 0,05 UMGEKEHRT)
+  seit 2017                      180 T: A-Tage  635  Ertrag   +70 % gegen alle Tage   +51 % (Unterschied   +19 Pp)  Nullwelt-Rang 0.650  unauffaellig
+  seit 2017                      365 T: A-Tage  599  Ertrag  +117 % gegen alle Tage  +108 % (Unterschied    +9 Pp)  Nullwelt-Rang 0.595  unauffaellig
+  ab 2023 (Auskunft, Messfokus)  180 T: A-Tage  274  Ertrag   +61 % gegen alle Tage   +24 % (Unterschied   +37 Pp)  Nullwelt-Rang 0.940  unauffaellig
+  ab 2023 (Auskunft, Messfokus)  365 T: A-Tage  238  Ertrag  +129 % gegen alle Tage   +62 % (Unterschied   +67 Pp)  Nullwelt-Rang 0.935  unauffaellig
+F2-H2 fallendes Messer: je Episode (Luecke >= 30 T trennt), Einstieg zum Schluss am Tag nach dem ersten A-Tag
+  2018-11-20..2019-04-01 (132 A-Tage)  Einstieg   4549.32  danach tiefstens  -30 % (am 2018-12-15)  WEITERE -20 %  nach 365 T +67 %
+  2020-03-12..2020-03-29 ( 12 A-Tage)  Einstieg   5627.69  danach tiefstens  -11 % (am 2020-03-16)  nach 365 T +989 %
+  2022-05-11..2023-03-16 (292 A-Tage)  Einstieg  29030.71  danach tiefstens  -46 % (am 2022-11-09)  WEITERE -20 %  nach 365 T -8 %
+  2023-05-11..2023-10-22 (163 A-Tage)  Einstieg  26773.34  danach tiefstens   -6 % (am 2023-06-14)  nach 365 T +127 %
+  2026-02-05..2026-04-12 ( 37 A-Tage)  Einstieg  70647.70  danach tiefstens  -17 % (am 2026-06-30)  nach 365 T offen bis 2027-02-06
+  2026-06-01..2026-08-19 ( 80 A-Tage)  Einstieg  66540.69  danach tiefstens  -12 % (am 2026-06-30)  nach 365 T offen bis 2027-06-02
+  -> Kurs nach 365 T ueber dem Einstieg: 3 von 4 Episoden mit vollem Fenster: GESTUETZT
+F2-H3 Aufbau gegen DCA: Zufluss 1 je Monat, nie verkaufen, Bargeld 0 %, keine Gebuehren; Endstand 2026-10-04
+  Start | eingezahlt | DCA Verm. | V2 Verm. (V2/DCA) | V1/DCA | V3/DCA | V2>=DCA an Monatsenden | groesster Rueckgang DCA / V2 | Einstand DCA / V2 | Bargeld V2 am Ende | Kaeufe DCA/V2
+  2017  |  118 |   1110.4 |    906.6 (0.82) | 0.81 | 0.67 |    0 % |  -90 % /  -79 % |   9194.73 /  10973.85 |   3.4 (  3 %) | 118/716
+  2018  |  106 |    564.1 |    632.0 (1.12) | 1.20 | 1.12 |   96 % |  -81 % /  -78 % |  16258.42 /  14117.44 |   3.4 (  3 %) | 106/716
+  2019  |   94 |    421.7 |    356.8 (0.85) | 1.06 | 0.95 |    1 % |  -83 % /  -73 % |  19285.62 /  22174.23 |   3.4 (  4 %) | 94/676
+  2020  |   82 |    247.1 |    226.7 (0.92) | 0.94 | 0.96 |    0 % |  -84 % /  -54 % |  28713.82 /  30440.41 |   3.4 (  4 %) | 82/584
+  2021  |   70 |    141.4 |    171.1 (1.21) | 1.12 | 1.10 |   98 % |  -75 % /  -52 % |  42828.54 /  34353.60 |   3.4 (  5 %) | 70/572
+  2022  |   58 |    117.6 |    127.0 (1.08) | 1.05 | 1.07 |   76 % |  -57 % /  -51 % |  42683.73 /  38206.43 |   3.4 (  6 %) | 58/572
+  2023  |   46 |     78.3 |     77.8 (0.99) | 1.01 | 0.99 |    6 % |  -59 % /  -45 % |  50859.08 /  49494.16 |   3.4 (  7 %) | 46/356
+  -> V2 vor DCA in 3 von 7 Startjahren: nicht gestuetzt
+  Nullwelt V2 Start 2017 (Auskunft): echt 0.82 x DCA · Zufallszonen gleicher Laenge Median 0.59, 95. Perzentil 0.85 · Rang 0.885
+
+==================== ETH (Daten bis 2026-10-04) ====================
+F2-H1 Zone-Ertrag: Folgeertrag ab t+1, A-Tage gegen alle Tage, zweiseitig (>= 0,95 besser, <= 0,05 UMGEKEHRT)
+  seit 2017                      180 T: A-Tage  680  Ertrag   +25 % gegen alle Tage   +94 % (Unterschied   -69 Pp)  Nullwelt-Rang 0.325  unauffaellig
+  seit 2017                      365 T: A-Tage  647  Ertrag   +64 % gegen alle Tage  +308 % (Unterschied  -244 Pp)  Nullwelt-Rang 0.225  unauffaellig
+  ab 2019 (Auskunft)             180 T: A-Tage  421  Ertrag   +46 % gegen alle Tage   +46 % (Unterschied    +0 Pp)  Nullwelt-Rang 0.680  unauffaellig
+  ab 2019 (Auskunft)             365 T: A-Tage  388  Ertrag  +122 % gegen alle Tage  +150 % (Unterschied   -29 Pp)  Nullwelt-Rang 0.580  unauffaellig
+  ab 2023 (Auskunft, Messfokus)  180 T: A-Tage   79  Ertrag   +84 % gegen alle Tage   +13 % (Unterschied   +71 Pp)  Nullwelt-Rang 1.000  BESSER
+  ab 2023 (Auskunft, Messfokus)  365 T: A-Tage   46  Ertrag   +29 % gegen alle Tage   +23 % (Unterschied    +6 Pp)  Nullwelt-Rang 0.485  unauffaellig
+F2-H2 fallendes Messer: je Episode (Luecke >= 30 T trennt), Einstieg zum Schluss am Tag nach dem ersten A-Tag
+  2017-07-11..2017-07-16 (  3 A-Tage)  Einstieg    220.38  danach tiefstens  -30 % (am 2017-07-16)  WEITERE -20 %  nach 365 T +92 %
+  2018-02-05..2018-02-05 (  1 A-Tage)  Einstieg    789.04  danach tiefstens  -90 % (am 2018-12-15)  WEITERE -20 %  nach 365 T -87 %
+  2018-03-14..2018-04-19 ( 37 A-Tage)  Einstieg    611.17  danach tiefstens  -86 % (am 2018-12-15)  WEITERE -20 %  nach 365 T -78 %
+  2018-05-23..2019-05-13 (351 A-Tage)  Einstieg    600.61  danach tiefstens  -86 % (am 2018-12-15)  WEITERE -20 %  nach 365 T -59 %
+  2019-07-14..2020-01-13 (139 A-Tage)  Einstieg    230.58  danach tiefstens  -52 % (am 2020-03-12)  WEITERE -20 %  nach 365 T +4 %
+  2020-03-12..2020-03-18 (  5 A-Tage)  Einstieg    134.76  danach tiefstens  -18 % (am 2020-03-16)  nach 365 T +1330 %
+  2022-06-12..2022-07-15 ( 34 A-Tage)  Einstieg   1192.16  danach tiefstens  -17 % (am 2022-06-18)  nach 365 T +46 %
+  2022-09-21..2022-12-31 ( 31 A-Tage)  Einstieg   1328.67  danach tiefstens  -18 % (am 2022-11-09)  nach 365 T +20 %
+  2025-03-10..2025-05-07 ( 46 A-Tage)  Einstieg   1923.01  danach tiefstens  -24 % (am 2025-04-08)  WEITERE -20 %  nach 365 T +7 %
+  2026-02-01..2026-03-29 ( 33 A-Tage)  Einstieg   2345.61  danach tiefstens  -33 % (am 2026-06-06)  WEITERE -20 %  nach 365 T offen bis 2027-02-02
+  2026-05-22..2026-08-18 ( 86 A-Tage)  Einstieg   2116.17  danach tiefstens  -26 % (am 2026-06-06)  WEITERE -20 %  nach 365 T offen bis 2027-05-23
+  -> Kurs nach 365 T ueber dem Einstieg: 6 von 9 Episoden mit vollem Fenster: GESTUETZT
+F2-H3 Aufbau gegen DCA: Zufluss 1 je Monat, nie verkaufen, Bargeld 0 %, keine Gebuehren; Endstand 2026-10-04
+  Start | eingezahlt | DCA Verm. | V2 Verm. (V2/DCA) | V1/DCA | V3/DCA | V2>=DCA an Monatsenden | groesster Rueckgang DCA / V2 | Einstand DCA / V2 | Bargeld V2 am Ende | Kaeufe DCA/V2
+  2017  |  118 |   1419.7 |    560.4 (0.39) | 0.43 |   -  |    0 % |  -96 % /  -83 % |    226.75 /    561.98 |   3.2 (  3 %) | 118/766
+  2018  |  106 |    518.9 |    485.9 (0.94) | 0.97 |   -  |   19 % |  -87 % /  -80 % |    557.31 /    580.91 |   3.2 (  3 %) | 106/763
+  2019  |   94 |    422.7 |    360.5 (0.85) | 0.95 |   -  |    2 % |  -85 % /  -81 % |    606.69 /    693.21 |   3.2 (  3 %) | 94/508
+  2020  |   82 |    224.3 |    161.0 (0.72) | 0.89 |   -  |    0 % |  -88 % /  -66 % |    997.25 /   1361.99 |   3.2 (  4 %) | 82/249
+  2021  |   70 |     88.3 |    119.4 (1.35) | 1.33 |   -  |   93 % |  -85 % /  -65 % |   2161.95 /   1568.78 |   3.2 (  5 %) | 70/230
+  2022  |   58 |     72.4 |     92.3 (1.28) | 1.24 |   -  |   80 % |  -69 % /  -64 % |   2185.85 /   1677.20 |   3.2 (  6 %) | 58/230
+  2023  |   46 |     54.6 |     67.3 (1.23) | 1.15 |   -  |   58 % |  -70 % /  -61 % |   2297.23 /   1820.27 |   3.2 (  7 %) | 46/166
+  -> V2 vor DCA in 3 von 7 Startjahren: nicht gestuetzt
+  Nullwelt V2 Start 2017 (Auskunft): echt 0.39 x DCA · Zufallszonen gleicher Laenge Median 0.47, 95. Perzentil 0.77 · Rang 0.290
+
+==================== GESAMT nach den vorab festen Regeln (§8.8) ====================
+F2-H1 Zone-Ertrag: unauffaellig, unauffaellig, unauffaellig, unauffaellig -> nicht gestuetzt
+F2-H2 fallendes Messer: BTC gestuetzt, ETH gestuetzt
+F2-H3 Aufbau gegen DCA: BTC nein, ETH nein -> nicht gestuetzt
+FOLGE (vorab): Spot ueber das Klima so nicht nachweisbar - festhalten
