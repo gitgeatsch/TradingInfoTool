@@ -759,3 +759,15 @@ prüfen und gegenprüfen"*.
 **05.10.2026** · Nutzer: *„Ja, lege diese als vorläufige Hypothesen fest, abhängig von den Ergebnissen.“*
 - K-1 (2018–2022 bestimmen, 2026 testen), K-2 (CoinMetrics), K-3 (A Zone · B Wende · C Klima als Fakt-Ampel), K-4 (echter Boden 45 %/180 T/+50 %), K-5 (Erfolg gegen DCA mit gleichem Kapital) gelten **vorläufig**.
 - Die Messung entscheidet. Eine Änderung wird **Fassung 2 mit Begründung**; Fassung 1 bleibt Maßstab (Voranalyse_Spot §8.6).
+
+# E-62 · Spot Fassung 2: die Zone als Aufbaufenster (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ja, der Vorschlag hört sich vernünftig an“* · *„Ja, prüfen und gegenprüfen.“*
+- Nach §8.7: H4 Wende trug nicht, die Zone zeigte sich vorn, aber mit Vorgriff in der Vergleichsbasis.
+- **Fassung 2** (Voranalyse_Spot §8.8):
+  - Zone gegen alle Tage, zweiseitig;
+  - fallendes Messer je Episode;
+  - Aufbau gegen DCA (H5);
+  - BTC als Wiederholung, ETH als teilweise unabhängige Menge, ab 2023 als Auskunft;
+  - Kauf zu t+1.
+- **Gemessen wird erst nach dem Ja zum Plan.** Die Folgen sind vorab festgelegt.

@@ -437,3 +437,86 @@ Beleg: `Spot_Voranalyse_04_10/k1_klima_studie.py` → `k1_klima_studie.txt`. Dat
 - **Das Potential lag in der Zone** — antizyklisch, wie vom Nutzer vorgegeben (E-60). ⚠️ Das ist **Auskunft**, kein Befund: dieselben 4 Zyklen, nachträglich angesehen. 2021 zeigt die Gefahr: eine Zone mitten im Abwärtsmarkt (Juni 2022) kostete −23 % über 180 T.
 - **Nicht** folgt: eine Aufbauregel. H5 (gegen DCA) ist nach §8.6 erst zulässig, wenn H1–H4 tragen. H4 trägt nicht.
 - **Eine Fassung 2 auf der Zone** wäre auf denselben Zyklen **kein unabhängiger Test**. Unabhängig bleiben nur Z5 (die Zone Feb.–Jun. 2026 wird ab Ende 2026 messbar) und eine zweite Menge, etwa **ETH mit eigenem MVRV** (CoinMetrics ab 2015, liegt schon in `coinmetrics.db`); ETH ist stark mit BTC verbunden, also nur teilweise unabhängig.
+
+### 8.8 Messplan FASSUNG 2 — die Zone als Aufbaufenster, VOR der Messung (05.10.2026; E-62)
+
+Nutzer 05.10.: *„Ja, prüfen und gegenprüfen.“* (auf den Vorschlag nach §8.7). **Gemessen wird erst nach dem Ja zu diesem Plan.**
+
+**Begründung der Fassung 2** (Versionsregel §8.6): H4 trug nicht (die Wende kommt zu spät). Die Auskunft zeigte die Zone vorn, **aber auf einem Vergleich mit Vorgriff**: die Basis waren die Tage um das *bekannte* Tief. Fassung 2 beseitigt den Vorgriff, prüft zweiseitig und führt direkt auf die Zielfrage K-5 (Aufbau gegen DCA). Die Zustände A1–A3 bleiben **unverändert** aus Fassung 1, es gibt keine neue Schwelle.
+
+#### Was unabhängig ist und was nicht
+
+| Menge | Status |
+|---|---|
+| **BTC 2017–2022** | **Wiederholung**, kein Test. Die Zone-Tage dort sind in §8.7 schon angesehen |
+| **ETH** | **teilweise unabhängig**. Folgeerträge nie angesehen; eigene Böden 2022-06, 2023-10, 2025-04 (nicht die von BTC); stark mit BTC verbunden |
+| **ab 2023** (Messfokus) | Auskunft getrennt ausgewiesen; ein Nachweis ist dort mit 2–3 Episoden nicht erreichbar |
+| **H5 Aufbau gegen DCA** | für **beide** Assets bisher **nie gerechnet** |
+
+#### Daten und Zustände
+
+- CoinMetrics täglich, BTC und ETH (`data/_spot/coinmetrics.db`, nur lesend), Messbeginn **01.01.2017** für beide.
+- **A Zone = mindestens 2 der verfügbaren, mindestens 2** von A1–A3. Verfügbar sind (Vorprüfung, keine Erträge):
+  - BTC: A1 und A2 ab 12.2013, A3 ab 05.2015;
+  - ETH: A1 ab 08.2016, A2 ab 06.2017, **A3 erst ab 06.2020**. Vorher gilt bei ETH A1 und A2.
+- ⚠️ **ETH vor 2019 hat eine kurze Vorgeschichte:** Die wachsenden Perzentile stehen dort auf ein bis drei Jahren. Ausgewiesen wird *ETH gesamt* (zählt) und *ETH ab 2019* (Auskunft).
+- **Episode** = Folge von A-Tagen; eine Lücke von ≥ 30 Tagen trennt.
+- Vorprüfung, rein aus A, ohne Erträge:
+  - BTC 6 Episoden: 11.2018, 03.2020, 05.2022–03.2023, 05–10.2023, 02–04.2026, 06–08.2026; 2024 und 2025 keine.
+  - ETH 11 Episoden, darunter 03–04.2018 und 05.2018–05.2019 (der Fall *fallendes Messer*), 2025-03 und 2026.
+- **Ohne Vorgriff:**
+  - A am Tag t ist erst nach dessen Schluss bekannt; MVRV erscheint am Folgetag. **Jeder Kauf erfolgt zum Schlusskurs von t+1.**
+  - Die **Vergleichsbasis sind alle Tage desselben Zeitraums**, nie ein Fenster um ein bekanntes Tief.
+
+#### Die Hypothesen der Fassung 2
+
+| # | Frage | Messung | gilt als gestützt, wenn |
+|---|---|---|---|
+| **F2-H1 Zone-Ertrag** | Bringt Kaufen in der Zone mehr als an einem beliebigen Tag? | Folgeertrag ab t+1 über **180 und 365 T**, A-Tage gegen alle Tage seit 2017. **Zweiseitig**: Nullwelt aus 200 zirkulären Verschiebungen der A-Reihe, Rang ≥ 0,95 = besser, ≤ 0,05 = **umgekehrt** | Rang ≥ 0,95 in **≥ 3 von 4** Tests (2 Assets × 2 Horizonte) **und** keiner umgekehrt |
+| **F2-H2 fallendes Messer** | Wie oft fällt der Kurs nach Zonenbeginn noch deutlich? | Je Episode (Einstieg t+1 nach dem ersten A-Tag): tiefster Kurs binnen 365 T, Anteil mit weiteren −20 %, Kurs nach 365 T | Kurs nach 365 T über dem Einstieg in **≥ 2/3** der Episoden mit vollem Fenster. Der weitere Rückgang wird **immer** berichtet (Risiko für Doku und Mail) |
+| **F2-H3 = H5 Aufbau gegen DCA** | Schlägt ein Aufbau in der Zone regelmäßiges Kaufen mit **gleichem Kapital**? | Siehe Regel unten. **Startjahre 2017 bis 2023** (je 01.01.), Ende 04.10.2026 | **Hauptvariante V2** hat mehr Endvermögen als DCA in **≥ 5 von 7** Startjahren, **je Asset und für beide** |
+
+**Aufbauregel, vorab und ohne Stellschraube aus den Ergebnissen:**
+- **Zufluss:** 1 Einheit am Monatsersten bei beiden Varianten. Der Zufluss ist Kapital, kein Signal (Regel 1).
+- **DCA:** Kauf am Monatsersten zum Schlusskurs.
+- **V2 Zone gestaffelt (zählt):**
+  - Der Zufluss geht ins Bargeld.
+  - War A am Tag t an, wird am Tag t+1 **1/30 des Bargelds** gekauft. Das sind gut 60 % des Bargelds nach einem Monat Zone. Wegen F2-H2 kein Alles-auf-einmal.
+- **V1 alles beim Zonenbeginn** (Auskunft): Das ganze Bargeld geht in den ersten Kauf einer Episode, danach fließt jeder Zufluss in der Zone sofort.
+- **V3 V2 plus Wende** (Auskunft): Das Restbargeld wird bei jeder B-Einschaltung gekauft. Nur BTC, weil B auf BTC definiert ist (Breite, B2, B3).
+- **Für alle Varianten:**
+  - Es wird nie verkauft; der Ausstieg ist eine eigene Frage (M-5).
+  - Bargeld bringt 0 % Zins, das benachteiligt die Zone bewusst.
+  - Gebühren zählen nicht (Regel 2); die Zahl der Käufe wird ausgewiesen.
+
+**Ausgewiesen je Asset und Startjahr:**
+- Endvermögen V1, V2, V3 gegen DCA;
+- **Anteil der Monatsenden mit V2 ≥ DCA**, weil das Endvermögen am Enddatum hängt;
+- größter Rückgang des Gesamtvermögens (Bestand plus Bargeld);
+- durchschnittlicher Einstand;
+- ungenutztes Bargeld am Ende;
+- Nullwelt-Rang der V2 bei Start 2017 (A zirkulär verschoben, 200×; Auskunft).
+
+#### Folgen, vorab festgelegt
+
+| Ergebnis | Folge |
+|---|---|
+| F2-H1 **und** F2-H3 gestützt | Klima-Zone wird **Aufbaugrundlage**. Nächster Schritt: Voranalyse der Fakt-Ampel samt Aufbauregel für den Betrieb (Schritt-8-Weg, T-2 erst nach Abstimmung); F2-H2 kommt als Risikotext in Mail und Doku |
+| nur eines davon | Kein Aufbau. Die Klima-Ampel bleibt als **Fakt in der Mail**; der Nutzer entscheidet das Ob |
+| keines, oder etwas umgekehrt | Spot über das Klima ist so **nicht nachweisbar**; das wird festgehalten. Kein neuer Anlauf auf derselben Menge (Mehrfachtesten) |
+
+**Ehrlich:**
+- 2 Assets mit 6 bzw. 11 Episoden, 2 Horizonte, 3 Varianten. „Gestützt“ heißt **beschrieben und stimmig**, nicht bewiesen.
+- Die Tage überlappen. Die Nullwelt mit zirkulärer Verschiebung trägt das, die wirkliche Fallzahl sind die **Episoden**.
+
+**Gegenprüfung dieses Plans (05.10., vor jeder Ertragsrechnung):**
+- **Vorgriff:**
+  - Kauf zu t+1 statt t. Beim Gegenprüfen gefunden: der Schlusskurs von t ist bei der Entscheidung noch nicht bekannt.
+  - Vergleichsbasis ohne Fenster um ein bekanntes Tief.
+- **Verfügbarkeit:** A3 fehlt ETH bis 06.2020. Deshalb „mindestens 2 der verfügbaren“.
+- **Kurze ETH-Vorgeschichte** ausgewiesen.
+- **Zweiseitig:** Rang ≤ 0,05 heißt umgekehrt; F2-H2 deckt den Fall 2018/2022 ab.
+- **Enddatum:** Anteil der Monatsenden.
+- **Startpunkt:** 7 Startjahre.
+- **Regeln 1–4:** Takt und Zufluss sind kein Signal, keine Gebühren, kein Asset-Rang. Die Zone ist ein Fakt; bewertet wird **was danach kam**.
+- **Grenze:** Der Plan prüft das Klima für BTC und ETH. Welches Altcoin, ist eine eigene Frage, und M-0 fand dort nichts.
