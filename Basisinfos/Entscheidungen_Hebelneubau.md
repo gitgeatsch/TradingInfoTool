@@ -733,3 +733,11 @@ prüfen und gegenprüfen"*.
   - Fachlich ergänzt beim Bau: Ist der gemessene Einstieg **mehr als 1 h** vorbei, geht keine Signalmail, sondern der Vermerk *verpasst*.
   - Der freigegebene D1-Weg (Mail wenige Minuten nach dem Einstieg) bleibt und nennt die Verspätung.
 - **S-5:** Am Ende der Woche liefert der Nutzer Teilexport und Ablage-Kopie, für F5 die Daten.
+
+# E-58 · Bitpanda-Bestand ohne Watchlist-Eintrag: automatische Aufnahme erst mit dem Spot-Neubau (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ja O26 wie vorgeschlagen, mit Spot-Neubau – ist ok, d.h. ich muss das Asset manuell aufnehmen?“*
+- E13 (16.09.) gilt weiter: Eine Position ohne Watchlist-Eintrag kommt als Mail, **höchstens einmal am Tag**. Seit 05.10. gilt das auch über Neustarts.
+- Die automatische Aufnahme kommt mit O23 (Spot-Neubau). Bis dahin: **von Hand**, wenn das Asset im System sein soll. Folgen: Es zählt im Portfoliowert, und die alte Spot-Kette analysiert es. Die REGEL0 braucht die Watchlist nicht.
+- Option auf Ja: eine Liste *bewusst nicht beobachtet*, die die Mail je Asset abstellt.
+
