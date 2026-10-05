@@ -1,0 +1,11 @@
+Spot-Buchungen (alle, mit Stablecoins): 3591
+A1 BTC: Kaufpreis 58647 / taeglich gleich 76149 = 0.770 (n 40 Kaeufe, 671 Tage)
+PME XLM bis 2026-07-13: Ergebnis +641 EUR, BTC-Spiegel +250 EUR, Vorteil +391 EUR (12 Buchungen)
+PME KAS bis 2026-07-13: Ergebnis -1970 EUR, BTC-Spiegel -384 EUR, Vorteil -1585 EUR (41 Buchungen)
+PME APT bis 2026-07-13: Ergebnis -2230 EUR, BTC-Spiegel -593 EUR, Vorteil -1638 EUR (42 Buchungen)
+PME INJ bis 2026-07-13: Ergebnis -2498 EUR, BTC-Spiegel -1106 EUR, Vorteil -1392 EUR (26 Buchungen)
+Hauptskript mit Stichtag 2026-07-13:
+  ZEIGE XLM: Ergebnis +638, BTC-Spiegel +247, Vorteil +390
+  ZEIGE KAS: Ergebnis -1970, BTC-Spiegel -384, Vorteil -1585
+  ZEIGE APT: Ergebnis -2230, BTC-Spiegel -593, Vorteil -1638
+  ZEIGE INJ: Ergebnis -2498, BTC-Spiegel -1106, Vorteil -1392

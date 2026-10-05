@@ -1,0 +1,23 @@
+Start 2022-01-01, 365 T: 298 Coins, Median -51.0 %, vor BTC 13 %
+Start 2024-02-01, 365 T: 366 Coins, Median -65.3 %, vor BTC 6 %
+Groesste Gewinner E1 (Start 2019-01 bis 2020-12, 730 T) - Pruefung auf Kurs-Spruenge (Tageswechsel > x5 oder < /5):
+  COCOS    bis x5322   groesster Tagesanstieg +172 %, groesster Tagesfall -44 %
+  DREP     bis x657   groesster Tagesanstieg +93 %, groesster Tagesfall -53 %
+  FTM      bis x515   groesster Tagesanstieg +50 %, groesster Tagesfall -56 %
+  MATIC    bis x190   groesster Tagesanstieg +64 %, groesster Tagesfall -52 %
+  TFUEL    bis x122   groesster Tagesanstieg +98 %, groesster Tagesfall -53 %
+  THETA    bis x116   groesster Tagesanstieg +30 %, groesster Tagesfall -48 %
+  DOGE     bis x113   groesster Tagesanstieg +392 %, groesster Tagesfall -38 %
+  LINK     bis x81   groesster Tagesanstieg +63 %, groesster Tagesfall -48 %
+  ANKR     bis x80   groesster Tagesanstieg +47 %, groesster Tagesfall -50 %
+  ONE      bis x76   groesster Tagesanstieg +60 %, groesster Tagesfall -53 %
+  NPXS     bis x64   groesster Tagesanstieg +120 %, groesster Tagesfall -42 %
+  ADA      bis x63   groesster Tagesanstieg +33 %, groesster Tagesfall -41 %
+Hauptskript Start 2022-01-01, 365 T: 298 Coins, Median -51.0 %, vor BTC 13 %
+Hauptskript Start 2024-02-01, 365 T: 366 Coins, Median -65.3 %, vor BTC 6 %
+E1 365 T, alle                           Korb-Median +72.8 %
+E1 365 T, ohne COCOS, DREP, NPXS         Korb-Median +27.5 %
+E1 365 T, Korb mit Median statt Mittel   Korb-Median -25.8 %
+E1 730 T, alle                           Korb-Median +726.2 %
+E1 730 T, ohne COCOS, DREP, NPXS         Korb-Median +117.1 %
+E1 730 T, Korb mit Median statt Mittel   Korb-Median -8.9 %

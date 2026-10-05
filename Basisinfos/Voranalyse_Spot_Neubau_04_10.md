@@ -895,3 +895,57 @@ Beide Messungen sind **beschreibend**: Es wird keine Regel gewählt und keine Sc
 
 - **M1 und M2 sind die Faktenbasis für das Gespräch G1** (D1–D6). Sie entscheiden nichts automatisch.
 - **G1-M2 an die Frage D4 geknüpft:** Liegt der Anteil vor BTC auf 365 und 730 T in **allen drei** Epochen unter 50 % **und** der Korb-Median unter 0, dann gibt es **als Grundrate** bei Altcoin-Spot nichts zu holen. Ein Spot-Weg müsste dann eine Auswahl nachweisen, die diese Grundrate deutlich schlägt; sonst gilt D4 (Spot entfällt) als ernsthafte Option.
+
+### 10.8 Ergebnis G1-M1 und G1-M2 (05.10.2026, nach dem vorab festen Plan §10.7)
+
+Belege `Spot_Voranalyse_04_10/g1_m1_eigenes_handeln.py` / `g1_m2_grundrate_altcoins.py`, jeweils mit `.txt`, dazu die Gegenproben `g1_m1_gegenprobe.py` und `g1_m2_gegenprobe.py`.
+
+#### Zwei Datenbefunde beim Prüfen (vor der Auswertung behoben)
+
+1. **Die Liste `trades` enthält die Hebel-Eröffnungen.** Bei BTC sind 39 von 79 „Käufen“ in Wahrheit `margin_trading.open`. Maßgeblich ist deshalb `transaktionen`, nur Kauf und Verkauf **ohne** Margin-Markierung; das schließt 3.908 Hebelbuchungen aus.
+2. **Coins aus geschlossenen Hebelpositionen** werden danach als **normale** Verkäufe gebucht: netto aus Spot TAO −68, LINK −622, SUI −3.495. Für Coins, die je gehebelt wurden (BTC, ETH und 9 Altcoins), sind Verkäufe und Restmengen **nicht belastbar**. Belastbar sind dort nur die Kaufqualität und die 50 Coins, die **nie** gehebelt wurden.
+- ⚠️ Das berührt den bekannten Importer-Befund 2.679 (Hebelpositionen falsch eingeteilt): Aus den Bitpanda-Daten lassen sich Spot und Hebel **nicht** über die Markierung allein trennen.
+
+#### G1-M1 — dein Handeln (13.09.2024 bis 01.08.2026)
+
+| | Ergebnis | belastbar? |
+|---|---|---|
+| **BTC Kaufqualität** | 40 Spot-Käufe zu Ø 58.647 EUR gegen 76.149 EUR bei täglich gleichem Betrag: **0,770**. Zufallstage: Median 1,01, **Rang 0,00**, besser als jeder Zufallszug | ✔ |
+| **ETH Kaufqualität** | 30 Käufe zu Ø 2.687 gegen 2.260 EUR: **1,189**, Rang 0,98, schlechter als fast jeder Zufallszug | ✔ |
+| **SOL Kaufqualität** | 1,003, Rang 0,44: neutral | ✔ |
+| BTC/ETH Verkäufe und Ergebnis | enthalten Hebel-Schließungen | ✗ |
+| **Altcoin-Spot gegen BTC** (PME, 50 nie gehebelte Coins, Käufe 77.694 EUR) | Ergebnis **−46.573 EUR**; dieselben Geldflüsse in BTC **−16.525 EUR**; **Vorteil gegen BTC −30.048 EUR**. Nur **6 von 50** Coins vor BTC (nach Volumen 7 %) | ✔ (6 mit Notbewertung) |
+| Auskunft Stichtag 20.09. | Vorteil gegen BTC **−39.463 EUR** (Restmengen unverändert angenommen) | Auskunft |
+| ohne Kursreihe | 68 Coins, 34.875 EUR Umsatz (DEAI, TAI, ORAI …), nicht bewertet | — |
+| **Kosten (M-1)** | Hin- und Rückweg: **BTC 0,56–0,81 %**, **Altcoins 2,48–2,49 %** (gegen Tagesschluss bzw. Tagesmitte, n 693/502). ETH ist unsicher (−0,51 / +2,76 %, n 29/42) | ✔ als Schätzung |
+
+**Gegenprobe:** A1 BTC unabhängig 0,770. PME für XLM, KAS, APT und INJ am 13.07. gleich: +391/+390, −1.585, −1.638, −1.392 EUR.
+
+#### G1-M2 — Grundrate Altcoins gegen BTC (525 Altcoins, davon 186 eingestellt)
+
+| Epoche | 365 T: Median · vor BTC · Korb | 730 T: Median · vor BTC · Korb | unabh. Starts 365/730 |
+|---|---|---|---|
+| **E1 2019–2020** | −10,5 % · 46 % · **+72,8 %** | −7,3 % · 48 % · **+726 %** | 2 / 1 |
+| **E2 2021–10.01.2024** | −45,8 % · 17 % · −27,0 % | −74,9 % · 8 % · −58,0 % | 4 / 2 |
+| **E3 ab 11.01.2024** | **−67,1 % · 6 % · −56,8 %** | **−86,4 % · 4 % · −72,0 %** | 2 / 1 |
+
+- **Auskunft:**
+  - Die liquidere Hälfte zeigt dasselbe Bild.
+  - Deine gehandelten Coins liegen etwas besser, aber E3 365 T: 10 % vor BTC, Korb −46,9 %.
+  - ETH gegen BTC: E1 vorn (+56 % / +146 %), E2 −13 % / −33 %, E3 −8 % / −42 % (0 von 8 vor BTC auf 730 T).
+- **Gegenprobe:**
+  - Starts 2022-01-01 (298 Coins, −51,0 %, 13 % vor BTC) und 2024-02-01 (366 Coins, −65,3 %, 6 %) unabhängig gleich.
+  - Der positive E1-Korb kommt aus wenigen Extremgewinnern der Altcoin-Saison 2021 (FTM ×515, MATIC ×190, DOGE ×113 …). Er bleibt **ohne** die drei Coins mit Verdacht auf Token-Umstellung (COCOS ×5.322, DREP, NPXS) positiv (+27,5 % / +117 %). Mit dem **Median** statt dem Mittel im Korb ist er negativ (−25,8 % / −8,9 %).
+- **Folge nach der vorab festen Regel:** **NEIN, 4 von 6 Zellen.** E1 erfüllt die Bedingung nicht, weil ihr Korb positiv ist. Formal schließt die Grundrate Altcoin-Spot damit nicht aus.
+- ⚠️ **Ehrlich dazu:** Nach der stehenden Vorgabe *Messfokus ab 2023/2024, ältere Jahre nur Auskunft* wäre E1 nur Auskunft. Dann wäre die Bedingung in **allen** übrigen Zellen erfüllt (E2, E3). Die Regel ist vorab so festgelegt, wie sie steht; die Lesart gehört ins Gespräch G1.
+
+#### Was daraus für G1 folgt — und was nicht
+
+| | |
+|---|---|
+| **Der typische Altcoin verliert gegen BTC** | in **jeder** Epoche und auf **jedem** Horizont, im ETF-Markt (E3) massiv: nach einem Jahr nur 6 % vor BTC, nach zwei Jahren 4 % |
+| **Gewinn nur als Lotterie** | Ein breiter Korb schlug BTC nur 2019–2021, getragen von wenigen 50- bis 500-fachen Gewinnern. Seit 2021 verliert selbst der Korb |
+| **Dein Altcoin-Spot** | hat gegen dieselben Geldflüsse in BTC rund **30.000 EUR** verloren; 6 von 50 Coins lagen vorn. Dazu kommen rund **2,5 %** Kosten je Hin- und Rückweg |
+| **Deine BTC-Käufe** | ⭐ waren **gut getimt** (0,77, besser als jeder Zufallszug), deine ETH-Käufe schlecht (1,19). Für die Akkumulation heißt das: Das Kaufen der Kernwerte kann **schlechter oder besser** als regelmäßiges Kaufen laufen, je nach Wert |
+| ⚠️ **Nicht** folgt | dass Altcoin-Spot **nie** trägt: E3 ist im Grunde **eine** Marktphase (1–2 unabhängige Fenster). Eine neue Altcoin-Saison ist nicht ausgeschlossen, aber **nicht belegt** |
+| ⚠️ **Nicht** belastbar | deine BTC/ETH-**Verkäufe** und Ergebnisse, weil sie mit dem Hebel vermischt sind; die Daten nach dem 01.08. fehlen |

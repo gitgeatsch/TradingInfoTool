@@ -1,0 +1,39 @@
+Spot G1-M1 - dein Handeln aus dem Bitpanda-Buch (Voranalyse_Spot §10.7), Trades 2024-09-13 bis 2026-08-01, Stichtag 2026-08-01
+Spot-Kaeufe/-Verkaeufe ohne Stablecoins: 2329 (Hebel-Buchungen ausgeschlossen: 3908) · Kraken-EUR bis 2026-07-19, danach CoinMetrics/messdaten x Wechselkurs
+Mengenabgleich (Auskunft): aus Spot-Trades gegen Bestand 01.08. (Bestand enthaelt Staking-Belohnungen und Boni ohne Geldfluss): BTC 0.09584/0.05058 · ETH -1.853/0.958 · SOL 2.952/5.931 · TAO -68.48/5.821 · LINK -622.4/141.9 · SUI -3495/1554
+negative Spot-Mengen (mehr verkauft als gekauft, z. B. Boni verkauft): 66 Coins
+
+============================== TEIL A - Kernwerte ==============================
+BTC: 40 Kaeufe (16607 EUR), 41 Verkaeufe (15237 EUR), Sparplan-Kaeufe 3
+  ⚠️ BTC wurde auch GEHEBELT: A2 und A3 enthalten Verkaeufe aus Hebel-Schliessungen - nur A1 (Kaufqualitaet) ist belastbar
+  A1 Kaufqualitaet: dein Durchschnitt 58647 EUR gegen taeglich gleich 76149 EUR -> 0.770 (unter 1 = billiger) · Nullwelt (Zufallstage): Median 1.010, Rang 0.00 (klein = besser als Zufall)
+  A2 Verkaufsqualitaet: dein Durchschnitt 81341 EUR gegen Mittel 84237 EUR -> 0.966 (ueber 1 = teurer verkauft) · die verkaufte Menge waere am Stichtag 10230 EUR wert, erloest 15237 EUR (+5007 EUR durch das Verkaufen)
+  A3 Ergebnis: tatsaechlich +3864 EUR (Restmenge 0.095839, 5234 EUR) · (i) dieselben Kaeufe nie verkauft -1143 EUR · (ii) regelmaessig Netto -340 EUR auf 1370 EUR Netto (-24.8 %)
+ETH: 30 Kaeufe (5519 EUR), 42 Verkaeufe (9884 EUR), Sparplan-Kaeufe 3
+  ⚠️ ETH wurde auch GEHEBELT: A2 und A3 enthalten Verkaeufe aus Hebel-Schliessungen - nur A1 (Kaufqualitaet) ist belastbar
+  A1 Kaufqualitaet: dein Durchschnitt 2687 EUR gegen taeglich gleich 2260 EUR -> 1.189 (unter 1 = billiger) · Nullwelt (Zufallstage): Median 1.000, Rang 0.98 (klein = besser als Zufall)
+  A2 Verkaufsqualitaet: dein Durchschnitt 2530 EUR gegen Mittel 2659 EUR -> 0.951 (ueber 1 = teurer verkauft) · die verkaufte Menge waere am Stichtag 6273 EUR wert, erloest 9884 EUR (+3611 EUR durch das Verkaufen)
+  A3 Ergebnis: tatsaechlich +1390 EUR (Restmenge -1.853378, -2976 EUR) · (i) dieselben Kaeufe nie verkauft -2221 EUR · (ii) regelmaessig Netto entfaellt (Netto <= 0: mehr verkauft als gekauft)
+SOL: 5 Kaeufe (2300 EUR), 28 Verkaeufe (3530 EUR), Sparplan-Kaeufe 0
+  A1 Kaufqualitaet: dein Durchschnitt 123 EUR gegen taeglich gleich 122 EUR -> 1.003 (unter 1 = billiger) · Nullwelt (Zufallstage): Median 1.039, Rang 0.44 (klein = besser als Zufall)
+  A2 Verkaufsqualitaet: dein Durchschnitt 223 EUR gegen Mittel 229 EUR -> 0.975 (ueber 1 = teurer verkauft) · die verkaufte Menge waere am Stichtag 990 EUR wert, erloest 3530 EUR (+2540 EUR durch das Verkaufen)
+  A3 Ergebnis: tatsaechlich +1415 EUR (Restmenge 2.952378, 185 EUR) · (i) dieselben Kaeufe nie verkauft -1125 EUR · (ii) regelmaessig Netto entfaellt (Netto <= 0: mehr verkauft als gekauft)
+
+============================== TEIL B - Altcoin-Spot gegen BTC (PME, jeder Geldfluss in BTC gespiegelt) ==============================
+AUSKUNFT, nicht belastbar - Coins MIT Hebel (9, Spot-Kaeufe 32856 EUR): Vorteil gegen BTC -1246 EUR, davon 5 mit negativer Spot-Menge
+BELASTBAR - Coins NUR Spot (nie gehebelt): 50, davon negative Spot-Menge (Boni/Belohnungen verkauft) 9
+Coins mit Kurs: 50 (Kaeufe 77694 EUR) · ohne Kursreihe, nur gezaehlt: 68 (Umsatz 34875 EUR) · Notbewertung mit letztem Tradepreis: 6
+SUMME: Ergebnis Altcoins -46573 EUR · dasselbe Geld zur selben Zeit in BTC -16525 EUR · VORTEIL gegen BTC -30048 EUR
+AUSKUNFT Stichtag 2026-09-20 (Restmengen unveraendert angenommen): Vorteil gegen BTC -39463 EUR (am 2026-08-01 -30048 EUR)
+Coins vor BTC: 6 von 50 (12 %) · nach Kaufvolumen gewichtet vor BTC: 7 %
+  die 10 groessten Nachteile:  AIOZ -2039 · PLUME -1738 · APT -1634 · KAS -1590 · ONDO -1576 · SUPRA -1487 · INJ -1391 · IO -1358 · RENDER -1330 · FET -1293
+  die 10 groessten Vorteile:   XLM +379 · FTM +144 · SOL +73 · QNT +23 · MON +6 · TREE +0 · GALA -0 · ASTER -1 · VIRTUAL -3 · CGPT -10
+  ohne Kursreihe (Umsatz EUR): DEAI 11046, TAI 3833, ORAI 2700, DUEL 1821, NAKA 1649, PHIL 1595, AITECH 1532, CC 1407, MEW 1305, QUBIC 1277, GOAT 1103, GODL 814, VSN 755, POPCAT 649, SUIAI 632
+
+============================== KOSTEN (M-1): Tradepreis / Kraken-Tagesschluss - 1 ==============================
+  BTC                    Kauf: Median +0.60 % (Quartile -1.46/+1.60, n 40) · Verkauf: Median +0.04 % (-1.07/+3.16, n 41) -> Hin und zurueck etwa 0.56 %
+                         Gegenprobe gegen die Tagesmitte (Hoch+Tief)/2: Kauf +0.60 %, Verkauf -0.21 % -> Hin und zurueck etwa 0.81 %
+  ETH                    Kauf: Median -0.30 % (Quartile -2.32/+2.07, n 29) · Verkauf: Median +0.21 % (-1.31/+1.29, n 42) -> Hin und zurueck etwa -0.51 %
+                         Gegenprobe gegen die Tagesmitte (Hoch+Tief)/2: Kauf +1.93 %, Verkauf -0.83 % -> Hin und zurueck etwa 2.76 %
+  alle Kraken-EUR-Werte  Kauf: Median +2.25 % (Quartile +0.47/+4.16, n 693) · Verkauf: Median -0.23 % (-2.23/+2.57, n 502) -> Hin und zurueck etwa 2.48 %
+                         Gegenprobe gegen die Tagesmitte (Hoch+Tief)/2: Kauf +1.83 %, Verkauf -0.66 % -> Hin und zurueck etwa 2.49 %
