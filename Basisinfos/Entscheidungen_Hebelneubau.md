@@ -747,3 +747,9 @@ prüfen und gegenprüfen"*.
 - **Trennung T-1 bis T-6** (Voranalyse_Spot §7.1): getrennte Dokumente, kein Betriebscode für Spot, getrennte Commits (`Spot M-…:` / `Hebel:`), Hebel hat Vorrang, Spot misst nur am Desktop ohne LLM-Kontingent, getrennter Memory-Abschnitt.
 - **M-0** prüft nur, ob ein Spot-Pfad überhaupt nachweisbar trägt: M-0a Welches, M-0b Ob, M-0c L3. Regeln und Folgen sind **vor** der Messung festgelegt (§7.2, §7.3).
 - Zur Beschleunigung von N4 (zweiter Gemini-Schlüssel) erinnere ich am Abend.
+
+# E-60 · Spot wird neu angelegt: Klima und echte Bodenbildung (Nutzervorgabe 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ok, Spot muss anders angelegt werden. BTC und Altcoins hatten gerade eine Trendwende, d. h. es ist erforderlich, das Wetter bzw. Klima für eine echte Bodenbildung zu erkennen.“*
+- Spot fragt zuerst nach dem **Klima** und dem **Boden** (wann), nicht nach dem Querschnitt (welches). M-0 hat für das Welches nichts gefunden (§7.4).
+- Vorschlag: Klima → Bodenbildung (Ereignisstudie, beschreibend) → Aufbau. Die Voranalyse kommt auf Ja, getrennt vom Hebel (E-59).

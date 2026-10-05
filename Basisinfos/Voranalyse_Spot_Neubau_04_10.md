@@ -239,3 +239,27 @@ Gemeinsam für alle drei:
 1. **Unabhängige Menge:** dieselbe Regel (unteres Schwankungsfünftel minus oberes, Tagesrang, 20/90 T) auf den **~420 Assets außerhalb der Messbasis** (`stundenkurse_alle.db`, ab 2024). Diese Assets hat M-0 nie gesehen.
 2. **Spiegel nach Marktrichtung:** getrennt nach Monaten mit steigendem und fallendem Median-Ertrag. Trägt es nur in fallenden Monaten, ist es das Regime, kein Spot-Vorteil.
 3. **tragfähig**, wenn auf der unabhängigen Menge 2024, 2025 und 2026 je über der Nullwelt (zweiseitig, Richtung jetzt festgelegt: niedrig besser) **und** in steigenden **wie** fallenden Monaten gleichgerichtet.
+
+### 7.5 Nutzervorgabe 05.10.: Spot neu anlegen – Klima und echte Bodenbildung (E-60)
+
+Nutzer: *„Ok, Spot muss anders angelegt werden. BTC und Altcoins hatten gerade eine Trendwende, d. h. es ist erforderlich, das Wetter bzw. Klima für eine echte Bodenbildung zu erkennen.“*
+
+**Fakt aus der NB-Kopie (05.10. 04:00 UTC):**
+- BTC: Tief 30.06. bei 58.600, am 04.10. bei 86.500 (+48 %), 21 % über dem 200-Tage-Schnitt (06.08.: −9 %).
+- Anteil der Assets über dem 50-Tage-Schnitt: 22 % (06.08.) → 91 % (21.08.) → 97 % (04.10.).
+- Anteil über dem 200-Tage-Schnitt: 11 % → 84 %.
+- M-0 hat fast nur die fallende Phase gesehen.
+
+**Vorschlag zur Anlage (zur Abstimmung):**
+1. **Klima** (marktweit, Fakten): Marktbreite, BTC gegen Schnitt und Steigung, Breitensprünge, Abstand zum Hoch, Schwankungsregime.
+2. **Bodenbildung** (Ereignis): „echter Boden“ vorab und rückblickend festlegen. Dann eine **Ereignisstudie** seit 2021: echte Böden gegen Erholungen im fallenden Markt.
+3. **Handlung:** Aufbau (Akkumulation), erst wenn 2 trägt.
+
+**Ehrlich vorab:**
+- Nur etwa 4–8 echte Böden seit 2021. Ebene 2 wird deshalb eine **beschreibende Auskunft** („erfüllt seit …; von N Lagen hielten M“), kein statistisch nachgewiesenes Signal (2.599).
+- Das *Ob* bleibt beim Nutzer (S-b, *übergeordnete Kräfte nur gewichten*).
+- Ein Boden ist erst mit Verzögerung bestätigt.
+
+**Vorher das Bestehende lesen:** 2.599, 2.685 Losfahren, 2.686 Wetter, 2.697 Gegenwind (K_IG), O10 Marktphasen.
+
+**M-0d** (niedrige Schwankung) wird nicht eigens gerechnet. Nach der Wende spricht viel für ein Regime; es geht in Ebene 1 auf.
