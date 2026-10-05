@@ -782,3 +782,12 @@ prüfen und gegenprüfen"*.
   - die Zahl der Blicke auf dieselbe Menge wird ausgewiesen;
   - auf derselben Menge ist eine Fassung n+1 **Beschreibung**, der Test kommt aus neuen Daten.
 - **Ersetzt** in §8.8 die Folge *„kein neuer Anlauf auf derselben Menge“*: Ein Anlauf ist erlaubt, zählt aber nicht als Nachweis.
+
+# E-64 · Spot Fassung 3: gewichten statt warten, Klima aus BTC, je Marktepoche (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ja, da die ersten Jahre und ab 2024 markttechnisch doch etwas anders sind, müssen wir dies berücksichtigen, es gab nur wenige echte Zyklen.“*
+- **Fassung 3** (Voranalyse_Spot §8.10):
+  - Kaufmenge am Zuflusstag = Bargeld × (1 − q). q ist das Klima aus BTC (MVRV, Drawdown, 200 Wochen), Perzentile wachsend.
+  - Gilt für BTC und ETH.
+  - Epochen E1 2017–2020 · E2 2021–10.01.2024 · E3 ab ETF-Start 11.01.2024.
+- **Gemessen wird erst nach dem Ja zum Plan.** Dritter Blick auf dieselben Daten, also Beschreibung; der Test ist eine laufende Mitschrift.

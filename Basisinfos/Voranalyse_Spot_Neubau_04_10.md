@@ -554,3 +554,79 @@ Beleg: `Spot_Voranalyse_04_10/k2_zone_aufbau.py` → `k2_zone_aufbau.txt`.
 | Staffel 1/30 je Zonentag | Kurze Episoden lassen Kapital liegen (Punkt 2) | Entfällt mit dem Gewichten |
 
 ⚠️ **Ehrlich zum Mehrfachtesten:** Fassung 3 wäre der **dritte Blick auf dieselben Daten**. Ihr Ergebnis ist eine **Beschreibung**. Ein unabhängiger Test entsteht erst **ab heute**, wenn die Regel laufend mitgeschrieben wird, oder auf anderen Assets. Die Ergebnisse von Fassung 1 und 2 bleiben stehen.
+
+### 8.10 Messplan FASSUNG 3 — gewichten statt warten, Klima aus BTC, je Marktepoche (05.10.2026, VOR der Messung; E-63/E-64)
+
+Nutzer 05.10.: *„Ja, da die ersten Jahre und ab 2024 markttechnisch doch etwas anders sind, müssen wir dies berücksichtigen, es gab nur wenige echte Zyklen.“* **Gemessen wird erst nach dem Ja zu diesem Plan.**
+
+**Begründung** (E-63, aus der Ursache in §8.9):
+- Fassung 2 scheiterte an den **Wartekosten**: Das ganze Kapital wartete auf die Zone.
+- ETH meldete wegen der **kurzen Vorgeschichte** zu früh.
+- Fassung 3 ändert genau diese zwei Annahmen und ergänzt die **Marktepochen**, die du genannt hast.
+- ⚠️ Das ist der **dritte Blick** auf dieselben Daten. Das Ergebnis ist **Beschreibung**, der Test kommt aus neuen Daten.
+
+#### Marktepochen — nach Fakten geschnitten, nicht nach Ergebnissen
+
+| Epoche | Zeitraum | Warum die Grenze | Echte Böden darin |
+|---|---|---|---|
+| **E1 Frühzeit** | 2017 – 2020 | Privatanleger-Markt, wenige Assets, extreme Zyklen. Nutzer: *Markt seit 2021 massiv verändert* | 2018-12, 2020-03 |
+| **E2 Übergang** | 2021 – 10.01.2024 | Einstieg der Institutionen, DeFi, Absturz 2022 | 2021-07, 2022-11 |
+| **E3 ETF-Markt** | ab 11.01.2024 (erster Handelstag der BTC-Spot-ETFs; ETH-ETF ab 23.07.2024) | Neuer Käuferkreis, anderes Angebot. **Messfokus** | 2026-06 (vorläufig) |
+
+⚠️ **Je Epoche 2, 2 und 1 Zyklen.** Ein Nachweis ist in keiner Epoche erreichbar. Ausgewiesen wird je Epoche **beschreibend**, damit sichtbar wird, ob die Regel in **allen** Epochen in dieselbe Richtung wirkt.
+
+#### Das Klima-Gewicht q (aus BTC, für jeden Kauf)
+
+- **Drei Bestandteile**, wie A1–A3: MVRV-Perzentil, 1 − Perzentil des Drawdowns in Vola-Einheiten, Perzentil des Abstands zum 200-Wochen-Schnitt.
+- **q** = Mittel der verfügbaren Bestandteile, mindestens 2. 0 heißt billig wie nie, 1 heißt teuer wie nie.
+- Perzentile wie bisher **im wachsenden Fenster ab 2013**. Alle drei liegen ab 05.2015 vor.
+- **q stammt immer von BTC**, auch für ETH-Käufe: Das Klima ist der Markt.
+
+**Formwahl wachsend gegen rollend — in der Vorprüfung gegengeprüft, ohne Erträge:**
+- Meine Vermutung war, dass ein rollendes 4-Jahres-Fenster dem Regimewechsel besser folgt; die MVRV-Tiefs stiegen von 0,56 über 0,69, 0,88 und 0,78 auf 1,10.
+- **Sie hält nicht:**
+  - Rollend wäre E3 seltener billig (8 % der Tage mit q ≤ 0,2 gegen 12 %) und häufiger teuer (19 % gegen 10 %).
+  - Der Grund: das 4-Jahres-Fenster enthält die tiefen Werte von 2022.
+- Deshalb bleibt es **unverändert wachsend**: ein Freiheitsgrad weniger. Rollend wird nur als Auskunft ausgewiesen.
+
+#### Die Regel V3 — gleiche Kauftage wie DCA, nur die Menge folgt dem Klima
+
+- **Zufluss:** 1 Einheit am Monatsersten ins Bargeld.
+- **Kauf am Monatsersten:** Bargeld × (1 − q des Vortags), zum Schlusskurs.
+- **Begrenzte Wartekosten:** Das Bargeld pendelt sich bei q/(1 − q) Monatsraten ein, also 1 bei q = 0,5 und 9 bei q = 0,9. In Fassung 2 lagen bei BTC 2024–2025 dagegen 33 Raten still.
+- **Vorprüfung:** Der mittlere Kaufanteil liegt je Epoche bei 0,43 / 0,57 / 0,46.
+- **Regel 1:** Der Kauftag ist der **Zuflusstag**, also eine Kapitaltatsache. Das Klima bestimmt nur das **Wie viel**. Der Takt ist kein Signalgeber.
+- Wie bisher: nie verkaufen, Bargeld 0 % Zins, keine Gebühren (Regel 2).
+
+#### Die Fragen und wann sie als *stimmig* gelten (vorab)
+
+| # | Frage | stimmig, wenn |
+|---|---|---|
+| **F3-H1 Vermögen** | Schlägt V3 regelmäßiges Kaufen bei gleichem Kapital? Startjahre **2017 bis 2023 plus 11.01.2024**, also 8 Starts. Ende 04.10.2026 | V3 ≥ DCA in **≥ 6 von 8** Starts, **für BTC und für ETH** (beide mit BTC-Klima) |
+| **F3-H2 Epochen** | Wirkt es in jeder Epoche in dieselbe Richtung? Je Epoche Start am Epochenbeginn; Vermögen am Epochenende **und** am 04.10.2026 | V3/DCA ≥ 1 in **allen drei** Epochen, je Asset, am 04.10.2026. Der Wert am Epochenende wird mit ausgewiesen, weil er am Zyklusstand hängt |
+| **F3-H3 Nullwelt** | Kommt der Vorteil vom **Klima** oder nur vom Mechanismus? q-Reihe zirkulär verschoben, 200×, mindestens 365 T Abstand, Start 2017 und 2021 | Rang **≥ 0,90** bei beiden Starts, BTC. Es sind wenige Zyklen, deshalb nicht 0,95; das wird so ausgewiesen |
+| **F3-H4 Risiko** | Größter Rückgang von Vermögen ÷ Eingezahltem | immer ausgewiesen, kein Kriterium |
+
+**Ausgewiesen, aber kein Kriterium:**
+- durchschnittlicher Einstand. Er ist **teils mechanisch**, weil ein niedriges MVRV mit einem niedrigen Kurs einhergeht.
+- Bargeld am Ende;
+- Anteil der Monatsenden mit V3 ≥ DCA.
+
+**Auskunft:** rollendes Fenster · ETH mit **eigenem** q (zeigt, was das BTC-Klima bringt) · V2 aus Fassung 2 zum Vergleich.
+
+#### Folgen, vorab festgelegt
+
+| Ergebnis | Folge |
+|---|---|
+| F3-H1 **und** F3-H3 stimmig, F3-H2 in E3 nicht gegenläufig | **Kandidat**. Nächster Schritt ist eine **laufende Mitschrift** ab dem nächsten Monatsersten: ein Schattenbuch am Desktop, kein Betriebscode (T-2, T-5). Sie ist der unabhängige Test. Parallel kommt die Voranalyse der Klima-Ampel für die Mail. Den Betrieb gibt es erst mit Belegen aus der Mitschrift; das Tempo bestimmt der Nutzer |
+| nur teilweise stimmig | Nach E-63 **WORAN messen** und berichten; die Klima-Ampel bleibt als Fakt in der Mail |
+| nichts stimmig oder E3 gegenläufig | Spot über das Klima ist **für den heutigen Markt** nicht belegt. Das wird so festgehalten; die Ampel bleibt als Fakt |
+
+**Gegenprüfung des Plans (05.10., vor jeder Ertragsrechnung):**
+- **Vorgriff:** q stammt vom Vortag des Kaufs; ETH nutzt das BTC-q desselben Tages.
+- **Epochengrenzen** aus Fakten (ETF-Handelsbeginn, Nutzeraussage 2021), nicht aus Ergebnissen.
+- **Formwahl** rollend gegen wachsend an der Vorprüfung entschieden; die eigene Vermutung ist widerlegt und festgehalten.
+- **Wartekosten** jetzt mathematisch begrenzt.
+- **Regeln 1–4** geprüft: Takt = Zufluss, keine Gebühren, kein Asset-Rang, q ist ein Fakt.
+- **Mehrfachtesten:** dritter Blick, ausgewiesen.
+- **Wenige Zyklen** (2/2/1): Die Schwelle der Nullwelt ist offen auf 0,90 gesenkt, der Grund steht dabei.

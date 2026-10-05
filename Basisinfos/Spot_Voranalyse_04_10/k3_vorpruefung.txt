@@ -1,0 +1,9 @@
+rollend 4 J q ab 2013-05-12 | alle drei ab 2016-05-15
+   E1 2017-01-01..2020-12-31  q Mittel 0.56  Anteil Tage q<=0,2:  11 %  q>=0,8:  25 %  Kaufanteil (1-q) am Monatsersten Mittel 0.43
+   E2 2021-01-01..2024-01-10  q Mittel 0.41  Anteil Tage q<=0,2:  35 %  q>=0,8:  14 %  Kaufanteil (1-q) am Monatsersten Mittel 0.57
+   E3 2024-01-11..2026-10-04  q Mittel 0.59  Anteil Tage q<=0,2:   8 %  q>=0,8:  19 %  Kaufanteil (1-q) am Monatsersten Mittel 0.42
+wachsend ab 2013 q ab 2013-12-31 | alle drei ab 2015-05-16
+   E1 2017-01-01..2020-12-31  q Mittel 0.55  Anteil Tage q<=0,2:  11 %  q>=0,8:  26 %  Kaufanteil (1-q) am Monatsersten Mittel 0.45
+   E2 2021-01-01..2024-01-10  q Mittel 0.41  Anteil Tage q<=0,2:  35 %  q>=0,8:  16 %  Kaufanteil (1-q) am Monatsersten Mittel 0.57
+   E3 2024-01-11..2026-10-04  q Mittel 0.55  Anteil Tage q<=0,2:  12 %  q>=0,8:  10 %  Kaufanteil (1-q) am Monatsersten Mittel 0.46
+MVRV-Tief je Zyklus (Fakt): 2015-01-14 0.56, 2018-12-15 0.69, 2020-03-12 0.88, 2022-11-21 0.78, 2026-06-30 1.10
