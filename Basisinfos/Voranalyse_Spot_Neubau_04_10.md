@@ -263,3 +263,110 @@ Nutzer: *„Ok, Spot muss anders angelegt werden. BTC und Altcoins hatten gerade
 **Vorher das Bestehende lesen:** 2.599, 2.685 Losfahren, 2.686 Wetter, 2.697 Gegenwind (K_IG), O10 Marktphasen.
 
 **M-0d** (niedrige Schwankung) wird nicht eigens gerechnet. Nach der Wende spricht viel für ein Regime; es geht in Ebene 1 auf.
+
+## 8. Voranalyse Spot: Klima und echte Bodenbildung — antizyklisch über längere Zeiträume (05.10.2026; E-60)
+
+Nutzer 05.10.: *„Ok, wir können langsam mit Spot anfangen. Führe nicht nur interne, sondern auch externe Recherche durch: wie können wir das über längere Zeiträume antizyklisch abbilden?“*
+
+Getrennt vom Hebel (E-59, T-1 bis T-6). Gemessen wird hier noch **nichts**: Das ist die Grundlage zur Abstimmung.
+
+### 8.1 Was im Projekt schon dazu existiert (interne Recherche)
+
+| | Stand |
+|---|---|
+| Marktzustand, Regime | **nur auf Stundenhorizonten für den Hebel gemessen** (2.598, 2.599 H6/H24; Wetter 2.686 und Gegenwind 2.697 auf 24 h). Auf Wochen bis Monate gibt es nur drei Messungen: Kap. 114 (20/60/120 T, „stumm“), Sentiment 12.7, M-0b. Keine hat etwas nachgewiesen |
+| ⭐ Deine Vorgabe 27.08. | *„Fehler ist, Kern-Assets über den Fear zu kaufen – der Markt ist über Monate im Fear. Es muss eine **strukturelle Bodenbildung** sein.“* Dazu `Definition_Boden_gehalten_27_08.md` (*Boden gehalten*, Dow/Wyckoff, **höheres Tief**). Vorab festgelegt, **nie gemessen** |
+| Akkumulation | Antizyklisch kaufen half nur, wenn das Regime drehte. Die Tagewahl *unter dem Schnitt* schlug den quotengleichen Zufall in 91 % / 83 % der Fenster (23.08.), im Rückspiel 2025/26 verlor aber jeder Kauf (§2.2). Für BTC/ETH war das Maß nie tragend |
+| Fear & Greed | Fear ist ein Dauerzustand (100 Phasen, längste 151 Tage, 27.08.). Extreme Angst hatte auf 10 Tagen **nicht** den behaupteten Vorteil (12.7) |
+| Nie gemessen | eine Ereignisstudie „echter Boden gegen Erholung im fallenden Markt“ · Regime rekonstruiert mit Positivkontrolle 2018-12, 2022-11, 08/2026 · Bewertung on-chain (MVRV) mit Historie · Breitensprünge auf Wochen und Monaten |
+
+**Daten im Haus:**
+- BTC und ETH täglich **ab 2017-08** (`messdaten.db`, 527 Symbole).
+- Funding ab 2019, Terminmarkt stündlich ab 2021-12.
+- Fear & Greed ab 2018-02.
+- On-chain nur Umlaufmenge und aktive Adressen; MVRV ohne Historie.
+
+**Abgedeckte Tiefs:**
+
+| Tief | Rückgang |
+|---|---|
+| 2018-12 | −84 % |
+| 2020-03 | −73 % |
+| 2021-07 | −54 % (Tagestief 20.07.2021) |
+| 2022-11 | −78 % |
+| 2026-07 | −54 % |
+
+Dazu die Korrekturen 2024-08 und 2025-04 (je etwa −33 %).
+
+### 8.2 Was außerhalb dazu bekannt ist (externe Recherche, Quellen im Recherchebericht)
+
+1. ⭐ **2026 ist der erste echte Test außerhalb der Stichprobe – und die klassischen Schwellen haben nicht ausgelöst.** Am Tief 30.06. lag MVRV bei **1,10**; der Realized Price (~53.100) wurde **nicht** unterschritten. Ich habe das an den Rohdaten der freien CoinMetrics-Schnittstelle selbst nachgeprüft. Auch der Drawdown blieb bei −54 % statt −77 bis −87 %. ➤ **Feste Schwellen aus 3–4 Zyklen sind überangepasst**; belastbarer sind relative Lagemaße (Perzentil im wachsenden Fenster) mit Bestätigung über Trend und Breite.
+2. **Belegt:**
+   - **Trendfolge** (Kurs gegen gleitenden Schnitt) sagt BTC-Renditen vorher und mindert die Drawdowns (Detzel u. a. 2021).
+   - Faber (10-Monats-Schnitt): Der Kern ist **Drawdown-Vermeidung, nicht Mehrrendite**.
+   - **MVRV-Regeln** mit einer Fachstudie (Grobys u. a. 2026): nur 3 Einstiege, Schwellen im Nachhinein gesetzt.
+   - Fear & Greed hat keine Vorhersagekraft außerhalb der Stichprobe.
+   - Markov-Regime sagen nicht zuverlässig vorher (Kirby 2023), das deckt sich mit 2.599.
+   - Value Averaging ist eine Rückschau-Verzerrung (Hayley).
+3. **Praktikerwissen ohne Studie:** Marktbreite (Anteil über 50/200-Tage-Schnitt, unter 30 % gilt als Kapitulation) und Breitensprünge nach Zweig-Art; bei Aktien umstritten. Pi Cycle ist an 2 Böden angepasst und wird **nicht** verwendet. Hash Ribbons und Puell lassen nach.
+4. **Methodik bei 4–8 Ereignissen:**
+   - Ereignis vorab und mechanisch festlegen.
+   - Den **Zustand** bewerten (Folgerenditen an allen Tagen mit „an“), nicht den Bodentag.
+   - Einen Zyklus auslassen (Schwellen aus den früheren, Test am nächsten).
+   - Gegen **DCA mit gleichem Kapital am Endvermögen** messen.
+   - Fehlalarmquote und Verzögerung ausweisen.
+   - ETH und Altcoins sind **keine** unabhängigen Zyklen.
+
+### 8.3 Vorschlag: drei Stufen, als FAKT-Ampel, nicht als Kaufsignal
+
+| Stufe | Frage | Messgrößen (alle aus freien Daten, kausal) |
+|---|---|---|
+| **A Zone** – ist es billig? | Liegt der Markt tief gegen seine eigene Kostenbasis und Geschichte? | BTC-MVRV als **Perzentil im wachsenden Fenster** (CoinMetrics frei) · Drawdown vom Hoch **in Einheiten der eigenen Schwankung** · Abstand zum 200-Wochen-Schnitt |
+| **B Wende** – ist der Boden **strukturell**? | Hat der Markt gedreht, statt nur zu erholen? | **Breitensprung** (Anteil der Grundgesamtheit über dem 50-Tage-Schnitt von unter 30 % auf über 80 % binnen 20 Tagen; eingestellte Werte bleiben drin) · BTC zurück über dem 200-Tage-Schnitt **mit steigender Steigung** · **höheres Tief** nach Dow/Wyckoff (deine Definition vom 27.08.) |
+| **C Klima** | Zustand in Worten | *Kapitulation* (A an, B aus) · *Bodenbildung läuft* (A an, B teilweise) · *Wende bestätigt* (B voll) · *Aufwärtstrend* · *überhitzt* (A am oberen Rand) |
+
+**Was daraus wird:**
+- Eine **Klima-Auskunft** in Tab und Mail. Das *Ob* bleibt bei dir (S-b; *übergeordnete Kräfte nur gewichten*).
+- Erst wenn die Ereignisstudie es trägt: eine **Aufbauregel** (Akkumulation) für die Kernwerte, gemessen gegen DCA mit gleichem Kapital.
+
+**Ehrliche Erwartung (Literatur und eigene Befunde):**
+- Eher **geringere Drawdowns und bessere Kapitalbindung** als eine nachweisbar höhere Rendite.
+- Ein **Nachweis** im Sinne unseres Messstandards ist bei 4–8 Ereignissen nicht erreichbar, nur die Wirkungsrichtung.
+- Ein Boden ist erst mit Verzögerung bestätigt; ein Teil des Anstiegs ist dann schon gelaufen.
+
+**Heute (Fakt, 04.10.):**
+- Stufe B wäre seit etwa dem **21.08.** erfüllt (Breite über dem 50-Tage-Schnitt 22 % → 91 % in 15 Tagen; BTC 21 % über dem 200-Tage-Schnitt).
+- Stufe A war am Tief **knapp nicht** erfüllt: MVRV 1,10, Realized Price nicht unterschritten.
+
+### 8.4 Ereignisdefinition „echter Boden“ — Vorschlag, VOR jeder Messung festzulegen
+
+Ein **echter Boden** ist ein Tagestief von BTC, das alle drei Bedingungen erfüllt:
+1. Es liegt mindestens **45 %** unter dem vorherigen Allzeithoch.
+2. In den **180 Tagen** danach folgt kein tieferes Tief.
+3. Innerhalb von **365 Tagen** liegt der Kurs mindestens **+50 %** über dem Tief.
+
+**Mechanisch erfüllt:**
+
+| Tief | Status |
+|---|---|
+| 2018-12 | erfüllt |
+| 2020-03 | erfüllt |
+| 2021-07 | erfüllt |
+| 2022-11 | erfüllt |
+| **2026-07** | Bedingung 2 erst am **2026-12-28** prüfbar; +48 % sind heute erreicht |
+
+**An den BTC-Tagesdaten geprüft (05.10.):** 2018-12-15 (−83 %, +315 % in 365 T), 2020-03-13 (−80 %, +1.518 %), 2021-07-20 (−54 %, +131 %), 2022-11-21 (−77 %, +145 %). Alle vier erfüllen alle drei Bedingungen, keines hatte binnen 180 Tagen ein tieferes Tief. Die Definition trennt also die bekannten Böden; ob sie Fehlalarme ausschließt, zeigt erst die Studie.
+
+**Gegenstück:** Eine *Erholung im fallenden Markt* ist jede Phase, in der Stufe B kurz auslöste und danach ein tieferes Tief folgte. Sie ergibt die **Fehlalarmquote**.
+
+### 8.5 Zur Abstimmung (nur, was bei dir liegt)
+
+| # | Frage | Vorschlag |
+|---|---|---|
+| **K-1** | **Messfenster:** Deine Regel E-21 sagt *Urteil ab 2023/24, Fallzahl nie mit alten Jahren auffüllen*. Ab 2024 gibt es aber genau **einen** echten Boden | Ausnahme **nur für die Bodenstudie**: Die Zyklen 2018–2022 **bestimmen** die Schwellen, **2026 ist der Test**. Alles getrennt ausgewiesen, nie zusammengezählt |
+| **K-2** | **Neue Datenquelle:** CoinMetrics Community (frei, ohne Schlüssel, nichtkommerzielle Lizenz) für BTC- und ETH-MVRV, Ausgabe und Hashrate | ja: einmal die Historie am Desktop laden, später am NB laufend (E-35) |
+| **K-3** | **Aufbau** A Zone · B Wende · C Klima als **Fakt-Ampel** | ja, wie in §8.3 |
+| **K-4** | **Ereignis „echter Boden“** wie in §8.4 (45 % / 180 Tage / +50 %) | ja, vor jeder Messung festgeschrieben |
+| **K-5** | **Erfolgsmaß** einer späteren Aufbauregel: Endvermögen gegen DCA mit gleichem Kapital, dazu der größte Drawdown | ja; Mehrrendite wird **nicht** versprochen |
+
+⚠️ **Spannung zu einer älteren Vorgabe:** Am 25.09. hast du gesagt *„nicht den Markt messen, sondern Beiträge je Asset“*. Das Klima **ist** Markt. Die Notiz selbst erlaubt Marktzustände *„in die Mail als Information oder als Sperre“*. Mein Vorschlag hält sich daran: Das Klima ist Auskunft und Gewicht, kein Auslöser je Asset. Wenn du es anders siehst, ist das K-3.
