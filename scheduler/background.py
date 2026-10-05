@@ -2497,21 +2497,55 @@ def _melde_bitpanda_bestand(meldung) -> bool:
     Eigener Betreff statt ,Job fehlgeschlagen' - eine Position ohne
     Watchlist-Eintrag ist kein Ausfall. Sperrfrist je Meldung
     (`cooldown_stunden`), damit derselbe Sachverhalt nicht jede halbe Stunde
-    kommt; bei Neustart beginnt sie neu (hoechstens eine Mail je Start)."""
+    kommt.
+
+    ⚠️ 05.10.2026 (Nutzer: Concrete-Mail bei jedem Neustart, 03.10. fuenfmal): die Sperre stand nur im Speicher
+    und begann bei jedem Neustart neu - die Mail verspricht aber *hoechstens einmal am Tag*. Jetzt steht der
+    Versandzeitpunkt in `meta` (``bitpanda_meldung:<schluessel>``) und gilt ueber Neustarts. Ist die Datenbank
+    nicht lesbar, gilt die Sperre im Speicher weiter - eine Meldung geht nie verloren, sie kommt hoechstens einmal
+    zu oft."""
     import config as config_module
     from api.email_notify import send_notification_email
 
     email_cfg = (config_module.load_config().get("benachrichtigung", {}) or {}).get("email", {}) or {}
     if not email_cfg.get("aktiv", False) or not email_cfg.get("empfaenger"):
         return False
-    zuletzt = _bitpanda_meldung_gesendet.get(meldung.schluessel)
-    if zuletzt is not None and time.monotonic() - zuletzt < meldung.cooldown_stunden * 3600:
+    if _bitpanda_meldung_gesperrt(meldung):
         return False
     ok = send_notification_email("TradingInfoTool: Bitpanda-Bestand - %s" % meldung.betreff,
                                  meldung.text(), email_cfg["empfaenger"])
     if ok:
-        _bitpanda_meldung_gesendet[meldung.schluessel] = time.monotonic()
+        _bitpanda_meldung_vermerken(meldung)
     return bool(ok)
+
+
+def _bitpanda_meldung_gesperrt(meldung, jetzt: datetime | None = None) -> bool:
+    """Laeuft die Sperrfrist dieser Meldung noch? Zuerst die Datenbank (ueber Neustarts), dann der Speicher."""
+    jetzt = jetzt or datetime.now(timezone.utc)
+    try:
+        conn = db.get_connection()
+        try:
+            wert = db.get_meta_wert(conn, "bitpanda_meldung:%s" % meldung.schluessel)
+        finally:
+            conn.close()
+        if wert:
+            return (jetzt - datetime.fromisoformat(wert)).total_seconds() < meldung.cooldown_stunden * 3600
+    except Exception:                                        # noqa: BLE001
+        logger.info("Bitpanda-Meldung %s: Sperrfrist aus der Datenbank nicht lesbar - Speicher gilt", meldung.schluessel)
+    zuletzt = _bitpanda_meldung_gesendet.get(meldung.schluessel)
+    return zuletzt is not None and time.monotonic() - zuletzt < meldung.cooldown_stunden * 3600
+
+
+def _bitpanda_meldung_vermerken(meldung, jetzt: datetime | None = None) -> None:
+    _bitpanda_meldung_gesendet[meldung.schluessel] = time.monotonic()
+    try:
+        conn = db.get_connection()
+        try:
+            db.set_meta_wert(conn, "bitpanda_meldung:%s" % meldung.schluessel, (jetzt or datetime.now(timezone.utc)).isoformat())
+        finally:
+            conn.close()
+    except Exception:                                        # noqa: BLE001
+        logger.info("Bitpanda-Meldung %s: Versand nicht in der Datenbank vermerkt - Speicher gilt", meldung.schluessel)
 
 
 def get_lock_status() -> dict[str, dict]:

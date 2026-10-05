@@ -1609,3 +1609,30 @@ Ausgewertet wird an einer **Kopie** von `data/regel0_signale.db` am Desktop, ohn
 - `pruefe_s75` 15/15, `pruefe_h17` 23/23, `pruefe_o25` 11/11, `pruefe_erinnerung_offen` 10/10.
 
 **NB-Kontrolle K-N1** (nach Pull und Neustart): Im Teilexport steht die Zeile *Nachgeholt (N-1): 0 Signalstunden · verpasste Signale: 0*, solange kein Ausfall war. Wer es sehen will: die App einmal **über zwei volle Stundenwechsel** beenden. Dann sagt der Lauf danach *nachgeholt: …*, und die Stillstandsmail kommt (K-ALARM-2).
+
+### 21.5 NB-Exporte 05.10. (Teilexport 05:53, NB-Export 06:00; Neustart 05:51 auf 3c8f9b1) und Concrete (CT)
+
+| Punkt | Ergebnis |
+|---|---|
+| Betrieb | ✔ 71 h ohne Lücke, seit dem Neustart 0 Fehler. REGEL0 jede Stunde, 635/635 frisch, 0 veraltet. 105 Signale, davon 4 mit Hebel-Schalter an (alle gemailt am 04.10.) |
+| **K-N1** | ⏳ noch nicht prüfbar: Der Neustart lag **2 min vor** dem Teilexport, der neue Code hatte noch keinen Stundenlauf (der nächste um 06:05). Erst dieser legt Tabelle `nachgeholt` und Spalte `mail_verpasst_am` an. Die Zeile *Nachgeholt* fehlt deshalb zu Recht. ➤ beim nächsten Teilexport |
+| Laufzeit | 160–230 s je Lauf, je nach Last am NB (03.10. phasenweise ~205 s, seit dem Neustart am 04.10. 18:20 ~225 s, einmal 285 s). Grenze 1.500 s (T3): **Beobachtung**, kein Befund |
+| Kontingent 04.10. | gemini-3.1 220, gemini-3.5 25 (der Prüfblock), Z.ai 21 |
+| K-ERIN | fällig heute 10–12 UTC (QNT, NEAR, KAIA) |
+
+**Concrete (CT): warum nicht automatisch aufgenommen?**
+- Das ist so entschieden: **E13 (16.09.)**. Eine Bitpanda-Position ohne Watchlist-Eintrag kommt als Mail mit Name, Wert, Status und Aktion.
+- Automatisch ergänzt werden nur Assets mit offener **Hebelposition** (`auto_add_unknown_hebel_symbols`, 16.07.).
+- CT ist im Bitpanda-Katalog ein *token*. Bei Binance gibt es ein CT-Paar erst **seit 01.10.**, ob es derselbe Coin ist, ist nicht abgeglichen. Wert 56 EUR.
+
+**Gefunden und behoben – die Mail kam bei jedem Neustart** (03.10. fünfmal, 05.10. wieder):
+- Die Sperrfrist stand nur im Speicher (`background._melde_bitpanda_bestand`, `time.monotonic`). Die Mail verspricht aber *höchstens einmal am Tag*.
+- Jetzt steht der Versand in `meta` (`bitpanda_meldung:<schlüssel>`) und gilt über Neustarts. Ist die Datenbank nicht lesbar, gilt der Speicher; die Meldung geht nie verloren.
+- Geprüft am Seiteneffekt gegen die NB-Kopie (`Rechenkern_02_10/pruefe_bestandsmail_sperre.py` 4/4, darunter der Neustart), dazu eine Wachzeile in *BitpandaBestand*.
+
+**Zur Abstimmung (Plan O26):** Sollen Bitpanda-Bestände automatisch in die Watchlist? Das ändert E13. Vorschlag: **jetzt nicht**, sondern mit dem Spot-Neubau (O23), weil:
+1. Die Watchlist speist die **alte Spot-Kette**. Ein aufgenommenes Concrete bekäme sofort deren Verkaufs- und Nachkaufvorschläge, also genau den angehaltenen, falschen Ast.
+2. Die REGEL0 braucht keine Watchlist: Sie rechnet über alle Binance-Assets, die Hebel-Freigabe steht in `asset_hebel_settings`.
+3. Für Token ist die Zuordnung zur Kursquelle unsicher (vier Symbolwelten, 2.612). CT wäre auf Binance erst seit vier Tagen da, ohne Preisabgleich.
+
+Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.

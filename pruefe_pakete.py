@@ -28818,6 +28818,11 @@ def paket_bitpanda_bestand() -> None:
            and "melden=_melde_bitpanda_bestand" in q
            and "bestandsabgleich(conn, self._bitpanda_api_key" in _quelltext("ui/app.py"),
            str(aufrufe))
+    # 05.10.2026 (Nutzer: Concrete-Mail bei jedem Neustart): die Sperrfrist steht in der Datenbank, nicht nur im Speicher.
+    # Am Seiteneffekt nachgewiesen (Kopie der NB-Datenbank): Basisinfos/Rechenkern_02_10/pruefe_bestandsmail_sperre.py
+    pruefe(P, "E13: die Sperrfrist einer Bestandsmail gilt ueber Neustarts (meta bitpanda_meldung:<schluessel>), Speicher nur als Rueckfall",
+           "if _bitpanda_meldung_gesperrt(meldung):" in q and '"bitpanda_meldung:%s" % meldung.schluessel' in q
+           and "_bitpanda_meldung_vermerken(meldung)" in q)
 
 
 def paket_bitpanda_cash() -> None:
