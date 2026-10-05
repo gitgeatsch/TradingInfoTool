@@ -2,6 +2,7 @@
 
 **04.10.2026** · E-54, Plan Hebel **O23** (dazu O14, O19, O24) · Nutzer: *„Ich würde gerne den Spot-Ast neu umbauen, analog dem Hebelablauf“* — *„vorerst nur eine Voranalyse und Analyse, damit wir die Grundlage aus fachlicher und technischer Sicht haben“*.
 
+> ▶ **05.10.2026: M-0 Machbarkeit gestartet, parallel zum Hebel und sauber getrennt (E-59, §7).** Vorher:
 > ⏸⏸ **ANGEHALTEN am 04.10.2026 (Nutzer, E-55):** *„So, wir machen nun Halt bei Spot. Notiere alles bisher Vorgeschlagene in den jeweiligen Dokumentationen und im Plan, mit dem Hinweis, dass eine Totalüberarbeitung, die Machbarkeit und die offenen Punkte behandelt werden müssen. Zuerst kümmern wir uns darum, dass die Hebelfunktion – E-Mails und LLM – sauber funktioniert.“*
 > Damit gilt: Alles hier Vorgeschlagene (S-a bis S-d, Messreihe M-1 bis M-5, die Nebenbefunde) ist **notiert, nicht abgestimmt**.
 > Vor einer Wiederaufnahme sind drei Dinge zu behandeln: **(1) Totalüberarbeitung** – der Spot-Ast wird nicht ausgebessert, sondern
@@ -175,3 +176,43 @@ Fachlich beantwortet und **keine** Frage an dich: der Horizont wird als **Achse*
 | `Spot_Voranalyse_04_10/v2_nachkauf_messen.py` / `.txt` | §2.1, Live-Signale gegen den weiteren Verlauf |
 | `Spot_Voranalyse_04_10/v2b_unter_schnitt_rueckspiel.py` / `.txt` | §2.2, Rückspiel 2024–2026. ⚠️ Erste Fassung zählte Lücken als „nicht im Minus“ (pandas 3: `stack()` behält NaN) und maß mit Mitteln, die schon beim Zufallskauf +3 bis +10 % ergaben — beides behoben, die Zahlen oben sind die korrigierten |
 | Recherchen V-1 und V-4 | Fundstellen im Text (Datei:Zeile, Befundnummern) |
+
+## 7. M-0 Machbarkeit — Messplan, vorab festgelegt (05.10.2026; E-59)
+
+Nutzer 05.10.: *„Ja, Spot M-0 Machbarkeit parallel starten, aber so, dass beide Themen Spot und Hebel sauber getrennt bleiben und alles dokumentiert, in die Zentraldokumente nachgezogen und in den Hauptplan eingetragen wird.“*
+
+**Frage:** Ist ein Spot-Pfad mit unseren Daten **überhaupt nachweisbar** tragfähig? Das wird entschieden, bevor irgendetwas gebaut wird (Plan O23: Totalüberarbeitung, Machbarkeit, offene Punkte).
+
+### 7.1 Trennung Hebel / Spot (gilt ab jetzt)
+
+| # | Regel | Woran man es sieht |
+|---|---|---|
+| T-1 | **Dokumente getrennt.** Hebel: `Voranalyse_Schritt7_Betrieb_02_10.md`, Plan O7/O16/O20–O25. Spot: `Voranalyse_Spot_Neubau_04_10.md`, Plan **O23** (dazu O26). Kein Spot-Inhalt im Hebel-Dokument und umgekehrt, nur Querverweise | jede Spot-Zeile hat O23 im Bezug |
+| T-2 | **Kein Betriebscode für Spot** (`agent/`, `scheduler/`, `ui/`, `api/`, `importer/`), bis der Hebel freigegeben (Schritt 8) und der Spot-Bau abgestimmt ist. Spot misst nur mit Skripten unter `Basisinfos/Spot_Voranalyse_04_10/` | `git diff` eines Spot-Schritts berührt nur diesen Ordner und die Spot-Doku |
+| T-3 | **Getrennte Commits** mit Präfix `Spot M-…:` bzw. `Hebel:` | Commit-Liste |
+| T-4 | **Hebel hat Vorrang.** Ein NB-Befund, ein Mailfehler oder eine Kontrolle unterbricht Spot sofort. Vor jedem Spot-Schritt sehe ich die offenen Hebel-Pflichten durch (Arbeitsstand: Abschnitt HEBEL-PFLICHTEN) | Arbeitsstand |
+| T-5 | **Spot misst nur am Desktop**, nur lesend gegen die Messbasis. Kein NB-Zugriff, kein LLM-Kontingent (das gehört N4 und dem Live-Block) | Skripte öffnen `mode=ro`, kein Netz |
+| T-6 | **Memory getrennt:** Der Arbeitsstand führt einen eigenen Abschnitt SPOT-STRANG neben dem Hebel | Memory |
+
+### 7.2 Die drei Teilfragen und ihre Regeln — VOR der Messung festgelegt
+
+Gemeinsam für alle drei:
+- **Urteil ab 2024** (Messfokus); 2022/23 werden nicht gerechnet.
+- **Wahl auf 2024, Bestätigung auf 2025 und 2026**, je Jahr getrennt.
+- Messbasis 116 Assets, eingestellte eingeschlossen, Tageskurs 23:00 UTC, nur lesend.
+- **Mehrfachtesten ausgewiesen:** Die Zahl der Tests und die dabei zu erwartenden Zufallstreffer stehen im Ergebnis.
+
+| | Frage | Maß | **tragfähig, wenn** |
+|---|---|---|---|
+| **M-0a** Welches (Querschnitt) | Ordnet ein Merkmal, welches Asset in den nächsten 20 bzw. 90 Tagen besser läuft? Kandidaten nur aus Kursen: Abstand zum 200-Tage-Schnitt, Momentum 60 und 250 Tage, rsi 14 Tage, Schwankung 30 Tage, Volumen relativ zu 30 Tagen. Das sind 6 Merkmale × 2 Horizonte = 12 Tests, also ~0,6 Zufallstreffer erwartet | Tagesrang des Ertrags (0 = schlechtestes, 1 = bestes Asset), **oberes minus unteres Fünftel**, gemittelt über Asset-Monate. Nullwelt: das Merkmal je Asset **zirkulär verschoben** (40 Verschübe ≥ 60 Tage) | 2024 über dem 95. Perzentil der Nullwelt **und** 2025 wie 2026 mit gleichem Vorzeichen, mindestens eines davon über dem 95. Perzentil |
+| **M-0b** Ob (Niveau) | Sagt ein marktweites Merkmal am Monatsende den Ertrag eines Zufallskaufs im Folgemonat voraus? Kandidaten: BTC-Abstand zum Schnitt, Marktbreite (Anteil der Assets über dem Schnitt), Median-Momentum 60 Tage | Spearman zwischen Merkmal und Median-Ertrag aller Assets der nächsten 30 Tage, nicht überlappende Monate ab 2024 (~32). Nullwelt: Blockverschub | p < 0,05 gegen die Nullwelt **und** dasselbe Vorzeichen in beiden Hälften. ⚠️ Bei ~32 Monaten erkennt die Messung erst Korrelationen ab etwa 0,35; das wird mit ausgewiesen |
+| **M-0c** L3 | Trägt der REGEL0-Einstieg **ohne Hebel und länger gehalten** (72 h, 120 h, 20 Tage)? | Einstiege aus der Referenz (`kern48jbz_einstiege_bestand.csv`, 2024–2026), Rang des Ertrags gegen Zufallsstunden derselben Assets im selben Monat | Rang 2024 über dem 95. Perzentil des Zufalls **und** 2025, 2026 gleiches Vorzeichen, mindestens eines über dem 95. Perzentil |
+
+### 7.3 Was aus dem Ergebnis folgt — ebenfalls vorab
+
+| Ergebnis | Folge |
+|---|---|
+| ein M-0a- **oder** M-0c-Kandidat trägt | Spot ist **machbar als Auswahl** (welches Asset, wann innerhalb). Weiter mit M-1 (Kosten) bis M-5 |
+| M-0b trägt nicht | Das *Ob* bleibt bei dir (S-b), wie vorgeschlagen. Das ist kein Abbruchgrund |
+| M-0b trägt | eigener Vorschlag zum *Ob*, getrennt zur Abstimmung |
+| **nichts** trägt | Spot ist mit unseren Daten **nicht nachweisbar**. Der Spot-Ast schrumpft auf Bestand und Ausstieg (S-B) und deine eigene Investitionsquote; keine Spot-Signale |

@@ -741,3 +741,9 @@ prüfen und gegenprüfen"*.
 - Die automatische Aufnahme kommt mit O23 (Spot-Neubau). Bis dahin: **von Hand**, wenn das Asset im System sein soll. Folgen: Es zählt im Portfoliowert, und die alte Spot-Kette analysiert es. Die REGEL0 braucht die Watchlist nicht.
 - Option auf Ja: eine Liste *bewusst nicht beobachtet*, die die Mail je Asset abstellt.
 
+# E-59 · Spot M-0 Machbarkeit parallel zum Hebel, sauber getrennt (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ja, Spot M-0 Machbarkeit parallel starten, aber so, dass beide Themen Spot und Hebel sauber getrennt bleiben und alles dokumentiert, in die Zentraldokumente nachgezogen und in den Hauptplan eingetragen wird.“*
+- **Trennung T-1 bis T-6** (Voranalyse_Spot §7.1): getrennte Dokumente, kein Betriebscode für Spot, getrennte Commits (`Spot M-…:` / `Hebel:`), Hebel hat Vorrang, Spot misst nur am Desktop ohne LLM-Kontingent, getrennter Memory-Abschnitt.
+- **M-0** prüft nur, ob ein Spot-Pfad überhaupt nachweisbar trägt: M-0a Welches, M-0b Ob, M-0c L3. Regeln und Folgen sind **vor** der Messung festgelegt (§7.2, §7.3).
+- Zur Beschleunigung von N4 (zweiter Gemini-Schlüssel) erinnere ich am Abend.
