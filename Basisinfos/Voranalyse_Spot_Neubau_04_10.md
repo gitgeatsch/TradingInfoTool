@@ -752,3 +752,89 @@ Es gelten die Trennungsregeln T-1 bis T-6 (Spot am Desktop, kein Betriebscode bi
 - **Folge, vorab:**
   - Mindestens eine Zelle besteht: **S2** für genau diese Zellen.
   - Keine besteht: **WORAN messen** (E-63, Ursache vor Form), z. B. Dauer, Klima, Marktbreite. Ein Anlauf auf dieselben 2024-Daten zählt dann nur noch als Beschreibung.
+
+### 9.4 Korrektur meines Vorschlags §9 (05.10.2026, E-66)
+
+- Die Haltedauern in §9.3 (10, 20, 60 T, höchstens 120 T) **passen nicht** zu deinem Horizont (Altcoins: Monate bis 1–2 Jahre). Ich habe das Muster des Hebels übernommen, ohne den Horizont zu prüfen.
+- Ein Ereignis-Ansatz auf diesem Horizont hat ein anderes Fallzahlproblem (§10.4). SPOT-REGEL0 und Stufe 1 **ruhen**, bis G1 entschieden ist.
+
+## 10. G1 — Was unterscheidet Spot von der Akkumulation? Diskussionsgrundlage (05.10.2026; E-66)
+
+Nutzer 05.10.: *„Spot-Thema müssen wir offen diskutieren und abstimmen – das geht nicht in ein paar Zeilen: Was soll Spot zur Akkumulation der Kernwerte BTC etc. unterscheiden? Also ein Vergleich, ob die aktuelle Akkumulation überhaupt Sinn ergibt oder wir darauf aufsetzen können – eher nicht. G1 ist der erste Punkt, an dem wir starten werden und diese fachlich und technisch bewerten müssen, damit wir überhaupt etwas festlegen können. Der Zeithorizont geht von ein paar Monaten eher über 1–2 Jahre bei Altcoins Spot, und Akkumulation kann über mehrere Zyklen gehen (mit Teilverkauf, Kernwerte).“*
+
+**Wozu dieser Abschnitt:**
+- Er ist **keine Vorlage zum Abhaken**, sondern die fachliche und technische Grundlage für ein Gespräch.
+- Er knüpft an den **Richtungsentscheid vom 24.09.** an (`Konzept_Hebel_als_eigenes_Geschaeft_24_09.md`, Befund 2.577): **drei Geschäfte**, Hebel, Akkumulation, Spot, in dieser Reihenfolge. Die *Lage* = (Instrument, Strategie) ist Eingang, nicht Ausgang.
+- Akkumulation ist dort eine **Strategie**, Spot ein **Instrument mit eigener Absicht**. Das ist das bestehende Schema, kein neues.
+
+### 10.1 Die zwei Geschäfte nebeneinander
+
+| | **Akkumulation (Kernwerte)** | **Spot (Altcoins)** |
+|---|---|---|
+| Zweck | Vermögen über **mehrere Zyklen** aufbauen und halten | **Mehrertrag** in einer begrenzten Zeit |
+| Assets | wenige Kernwerte (BTC, ETH; SOL zu klären) | viele, wechselnd; viele werden eingestellt |
+| Horizont (Nutzer) | mehrere Zyklen, Jahre | einige Monate bis 1–2 Jahre |
+| Einstieg | laufend, der Zufluss ist Kapital (Regel 1) | ein **Anlass** (Lage, Wende, Ereignis) |
+| Ausstieg | **Teilverkauf** in Überhitzung, Rest bleibt | **Ausstieg** am Ziel oder bei Bruch, Position ganz zu |
+| Risiko | Drawdown −75 bis −85 % je Zyklus, aber Erholung bisher immer | **Totalverlust** möglich; Überlebensverzerrung |
+| richtiger Maßstab | **regelmäßiges Kaufen** desselben Kernwerts mit gleichem Kapital | ⭐ **BTC halten** im selben Zeitraum: Spot lohnt nur, wenn es den Kernwert schlägt. In USD reicht nicht |
+| Fallzahl für eine Messung | 4–5 Zyklen → **beschreibend** (F1–F3) | viele Assets, aber auf 1–2 Jahre **wenige unabhängige Zeitfenster** (§10.4) |
+| Rolle des Klimas | Teilverkauf (*überhitzt*) und Fakt in der Mail | **Achse**: ob Altcoins überhaupt laufen (Breite, Altcoin-Saison) |
+| Wer entscheidet wie viel | der Nutzer (S-b) | der Nutzer; das System liefert *welches* und *wann* |
+
+⚠️ **Der wichtigste Unterschied ist der Maßstab.** Akkumulation muss nur regelmäßiges Kaufen erreichen oder knapp schlagen. Spot muss **den Kernwert schlagen**, sonst wäre dasselbe Geld in BTC besser aufgehoben. Damit ist Spot die strengere Frage.
+
+### 10.2 Wie steht die heutige Akkumulation? (fachlich)
+
+| Ebene | Befund | Quelle |
+|---|---|---|
+| **im System** | Die Akkumulationszelle fällt **immer** an `lage_gesperrt` und liefert **null Kaufsignale**. Die taktische Zelle scheitert an der Geometrie | V-1 §1, 2.540 |
+| **Kaufseite fachlich** | Gegen regelmäßiges Kaufen gewinnt **keine** Klima-Regel (F2 warten, F3 gewichten; BTC und ETH; alle Epochen). Regelmäßiges Kaufen ist damit die **begründete Grundlage** der Kaufseite | §8.9, §8.11 |
+| **Verkaufsseite** | **ungemessen.** Teilverkauf über Zyklen ist die offene Frage, und genau dort könnte die Akkumulation über regelmäßiges Kaufen hinauskommen | M-5, §8.11 (b) |
+| **dein tatsächliches Kaufen** | **ungemessen.** Wie deine Käufe aus dem Bitpanda-Buch gegen regelmäßiges Kaufen dastehen, weiß ich nicht | Vorschlag G1-M1 |
+| Stop-Nachzieh 07:15 | zieht auch für Spot-Bestand Stops nach, obwohl *Spot hat keinen Stop* entschieden ist | O19 |
+
+**Meine Einschätzung zu *„eher nicht“*:** Als **System** gibt es heute keine Akkumulation, auf die man aufsetzen könnte. Als **Kaufregel** ist regelmäßiges Kaufen gemessen nicht zu schlagen; das ist eine Grundlage, aber noch kein Geschäft. Was fehlt, sind der **Teilverkauf** und die **Gewichtung der Kernwerte**.
+
+### 10.3 Wie steht Altcoin-Spot? (fachlich)
+
+| | Befund | Was er für deinen Horizont sagt |
+|---|---|---|
+| alte Kette | kauft seit 2025 nur in den Verlust nach (V-2) | ersetzen |
+| M-0 Querschnitt | 6 Merkmale × 20/90 T: nichts trägt; *niedrige Schwankung* lag umgekehrt am unteren Rand (Auskunft) | gemessen **kürzer** als dein Horizont |
+| M-0 L3 | REGEL0-Einstieg 72/120/480 h: nichts | ebenfalls kürzer |
+| F3 | Der Trend über ein Jahr schlägt die Rückkehr zum Mittel (BTC) | spricht für **Trendfolge** über Monate, nicht für antizyklisches Altcoin-Kaufen |
+| **Grundrate Altcoin gegen BTC** über 6–24 Monate | ⭐ **ungemessen.** Bekannt aus der Recherche: die Mehrheit der Altcoins verliert über Jahre gegen BTC, viele werden eingestellt | das ist die **erste** Frage: Gibt es überhaupt etwas zu holen? |
+
+### 10.4 Technische Bewertung
+
+| | Akkumulation | Spot (Altcoins) |
+|---|---|---|
+| **Messdaten** | BTC/ETH täglich ab 2010/2015 (CoinMetrics, Desktop), Klima vorhanden | `messdaten.db` täglich ab 2017, 537 Symbole **mit eingestellten**: nötig gegen die Überlebensverzerrung |
+| **Fallzahl** | 4–5 Zyklen, eine Regel ist nur beschreibbar | Auf 1–2 Jahre gibt es seit 2019 je Asset nur 3–7 **unabhängige** Fenster. Altcoins laufen gemeinsam, deshalb ist die wirkliche Fallzahl die Zahl der **Marktphasen**, nicht der Assets. ⚠️ Dasselbe Problem wie beim Klima, nur abgeschwächt |
+| **Betrieb am NB** | Kurse ✔; MVRV/Klima am NB **ungeprüft** (CoinMetrics ist dort nur für Börsenflüsse angebunden) | Die Betriebskopie `messdaten.db` hat nur **500 Tage**; Merkmale über 200 Wochen fehlen dort. Die Stundenkurse ab 2023 laufen laufend ✔ |
+| **Kosten** | gering je Jahr (wenige Käufe) | bei Monaten Haltedauer nachrangig; Bitpanda-Spotsatz trotzdem unbelegt (M-1) |
+| **Bestand und Teilverkauf** | Bitpanda-Bestand und Einstand werden abgeglichen ✔ | dto. |
+| **Ablösung der alten Kette** | R-4 vorhanden (Umfang A/B offen) | dto. |
+
+### 10.5 Die Punkte für unser Gespräch (offen, keine Ja/Nein-Fragen)
+
+| # | Punkt | worum es geht |
+|---|---|---|
+| D1 | **Welche Kernwerte**, und mit welchem Gewicht? | BTC allein, BTC+ETH, SOL dazu? Fester Mix oder gewichtet? |
+| D2 | **Was soll der Teilverkauf leisten?** | Gewinne sichern, Risiko senken, Geld für den nächsten Boden bereitlegen oder in Altcoins umschichten? Davon hängt ab, **woran** er gemessen wird |
+| D3 | **Soll Spot BTC schlagen müssen?** | ⭐ Mein Vorschlag: ja, als Maßstab. Sonst ist es Risiko ohne Mehrwert |
+| D4 | **Darf Altcoin-Spot ganz entfallen**, wenn die Grundrate gegen BTC nichts hergibt? | eine ehrliche Option, die vorab feststehen sollte |
+| D5 | **Kapital je Geschäft** | Töpfe heute: Spot 4.000, Hebel 3.000 EUR. Hat die Akkumulation einen eigenen Topf? |
+| D6 | **Deine Rolle** | Ob und wie viel bei dir (S-b). Was genau soll das System liefern: Ampel, Kandidaten, Teilverkaufs-Hinweis? |
+
+### 10.6 Messungen, die G1 fachlich entscheidbar machen — Vorschlag, nicht gestartet
+
+| # | Messung | beantwortet | Aufwand |
+|---|---|---|---|
+| **G1-M1** | **Deine Akkumulation aus dem Bitpanda-Buch** gegen regelmäßiges Kaufen mit gleichem Kapital und Zeitraum, dazu die tatsächlichen Kosten (= M-1) | *ergibt die heutige Akkumulation Sinn?* (dein *eher nicht*) | klein, Desktop |
+| **G1-M2** | **Grundrate Altcoins gegen BTC** über 90/180/365/730 T: Verteilung, Anteil besser als BTC, Totalverluste; mit eingestellten Werten, je Epoche (E1/E2/E3) | *gibt es bei Altcoin-Spot überhaupt etwas zu holen?* | klein, Desktop |
+| **G1-M3** | **Teilverkauf über Zyklen** bei BTC/ETH: z. B. ein Anteil bei *überhitzt*, Rückkauf in der Zone, gegen reines Halten. Beschreibend, 4–5 Zyklen | *bringt der Teilverkauf etwas, und wie viel kostet er im Aufwärtstrend?* | mittel |
+| **G1-M4** | **Fallzahl auf deinem Horizont:** wie viele unabhängige Phasen tragen eine Spot-Regel auf 6–24 Monate | *ist eine Spot-Regel überhaupt messbar, oder bleibt nur Beschreibung?* | klein |
+
+**Reihenfolge:** M1 und M2 zuerst. Sie sind schnell und rein **beschreibend**, mit kleinem Mehrfachtest-Risiko. Je nach Ergebnis M3 und M4. Jede bekommt vorher einen Messplan zur Abstimmung (Pflichtablauf).

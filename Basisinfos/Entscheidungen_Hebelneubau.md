@@ -800,3 +800,13 @@ prüfen und gegenprüfen"*.
 - ✗ (c) Keine Mitschrift.
 - **Spot wird als Ereignis je Asset auf Tagesbasis gebaut**, Schritte S1–S8 wie beim Hebel (Voranalyse_Spot §9). Das Klima wird Achse auf den Ereignissen.
 - Stufe 1 wird vorab festgelegt (§9.3). **Gemessen wird nach dem Ja.**
+
+# E-66 · Spot: G1 zuerst, offen abgestimmt — Altcoin-Spot gegen Akkumulation der Kernwerte (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Spot-Thema müssen wir offen diskutieren und abstimmen – das geht nicht in ein paar Zeilen: Was soll Spot zur Akkumulation der Kernwerte BTC etc. unterscheiden? Also ein Vergleich, ob die aktuelle Akkumulation überhaupt Sinn ergibt oder wir darauf aufsetzen können – eher nicht. G1 ist der erste Punkt, an dem wir starten werden und diese fachlich und technisch bewerten müssen, damit wir überhaupt etwas festlegen können. Der Zeithorizont geht von ein paar Monaten eher über 1–2 Jahre bei Altcoins Spot, und Akkumulation kann über mehrere Zyklen gehen (mit Teilverkauf, Kernwerte).“*
+- **Keine Festlegung vor der Bewertung von G1.** SPOT-REGEL0 (§9) und seine Stufe 1 **ruhen**.
+- **Horizonte (Nutzervorgabe):**
+  - Altcoin-Spot: einige Monate bis eher 1–2 Jahre;
+  - Akkumulation der Kernwerte: über mehrere Zyklen, mit Teilverkauf.
+- **Die Nutzereinschätzung zur heutigen Akkumulation:** *eher nicht* tragfähig, um darauf aufzusetzen. Zu prüfen ist das im Vergleich.
+- Die Diskussionsgrundlage steht in Voranalyse_Spot §10. Anschluss an den Richtungsentscheid vom 24.09. (drei Geschäfte: Hebel, Akkumulation, Spot).

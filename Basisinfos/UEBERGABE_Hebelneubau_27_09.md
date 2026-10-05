@@ -12,6 +12,15 @@
 
 ---
 
+# ⭐⭐⭐ NACHTRAG 05.10.2026 abends — zuerst lesen
+
+| Frage | Stand | selbst prüfen |
+|---|---|---|
+| **Hebel** | REGEL0 am NB stündlich (rund 170 s), Testwoche bis mindestens 10.10., Freigabe nur mit Ja (S-2). F5 zeilengleich 103/103. ✔ K-ERIN, ✔ K-MISFIRE behoben (95cfe08) | `python nb_teilexport_betriebsdaten.py` am NB · `Basisinfos/Rechenkern_02_10/pruefe_misfire.py` |
+| **Alte Kette** | läuft noch scharf (Spot-Mails, NACHKAUFEN). Der Schalter `spot_kette_angehalten` hält **alle Gruppen** an; die Wahl A (so) oder B (Schalter je Gruppe) liegt beim Nutzer | `Basisinfos/regel0_betrieb.yaml` |
+| **Spot** | getrennter Strang (E-59, T-1 bis T-6). Klima F1–F3: beschreibt, keine Kaufregel schlägt DCA. ➤ G1 offen (§10, E-66) | `Basisinfos/Voranalyse_Spot_Neubau_04_10.md` §8.7–§10 |
+| **Erinnerung** | zweiter Gemini-Schlüssel oder Bezahlstufe für N4 — Entscheidung beim Nutzer | Plan Hebel O22 |
+
 # ⭐⭐⭐ NACHTRAG STAND 02.10.2026 — vor allen älteren lesen
 
 | Frage | neu | selbst prüfen |

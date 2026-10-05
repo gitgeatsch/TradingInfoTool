@@ -1701,3 +1701,10 @@ Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.
 - **Neu:** REGEL0 *veraltet 3* (633/636) seit dem Lauf um 09:00 UTC, unter der Meldegrenze. Welche Assets, zeigt der nächste Teilexport.
 - Concrete: keine Mail mehr, nur noch die Log-Warnung.
 - K-MAIL-2 beim Nutzer.
+
+**Nachtrag Teilexport 05.10. 18:07** (nach Pull 95cfe08 und Neustart):
+- ✔ **K-ERIN bestanden.** Alle drei Erinnerungen sind entfallen: QNT 10:09 UTC, NEAR und KAIA 12:09 UTC. Die Ablage führt UTC, das Log Ortszeit.
+- **veraltet 3** = 1000000BOB, PROMPT, PUMPBTC. Sie sind auf Binance nicht mehr im Handel (Nachlader *nicht im Handel 3*), keiner steht auf der Hebel-Liste. Unbedenklich.
+- **Signale:** Heute gab es 16 REGEL0-Signale, alle außerhalb der Hebel-Liste, also keine Hebelmail. Seit 03.10. kamen 4 Hebelmails (SEI, QNT, NEAR, KAIA) in rund 58 h. Bei 19,5 je Woche (§22) wären etwa 7 zu erwarten; P(≤ 4) ≈ 0,2, also im Rauschen. Weiter in der Testwoche beobachten (T1 der S7-7-Bedingungen).
+- Der Nutzer bekommt derzeit nur Mails der alten Spot-Kette (Verkaufsvorschläge, NACHKAUFEN). Zum Schalter R-4 siehe Plan Hebel O24 (Wahl A/B).
+- **K-MISFIRE-2:** ob nach dem Neustart noch eine Misfire-Mail kam, prüft der nächste NB-Export bzw. die Rückmeldung des Nutzers.

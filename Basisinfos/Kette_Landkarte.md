@@ -18,6 +18,13 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 05.10.2026 — Scheduler und Schalter
+>
+> | Hier fehlt | Stand seit 05.10.2026 |
+> |---|---|
+> | Toleranz verpasster Läufe | **alle** Jobs haben `misfire_grace_time` = 300 s (`scheduler/background.py` `_neuer_scheduler`); vorher erbten die Intervall-Jobs 1 s, und 1,07 s Verspätung löste eine Fehlalarm-Mail aus. Die Mail nennt jetzt die Verspätung |
+> | Schalter `spot_kette_angehalten` (`regel0_betrieb.yaml`) | hält die Rollen-Kette in **allen fünf Gruppen** an, nicht nur Krypto-Spot. Weiter laufen REGEL0, Stop-Nachzieh 07:15, Bitpanda-Abgleich und Marktscan. Gesetzt ist er noch **nicht** (Wahl A/B, Plan Hebel O24) |
+
 > ## ⚠️⚠️⚠️ NACHTRAG 03.10.2026 — der HEBEL kommt nicht mehr aus dieser Kette
 >
 > Seit S7-4 (E-46, am NB seit 03.10.) kommen **neue Hebel-Einstiege nur noch aus der REGEL0**: `agent/regel0_rechnung.py` stündlich nach dem Nachlader, Ablage `data/regel0_signale.db`, Mail `agent/regel0_mail.py`. In der Rollen-Kette ist der Hebelvorschlag über den Schalter `alter_hebelweg_aus` (`Basisinfos/regel0_betrieb.yaml`) **aus**: Eine Hebel-Etikettierung wird zu Spot, SHORT entfällt, es gibt keine Hebelrechnung (`rollen_lauf._ein_asset`). **Unverändert** sind die Spot-Kette und die Führung **echter** Hebelpositionen. Die LLM-Rollen sehen die REGEL0 noch **nicht** (D3; ihr Prüfblock kommt in der zweiten Fassung, M1-Kriterium 4). Alles, was unten über *Hebel* aus den Rollen steht, beschreibt den alten Weg. **Oberfläche:** Der Hebel-Tab zeigt die REGEL0-Signale in derselben Liste, nur gelesen (`agent/regel0_ansicht.py`, E-49). *Jetzt analysieren* ist gesperrt, solange der alte Weg aus ist. **LLM-Ebene der REGEL0 (seit 03.10., E-50 bis E-52):** eine eigene, neu gebaute Kette (Markt, Trader, Entscheider; `agent/regel0_llm.py`) liefert einen Prüfblock in die Signalmail, dazu ein Chart. Sie kippt nichts. Seit Fassung 0.1e (E-53, 04.10.): Trader mit 5 Stimmen, Umfeld nur Auskunft, Entscheider ausgesetzt (Neuprüfung O22). Die **Ausstiegserinnerung** nach 24 h kommt seit 04.10. nur bei einer **offenen** Hebelposition (E-55; unbekannter Stand → mit Vermerk). Die Rollen A/BC/G unten bleiben die der Spot-Kette.

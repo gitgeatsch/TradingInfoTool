@@ -2408,3 +2408,13 @@ Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
 **Nachtrag 04.10.2026 (14) — Halt bei Spot, Vorrang Hebel (E-55):** Der Spot-Neubau (O23) ist nach der Voranalyse angehalten. Vor einer Wiederaufnahme sind Totalüberarbeitung, Machbarkeit und offene Punkte zu behandeln (`Voranalyse_Spot_Neubau_04_10.md`). Zuerst müssen REGEL0-Mails und LLM-Prüfblock sauber laufen. Die Ausstiegserinnerung kommt nur noch bei offener Hebelposition (`Voranalyse_Schritt7` §21).
 
 **Nachtrag 05.10.2026 (15) — zwei getrennte Stränge (E-59):** **Hebel** (Testwoche, F5, Freigabe, danach N4 und Selbstmessung) und **Spot** (nur Machbarkeit M-0, Desktop-Messung ohne LLM, kein Betriebscode). Die Trennungsregeln T-1 bis T-6 und der vorab festgelegte Messplan stehen in `Voranalyse_Spot_Neubau_04_10.md` §7. Der Hebel hat Vorrang.
+
+**Nachtrag 05.10.2026 (16) — Spot-Klima gemessen, Misfire behoben, G1 offen (E-61 bis E-66):**
+- **Spot:** drei Fassungen auf BTC und ETH (`Voranalyse_Spot_Neubau_04_10.md` §8.6–§8.11).
+  - Das Klima (MVRV, Drawdown, 200 Wochen) erkennt die echten Böden (3 von 4, auch 2026) und meldet die Wende verlässlich.
+  - Aber weder Warten auf die Zone (F2) noch Gewichten (F3) schlägt regelmäßiges Kaufen. Der Grund: Das Klima ist in den stärksten Anstiegsjahren am teuersten.
+  - Eine vierte Kaufregel auf derselben Menge wäre Kurvenanpassung (E-63).
+- **Nächster Spot-Schritt:** die Grundsatzfrage **G1** (Spot-Altcoins über Monate bis 1–2 Jahre gegen Akkumulation der Kernwerte über mehrere Zyklen mit Teilverkauf), fachlich und technisch bewertet, in offener Abstimmung (§10, E-66).
+- **Hebel:**
+  - Die Misfire-Mail war ein Fehlalarm: 1,07 s Verspätung bei 1 s Standardtoleranz. Behoben (95cfe08).
+  - Die Ausstiegserinnerungen ohne offene Position entfallen wie vorgesehen.
