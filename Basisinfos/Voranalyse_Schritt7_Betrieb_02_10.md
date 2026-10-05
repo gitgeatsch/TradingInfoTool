@@ -1780,3 +1780,85 @@ Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.
 |---|---|---|
 | **N4-1** | Umfang: **Kern** (K+T+R, ~8,5 Tage) oder **mit Markt** (+~1,5 Tage)? | **Kern.** Der Markt sagt über 2025/26 zu 85 % dasselbe (§20.12.2); ein Rückspiel würde das teuer bestätigen |
 | **N4-2** | Start nach dem Bau und dem Trockenlauf, **ohne weitere Rückfrage**? | **Ja.** Ich melde den Start, den Tagesstand und das Ergebnis von K, bevor T beginnt |
+
+### 23.5 Abgestimmt und gebaut (05.10.2026; Nutzer: *„N4-1 nur Kern, N4-2 Ja – bauen, prüfen und gegenprüfen“*)
+
+**Vorgaben des Nutzers, wörtlich umgesetzt:**
+
+| Vorgabe | Umsetzung |
+|---|---|
+| *„Wenn die Messung abbricht oder der Rechner neu startet, muss alles wieder funktionieren und es darf nichts verloren gehen“* | Ablage `data/_n4/n4_ablage.db` (synchronous=FULL), **jede Stimme sofort geschrieben**, Eingaben eingefroren, Fassung als Prüfsumme, Herzschlag-Sperre, Kontingent je Schlüssel in der Ablage. Nach einem Neustart: Doppelklick `n4_start.cmd`. ⛔ **Keine Windows-Aufgabe** (Nutzer: *„ich möchte das nicht einrichten“*); ich prüfe zu Beginn jeder Sitzung den Stand |
+| *„den ersten Teil der Prüfung und Messungen immer sauber durchtesten“* | `n4_pruefe.py` P1–P10 mit Platzhalter-Client vor dem ersten Gemini-Aufruf (Ergebnis unten) |
+| *„wenn sich bereits ein eindeutiges Ergebnis abzeichnet, Zeit in Anpassungen stecken statt weiter zu messen“* | **Zwischenentscheide** nach 250/500/750 Ankern, gegen bekannte Wahrheit geeicht (§23.6); Anpassungskatalog §23.7 |
+| N4-1 *nur Kern* | K → T → R; Markt **später**, ggf. in Kurzform (Nutzer: *„die Marktmessung kann man nachziehen bzw. in kurzer Form andenken“*) |
+
+**Werkzeuge** (`Basisinfos/Rechenkern_02_10/`): `n4_rueckspiel.py` (Läufer, `lauf`/`stand`), `n4_auswertung.py` (Entscheide, Endbericht erst nach T), `n4_pruefe.py` (P1–P10), `n4_sequenz_selbsttest.py` (Eichung), `n4_start.cmd`, `n4_stand.cmd`.
+
+**Beim Bauen gefunden:**
+- 3 Anker ohne Eingabe (ASR, BANANAS31, INIT: unter 30 Tageskerzen). Im Betrieb bekäme der Trader ebenfalls keine Eingabe; N4 bildet das nach (*fehlt*, kein Aufruf), statt abzubrechen.
+- Der Zähler des Gemini-Clients schreibt in `data/_n4/client_zaehler.db`, nie in die Standard-DB.
+
+### 23.6 Zwischenentscheide — geeicht, bevor ein Aufruf fällt
+
+`n4_sequenz_selbsttest.py`: echte Anker in Läufer-Reihenfolge mit echtem Ertrag, simulierte Urteile mit Stärke k. Die Vorgabe vorab war: **falscher Abbruch bei einem Effekt, den N4 sicher findet (k = 0,3, ~4,7 Pp), höchstens 5 %**.
+
+| Kandidat (Grenzen z bei 250/500/750) | falscher Abbruch bei k = 0,3 | Abbruch ohne Effekt | Ø Anker ohne Effekt |
+|---|---|---|---|
+| A (−0,5 / 0 / 0,5) | 4,7 % (300 Welten) → **5,3 % (1.000 Welten) ✗** | 77 % | 572 |
+| B (−1 / −0,5 / 0) | 0,3 % | 58 % | 721 |
+| C (0 / 0,5 / 1) | 10,3 % ✗ | 91 % | 459 |
+| **D (−1 / 0 / 0,5)** gewählt | 1,3 % → **1,8 % (1.000 Welten) ✔** | **75 %** | 629 |
+
+- **Gegenprüfung:** A lag mit 300 Welten knapp unter der Grenze; die Nachprüfung mit 1.000 Welten zeigte 5,3 %. Erst danach wurde D gebaut: das Risiko von A lag nur beim ersten Blick.
+- **Zusätzlich:** frühes TRÄGT nur bei p < 0,001 in beiden Jahren (Haybittle-Peto); ohne Effekt kam das in keiner der Welten vor.
+- **Was der Läufer am Entscheid ausgibt:** nur das Wort (*WEITER / STOP-ANPASSEN / STOP-TRÄGT-FRÜH*), keine Trennzahl. Die Zahlen stehen für die Nachvollziehbarkeit in der Ablage (Tabelle `entscheid`).
+
+### 23.7 Anpassen — wie, was und warum (vorab festgelegt)
+
+**Wann:** bei *STOP-ANPASSEN*, bei *TRÄGT NICHT* am Ende oder bei P2b.
+
+**Schritt 1 — WORAN** (aus der Ablage, **ohne** neue Aufrufe):
+
+| # | Befund | Hebel |
+|---|---|---|
+| W1 | *stützt* zu selten (unter 30 je Jahr) | Stufen: Saldo der Stimmen statt Mehrheit (R3), zwei Stufen statt drei |
+| W2 | Rauschboden: A/A′ unter 80 % gleich | mehr Stimmen oder Saldo; Temperatur |
+| W3 | vertauschte Reihenfolge ändert über 20 % | Form der Eingabe (Positionsbias) |
+| W4 | **Regel-Arm trennt, Trader nicht** | Die Information ist in der Eingabe, das LLM nutzt sie nicht: **Aufgabe/Prompt** (die Wette *Gegenbewegung nach Rückgang*, P1-Lehre) |
+| W5 | **weder Regel noch Trader trennen** | Die Information fehlt in der Eingabe: **neue Information** (Terminmarkt, Funding, Text). Nach §20.11.5 **nicht** weiter am Prompt feilen |
+| W6 | Begründungen (Stichprobe 30) argumentieren mit Trend statt Gegenbewegung | Aufgabe/Prompt |
+| W7 | trennt nur in einem Jahr | Regime, kein Prompt-Fehler → Auskunft je Phase |
+
+**Schritt 2 — WAS:**
+- **Ein** Hebel je neuer Fassung, der zum WORAN-Befund gehört.
+- Begründung aus der Ursache, nie aus dem Wunschergebnis (E-63).
+
+**Schritt 3 — WIE:**
+- Fassung n+1 bekommt eine **neue Ablage**, der Versuchszähler läuft mit.
+- Zuerst Kalibrierlauf P1 (50 Anker), dann wieder die Entwicklungsmenge.
+- Die Bestätigungsmenge bleibt **unberührt** bis zur endgültigen Fassung (P3, einmal).
+
+**Grenze:** Nach **drei** Fassungen ohne TRÄGT bleibt der Block **Auskunft**. Der nächste Hebel ist dann nur noch neue Information (O22); das entscheidet der Nutzer.
+
+### 23.8 Prüfung des Läufers vor dem Start (`n4_pruefe.py`, Beleg `n4_pruefe.txt`)
+
+```
+OK    P1 Anker: 1.000, Pruefsumme wie Beleg, Reihenfolge fest  
+OK    P1 Reihenfolge abwechselnd 2025/2026 (je Blick gleich stark)  
+OK    P1 ein Anker der Bestaetigungsmenge in der Liste -> Abbruch  
+OK    P2 ganzer Lauf mit 3 % Netz- und 3 % Formfehlern: fertig, lueckenlos, keine Doppel (142 s)  []  gestoppt=('ENTSCHEID_T500',)
+OK    P2 Netzfehler nie als Stimme gespeichert, Formfehler als ungueltige Stimme (wie im Betrieb)  ungueltig 132
+OK    P3 16 harte Abbrueche (Prozess getoetet), davon 11 MITTEN im Lauf, und Fortsetzen: fertig, lueckenlos, keine Doppel  [] N4 ist beendet (fertig 2026-10-05 20:44:54) - nichts zu tun.
+OK    P3 Eingaben nur EINMAL eingefroren (1000 Zeilen), jeder Neustart nimmt dieselben (12 Starts)  
+OK    P4 Deckel je Schluessel: erst Schluessel 2 (30), dann 1 (20), dann Ende ohne Warten  {(2, '2030-01-01'): 30, (1, '2030-01-01'): 20} leer=1 stimmen=50
+OK    P4 naechster Pazifik-Tag: setzt fort, nichts doppelt  stimmen 100
+OK    P4 Google meldet 'Tagesbudget leer' -> Schluessel als erschoepft vermerkt, Wechsel auf den anderen  [(1,), (2,)]
+OK    P5 geaenderte Fassung -> der Laeufer verweigert  
+OK    P6 zweiter Laeufer bei aktivem ersten -> tut nichts  Ein anderer Laeufer ist aktiv (Herzschlag juenger als 600 s) - nichts zu tun.
+OK    P7 Platzhalter in die echte Ablage -> verweigert  
+OK    P8 Orakel-Urteile -> Bericht TRAEGT (oder frueh STOP-TRAEGT)  [('ENTSCHEID_K', 'WEITER (Kontaminationsprobe bestanden)'), ('ENTSCHEID_T250', 'STOP-TRAEGT-FRUEH (beide Jahre p < 0,001) - weiter zur Bestaetigung')]
+OK    P8 Zufalls-Urteile -> TRAEGT NICHT  [('ENTSCHEID_K', 'WEITER (Kontaminationsprobe bestanden)'), ('ENTSCHEID_T250', 'WEITER'), ('ENTSCHEID_T500', 'STOP-ANPASSEN (der Trader trennt erkennbar nicht) - Zeit in Anpassungen, §23.5')]
+OK    P10 Start ohne Konsole (pythonw, wie die Windows-Aufgabe): Stimmen gespeichert, Protokoll geschrieben  stimmen 30
+OK    P9 Standard-DB und Messbasen unberuehrt  ['tradinginfotool.db', 'stundenkurse.db', 'stundenkurse_alle.db']
+ALLE BESTANDEN
+```

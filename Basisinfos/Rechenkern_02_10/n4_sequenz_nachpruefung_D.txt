@@ -1,0 +1,5 @@
+N4 Zwischenentscheide - Eichung gegen bekannte Wahrheit (1000 Welten je Stärke, 200 Vertauschungen, Blicke (250, 500, 750, 1000))
+
+Kandidat D (-1,0 / 0,0 / 0,5)
+  k     | Abbruch ANPASSEN (Blick 250/500/750) | Abbruch TRAEGT frueh | am Ende traegt | am Ende traegt nicht | mittlere Anker
+  0.3   |   1.8 %  (  1 /   0 /   0 %)           |   14.9 %            |   59.3 %        |   24.0 %              |  939

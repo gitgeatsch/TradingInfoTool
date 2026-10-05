@@ -1,0 +1,22 @@
+OK    P1 Anker: 1.000, Pruefsumme wie Beleg, Reihenfolge fest  
+OK    P1 Reihenfolge abwechselnd 2025/2026 (je Blick gleich stark)  
+OK    P1 ein Anker der Bestaetigungsmenge in der Liste -> Abbruch  
+OK    P2 ganzer Lauf mit 3 % Netz- und 3 % Formfehlern: fertig, lueckenlos, keine Doppel (142 s)  []  gestoppt=('ENTSCHEID_T500',)
+OK    P2 Netzfehler nie als Stimme gespeichert, Formfehler als ungueltige Stimme (wie im Betrieb)  ungueltig 132
+OK    P3 16 harte Abbrueche (Prozess getoetet), davon 11 MITTEN im Lauf, und Fortsetzen: fertig, lueckenlos, keine Doppel  [] N4 ist beendet (fertig 2026-10-05 20:44:54) - nichts zu tun.
+
+OK    P3 Eingaben nur EINMAL eingefroren (1000 Zeilen), jeder Neustart nimmt dieselben (12 Starts)  
+OK    P4 Deckel je Schluessel: erst Schluessel 2 (30), dann 1 (20), dann Ende ohne Warten  {(2, '2030-01-01'): 30, (1, '2030-01-01'): 20} leer=1 stimmen=50
+OK    P4 naechster Pazifik-Tag: setzt fort, nichts doppelt  stimmen 100
+OK    P4 Google meldet 'Tagesbudget leer' -> Schluessel als erschoepft vermerkt, Wechsel auf den anderen  [(1,), (2,)]
+OK    P5 geaenderte Fassung -> der Laeufer verweigert  
+OK    P6 zweiter Laeufer bei aktivem ersten -> tut nichts  Ein anderer Laeufer ist aktiv (Herzschlag juenger als 600 s) - nichts zu tun.
+
+OK    P7 Platzhalter in die echte Ablage -> verweigert  
+OK    P8 Orakel-Urteile -> Bericht TRAEGT (oder frueh STOP-TRAEGT)  [('ENTSCHEID_K', 'WEITER (Kontaminationsprobe bestanden)'), ('ENTSCHEID_T250', 'STOP-TRAEGT-FRUEH (beide Jahre p < 0,001) - weiter zur Bestaetigung')]
+OK    P8 Zufalls-Urteile -> TRAEGT NICHT  [('ENTSCHEID_K', 'WEITER (Kontaminationsprobe bestanden)'), ('ENTSCHEID_T250', 'WEITER'), ('ENTSCHEID_T500', 'STOP-ANPASSEN (der Trader trennt erkennbar nicht) - Zeit in Anpassungen, §23.5')]
+OK    P10 Start ohne Konsole (pythonw, wie die Windows-Aufgabe): Stimmen gespeichert, Protokoll geschrieben  stimmen 30
+OK    P9 Standard-DB und Messbasen unberuehrt  ['tradinginfotool.db', 'stundenkurse.db', 'stundenkurse_alle.db']
+
+ALLE BESTANDEN
+Wegwerf-Ablagen: C:\Users\Geatsch\AppData\Local\Temp\n4_pruefe_htr_8aup
