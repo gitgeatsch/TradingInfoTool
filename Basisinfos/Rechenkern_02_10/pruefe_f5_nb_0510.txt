@@ -1,0 +1,9 @@
+F5 R-R11 am NB: Laufstunden 2026-10-03 04:00 bis 2026-10-05 05:00 (50), Modelle des NB
+REGEL0-ERGEBNIS {"jetzt": "2026-10-03 04:00", "sekunden": 64.3, "neu": 1, "endgueltig": 3, "nachgeholt": [], "neu_schalter_an": 0, "aktiv": 635, "frisch": 635, "veraltet": 0, "trainiert": [], "meldung": ""}
+Signale: NB 103 Signale, Desktop 103, gleich 103
+  ✔ nur im NB                  0
+  ✔ nur am Desktop             0
+  ✔ v-dach anders              0
+  ✔ vorlaeufige Stufe anders   0
+  ✔ endgueltige Stufe anders   0
+SCHLUSS F5: zeilengleich

@@ -1663,3 +1663,11 @@ Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.
 1. Am NB nach dem Pull: `python nb_teilexport_betriebsdaten.py --mit-kurse <USB>\regel0_kopie`
 2. Den Stick an den Desktop. Ich rechne `pruefe_f5_rr11_nb.py <USB>\regel0_kopie\regel0_signale.db <USB>\regel0_kopie --modelle <USB>\regel0_kopie\regel0_modelle`.
 3. Dauer am Desktop etwa 1–2 h für die Stunden seit 03.10. (4 Prozesse).
+
+### 22.8 F5 erster Lauf an den echten NB-Daten — ZEILENGLEICH (05.10.2026)
+
+- **Kopie:** vom NB über den Teilexport (`--mit-kurse`, Stick), 05:19 UTC. Integritätsprüfung ok, Modell-Prüfsumme `bf3e71daf909` wie am NB. Am Desktop lokal abgelegt, Prüfsummen gleich.
+- **Nachrechnung:** `pruefe_f5_rr11_nb.py` mit den **Modellen des NB**, 4 Prozesse, Laufstunden **03.10. 04:00 bis 05.10. 05:00 (50)**. Beleg `Rechenkern_02_10/pruefe_f5_nb_0510.txt`.
+- **Ergebnis: 103 von 103 Signalen gleich.** 0 nur am NB, 0 nur am Desktop, 0 v̂ anders, 0 vorläufige und 0 endgültige Stufe anders. ✔ **F5 für den bisherigen Teil der Testwoche erfüllt.**
+- **Aussage:** Der Rechenkern am NB rechnet dieselben Signale wie die Messung am Desktop, auf allen Assets (nicht nur den 4 gemailten).
+- **Nicht geprüft:** das Training am Monatswechsel. Die NB-Modelle wurden übernommen; ein Lauf ohne `--modelle` (Training am Desktop) folgt zum Wochenende mit, und K-MONAT kommt am 01.11.
