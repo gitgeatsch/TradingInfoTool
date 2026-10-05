@@ -838,3 +838,60 @@ Nutzer 05.10.: *„Spot-Thema müssen wir offen diskutieren und abstimmen – da
 | **G1-M4** | **Fallzahl auf deinem Horizont:** wie viele unabhängige Phasen tragen eine Spot-Regel auf 6–24 Monate | *ist eine Spot-Regel überhaupt messbar, oder bleibt nur Beschreibung?* | klein |
 
 **Reihenfolge:** M1 und M2 zuerst. Sie sind schnell und rein **beschreibend**, mit kleinem Mehrfachtest-Risiko. Je nach Ergebnis M3 und M4. Jede bekommt vorher einen Messplan zur Abstimmung (Pflichtablauf).
+
+### 10.7 Messplan G1-M1 und G1-M2 — VOR dem Lauf festgelegt (05.10.2026; Nutzer: *„zuerst G1-M1 und M2 messen, prüfen und gegenprüfen“*)
+
+Beide Messungen sind **beschreibend**: Es wird keine Regel gewählt und keine Schwelle gesetzt. Gemessen wird nur am Desktop und nur lesend.
+
+#### G1-M1 — dein tatsächliches Handeln aus dem Bitpanda-Buch
+
+- **Daten:**
+  - `Austauschordner/Notebook_Analysedaten/bitpanda_transaktionen.json` (Spot-Trades 13.09.2024 bis 01.08.2026, 6.149, alle in EUR). ⚠️ August bis Oktober 2026 fehlen; die Datei ist vom 03.08.
+  - Kurse: Kraken EUR täglich (`tradinginfotool.db`, bis 19.07.2026); danach CoinMetrics USD × Wechselkurs vom 19.07.; für Altcoins `messdaten.db` USD.
+- **Stichtag** 01.08.2026 (letzter Trade).
+- **Menge:**
+  - Mengen aus den Trades (Käufe − Verkäufe); Staking, Belohnungen und Umbuchungen zählen nicht, weil ihnen kein Geldfluss gegenübersteht.
+  - Stablecoins (EURCV, EURC, USDC, USDT …) sind ausgenommen.
+  - Werte ohne Kursreihe (Aktien, ETF, nicht bei Binance gelistete) werden nur gezählt (Anzahl, EUR-Umsatz).
+- **Teil A — Kernwerte BTC und ETH:**
+  - **A1 Kaufqualität:** EUR-gewichteter Durchschnittskaufpreis ÷ Durchschnittspreis bei täglich gleichem Betrag im selben Zeitraum (harmonisches Mittel der Tagesschlüsse vom ersten bis letzten Kauf). < 1 heißt billiger gekauft als regelmäßiges Kaufen.
+  - **Nullwelt:** dieselben Beträge an zufälligen Tagen desselben Zeitraums, 1.000-mal; ausgewiesen wird der Rang.
+  - **A2 Verkaufsqualität:** EUR-gewichteter Durchschnittsverkaufspreis ÷ arithmetisches Mittel der Tagesschlüsse im Verkaufszeitraum (> 1 heißt teurer verkauft). Dazu *Halten statt Verkaufen*: Wert der verkauften Menge am Stichtag gegen den Erlös.
+  - **A3 Ergebnis:** Ergebnis in EUR (Erlöse + Bestandswert − Käufe) gegen zwei Gegenwelten:
+    - (i) *dieselben Käufe, nie verkauft*;
+    - (ii) *regelmäßiges Kaufen*: dasselbe **Netto**kapital (Käufe − Verkäufe, falls > 0) gleichmäßig monatlich vom ersten Monat bis zum Stichtag.
+- **Teil B — Altcoin-Spot gegen BTC, je Coin mit Kursreihe:**
+  - Methode **PME** (*public market equivalent*, Kaplan/Schoar): Jeder Geldfluss wird am selben Tag in BTC gespiegelt. Ein Kauf von x EUR Coin entspricht einem Kauf von x EUR BTC, ein Verkauf einem Verkauf von x EUR BTC.
+  - **Vorteil gegen BTC** = Ergebnis Coin − Ergebnis BTC-Spiegel.
+  - Restbestand zum Stichtagskurs. Fehlt der Kurs, gilt der letzte eigene Tradepreis; das wird gezählt und ausgewiesen.
+  - Ausgewiesen werden die Summe, der Anteil der Coins vor BTC und die 10 größten Beiträge in beide Richtungen.
+- **Kosten (M-1):**
+  - Tradepreis ÷ Tagesschluss − 1, getrennt nach Kauf und Verkauf, Median und Quartile, für BTC, ETH und alle Kraken-EUR-Werte.
+  - Geschätzte **Kosten je Hin- und Rückweg** = Median beim Kauf − Median beim Verkauf. Die Tagesbewegung mittelt sich über viele Trades heraus; das ist eine Schätzung mit Streuung.
+
+#### G1-M2 — Grundrate Altcoins gegen BTC
+
+- **Daten:** `messdaten.db`, Krypto, USD, **mit eingestellten Werten** (unverzerrt), 2017–2026-09-20.
+- **Ausgenommen:**
+  - BTC selbst;
+  - Stablecoins: Median der täglichen Bewegung unter 0,2 %;
+  - Hebeltoken mit den Endungen UP, DOWN, BULL, BEAR.
+- **Starts:** jeder Monatserste ab 01.2019. **Horizonte:** 90, 180, 365, 730 T.
+- **Je Coin mit Kurs am Start:** relativer Ertrag gegen BTC = (P(t+h)/P(t)) ÷ (BTC(t+h)/BTC(t)) − 1.
+  - Endet die Reihe vor t+h (eingestellt), gilt der **letzte Kurs** und das Ereignis wird gezählt. Das ist eher zu günstig für den Coin, weil Einstellungen oft nahe null erfolgen.
+- **Ausgewiesen je Epoche (E1 Start 2019–2020 · E2 2021 bis 10.01.2024 · E3 ab 11.01.2024) und Horizont:**
+  - Median des relativen Ertrags;
+  - Anteil vor BTC;
+  - Ertrag eines gleich gewichteten Korbs aller Altcoins gegen BTC (Mittel je Start, dann Median über die Starts);
+  - Anteil mit −50 % und −90 % in USD;
+  - Anteil eingestellt;
+  - **Zahl unabhängiger Starts** (nicht überlappend: Abstand ≥ h).
+- **Auskunft:**
+  - ETH getrennt;
+  - nur die liquidere Hälfte (30-T-Umsatz am Start über dem Median);
+  - nur deine gehandelten Coins.
+
+#### Was daraus folgt (vorab)
+
+- **M1 und M2 sind die Faktenbasis für das Gespräch G1** (D1–D6). Sie entscheiden nichts automatisch.
+- **G1-M2 an die Frage D4 geknüpft:** Liegt der Anteil vor BTC auf 365 und 730 T in **allen drei** Epochen unter 50 % **und** der Korb-Median unter 0, dann gibt es **als Grundrate** bei Altcoin-Spot nichts zu holen. Ein Spot-Weg müsste dann eine Auswahl nachweisen, die diese Grundrate deutlich schlägt; sonst gilt D4 (Spot entfällt) als ernsthafte Option.
