@@ -409,3 +409,31 @@ Nutzer 05.10.: *„Ja, lege diese als vorläufige Hypothesen fest, abhängig von
 **Echter Boden** nach K-4: mindestens 45 % unter dem Hoch, 180 T kein tieferes Tief, +50 % in 365 T. Z1–Z4 sind an den Daten geprüft (§8.4).
 
 **Ehrlich:** Bei 4 Bestimmungszyklen ist ein Nachweis nicht erreichbar. „Gestützt“ heißt Wirkungsrichtung, Fehlalarm und Verzögerung **beschrieben**, nicht bewiesen.
+
+### 8.7 Ergebnis Fassung 1 (05.10.2026, nach dem vorab festen Plan §8.6)
+
+Beleg: `Spot_Voranalyse_04_10/k1_klima_studie.py` → `k1_klima_studie.txt`. Daten: CoinMetrics bis 04.10.2026, Breite aus `messdaten.db` bis 20.09.2026 (nur lesend). Nichts nachgestellt.
+
+**Auslegung, vor dem ersten Lauf im Skriptkopf festgelegt** (im Plan nicht genau bestimmt): Kurs = CoinMetrics-Tagesschluss · Zyklusfenster für H4 = Tief ±365 T · eine B-Einschaltung = erster B-Tag nach ≥ 10 Tagen ohne B · Breite nur bei ≥ 50 Reihen.
+
+**Echte Böden** (K-4, aus den Daten gefunden, nicht vorgegeben): 15.12.2018 · 12.03.2020 · 20.07.2021 · 09.11.2022 · **30.06.2026 vorläufig** (180-Tage-Bedingung erst am 27.12.2026 prüfbar). Deckt sich mit Z1–Z5.
+
+| | Ergebnis Bestimmung Z1–Z4 | Z5 2026 (Test) | Urteil Fassung 1 |
+|---|---|---|---|
+| **H1 Zone** | A an in **3 von 4**; nicht 2021-07 (Zwischentief im Bullenmarkt, MVRV 1,54 = Perzentil 40 %) | **A an** (alle drei, MVRV 1,10) | **gestützt** |
+| **H2 Wende** | B binnen 120 T in **3 von 4**: 2020 nach 57 T (+99 % vom Tief), 2021 nach 30 T (+57 %), 2022 nach 78 T (+46 %); 2018 erst nach 154 T (18.05.2019) | B an **03.09.2026**, nach 65 T, **+39 %** vom Tief | **gestützt** |
+| **H3 Fehlalarm** | **2 von 11** Einschaltungen (18 %): 07.03.2018 (−41 %), 19.08.2021 (−25 %) | 03.09.2026 offen bis 02.03.2027 | **gestützt** |
+| **H4 Klima trägt** | 180-T-Folgeertrag an B-Tagen über dem aller Tage nur in **1 von 4** (2022: +18 Pp; 2018 −41, 2020 −55, 2021 −26 Pp); Nullwelt-Rang 0,12–0,67, nirgends auffällig | nicht messbar (Ertrag reicht nur bis 07.04.2026, also vor dem Tief) | **nicht gestützt** |
+
+**Auskunft — keine Hypothese der Fassung 1**, die Gegenrichtung nach §8.6: derselbe Vergleich für **A-Tage (Zone)**: 2018 **+152 Pp** (Rang 1,00) · 2020 +37 Pp (0,71) · 2021 **−69 Pp** (0,34; die A-Tage im Juni 2022 lagen vor dem letzten Abverkauf) · 2022 **+28 Pp** (0,99) · 2026 +36 Pp (1,00; A-Tage Feb.–Apr. 2026, vor dem Tief).
+
+**Klima heute (04.10.2026, Fakt):** *Wende bestätigt* seit 03.09. · Zone aus (MVRV 1,61 = Perzentil 45 %) · B1 nur noch aus dem 60-Tage-Nachlauf, weil die Breite in `messdaten.db` am 20.09. endet.
+
+**Gegenprobe** (unabhängige Schleifenrechnung, scratchpad): Einschalttage von B2/B3 am 08.05.2020, 26.01.2023 und 03.09.2026 gleich, MVRV-Perzentil am Tief 2026 0,149 / 2022 0,010 / 2021 0,402 gleich, die fünf Tiefs als Minimum ihres Zeitraums gleich.
+
+#### Was daraus folgt — und was nicht
+
+- **Die Wende erkennt man, aber sie ist nicht das Potential.** B kommt verlässlich und selten falsch (H2, H3), doch im Mittel **30–78 Tage und +46 % bis +99 % nach dem Tief**. Wer erst bei der Wende kauft, hat nach dem Zyklusfenster nicht mehr als an einem beliebigen Tag (H4).
+- **Das Potential lag in der Zone** — antizyklisch, wie vom Nutzer vorgegeben (E-60). ⚠️ Das ist **Auskunft**, kein Befund: dieselben 4 Zyklen, nachträglich angesehen. 2021 zeigt die Gefahr: eine Zone mitten im Abwärtsmarkt (Juni 2022) kostete −23 % über 180 T.
+- **Nicht** folgt: eine Aufbauregel. H5 (gegen DCA) ist nach §8.6 erst zulässig, wenn H1–H4 tragen. H4 trägt nicht.
+- **Eine Fassung 2 auf der Zone** wäre auf denselben Zyklen **kein unabhängiger Test**. Unabhängig bleiben nur Z5 (die Zone Feb.–Jun. 2026 wird ab Ende 2026 messbar) und eine zweite Menge, etwa **ETH mit eigenem MVRV** (CoinMetrics ab 2015, liegt schon in `coinmetrics.db`); ETH ist stark mit BTC verbunden, also nur teilweise unabhängig.

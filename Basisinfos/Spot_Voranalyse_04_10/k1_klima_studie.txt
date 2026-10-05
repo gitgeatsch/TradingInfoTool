@@ -1,0 +1,56 @@
+Spot K-0 Klima und Bodenbildung - Messplan Fassung 1 (Voranalyse_Spot §8.6), BTC, Daten bis 2026-10-04
+
+ECHTE BOEDEN (K-4, aus CoinMetrics-Tagesschluss):
+  2018-12-15  Kurs     3185  Drawdown -84 %  danach hoechstens +304 % in 365 T
+  2020-03-12  Kurs     4959  Drawdown -75 %  danach hoechstens +1066 % in 365 T
+  2021-07-20  Kurs    29767  Drawdown -53 %  danach hoechstens +127 % in 365 T
+  2022-11-09  Kurs    15758  Drawdown -77 %  danach hoechstens +133 % in 365 T
+  2026-06-30  Kurs    58525  Drawdown -53 %  danach hoechstens +48 % in 365 T  [VORLAEUFIG: 180-Tage-Bedingung erst 2026-12-27 pruefbar]
+
+H1 Zone - A an in +-30 Tagen um das Tief (gestuetzt: >= 3 von 4 Bestimmungszyklen):
+  2018-12-15  A an: JA  (A1 MVRV ja · A2 Drawdown ja · A3 200-Wochen ja; MVRV am Tief 0.69)
+  2020-03-12  A an: JA  (A1 MVRV ja · A2 Drawdown nein · A3 200-Wochen ja; MVRV am Tief 0.88)
+  2021-07-20  A an: nein  (A1 MVRV nein · A2 Drawdown nein · A3 200-Wochen nein; MVRV am Tief 1.54)
+  2022-11-09  A an: JA  (A1 MVRV ja · A2 Drawdown ja · A3 200-Wochen ja; MVRV am Tief 0.75)
+  2026-06-30  A an: JA  (A1 MVRV ja · A2 Drawdown ja · A3 200-Wochen ja; MVRV am Tief 1.10)
+  -> Bestimmungszyklen 3 von 4: GESTUETZT
+
+H2 Wende - B schaltet binnen 120 T nach dem Tief ein (gestuetzt: >= 3 von 4); Verzoegerung und verpasster Anstieg:
+  2018-12-15  B NICHT binnen 120 T
+  2020-03-12  B an am 2020-05-08: nach  57 Tagen, Kurs +99 % ueber dem Tief
+  2021-07-20  B an am 2021-08-19: nach  30 Tagen, Kurs +57 % ueber dem Tief
+  2022-11-09  B an am 2023-01-26: nach  78 Tagen, Kurs +46 % ueber dem Tief
+  2026-06-30  B an am 2026-09-03: nach  65 Tagen, Kurs +39 % ueber dem Tief
+  -> Bestimmungszyklen 3 von 4: GESTUETZT
+
+H3 Fehlalarm - Anteil der B-Einschaltungen mit einem Tief 20 % unter dem Einschaltkurs binnen 180 T (gestuetzt: <= 1/3):
+  2018-03-07  FEHLALARM  (tiefstes binnen 180 T -41 %)
+  2019-05-18  ok  (tiefstes binnen 180 T +2 %)
+  2020-05-08  ok  (tiefstes binnen 180 T -13 %)
+  2020-11-21  ok  (tiefstes binnen 180 T -9 %)
+  2021-08-19  FEHLALARM  (tiefstes binnen 180 T -25 %)
+  2023-01-26  ok  (tiefstes binnen 180 T -12 %)
+  2023-04-14  ok  (tiefstes binnen 180 T -18 %)
+  2023-10-16  ok  (tiefstes binnen 180 T -1 %)
+  2024-02-15  ok  (tiefstes binnen 180 T -2 %)
+  2024-11-02  ok  (tiefstes binnen 180 T -2 %)
+  2025-05-08  ok  (tiefstes binnen 180 T -2 %)
+  -> 2 von 11 Einschaltungen Fehlalarm (18 %), 1 noch offen (2026-09-03): GESTUETZT
+
+H4 Klima - 180-Tage-Folgeertrag an B-Tagen gegen alle Tage, je Zyklus [Tief -365 T, +365 T] (gestuetzt: >= 3 von 4):
+  2018-12-15  B-Tage 166 (davon nach dem Tief 104): Folgeertrag -26 % gegen alle Tage +15 % (Unterschied -41 Pp) · Nullwelt-Rang 0.14 (Auskunft)
+  2020-03-12  B-Tage 275 (davon nach dem Tief 171): Folgeertrag +31 % gegen alle Tage +86 % (Unterschied -55 Pp) · Nullwelt-Rang 0.12 (Auskunft)
+  2021-07-20  B-Tage 132 (davon nach dem Tief  22): Folgeertrag +20 % gegen alle Tage +46 % (Unterschied -26 Pp) · Nullwelt-Rang 0.62 (Auskunft)
+  2022-11-09  B-Tage 138 (davon nach dem Tief 138): Folgeertrag +35 % gegen alle Tage +18 % (Unterschied +18 Pp) · Nullwelt-Rang 0.67 (Auskunft)
+  2026-06-30  B-Tage 100 (davon nach dem Tief   0): Folgeertrag -34 % gegen alle Tage -21 % (Unterschied -13 Pp) · Nullwelt-Rang 0.06 (Auskunft)  [VORLAEUFIG: 180-Tage-Ertrag reicht nur bis 2026-04-07 - die Wende nach dem Tief ist noch nicht messbar]
+  -> Bestimmungszyklen 1 von 4 positiv: nicht gestuetzt
+
+AUSKUNFT (KEINE Hypothese der Fassung 1, Gegenrichtung nach §8.6): derselbe Vergleich fuer A-Tage (Zone)
+  2018-12-15  A-Tage 132: Folgeertrag +167 % gegen alle Tage +15 % (Unterschied +152 Pp) · Nullwelt-Rang 1.00
+  2020-03-12  A-Tage  32: Folgeertrag +124 % gegen alle Tage +86 % (Unterschied +37 Pp) · Nullwelt-Rang 0.71
+  2021-07-20  A-Tage  53: Folgeertrag -23 % gegen alle Tage +46 % (Unterschied -69 Pp) · Nullwelt-Rang 0.34
+  2022-11-09  A-Tage 455: Folgeertrag +46 % gegen alle Tage +18 % (Unterschied +28 Pp) · Nullwelt-Rang 0.99
+  2026-06-30  A-Tage  36: Folgeertrag +15 % gegen alle Tage -21 % (Unterschied +36 Pp) · Nullwelt-Rang 1.00
+
+KLIMA HEUTE (2026-10-04, Fakt): Wende bestaetigt · A1 aus A2 aus A3 aus · B1 an B2 an B3 an · MVRV 1.61 (Perzentil 45 %) · Breite ueber 50 T - (messdaten.db endet 2026-09-20, B1 aus dem 60-Tage-Nachlauf)
+  B (Wende) an seit: 2026-09-03
