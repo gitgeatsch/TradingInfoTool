@@ -370,3 +370,42 @@ Ein **echter Boden** ist ein Tagestief von BTC, das alle drei Bedingungen erfül
 | **K-5** | **Erfolgsmaß** einer späteren Aufbauregel: Endvermögen gegen DCA mit gleichem Kapital, dazu der größte Drawdown | ja; Mehrrendite wird **nicht** versprochen |
 
 ⚠️ **Spannung zu einer älteren Vorgabe:** Am 25.09. hast du gesagt *„nicht den Markt messen, sondern Beiträge je Asset“*. Das Klima **ist** Markt. Die Notiz selbst erlaubt Marktzustände *„in die Mail als Information oder als Sperre“*. Mein Vorschlag hält sich daran: Das Klima ist Auskunft und Gewicht, kein Auslöser je Asset. Wenn du es anders siehst, ist das K-3.
+
+### 8.6 K-1 bis K-5 als vorläufige Hypothesen — Messplan Fassung 1, VOR der Messung (05.10.2026; E-61)
+
+Nutzer 05.10.: *„Ja, lege diese als vorläufige Hypothesen fest, abhängig von den Ergebnissen.“*
+
+**Versionsregel:** Ändert ein Ergebnis eine Hypothese, entsteht **Fassung 2 mit Begründung**. Fassung 1 bleibt als Maßstab stehen und wird nie still angepasst (Mehrfachtesten).
+
+**Daten:**
+- BTC täglich aus **CoinMetrics Community** (Kurs, MVRV, Umlaufmenge ab 2010; einmal geladen nach `data/_spot/coinmetrics.db`, Lizenz CC BY-NC, privat).
+- Marktbreite aus allen Krypto-Reihen in `messdaten.db` (Binance täglich, eingestellte eingeschlossen). **Erst ab 2020**, weil vorher weniger als 50 Reihen vorliegen. 2018 läuft deshalb ohne Breite.
+- **Zyklen** (K-1): Z1 2018-12 · Z2 2020-03 · Z3 2021-07 · Z4 2022-11 **bestimmen** · **Z5 2026-07 ist der Test**. Alles getrennt ausgewiesen.
+
+**Zustände — kausal, täglich, ohne angepasste Schwellen** (Perzentile im **wachsenden** Fenster ab 2013, nie über die ganze Reihe):
+
+| | Bedingung |
+|---|---|
+| A1 | MVRV-Perzentil ≤ 20 % |
+| A2 | Drawdown vom Allzeithoch in Einheiten der Jahresschwankung (σ der Tagesrenditen über 365 T × √365), Perzentil ≥ 80 % |
+| A3 | Kurs / 200-Wochen-Schnitt, Perzentil ≤ 20 % |
+| **A Zone an** | mindestens 2 von 3 |
+| B1 | Breitensprung: Anteil über dem 50-Tage-Schnitt von ≤ 30 % auf ≥ 80 % binnen 20 Tagen; gilt danach 60 Tage (ab 2020) |
+| B2 | BTC über dem 200-Tage-Schnitt **und** der Schnitt höher als vor 20 Tagen |
+| B3 | **höheres Tief** (Dow, G5 vom 27.08.): Tief der letzten 30 Tage über dem Tief der 60 Tage davor |
+| **B Wende an** | B2 und B3, dazu B1, wo die Breite vorliegt |
+| **C Klima** | *Kapitulation* = A an, B2 und B3 aus · *Bodenbildung läuft* = A an und (B2 oder B3) · *Wende bestätigt* = B an · *Aufwärtstrend* = B2 ohne A · *überhitzt* = MVRV-Perzentil ≥ 90 % |
+
+**Die Hypothesen** (Fassung 1). Die Richtung ist fachlich vorgegeben (*Zone* = billig, *Wende* = besser), deshalb einseitig. Die Gegenrichtung wird mit ausgewiesen.
+
+| # | Hypothese | gilt als gestützt, wenn |
+|---|---|---|
+| **H1 Zone** | Am echten Boden ist A an | in ±30 Tagen um das Tief in **≥ 3 von 4** Bestimmungszyklen; Z5 berichtet |
+| **H2 Wende** | Nach jedem echten Boden schaltet B ein | binnen 120 Tagen in ≥ 3 von 4; **Verzögerung** in Tagen und **verpasster Anstieg** in % vom Tief berichtet |
+| **H3 Fehlalarm** | B schaltet selten im fallenden Markt ein | Anteil der B-Einschaltungen, nach denen binnen 180 T ein Tief **20 % unter** dem Einschaltkurs folgt, ≤ 1/3 |
+| **H4 Klima trägt** | Nach *Wende bestätigt* läuft BTC besser als an einem beliebigen Tag | 180-Tage-Folgeertrag an B-Tagen über dem aller Tage, in ≥ 3 von 4 Zyklen. Nullwelt: Zustandsreihe zirkulär verschoben (200×), Perzentil als **Auskunft** |
+| H5 (K-5, später) | Eine Aufbauregel auf dem Klima schlägt DCA mit gleichem Kapital | Endvermögen und größter Drawdown. Erst, wenn H1–H4 tragen |
+
+**Echter Boden** nach K-4: mindestens 45 % unter dem Hoch, 180 T kein tieferes Tief, +50 % in 365 T. Z1–Z4 sind an den Daten geprüft (§8.4).
+
+**Ehrlich:** Bei 4 Bestimmungszyklen ist ein Nachweis nicht erreichbar. „Gestützt“ heißt Wirkungsrichtung, Fehlalarm und Verzögerung **beschrieben**, nicht bewiesen.

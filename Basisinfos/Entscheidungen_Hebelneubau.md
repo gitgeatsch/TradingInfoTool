@@ -753,3 +753,9 @@ prüfen und gegenprüfen"*.
 **05.10.2026** · Nutzer: *„Ok, Spot muss anders angelegt werden. BTC und Altcoins hatten gerade eine Trendwende, d. h. es ist erforderlich, das Wetter bzw. Klima für eine echte Bodenbildung zu erkennen.“*
 - Spot fragt zuerst nach dem **Klima** und dem **Boden** (wann), nicht nach dem Querschnitt (welches). M-0 hat für das Welches nichts gefunden (§7.4).
 - Vorschlag: Klima → Bodenbildung (Ereignisstudie, beschreibend) → Aufbau. Die Voranalyse kommt auf Ja, getrennt vom Hebel (E-59).
+
+# E-61 · Spot K-1 bis K-5 als vorläufige Hypothesen (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ja, lege diese als vorläufige Hypothesen fest, abhängig von den Ergebnissen.“*
+- K-1 (2018–2022 bestimmen, 2026 testen), K-2 (CoinMetrics), K-3 (A Zone · B Wende · C Klima als Fakt-Ampel), K-4 (echter Boden 45 %/180 T/+50 %), K-5 (Erfolg gegen DCA mit gleichem Kapital) gelten **vorläufig**.
+- Die Messung entscheidet. Eine Änderung wird **Fassung 2 mit Begründung**; Fassung 1 bleibt Maßstab (Voranalyse_Spot §8.6).
