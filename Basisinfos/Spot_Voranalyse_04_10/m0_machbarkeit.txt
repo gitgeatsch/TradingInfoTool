@@ -1,0 +1,27 @@
+Spot M-0 Machbarkeit - Messplan Voranalyse_Spot §7.2 (vorab festgelegt, Commit 0e776be)
+Messbasis: 116 Assets, Tage 2022-06-01 bis 2026-09-23
+== M-0a Welches (Querschnitt) - 6 Merkmale x 2 Horizonte = 12 Tests, ~0,6 Zufallstreffer erwartet
+  schnitt200      20 T | 2024 -0.037 (N95 +0.094) 2025 +0.027 (N95 +0.096) 2026 +0.017 (N95 +0.068) | traegt nicht
+  momentum60      20 T | 2024 -0.035 (N95 +0.046) 2025 +0.016 (N95 +0.072) 2026 +0.020 (N95 +0.061) | traegt nicht
+  momentum250     20 T | 2024 +0.001 (N95 +0.107) 2025 +0.103 (N95 +0.133) 2026 +0.004 (N95 +0.105) | traegt nicht
+  rsi14           20 T | 2024 -0.014 (N95 +0.041) 2025 +0.005 (N95 +0.043) 2026 -0.017 (N95 +0.046) | traegt nicht
+  schwankung30    20 T | 2024 -0.105 (N95 -0.023) 2025 -0.174 (N95 -0.062) 2026 -0.068 (N95 -0.001) | traegt nicht · AUSKUNFT: umgekehrt in allen drei Jahren am unteren Rand
+  volumen_rel30   20 T | 2024 +0.004 (N95 +0.033) 2025 +0.005 (N95 +0.034) 2026 -0.020 (N95 +0.027) | traegt nicht
+  schnitt200      90 T | 2024 -0.020 (N95 +0.185) 2025 +0.114 (N95 +0.218) 2026 +0.000 (N95 +0.145) | traegt nicht
+  momentum60      90 T | 2024 -0.046 (N95 +0.110) 2025 +0.050 (N95 +0.105) 2026 -0.001 (N95 +0.099) | traegt nicht
+  momentum250     90 T | 2024 +0.080 (N95 +0.224) 2025 +0.201 (N95 +0.256) 2026 +0.001 (N95 +0.164) | traegt nicht
+  rsi14           90 T | 2024 -0.016 (N95 +0.078) 2025 +0.035 (N95 +0.066) 2026 -0.018 (N95 +0.084) | traegt nicht
+  schwankung30    90 T | 2024 -0.212 (N95 -0.064) 2025 -0.191 (N95 -0.104) 2026 -0.067 (N95 +0.042) | traegt nicht · AUSKUNFT: umgekehrt in allen drei Jahren am unteren Rand
+  volumen_rel30   90 T | 2024 +0.011 (N95 +0.029) 2025 -0.006 (N95 +0.022) 2026 -0.002 (N95 +0.026) | traegt nicht
+  -> tragfaehig: KEIN Kandidat
+== M-0b Ob (Niveau) - Monatsende ab 2024, Ziel: Median-Ertrag aller Assets der naechsten 30 Tage
+  BTC Abstand Schnitt                  Monate 29 | rho -0.27 | p 0.107 | Haelften -0.60 / -0.02 | traegt nicht (nachweisbar erst ab etwa |rho| 0.31)
+  Marktbreite (Anteil ueber Schnitt)   Monate 31 | rho -0.12 | p 0.633 | Haelften -0.24 / -0.07 | traegt nicht (nachweisbar erst ab etwa |rho| 0.49)
+  Median-Momentum 60 T                 Monate 31 | rho +0.08 | p 0.700 | Haelften +0.08 / +0.04 | traegt nicht (nachweisbar erst ab etwa |rho| 0.56)
+  -> tragfaehig: KEIN Kandidat
+== M-0c L3 - REGEL0-Einstieg ohne Hebel, laenger gehalten (Rang gegen Zufallsstunden desselben Assets und Monats)
+    72 h | 2024 0.493 (Zufall 0.500, N95 0.510, n 2222) 2025 0.491 (Zufall 0.500, N95 0.507, n 4411) 2026 0.488 (Zufall 0.501, N95 0.509, n 3367) | traegt nicht
+   120 h | 2024 0.498 (Zufall 0.501, N95 0.511, n 2222) 2025 0.490 (Zufall 0.501, N95 0.508, n 4411) 2026 0.493 (Zufall 0.501, N95 0.509, n 3363) | traegt nicht
+   480 h | 2024 0.502 (Zufall 0.500, N95 0.511, n 2222) 2025 0.517 (Zufall 0.501, N95 0.508, n 4411) 2026 0.512 (Zufall 0.501, N95 0.508, n 3294) | traegt nicht
+  -> tragfaehig: KEIN Horizont
+== ZUSAMMEN (Folgen vorab, §7.3): Welches nein · Ob nein · L3 nein

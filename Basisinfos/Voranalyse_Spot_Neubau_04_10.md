@@ -216,3 +216,26 @@ Gemeinsam für alle drei:
 | M-0b trägt nicht | Das *Ob* bleibt bei dir (S-b), wie vorgeschlagen. Das ist kein Abbruchgrund |
 | M-0b trägt | eigener Vorschlag zum *Ob*, getrennt zur Abstimmung |
 | **nichts** trägt | Spot ist mit unseren Daten **nicht nachweisbar**. Der Spot-Ast schrumpft auf Bestand und Ausstieg (S-B) und deine eigene Investitionsquote; keine Spot-Signale |
+
+### 7.4 Ergebnis M-0 (05.10.2026; Beleg `Spot_Voranalyse_04_10/m0_machbarkeit.py` / `.txt`, Messplan Commit 0e776be)
+
+**Nach dem vorab festgelegten Plan trägt KEIN Kandidat:** Welches nein · Ob nein · L3 nein.
+
+| | Ergebnis |
+|---|---|
+| **M-0a Welches** | 0 von 12. Abstand zum Schnitt, Momentum 60/250, rsi 14, Volumen relativ: alle in mindestens einem Jahr unter der Nullwelt oder mit wechselndem Vorzeichen |
+| **M-0b Ob** | 0 von 3 (BTC-Abstand ρ −0,27, p 0,11; Marktbreite ρ −0,12; Median-Momentum ρ +0,08). Mit ~30 Monaten erst ab ρ ≈ 0,3–0,56 nachweisbar |
+| **M-0c L3** | 72 h und 120 h **unter** dem Zufall (Rang 0,488–0,498); 480 h 2025/2026 knapp darüber (0,517 / 0,512 bei N95 0,508), 2024 nicht (0,502 bei N95 0,511) → trägt nicht |
+
+**Folge nach §7.3:** *Spot ist mit unseren Daten als Auswahl nicht nachweisbar.* Der Spot-Ast schrumpft auf Bestand und Ausstieg (S-B) und deine eigene Investitionsquote; keine Spot-Signale. Das *Ob* bleibt bei dir.
+
+⚠️ **Eine Auffälligkeit, ehrlich eingeordnet – niedrige Schwankung:**
+- `schwankung30` liegt in **allen drei Jahren und auf 20 wie 90 Tagen am unteren Rand** der Nullwelt. Ruhige Assets liefen im Tagesrang besser als schwankungsreiche (20 T: −0,105 / −0,174 / −0,068; 90 T: −0,212 / −0,191 / −0,067).
+- Der Messplan hatte nur den **oberen** Rand als Erfolg festgelegt. Das war eine Schwäche meines Plans: Er war einseitig, ohne dass die Richtung fachlich vorgegeben war.
+- **Nachträglich umgedeutet wird es nicht** (Mehrfachtesten).
+- Fachlich liegt eine Erklärung nahe: 2024–26 war für Altcoins überwiegend fallend, ruhige Assets fallen weniger und stehen im Rang oben. Das wäre ein **Effekt des Regimes**, kein dauerhafter Vorteil. Das ist zu **messen**, nicht anzunehmen.
+
+**Vorschlag M-0d – Bestätigung, wieder vorab festgelegt** (zur Abstimmung):
+1. **Unabhängige Menge:** dieselbe Regel (unteres Schwankungsfünftel minus oberes, Tagesrang, 20/90 T) auf den **~420 Assets außerhalb der Messbasis** (`stundenkurse_alle.db`, ab 2024). Diese Assets hat M-0 nie gesehen.
+2. **Spiegel nach Marktrichtung:** getrennt nach Monaten mit steigendem und fallendem Median-Ertrag. Trägt es nur in fallenden Monaten, ist es das Regime, kein Spot-Vorteil.
+3. **tragfähig**, wenn auf der unabhängigen Menge 2024, 2025 und 2026 je über der Nullwelt (zweiseitig, Richtung jetzt festgelegt: niedrig besser) **und** in steigenden **wie** fallenden Monaten gleichgerichtet.
