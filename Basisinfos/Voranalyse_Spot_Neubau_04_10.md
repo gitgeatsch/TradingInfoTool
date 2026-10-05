@@ -681,3 +681,74 @@ Beleg: `Spot_Voranalyse_04_10/k3_gewichten.py` → `.txt`.
 - (a) Die Klima-Ampel als Mail-Fakt — Voranalyse, wo und wie (T-2: Betriebscode erst nach Abstimmung).
 - (b) Die **andere Frage** M-5 Ausstieg: Taugt *überhitzt* zum **Teilverkauf**? Das ist eine neue Frage, aber dieselbe Trend-Gefahr (2017).
 - (c) Eine laufende Mitschrift der Ampel ab dem nächsten Monatsersten als unabhängige Beobachtung.
+
+## 9. SPOT-REGEL0 — der Spot-Neubau nach dem Muster des Hebels (05.10.2026; E-65)
+
+Nutzer 05.10.: *„Ja, die Punkte erscheinen sinnvoll, die Ausstiegsfrage für Spot (aktuelle Hebelplanung) steht ohnehin an. Unabhängig davon ist eine Mitschrift für langfristige Beobachtung sinnvoll, aber für unser Konzept und Vorhaben ungeeignet. Wir brauchen jetzt sinnvolle Lösungen, Tests und Simulationen, welche uns weiterbringen, analog des gerade umgebauten Hebels.“*
+
+**Abgestimmt:**
+- (a) Die Klima-Ampel kommt als Fakt in die Mail; sie wird mit Schritt S7 gebaut.
+- (b) Die Ausstiegsfrage wird **mitgemessen**, nicht nachgelagert.
+- ✗ (c) Die Mitschrift ist für das Vorhaben ungeeignet. Sie entfällt; höchstens später als Langzeitbeobachtung.
+
+### 9.1 Warum der Hebel trug und das Klima nicht — die Lehre für den Bau
+
+| | Klima (§8, F1–F3) | Hebel (REGEL0) |
+|---|---|---|
+| Einheit | ein **Marktzyklus** | ein **Ereignis je Asset** |
+| Fallzahl | 4–5 Zyklen, nicht messbar | Tausende je Jahr: Nullwelt, je Asset, Zeitstabilität möglich |
+| Wahl / Bestätigung | unmöglich zu trennen | Wahl auf **2024**, **einmal** bestätigt auf 2025–26 (E-21/E-24) |
+
+**Folge:**
+- Spot wird wie der Hebel gebaut: ein **Ereignis je Asset auf Tagesbasis**, gehalten **Tage bis Wochen**, Einstieg **und Ausstieg** als Paar.
+- Das Klima wird **Achse** (Gewicht, kein Blocker) **auf** den Ereignissen. Dort lässt sich seine Wirkung messen, weil jedes Ereignis einen eigenen Klimawert hat.
+- F3 hat gezeigt: *der Trend über ein Jahr schlägt die Rückkehr zum Mittel*. Deshalb kommt eine **Trend-Familie** neben die Rückgang-Familie (die Wette des Hebels).
+
+**Vorprüfung, keine Erträge:** `messdaten.db`, Krypto, 526 Symbole ab 06.2022, eingestellte eingeschlossen.
+
+| Familie | 2023 | 2024 | 2025 | 2026 (bis 20.09.) | Assets 2024 |
+|---|---|---|---|---|---|
+| **T** Trendwende: Schluss über S50 nach ≥ 20 T darunter, Ruhe 20 T | 1.225 | 1.254 | 1.195 | 1.188 | 415 |
+| T′ Spiegel: Schluss unter S50 nach ≥ 20 T darüber | 842 | 1.203 | 800 | 452 | 414 |
+| **R** Rückgang: Tages-RSI14 < 30, Ersteintritt nach ≥ 10 T, Ruhe 10 T | 888 | 1.068 | 1.962 | 1.062 | 404 |
+| R′ Spiegel: RSI14 > 70, Ersteintritt | 1.438 | 1.230 | 786 | 737 | 417 |
+
+Das sind rund **1.000–2.000 Ereignisse je Familie und Jahr**, also genug für die sechs Prüfungen.
+
+### 9.2 Der Plan — dieselben Schritte wie beim Hebel (Plan_Hebel, Abschnitt 1)
+
+| # | Schritt | Inhalt |
+|---|---|---|
+| **S1** | **Stufe 1 Vorprüfung** (unten, vorab) | Trägt eine Familie mit einem Ausstieg auf 2024 über der Nullwelt, **und** ihr Spiegel nicht? Kurzer Lauf auf vollen Daten (*lange Messung nur nach Vorprüfung*) |
+| **S2** | **Stufe 2 voll**, nur für Zellen, die S1 bestehen | Einmal bestätigt auf 2025 und 2026 getrennt; je Asset; Weglassprobe (ohne BTC/ETH, ohne die 10 größten); Mehrfachtesten; Spiegelprobe auf dem Ereignis (Lift, Schwelle **1,717**); Klima-Achse und Marktbreite als **Gewicht** |
+| **S3** | SPOT-REGEL0 **festschreiben** | Parameter und Referenzzahlen, eine Konstante im Code, Wache |
+| **S4** | **Betriebsprüfung B1–B9** (E-35) | Tageskerzen am NB aus `stundenkurse_alle.db` (laufend, Job `regel0_nachlader`) gegen die Messbasis: **R-R11 der Tagesschlüsse**; Bitpanda-Spotliste; Kosten (M-1) |
+| **S5** | Messung auf **deiner Spot-Liste** (Bitpanda-Bestand) | analog 2.700 |
+| **S6** | **REGEL1 … n** | Ausstiegsform (Trailing, Teilverkauf bei *überhitzt*, = M-5), Positionsgröße aus dem Klima, Nachkauf |
+| **S7** | Betriebsvorbereitung | Mail samt **Klima-Ampel** (a), Tab, LLM-Rolle (kennt die Wette, P1-Lehre), Testwoche, F5 analog |
+| **S8** | Umstellung | ersetzt die alte Spot-Kette, kein Parallelbetrieb; O24 stoppt rechtzeitig die alten LLM-Aufrufe |
+
+Es gelten die Trennungsregeln T-1 bis T-6 (Spot am Desktop, kein Betriebscode bis S7, Hebel hat Vorrang).
+
+### 9.3 Messplan Stufe 1 — VOR dem Lauf festgelegt
+
+- **Messbasis:** `messdaten.db`, Krypto, eingestellte eingeschlossen (unverzerrt, 2.669). Nur lesend. Ereignisse **2024** (Wahljahr); 2025–26 wird in S1 **nicht** angesehen.
+- **Ereignisse:**
+  - T, T′, R, R′ wie in der Tabelle oben; Ruhe je Asset.
+  - **Einstieg zum Schluss von t+1**: der Tagesschluss von t ist erst danach bekannt.
+- **Ausstiege, vier je Familie:**
+  - fest nach **10, 20, 60 T**;
+  - **Bruch**: erster Schluss unter S50, höchstens 120 T;
+  - bei R: erster Schluss über S50, höchstens 120 T (*Gegenbewegung erreicht*).
+- **Zielgröße — Vorteil je Handel:**
+  - log-Ertrag des Handels minus Mittel der **Nullwelt**: 20 Zufallseinstiege **desselben Assets im selben Monat** mit derselben Ausstiegsregel. Damit fällt die **Drift** heraus (Nullpunkt = Drift).
+  - Tagesklammer: erst je Tag gemittelt, dann über die Tage.
+- **Bestehen (eine Zelle = Familie × Ausstieg, 4 × 4 = 16 Zellen, für den Spiegel nur zur Gegenprobe):**
+  1. Vorteil > 95. Perzentil der Nullwelt-Verteilung (200 Ziehungen der Zufallseinstiege) **und**
+  2. Der Spiegel derselben Zelle ist **nicht ebenso** über seiner Nullwelt. Sonst wäre es Bewegung, nicht Richtung.
+- **Mehrfachtesten:** 8 echte Zellen bei 5 % lassen **~0,4 Zufallstreffer** erwarten. Eine einzelne bestandene Zelle ist deshalb nur ein **Kandidat für S2**, kein Befund.
+- **Kosten:** Ausgewiesen werden der **Rohvorteil** und die **Kostenschwelle**, bei der er null wird. Der Bitpanda-Spotsatz ist nicht belegt (M-1).
+- **Auskunft:** Zahl der Handel, je Asset der Anteil positiver Vorteile, mittlere Haltedauer.
+- **Folge, vorab:**
+  - Mindestens eine Zelle besteht: **S2** für genau diese Zellen.
+  - Keine besteht: **WORAN messen** (E-63, Ursache vor Form), z. B. Dauer, Klima, Marktbreite. Ein Anlauf auf dieselben 2024-Daten zählt dann nur noch als Beschreibung.

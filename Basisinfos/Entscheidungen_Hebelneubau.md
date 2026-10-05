@@ -791,3 +791,12 @@ prüfen und gegenprüfen"*.
   - Gilt für BTC und ETH.
   - Epochen E1 2017–2020 · E2 2021–10.01.2024 · E3 ab ETF-Start 11.01.2024.
 - **Gemessen wird erst nach dem Ja zum Plan.** Dritter Blick auf dieselben Daten, also Beschreibung; der Test ist eine laufende Mitschrift.
+
+# E-65 · Spot nach dem Muster des Hebels — SPOT-REGEL0 (Nutzer 05.10.2026)
+
+**05.10.2026** · Nutzer: *„Ja, die Punkte erscheinen sinnvoll, die Ausstiegsfrage für Spot (aktuelle Hebelplanung) steht ohnehin an. Unabhängig davon ist eine Mitschrift für langfristige Beobachtung sinnvoll, aber für unser Konzept und Vorhaben ungeeignet. Wir brauchen jetzt sinnvolle Lösungen, Tests und Simulationen, welche uns weiterbringen, analog des gerade umgebauten Hebels.“*
+- (a) Die Klima-Ampel kommt als Fakt in die Mail, gebaut in S7.
+- (b) Der Ausstieg wird mitgemessen.
+- ✗ (c) Keine Mitschrift.
+- **Spot wird als Ereignis je Asset auf Tagesbasis gebaut**, Schritte S1–S8 wie beim Hebel (Voranalyse_Spot §9). Das Klima wird Achse auf den Ereignissen.
+- Stufe 1 wird vorab festgelegt (§9.3). **Gemessen wird nach dem Ja.**

@@ -1,0 +1,5 @@
+Symbole 526 Tage 2022-06-01 bis 2026-09-20
+T Trendwende (Schluss > S50 nach 20 T darunter)    2022:   759 2023:  1225 2024:  1254 2025:  1195 2026:  1188 | Assets mit >=1 Ereignis 2024: 415
+T' Spiegel (Schluss < S50 nach 20 T darueber)      2022:   543 2023:   842 2024:  1203 2025:   800 2026:   452 | Assets mit >=1 Ereignis 2024: 414
+R Rueckgang (RSI14 < 30 Ersteintritt nach 10 T)    2022:   777 2023:   888 2024:  1068 2025:  1962 2026:  1062 | Assets mit >=1 Ereignis 2024: 404
+R' Spiegel (RSI14 > 70 Ersteintritt nach 10 T)     2022:   328 2023:  1438 2024:  1230 2025:   786 2026:   737 | Assets mit >=1 Ereignis 2024: 417
