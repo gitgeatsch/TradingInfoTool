@@ -1708,3 +1708,75 @@ Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.
 - **Signale:** Heute gab es 16 REGEL0-Signale, alle außerhalb der Hebel-Liste, also keine Hebelmail. Seit 03.10. kamen 4 Hebelmails (SEI, QNT, NEAR, KAIA) in rund 58 h. Bei 19,5 je Woche (§22) wären etwa 7 zu erwarten; P(≤ 4) ≈ 0,2, also im Rauschen. Weiter in der Testwoche beobachten (T1 der S7-7-Bedingungen).
 - Der Nutzer bekommt derzeit nur Mails der alten Spot-Kette (Verkaufsvorschläge, NACHKAUFEN). Zum Schalter R-4 siehe Plan Hebel O24 (Wahl A/B).
 - **K-MISFIRE-2:** ob nach dem Neustart noch eine Misfire-Mail kam, prüft der nächste NB-Export bzw. die Rückmeldung des Nutzers.
+
+## 23. Voranalyse N4 — das Rückspiel des LLM-Prüfblocks (05.10.2026; Nutzer: *„Ja, Voranalyse N4 vorbereiten, prüfen und gegenprüfen“*)
+
+**Ziel:** Trennt das Urteil des **Traders** (Fassung 0.1e, 5 Stimmen) den 24-h-Ausgang der REGEL0-Handel? Das ist bis heute **ungemessen** (§20.12.5). Bis zur Antwort bleibt der Block in der Mail **Auskunft**.
+
+**Test, nicht Betrieb:** am Desktop, gegen eine NB-Sicherung, Wegwerf-Ablage, Standard-DB unberührt. Am NB ändert sich nichts.
+
+**Was feststeht:**
+- Anker eingefroren (§20.13, `ziehe_n4_anker.py`): Entwicklungsmenge 1.000, unberührte Bestätigungsmenge 1.000, je Jahr 500, SHA-256.
+- Arme, Kontaminationsprobe und Messregel nach §20.5; Prüfpunkte P2, P2b und P3 nach §20.11.5.
+- Schlüssel: Nutzerwahl **A**, zweiter kostenloser Schlüssel `GEMINI_API_KEY_2`, am 05.10. getestet (3.1 und 3.5 antworten). Seit E-67 ist die alte Kette aus, damit ist auch Schlüssel 1 bis auf den Prüfblock frei.
+
+### 23.1 Umfang und Aufrufe
+
+| Teil | Inhalt | Aufrufe |
+|---|---|---|
+| **K Kontaminationsprobe** (zuerst) | (a) 50 Anker, direkt gefragt: Asset oder Zeitraum erkannt? (b) 100 Anker **benannt** gegen anonym | ~550 |
+| **T Trader** (Kern) | 1.000 Anker × 5 Stimmen | ~5.000 |
+| **R Rauschboden** | 100 Anker wiederholt (A/A′), 100 Anker mit vertauschter Reihenfolge der Sätze | ~1.000 |
+| **Regel-Arm, Zufall** | ohne LLM: dieselben Eingaben, deterministische Regel (Lage des Schlusses in der Spanne der letzten 20 Tage, gleiche Stufenquote) · Zufall mit gleicher Quote | 0 |
+| M Markt (Auskunft) | einmal je Faktenstand: 283 Tage × 5 Stimmen | ~1.400 (wahlweise) |
+| **Entscheider** | ⛔ **nicht** in N4: Er ist ein Echo (39/40, §20.12.3). Er bekommt erst mit einer zweiten unabhängigen Sicht wieder eine Aufgabe (O22) | 0 |
+
+**Kontingent** (gemini-3.5-flash-lite, 500 je Tag und Schlüssel, Zurücksetzen um Mitternacht Pazifikzeit):
+- **Schlüssel 2:** Deckel 480 je Tag.
+- **Schlüssel 1:** Deckel 300 je Tag. Der NB-Prüfblock braucht höchstens 150; der NB-Zähler sieht die Desktop-Aufrufe nicht (§21.1). Bleibt zu wenig übrig, steht der Block in der Mail grau da (*keine Auskunft*), die Mail geht trotzdem.
+- **Zusammen ~780 je Tag:** Kern (K+T+R) **~8,5 Tage**, mit Markt ~10 Tage. Die Bestätigung (P3) später, einmal: ~5.000 Aufrufe, ~6,5 Tage.
+
+### 23.2 Prüfen und gegenprüfen — der Selbsttest der Messregel, bevor ein Aufruf fällt
+
+`Rechenkern_02_10/n4_selbsttest_messregel.py`, Beleg `.txt`:
+- echte Anker der Entwicklungsmenge mit ihrem **echten** 24-h-Ertrag (Mittel +0,30 %, Streuung 5,46 %);
+- **simulierte** Urteile in der Verteilung der Kalibrierung (stützt 10 %, neutral 45 %, dagegen 45 %), mit gepflanzter Stärke k;
+- je Jahr 200 Welten mit 200 Vertauschungen.
+
+| gepflanzt (k) | Unterschied stützt − dagegen | **R1** vorab (Tag) | R2 (Woche) | R3 Saldo der Stimmen (Woche) |
+|---|---|---|---|---|
+| 0 (kein Effekt) | ±0,1 Pp | **6 % / 6 %** Fehlalarm | 4 % / 7 % | 5 % / 4 % |
+| 0,10 | ~1,5 Pp | 20 % / 30 % | 40 % / 42 % | 36 % / 39 % |
+| 0,20 | ~3,1 Pp | 46 % / 74 % | 88 % / 93 % | 88 % / 92 % |
+| 0,30 | ~4,7 Pp | **82 % / 98 %** | 100 % | 100 % |
+
+(je 2025 / 2026)
+
+**Was das heißt:**
+- ✔ **Die Messregel ist ehrlich:** Ohne Effekt meldet sie in rund 5–6 % der Fälle etwas, wie vorgesehen.
+- ⚠️ **Sie ist schwach.** Mit 1.000 Ankern findet R1 einen Unterschied zwischen *stützt* und *spricht dagegen* erst ab rund **4–5 Prozentpunkten** je Handel verlässlich in beiden Jahren. Bei 3 Pp sind es nur rund 34 % (0,46 × 0,74).
+- Ein **kleiner, aber nützlicher** Effekt um 1 Pp (die REGEL0 bringt im Mittel +0,30 %) bleibt mit hoher Wahrscheinlichkeit **unentdeckt**.
+- Der Grund: Nur 10 % *stützt* (~50 je Jahr), und das Vertauschen innerhalb des Tages nimmt die Marktbewegung des Tages heraus. Das ist gewollt, denn der Trader soll das **Asset** beurteilen, nicht den Markttag. 9–11 % der Anker stehen allein an ihrem Tag.
+
+**Folgen, von mir festgelegt (fachlich beantwortbar):**
+- **R1 bleibt die Hauptregel** (vorab §20.5, Tagesklammer nach dem Messstandard). R2 und R3 werden **daneben ausgewiesen** (*Gewichtung ausweisen: Tagesklammer oder gepoolt*). Sie entscheiden nichts; das hält den Mehrfachtest klein.
+- **Kein Ergebnis ist ein Ergebnis mit Mindestgröße:** Trägt R1 nicht, heißt das *kein Unterschied über ~4–5 Pp*, nicht *wertlos*. Kleinere Effekte misst nur die Vorwärtsmessung (Schatten N5, 12–15 Signale je Tag, nach ~3 Monaten n ≈ 1.000) oder eine größere Entwicklungsmenge (nicht vorgesehen, Kontingent).
+- **Ausgewertet wird einmal**, wenn alle Teile fertig sind, ohne Zwischenblick. Das Werkzeug gibt vorher keine Trennzahlen aus.
+
+### 23.3 Was gebaut wird (Werkzeug, Desktop, kein Betriebscode)
+
+| | |
+|---|---|
+| Läufer `n4_rueckspiel.py` | baut auf `kalibrier_llm.py` auf: Wegwerf-Ablage, Bestätigungsmenge **ausgesperrt**, NB-Sicherung als Quelle |
+| zwei Schlüssel | je Schlüssel **eigener** Zähler und Tagesdeckel (Pazifik-Tag). Wert nie ausgegeben |
+| fortsetzbar | jedes Urteil sofort in die Ablage; Abbruch und Neustart setzen beim nächsten Anker fort (*lange Läufe selbst neu starten*) |
+| Reihenfolge | K → T → R → (M). Fällt K durch, gilt P2b (*nur noch vorwärts*): T wird **nicht** begonnen, das Kontingent bleibt gespart |
+| Auswertung `n4_auswertung.py` | läuft erst, wenn T vollständig ist (Sperre); R1 Haupt, R2/R3 daneben, Regel-Arm, Zufall, Rauschboden, Signalbilanz je Asset, je Jahr |
+| Prüfung vor dem Start | Trockenlauf mit Platzhalter-Client (0 echte Aufrufe), Fortsetzen nach Abbruch, Sperre der Bestätigungsmenge, beide Zähler, Standard-DB unberührt |
+
+### 23.4 Zur Abstimmung (nur, was bei dir liegt)
+
+| | Frage | Empfehlung |
+|---|---|---|
+| **N4-1** | Umfang: **Kern** (K+T+R, ~8,5 Tage) oder **mit Markt** (+~1,5 Tage)? | **Kern.** Der Markt sagt über 2025/26 zu 85 % dasselbe (§20.12.2); ein Rückspiel würde das teuer bestätigen |
+| **N4-2** | Start nach dem Bau und dem Trockenlauf, **ohne weitere Rückfrage**? | **Ja.** Ich melde den Start, den Tagesstand und das Ergebnis von K, bevor T beginnt |

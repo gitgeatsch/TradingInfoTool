@@ -1,0 +1,16 @@
+Entwicklungsmenge: 1000 Anker · Ertrag 24 h ohne Hebel: Mittel +0.30 %, Streuung 5.46 %
+  2025: 500 Anker an 146 Tagen · Tage mit nur EINEM Anker: 56 (11 % der Anker) · 50 Wochen
+  2026: 500 Anker an 137 Tagen · Tage mit nur EINEM Anker: 43 (9 % der Anker) · 32 Wochen
+
+Fehlalarm (k = 0) und Fundquote je gepflanzter Staerke k, je Jahr 200 Welten mit je 200 Vertauschungen
+  k     | gepflanzter Unterschied stuetzt-dagegen | R1 Tag | R2 Woche | R3 Saldo/Woche
+  0.00  2025 |  -0.05 Prozentpunkte (Mittel)             |    6 % |      4 % |        5 %
+  0.00  2026 |  +0.08 Prozentpunkte (Mittel)             |    6 % |      7 % |        4 %
+  0.10  2025 |  +1.59 Prozentpunkte (Mittel)             |   20 % |     40 % |       36 %
+  0.10  2026 |  +1.37 Prozentpunkte (Mittel)             |   30 % |     42 % |       39 %
+  0.20  2025 |  +3.29 Prozentpunkte (Mittel)             |   46 % |     88 % |       88 %
+  0.20  2026 |  +2.96 Prozentpunkte (Mittel)             |   74 % |     93 % |       92 %
+  0.30  2025 |  +4.87 Prozentpunkte (Mittel)             |   82 % |    100 % |      100 %
+  0.30  2026 |  +4.50 Prozentpunkte (Mittel)             |   98 % |    100 % |      100 %
+  0.50  2025 |  +7.42 Prozentpunkte (Mittel)             |   98 % |    100 % |      100 %
+  0.50  2026 |  +6.83 Prozentpunkte (Mittel)             |  100 % |    100 % |      100 %
