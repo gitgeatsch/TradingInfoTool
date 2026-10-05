@@ -31608,6 +31608,11 @@ def paket_regel0_betrieb() -> None:
                        capture_output=True, text=True, timeout=120)
         pruefe(P, "Ausstiegserinnerung NUR bei offener Hebelposition; unbekannter Stand -> mit Vermerk; entfallen als Fakt, nie nachgeschickt",
                "ALLE BESTANDEN" in (_er.stdout or ""), ((_er.stdout or "") + (_er.stderr or ""))[-400:])
+        # K-MISFIRE (05.10.2026): 1,07 s Verspaetung loeste die Misfire-Mail aus - Toleranz fuer alle Jobs, am echten APScheduler nachgewiesen
+        _mf = _sp4.run([sys.executable, os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_misfire.py")],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+        pruefe(P, "K-MISFIRE: wenige Sekunden Verspaetung sind kein Misfire, ein echter Ausfall meldet sich weiter, die Mail nennt die Verspaetung",
+               "ALLE BESTANDEN" in (_mf.stdout or ""), ((_mf.stdout or "") + (_mf.stderr or ""))[-400:])
         pruefe(P, "Schatten: der Block wird je Signalmail GERECHNET, die Mail bleibt unveraendert (kein Text angehaengt)",
                _gerechnet == ["SSSX"] and _post and "PRUEFUNG" not in _post[0])
         pruefe(P, "E-52: der Stundenjob haengt den Block an - EIN Umlauf je Lauf, derselbe Gemini-Client wie die Spot-Kette",

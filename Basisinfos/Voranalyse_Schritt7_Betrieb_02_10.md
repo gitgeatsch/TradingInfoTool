@@ -1671,3 +1671,33 @@ Bis dahin kommt die Mail **einmal am Tag**, wie versprochen.
 - **Ergebnis: 103 von 103 Signalen gleich.** 0 nur am NB, 0 nur am Desktop, 0 v̂ anders, 0 vorläufige und 0 endgültige Stufe anders. ✔ **F5 für den bisherigen Teil der Testwoche erfüllt.**
 - **Aussage:** Der Rechenkern am NB rechnet dieselben Signale wie die Messung am Desktop, auf allen Assets (nicht nur den 4 gemailten).
 - **Nicht geprüft:** das Training am Monatswechsel. Die NB-Modelle wurden übernommen; ein Lauf ohne `--modelle` (Training am Desktop) folgt zum Wochenende mit, und K-MONAT kommt am 01.11.
+
+### 22.9 NB-Export 05.10. 12:40 und K-MISFIRE (05.10.2026; Nutzer: *„prüfe den NB-Export zuerst“*, *„Ja zu 1 und 2“*)
+
+**Betrieb:**
+- 0 fehlende Stunden in 72 h.
+- REGEL0 stündlich, 158–327 s, Nachlader fehlerfrei.
+- 21 Traceback-Zeilen = 7 Z.ai-Zeitüberschreitungen der **alten** Kette (Rolle G), keine aus REGEL0.
+- Gemini 125 Aufrufe.
+
+**K-MISFIRE geklärt:**
+- Am 05.10. um 09:18:34 starteten `staleness_watchdog` und `coingecko_quota_check` **1,07 s** zu spät. Das war Last, kein Standby.
+- Ursache: Jobs ohne eigenes `misfire_grace_time` erben den APScheduler-Standard von **1 s**. Der Fix vom 19.07. galt nur den Sofort-Start-Jobs.
+- Folge: ein ausgelassener Lauf und eine Fehlalarm-Mail, kein Datenverlust.
+
+**Fix (Nutzer-Ja):**
+- `scheduler/background.py` `_neuer_scheduler()`: `job_defaults` mit `misfire_grace_time` = 300 s für **alle** Jobs; eigene Werte bleiben.
+- `_misfire_text()`: Die Mail nennt die geplante Zeit, die Verspätung und die Toleranz.
+- Ein echter Ausfall von mehr als 300 s meldet sich weiter.
+
+**Nachweis am echten APScheduler** (`Rechenkern_02_10/pruefe_misfire.py`, 6/6):
+- Die Gegenprobe reproduziert den Fehler mit dem alten Aufbau.
+- 2 s Verspätung laufen jetzt durch; 400 s sind weiter ein Misfire; eine eigene Toleranz bleibt.
+- `build_scheduler` baut über den Helfer, nachgewiesen mit einem Sentinel vor jedem Datenbankzugriff.
+- Wache Regel0Betrieb **66/66**.
+
+**Weiter offen:**
+- K-ERIN: 1 von 3 *entfallen* um 12:09 ✔; die zwei übrigen waren nach dem Export fällig.
+- **Neu:** REGEL0 *veraltet 3* (633/636) seit dem Lauf um 09:00 UTC, unter der Meldegrenze. Welche Assets, zeigt der nächste Teilexport.
+- Concrete: keine Mail mehr, nur noch die Log-Warnung.
+- K-MAIL-2 beim Nutzer.

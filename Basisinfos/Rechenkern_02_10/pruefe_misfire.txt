@@ -1,0 +1,10 @@
+Run time of job "lauf.<locals>.<lambda> (trigger: date[2026-10-05 16:19:24 CEST], next run at: 2026-10-05 16:19:24 CEST)" was missed by 0:00:02.000928
+Run time of job "lauf.<locals>.<lambda> (trigger: date[2026-10-05 16:12:46 CEST], next run at: 2026-10-05 16:12:46 CEST)" was missed by 0:06:40.000384
+Run time of job "lauf.<locals>.<lambda> (trigger: date[2026-10-05 16:19:24 CEST], next run at: 2026-10-05 16:19:24 CEST)" was missed by 0:00:02.000486
+OK    P1 Gegenprobe: alter Aufbau, 2 s zu spaet -> Misfire (Fehler reproduziert)  (misfire)
+OK    P2 neuer Scheduler, 2 s zu spaet -> ausgefuehrt, kein Misfire  (ausgefuehrt)
+OK    P3 echter Ausfall 400 s (> Toleranz 300 s) -> weiter Misfire  (misfire)
+OK    P4 eigene Toleranz 1 s bleibt -> 2 s zu spaet ist Misfire  (misfire)
+OK    P5 Mailtext nennt geplante Zeit, Verspaetung und Toleranz  (Verpasster Lauf (Misfire) - geplant 05.10. 09:18:34, 1 s zu spaet (Toleranz 300 s). Z. B. Rechner war im Standby oder ueberlastet; der naechste regulaere Lauf kommt zum normalen Takt. | Verpasster Lauf (Misfire) - geplant 05.10. 06:18:35, 3,0 h zu spaet (Toleranz 300 s). Z. B. Rechner war im Standby oder ueberlastet; der naechste regulaere Lauf kommt zum normalen Takt.)
+OK    P6 build_scheduler() baut ueber _neuer_scheduler()  (Sentinel erreicht)
+ALLE BESTANDEN

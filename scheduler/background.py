@@ -167,6 +167,36 @@ _IMMEDIATE_START_MISFIRE_GRACE_SECONDS = 300  # siehe build_scheduler()-Kommenta
 _STARTUP_STAGGER_SECONDS = 5  # siehe _staggered_start()-Docstring (2026-07-31)
 
 
+def _neuer_scheduler() -> BackgroundScheduler:
+    """K-MISFIRE (05.10.2026): der Scheduler mit einer Toleranz fuer ALLE Jobs.
+
+    DER BEFUND (NB-Export 05.10. 12:40). `staleness_watchdog` und
+    `coingecko_quota_check` starteten um 09:18:34 nur 1,07 s zu spaet (Last,
+    kein Standby) - und loesten die Mail *Verpasster Lauf (Misfire)* aus.
+    Ursache: Jobs ohne eigenes `misfire_grace_time` erben den APScheduler-
+    Standard von **1 Sekunde**; der Fix vom 19.07. galt nur den Sofort-Start-
+    Jobs.
+
+    Jetzt gilt `_IMMEDIATE_START_MISFIRE_GRACE_SECONDS` (300 s) als Vorgabe
+    fuer jeden Job. Ein Job mit eigenem Wert (z. B. 1800 s) behaelt ihn. Ein
+    echter Standby von Minuten bis Stunden ueberschreitet 300 s weiter und
+    meldet sich wie bisher (`_log_job_event`)."""
+    return BackgroundScheduler(job_defaults={"misfire_grace_time": _IMMEDIATE_START_MISFIRE_GRACE_SECONDS})
+
+
+def _misfire_text(event, jetzt: datetime | None = None) -> str:
+    """Mailtext fuer EVENT_JOB_MISSED - mit der tatsaechlichen Verspaetung (K-MISFIRE 05.10.)."""
+    geplant = getattr(event, "scheduled_run_time", None)
+    if geplant is None:
+        return "Verpasster Lauf (Misfire) - z. B. Rechner war im Standby oder ueberlastet."
+    jetzt = jetzt or datetime.now(geplant.tzinfo or timezone.utc)
+    sek = max(0.0, (jetzt - geplant).total_seconds())
+    dauer = "%.0f s" % sek if sek < 120 else "%.0f min" % (sek / 60) if sek < 7200 else ("%.1f h" % (sek / 3600)).replace(".", ",")
+    return ("Verpasster Lauf (Misfire) - geplant %s, %s zu spaet (Toleranz %d s). Z. B. Rechner war im Standby oder ueberlastet; "
+            "der naechste regulaere Lauf kommt zum normalen Takt." % (geplant.astimezone().strftime("%d.%m. %H:%M:%S"), dauer,
+                                                                       _IMMEDIATE_START_MISFIRE_GRACE_SECONDS))
+
+
 def _staggered_start(index: int) -> datetime:
     """Verteilt die Sofort-Start-Jobs auf ein paar Sekunden Abstand statt alle
     exakt gleichzeitig zu starten (2026-07-31, Bug-Runde-Fund, siehe Memory
@@ -4711,7 +4741,7 @@ def _log_job_event(event) -> None:
         _notify_job_failure(event.job_id, f"Unbehandelter Fehler im Job-Wrapper: {event.exception}")
     else:
         logger.warning("Scheduler-Job '%s' verpasst (Misfire)", event.job_id)
-        _notify_job_failure(event.job_id, "Verpasster Lauf (Misfire) - z. B. Rechner war im Standby.")
+        _notify_job_failure(event.job_id, _misfire_text(event))
 
 
 def _history_data_is_stale(conn, watchlist) -> bool:
@@ -5057,7 +5087,7 @@ def build_scheduler(
     mistral_client=None, zai_client=None, openrouter_client=None,
 ) -> BackgroundScheduler:
     watchlist = watchlist_provider()
-    scheduler = BackgroundScheduler()
+    scheduler = _neuer_scheduler()                   # K-MISFIRE 05.10.: Toleranz fuer alle Jobs
     global _SCHEDULER_START
     _SCHEDULER_START = datetime.now(timezone.utc)
     # Betriebssicherheit (2026-07-12): next_run_time=jetzt, damit Preise nach
