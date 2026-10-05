@@ -1,0 +1,47 @@
+Spot K-3 gewichten statt warten - Messplan Fassung 3 (Voranalyse_Spot §8.10), Klima q aus BTC, Ende 2026-10-04
+
+==================== BTC mit BTC-Klima ====================
+F3-H1 Vermoegen gegen DCA, 8 Starts (Auskunft rechts: rollendes Fenster)
+  Start      | eingez. | DCA Verm. | V3 Verm. | V3/DCA | V3>=DCA Monatsenden | Rueckgang DCA / V3 | Einstand DCA / V3 | Bargeld V3 | Ausk. rollend
+  2017-01-01 |   118   |    1110.4 |    843.9 |  0.760 |          0 %        |  -90 % /  -85 %   |   9194.73 /  12057.10 |  0.5 | 0.756
+  2018-01-01 |   106   |     564.1 |    569.0 |  1.009 |        100 %        |  -81 % /  -81 %   |  16258.42 /  16060.52 |  0.5 | 1.019
+  2019-01-01 |    94   |     421.7 |    413.3 |  0.980 |          5 %        |  -83 % /  -82 %   |  19285.62 /  19602.46 |  0.5 | 0.984
+  2020-01-01 |    82   |     247.1 |    238.4 |  0.965 |          0 %        |  -84 % /  -83 %   |  28713.82 /  29642.26 |  0.5 | 0.971
+  2021-01-01 |    70   |     141.4 |    142.8 |  1.010 |        100 %        |  -75 % /  -68 %   |  42828.54 /  42267.12 |  0.5 | 1.009
+  2022-01-01 |    58   |     117.6 |    118.3 |  1.006 |         96 %        |  -57 % /  -57 %   |  42683.73 /  42255.95 |  0.5 | 1.006
+  2023-01-01 |    46   |      78.3 |     77.2 |  0.986 |          0 %        |  -59 % /  -58 %   |  50859.08 /  51347.35 |  0.5 | 0.986
+  2024-01-11 |    34   |      39.4 |     38.8 |  0.985 |          0 %        |  -55 % /  -53 %   |  74648.19 /  75660.55 |  0.5 | 0.987
+  -> V3 >= DCA in 3 von 8 Starts: nicht stimmig
+F3-H2 je Epoche (Zufluesse nur in der Epoche, danach gehalten)
+  E1 Fruehzeit  2017-01-01..2020-12-31  V3/DCA am Epochenende 0.725 · am 2026-10-04 0.721  (Einstand DCA 4286.09 / V3 5700.46, Restbargeld 2.1 von 48)
+  E2 Uebergang  2021-01-01..2024-01-10  V3/DCA am Epochenende 1.019 · am 2026-10-04 1.014  (Einstand DCA 30820.11 / V3 30047.99, Restbargeld 0.7 von 37)
+  E3 ETF-Markt  2024-01-11..2026-10-04  V3/DCA am Epochenende 0.985 · am 2026-10-04 0.985  (Einstand DCA 74648.19 / V3 75660.55, Restbargeld 0.5 von 34)
+  -> V3 >= DCA in allen drei Epochen: nicht stimmig
+
+==================== ETH mit BTC-Klima ====================
+F3-H1 Vermoegen gegen DCA, 8 Starts (Auskunft rechts: rollendes Fenster, ETH mit eigenem q)
+  Start      | eingez. | DCA Verm. | V3 Verm. | V3/DCA | V3>=DCA Monatsenden | Rueckgang DCA / V3 | Einstand DCA / V3 | Bargeld V3 | Ausk. rollend | Ausk. ETH-eigen
+  2017-01-01 |   118   |    1419.7 |    800.6 |  0.564 |          0 %        |  -96 % /  -95 %   |    226.75 /    400.76 |  0.5 | 0.567 | nan
+  2018-01-01 |   106   |     518.9 |    524.1 |  1.010 |        100 %        |  -87 % /  -83 %   |    557.31 /    549.89 |  0.5 | 1.030 | 0.983
+  2019-01-01 |    94   |     422.7 |    412.6 |  0.976 |         12 %        |  -85 % /  -85 %   |    606.69 /    619.15 |  0.5 | 0.985 | 0.971
+  2020-01-01 |    82   |     224.3 |    206.8 |  0.922 |          0 %        |  -88 % /  -87 %   |    997.25 /   1078.05 |  0.5 | 0.935 | 0.939
+  2021-01-01 |    70   |      88.3 |     86.1 |  0.975 |          0 %        |  -85 % /  -77 %   |   2161.95 /   2215.74 |  0.5 | 0.978 | 0.992
+  2022-01-01 |    58   |      72.4 |     74.0 |  1.022 |        100 %        |  -69 % /  -68 %   |   2185.85 /   2135.58 |  0.5 | 1.022 | 1.035
+  2023-01-01 |    46   |      54.6 |     55.1 |  1.009 |         58 %        |  -70 % /  -68 %   |   2297.23 /   2273.28 |  0.5 | 1.008 | 1.016
+  2024-01-11 |    34   |      35.6 |     36.3 |  1.020 |         76 %        |  -67 % /  -65 %   |   2608.17 /   2553.99 |  0.5 | 1.021 | 1.035
+  -> V3 >= DCA in 4 von 8 Starts: nicht stimmig
+F3-H2 je Epoche (Zufluesse nur in der Epoche, danach gehalten)
+  E1 Fruehzeit  2017-01-01..2020-12-31  V3/DCA am Epochenende 0.540 · am 2026-10-04 0.536  (Einstand DCA 98.36 / V3 175.96, Restbargeld 2.1 von 48)
+  E2 Uebergang  2021-01-01..2024-01-10  V3/DCA am Epochenende 0.945 · am 2026-10-04 0.944  (Einstand DCA 1875.88 / V3 1977.00, Restbargeld 0.7 von 37)
+  E3 ETF-Markt  2024-01-11..2026-10-04  V3/DCA am Epochenende 1.020 · am 2026-10-04 1.020  (Einstand DCA 2608.17 / V3 2553.99, Restbargeld 0.5 von 34)
+  -> V3 >= DCA in allen drei Epochen: nicht stimmig
+
+==================== F3-H3 Nullwelt (BTC): q-Reihe zirkulaer verschoben, 200 x, Abstand >= 365 T ====================
+  Start 2017-01-01: echt 0.760 x DCA · verschobenes Klima Median 0.940, 90. Perzentil 0.971 · Rang 0.000 -> nicht stimmig
+  Start 2021-01-01: echt 1.010 x DCA · verschobenes Klima Median 0.966, 90. Perzentil 1.047 · Rang 0.750 -> nicht stimmig
+
+==================== GESAMT nach den vorab festen Regeln (§8.10) ====================
+F3-H1 Vermoegen: BTC nicht stimmig, ETH nicht stimmig
+F3-H2 Epochen:   BTC nicht stimmig, ETH nicht stimmig
+F3-H3 Nullwelt:  nicht stimmig
+FOLGE (vorab): fuer den heutigen Markt nicht belegt - festhalten, Ampel bleibt Fakt

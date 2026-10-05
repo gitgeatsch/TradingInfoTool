@@ -630,3 +630,54 @@ Nutzer 05.10.: *„Ja, da die ersten Jahre und ab 2024 markttechnisch doch etwas
 - **Regeln 1–4** geprüft: Takt = Zufluss, keine Gebühren, kein Asset-Rang, q ist ein Fakt.
 - **Mehrfachtesten:** dritter Blick, ausgewiesen.
 - **Wenige Zyklen** (2/2/1): Die Schwelle der Nullwelt ist offen auf 0,90 gesenkt, der Grund steht dabei.
+
+### 8.11 Ergebnis Fassung 3 (05.10.2026, nach dem vorab festen Plan §8.10) — und das Gesamtbild aus drei Fassungen
+
+Nutzer 05.10.: *„ok, besser wird es vorläufig nicht — ja, starten wir mit Messungen.“*
+
+Beleg: `Spot_Voranalyse_04_10/k3_gewichten.py` → `.txt`.
+
+**Gegenprobe** (`k3_gegenprobe.py`, eigene Monatsschleife): 0,760 / 1,009 / 1,010 gleich.
+
+| | BTC | ETH (BTC-Klima) | Urteil |
+|---|---|---|---|
+| **F3-H1 Vermögen**, 8 Starts | V3 ≥ DCA in **3 von 8**. Spanne 0,76 (Start 2017) bis 1,01, sonst 0,97–1,01 | **4 von 8**. 0,56 (2017) bis 1,02 | **nicht stimmig** |
+| **F3-H2 Epochen** (am 04.10.2026) | E1 **0,72** · E2 1,01 · E3 **0,985** | E1 **0,54** · E2 0,94 · E3 1,02 | **nicht stimmig** |
+| **F3-H3 Nullwelt** | Start 2017: Rang **0,000**, das echte Klima war das **schlechteste** aller Verschiebungen · Start 2021: 0,75 | — | **nicht stimmig** |
+| F3-H4 Rückgang | V3 gleich oder bis 7 Pp kleiner | gleich oder bis 8 Pp kleiner | Auskunft |
+
+**Auskunft:**
+- Das rollende Fenster ändert nichts (gleiche Richtung, ±0,02).
+- ETH mit eigenem q liegt im selben Bereich (0,94–1,04).
+
+**Folge nach dem vorab festen Plan:** Spot über das Klima ist **für den heutigen Markt nicht belegt**. Die Klima-Ampel bleibt als **Fakt** für die Mail.
+
+#### WORAN — an den Jahreswerten nachgesehen (Gegenprobe)
+
+| Jahr | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Klima q (Mittel) | **0,90** | 0,49 | 0,33 | 0,50 | **0,79** | 0,28 | 0,21 | **0,65** | 0,69 | 0,23 |
+| BTC im Jahr | **+1296 %** | −73 % | +88 % | +305 % | **+58 %** | −65 % | +154 % | **+112 %** | −7 % | −2 % |
+
+- Das Klima war in den **stärksten Anstiegsjahren am teuersten** (2017, 2021, 2024) und kaufte dort wenig. In den fallenden Jahren war es billig (2022) und kaufte viel, **während der Kurs weiter fiel**.
+- **Der Trend über ein Jahr ist bei Krypto stärker als die Rückkehr zum Mittel.** Das Klima gewinnt nur **an den Wendepunkten**, und die sind selten. Genau das hat der Nutzer mit den *wenigen echten Zyklen* angesprochen.
+- **Der Hebel ist klein**, solange immer gekauft wird: V3 verschiebt nur gut eine Monatsrate. Wirkung hat er nur in Dauerlagen, und dort ist sie negativ (2017).
+
+#### Das Gesamtbild aus drei Fassungen (F1 §8.7 · F2 §8.9 · F3 hier)
+
+| Was trägt | Was nicht trägt |
+|---|---|
+| Das Klima **beschreibt** die Lage gut: Zone an den echten Böden 3 von 4, auch 2026; Wende verlässlich, Fehlalarm 2 von 11 | **Keine Kaufregel** auf dem Klima schlägt regelmäßiges Kaufen: weder warten (F2) noch gewichten (F3), weder BTC noch ETH, in keiner Epoche verlässlich |
+| Nach Zonenbeginn war der Kurs ein Jahr später meist im Plus (F2-H2) | Die Wende kommt 30–78 Tage und +46 bis +99 % nach dem Tief (F1) |
+| Im ETF-Markt (E3) ist alles **neutral**: BTC 0,985, ETH 1,02 | Ein Vorteil zeigt sich nur bei Starts in fallenden Märkten (2018, 2022), und dann nur 1–2 % |
+
+**Was daraus fürs Ziel folgt:**
+- Spot-**Aufbau** als Regel: **regelmäßig kaufen** ist mit den vorhandenen Daten nicht zu schlagen.
+- Das Klima gehört als **Fakt-Ampel in die Mail** (*Kapitulation · Bodenbildung · Wende bestätigt · Aufwärtstrend · überhitzt*), samt Bewertungsgründen. **Das Ob bleibt beim Nutzer** (E-55 S-b).
+
+⚠️ **Mehrfachtesten:** drei Blicke auf dieselben Daten. Eine **Fassung 4 einer Kaufregel** auf dieser Menge wäre Kurvenanpassung. Ein neuer Anlauf braucht **neue Daten** (laufend ab heute) oder eine **andere Frage**.
+
+**Offen für die Abstimmung, nicht gemessen:**
+- (a) Die Klima-Ampel als Mail-Fakt — Voranalyse, wo und wie (T-2: Betriebscode erst nach Abstimmung).
+- (b) Die **andere Frage** M-5 Ausstieg: Taugt *überhitzt* zum **Teilverkauf**? Das ist eine neue Frage, aber dieselbe Trend-Gefahr (2017).
+- (c) Eine laufende Mitschrift der Ampel ab dem nächsten Monatsersten als unabhängige Beobachtung.
