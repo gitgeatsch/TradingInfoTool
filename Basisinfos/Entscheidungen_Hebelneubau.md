@@ -820,3 +820,10 @@ prüfen und gegenprüfen"*.
 - **Alternativen** für das Angehaltene: Plan Hebel **O27**, Voranalyse_Spot §11.6.
 - **Auftrag ans Regelwerk:** Welche Spotwerte schlagen BTC, mit welcher Diversifikation? Der Zeitpunkt (antizyklisch oder früh nach Bärenmarkt und Korrektur) und der Verkauf gehören dazu. Breiter denken: das Schichtenmodell in Voranalyse_Spot §11.
 - Weiter mit **D1** (Kernwerte und Gewichte) und **D2** (Teilverkauf).
+
+# E-68 · Kernwerte BTC, ETH, SOL; Teilverkauf für den nächsten Boden und Entnahme (Nutzer 06.10.2026)
+
+**06.10.2026** · Nutzer: *„D1 – BTC, ETH und Solana. D2 – ja b und d jedenfalls, a und c eher später, denke ich. Messplan für alle relevanten Fälle.“*
+- **D1:** Kern = **BTC, ETH und SOL**. Mein Vorschlag, SOL in den Spot zu geben, ist abgelehnt. Die Gewichte werden gemessen (D1-M).
+- **D2:** Teilverkauf für **(b)** Geld für den nächsten Boden und **(d)** Entnahme. (a) Risiko senken und (c) Umschichten in Altcoins kommen später.
+- Messplan für alle relevanten Fälle vorab (Voranalyse_Spot §12). Gemessen wird nach dem Ja.

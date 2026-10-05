@@ -1028,3 +1028,68 @@ Nutzer 05.10.: *„Schalter A setzen, dann mit D1 und D2 starten. Wichtig: Wenn 
 | (d) Gewinne entnehmen | gesicherter EUR-Betrag |
 
 ⚠️ Aus F3 bekannt: *überhitzt* kam 2017, 2021 und 2024 **früh**; danach stieg der Kurs weiter. Ein Teilverkauf muss deshalb **gestaffelt** sein. Ein Rückkauf in der Zone ist Teil der Regel, nicht nachgelagert.
+
+## 12. Messplan D1-M und D2-M — Kernwerte und Teilverkauf, VOR der Messung (06.10.2026; E-68)
+
+Nutzer 06.10.: *„D1 – BTC, ETH und Solana. D2 – ja b und d jedenfalls, a und c eher später, denke ich. Messplan für alle relevanten Fälle.“*
+
+### 12.1 Vorprüfung (keine Erträge; `Spot_Voranalyse_04_10/d_vorpruefung.py`)
+
+- **Kurse:** BTC und ETH aus CoinMetrics (ab 2010 bzw. 07.2015, bis 04.10.2026); SOL aus `messdaten.db` (ab **11.08.2020**, bis 20.09.2026).
+- **Klima q (BTC, wie F3)**, Tage über der Stufe:
+
+| Jahr | 2015 | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| max q | 0,49 | 0,86 | **0,98** | 0,92 | 0,72 | 0,92 | **0,97** | 0,66 | 0,49 | 0,86 | 0,84 | 0,49 |
+| Tage ≥ 0,80 / 0,90 / 0,95 | 0 | 6/0/0 | **325/171/72** | 14/2/0 | 0 | 43/6/0 | **175/77/14** | 0 | 0 | 45/0/0 | 53/0/0 | 0 |
+| Tage ≤ 0,20 (Zone) | 263 | 0 | 0 | 42 | 105 | 9 | 0 | 215 | 175 | 0 | 0 | 116 |
+
+⚠️ **Im ETF-Markt (2024–25) kam q nie über 0,86.** Stufen ab 0,90 hätten dort nie ausgelöst. Deshalb gehört eine Variante **nur mit der ersten Stufe** in den Plan. Die 0,80 aus 2020 lag vor dem Anstieg 2021, das ist das bekannte Risiko *zu früh*.
+
+### 12.2 D1-M — Gewichtung der Kernwerte (Aufbau durch regelmäßiges Kaufen, gemessen nicht schlagbar, F2/F3)
+
+| | |
+|---|---|
+| **Zeitraum** | gemeinsam ab **01.09.2020** (SOL) bis 20.09.2026. Auskunft: BTC/ETH ab 2017 |
+| **Mischungen** | **M0** 100 % BTC (Maßstab) · **M1** je ⅓ · **M2** 70/20/10 (etwa nach Marktgewicht) · **M3** 50/30/20 · **M4** 50/50/0 (nur BTC/ETH, Bezug) |
+| **Ausgleich** | **R0** nie ausgleichen (Zufluss nach Zielmix) · **R1** über die Zuflüsse: die neue Rate geht in den untergewichteten Wert, **ohne Verkauf** (steuerneutral) · **R2** jährlich auf den Zielmix, **mit** Verkauf |
+| **Zufluss** | 1 Einheit am Monatsersten; keine Gebühren (Regel 2) |
+| **Startjahre** | 01.09.2020, 2021, 2022, 2023, 11.01.2024 (ETF-Markt) |
+| **Ausgewiesen** | Endvermögen ÷ M0 · größter Rückgang (Vermögen ÷ eingezahlt) · Anteil Monatsenden ≥ M0 · Zahl der Verkäufe (R2) |
+| **Empfehlungsregel (vorab)** | Die Mischung mit dem höchsten **Median** von Endvermögen ÷ M0 über die Starts, **sofern** ihr Median-Rückgang höchstens 5 Pp schlechter ist als bei M0. Bei Gleichstand die einfachere (R0 vor R1 vor R2) |
+
+### 12.3 D2-M — Teilverkauf (b) und Entnahme (d), je Kernwert
+
+| | |
+|---|---|
+| **Auslöser** | Klima q aus **BTC** (F3, wachsend) für **alle drei** Werte; bekannt am Tagesschluss t, ausgeführt zum Schluss t+1 |
+| **Stufen** | 0,80 / 0,90 / 0,95. Jede Stufe löst **einmal je Zyklus** aus; erneut erst nach einer Zone (q ≤ 0,20) |
+| **Zufluss** | 1 Einheit am Monatsersten, nie unterbrochen (wie D1) |
+| **Gegenwelt H0** | dieselben Käufe, nie verkaufen |
+
+**Die Fälle:**
+
+| Fall | Verkauf | Rückkauf |
+|---|---|---|
+| **b1** | 10 % des Bestands je Stufe | alles bei der ersten Zone (q ≤ 0,20) |
+| **b2** | 10 % je Stufe | gestaffelt: ⅓ bei q ≤ 0,20 / 0,10 / 0,05; der Rest nach 12 Monaten ohne tiefere Stufe (damit das Geld nicht unbegrenzt liegt, F2) |
+| **b3** | 20 % je Stufe | wie b2 |
+| **b4** | **nur Stufe 0,80**, 20 % | wie b2 (der Fall des ETF-Markts) |
+| **d1** | 10 % je Stufe | **kein Rückkauf**: Entnahme |
+| **d2** | 20 % je Stufe | Entnahme |
+
+| | |
+|---|---|
+| **Zeiträume, Starts** | BTC ab 2015 (Starts 2015, 2017, 2019, 2021, 2023, 11.01.2024) · ETH ab 2017 (2017, 2019, 2021, 2023, 2024) · SOL ab 09.2020 (2020-09, 2021, 2023, 2024) |
+| **Ausgewiesen (b)** | ⭐ **Endbestand in Stück ÷ H0** (das Ziel von b) · Endvermögen ÷ H0 · größter Rückgang · ungenutztes Geld am Ende · Verkäufe und Rückkäufe · Stück ÷ H0 **am Ende jeder Zone** (je Zyklus) |
+| **Ausgewiesen (d)** | entnommener Betrag · Restbestand plus Entnahme ÷ H0 (was die Entnahme gekostet hat) · Anteil des Eingezahlten zurückgeholt · größter Rückgang |
+| **Auskunft** | realisierte Gewinne je Verkauf (für deine Steuerprüfung; die Steuer selbst rechne ich nicht) · D1 × D2: die nach D1 empfohlene Mischung mit b2 |
+| **stimmig (b), vorab** | Stück ÷ H0 > 1 bei **BTC und ETH** in **≥ 2/3** der Starts **und** beim Start 11.01.2024 nicht unter 0,95. SOL nur Auskunft (kurze Reihe) |
+| **(d)** | kein stimmig/nicht: Die Entnahme entscheidest du; die Messung zeigt den **Preis** |
+
+### 12.4 Ehrlich vorab
+
+- **Wenige Zyklen:** BTC hat Hochs 2017, 2021 und 2024/25, ETH zwei, SOL einen. Das ist **Beschreibung**, kein Nachweis.
+- **Mehrfachtesten:** Es ist der vierte Blick auf das BTC-Klima, aber eine **andere Frage** (Ausstieg statt Einstieg). Die Stufen sind vorab fest und werden nicht nachgestellt.
+- **Stichtag:** Die Reihe endet im Herbst 2026 nach einer Zone (02.–08.2026). Varianten mit Rückkauf sind dadurch eher **begünstigt**; das wird ausgewiesen (Ergebnis auch zum Ende jeder Zone).
+- (a) Risiko senken und (c) Umschichten folgen später (E-68).

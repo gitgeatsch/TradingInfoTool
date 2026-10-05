@@ -1,0 +1,18 @@
+SOL messdaten: ('2020-08-11', '2026-09-20', 2232)
+ETH messdaten: ('2017-08-17', '2026-09-20', 3322)
+BTC messdaten: ('2017-08-17', '2026-09-20', 3322)
+CoinMetrics: [('btc', '2010-01-01', '2026-10-04'), ('eth', '2015-07-30', '2026-10-04')]
+
+Klima q (BTC) je Jahr: Maximum, Tage >= 0,80 / 0,90 / 0,95 (ueberhitzt) und <= 0,20 / 0,10 / 0,05 (Zone)
+  2015  max 0.49 | ueberhitzt   0 /   0 /   0 | Zone 263 / 216 / 119
+  2016  max 0.86 | ueberhitzt   6 /   0 /   0 | Zone   0 /   0 /   0
+  2017  max 0.98 | ueberhitzt 325 / 171 /  72 | Zone   0 /   0 /   0
+  2018  max 0.92 | ueberhitzt  14 /   2 /   0 | Zone  42 /  10 /   0
+  2019  max 0.72 | ueberhitzt   0 /   0 /   0 | Zone 105 /  62 /   5
+  2020  max 0.92 | ueberhitzt  43 /   6 /   0 | Zone   9 /   0 /   0
+  2021  max 0.97 | ueberhitzt 175 /  77 /  14 | Zone   0 /   0 /   0
+  2022  max 0.66 | ueberhitzt   0 /   0 /   0 | Zone 215 / 164 /  48
+  2023  max 0.49 | ueberhitzt   0 /   0 /   0 | Zone 175 /  16 /   9
+  2024  max 0.86 | ueberhitzt  45 /   0 /   0 | Zone   0 /   0 /   0
+  2025  max 0.84 | ueberhitzt  53 /   0 /   0 | Zone   0 /   0 /   0
+  2026  max 0.49 | ueberhitzt   0 /   0 /   0 | Zone 116 /  25 /   0
