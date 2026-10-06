@@ -2612,3 +2612,47 @@ Je Coin **eine Zeile**: Stufe · Begründung in Worten · Status. Die Zahlen kom
   - (b) eine **Beschreibung** auf E3, ob Coins mit hohen und wachsenden Gebühren seltener abstürzen;
   - (c) der Vorwärtstest.
 - Die Kategorie *Meme ohne Nutzen* kann als Fakt mitlaufen. Ob sie das Absturzrisiko trennt, ist mit dem heutigen Stand auf E2/E3 als Auskunft messbar; dabei ist der Vorgriff zu prüfen.
+
+### 23.5 Nutzer-Entscheide und was *Nutzen* genau heißt (06.10.2026)
+
+Nutzer 06.10.:
+1. *„Der Bestand und Neuzugänge (alle) – die Rangliste dann ohne Small- und Ultrasmallcaps“*
+2. *„Ja, Schema ist nicht schlecht, bei den Zahlen im Anhang ja Kriterium mit Skala, was warum gut oder schlecht“*
+3. *„Kategorien passt auch – aber der Nutzen, den du mir schilderst, ist noch unklar: Was meinst du hier genau je Asset, die Information von Total Value Locked oder etwas anderes?“*
+
+**Festgehalten (vorläufig, E-73):**
+- **Rangliste nur H und M.**
+- Der Block **Bestand** zeigt **alle** gehaltenen Coins und alle **Neuzugänge**, auch Smallcaps. ⚠️ Auslegung zu bestätigen: *Neuzugänge* = neu in den Bestand gekommene Coins.
+- **Schema** mit Sternen und Worten.
+- Im **Anhang** je Kriterium eine **Skala**: welcher Bereich günstig oder ungünstig ist und **warum** (aus der gemessenen Dosis-Wirkung).
+- **Kategorie** als Fakt.
+
+**Was *Nutzen* je Asset heißen kann — drei Größen, nicht dasselbe** (Beleg: Abfrage 06.10., DefiLlama; Marktwert = Umlaufmenge × Kurs 20.09.):
+
+| Größe | was sie misst | Vergleich | Falle |
+|---|---|---|---|
+| **TVL** (Total Value Locked) | wie viel Geld in einem Protokoll oder auf einer Blockchain **geparkt** ist | Kundeneinlagen einer Bank | sagt nicht, ob jemand **bezahlt**; durch Belohnungsprogramme aufblasbar, oft doppelt gezählt. Beispiel: Bei BNB stehen 174 Mrd. USD; das sind die Bestände der Börse Binance, keine Nutzung der Blockchain |
+| **Gebühren** | was Nutzer **tatsächlich bezahlen**, um die Blockchain oder App zu nutzen | **Umsatz** eines Unternehmens | enthält zum Teil durchgereichte Erträge. Beispiel: LDO 616 Mio. USD sind überwiegend Staking-Erträge, die an die Einleger gehen |
+| **Halter-Einnahmen** | der Teil der Gebühren, der **beim Token ankommt** (Rückkauf, Verbrennen, Ausschüttung an Staker) | **Gewinn bzw. Dividende** | die meisten Tokens erhalten nichts davon. Dann ist der Token ein Stimmrecht, kein Anteil |
+
+| Coin | Gebühren 365 T | Trend (180 T gegen 180 T davor) | Halter-Einnahmen 365 T | Marktwert | Marktwert / Gebühren |
+|---|---|---|---|---|---|
+| ETH | 4.631 Mio. USD | −28 % | 325 Mio. | 315 Mrd. | 68× |
+| BNB | 788 Mio. | −17 % | 71 Mio. | 100 Mrd. | 127× |
+| AVAX | 125 Mio. | −27 % | 23 Mio. | 4,2 Mrd. | 34× |
+| TRX | 83 Mio. | +36 % | 0,7 Mio. | 32 Mrd. | 390× |
+| ADA | 8,3 Mio. | −29 % | 0,7 Mio. | 8,3 Mrd. | 996× |
+| ATOM | 4,5 Mio. | −71 % | ~0 | 0,9 Mrd. | 204× |
+| LTC | 0,5 Mio. | −21 % | ~0 | 4,4 Mrd. | 8.603× |
+| DOGE | 0,1 Mio. | −40 % | ~0 | 13,3 Mrd. | 92.570× |
+
+**Vorgeschlagenes Nutzen-Kriterium** (Fakt in der Zeile, Zahlen im Anhang, ohne Gewicht bis zur Messung §23.4 b):
+- **Nutzung vorhanden:** Gebühren der letzten 365 T über einer Mindesthöhe.
+- **Trend:** Gebühren steigend oder fallend.
+- **Wert beim Token:** Halter-Einnahmen ja/nein und Marktwert je Dollar Halter-Einnahmen. Das entspricht einem Kurs-Gewinn-Verhältnis.
+- **Kategorie:** Meme, Gaming, Blockchain, DeFi …
+
+Beispielzeile:
+```
+★★ ADA  Highcap · sehr alt, Hoch lange her · Nutzung gering (8 Mio. $/Jahr, fallend), Token erhält wenig
+```
