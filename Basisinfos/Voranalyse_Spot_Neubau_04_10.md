@@ -2006,3 +2006,46 @@ Gleichzeitig enden 57–61 % der Mid- und Smallcaps bei −70 % oder eingestellt
 | **Überlappung** | 12-Monats-Fenster an Monatsersten überlappen. Die Nullwelt vertauscht innerhalb des Stichtags, die Zeitstruktur bleibt erhalten |
 | **Fallzahl** | E2 37 und E3 20 Stichtage. H hat nur 13–20 Coins je Stichtag, also 3–4 im Fünftel ⇒ H vor allem gepoolt, je Klasse Auskunft |
 | **Ehrlich** | Zwei Alt-Aufschwünge in den Daten. E1 (2019–20) war ein Aufschwung, in dem fast **alles** stieg; dort trennt kein Merkmal, also nur Auskunft. Es ist **Beschreibung**; das Vorwärtsprotokoll ist der eigentliche Test |
+
+## 20. Monatlicher MACD der Altcoins — Messplan VOR der Messung (06.10.2026)
+
+Nutzer 06.10.: *„Prüfe den monatlichen MACD bei den Altcoins – dies war erst 3-mal der Fall und jedes Mal Altseason.“*
+
+**Einordnung:**
+- Ein Marktsignal mit **drei** Fällen ist eine **Zeitachse** mit drei Beobachtungen. Eine Nullwelt kann darüber nicht entscheiden (2.599).
+- ⇒ Das Ergebnis ist **nur Auskunft**: Wann trat das Signal auf, was folgte, und gab es **Fehlsignale**?
+- Gewichtet wird höchstens, wie Makro (Vorgabe 01.10.).
+
+**Daten:**
+- CoinMetrics Community API (frei, ohne Schlüssel), Tageswert `CapMrktCurUSD` aller 135 dort geführten Assets.
+- Daraus ohne BTC, Stablecoins, Wrapped/Bridge-Tokens und Doppelzählungen (bnb_eth, flow_native, wnxm, leo-Zweitnetz) ein **Altcoin-Marktwert**.
+- Schreibt **nur** nach `data/_spot/altcap.db` (Messdatei des Spot-Strangs).
+- ⚠️ SOL, TON, HYPE und andere fehlen bei CoinMetrics. Der Index ist also ein Näherungswert, vor allem für die Zeit ab 2021.
+
+**Reihen (alle Auskunft):**
+
+| | |
+|---|---|
+| **I1** | Altcoin-Marktwert in USD (mit ETH, ähnlich TOTAL2) |
+| **I2** | I1 / BTC-Marktwert |
+| **I3** | ohne ETH, in USD (ähnlich OTHERS) |
+| **I4** | I3 / BTC-Marktwert |
+
+**Signal:**
+- MACD(12, 26, 9) auf **Monatsschlüssen**; gilt am Monatsende, Handel ab dem Folgemonat.
+- **S:** MACD-Linie kreuzt die Signallinie nach oben.
+- **N:** MACD-Linie kreuzt die Nulllinie nach oben.
+- Die ersten 35 Monate je Reihe sind Einschwingzeit und werden nicht gewertet.
+
+**Was folgte**, je Signal 3, 6 und 12 Monate danach:
+- I1 und I2;
+- höchster Stand von I2 in 12 Monaten;
+- **Altseason** (vorab):
+  - I2 steigt binnen 12 Monaten um **≥ +50 %** gegenüber dem Signalmonat;
+  - zusätzlich ab 2018 die Breite aus §13.4: ≥ 75 % der Top 50 schlagen BTC über 90 T.
+
+**Vergleich:**
+- alle Monate ohne Signal (Grundrate);
+- Zählung der **Fehlsignale**, also Signale ohne folgende Altseason.
+
+**Heute:** Wo stehen MACD und Signallinie jeder Reihe zum letzten Monatsschluss?
