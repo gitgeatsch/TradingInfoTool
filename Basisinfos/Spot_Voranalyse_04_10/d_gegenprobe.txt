@@ -1,0 +1,2 @@
+D1 V2 R0 Start 2021: Vermoegen / M0 = 1.00
+D2 BTC b1 Start 2017: Stueck / H0 = 0.950

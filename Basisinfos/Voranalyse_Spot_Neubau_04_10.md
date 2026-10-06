@@ -1104,3 +1104,99 @@ Nutzer 06.10.: *„D1 – BTC, ETH und Solana. D2 – ja b und d jedenfalls, a u
 | Maßstab | M0 100 % BTC | unverändert, **nur als Maßstab** | |
 
 D2-M bleibt wie §12.3.
+
+### 12.6 Ergebnis D1-M und D2-M (06.10.2026, nach dem vorab festen Plan §12 und §12.5)
+
+Beleg `Spot_Voranalyse_04_10/d_kern_teilverkauf.py` → `.txt`.
+
+**Gegenprobe** (`d_gegenprobe.py`, eigene einfache Schleife): D1 V2 R0 ab 2021 = **1,00** und D2 BTC b1 ab 2017 = **0,950**, beide gleich.
+
+#### D1 — Verhältnis BTC/ETH/SOL (Endvermögen ÷ 100 % BTC; Ende 20.09.2026)
+
+| Fall | Start 10.2020 | 2021 | 2022 | 2023 | 11.01.2024 | **Median** | größter Rückgang (Median; BTC −59 %) |
+|---|---|---|---|---|---|---|---|
+| V1 ⅓ je, nie ausgleichen | 1,43 | 1,13 | 0,91 | 0,98 | 0,91 | 0,98 | −75 % |
+| V1, Ausgleich über Raten | 1,52 | 1,17 | 0,97 | 1,01 | 0,92 | 1,01 | −73 % |
+| V1, jährlich ausgleichen | 2,09 | 1,78 | 1,06 | 1,03 | 0,90 | 1,06 | −73 % |
+| **V2 70/20/10**, nie | 1,10 | 1,00 | 0,94 | 0,97 | 0,96 | 0,97 | −63 % |
+| **V2**, über Raten | 1,20 | 1,03 | 0,97 | 0,99 | 0,98 | 0,99 | −62 % |
+| **V2**, jährlich | 1,37 | 1,24 | 1,00 | 0,99 | 0,96 | **1,00** | **−62 %** |
+| V3 50/30/20, jährlich | 1,70 | 1,48 | 1,02 | 1,00 | 0,93 | 1,02 | −67 % |
+| V4 nach Schwankung (heute 43/30/27), jährlich | 1,57 | 1,46 | 1,00 | 0,97 | 0,92 | 1,00 | −68 % |
+
+- **Nach der vorab festen Regel: V2 70/20/10 mit jährlichem Ausgleich.** Der Median liegt bei 1,00 × BTC, der Rückgang nur 3 Pp über BTC. Alle Mischungen mit mehr ETH/SOL fallen heraus, weil ihr Rückgang mehr als 5 Pp schlechter ist.
+- **V2 über die Raten** (steuerneutral, ohne Verkauf) liegt praktisch gleichauf (0,99, −62 %). Der Unterschied kommt nur aus den Starts vor 2021.
+- **Kein Verhältnis schlägt BTC seit 2022:** Bei Starts 2022–2024 liegen alle Mischungen bei 0,89–1,06. Der Vorteil früher Starts kommt aus **einer** Phase, dem Anstieg von SOL und ETH 2021.
+
+#### D2 — Teilverkauf (b): Stück am Ende ÷ nie verkaufen
+
+| | BTC (Starts 2015 / 17 / 19 / 21 / 23 / 24) | ETH (2017 / 19 / 21 / 23 / 24) | SOL (2020 / 21 / 23 / 24) |
+|---|---|---|---|
+| b1 10 %, alles zurück | 0,81 · 0,95 · 0,98 · 0,99 · 1,00 · 1,00 | 0,87 · 0,93 · 1,04 · 1,03 · 1,01 | 0,92 · 0,97 · 1,03 · 1,01 |
+| b2 10 %, gestaffelt | 0,87 · 1,00 · 1,01 · 0,98 · 0,98 · 1,00 | 0,89 · 0,93 · 1,02 · 1,01 · 1,00 | 0,90 · 0,95 · 1,01 · 1,00 |
+| b3 20 %, gestaffelt | 0,74 · 0,97 · 1,00 · 0,95 · 0,96 · 0,99 | 0,80 · 0,87 · 1,03 · 1,03 · 1,01 | 0,81 · 0,91 · 1,02 · 1,00 |
+| b4 nur Stufe 0,80, 20 % | 0,78 · 0,89 · 0,91 · 0,95 · 0,96 · 0,99 | 0,89 · 0,95 · 1,04 · 1,03 · 1,01 | 0,97 · 0,98 · 1,02 · 1,00 |
+
+- **Nach der vorab festen Regel: kein Fall stimmig.** Der Teilverkauf nach dem BTC-Klima bringt **nicht verlässlich mehr Stück**.
+- **WORAN, an den Zyklen nachgesehen (b2, BTC ab 2015):**
+  - Verkauft wurde **12/2016 bei ~900 $** (Stufe 0,80), zurückgekauft 2018/19 bei 3.000–4.000 $: danach 0,84.
+  - Verkauft **11/2020 bei ~18.000 $**, zurückgekauft 2022 bei 30.000 bis 16.000 $: danach 0,69, nach 2023 0,90.
+  - Verkauft **03/2024 bei ~67.000 $**, zurückgekauft 2026 bei ~65.000 $: 0,87.
+  - ⇒ **„Überhitzt“ kommt zu früh**, wie schon in F3. Der Kurs steigt danach meist noch stark, der Rückkauf in der nächsten Zone liegt **über** dem Verkaufspreis.
+- **Im ETF-Markt** (Start 2024) ist alles neutral (0,99–1,01). Es gab nur eine Stufe (0,80) und einen Rückkauf.
+- **Größter Rückgang:** etwas kleiner als beim Halten (z. B. BTC −76 % gegen −79 %), weil Geld wartet. Das ist teils mechanisch.
+
+#### D2 — Entnahme (d): Rest plus Entnommenes ÷ nie verkaufen
+
+| | BTC (2015 / 17 / 19 / 21 / 23 / 24) | ETH (2017 / 19 / 21 / 23 / 24) | SOL (2020 / 21 / 23 / 24) |
+|---|---|---|---|
+| d1 10 % je Stufe | 0,62 · 0,78 · 0,86 · 0,98 · 0,99 · 1,00 | 0,76 · 0,87 · 1,01 · 1,01 · 1,00 | 0,89 · 0,94 · 1,01 · 1,00 |
+| entnommen (in % des Eingezahlten) | 544 % · 116 % · 50 % · 12 % · 7 % · 1 % | 183 % · 69 % · 11 % · 6 % · 1 % | 55 % · 32 % · 16 % · 1 % |
+| d2 20 % je Stufe | 0,38 · 0,62 · 0,75 · 0,95 · 0,97 · 0,99 | 0,58 · 0,75 · 1,02 · 1,02 · 1,01 | 0,80 · 0,90 · 1,02 · 1,00 |
+
+- **Entnahme kostet auf lange Sicht viel Ertrag, sichert aber echtes Geld:** Ab 2015 wurden beim BTC das **5,4-Fache des Eingezahlten** entnommen, dafür lag das Gesamtergebnis 38 % unter Halten. Bei Starts ab 2021 kostet sie fast nichts (0,98–1,00).
+- **Ob entnommen wird, entscheidest du** (E-68). Die Messung zeigt den **Preis**.
+
+#### Zwischenfazit zum Ziel
+
+| | Ergebnis | Folge |
+|---|---|---|
+| **D1** | **70/20/10 (BTC/ETH/SOL)** ist das gemessen sinnvolle Verhältnis: so gut wie BTC allein, ETH und SOL sind dabei, und das Zusatzrisiko ist gering (+3 Pp). Ausgleich über die Raten ist steuerneutral und fast gleich gut | Vorschlag für den Aufbau: 70/20/10, **Ausgleich über die Raten** (R1) statt jährlichem Verkauf; der Unterschied von 0,01 rechtfertigt keine Verkäufe und Steuern |
+| **D2 (b)** | **nicht belegt.** Der Auslöser „überhitzt“ kommt zu früh | Nach E-63: WORAN = Zeitpunkt. Eine **Fassung 2** müsste später verkaufen, z. B. erst, wenn q von über 0,90 wieder **fällt** (die Überhitzung kippt). ⚠️ Das wäre ein zweiter Blick auf dieselben 2–3 Zyklen und damit nur Beschreibung |
+| **D2 (d)** | Kosten und gesicherter Betrag sind jetzt bekannt | deine Entscheidung; das System kann den Zeitpunkt als **Fakt** melden (Klima-Ampel *überhitzt*) |
+
+### 12.7 Regeln und Funktionsweise — in Klartext (für den Nutzer)
+
+**1. Woher die Zahl „Klima q“ kommt**
+- Täglich aus BTC berechnet, aus drei Zutaten:
+  - **MVRV:** Kurs gegen den Durchschnittseinstand aller BTC-Halter;
+  - der **Abstand zum bisherigen Hoch**;
+  - der **Abstand zum 200-Wochen-Schnitt**.
+- Jede Zutat wird mit **allen Tagen seit 2013** verglichen (Perzentil). q ist der Mittelwert der drei.
+- **q = 0,80** heißt: *teurer als an 80 % aller bisherigen Tage*. **q = 0,20** heißt: *billiger als an 80 % aller Tage*.
+- q ist am Abend eines Tages bekannt; gehandelt wird **am nächsten Tag** zum Tagesschluss. So gibt es keinen Blick in die Zukunft.
+
+**2. Aufbau (D1)**
+- Jeden Monatsersten wird **derselbe Betrag** investiert.
+- Er wird nach dem Zielverhältnis auf BTC, ETH und SOL verteilt. Gemessen ist **70/20/10** als sinnvolles Verhältnis.
+- **Ausgleich über die Raten:** Hat sich ein Anteil durch Kursbewegungen vom Ziel entfernt, geht die neue Rate zuerst in den Wert, der zu wenig hat. **Verkauft wird dabei nie.**
+
+**3. Teilverkauf (D2b) — so war er gemessen, und so hätte er gewirkt**
+- **Verkauf:**
+  - Steigt q über **0,80**, dann über **0,90**, dann über **0,95**, wird jedes Mal ein Teil des Bestands verkauft (10 % oder 20 %).
+  - Jede Stufe nur **einmal je Zyklus**. Wieder scharf wird sie erst nach der nächsten Zone (q ≤ 0,20).
+- **Rückkauf:** in der Zone, entweder auf einmal (b1) oder in drei Teilen bei q ≤ 0,20 / 0,10 / 0,05 (b2–b4). Was nach 12 Monaten noch übrig ist, wird gekauft.
+- **Ergebnis:** In der Vergangenheit hätte das **weniger** Coins gebracht, weil zu früh verkauft wurde.
+
+**4. Entnahme (D2d)**
+- Gleiche Verkaufsstufen, aber das Geld bleibt draußen.
+- Gemessen ist, wie viel du entnimmst und was es gegenüber Halten kostet.
+
+**5. Was in den Zahlen NICHT enthalten ist**
+- **Gebühren und Steuern** (Regel 2). Jeder Verkauf kann bei dir steuerpflichtig sein; die realisierten Gewinne je Verkauf stehen im Beleg.
+- **Zinsen** auf wartendes Geld (0 %).
+- Die Daten **nach dem 20.09.2026** (SOL) bzw. 04.10.2026 (BTC, ETH).
+
+**6. Wie belastbar das ist**
+- **Wenige Zyklen:** BTC 3, ETH 2, SOL 1–2. Alles ist **Beschreibung**, kein Nachweis für die Zukunft.
+- **Rückschau:** Das Verhältnis 70/20/10 war in der Vergangenheit sinnvoll. Ob ETH und SOL künftig mithalten, sagt es nicht.
