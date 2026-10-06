@@ -5198,6 +5198,9 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Nächster Schritt Betrieb** | 02.10.: *Ja, 1. wie von dir empfohlen* | E-41: Schritt 7 Betriebsvorbereitung, zuerst die Voranalyse |
 | **Hypothesen nicht starr** | 05.10.: *sollten wir während der Messungen zur Erkenntnis gelangen, dass die Annahmen und Hypothesen geändert werden müssen, dies bitte berücksichtigen* (E-63) | Fassung n+1 mit Begründung aus der **Ursache**; die alte bleibt stehen; Zahl der Blicke ausweisen; auf derselben Menge nur Beschreibung, der Test kommt aus neuen Daten |
 | **Spot offen abstimmen** | 05.10.: *das geht nicht in ein paar Zeilen* · Altcoins Monate bis 1–2 Jahre, Akkumulation über mehrere Zyklen mit Teilverkauf (E-66) | G1 zuerst fachlich und technisch bewerten (Voranalyse_Spot §10), erst dann etwas festlegen |
+| **Altcoins: Asymmetrie** | 06.10.: *aus den unsicheren Assets jene identifizieren, welche ein ausgewogeneres bzw. möglichst asymmetrisches Chance-Risiko-Verhältnis aufzeigen* (E-71) | Zielgröße rechtes gegen linkes Ende je Asset, nicht Mittel/Median gegen BTC (Voranalyse_Spot §19) |
+| **Delegiert** | 06.10.: *du entscheidest jetzt* (E-72) | Spiegelprobe bewegungsgleich; Maßstab Systemfunktion / Hinweis / Newsletter vorab |
+| **Erst verstehen, dann bauen** | 06.10.: *ich kann mir noch immer nicht vorstellen, was das System leistet* (E-73) | W1–W7 vorläufig; vor dem Bau ein Beispiel aus echten Daten |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,

@@ -1412,3 +1412,5 @@ mit Zeit zum Auflösen als Datengrundlage.
   Damit ist der `SYMBOL_OVERRIDES`-Workaround in `importer/excel_import.py` nicht mehr
   nötig und wurde entfernt. Backup der Originaldatei vor der Korrektur liegt lokal unter
   `.claude/backups/` (nicht versioniert).
+
+**Nachtrag 06.10.2026 — Spot-Altcoins (geplant, nicht gebaut, vorläufig E-73):** monatliche **Watchlist** je Klasse nach Asymmetrie (Alter, Absturz, Dauer seit dem Hoch, TVL gegen Kurs) mit Begründung je Faktor und **Nachlauf-Marke** je Position, als **Auskunft** in der Klima-Ampel-Mail, ohne Kaufsignal, mit Vorwärtsprotokoll. Herleitung: `Voranalyse_Spot_Neubau_04_10.md` §19–§22.

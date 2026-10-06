@@ -2418,3 +2418,5 @@ Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
 - **Hebel:**
   - Die Misfire-Mail war ein Fehlalarm: 1,07 s Verspätung bei 1 s Standardtoleranz. Behoben (95cfe08).
   - Die Ausstiegserinnerungen ohne offene Position entfallen wie vorgesehen.
+
+**Nachtrag 06.10.2026 (17) — Spot-Altcoins, ein langer Messtag (E-63 bis E-73):** Spot-Altcoins 06.10.: Zeitpunkt-Regeln (Boden, Momentum, Zyklus, Makro, MACD) schlagen BTC nicht; **Asymmetrie-Auswahl trägt** (alte Überlebende am Boden: Alter, Absturz tief, Hoch lange her, TVL > Kurs; E3 +13 Pp gegen die Klasse); **Führung** mit Nachlauf −35 % macht den E3-Korb aus −42 % zu −4 % (knapp nicht bestätigt); gegen BTC verliert auch das. Fazit und W1–W7 in Voranalyse_Spot §22 **festgehalten, vorläufig** (E-73); der Nutzer kann sich die Leistung noch nicht vorstellen ⇒ vor jedem Bau ein Beispiel aus echten Daten. Belege: Voranalyse_Spot §15–§22; Eintrag im Plan Hebel O23.

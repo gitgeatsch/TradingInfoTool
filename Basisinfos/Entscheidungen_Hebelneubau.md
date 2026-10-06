@@ -862,3 +862,16 @@ prüfen und gegenprüfen"*.
 **06.10.2026** · Nutzer: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüfen, du entscheidest jetzt. Wichtig wäre die Zielerreichung, und hier bin ich nicht sicher, ob das ein schlechter Newsletter wird oder echte Systemfunktionalität.“*
 - Die Spiegelprobe *Verhältnis ≥ 1,717* (Hebel-Eichung 2.603) ist für die Asymmetrie-Messung ersetzt durch die **bewegungsgleiche Spiegelprobe** (Voranalyse_Spot §19.4). Begründung: Selbsttest (b) an 1,717 gescheitert, die feste Schwelle trennt bei 12-Monats-Fenstern nicht. Die neue Probe hatte 0 von 200 Fehlalarmen in beiden Epochen und eine Fundquote von 100 %.
 - Der Maßstab *Systemfunktion / Hinweis / Newsletter* (§19.5) ist **vor** dem Ergebnis festgelegt.
+
+# E-73 · Spot-Altcoins: Fazit §22 und W1–W7 festgehalten, VORLÄUFIG — kein Bau vor einem verständlichen Beispiel (06.10.2026)
+
+**06.10.2026** · Nutzer: *„Ja – halte vorerst alles fest in der Doku und dem Gesamtplan. Ich kann mir noch immer nicht vorstellen, was das System leistet oder leisten soll.“*
+- W1–W7 (Voranalyse_Spot §22.3) stehen als **Arbeitsstand** in Doku und Plan, **nicht** als Freigabe:
+  - Watchlist als Auskunft ohne Geld mit Vorwärtsprotokoll;
+  - kurze Liste;
+  - keine Leistungsfilter;
+  - Nachlauf-Marke als Hinweis;
+  - Allokation nach 6 Monaten;
+  - Bau-Voranalyse NB;
+  - weitere Messungen.
+- **Vor jedem Bau:** eine konkrete Beschreibung, was das System leistet. Als Beispiel des Mailabschnitts aus echten Daten und als Ablauf: was der Nutzer jeden Monat bekommt und was er damit tut (Voranalyse_Spot §22.4).

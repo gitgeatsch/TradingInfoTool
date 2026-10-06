@@ -12,6 +12,15 @@
 
 ---
 
+# ⭐⭐⭐ NACHTRAG 06.10.2026 — zuerst lesen
+
+| | |
+|---|---|
+| **Hebel** | N4 läuft am Desktop (Kontaminationsprobe K bestanden 07:31, T 202/997, wartet auf das Kontingent); Zwischenentscheid nach 250. Testwoche bis 10.10. |
+| **Spot-Altcoins** | Spot-Altcoins 06.10.: Zeitpunkt-Regeln (Boden, Momentum, Zyklus, Makro, MACD) schlagen BTC nicht; **Asymmetrie-Auswahl trägt** (alte Überlebende am Boden: Alter, Absturz tief, Hoch lange her, TVL > Kurs; E3 +13 Pp gegen die Klasse); **Führung** mit Nachlauf −35 % macht den E3-Korb aus −42 % zu −4 % (knapp nicht bestätigt); gegen BTC verliert auch das. Fazit und W1–W7 in Voranalyse_Spot §22 **festgehalten, vorläufig** (E-73); der Nutzer kann sich die Leistung noch nicht vorstellen ⇒ vor jedem Bau ein Beispiel aus echten Daten |
+| **Spot-Kern** | unverändert: BTC/ETH/SOL 70/20/10 mit R1, K1 als Hinweis |
+| **Nächster Schritt** | dem Nutzer zeigen, **was das System leistet** (§22.4 Beispiel), dann W1–W7 abstimmen |
+
 # ⭐⭐⭐ NACHTRAG 05.10.2026 abends — zuerst lesen
 
 | Frage | Stand | selbst prüfen |

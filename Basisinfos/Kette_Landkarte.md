@@ -23,6 +23,7 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | Hier fehlt | Stand seit 05.10.2026 |
 > |---|---|
 > | Toleranz verpasster Läufe | **alle** Jobs haben `misfire_grace_time` = 300 s (`scheduler/background.py` `_neuer_scheduler`); vorher erbten die Intervall-Jobs 1 s, und 1,07 s Verspätung löste eine Fehlalarm-Mail aus. Die Mail nennt jetzt die Verspätung |
+> | Spot-Altcoin-**Watchlist** (Voranalyse_Spot §19–§22) | **nicht gebaut, nur gemessen.** Geplant als Abschnitt der Klima-Ampel-Mail: monatlicher Asymmetrie-Rang je Klasse und Nachlauf-Marke, ohne Geld, mit Vorwärtsprotokoll; vorläufig (E-73) |
 > | Schalter `spot_kette_angehalten` (`regel0_betrieb.yaml`) | hält die Rollen-Kette in **allen fünf Gruppen** an, nicht nur Krypto-Spot. Weiter laufen REGEL0, Stop-Nachzieh 07:15, Bitpanda-Abgleich und Marktscan. ✔ **Gesetzt am 05.10.2026 (E-67, Wahl A)**: Die Kette läuft in keiner Gruppe mehr. Ersatz siehe Plan Hebel O27 |
 
 > ## ⚠️⚠️⚠️ NACHTRAG 03.10.2026 — der HEBEL kommt nicht mehr aus dieser Kette
