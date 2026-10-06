@@ -2298,3 +2298,34 @@ In E2 waren die **Bestätigten** (zwei Monate in Folge im Fünftel) deutlich bes
 | **alte Spot-Kette** (LLM-Rollen, NACHKAUFEN), angehalten seit E-67 | die Liste und die Klima-Ampel sind der **Ersatz** (O27): Fakten und eine gemessene Auswahl statt der LLM-Begründung *im Minus → nachkaufen* |
 | **Klima-Ampel / Fakt-Mail** (A4) | beantwortet das **Wann** (Phase, als Fakt: Klima, MACD, Liquidität). Die Liste beantwortet das **Welche** |
 | **gemeinsame Grundlage** | dieselben Kursdaten, dieselben Klassen H/M/S (§14), dieselben Kosten, derselbe Messstandard (Nullwelt, Selbsttest, sechs Prüfungen) und dieselben Betriebsregeln am NB |
+
+### 19.8 Reifegrad und Gliederung — Einschätzung VOR einem Bau (06.10.2026)
+
+Nutzer 06.10.: *„Denke, wir müssen das Thema nach Bedarf und fachlicher Einordnung aufteilen, z. B. Watchlist und Assetliste kombinieren oder was auch immer. Bist du der Meinung als Experte, dass das Thema einen Reifegrad besitzt, um fortzusetzen, und konzeptionell sauber ist?“*
+
+**Einschätzung:**
+
+| | Reif? | |
+|---|---|---|
+| **Die Messung** | **ja** | vorab festgelegt, Selbsttest, Nullwelt, Gegenprobe aus SQL, sechs Prüfungen. Monoton, jedes Jahr positiv, Weglassprobe hält. Zwei eigene Fehler wurden **vor** der Meldung bzw. bei der Erklärung gefunden und behoben (offene Fenster, Richtung von F1) |
+| **Das Konzept** | **noch nicht** | In *Kandidatenliste* stecken fünf verschiedene Fragen, die bisher vermischt sind. Drei davon sind nicht gemessen |
+| **Kaufsystem mit Geld** | **nein** | Das Ergebnis ist Beschreibung (fünfter Blick); gegen BTC verliert auch der beste Korb in E3. Der einzige saubere Test ist vorwärts |
+
+**Gliederung nach fachlicher Frage:**
+
+| # | Baustein | Frage | Stand | Art |
+|---|---|---|---|---|
+| **B1** | **Assetliste (Universum)** | Welche Coins kommen überhaupt in Frage? Bitpanda-handelbar, Datenqualität (Token-Umstellungen verfälschen das Allzeithoch), **tote Projekte** ausschließen (z. B. FTT), Klasse H/M/S | Regeln da (§14), Ausschluss und Datenprüfung **fehlen** | Fakten und Regeln |
+| **B2** | **Watchlist (Asymmetrie-Rang)** | Welche Coins aus B1 haben das bessere Verhältnis aus Chance und Risiko? Monatlicher Rang mit Begründung je Faktor, Rangverlauf, Bestätigung | **gemessen** (§19.6); Bestätigung und Länge offen | gemessene Ordnung, **Auskunft** |
+| **B3** | **Phase** (Klima-Ampel) | Ist gerade eine Lage, in der das rechte Ende häufiger ist? BTC-Klima, MACD, Liquidität, Breite | als Fakten gemessen (§16, §20). Als Signal **nicht** vorab erkennbar (2.599) | Fakt, kein Auslöser |
+| **B4** | **Allokation und Einsatz** | Wie viel vom Vermögen in den Satelliten neben dem Kern? Fester kleiner Einsatz je Coin, Tranchen | **nicht gemessen**; die Höhe des Satelliten ist eine **Nutzerentscheidung** (Ziel, Risiko) | Regelwerk |
+| **B5** | **Führung und Ausstieg** | Wann wird verkauft? Gemessen ist nur *12 Monate halten*. Beim Bodenkauf half die Führung deutlich (§15.7: +20–40 Pp gegen Halten) | **nicht gemessen** für die Liste | Messung nötig |
+
+**Empfehlung (Reihenfolge):**
+1. **B1 + B2 zusammen als Watchlist mit Vorwärtsprotokoll, ohne Geld**, als Abschnitt der Klima-Ampel-Mail (B3).
+   - B1 liefert die *Assetliste*, B2 den Rang darin. Das ist die vom Nutzer genannte Kombination *Watchlist und Assetliste*.
+   - Vorher muss der Ausschluss toter Projekte und die Datenprüfung stehen.
+2. **Parallel messen** (je eigener Plan vorab): B2-Bestätigung (≥ 2 Monate im Fünftel), Listenlänge (die besten k je Klasse), B5-Führung auf der Liste.
+3. **B4 erst nach 6 Monaten Vorwärtsprotokoll**, zusammen mit dem Nutzer: Satellitenanteil und Einsatz je Coin.
+
+⇒ **Fortsetzen ja, als Watchlist und Auskunft. Kein Kaufsystem, solange B1, B4 und B5 offen sind und kein Vorwärtsergebnis vorliegt.**
