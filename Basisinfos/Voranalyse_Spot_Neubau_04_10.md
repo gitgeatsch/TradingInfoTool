@@ -1860,3 +1860,11 @@ Belege:
 | **A4** | **Klima-Ampel und Fakt-Mail** (S7/O27, Ersatz für die angehaltene Kette) | als Fakten ohne Gewicht: BTC-Klima q mit K1-Hinweis und Rückkauf-Hinweis, Netto-Liquidität (Stand + 13-W-Richtung), Stablecoin-Umlauf, Altseason-Breite, BTC-Dominanz, Protokoll aus A2. Danach als nächster **Bau**: Voranalyse, dann Betriebsprüfung am NB |
 | **A5** | **Kern** | unverändert: 70/20/10 (BTC/ETH/SOL) mit Ausgleich über die Raten (R1), K1 als Hinweis |
 | **A6** | **Verwässerung** | verworfen, bis ein Freigabekalender mit Historie verfügbar ist; Quelle prüfen nur auf Wunsch |
+
+### 18.1 Begriffsklärung „ETF-Markt“ (06.10.2026; Nutzer: *„es hört sich an, als ob wir ETF traden“*)
+
+- **„ETF-Markt“ ist nur der Name der Epoche E3:** der Zeitraum **ab 11.01.2024**, dem ersten Handelstag der US-Spot-ETFs auf BTC.
+- **Gehandelt und gemessen werden ausschließlich Coins** (Kurse aus `messdaten.db`, Kosten wie Bitpanda), **keine ETFs**.
+- **Gemessen ist nur:** Ab 2024 verhalten sich die Altcoins gegen BTC anders als 2021–23.
+- **Nicht gemessen ist, dass die ETFs die Ursache sind.** Das ist eine Vermutung aus der Recherche (Block Scholes, §16.1: Kapital in BTC-ETFs gebunden). Andere Ursachen sind ebenso möglich, etwa mehr neue Tokens mit kleinem Umlauf, Memecoins oder die Zinslage.
+- **Ab jetzt** steht in neuen Texten **„E3 (ab 2024)“** statt „ETF-Markt“, damit der Name keine Ursache unterstellt. Ältere Abschnitte bleiben unverändert und sind so zu lesen.
