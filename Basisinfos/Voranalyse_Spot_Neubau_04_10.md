@@ -2216,3 +2216,14 @@ Nutzer 06.10.: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüf
 - Der **Bau** einer monatlichen Kandidatenliste am NB mit Vorwärtsprotokoll ist begründet. Vor dem Bau kommt die Voranalyse des Betriebs.
 - ⚠️ Für die NB-Daten (B1–B9) ist zu klären: Die Kombination braucht das **Allzeithoch** und das **erste Kursdatum** je Coin. Am NB liegen Stundenkurse erst ab 2023, also braucht es Stammdaten vom Desktop plus eine laufende Fortschreibung. Außerdem TVL am NB.
 - Nicht gemessen und offen: die Wahl **innerhalb** des Fünftels, also wie lang die Liste sein soll.
+
+**Nachtrag §19.4/§19.6:** Der Selbsttest der bewegungsgleichen Spiegelprobe (Lauf 3) wurde auf der **korrigierten** Menge (19.681 Coin-Anker) nachgerechnet (`as_spiegel_nachbarn_korr.txt`). Ergebnis in beiden Epochen:
+
+| Welt | besteht in beiden Epochen |
+|---|---|
+| reine Bewegung | **0 %** |
+| Zufall | **0 %** |
+| Richtung s 0,3 / 0,6 | **100 %** |
+| Richtung s 0,15 | 72 % |
+
+Je Epoche liegt der Fehlalarm bei 0–5 %. Die Probe gilt damit unverändert.

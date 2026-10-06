@@ -1,0 +1,17 @@
+Spiegelprobe 'bewegungsgleich' - Selbsttest (§19.4) · 19681 Coin-Anker
+
+Gitter (Mittel Lift R2 / 2,5. Perzentil Lift D2):
+  s 0.0  E2 0.999 / 0.975 · E3 1.001 / 0.983
+  s 0.3  E2 1.123 / 1.050 · E3 1.174 / 1.017
+  s 0.6  E2 1.241 / 1.112 · E3 1.359 / 1.048
+  s 1.0  E2 1.375 / 1.183 · E3 1.594 / 1.081
+  s 1.5  E2 1.500 / 1.258 · E3 1.851 / 1.113
+  s 2.0  E2 1.585 / 1.295 · E3 2.047 / 1.132
+  (1) Bewegung  s 0.15  besteht E2   2 % · E3   5 % · beide   0 %
+  (1) Bewegung  s 0.30  besteht E2   0 % · E3   2 % · beide   0 %
+  (1) Bewegung  s 0.60  besteht E2   2 % · E3   0 % · beide   0 %
+  (1) Bewegung  s 1.00  besteht E2   5 % · E3   2 % · beide   0 %
+  (2) Richtung  s 0.15  besteht E2  88 % · E3  85 % · beide  72 %
+  (2) Richtung  s 0.30  besteht E2 100 % · E3 100 % · beide 100 %
+  (2) Richtung  s 0.60  besteht E2 100 % · E3 100 % · beide 100 %
+  (3) Zufall    s 0.00  besteht E2   2 % · E3   5 % · beide   0 %
