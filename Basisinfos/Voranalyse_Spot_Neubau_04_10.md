@@ -2656,3 +2656,47 @@ Beispielzeile:
 ```
 ★★ ADA  Highcap · sehr alt, Hoch lange her · Nutzung gering (8 Mio. $/Jahr, fallend), Token erhält wenig
 ```
+
+### 23.6 Der Prüfstein Quant — wo das System heute zu kurz greift (06.10.2026)
+
+Nutzer 06.10.: *„Neu in den Bestand gekaufte Coins, aber ja, diese könnten natürlich auch Neuemissionen sein. Zum Schema: ja gut, aber etwas zu kurz, z. B. was ist ‚Token erhält wenig'? … Der Punkt ist eher: Wenn die Adaption der Wallstreet und Tokenisierung Fahrt aufnimmt, werden nur bestimmte Assets dauerhaft Bestand haben. Siehe Quant – der Coin galt als tot, hat aber begrenzte Tokenanzahl, alles ausgegeben. Ich fürchte, hier sind wir nicht weit genug bzw. ist der Weg noch nicht klar.“*
+
+**Festgehalten:**
+- *Neuzugänge* sind neu gekaufte Coins. Sind sie zu jung für einen Rang, erscheinen sie mit Fakten und dem Vermerk *zu jung für eine Einstufung*.
+- Das Schema bekommt **ganze Sätze** statt Kürzeln (Beispiel unten).
+
+**QNT, nachgesehen** (Beleg: Abfrage 06.10., messdaten, CoinGecko):
+
+| | |
+|---|---|
+| Kurs | Allzeithoch 394,9 (09/2021), heute 64,2 (**−84 %**). Die Klasse liegt im Median bei −97 % bis −99 % |
+| Angebot | **14,54 von 14,61 Mio. ausgegeben (99,5 %), Höchstmenge fest** ⇒ praktisch keine künftige Verwässerung |
+| Kategorien | Infrastructure, **Real World Assets (RWA)**, Coinbase 50 Index |
+| im System | Klasse **S** (Binance-Umsatzrang über 100) ⇒ nach dem Entscheid *ohne Smallcaps* **gar nicht in der Rangliste**. In der Klasse nur Perzentil 0,43, weil QNT **weniger tief** gefallen ist als die anderen |
+
+⇒ Das System hätte QNT **nicht** hervorgehoben. Der Grund liegt in **drei Lücken**:
+1. **Klasse nach Binance-Umsatz statt nach Marktwert.** Für einen Spot-Anleger bei Bitpanda zählt die Größe des Projekts, nicht der Umsatz an einer Börse. QNT ist nach Marktwert deutlich größer als nach Binance-Umsatz.
+2. **Alter ab dem Binance-Listing** (QNT 07/2021), nicht ab dem Projektstart (2018). Das echte Alter fehlt als Stammdatum.
+3. **Angebot und Tokenisierung fehlen ganz:** feste, voll ausgegebene Menge, RWA- und Institutionsbezug. Genau das ist die These des Nutzers zum Fortbestand.
+
+**Einordnung:**
+- *Welche Assets haben dauerhaft Bestand, wenn Wall Street und Tokenisierung Fahrt aufnehmen?* Das ist eine These über einen **Strukturwandel, der erst kommt**. Mit den Kursen der Vergangenheit lässt sie sich nicht beweisen (Regime nicht vorab erkennbar, 2.599).
+- Das ist aber kein Grund, sie wegzulassen. Nach der Vorgabe vom 01.10. werden übergeordnete Kräfte **gewichtet**, und **der Nutzer** gewichtet sie.
+- ⇒ Es braucht eine **zweite Ebene** neben der gemessenen.
+
+**Vorschlag: zwei Ebenen**
+
+| Ebene | Frage | Inhalt | Art |
+|---|---|---|---|
+| **1 · Fortbestand (Strukturprofil)** | Hat das Asset das Zeug, dauerhaft zu bestehen? | **Angebot:** Höchstmenge fest, % ausgegeben, künftige Verwässerung · **Nutzung:** Gebühren, Halter-Einnahmen, Trend · **Institution/Tokenisierung:** RWA-Kategorie, RWA-Volumen auf der eigenen Blockchain, ETF/ETP vorhanden, Index-Aufnahme · **echtes Alter** (Projektstart) · **Größe nach Marktwert** · Kategorie | **Fakten-Profil, vom Nutzer gewichtet.** Teilweise messbar als Auskunft (z. B. ob eine feste, voll ausgegebene Menge seltener abstürzt) |
+| **2 · Gelegenheit (Watchlist)** | Steht dieses Asset **gerade** günstig? | der gemessene Asymmetrie-Rang (§19.6) und die Nachlauf-Marke | gemessen |
+
+Zusammen: zuerst Ebene 1, dann Ebene 2. *Ein Asset mit gutem Strukturprofil, das gerade asymmetrisch steht.*
+
+**Beispiel einer Zeile mit ganzen Sätzen** (QNT, mit den Fakten von oben):
+
+> **QNT** (nach Marktwert Midcap) · *Fortbestand:* Die Gesamtmenge ist fest und zu 99,5 % ausgegeben; es kommen kaum neue Tokens auf den Markt. Kategorie Tokenisierung realer Werte (RWA). Gebühren sind bei DefiLlama nicht erfasst; der Nutzen liegt außerhalb öffentlicher Blockchains und ist damit nicht messbar. · *Gelegenheit:* 84 % unter dem Hoch von 2021. Es ist weniger tief gefallen als vergleichbare Coins, was im gemessenen Rang eher gegen eine Aufnahme spricht. · *Marke:* …
+
+⇒ **Der Weg ist noch nicht klar. Der Nutzer hat recht:**
+- Ebene 2 ist gemessen; Ebene 1 fehlt.
+- Nächster Schritt: eine **Voranalyse Strukturprofil**. Welche Fakten gibt es frei und mit welcher Historie (CoinGecko: Angebot, Kategorien, Projektstart; DefiLlama: Gebühren, RWA; ETF/ETP-Liste)? Welche lassen sich als Auskunft messen? Und die Klasseneinteilung nach Marktwert statt nach Binance-Umsatz neu rechnen.
