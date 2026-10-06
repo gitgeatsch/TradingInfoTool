@@ -1,0 +1,47 @@
+====================================================================================================
+BEISPIEL Mailabschnitt  ALTCOIN-WATCHLIST  zum 2026-09-01   (Datenstand 2026-09-20 · nur Anschauung, KEIN Signal)
+====================================================================================================
+PHASE (Fakten, kein Ausloeser):  BTC-Klima q 0.33 (billig) · Altseason-Breite 51 % (Top 50 gegen BTC ueber 90 T)
+                                 Netto-Liquiditaet USA 5.78 Bio. USD, 13 Wochen fallend (-1.0 %)
+                                 MACD Altcoins/BTC (monatlich): unter Null, Histogramm steigend - Kreuz nahe, nicht vollzogen (Voranalyse_Spot §20.2)
+
+WATCHLIST (Rang innerhalb der Klasse; 1,00 = bester; Faktoren: Alter · Absturz · Hoch lange her · TVL gegen Kurs)
+
+  H - Highcaps (alle im obersten Fuenftel)
+       LTC     Wert 0.81 | Alter  8.7 J (0.95) ·  87 % unter Hoch (0.60) · Hoch vor  64 Mon. (0.88) · TVL    -       | seit 6 Mon. in der Liste | Kauf 49.69 · jetzt +15 % · Nachlauf-Marke 37.88 (-34 % von jetzt) · Notbremse 24.84
+       ADA     Wert 0.78 | Alter  8.4 J (0.90) ·  93 % unter Hoch (0.80) · Hoch vor  60 Mon. (0.65) · TVL    -       | seit 5 Mon. in der Liste | Kauf 0.2012 · jetzt +10 % · Nachlauf-Marke 0.1481 (-33 % von jetzt) · Notbremse 0.1006
+   NEU DOGE    Wert 0.72 | Alter  7.2 J (0.55) ·  88 % unter Hoch (0.65) · Hoch vor  64 Mon. (0.95) · TVL    -       | seit 1 Mon. in der Liste | Kauf 0.08176 · jetzt +4 % · Nachlauf-Marke 0.0591 (-31 % von jetzt) · Notbremse 0.04088
+   NEU FET     Wert 0.67 | Alter  7.5 J (0.65) ·  95 % unter Hoch (0.90) · Hoch vor  29 Mon. (0.45) · TVL    -       | seit 1 Mon. in der Liste | Kauf 0.152 · jetzt +12 % · Nachlauf-Marke 0.1204 (-29 % von jetzt) · Notbremse 0.076
+
+  M - Midcaps (beste 10)
+       FIL     Wert 0.92 | Alter  5.9 J (0.85) · 100 % unter Hoch (0.93) · Hoch vor  65 Mon. (0.97) · TVL    -       | seit 1 Mon. in der Liste | Kauf 0.799 · jetzt +19 % · Nachlauf-Marke 0.6252 (-35 % von jetzt) · Notbremse 0.3995
+       CHZ     Wert 0.90 | Alter  7.0 J (0.94) ·  98 % unter Hoch (0.82) · Hoch vor  65 Mon. (0.94) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.01339 · jetzt +13 % · Nachlauf-Marke 0.009997 (-34 % von jetzt) · Notbremse 0.006695
+       STRAX   Wert 0.89 | Alter  5.8 J (0.82) · 100 % unter Hoch (0.96) · Hoch vor  64 Mon. (0.88) · TVL    -       | seit 3 Mon. in der Liste | Kauf 0.00935 · jetzt +15 % · Nachlauf-Marke 0.008125 (-24 % von jetzt) · Notbremse 0.004675
+       CELO    Wert 0.83 | Alter  5.7 J (0.81) ·  99 % unter Hoch (0.88) · Hoch vor  59 Mon. (0.79) · TVL    -       | seit 2 Mon. in der Liste | Kauf 0.07802 · jetzt +13 % · Nachlauf-Marke 0.05951 (-32 % von jetzt) · Notbremse 0.03901
+   NEU COTI    Wert 0.83 | Alter  6.5 J (0.91) ·  98 % unter Hoch (0.79) · Hoch vor  59 Mon. (0.78) · TVL    -       | seit 1 Mon. in der Liste | Kauf 0.01288 · jetzt +46 % · Nachlauf-Marke 0.01648 (-13 % von jetzt) · Notbremse 0.00644
+       ICP     Wert 0.83 | Alter  5.3 J (0.72) ·  99 % unter Hoch (0.89) · Hoch vor  64 Mon. (0.86) · TVL    -       | seit 5 Mon. in der Liste | Kauf 2.465 · jetzt +13 % · Nachlauf-Marke 1.943 (-30 % von jetzt) · Notbremse 1.232
+       ATOM    Wert 0.82 | Alter  7.3 J (0.96) ·  97 % unter Hoch (0.70) · Hoch vor  59 Mon. (0.80) · TVL    -       | seit 6 Mon. in der Liste | Kauf 1.455 · jetzt +18 % · Nachlauf-Marke 1.208 (-29 % von jetzt) · Notbremse 0.7275
+       ALGO    Wert 0.81 | Alter  7.2 J (0.95) ·  96 % unter Hoch (0.65) · Hoch vor  60 Mon. (0.82) · TVL    -       | seit 3 Mon. in der Liste | Kauf 0.0933 · jetzt +10 % · Nachlauf-Marke 0.06832 (-34 % von jetzt) · Notbremse 0.04665
+   NEU ALICE   Wert 0.80 | Alter  5.5 J (0.76) · 100 % unter Hoch (0.91) · Hoch vor  57 Mon. (0.74) · TVL    -       | seit 1 Mon. in der Liste | Kauf 0.1326 · jetzt +5 % · Nachlauf-Marke 0.09133 (-34 % von jetzt) · Notbremse 0.0663
+   NEU ONG     Wert 0.80 | Alter  7.5 J (0.99) ·  96 % unter Hoch (0.57) · Hoch vor  63 Mon. (0.84) · TVL    -       | seit 1 Mon. in der Liste | Kauf 0.09695 · jetzt -5 % · Nachlauf-Marke 0.06611 (-28 % von jetzt) · Notbremse 0.04847
+
+  S - Smallcaps (beste 10)
+       ONT     Wert 0.94 | Alter  8.2 J (0.99) ·  99 % unter Hoch (0.84) · Hoch vor  99 Mon. (1.00) · TVL    -       | seit 3 Mon. in der Liste | Kauf 0.05245 · jetzt +5 % · Nachlauf-Marke 0.03697 (-33 % von jetzt) · Notbremse 0.02622
+       NEO     Wert 0.92 | Alter  8.8 J (1.00) ·  99 % unter Hoch (0.76) · Hoch vor 104 Mon. (1.00) · TVL    -       | seit 6 Mon. in der Liste | Kauf 2.009 · jetzt +19 % · Nachlauf-Marke 1.577 (-34 % von jetzt) · Notbremse 1.004
+       SNX     Wert 0.88 | Alter  6.2 J (0.83) ·  99 % unter Hoch (0.81) · Hoch vor  67 Mon. (0.98) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.208 · jetzt +9 % · Nachlauf-Marke 0.1502 (-34 % von jetzt) · Notbremse 0.104
+       AUDIO   Wert 0.87 | Alter  5.9 J (0.75) · 100 % unter Hoch (0.92) · Hoch vor  65 Mon. (0.95) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.01309 · jetzt +1 % · Nachlauf-Marke 0.008704 (-34 % von jetzt) · Notbremse 0.006545
+       SKL     Wert 0.87 | Alter  5.8 J (0.72) · 100 % unter Hoch (0.91) · Hoch vor  66 Mon. (0.97) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.00362 · jetzt +38 % · Nachlauf-Marke 0.003237 (-35 % von jetzt) · Notbremse 0.00181
+   NEU ZIL     Wert 0.86 | Alter  7.5 J (0.97) ·  99 % unter Hoch (0.75) · Hoch vor  65 Mon. (0.87) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.002637 · jetzt +47 % · Nachlauf-Marke 0.002517 (-35 % von jetzt) · Notbremse 0.001319
+       BAND    Wert 0.86 | Alter  7.0 J (0.91) ·  99 % unter Hoch (0.80) · Hoch vor  65 Mon. (0.87) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.1801 · jetzt +13 % · Nachlauf-Marke 0.1404 (-31 % von jetzt) · Notbremse 0.09005
+       HOT     Wert 0.86 | Alter  7.5 J (0.98) ·  99 % unter Hoch (0.69) · Hoch vor  65 Mon. (0.91) · TVL    -       | seit 6 Mon. in der Liste | Kauf 0.000366 · jetzt +7 % · Nachlauf-Marke 0.0002581 (-34 % von jetzt) · Notbremse 0.000183
+   NEU WIN     Wert 0.86 | Alter  7.1 J (0.93) ·  99 % unter Hoch (0.73) · Hoch vor  65 Mon. (0.91) · TVL    -       | seit 6 Mon. in der Liste | Kauf 3.172e-05 · jetzt +26 % · Nachlauf-Marke 2.638e-05 (-34 % von jetzt) · Notbremse 1.586e-05
+   NEU ONE     Wert 0.85 | Alter  7.3 J (0.94) · 100 % unter Hoch (0.95) · Hoch vor  56 Mon. (0.52) · TVL +1.30 (1.00) | seit 3 Mon. in der Liste | Kauf 0.000754 · jetzt +464 % · Nachlauf-Marke 0.002764 (-35 % von jetzt) · Notbremse 0.000377
+
+  Gegen den Vormonat nicht mehr in der kurzen Liste: DASH, ETC, FIDA, GALA, ICX, SLP, THETA, UNI, ZEN
+
+VORWAERTSPROTOKOLL (ohne Geld): Korb der kurzen Liste ab 2026-09-02 gegen ganze Klasse und BTC, bis Datenstand:
+   H  Liste +10.4 % · ganze Klasse +21.3 % · BTC  +4.1 %  (18 Tage, vor Kosten)
+   M  Liste +14.7 % · ganze Klasse +13.1 % · BTC  +4.1 %  (18 Tage, vor Kosten)
+   S  Liste +62.9 % · ganze Klasse +18.6 % · BTC  +4.1 %  (18 Tage, vor Kosten)
+
+Was dieser Abschnitt NICHT ist: kein Kaufsignal, kein Hebel, keine Aussage 'Altcoins statt BTC'. Abrechnung nach 6 und 12 Monaten.

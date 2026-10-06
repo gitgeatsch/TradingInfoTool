@@ -2496,3 +2496,49 @@ Nutzer 06.10.: *„Ja, ich denke, für den ersten Wurf mit Luft nach oben könne
 - Kein Hebel aus dieser Liste (Regel 3).
 - Keine Änderung am Kern 70/20/10.
 - Keine Aussage, dass Altcoins BTC schlagen.
+
+### 22.4 Was das System leistet — am Beispiel aus echten Daten (06.10.2026; E-73)
+
+Nutzer 06.10.: *„Ich kann mir noch immer nicht vorstellen, was das System leistet oder leisten soll.“*
+
+Beleg: `beispiel_watchlist_mail.py` → `.txt`, Stichtag 01.09.2026, Datenstand 20.09.2026. Nur Anschauung, kein Signal.
+
+**In einem Satz:** Einmal im Monat sagt das System, **welche Altcoins** gerade das bessere Verhältnis aus Chance und Risiko haben und **warum**. Für jeden Coin nennt es, **ab wo** man ihn wieder verkaufen würde. Es führt Buch, ob das stimmt. **Kaufen** tut es nicht, und es rät auch nicht dazu.
+
+**Ablauf je Monat:**
+
+| Wer | Was |
+|---|---|
+| **System, am Monatsersten** | 1. Phase als Fakten (BTC-Klima, Breite, Liquidität, MACD). 2. Rang aller Altcoins je Klasse aus den vier Faktoren. 3. Kurze Liste: alle Highcaps im obersten Fünftel und die besten 10 je Mid- und Smallcap. 4. Je Coin die Begründung (vier Teilränge), seit wann in der Liste, neu oder herausgefallen. 5. Je Coin die Nachlauf-Marke. 6. Das Protokoll: wie sich die Liste seit dem letzten Mal gegen ihre Klasse und gegen BTC entwickelt hat |
+| **Nutzer** | liest, entscheidet selbst, ob und was er kauft (B4 ist offen). Bei gehaltenen Coins sieht er die Marke, unter der der Nachlauf verkaufen würde |
+| **System, laufend** | schreibt die Marke täglich fort und meldet als Fakt, wenn ein Kurs sie unterschreitet |
+| **nach 6 und 12 Monaten** | Abrechnung des Protokolls: Liste gegen Klasse und gegen BTC, gehalten und geführt. Erst dann wird über Geld (B4) entschieden |
+
+**Auszug aus dem Beispiel:**
+- **Phase:** BTC-Klima 0,33 (Grenze billig/mittel) · Breite 51 % · Netto-Liquidität 5,78 Bio. USD, 13 Wochen fallend (−1,0 %) · MACD unter Null, Kreuz nahe.
+- **Highcaps:** LTC (0,81: Alter 8,7 J, 87 % unter dem Hoch, Hoch vor 64 Monaten, seit 6 Monaten in der Liste) · ADA (0,78) · DOGE (0,72, neu) · FET (0,67, neu).
+- **Midcaps:** FIL · CHZ · STRAX · CELO · COTI · ICP · ATOM · ALGO · ALICE · ONG.
+- **Smallcaps:** ONT · NEO · SNX · AUDIO · SKL · ZIL · BAND · HOT · WIN · ONE.
+- **Herausgefallen:** DASH, ETC, FIDA, GALA, ICX, SLP, THETA, UNI, ZEN.
+- **Nachlauf-Marke**, Beispiel LTC: Kauf am 02.09. bei 49,69, heute +15 %, Marke 37,88 (−34 % von heute), Notbremse 24,84.
+- **Protokoll nach 18 Tagen** (vor Kosten; nur Anschauung, keine Aussage):
+
+  | | Liste | ganze Klasse | BTC |
+  |---|---|---|---|
+  | H | +10 % | +21 % | +4 % |
+  | M | +15 % | +13 % | +4 % |
+  | S | **+63 %** | +19 % | +4 % |
+
+⚠️⚠️ **Was das Beispiel an Lücken zeigt (vor einem Bau zu beheben):**
+1. **ONE (+464 % in 18 Tagen) und AUDIO** stehen in der Symbolzuordnung als **gesperrt** (Verwechslungsgefahr mit gleichnamigen Coins, 2.705). Der Smallcap-Wert +63 % hängt an ONE. ⇒ B1 braucht als **Pflicht** den Abgleich mit `symbol_zuordnung.csv` (gesperrt = nicht in die Liste).
+2. *NEU* bezog sich auf die **kurze** Liste, nicht auf das Fünftel. Deshalb steht bei ZIL und WIN zugleich *neu* und *seit 6 Monaten*. ⇒ getrennt beschriften: *neu im Fünftel* und *neu unter den besten 10*.
+3. Viele Werte zeigen *100 % unter dem Hoch* (gerundet ≥ 99,5 %). Bei Allzeithochs aus den ersten Handelstagen ist das Allzeithoch ab dem 31. Tag sauberer (§21.6 Auskunft).
+4. TVL gibt es nur für wenige Coins der kurzen Liste.
+
+**Was es leistet, und was nicht:**
+
+| leistet | leistet nicht |
+|---|---|
+| Aus über 300 Altcoins monatlich rund 23 mit nachweislich besserem Chance-Risiko-Verhältnis als ihre Klasse, **begründet** | sagt nicht, **ob** man Altcoins kaufen soll statt BTC; seit 2024 hat BTC jede Altcoin-Auswahl geschlagen |
+| eine Verkaufsmarke je Coin, die in der Rückmessung die großen Abstürze verhindert hätte | keine Garantie; der Nachlauf ist knapp nicht bestätigt |
+| ein ehrliches Vorwärtsprotokoll, an dem nach 6 und 12 Monaten entschieden wird | keinen Kaufzeitpunkt (Phase nur als Fakt) |
