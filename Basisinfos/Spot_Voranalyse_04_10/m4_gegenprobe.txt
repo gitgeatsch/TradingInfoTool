@@ -1,0 +1,12 @@
+G1 2022-03-01 H Rueckblick 28 T · 11 Kandidaten, Kauf XRP,ATOM,BNB | Messung -0.0426  Gegenprobe -0.0426  gleich
+G1 2023-07-01 M Rueckblick 84 T · 82 Kandidaten, Kauf BCH,TOMO,RNDR,ARPA,MKR,WOO,TRX,KAVA,IDEX,BEL,CTSI,XMR,ETC,ARB,MTL,LINA,ALPHA | Messung +0.0116  Gegenprobe +0.0116  gleich
+G1 2025-02-01 S Rueckblick 28 T · 276 Kandidaten, Kauf VTHO,ACH,SPELL,LIT,DEXE,BEL,QTUM,STPT,NEXO,QKC,JTO,KAS,HIVE,SKL,ARPA,ONT,JST,SFP,MBL,REQ,BADGER,STMX,OXT,QNT,BTTC,GAS,IQ,SC,MTL,BNT,NEO,ARK,POWR,HIFI,ONG,TFUEL,PUNDIX,CFX,AMP,LSK,HARD,SANTOS,TKO,MORPHO,DF,KAVA,WAXP,LEVER,XEC,BAL,BAT,TNSR,SNT,T,ARDR,WIN | Messung -0.0042  Gegenprobe -0.0042  gleich
+G1 2025-11-01 H Rueckblick 84 T · 17 Kandidaten, Kauf BNB,BCH,TRX,LTC | Messung +0.0789  Gegenprobe +0.0789  gleich
+G2 2021-08-02 ZRX       S Signal ja · Verkauf nach  49 T (Messung  49) | Messung -0.0916  Gegenprobe -0.0916  gleich
+G2 2024-07-29 AMB       S Signal ja · Verkauf nach  31 T (Messung  31) | Messung +0.0339  Gegenprobe +0.0339  gleich
+G2 2023-04-29 RLC       S Signal ja · Verkauf nach   5 T (Messung   5) | Messung -0.1202  Gegenprobe -0.1202  gleich
+G2 2024-09-19 SXP       S Signal ja · Verkauf nach  13 T (Messung  13) | Messung -0.1976  Gegenprobe -0.1976  gleich
+G2 2024-10-28 ADX       S Signal ja · Verkauf nach   1 T (Messung   1) | Messung -0.0341  Gegenprobe -0.0341  gleich
+G2 2023-10-10 FLUX      S Signal ja · Verkauf nach   2 T (Messung   2) | Messung -0.0675  Gegenprobe -0.0675  gleich
+
+10 von 10 gleich

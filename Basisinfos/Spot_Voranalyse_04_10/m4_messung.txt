@@ -1,0 +1,65 @@
+Altcoin Fassung 4 - Momentum (Voranalyse_Spot §17) · Daten bis 2026-09-20 · Vorteil gegen BTC an denselben Tagen, nach Kosten
+
+M1 Querschnitt 4 W · Klasse H (oberes Fuenftel, 28 T halten)  ->  traegt nicht
+  E1   8 Monate · je Monat 2.6 von 10 Coins | Mittel   -5.8 % · Median   +0.5 % · Monate vor BTC  50 % | brutto   -4.2 % · alle der Klasse   -6.0 % | Rang 0.49
+  E2  37 Monate · je Monat 3.1 von 13 Coins | Mittel   -3.4 % · Median   -5.3 % · Monate vor BTC  27 % | brutto   -1.7 % · alle der Klasse   -1.2 % | Rang 0.14
+  E3  31 Monate · je Monat 3.5 von 15 Coins | Mittel   -1.9 % · Median   -2.7 % · Monate vor BTC  42 % | brutto   -0.3 % · alle der Klasse   -4.6 % | Rang 0.95
+
+M1 Querschnitt 4 W · Klasse M (oberes Fuenftel, 28 T halten)  ->  traegt nicht
+  E1  24 Monate · je Monat 12.6 von 61 Coins | Mittel   -3.5 % · Median   -6.9 % · Monate vor BTC  38 % | brutto   -1.9 % · alle der Klasse   -4.9 % | Rang 0.83
+  E2  37 Monate · je Monat 17.8 von 87 Coins | Mittel   +0.5 % · Median   -6.9 % · Monate vor BTC  41 % | brutto   +2.2 % · alle der Klasse   +0.0 % | Rang 0.65
+  E3  31 Monate · je Monat 17.4 von 85 Coins | Mittel  -10.0 % · Median  -12.9 % · Monate vor BTC  26 % | brutto   -8.4 % · alle der Klasse   -8.2 % | Rang 0.03
+
+M1 Querschnitt 4 W · Klasse S (oberes Fuenftel, 28 T halten)  ->  traegt nicht
+  E1  zu wenige Monate
+  E2  37 Monate · je Monat 37.1 von 184 Coins | Mittel   +3.0 % · Median   -6.5 % · Monate vor BTC  43 % | brutto   +4.7 % · alle der Klasse   +1.7 % | Rang 0.86
+  E3  31 Monate · je Monat 55.3 von 275 Coins | Mittel   -8.9 % · Median   -8.1 % · Monate vor BTC  16 % | brutto   -7.3 % · alle der Klasse   -7.0 % | Rang 0.00
+
+M2 Querschnitt 12 W · Klasse H (oberes Fuenftel, 28 T halten)  ->  traegt nicht
+  E1   8 Monate · je Monat 2.6 von 10 Coins | Mittel  -12.5 % · Median  -10.0 % · Monate vor BTC  38 % | brutto  -11.0 % · alle der Klasse   -6.0 % | Rang 0.05
+  E2  37 Monate · je Monat 3.1 von 13 Coins | Mittel   -1.2 % · Median   -7.0 % · Monate vor BTC  38 % | brutto   +0.5 % · alle der Klasse   -1.2 % | Rang 0.51
+  E3  31 Monate · je Monat 3.5 von 15 Coins | Mittel   -2.4 % · Median   -5.0 % · Monate vor BTC  35 % | brutto   -0.8 % · alle der Klasse   -4.6 % | Rang 0.92
+
+M2 Querschnitt 12 W · Klasse M (oberes Fuenftel, 28 T halten)  ->  traegt nicht
+  E1  24 Monate · je Monat 10.6 von 51 Coins | Mittel   -2.9 % · Median   -5.7 % · Monate vor BTC  42 % | brutto   -1.3 % · alle der Klasse   -4.1 % | Rang 0.81
+  E2  37 Monate · je Monat 16.6 von 81 Coins | Mittel   -1.4 % · Median   -2.4 % · Monate vor BTC  38 % | brutto   +0.3 % · alle der Klasse   -0.3 % | Rang 0.28
+  E3  31 Monate · je Monat 16.1 von 78 Coins | Mittel   -8.6 % · Median  -11.2 % · Monate vor BTC  29 % | brutto   -7.0 % · alle der Klasse   -7.9 % | Rang 0.20
+
+M2 Querschnitt 12 W · Klasse S (oberes Fuenftel, 28 T halten)  ->  traegt nicht
+  E1  zu wenige Monate
+  E2  37 Monate · je Monat 35.9 von 178 Coins | Mittel   +2.8 % · Median   -4.6 % · Monate vor BTC  43 % | brutto   +4.6 % · alle der Klasse   +1.9 % | Rang 0.76
+  E3  31 Monate · je Monat 55.0 von 273 Coins | Mittel   -8.2 % · Median   -7.0 % · Monate vor BTC  16 % | brutto   -6.6 % · alle der Klasse   -7.1 % | Rang 0.02
+
+M3 Trend Coin/BTC ueber 50-T + 28-T > 0, Ausstieg unter 50-T · Klasse H  ->  traegt nicht
+  E1  n   68 ( 55 Tage) | Mittel   -3.1 % · Median   -3.0 % · Handel vor BTC  29 % | brutto   -1.4 % | Coin selbst Median   -1.3 % | Halten  12 T · offen  0 % | Rang N1 -
+  E2  n  348 (257 Tage) | Mittel   +1.5 % · Median   -4.1 % · Handel vor BTC  20 % | brutto   +3.2 % | Coin selbst Median   -4.4 % | Halten  14 T · offen  0 % | Rang N1 0.44
+  E3  n  395 (269 Tage) | Mittel   -1.7 % · Median   -4.3 % · Handel vor BTC  16 % | brutto   -0.1 % | Coin selbst Median   -5.4 % | Halten  11 T · offen  4 % | Rang N1 0.93
+
+M3 Trend Coin/BTC ueber 50-T + 28-T > 0, Ausstieg unter 50-T · Klasse M  ->  traegt nicht
+  E1  n 1007 (397 Tage) | Mittel   +2.1 % · Median   -5.3 % · Handel vor BTC  24 % | brutto   +3.8 % | Coin selbst Median   -4.1 % | Halten  14 T · offen  0 % | Rang N1 -
+  E2  n 2208 (767 Tage) | Mittel   +0.9 % · Median   -5.0 % · Handel vor BTC  23 % | brutto   +2.6 % | Coin selbst Median   -5.6 % | Halten  13 T · offen  0 % | Rang N1 0.29
+  E3  n 1955 (653 Tage) | Mittel   -5.5 % · Median   -6.4 % · Handel vor BTC  15 % | brutto   -3.9 % | Coin selbst Median   -6.7 % | Halten   9 T · offen  1 % | Rang N1 0.00
+
+M3 Trend Coin/BTC ueber 50-T + 28-T > 0, Ausstieg unter 50-T · Klasse S  ->  traegt nicht
+  E1  n   72 ( 41 Tage) | Mittel   -2.1 % · Median  -10.3 % · Handel vor BTC  17 % | brutto   -0.5 % | Coin selbst Median   -6.2 % | Halten   9 T · offen  0 % | Rang N1 -
+  E2  n 5529 (966 Tage) | Mittel   +2.5 % · Median   -4.8 % · Handel vor BTC  19 % | brutto   +4.2 % | Coin selbst Median   -4.8 % | Halten  12 T · offen  0 % | Rang N1 1.00
+  E3  n 7203 (908 Tage) | Mittel   -4.9 % · Median   -5.8 % · Handel vor BTC  14 % | brutto   -3.3 % | Coin selbst Median   -5.9 % | Halten   8 T · offen  1 % | Rang N1 0.00
+
+M0 Auskunft - Literatur 1 W (Rueckblick 7 T, Halten 7 T, oberes Fuenftel):
+  H E1   35 Wochen | netto Mittel   -0.8 % · Median   -3.4 % | brutto   +0.9 % · alle der Klasse   -2.6 % | Rang 0.97
+  H E2  158 Wochen | netto Mittel   -1.1 % · Median   -2.2 % | brutto   +0.6 % · alle der Klasse   -1.3 % | Rang 0.68
+  H E3  139 Wochen | netto Mittel   -2.0 % · Median   -2.7 % | brutto   -0.3 % · alle der Klasse   -2.1 % | Rang 0.65
+  M E1  104 Wochen | netto Mittel   -2.2 % · Median   -2.5 % | brutto   -0.5 % · alle der Klasse   -2.5 % | Rang 0.86
+  M E2  158 Wochen | netto Mittel   -1.1 % · Median   -1.8 % | brutto   +0.6 % · alle der Klasse   -1.1 % | Rang 0.58
+  M E3  139 Wochen | netto Mittel   -3.7 % · Median   -4.3 % | brutto   -2.1 % · alle der Klasse   -3.3 % | Rang 0.01
+
+GESAMT (vorab §17: E2 UND E3 Mittel > 0, Median > 0, Rang >= 0,95):
+  M1 Querschnitt 4 W · H     -
+  M1 Querschnitt 4 W · M     -
+  M1 Querschnitt 4 W · S     -
+  M2 Querschnitt 12 W · H    -
+  M2 Querschnitt 12 W · M    -
+  M2 Querschnitt 12 W · S    -
+  M3 Trend gg. BTC · H       -
+  M3 Trend gg. BTC · M       -
+  M3 Trend gg. BTC · S       -

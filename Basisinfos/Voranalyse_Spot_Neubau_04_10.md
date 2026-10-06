@@ -1806,3 +1806,57 @@ Belege:
 - Es ist der fünfte Blick auf die Altcoin-Daten seit §14: **Beschreibung**.
 - M1/M2 haben je Epoche nur rund 36 bzw. 32 Monate.
 - Die Ränge vergleichen Coins untereinander (Regel 3 erlaubt den Querschnitt). Ein **Hebel** folgt daraus nie (Regel 3).
+
+### 17.1 Ergebnis Fassung 4 Momentum (06.10.2026, nach §17) — und WORAN
+
+Belege:
+- `Spot_Voranalyse_04_10/m4_messung.py` → `.txt`
+- Gegenprobe `m4_gegenprobe.py` → `.txt`: 10 von 10 gleich; vier Monatsportfolios (Auswahl und Ertrag) und sechs Trend-Handel mit eigener Schleife direkt aus SQL
+
+**Vorteil gegen BTC nach Kosten (M1/M2 je Monat, M3 je Handel mit Tagesklammer):**
+
+| Fall | E2 Mittel / Median · Rang | E3 Mittel / Median · Rang | E3 brutto · ganze Klasse |
+|---|---|---|---|
+| M1 4 W · H | −3,4 / −5,3 % · 0,14 | −1,9 / −2,7 % · **0,95** | −0,3 % · **−4,6 %** je Monat |
+| M1 · M | +0,5 / −6,9 % · 0,65 | −10,0 / −12,9 % · 0,03 | −8,4 % · −8,2 % |
+| M1 · S | +3,0 / −6,5 % · 0,86 | −8,9 / −8,1 % · **0,00** | −7,3 % · −7,0 % |
+| M2 12 W · H/M/S | −1,4 bis +2,8 % / Median ≤ −2,4 % | −2,4 bis −8,6 % · Rang 0,02–0,92 | −0,8 bis −7,0 % |
+| M3 Trend · H | +1,5 / −4,1 % · 0,44 | −1,7 / −4,3 % · 0,93 | −0,1 % |
+| M3 · M | +0,9 / −5,0 % · 0,29 | −5,5 / −6,4 % · **0,00** | −3,9 % |
+| M3 · S | +2,5 / −4,8 % · **1,00** | −4,9 / −5,8 % · **0,00** | −3,3 % |
+| *M0 1 W (Auskunft)* | H −1,1 % · M −1,1 % (brutto +0,6 %) | H −2,0 % · M −3,7 % (Rang 0,01) | brutto −0,3 / −2,1 % |
+
+- **Nach der vorab festen Regel: keiner der 9 Fälle trägt.**
+- **M3:** Die Haltedauer liegt bei nur 8–14 T, und nur 14–23 % der Handel schlagen BTC.
+
+**WORAN:**
+
+| | |
+|---|---|
+| **Im ETF-Markt dreht Momentum bei M/S ins Gegenteil** | Ausgewählte Stärke ist **schlechter** als eine Zufallsauswahl (Rang 0,00–0,03). Stärke bei Mid- und Smallcaps kehrt um. Das ist der Gegenbefund zu §15: Dort war der Boden *besser als Zufall* (E2), aber gegen BTC verloren. Hier ist es weder das eine noch das andere |
+| **Highcaps: Auswahl hilft, gegen BTC reicht es nicht** | In E3 liegt die ganze H-Klasse im Mittel bei **−4,6 % je Monat** gegen BTC. Die Momentum-Auswahl verliert nur −1,9 % (Rang 0,95), aber sie verliert |
+| **Nicht die Kosten, die Grundrate** | Schon **brutto** ist E3 bei M/S negativ (−3 bis −8 %). Kosten verschlimmern, entscheiden aber nicht |
+| **Literatur (1 W) bei uns nicht nachweisbar** | brutto +0,6 % in E2, negativ in E3. Die Befunde aus 2014–2018 gelten im ETF-Markt nicht mehr |
+
+## 18. Gesamtbild Altcoin-Spot nach vier Fassungen und der Makro-Messung — Punkte zur Abstimmung (06.10.2026)
+
+**Was jetzt feststeht** (§14.6, §15.7, §15.10, §16.4, §17.1; je mit Gegenprobe):
+
+| | |
+|---|---|
+| **Grundrate** | Im ETF-Markt verliert **jede** Altcoin-Klasse gegen BTC: Highcaps −16 %/−29 % (§14.6), je Monat H −4,6 %, M −8 %, S −7 % (§17.1) |
+| **Zeitpunkt** | Umkehr (Bodenkauf, 3 Fassungen) und Stärke (Momentum, 3 Formen) überwinden die Grundrate nicht. Mit Führung, ohne Führung, kurz, über den Zyklus |
+| **Makro** | Liquidität trennte 2021–23, im ETF-Markt nicht. Stablecoins sind umgekehrt zur Faustregel. Die Verwässerung ist mit unseren Daten nicht messbar |
+| **2021–23** | Es gab Potential: Highcaps-Swing +21/+23 % gg. BTC, Liquidität +13 Pp. Diese Lage besteht seit 2024 **nicht** |
+| **Ehrlich** | Es sind viele Blicke auf dieselben Daten. Die Ergebnisse sind **Beschreibung**, sie stimmen aber in **einer** Richtung überein |
+
+**Zur Abstimmung:**
+
+| # | Punkt | Vorschlag |
+|---|---|---|
+| **A1** | Altcoin-Spot als **Regel** | **D4: ruht.** Kein Kauf- oder Verkaufssignal für Altcoins im Spot |
+| **A2** | **Vorwärtstest** statt weiterer Rückblicke | Ab jetzt werden Boden + Wende (A1/X5) und die Momentum-Auswahl der Highcaps (M1-H) **protokolliert**, ohne Geld, als Fakt in der Ampel. Abrechnung nach 6 und 12 Monaten gegen BTC. Das ist der einzige saubere Test (E-63) |
+| **A3** | **Wiedervorlage** mit Auslöser statt Kalender (Regel 1) | erneute Messung, sobald (a) die Altseason-Breite ≥ 75 % erreicht oder (b) Liquidität und BTC wieder gleichlaufen. Spätestens ist die Abrechnung aus A2 der Anlass |
+| **A4** | **Klima-Ampel und Fakt-Mail** (S7/O27, Ersatz für die angehaltene Kette) | als Fakten ohne Gewicht: BTC-Klima q mit K1-Hinweis und Rückkauf-Hinweis, Netto-Liquidität (Stand + 13-W-Richtung), Stablecoin-Umlauf, Altseason-Breite, BTC-Dominanz, Protokoll aus A2. Danach als nächster **Bau**: Voranalyse, dann Betriebsprüfung am NB |
+| **A5** | **Kern** | unverändert: 70/20/10 (BTC/ETH/SOL) mit Ausgleich über die Raten (R1), K1 als Hinweis |
+| **A6** | **Verwässerung** | verworfen, bis ein Freigabekalender mit Historie verfügbar ist; Quelle prüfen nur auf Wunsch |
