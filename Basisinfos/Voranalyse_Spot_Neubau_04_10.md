@@ -2104,3 +2104,38 @@ Die Behauptung: *„Der monatliche MACD bei Alts hat gerade bullisch gekreuzt. D
 | **Grundrate** | — | In 24 % aller Monate verdoppelte sich I1 binnen 12 Monaten; Median +12 %, BTC im selben Fenster +57 % |
 
 ⇒ **Die Aussage ist in USD für 2020 und 2023 richtig**: Die Altcoins stiegen danach stark. **Gegen BTC** stimmt sie nur für 2017. Im Fenster von 12 Monaten stieg BTC 2020/21 genauso stark und 2023/24 stärker. Das Kreuz 07/2025 fehlt in der Aufzählung. Als **Fakt** für die Ampel taugt der Stand (Histogramm steigt, Kreuz nahe); als Signal mit drei Fällen nicht.
+
+### 19.4 Selbsttest NICHT bestanden — die Spiegelschwelle 1,717 passt hier nicht; Vorschlag *bewegungsgleiche Spiegelprobe* (06.10.2026)
+
+**Selbsttest** (`as_messung.py` → `.txt`):
+
+| Teil | Ergebnis |
+|---|---|
+| (a) 80 Zufallstests | Rang ≥ 0,975 in E2 zu 2,5 %, in E3 zu 1,2 %, in beiden 0; trägt 0 ⇒ **bestanden** |
+| (b) gepflanzt 0,3 · R2 + Rauschen | **sicher gefunden**: Saldo +9,1 / +9,9 Pp, Rang 1,000 / 1,000. Die Spiegelprobe verwirft es aber: 1,21 / 1,38 < 1,717 ⇒ **nicht bestanden** |
+
+⇒ Nach Plan wird **nicht gemessen**. Die Schwelle 1,717 war für **stündliche Hebel-Ereignisse** geeicht (2.603), nicht für 12-Monats-Fenster.
+
+**Eichung nach der Methode vom 26.09.** (`as_eichung_spiegel.py` → `.txt`): Eine **feste** Verhältnisschwelle trennt hier nicht.
+- In der reinen Bewegungswelt steigt das Verhältnis mit der Stärke mit: E3 von 1,08 auf 1,48.
+- Die Regel *höchstes 97,5. Perzentil* ergäbe 1,557.
+- Bei dieser Schwelle fände die Probe die Richtung 0,3 nie, die Richtung 0,6 nur in E3.
+- ⇒ Das ist dieselbe Falle wie am 26.09.: **Das Verhältnis vermischt Stärke und Richtung.**
+
+**Vorschlag: bewegungsgleiche Spiegelprobe** (`as_spiegel_bewegt.py`):
+- *Hebt ein Merkmal die Chance auf eine Verdopplung so stark wie reine Bewegung, dann muss es das Absturzrisiko **weniger** heben.*
+- Verglichen wird mit den **200 Bewegungswelten** (f = s · (R2 + D2) + Rauschen, s von 0 bis 2,0), deren **beobachteter** Lift(R2) dem des Merkmals am nächsten liegt.
+- Das Merkmal besteht, wenn sein Lift(D2) **unter dem 2,5. Perzentil** dieser Welten liegt.
+
+| Selbsttest der Probe, je 40 Ziehungen | E2 | E3 | **beide** (das zählt für *trägt*) |
+|---|---|---|---|
+| Lauf 1/2: Zuordnung über den **Mittelwert** je Stärke (Gitter 0,1 bzw. 0,05) | Bewegung 5–18 % | 0–12 % | 0–5 % ⇒ zu lax je Epoche. Ursache: Ein zufällig hoher Lift wurde mit zu starker Bewegung verglichen |
+| **Lauf 3: nächste Nachbarn im beobachteten Lift** (`as_spiegel_nachbarn.txt`) — reine Bewegung | 0–5 % | 0–5 % | **0 %** |
+| Lauf 3 — Zufallsmerkmale | 0 % | 8 % | **0 %** |
+| Lauf 3 — Richtung s 0,15 / **0,3** / 0,6 | 92 / **100** / 100 % | 75 / **100** / 100 % | 68 / **100** / 100 % |
+
+⚠️ **Ehrlich:**
+- Je Epoche schwankt die Fehlalarmquote mit 40 Ziehungen zwischen 0 und 8 %: 3 von 40 sind 7,5 %, das Band reicht bis rund 20 %.
+- Entscheidend ist *beide Epochen*: **0 von 200** Bewegungs- und Zufallswelten.
+
+**Zur Freigabe (Nutzer):** In §19.2 wird die Spiegelprobe *Verhältnis ≥ 1,717* durch die **bewegungsgleiche Spiegelprobe (Lauf 3)** ersetzt, in E2 und E3. Alles andere bleibt, wie vorab festgelegt. Danach läuft zuerst der Selbsttest (b) erneut, erst dann die Messung.

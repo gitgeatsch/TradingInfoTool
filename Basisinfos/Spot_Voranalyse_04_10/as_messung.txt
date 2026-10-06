@@ -1,0 +1,10 @@
+Asymmetrie-Messung (§19.2) · Kurse bis 2026-09-20 · 20180 Coin-Anker (12 Monate) · Saldo = (R2 - L) im Fuenftel minus Zelle
+
+SELBSTTEST der Anlage (§19.2, vorab)
+  (a) 80 Zufallstests: Rang >= 0,975 in E2 2 (2.5 %) · in E3 1 (1.2 %) · in beiden 0 · traegt 0  ->  BESTANDEN
+  (b) gepflanzt 0,3 x R2 + N(0,1), oberes Fuenftel  ->  NICHT BESTANDEN
+      E1  -
+      E2  Saldo  +9.1 Pp  Rang 1.000 | Lift R2 1.18 · D2 0.97 · Spiegel  1.21 | R3 +3.2 Pp | 311 Coins mit R2 | n 2136 an 37 Stichtagen | Korb    -6 % (ganze Klasse    -9 %) gg. BTC
+      E3  Saldo  +9.9 Pp  Rang 1.000 | Lift R2 1.34 · D2 0.97 · Spiegel  1.38 | R3 +3.0 Pp | 232 Coins mit R2 | n 1611 an 31 Stichtagen | Korb   -40 % (ganze Klasse   -47 %) gg. BTC
+
+SELBSTTEST NICHT BESTANDEN - keine Messung (Plan §19.2: erst die Anlage reparieren).
