@@ -2182,7 +2182,7 @@ Nutzer 06.10.: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüf
 
 | | E2 2021–23 | E3 ab 2024 | Korb E3 gg. BTC (ganze Klasse) |
 |---|---|---|---|
-| **Kombination** (Wahl auf E2: geringe **Tiefe** F1 unten · lange **Dauer** seit dem Hoch F2 oben · hohes **Alter** F8 oben · **TVL** wächst schneller als der Kurs F9 oben) | +11,0 Pp · Rang 1,000 · Lift R2 1,14 / D2 0,87 | **+13,2 Pp · Rang 1,000 · Lift R2 1,22 / D2 0,94**, Spiegelprobe besteht, 102 Coins | **−34 %** (−48 %) |
+| **Kombination** (Wahl auf E2: **tiefer Absturz** F1 unten — korrigiert 06.10., siehe §19.7 · lange **Dauer** seit dem Hoch F2 oben · hohes **Alter** F8 oben · **TVL** wächst schneller als der Kurs F9 oben) | +11,0 Pp · Rang 1,000 · Lift R2 1,14 / D2 0,87 | **+13,2 Pp · Rang 1,000 · Lift R2 1,22 / D2 0,94**, Spiegelprobe besteht, 102 Coins | **−34 %** (−48 %) |
 | **F8 Alter** allein, oberes Fünftel | +3,2 Pp · Rang 1,000 | +17,2 Pp · Rang 1,000 · R2 1,22 / D2 0,90 | −22 % (−48 %) |
 | alle übrigen 20 Einzeltests | trägt nicht | | |
 
@@ -2208,7 +2208,7 @@ Nutzer 06.10.: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüf
 4. **Für die Praxis zu lang:** Das Fünftel umfasst je Stichtag rund 3 Highcaps, 18 Midcaps und rund 50 Smallcaps (Beispiel 01.09.2025: ADA, LTC, UNI · ALGO, ATOM, NEAR …).
 
 **Inhaltlich:**
-- Asymmetrisch sind **etablierte Überlebende**: lange am Markt, weniger tief gefallen, das Hoch liegt lange zurück, die Nutzung (TVL) wächst schneller als der Kurs.
+- Asymmetrisch sind **etablierte Überlebende am Boden**: lange am Markt, **sehr tief gefallen** (bis 06.10. stand hier fälschlich *weniger tief*, siehe §19.7), das Hoch liegt lange zurück, die Nutzung (TVL) wächst schneller als der Kurs.
 - Ihr Vorteil kommt vor allem aus dem **kleineren** linken Ende: weniger Abstürze und weniger Einstellungen.
 - In E3 kommt eine höhere Chance auf eine Verdopplung dazu.
 
@@ -2227,3 +2227,74 @@ Nutzer 06.10.: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüf
 | Richtung s 0,15 | 72 % |
 
 Je Epoche liegt der Fehlalarm bei 0–5 %. Die Probe gilt damit unverändert.
+
+### 19.7 Wie die Kandidatenliste funktioniert — Faktoren, Wirkung, Liste gegen Watchlist, Rangwechsel, Bezug zum Bestand (06.10.2026)
+
+Nutzer 06.10.: *„Die bisherige Beschreibung der Funktionalität ist mir noch zu wenig erklärt, und welche fachlichen Faktoren nun tatsächlich zum Einsatz kommen und mit welcher Wirkung, fixe Listen vs. Watchlist, Rangänderungen über Zeit? Offenbar hat das Ganze nichts mehr mit dem Bestehenden zu tun?“*
+
+Beleg: `as_erklaerung.py` → `.txt` (Auskunft, keine neue Hypothese).
+
+⚠️⚠️ **Korrektur meiner Beschreibung in §19.6 und in der Meldung vom 06.10.:**
+- F1 *unten* heißt **am tiefsten unter dem Allzeithoch** (F1 = Schluss / Allzeithoch − 1, das unterste Fünftel ist der größte Absturz).
+- Ich hatte *weniger tief gefallen* geschrieben. Gerechnet war richtig, beschrieben falsch herum.
+- Die aktuelle Liste zeigt es: 87–100 % unter dem Hoch.
+
+**1. So entsteht die Liste (jeden Monatsersten, je Klasse H/M/S):**
+
+| Schritt | |
+|---|---|
+| a | Für jeden Coin der Klasse vier Werte, alle aus Daten **bis gestern** |
+| b | Jeder Wert wird in der Klasse zu einem **Rang zwischen 0 und 1**. 1 bedeutet: am stärksten in der günstigen Richtung |
+| c | **Gesamtwert** = Mittel der vorhandenen Ränge. TVL gibt es nur für einen Teil der Coins; fehlt er, zählen die übrigen drei |
+| d | Das **oberste Fünftel** des Gesamtwerts ist die Kandidatenliste |
+
+**2. Die vier Faktoren und ihre Wirkung** (*Saldo* = Anteil *hat sich binnen 12 Monaten zeitweise verdoppelt* minus Anteil *−70 % oder eingestellt*, gegen die eigene Klasse am selben Stichtag):
+
+| Faktor | günstig ist | allein E2 / E3 | Kombination OHNE ihn, E2 / E3 (mit allen: +11,0 / +13,2 Pp) | Rolle |
+|---|---|---|---|---|
+| **F8 Alter** | **lange am Markt** | +3,2 / **+17,2** Pp | +9,9 / **+2,3** | **der tragende Faktor im E3.** Er senkt vor allem das Absturz- und Einstellungsrisiko |
+| **F1 Absturz** | **sehr tief unter dem Allzeithoch** | +6,0 / **−7,6** Pp | +6,5 / +15,8 | in E2 die Quelle der **Chance** (ohne F1 fällt der Verdopplungsanteil von +5,1 auf +0,2 Pp); in E3 **allein schädlich**, im Verbund neutral bis leicht bremsend |
+| **F2 Dauer** | das Hoch liegt **lange zurück** | +3,4 / +5,4 Pp | +10,5 / +13,2 | klein, gleichgerichtet. Er hält die Liste bei *ausgebrannten* Zyklen statt bei frischen Abstürzen |
+| **F9 TVL gegen Kurs** | Nutzung wächst **schneller** als der Kurs | +7,6 / +3,6 Pp | +9,9 / +10,5 | klein, nur für etwa 20 % der Coins vorhanden |
+
+⇒ **Fachlich:** Die Liste sucht **alte Überlebende am Boden**, deren Hoch lange zurückliegt und deren Nutzung nicht mitgefallen ist.
+- Sie gewinnt vor allem, weil sie **seltener abstürzt oder eingestellt wird**: Absturz −4 bis −8 Pp gegen die Klasse.
+- Dazu kommt eine etwas höhere Chance auf eine Verdopplung (+5 bis +8 Pp).
+- Das ist die Bodenkauf-Idee des Nutzers, aber über die **Auswahl** gelöst, nicht über den Zeitpunkt.
+- ⚠️ Die Faktoren stammen aus einer Auswahl auf E2. Dass F1 in E3 allein schadet, ist ein Warnzeichen für diesen Faktor.
+
+**3. Rangwechsel über die Zeit:**
+
+| Klasse | im Fünftel je Monat | schon im Vormonat drin | nach 12 Monaten noch drin | Verweildauer Median / Mittel | verschiedene Coins 2019–2025 |
+|---|---|---|---|---|---|
+| H | 3 | 70 % | 40 % | 2 / 3,2 Monate | 19 |
+| M | 16 | 75 % | 27 % | 2 / 3,8 Monate | 146 |
+| S | 41 | 80 % | 43 % | 3 / 6,0 Monate | 150 |
+
+⇒ Es ist eine **wandernde Liste mit festem Kern**. Drei Viertel bleiben von Monat zu Monat. Viele Coins sind aber nur kurz drin, und nach einem Jahr ist der größere Teil ausgetauscht.
+
+**4. Feste Liste gegen Watchlist:**
+
+| | E2: verdoppelt · −70 %/eingestellt (Klasse) | E3: verdoppelt · −70 %/eingestellt (Klasse) |
+|---|---|---|
+| **neu** ins Fünftel gekommen | 39,2 % · 40,0 % (36,7 · 41,0) | 24,3 % · 48,3 % (21,2 · 57,2) |
+| **schon im Vormonat** drin | **45,8 % · 24,3 %** (39,5 · 30,6) | 27,2 % · 48,4 % (22,1 · 56,7) |
+
+In E2 waren die **Bestätigten** (zwei Monate in Folge im Fünftel) deutlich besser, die Neuzugänge nicht besser als die Klasse. In E3 sind beide ähnlich. ⇒ Ein Hinweis, kein Befund (nicht vorab geplant): Eine **Watchlist mit Bestätigung** wäre eine eigene Messung wert.
+
+| Form | Gemessen? | |
+|---|---|---|
+| **Feste Monatsliste:** alle im Fünftel kaufen, 12 Monate halten | **ja**, genau das ist §19.6 | jeden Monat eine neue Tranche, viele kleine Positionen |
+| **Watchlist mit Bestätigung:** Kauf erst nach ≥ 2 Monaten im Fünftel | nein | Hinweis aus E2, siehe oben |
+| **Watchlist mit Zeitpunkt:** Kauf aus der Watchlist erst bei einem Phasen-Fakt (Klima, MACD-Kreuz, Breite) | nein | Zeitpunkt-Regeln haben bisher nie getragen (§15, §17), also nur mit eigener Messung |
+| **Kurze Liste:** nur die ersten k je Klasse | nein | Die Listenlänge ist offen |
+
+**5. Bezug zum Bestehenden:**
+
+| Baustein | Verhältnis zur Kandidatenliste |
+|---|---|
+| **Hebel / REGEL0** (Stunden, Futures, ATR-Schwelle) | **unberührt**. Die Liste darf den Hebel **nie** speisen; ein Asset-Rang beim Hebel ist ausgeschlossen (Regel 3). Die Stränge bleiben getrennt (T-1..T-6) |
+| **Spot-Kern** BTC/ETH/SOL 70/20/10 mit R1, BTC-Klima | **unberührt**. Die Liste ist ein **Satellit** für Altcoins neben dem Kern, kein Ersatz. Gegen BTC verliert auch der beste Korb in E3 (−34 % in 12 M) |
+| **alte Spot-Kette** (LLM-Rollen, NACHKAUFEN), angehalten seit E-67 | die Liste und die Klima-Ampel sind der **Ersatz** (O27): Fakten und eine gemessene Auswahl statt der LLM-Begründung *im Minus → nachkaufen* |
+| **Klima-Ampel / Fakt-Mail** (A4) | beantwortet das **Wann** (Phase, als Fakt: Klima, MACD, Liquidität). Die Liste beantwortet das **Welche** |
+| **gemeinsame Grundlage** | dieselben Kursdaten, dieselben Klassen H/M/S (§14), dieselben Kosten, derselbe Messstandard (Nullwelt, Selbsttest, sechs Prüfungen) und dieselben Betriebsregeln am NB |

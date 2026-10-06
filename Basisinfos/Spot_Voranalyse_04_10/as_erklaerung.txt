@@ -1,0 +1,75 @@
+Erklaerung der Kombination (§19.7, Auskunft) · 19681 Coin-Anker
+
+1. WIRKUNG JE FAKTOR (oberes Fuenftel; Saldo = Anteil verdoppelt - Anteil -70 %/eingestellt, gegen die Klasse am Stichtag)
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\as_erklaerung.py:28: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+   alle vier                                      E2 Saldo +11.0 Pp (verdoppelt +5.1 Pp, Absturz -8.0 Pp) · E3 Saldo +13.2 Pp (verdoppelt +7.9 Pp, Absturz -3.9 Pp)
+   ohne F1 (Absturz tief (weit unter Allzeithoch)) E2 Saldo  +6.5 Pp (verdoppelt +0.2 Pp, Absturz -7.3 Pp) · E3 Saldo +15.8 Pp (verdoppelt +6.4 Pp, Absturz -4.8 Pp)
+   ohne F2 (Hoch liegt lange zurueck)             E2 Saldo +10.5 Pp (verdoppelt +4.2 Pp, Absturz -6.7 Pp) · E3 Saldo +13.2 Pp (verdoppelt +9.7 Pp, Absturz -3.7 Pp)
+   ohne F8 (Alter hoch)                           E2 Saldo  +9.9 Pp (verdoppelt +6.5 Pp, Absturz -7.6 Pp) · E3 Saldo  +2.3 Pp (verdoppelt +3.0 Pp, Absturz -0.1 Pp)
+   ohne F9 (TVL waechst schneller als der Kurs)   E2 Saldo  +9.9 Pp (verdoppelt +4.3 Pp, Absturz -7.0 Pp) · E3 Saldo +10.5 Pp (verdoppelt +6.3 Pp, Absturz -3.1 Pp)
+   einzeln F1 Absturz tief (weit unter Allzeithoch) E2 Saldo  +6.0 Pp · E3 Saldo  -7.6 Pp
+   einzeln F2 Hoch liegt lange zurueck             E2 Saldo  +3.4 Pp · E3 Saldo  +5.4 Pp
+   einzeln F8 Alter hoch                           E2 Saldo  +3.2 Pp · E3 Saldo +17.2 Pp
+   einzeln F9 TVL waechst schneller als der Kurs   E2 Saldo  +7.6 Pp · E3 Saldo  +3.6 Pp
+
+2. RANGSTABILITAET (oberes Fuenftel je Klasse)
+   H  je Monat  3.1 Coins im Fuenftel · davon schon im Vormonat  70 % · noch nach 12 Monaten  40 % · ein Coin bleibt im Median 2 Monate (Mittel 3.2) · verschiedene Coins insgesamt 19
+   M  je Monat 16.3 Coins im Fuenftel · davon schon im Vormonat  75 % · noch nach 12 Monaten  27 % · ein Coin bleibt im Median 2 Monate (Mittel 3.8) · verschiedene Coins insgesamt 146
+   S  je Monat 41.0 Coins im Fuenftel · davon schon im Vormonat  80 % · noch nach 12 Monaten  43 % · ein Coin bleibt im Median 3 Monate (Mittel 6.0) · verschiedene Coins insgesamt 150
+
+3. LISTE GEGEN WATCHLIST: neu ins Fuenftel gekommen gegen schon im Vormonat drin
+   E2 neu im Fuenftel  n  490 | verdoppelt 39.2 % (Klasse 36.7 %) · -70 %/eingestellt 40.0 % (Klasse 41.0 %)
+   E2 schon drin       n 1646 | verdoppelt 45.8 % (Klasse 39.5 %) · -70 %/eingestellt 24.3 % (Klasse 30.6 %)
+   E3 neu im Fuenftel  n  267 | verdoppelt 24.3 % (Klasse 21.2 %) · -70 %/eingestellt 48.3 % (Klasse 57.2 %)
+   E3 schon drin       n 1248 | verdoppelt 27.2 % (Klasse 22.1 %) · -70 %/eingestellt 48.4 % (Klasse 56.7 %)
+
+4. LISTE ZUM 2026-09-01 (Beispiel, KEIN Signal; Wert = Mittel der vier Perzentile in der Klasse, 1 = bester)
+   H (4):
+      LTC      Wert 0.81 ·   87 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  8.7 J · TVL gg. Kurs   -  
+      ADA      Wert 0.78 ·   93 % unter Allzeithoch · Hoch vor  60 Monaten · Alter  8.4 J · TVL gg. Kurs   -  
+      DOGE     Wert 0.72 ·   88 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  7.2 J · TVL gg. Kurs   -  
+      FET      Wert 0.67 ·   95 % unter Allzeithoch · Hoch vor  29 Monaten · Alter  7.5 J · TVL gg. Kurs   -  
+   M (16):
+      FIL      Wert 0.92 ·  100 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  5.9 J · TVL gg. Kurs   -  
+      CHZ      Wert 0.90 ·   98 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  7.0 J · TVL gg. Kurs   -  
+      STRAX    Wert 0.89 ·  100 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  5.8 J · TVL gg. Kurs   -  
+      CELO     Wert 0.83 ·   99 % unter Allzeithoch · Hoch vor  59 Monaten · Alter  5.7 J · TVL gg. Kurs   -  
+      COTI     Wert 0.83 ·   98 % unter Allzeithoch · Hoch vor  59 Monaten · Alter  6.5 J · TVL gg. Kurs   -  
+      ICP      Wert 0.83 ·   99 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  5.3 J · TVL gg. Kurs   -  
+      ATOM     Wert 0.82 ·   97 % unter Allzeithoch · Hoch vor  59 Monaten · Alter  7.3 J · TVL gg. Kurs   -  
+      ALGO     Wert 0.81 ·   96 % unter Allzeithoch · Hoch vor  60 Monaten · Alter  7.2 J · TVL gg. Kurs   -  
+      ALICE    Wert 0.80 ·  100 % unter Allzeithoch · Hoch vor  57 Monaten · Alter  5.5 J · TVL gg. Kurs   -  
+      ONG      Wert 0.80 ·   96 % unter Allzeithoch · Hoch vor  63 Monaten · Alter  7.5 J · TVL gg. Kurs   -  
+      GALA     Wert 0.80 ·  100 % unter Allzeithoch · Hoch vor  57 Monaten · Alter  5.0 J · TVL gg. Kurs   -  
+      TLM      Wert 0.79 ·  100 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  5.4 J · TVL gg. Kurs -0.14
+      ETC      Wert 0.79 ·   95 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  8.2 J · TVL gg. Kurs   -  
+      DOT      Wert 0.78 ·   98 % unter Allzeithoch · Hoch vor  58 Monaten · Alter  6.0 J · TVL gg. Kurs -0.03
+      ZEN      Wert 0.78 ·   96 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  6.2 J · TVL gg. Kurs +0.04
+      BICO     Wert 0.78 ·  100 % unter Allzeithoch · Hoch vor  57 Monaten · Alter  4.7 J · TVL gg. Kurs   -  
+   S (47):
+      ONT      Wert 0.94 ·   99 % unter Allzeithoch · Hoch vor  99 Monaten · Alter  8.2 J · TVL gg. Kurs   -  
+      NEO      Wert 0.92 ·   99 % unter Allzeithoch · Hoch vor 104 Monaten · Alter  8.8 J · TVL gg. Kurs   -  
+      SNX      Wert 0.88 ·   99 % unter Allzeithoch · Hoch vor  67 Monaten · Alter  6.2 J · TVL gg. Kurs   -  
+      AUDIO    Wert 0.87 ·  100 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  5.9 J · TVL gg. Kurs   -  
+      SKL      Wert 0.87 ·  100 % unter Allzeithoch · Hoch vor  66 Monaten · Alter  5.8 J · TVL gg. Kurs   -  
+      ZIL      Wert 0.86 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  7.5 J · TVL gg. Kurs   -  
+      BAND     Wert 0.86 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  7.0 J · TVL gg. Kurs   -  
+      HOT      Wert 0.86 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  7.5 J · TVL gg. Kurs   -  
+      WIN      Wert 0.86 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  7.1 J · TVL gg. Kurs   -  
+      ONE      Wert 0.85 ·  100 % unter Allzeithoch · Hoch vor  56 Monaten · Alter  7.3 J · TVL gg. Kurs +1.30
+      THETA    Wert 0.85 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  7.4 J · TVL gg. Kurs   -  
+      GRT      Wert 0.84 ·   99 % unter Allzeithoch · Hoch vor  67 Monaten · Alter  5.7 J · TVL gg. Kurs   -  
+      FTT      Wert 0.84 ·  100 % unter Allzeithoch · Hoch vor  60 Monaten · Alter  6.7 J · TVL gg. Kurs   -  
+      KAVA     Wert 0.84 ·   99 % unter Allzeithoch · Hoch vor  60 Monaten · Alter  6.9 J · TVL gg. Kurs   -  
+      UMA      Wert 0.84 ·   99 % unter Allzeithoch · Hoch vor  67 Monaten · Alter  6.0 J · TVL gg. Kurs   -  
+      IOST     Wert 0.84 ·   99 % unter Allzeithoch · Hoch vor  60 Monaten · Alter  7.5 J · TVL gg. Kurs   -  
+      OGN      Wert 0.83 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  6.6 J · TVL gg. Kurs +0.30
+      IOTA     Wert 0.83 ·   98 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  8.3 J · TVL gg. Kurs   -  
+      RVN      Wert 0.83 ·   99 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  6.9 J · TVL gg. Kurs   -  
+      SUN      Wert 0.82 ·  100 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  5.9 J · TVL gg. Kurs +0.21
+      ENJ      Wert 0.81 ·   99 % unter Allzeithoch · Hoch vor  57 Monaten · Alter  7.4 J · TVL gg. Kurs   -  
+      LSK      Wert 0.80 ·   99 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  6.6 J · TVL gg. Kurs   -  
+      MBL      Wert 0.79 ·   98 % unter Allzeithoch · Hoch vor  65 Monaten · Alter  6.5 J · TVL gg. Kurs   -  
+      TFUEL    Wert 0.78 ·   99 % unter Allzeithoch · Hoch vor  62 Monaten · Alter  7.3 J · TVL gg. Kurs   -  
+      SLP      Wert 0.78 ·  100 % unter Allzeithoch · Hoch vor  64 Monaten · Alter  5.3 J · TVL gg. Kurs +0.30
