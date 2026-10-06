@@ -1868,3 +1868,31 @@ Belege:
 - **Gemessen ist nur:** Ab 2024 verhalten sich die Altcoins gegen BTC anders als 2021–23.
 - **Nicht gemessen ist, dass die ETFs die Ursache sind.** Das ist eine Vermutung aus der Recherche (Block Scholes, §16.1: Kapital in BTC-ETFs gebunden). Andere Ursachen sind ebenso möglich, etwa mehr neue Tokens mit kleinem Umlauf, Memecoins oder die Zinslage.
 - **Ab jetzt** steht in neuen Texten **„E3 (ab 2024)“** statt „ETF-Markt“, damit der Name keine Ursache unterstellt. Ältere Abschnitte bleiben unverändert und sind so zu lesen.
+
+## 19. Neue Zielgröße Altcoins: ASYMMETRIE statt Durchschnitt (06.10.2026; E-71)
+
+Nutzer 06.10.: *„Altcoins sind mehr als 2 Jahre gefallen und sollten einen gewissen Boden erreicht haben, und je nach Wirtschaftslage kann es auch wieder eine massive Altseason geben. Offenbar haben wir aber keine Lösung zur Thematik, wie wir die Altcoin-Diamanten finden. Ziel sollte sein, aus den unsicheren Assets jene zu identifizieren, welche ein ausgewogeneres bzw. möglichst asymmetrisches Chance-Risiko-Verhältnis aufzeigen.“*
+
+**Was das an §14–§18 ändert:**
+- Die vier Fassungen fragten: *Schlägt eine Regel BTC im **Mittel und Median**?*
+- Diamanten zu finden ist eine Frage nach dem **rechten Ende**: wenige große Gewinner, viele Verlierer. Bei einer solchen Verteilung ist der **Median von Natur aus negativ**.
+- ⇒ Die Forderung *Median > 0* hätte jede Diamanten-Strategie **schon vom Aufbau her** verworfen. Die Ergebnisse §14–§18 bleiben gültig, beantworten aber **diese** Frage nicht.
+- A1–A6 (§18) ruhen bis zur Asymmetrie-Messung. Unabhängig davon gilt: Der Kern bleibt unverändert, Liquidität und Stablecoins sind Fakt.
+
+**Fakt Lage heute** (Auskunft, keine Bewertung — Regel 4; Klasse am Monatsersten, Median je Coin):
+
+| Stichtag | Klasse | Abstand zum Allzeithoch | gegen BTC | Hoch vor |
+|---|---|---|---|---|
+| 01.01.2023 (Boden davor) | H / M / S | −89 / −93 / −93 % | −73 / −81 / −84 % | 20 / 16 / 18 Monaten |
+| **20.09.2026** | H / M / S | **−83 / −95 / −97 %** | **−90 / −96 / −98 %** | **44 / 31 / 56 Monaten** |
+
+⇒ Die Altcoins stehen heute **tiefer und länger** unter dem Hoch als am Boden 2023, gegen BTC deutlich tiefer. Das ist ein **Fakt**. Ob daraus ein Boden folgt, ist eine Bewertung und erst zu messen.
+
+**Weg (Vorschlag, Voranalyse folgt nach Ja):**
+
+| | |
+|---|---|
+| **Zielgröße** | je Asset und Monatserstem über 12 und 24 Monate: **rechtes Ende** (Anteil ≥ ×3 bzw. ≥ ×2 des Einstiegs, höchster Stand) gegen **linkes Ende** (Anteil ≤ −70 %, eingestellt). Zusätzlich das Ergebnis eines **Korbs** kleiner gleicher Einsätze gegen BTC |
+| **Merkmale je Asset** (Querschnitt, Regel 3) | Tiefe und Dauer des Absturzes · **Basisbildung** (Schwankung zusammengezogen; Bezug Spot M-0) · Widerstandskraft (hielt das Tief, fiel weniger als die Klasse) · Umsatz hält trotz Kursverfall · Alter/Überleben · TVL gegen Kurs (188 Protokolle) · aktive Adressen (66 Coins) · Positionierung (Funding, Terminmarkt) |
+| **Nullwelt** | Merkmal innerhalb desselben Datums vertauscht |
+| ⚠️ **Grenze** | Es gibt nur **zwei** Alt-Aufschwünge in den Daten (2019–21 und 2023/24). In E3 (ab 2024) ist noch keiner abgeschlossen. ⇒ Das Ergebnis ist **Beschreibung**; ein Vorwärtsprotokoll gehört dazu |

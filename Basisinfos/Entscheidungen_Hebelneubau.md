@@ -850,3 +850,9 @@ prüfen und gegenprüfen"*.
   - der **Markt-Boden-Korb**;
   - die **Führung**: gestaffelt, Nachlauf, Zeit.
 - Maßstab: BTC an denselben Tagen und eine Nullwelt. Gemessen wird nach dem Ja.
+
+# E-71 · Altcoins: Ziel sind ASYMMETRISCHE Chance-Risiko-Verhältnisse, nicht der Durchschnitt (Nutzer 06.10.2026)
+
+**06.10.2026** · Nutzer: *„Altcoins sind mehr als 2 Jahre gefallen und sollten einen gewissen Boden erreicht haben, und je nach Wirtschaftslage kann es auch wieder eine massive Altseason geben. Offenbar haben wir aber keine Lösung zur Thematik, wie wir die Altcoin-Diamanten finden. Ziel sollte sein, aus den unsicheren Assets jene zu identifizieren, welche ein ausgewogeneres bzw. möglichst asymmetrisches Chance-Risiko-Verhältnis aufzeigen.“*
+- Zielgröße für Altcoins ist das **rechte gegen das linke Ende** je Asset (Voranalyse_Spot §19), nicht Mittel/Median gegen BTC. Ein negativer Median ist bei Diamanten-Suche kein Ausschluss.
+- §14–§18 bleiben gültig für die alte Frage. A1–A6 ruhen bis zur Asymmetrie-Messung.
