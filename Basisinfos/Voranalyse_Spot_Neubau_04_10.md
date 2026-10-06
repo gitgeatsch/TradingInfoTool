@@ -2389,3 +2389,14 @@ Nutzer 06.10.: *„Ja, ich denke, für den ersten Wurf mit Luft nach oben könne
 | **Mehrfachtesten** | B1 4, B2 4, B5 4 Regeln, jeweils *beide Epochen* gefordert. Ein Fehlalarm in beiden bei Rang ≥ 0,95 liegt je Regel bei etwa 0,25 % |
 | **Selbsttest** | Die Anlage aus §19 ist geprüft. Für B5 wird X0 gegen sich selbst gerechnet (Differenz muss 0 sein); eine Zufallsregel *Ausstieg nach zufälliger Monatszahl* darf nicht tragen |
 | **Ehrlich** | Sechster Blick auf die Altcoin-Daten: **Beschreibung**. Das Vorwärtsprotokoll bleibt der eigentliche Test |
+
+### 21.5 Nachtrag zum Plan B5, VOR dem ersten Lauf (06.10.2026)
+
+- **Verzerrung im Plan erkannt:** In E3 verliert *12 Monate halten* im Mittel −48 % gegen BTC bzw. −45 bis −65 % absolut (§19.1).
+  - Jede Regel, die früher verkauft, schlägt X0 dann schon, weil sie **kürzer** im fallenden Markt ist.
+  - Das ist keine Führungsleistung.
+- **Zusätzliche Bedingung für *trägt* (strenger, nicht lockerer):** Die Regel muss auch eine **Zufallswelt mit derselben Haltedauer** schlagen.
+  - Die Haltedauern der Regel werden innerhalb der Epoche zufällig auf die Einstiege verteilt, 200 Ziehungen.
+  - Rang ≥ 0,95 in E2 und E3.
+- **Selbsttest B5:** X0 gegen X0 ergibt 0. Eine Zufallsregel *Verkauf nach zufälliger Monatszahl 1–12* darf unter der vollen Bedingung **nicht** tragen.
+- Bei X7 zählt ein Monat **ohne** Rangwert (Merkmal fehlt) als *halten*.
