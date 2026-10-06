@@ -2329,3 +2329,63 @@ Nutzer 06.10.: *„Denke, wir müssen das Thema nach Bedarf und fachlicher Einor
 3. **B4 erst nach 6 Monaten Vorwärtsprotokoll**, zusammen mit dem Nutzer: Satellitenanteil und Einsatz je Coin.
 
 ⇒ **Fortsetzen ja, als Watchlist und Auskunft. Kein Kaufsystem, solange B1, B4 und B5 offen sind und kein Vorwärtsergebnis vorliegt.**
+
+## 21. Erster Wurf Watchlist: Messpläne B1, B2, B5 — VOR der Messung (06.10.2026)
+
+Nutzer 06.10.: *„Ja, ich denke, für den ersten Wurf mit Luft nach oben können wir weiterarbeiten. Nach den Messungen machen wir ein langes Fazit und gemeinsame Abstimmung.“*
+
+**Grundlage für alle drei:**
+- Die Liste V0 ist das oberste Fünftel der Kombination aus §19.6: F1 unten, F2 oben, F8 oben, F9 oben. Je Stichtag und Klasse, 12 Monate, Anker wie §19.6.
+- Wahl auf **E2**, Bestätigung **einmal auf E3**.
+- Die Nullwelt ist immer eine **Zufallsauswahl gleicher Größe aus V0 in derselben Zelle**. Gefragt wird also: *Verbessert die Regel die Liste?*
+- 200 Ziehungen. *Trägt* heißt: Wirkung in die erwartete Richtung in E2 **und** E3, Rang ≥ 0,95 in beiden.
+
+### 21.1 B1 Assetliste — Ausschlussregeln
+
+| # | Regel (am Stichtag t, Daten bis t) | Gedanke |
+|---|---|---|
+| **XA Restwert** | Kurs ≤ 1 % des Allzeithochs | *praktisch null*, z. B. tote Börsen-Tokens |
+| **XB Umsatzschwund** | mittlerer Umsatz 90 T < 20 % des Umsatzes 365 T | das Interesse ist weg |
+| **XC Mindestumsatz** | 90-T-Umsatz im untersten Zehntel der Klasse am Stichtag | nicht handelbar genug |
+| **XD Datenfehler** | in der Kursreihe bis t ein Tagessprung über Faktor 5 (Token-Umstellung, Befund 29.08.) | Allzeithoch und Absturztiefe unzuverlässig |
+
+- **Gemessen:** Saldo (verdoppelt − Absturz/eingestellt) der Liste **nach** dem Ausschluss minus Saldo von V0.
+- **Nullwelt:** gleich viele Coins zufällig aus V0 entfernt.
+- **Signalbilanz:** wie viele Coins je Klasse und Monat die Regel entfernt (Vorgabe 01.10.: Filter nur mit Qualitätsgewinn).
+- **Auskunft:**
+  - *Allzeithoch erst ab dem 31. Handelstag* (ohne Listing-Spitzen), Wirkung auf V0;
+  - *heute bei Bitpanda handelbar* (nur als Fakt; Rückmessung wäre Vorgriff).
+
+### 21.2 B2 Watchlist — Bestätigung und Länge
+
+| # | Variante | Nullwelt |
+|---|---|---|
+| **V1** | im Fünftel an t **und** am Vormonat | Zufallsauswahl gleicher Größe aus V0 |
+| **V2** | an t, t−1 **und** t−2 | ebenso |
+| **K5 / K10** | nur die besten 5 bzw. 10 je Klasse nach Gesamtwert (nur M und S; H hat im Mittel 3) | ebenso |
+
+**Gemessen:** Saldo, Lift R2 und D2, Korb gegen BTC und gegen V0, Zahl der Coins je Monat.
+
+### 21.3 B5 Führung und Ausstieg (Einstieg = Mitglied von V0, Kauf zum Schluss t+1, höchstens 12 Monate, Kosten 1,25 % je Seite)
+
+| # | Ausstieg |
+|---|---|
+| **X0** | 12 Monate halten (Bezug, so ist §19.6 gemessen) |
+| **X1** | gestaffelt: ⅓ bei ×2, ⅓ bei ×3, Rest mit Nachlauf −35 % vom Hoch |
+| **X2** | Nachlauf −35 % vom Hoch, Notbremse −50 % vom Einstieg |
+| **X7a** | **Rang-Ausstieg:** Verkauf am ersten Monatsersten, an dem der Coin **nicht mehr in der oberen Hälfte** seiner Klasse liegt (Gesamtwert) |
+| **X7b** | wie X7a, aber schon, wenn er **aus dem Fünftel** fällt |
+
+- **Gemessen:** Korb-Ertrag nach Kosten je Stichtag, **gepaart** gegen X0 auf denselben Einstiegen.
+- **Trägt:** Mittel **und** Median der Differenz je Stichtag > 0 in E2 und E3. Blockbootstrap über die Stichtage (Block 3, 1.000 Ziehungen): Anteil > 0 ≥ 0,95 in beiden.
+- **Auskunft:** realisiert ≥ ×2, realisiert ≤ −70 %, Haltedauer, gegen BTC.
+- Die Ränge für X7 stammen aus derselben Monatsrechnung, auch für Monate ohne abgeschlossenes Fenster (nur Merkmale, kein Ausgang).
+
+### 21.4 Gegenprüfung des Plans
+
+| | |
+|---|---|
+| **Vorgriff** | Alle Regeln nutzen Daten bis t. Ausnahme: der Bitpanda-Stand, deshalb nur Auskunft |
+| **Mehrfachtesten** | B1 4, B2 4, B5 4 Regeln, jeweils *beide Epochen* gefordert. Ein Fehlalarm in beiden bei Rang ≥ 0,95 liegt je Regel bei etwa 0,25 % |
+| **Selbsttest** | Die Anlage aus §19 ist geprüft. Für B5 wird X0 gegen sich selbst gerechnet (Differenz muss 0 sein); eine Zufallsregel *Ausstieg nach zufälliger Monatszahl* darf nicht tragen |
+| **Ehrlich** | Sechster Blick auf die Altcoin-Daten: **Beschreibung**. Das Vorwärtsprotokoll bleibt der eigentliche Test |
