@@ -1093,3 +1093,14 @@ Nutzer 06.10.: *„D1 – BTC, ETH und Solana. D2 – ja b und d jedenfalls, a u
 - **Mehrfachtesten:** Es ist der vierte Blick auf das BTC-Klima, aber eine **andere Frage** (Ausstieg statt Einstieg). Die Stufen sind vorab fest und werden nicht nachgestellt.
 - **Stichtag:** Die Reihe endet im Herbst 2026 nach einer Zone (02.–08.2026). Varianten mit Rückkauf sind dadurch eher **begünstigt**; das wird ausgewiesen (Ergebnis auch zum Ende jeder Zone).
 - (a) Risiko senken und (c) Umschichten folgen später (E-68).
+
+### 12.5 Änderungen am Messplan VOR der Messung (06.10.2026; Nutzer: *„möchte hier BTC, ETH und SOL in einem sinnvollen Verhältnis“* · *„ja, mit deinem Vorschlag können wir starten“*)
+
+| | vorher (§12.2) | jetzt | Grund |
+|---|---|---|---|
+| Mischungen | M1 ⅓ · M2 70/20/10 · M3 50/30/20 · M4 50/50/0 | **V1** ⅓ · **V2** 70/20/10 (BTC-lastig) · **V3** 50/30/20 · **V4 nach Schwankung** | M4 entfällt, weil SOL dazugehört (E-68). V4 ist das einzige Verhältnis, das aus den Daten kommt statt aus einer Meinung |
+| V4 Regel | — | Gewicht je Wert ∝ 1 / Schwankung der Tagesrenditen der **letzten 365 Tage** (mindestens 30 Tage) am Vortag des Kaufs; neu bei jedem Kauf; kausal | Wer stärker schwankt, bekommt weniger |
+| erster Start D1 | 01.09.2020 | **01.10.2020** | V4 braucht ≥ 30 Tage SOL-Historie (SOL ab 11.08.2020) |
+| Maßstab | M0 100 % BTC | unverändert, **nur als Maßstab** | |
+
+D2-M bleibt wie §12.3.
