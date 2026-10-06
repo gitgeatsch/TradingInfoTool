@@ -1862,3 +1862,10 @@ OK    P10 Start ohne Konsole (pythonw, wie die Windows-Aufgabe): Stimmen gespeic
 OK    P9 Standard-DB und Messbasen unberuehrt  ['tradinginfotool.db', 'stundenkurse.db', 'stundenkurse_alle.db']
 ALLE BESTANDEN
 ```
+
+### 23.9 Lauf: Kontaminationsprobe bestanden (06.10.2026)
+
+- `ENTSCHEID_K` am 06.10. um 07:31: **WEITER (Kontaminationsprobe bestanden)**. Weder Asset noch Zeitraum wurden erkannt (Grenze Kürzel ≥ 2 oder Monat+Jahr ≥ 6), und *benannt* trennt nicht besser als *anonym*.
+- Der Läufer ist danach selbst in T weitergegangen: 172 von 997 Ankern am 06.10. nachmittags, ungültige Stimmen 0.
+- Der nächste Halt ist der Zwischenentscheid nach 250 Ankern. Ausgegeben wird dann nur das Wort, keine Zahl.
+- ⚠️ Die Kennzahlen der Probe stehen nur im Lauf-Protokoll als Wort, nicht in der Ablage. Sie lassen sich mit `n4_auswertung.entscheide(c, "ENTSCHEID_K")` jederzeit nachrechnen, ohne Blick auf T.
