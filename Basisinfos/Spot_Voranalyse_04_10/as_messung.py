@@ -14,8 +14,9 @@ AUSLEGUNG, vor dem ersten Lauf festgelegt (im Plan nicht genau bestimmt):
   - F1/F2/F5 erst ab 180 T Kursgeschichte; F4 braucht 250 T fuer die 365-T-Schwankung; F7 180 T Umsatz fuer das 365-T-Mittel
   - F6 = 180-T-Ertrag (der Klassenmedian ist je Zelle konstant und aendert den Rang nicht)
   - Externe Quellen (TVL, Adressen, Funding, OI) nur mit Daten bis t-1 (ein Tag Abstand, Veroeffentlichung); asof hoechstens 7 T alt
-  - Kombination: Auswahl auf E2 (eine Seite mit Rang >= 0,90 UND Spiegel >= 1,717), Wert = Mittel der richtungsgerechten Perzentile der verfuegbaren
-    ausgewaehlten Merkmale; Pruefung des oberen Fuenftels auf E3 mit Rang >= 0,95, Spiegel >= 1,717, >= 10 Coins
+  - Kombination: Auswahl auf E2 (eine Seite mit Rang >= 0,90 UND Spiegelprobe besteht; bis 06.10. stand hier 1,717), Wert = Mittel der richtungsgerechten Perzentile der verfuegbaren
+    ausgewaehlten Merkmale; Pruefung des oberen Fuenftels auf E3 mit Rang >= 0,95, Spiegelprobe bewegungsgleich, >= 10 Coins
+    HINWEIS: im Protokoll as_messung.txt vom 06.10. stehen in zwei Kopfzeilen noch '1,717' - nur der Text war alt, gerechnet wurde mit spiegel_ok
   - Selbsttest (a) 40 Zufallsmerkmale je beide Seiten: bestanden, wenn keines traegt und je Epoche hoechstens 5 % ueber 0,975;
     (b) gepflanzt 0,3 x R2 + N(0,1), obere Seite: bestanden, wenn es traegt
 """
@@ -60,7 +61,9 @@ def ziel(s, i0, h):
 def paare(h):
     out = []
     for t in pd.date_range("2019-01-01", ENDE, freq="MS"):
-        if t not in POS:
+        # KORREKTUR 06.10. (§19.6): nur Stichtage, deren Fenster fuer ALLE Coins abgeschlossen ist - sonst bleiben an spaeten Stichtagen nur
+        # die spaeter EINGESTELLTEN Coins uebrig (Auswahl nach der Zukunft); as_vorpruefung.py hatte das richtig (E3 20 Stichtage, nicht 31)
+        if t not in POS or POS[t] + 1 + h > len(IDX) - 1:
             continue
         for s, k in A.klassen(t)[0].items():
             z = ziel(s, POS[t] + 1, h)
@@ -292,7 +295,7 @@ def main():
     for k in NAMEN:
         for seite in ("oben", "unten"):
             erg[(k, seite)] = bewerte(Z, F[k], seite)
-    print("\nEINZELMERKMALE (Trägt: Saldo > 0 und Rang >= 0,975 in E2 UND E3, Spiegel >= 1,717, >= 10 Coins; F12 nur Auskunft)")
+    print("\nEINZELMERKMALE (Trägt: Saldo > 0 und Rang >= 0,975 in E2 UND E3, Spiegelprobe bewegungsgleich besteht, >= 10 Coins; F12 nur Auskunft)")
     for k in NAMEN:
         for seite in ("oben", "unten"):
             o = erg[(k, seite)]
@@ -300,7 +303,7 @@ def main():
             drucke("%s %s · %s Fuenftel  ->  %s" % (k, NAMEN[k], seite, "TRAEGT" if t else ("Auskunft" if k == "F12" else "traegt nicht")), o)
     # Kombination
     wahl = [(k, s) for (k, s), o in erg.items() if k != "F12" and o.get("E2") and o["E2"]["rang"] >= 0.90 and spiegel_ok(o["E2"], "E2") and o["E2"]["saldo"] > 0]
-    print("\nKOMBINATION (Auswahl auf E2: Rang >= 0,90, Spiegel >= 1,717): %s" % (", ".join("%s %s" % w for w in wahl) or "keine"))
+    print("\nKOMBINATION (Auswahl auf E2: Rang >= 0,90, Spiegelprobe bewegungsgleich besteht): %s" % (", ".join("%s %s" % w for w in wahl) or "keine"))
     komb_tr = False
     if wahl:
         P = np.vstack([pct_in_zelle(Z, F[k]) if s == "oben" else 1 - pct_in_zelle(Z, F[k]) for k, s in wahl])

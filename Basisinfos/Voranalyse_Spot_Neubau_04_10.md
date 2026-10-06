@@ -2158,3 +2158,61 @@ Nutzer 06.10.: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüf
 | **C · Newsletter** | Nichts trägt | Nur Fakten in der Ampel (Lage, MACD, Liquidität, Stablecoins), ausdrücklich **ohne** Kaufaussage. Altcoins bleiben Auskunft (D4) |
 
 ⚠️ Ein *Newsletter* ist kein Misserfolg, wenn er sich **so nennt**. Schlecht wird er erst, wenn er Fakten wie ein Signal verkauft (Regel 4).
+
+### 19.6 Ergebnis Asymmetrie (06.10.2026, nach §19.2 mit §19.4/§19.5) — Urteil: **A · Systemfunktion, mit Vorbehalt**
+
+**Belege:**
+- `as_messung.py` → `.txt`
+- Gegenprobe `as_gegenprobe.py` → `.txt`: 66 von 66 Merkmalswerten direkt aus SQL gleich, Saldo und Lifts mit pandas gleich
+- Pflichtprüfungen `as_pruefungen_komb.py` → `.txt`
+
+⚠️⚠️ **Korrigiert vor der Bewertung (mein Fehler, im Lauf gefunden):**
+- `paare()` nahm auch Stichtage nach 09/2025 auf, deren 12-Monats-Fenster noch offen ist. Dort blieben nur die **später eingestellten** Coins übrig, also eine Auswahl nach der Zukunft.
+- Das waren E3 mit 31 statt 20 Stichtagen und 499 Paare. Die Vorprüfung hatte es richtig.
+- Die Gegenprobe fand es nicht, weil sie dieselbe Funktion nutzte. Gefunden habe ich es am Beispiel-Stichtag 08/2026, der kein volles Fenster haben kann.
+- Alles wurde auf 19.681 Coin-Ankern neu gerechnet. Die Werte unten sind die korrigierten.
+- ⚠️ Die Kopfzeilen im Protokoll nennen noch *1,717*. Gerechnet wurde mit der bewegungsgleichen Probe (`spiegel_ok`); die Beschriftung ist inzwischen im Code korrigiert.
+
+**Selbsttest (korrigierte Menge):**
+- (a) 80 Zufallstests: in E2 1,2 %, in E3 5,0 %, in beiden 0, trägt 0;
+- (b) das gepflanzte Merkmal trägt.
+- ⇒ **bestanden.**
+
+**Was trägt (12 Monate; Saldo = Anteil *verdoppelt* − Anteil *−70 % oder eingestellt*, gegen die eigene Klasse am selben Stichtag):**
+
+| | E2 2021–23 | E3 ab 2024 | Korb E3 gg. BTC (ganze Klasse) |
+|---|---|---|---|
+| **Kombination** (Wahl auf E2: geringe **Tiefe** F1 unten · lange **Dauer** seit dem Hoch F2 oben · hohes **Alter** F8 oben · **TVL** wächst schneller als der Kurs F9 oben) | +11,0 Pp · Rang 1,000 · Lift R2 1,14 / D2 0,87 | **+13,2 Pp · Rang 1,000 · Lift R2 1,22 / D2 0,94**, Spiegelprobe besteht, 102 Coins | **−34 %** (−48 %) |
+| **F8 Alter** allein, oberes Fünftel | +3,2 Pp · Rang 1,000 | +17,2 Pp · Rang 1,000 · R2 1,22 / D2 0,90 | −22 % (−48 %) |
+| alle übrigen 20 Einzeltests | trägt nicht | | |
+
+**Die sechs Prüfungen (Kombination):**
+
+| | |
+|---|---|
+| **Nullwelt** | Rang 1,000 in beiden Epochen |
+| **Dosis** | monoton. E2: −6,6 · −3,6 · −2,7 · +1,5 · +11,0 Pp. E3: −18,2 · −1,2 · −0,3 · +5,6 · +13,2 Pp. Das **unterste** Fünftel ist deutlich schlechter, die Ordnung trägt über die ganze Breite |
+| **Zeitstabilität** | jedes Jahr positiv: 2019 +15 · 2020 +4 · 2021 +14 · 2022 +9 · 2023 +10 · 2024 +21 · 2025 +4 Pp. ⚠️ 2025: Lift R2 0,81, die Asymmetrie kommt dort nur aus dem **kleineren** Absturzrisiko |
+| **Weglassprobe** | ohne die 5 stärksten Coins: E2 +10,4 Pp, E3 +10,3 Pp, Spiegelprobe besteht in beiden ⇒ keine Ein-Coin-Geschichte |
+| **Mehrfachtesten** | 22 Einzeltests, 1 trägt (Familien-Fehlalarm vorab ≈ 1,4 %). Die Kombination ist **einmal** auf E3 geprüft |
+| **Ebene / je Klasse** | H: E2 −0,1, E3 +27,9 Pp · M: E2 +14,0, E3 +27,5 Pp · S: E2 +10,3, E3 +7,9 Pp. ⇒ In der laufenden Epoche am stärksten bei **Highcaps und Midcaps** |
+
+**Vorbehalte (gehören zu jeder Aussage):**
+1. **Gegen BTC verliert auch der beste Korb in E3:** −34 % in 12 Monaten, die Klasse −48 %. Die Asymmetrie gilt **innerhalb der Altcoins**. Sie beantwortet *welche Altcoins*, nicht *Altcoins statt BTC*.
+2. **Das Alter trägt mit.**
+   - Die Hälfte des Kombinations-Fünftels liegt auch im obersten Alters-Fünftel.
+   - Ohne F8 trägt der Rest in E3 nicht: +2,3 Pp, Rang 0,935.
+   - F8 allein fällt in E2 bei der Weglassprobe (+0,7 Pp ohne DUSK, FET, WAVES, CTXC, COCOS).
+   - ⇒ Die Kombination ist robuster als jedes einzelne Merkmal.
+3. **Es ist der fünfte Blick auf die Altcoin-Daten.** Die Wahl fiel auf E2 und wurde einmal auf E3 bestätigt; das ist sauber, bleibt aber **Beschreibung**. Der eigentliche Test ist das Vorwärtsprotokoll.
+4. **Für die Praxis zu lang:** Das Fünftel umfasst je Stichtag rund 3 Highcaps, 18 Midcaps und rund 50 Smallcaps (Beispiel 01.09.2025: ADA, LTC, UNI · ALGO, ATOM, NEAR …).
+
+**Inhaltlich:**
+- Asymmetrisch sind **etablierte Überlebende**: lange am Markt, weniger tief gefallen, das Hoch liegt lange zurück, die Nutzung (TVL) wächst schneller als der Kurs.
+- Ihr Vorteil kommt vor allem aus dem **kleineren** linken Ende: weniger Abstürze und weniger Einstellungen.
+- In E3 kommt eine höhere Chance auf eine Verdopplung dazu.
+
+**Folge nach dem Maßstab §19.5 → A:**
+- Der **Bau** einer monatlichen Kandidatenliste am NB mit Vorwärtsprotokoll ist begründet. Vor dem Bau kommt die Voranalyse des Betriebs.
+- ⚠️ Für die NB-Daten (B1–B9) ist zu klären: Die Kombination braucht das **Allzeithoch** und das **erste Kursdatum** je Coin. Am NB liegen Stundenkurse erst ab 2023, also braucht es Stammdaten vom Desktop plus eine laufende Fortschreibung. Außerdem TVL am NB.
+- Nicht gemessen und offen: die Wahl **innerhalb** des Fünftels, also wie lang die Liste sein soll.

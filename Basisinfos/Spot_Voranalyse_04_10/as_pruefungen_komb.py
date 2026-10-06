@@ -1,4 +1,4 @@
-"""Die sechs Pruefungen fuer die KOMBINATION aus as_messung.py (F1 unten, F2 oben, F8 oben, F9 oben; Voranalyse_Spot §19.6) - nur lesend.
+"""Die sechs Pruefungen fuer die KOMBINATION aus as_messung.py (Auswahl aus as_messung.txt; Voranalyse_Spot §19.6) - nur lesend.
 
     python Basisinfos/Spot_Voranalyse_04_10/as_pruefungen_komb.py
 
@@ -16,7 +16,19 @@ sys.path.insert(0, HIER)
 import as_messung as M  # noqa: E402
 
 A = M.A
-WAHL = [("F1", "unten"), ("F2", "oben"), ("F8", "oben"), ("F9", "oben")]
+WAHL_LAUF1 = [("F1", "unten"), ("F2", "oben"), ("F8", "oben"), ("F9", "oben")]   # Lauf vor der Korrektur 06.10. (ungueltig)
+
+
+def _wahl_aus_protokoll():
+    """Auswahl genau so, wie as_messung.py sie auf E2 getroffen hat (Zeile 'KOMBINATION ...: F1 unten, ...' in as_messung.txt)."""
+    for z in open(os.path.join(HIER, "as_messung.txt"), encoding="utf-8"):
+        if z.startswith("KOMBINATION"):
+            teil = z.split("):", 1)[1].strip()
+            return [] if teil == "keine" else [tuple(x.strip().split(" ")) for x in teil.split(",")]
+    raise SystemExit("as_messung.txt ohne Zeile KOMBINATION - erst as_messung.py laufen lassen")
+
+
+WAHL = _wahl_aus_protokoll()
 
 
 def wert(Z, F, wahl):
@@ -26,6 +38,8 @@ def wert(Z, F, wahl):
 
 
 def main():
+    if not WAHL:
+        print("Keine Kombination ausgewaehlt (as_messung.txt) - nichts zu pruefen."); return
     D = M.paare(365).reset_index(drop=True)
     Z = M.Zellen(D)
     M.baue_grid(Z)
@@ -57,14 +71,18 @@ def main():
     p8 = M.pct_in_zelle(Z, F["F8"])
     beide = (p > 0.8) & (p8 > 0.8)
     print("\n  Ueberschneidung: %.0f %% des Kombinations-Fuenftels sind auch im obersten Alters-Fuenftel" % (100 * beide.sum() / (p > 0.8).sum()))
-    w2 = wert(Z, F, [x for x in WAHL if x[0] != "F8"])
-    o = M.bewerte(Z, w2, "oben", ep_liste=("E2", "E3"))
-    print("  Kombination OHNE F8 (F1 unten, F2 oben, F9 oben):")
-    for e in ("E2", "E3"):
+    rest = [x for x in WAHL if x[0] != "F8"]
+    if not rest or len(rest) == len(WAHL):
+        print("  (F8 nicht oder allein in der Auswahl - keine Probe ohne F8)"); rest = None
+    w2 = wert(Z, F, rest) if rest else None
+    o = M.bewerte(Z, w2, "oben", ep_liste=("E2", "E3")) if rest else {}
+    if rest:
+        print("  Kombination OHNE F8 (%s):" % ", ".join("%s %s" % x for x in rest))
+    for e in (("E2", "E3") if rest else ()):
         x = o[e]
         print("    %s Saldo %+5.1f Pp · Rang %.3f · Lift R2 %.2f / D2 %.2f · Spiegelprobe %s · %d Coins" % (e, 100 * x["saldo"], x["rang"], x["lift_r2"], x["lift_d2"],
                                                                                                    "besteht" if M.spiegel_ok(x, e) else "nein", x["coins"]))
-    t = D.t.max()
+    t = D.t.max()                                            # nach der Korrektur in paare: letzter Stichtag mit vollem Fenster fuer alle
     m = (D.t == t).values
     print("\n  Beispiel: oberes Fuenftel am letzten Stichtag mit abgeschlossenem 12-Monats-Fenster (%s; Auskunft, KEIN Signal):" % t.date())
     for kl in ("H", "M", "S"):

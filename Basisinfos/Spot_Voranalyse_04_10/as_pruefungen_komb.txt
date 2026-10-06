@@ -1,0 +1,31 @@
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\as_pruefungen_komb.py:37: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+PRUEFUNGEN der Kombination F1 unten, F2 oben, F8 oben, F9 oben (oberes Fuenftel)
+
+  Dosis E2  Fuenftel 1..5 Saldo:  -6.6  -3.6  -2.7  +1.5 +11.0
+  Dosis E3  Fuenftel 1..5 Saldo: -18.2  -1.2  -0.3  +5.6 +13.2
+  Klasse H  E2 Saldo  -0.1 Pp · Lift R2 0.99 / D2 0.89 · Korb  -21 % (Klasse  -20 %) · E3 Saldo +27.9 Pp · Lift R2 1.53 / D2 0.74 · Korb   -0 % (Klasse  -28 %)
+  Klasse M  E2 Saldo +14.0 Pp · Lift R2 1.14 / D2 0.85 · Korb   -4 % (Klasse   -3 %) · E3 Saldo +27.5 Pp · Lift R2 1.36 / D2 0.85 · Korb  -44 % (Klasse  -58 %)
+  Klasse S  E2 Saldo +10.3 Pp · Lift R2 1.15 / D2 0.88 · Korb   +6 % (Klasse   -2 %) · E3 Saldo  +7.9 Pp · Lift R2 1.15 / D2 0.98 · Korb  -57 % (Klasse  -56 %)
+  Jahr 2019  Saldo +14.7 Pp · Lift R2 0.93 / D2 0.84 · 15 Coins
+  Jahr 2020  Saldo  +3.5 Pp · Lift R2 1.01 / D2 0.90 · 45 Coins
+  Jahr 2021  Saldo +14.2 Pp · Lift R2 1.23 / D2 0.96 · 91 Coins
+  Jahr 2022  Saldo  +9.2 Pp · Lift R2 1.08 / D2 0.87 · 48 Coins
+  Jahr 2023  Saldo +10.0 Pp · Lift R2 1.12 / D2 0.68 · 101 Coins
+  Jahr 2024  Saldo +20.6 Pp · Lift R2 1.33 / D2 0.88 · 93 Coins
+  Jahr 2025  Saldo  +4.2 Pp · Lift R2 0.81 / D2 0.99 · 23 Coins
+  Weglassprobe E2 ohne GRT,NULS,WIN,SKL,ALGO: Saldo +10.4 Pp · Lift R2 1.13 / D2 0.88 · Spiegelprobe besteht
+  Weglassprobe E3 ohne DASH,FUN,SNX,CRV,RSR: Saldo +10.3 Pp · Lift R2 1.13 / D2 0.95 · Spiegelprobe besteht
+
+  Ueberschneidung: 50 % des Kombinations-Fuenftels sind auch im obersten Alters-Fuenftel
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\as_pruefungen_komb.py:37: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+  Kombination OHNE F8 (F1 unten, F2 oben, F9 oben):
+    E2 Saldo  +9.9 Pp · Rang 1.000 · Lift R2 1.18 / D2 0.88 · Spiegelprobe besteht · 148 Coins
+    E3 Saldo  +2.3 Pp · Rang 0.935 · Lift R2 1.08 / D2 1.00 · Spiegelprobe nein · 97 Coins
+
+  Beispiel: oberes Fuenftel am letzten Stichtag mit abgeschlossenem 12-Monats-Fenster (2025-09-01; Auskunft, KEIN Signal):
+    H: ADA, LTC, UNI
+    M: ALGO, ATOM, CAKE, CFX, COMP, ETC, FIL, FUN, GALA, ICP, LPT, MASK, MEME, NEAR, RUNE, SHIB, SKL, VET
+    S: ACM, ANKR, ATA, ATM*, AUDIO, AXS, BAKE, BAND, BAR, BEL, C98, CELR, CHZ, CTSI, DASH*, DATA, DEGO, DENT, DGB, DODO, ENJ, FIO, FIS, FLOW, FTT, GRT, HOT, ICX, IOST, IOTA, KAVA, LSK, LUNA, MBL, MTL, NEO, NKN, OGN, ONE, ONG, ONT, POND, PSG, QUICK, RVN, SC, SLP, SNX*, STORJ, STRAX, SUSHI, TFUEL, THETA, UMA, UTK, WAN, WIN, YFI, ZEN*, ZIL
+    (* = hat sich danach binnen 12 Monaten zeitweise verdoppelt)
