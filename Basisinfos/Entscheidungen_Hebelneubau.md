@@ -856,3 +856,9 @@ prüfen und gegenprüfen"*.
 **06.10.2026** · Nutzer: *„Altcoins sind mehr als 2 Jahre gefallen und sollten einen gewissen Boden erreicht haben, und je nach Wirtschaftslage kann es auch wieder eine massive Altseason geben. Offenbar haben wir aber keine Lösung zur Thematik, wie wir die Altcoin-Diamanten finden. Ziel sollte sein, aus den unsicheren Assets jene zu identifizieren, welche ein ausgewogeneres bzw. möglichst asymmetrisches Chance-Risiko-Verhältnis aufzeigen.“*
 - Zielgröße für Altcoins ist das **rechte gegen das linke Ende** je Asset (Voranalyse_Spot §19), nicht Mittel/Median gegen BTC. Ein negativer Median ist bei Diamanten-Suche kein Ausschluss.
 - §14–§18 bleiben gültig für die alte Frage. A1–A6 ruhen bis zur Asymmetrie-Messung.
+
+# E-72 · Asymmetrie: Spiegelprobe bewegungsgleich, voller Plan, Maßstab A/B/C vorab (06.10.2026; Nutzer delegiert: „du entscheidest jetzt“)
+
+**06.10.2026** · Nutzer: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüfen, du entscheidest jetzt. Wichtig wäre die Zielerreichung, und hier bin ich nicht sicher, ob das ein schlechter Newsletter wird oder echte Systemfunktionalität.“*
+- Die Spiegelprobe *Verhältnis ≥ 1,717* (Hebel-Eichung 2.603) ist für die Asymmetrie-Messung ersetzt durch die **bewegungsgleiche Spiegelprobe** (Voranalyse_Spot §19.4). Begründung: Selbsttest (b) an 1,717 gescheitert, die feste Schwelle trennt bei 12-Monats-Fenstern nicht. Die neue Probe hatte 0 von 200 Fehlalarmen in beiden Epochen und eine Fundquote von 100 %.
+- Der Maßstab *Systemfunktion / Hinweis / Newsletter* (§19.5) ist **vor** dem Ergebnis festgelegt.

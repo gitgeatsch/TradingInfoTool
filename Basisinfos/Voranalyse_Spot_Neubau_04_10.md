@@ -2139,3 +2139,22 @@ Die Behauptung: *„Der monatliche MACD bei Alts hat gerade bullisch gekreuzt. D
 - Entscheidend ist *beide Epochen*: **0 von 200** Bewegungs- und Zufallswelten.
 
 **Zur Freigabe (Nutzer):** In §19.2 wird die Spiegelprobe *Verhältnis ≥ 1,717* durch die **bewegungsgleiche Spiegelprobe (Lauf 3)** ersetzt, in E2 und E3. Alles andere bleibt, wie vorab festgelegt. Danach läuft zuerst der Selbsttest (b) erneut, erst dann die Messung.
+
+### 19.5 Entscheid und Maßstab *Systemfunktion oder Newsletter* — festgelegt VOR dem Ergebnis (06.10.2026; E-72)
+
+Nutzer 06.10.: *„Denke, wir sollten alle Möglichkeiten prüfen und gegenprüfen, du entscheidest jetzt. Wichtig wäre die Zielerreichung, und hier bin ich nicht sicher, ob das ein schlechter Newsletter wird oder echte Systemfunktionalität.“*
+
+**Entschieden:**
+- Die bewegungsgleiche Spiegelprobe (§19.4, Lauf 3) ersetzt 1,717.
+- Gemessen wird der volle Plan §19.2: alle 11 Merkmale beidseitig, die Kombination E2 → E3, 24 Monate als Auskunft.
+- Der Selbsttest läuft erneut vorweg.
+
+**Maßstab, vorab:**
+
+| Ergebnis | Was es ist | Was gebaut wird |
+|---|---|---|
+| **A · Systemfunktion** | Ein Merkmal **oder** die Kombination *trägt* nach §19.2, **und** der Korb des Fünftels hat in E3 ein besseres Verhältnis aus Chance und Risiko als die Klasse (Saldo > 0, Spiegelprobe besteht) | Monatliche **Kandidatenliste** am NB, ohne Desktop-Handgriff (B1–B9). Je Coin die Begründung und ein **kleiner fester Einsatz**. **Vorwärtsprotokoll** mit Abrechnung nach 6 und 12 Monaten gegen die Klasse und gegen BTC. Erst danach Geld in nennenswerter Höhe |
+| **B · Hinweis mit Vorbehalt** | Etwas trägt nur in **einer** Epoche, oder nur die Kombination in E2 | **Kein** Signal. Das Vorwärtsprotokoll läuft ohne Geld; die Entscheidung fällt nach 6 Monaten |
+| **C · Newsletter** | Nichts trägt | Nur Fakten in der Ampel (Lage, MACD, Liquidität, Stablecoins), ausdrücklich **ohne** Kaufaussage. Altcoins bleiben Auskunft (D4) |
+
+⚠️ Ein *Newsletter* ist kein Misserfolg, wenn er sich **so nennt**. Schlecht wird er erst, wenn er Fakten wie ein Signal verkauft (Regel 4).
