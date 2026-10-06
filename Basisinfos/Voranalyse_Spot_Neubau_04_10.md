@@ -1480,3 +1480,71 @@ Beleg `Spot_Voranalyse_04_10/s3_stufe1.py` → `.txt`.
 | **WORAN** | Im ETF-Markt floss das Geld in **BTC**. Das zeigt sich in **allen** Klassen, nicht nur bei riskanten Werten: selbst stabile Highcaps wie LINK verloren über ein Jahr rund 30 % gegen BTC. Bei Smallcaps kommen Totalverluste und Einstellungen dazu (18 % eingestellt) |
 | **Was eine Auswahlregel leisten müsste** | aus −16 % bis −62 % Grundrate **plus** 2,5 % Kosten je Hin- und Rückweg einen Vorsprung machen. Das ist ein Mehrfaches dessen, was Regeln sonst bringen |
 | **Wo es Altcoin-Chancen gibt** | ⭐ **kurzfristig über den Hebel:** Die REGEL0 bewertet stündlich 636 Werte, darunter fast alle Altcoins, über 24 h. Dort ist der Vorteil gemessen |
+
+## 15. Messplan Altcoin-Spot Fassung 2 — antizyklisch kaufen und Positionen führen, VOR der Messung (06.10.2026; E-70)
+
+Nutzer 06.10.: *„hier kann und soll nicht die Kernwert-Berechnung angewendet werden, meines Erachtens. Antizyklisch – Bodenkauf ist erforderlich, dann sollte eine massive Outperformance möglich sein; eigentlich müssen die Spot-Positionen auch geführt werden. Versuche für die Altcoins auch alternative Ansätze, wie wir damit sinnvoll umgehen können.“*
+
+### 15.1 Warum Fassung 2 (E-63)
+
+- §14.6 hat die **Grundrate** gemessen: Kauf an jedem Monatsersten, auch am Hoch, ungeführt gehalten. Das ist der Maßstab *zufälliger Zeitpunkt*, **nicht** die Strategie des Nutzers.
+- Die Zulassungsregel („höchstens −10 Pp“) unterstellte, eine Regel bringe nur wenige Pp. Für **Bodenkauf mit Positionsführung** gilt das nicht: Sie vermeidet die schlechten Einstiege und sichert Gewinne.
+- ⇒ Die Strategie wird **direkt** gemessen. Die Zulassungsregel aus §14.3 **entfällt** für diese Fassung.
+- Lehre: Eine Grundrate taugt nicht als Filter für eine **Zeitpunkt**-Strategie.
+
+### 15.2 Vorprüfung (`Spot_Voranalyse_04_10/a2_vorpruefung.py`, nur Zahl der Ereignisse)
+
+| Ansatz | Ereignisse je Jahr 2020 · 21 · 22 · 23 · 24 · 25 · 26 (H/M/S) |
+|---|---|
+| **A** Boden je Coin: ≥ 75 % unter dem 365-T-Hoch, dann **Wende** (Schluss über dem 50-T-Schnitt nach ≥ 60 T darunter), Ruhe 180 T je Coin | 9 · 89 · 328 · 140 · 69 · 280 · 379 (meist M/S; H 0–9 je Jahr) |
+| **B** Markt-Boden: Korb kaufen in der BTC-Zone (q ≤ 0,20) | 7 Episoden: 2018/19 · 03/2020 · 05/2022–03/2023 · 2023 (2) · 2026 (2) |
+| D Trendfolge Coin/BTC über steigendem 200-T-Schnitt | 0–15 je Jahr → **nur Auskunft** |
+
+### 15.3 Die Fälle (vorab, höchstens 15 Kombinationen)
+
+| Einstieg | Klassen | Ausstieg |
+|---|---|---|
+| **A1** Boden je Coin mit Wende (Kauf zum Schluss t+1) | H, M, S | X1, X2, X3 |
+| **A2** Boden je Coin **ohne** Wende: erster Tag ≥ 75 % unter dem Hoch (*fallendes Messer*, Vergleich zu A1) | M, S | X2 |
+| **B** Markt-Boden: am ersten Zonentag jeder Episode ein gleich gewichteter Korb der Klasse | H, M | X1, X2 |
+
+**Positionsführung (Ausstieg) — vorab:**
+
+| | Regel |
+|---|---|
+| **X1 gestaffelt** | ⅓ verkaufen bei **+100 %**, ⅓ bei **+200 %**; der Rest mit Nachlauf −35 % vom Hoch seit Einstieg. Höchstens 730 T |
+| **X2 Nachlauf** | Verkauf, wenn der Kurs **35 % unter sein Hoch seit Einstieg** fällt; **Notbremse −50 %** vom Einstieg. Höchstens 730 T |
+| **X3 Zeit** | 365 T halten, ungeführt (Bezug: Bodenkauf **ohne** Führung) |
+
+### 15.4 Messung
+
+- **Je Handel:** Ertrag nach Kosten (1,25 % je Kauf und Verkauf; Smallcaps zusätzlich mit 3 % je Seite als Auskunft) **gegen BTC**, gekauft und verkauft an **denselben Tagen**. ⇒ *Vorteil gegen BTC*.
+- **Nullwelt:** 20 zufällige Einstiegstage **desselben Coins im selben Kalenderjahr**, gleiche Ausstiegsregel. ⇒ Wie viel bringt der **Zeitpunkt** Boden?
+- **Tagesklammer:** Handel am selben Tag zuerst gemittelt, damit ein Crashtag mit 50 Ereignissen nicht 50-fach zählt.
+- **Eingestellte:** Ausstieg zum letzten Kurs. **Offene** Handel am Datenende werden zum letzten Kurs bewertet und als *offen* gezählt.
+- **Ausgewiesen:**
+  - Median und Mittel des Vorteils gegen BTC;
+  - Anteil mit ≥ +100 % (*massive Outperformance*) und mit ≤ −50 %;
+  - mittlere Haltedauer, Anteil offen;
+  - Nullwelt-Rang;
+  - je **Klasse** und **Epoche**.
+
+### 15.5 Wann es trägt (vorab)
+
+- **Wahl auf E2** (Einstiege 2021 bis 10.01.2024), **Bestätigung einmal auf E3** (ab 11.01.2024). E1 nur Auskunft.
+- **Trägt** heißt: in **E2 und E3** Median **und** Mittel des Vorteils gegen BTC nach Kosten **> 0** **und** Nullwelt-Rang ≥ 0,95.
+- **Mehrfachtesten:** 15 Kombinationen. Erst die Forderung *beide Epochen* hält Zufallstreffer klein.
+- **Folge:**
+  - Trägt eine Kombination: Voranalyse für den Betrieb (Signal je Coin, Führung in der Mail, Bitpanda-Katalog, Betriebsprüfung).
+  - Trägt keine: WORAN je Ansatz, dann D4 zur Vorlage.
+
+### 15.6 Gegenprüfung des Plans
+
+| | |
+|---|---|
+| Vorgriff | Hoch, Schnitt und Wende nur aus Daten bis zum Tag t; Kauf zum Schluss t+1 |
+| Überleben | eingestellte enthalten; gerade bei −75 % sterben viele Coins |
+| Kosten | im Ertrag des Handels; bei Smallcaps mit höherer Annahme als Auskunft |
+| Vergleich | BTC zu denselben Tagen (der faire Maßstab: BTC ist am Boden ebenfalls billig) |
+| Fallzahl | A: Hunderte Ereignisse je Jahr. B: nur 7 Episoden, also Beschreibung |
+| Betrieb | Tageskerzen aus `stundenkurse_alle.db` am NB (ab 2023, 365-T-Hoch ✔); Bitpanda-Handelbarkeit als Auskunft |

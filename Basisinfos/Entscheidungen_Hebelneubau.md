@@ -840,3 +840,13 @@ prüfen und gegenprüfen"*.
   - Ebenso der Hinweis für den **Rückkauf** in der Zone (q ≤ 0,20 / 0,10 / 0,05).
   - Verkauf, Rückkauf und Entnahme entscheidet der Nutzer.
 - **Gebaut wird mit dem Spot-Betrieb (S7, O27).** Bis dahin kein Betriebscode (T-2).
+
+# E-70 · Altcoin-Spot: antizyklisch am Boden kaufen und Positionen führen, direkt messen (Nutzer 06.10.2026)
+
+**06.10.2026** · Nutzer: *„hier kann und soll nicht die Kernwert-Berechnung angewendet werden, meines Erachtens. Antizyklisch – Bodenkauf ist erforderlich, dann sollte eine massive Outperformance möglich sein; eigentlich müssen die Spot-Positionen auch geführt werden. Versuche für die Altcoins auch alternative Ansätze, wie wir damit sinnvoll umgehen können.“*
+- §14.6 maß die **Grundrate** (Kauf zu jedem Zeitpunkt, ungeführt), nicht die Strategie. Die Zulassungsregel §14.3 entfällt für diese Fassung (E-63).
+- Gemessen werden (Voranalyse_Spot §15):
+  - der **Bodenkauf je Coin**, mit und ohne Wende;
+  - der **Markt-Boden-Korb**;
+  - die **Führung**: gestaffelt, Nachlauf, Zeit.
+- Maßstab: BTC an denselben Tagen und eine Nullwelt. Gemessen wird nach dem Ja.
