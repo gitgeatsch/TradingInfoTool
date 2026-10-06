@@ -1445,3 +1445,38 @@ Beleg `Spot_Voranalyse_04_10/s1_messung.py` → `.txt`.
 | Mehrfachtesten | Stufe 1 beschreibend (3 Klassen × 3 Horizonte × 2 Epochen); Stufe 2 höchstens 12 Kombinationen, eine Bestätigung |
 | Messfokus | E2 wählt, E3 bestätigt; E1 nur Auskunft |
 | **Betrieb (B-Punkte)** | Klassen sind am NB aus `stundenkurse_alle.db` rechenbar (Umsatz ✔, ab 2023; das Alter ≥ 2 J erst ab 2025 aus eigenen Daten). ⚠️ **Gehandelt wird bei Bitpanda:** Im Betrieb zählt nur, was dort handelbar ist (Katalog am NB). In Stufe 2 als Auskunft prüfen |
+
+### 14.6 Ergebnis Stufe 1 — Grundrate je Klasse (06.10.2026, nach §14.3)
+
+Beleg `Spot_Voranalyse_04_10/s3_stufe1.py` → `.txt`.
+
+**Gegenprobe** (`s3_gegenprobe.py`, direkt aus SQL): Klasse H am 01.03.2024 mit **14 Coins** (ADA, AVAX, BNB, DOGE, DOT, FIL, INJ, LINK, MATIC, NEAR, RUNE, SHIB, TRB, XRP), 180-T-Korb **−27,90 %** gegen BTC, gleich.
+- ⚠️ **Beim ersten Vergleich wich sie ab** (10 statt 14 Coins). Die Ursache war eine **Auslegung**, kein Rechenfehler.
+  - Das Hauptskript rankt einen Coin erst ab 30 Tagen Umsatz (stand vor dem Lauf im Code, war aber nicht beschrieben). Die Gegenprobe rankte auch Neulistungen mit wenigen Hype-Tagen (DYM, PIXEL, PORTAL, STRK).
+  - Für ein **Größenmaß** ist die 30-Tage-Regel richtig. Sie ist jetzt dokumentiert, die Gegenprobe nutzt sie ebenfalls.
+
+**Korb gegen BTC** (gleich gewichtet, Median über die Starts):
+
+| Klasse | E2 2021–23: 180 T · 365 T | **E3 ETF-Markt: 180 T · 365 T** | E3 365 T: vor BTC · −90 % · eingestellt |
+|---|---|---|---|
+| **H stabile Highcaps** | −14 % · −22 % | **−16 % · −29 %** | 18 % · 0 % · 6 % |
+| M Midcaps | −21 % · −37 % | −36 % · −58 % | 6 % · 7 % · 5 % |
+| S Smallcaps | −8 % · −26 % | −35 % · −62 % | 5 % · 8 % · 18 % |
+
+- **Nach der vorab festen Regel: keine Klasse zulässig.** Die Grenze war höchstens −10 % in E3 auf 180 oder 365 T. Am nächsten liegen die stabilen Highcaps mit −16 % (180 T).
+- **Das Gefälle ist eindeutig:** größer, älter und ruhiger verliert weniger.
+  - E3 365 T nach Alter: ab 2 J −53 %, 1–2 J −68 %, < 1 J −73 %.
+  - Nach Schwankung: ruhig −49 %, mittel −62 %, wild −66 %.
+  - Gegen BTC liegt trotzdem **jede** Klasse hinten.
+- **Auskunft:**
+  - **LINK** E3 365 T **−28 %** (3 von 20 Starts vor BTC).
+  - ETH −8 % (5/20), SOL −29 % (0/20).
+  - LINK war in E2 und E3 fast immer Klasse H.
+
+#### D4 zur Vorlage — mit dem WORAN je Klasse
+
+| | |
+|---|---|
+| **WORAN** | Im ETF-Markt floss das Geld in **BTC**. Das zeigt sich in **allen** Klassen, nicht nur bei riskanten Werten: selbst stabile Highcaps wie LINK verloren über ein Jahr rund 30 % gegen BTC. Bei Smallcaps kommen Totalverluste und Einstellungen dazu (18 % eingestellt) |
+| **Was eine Auswahlregel leisten müsste** | aus −16 % bis −62 % Grundrate **plus** 2,5 % Kosten je Hin- und Rückweg einen Vorsprung machen. Das ist ein Mehrfaches dessen, was Regeln sonst bringen |
+| **Wo es Altcoin-Chancen gibt** | ⭐ **kurzfristig über den Hebel:** Die REGEL0 bewertet stündlich 636 Werte, darunter fast alle Altcoins, über 24 h. Dort ist der Vorteil gemessen |
