@@ -1280,3 +1280,18 @@ Mit dem späteren Zeitpunkt (dK1) kostet die Entnahme **weniger** als in Fassung
   - Scharf ab **0,80**.
   - Verkauf je ein Zehntel, wenn q 0,10 / 0,20 / 0,30 unter seinem **bisherigen Höchstwert im Zyklus** liegt.
 - **Was beide NICHT tun:** im Voraus wissen, ob das Hoch schon da war. Sie reagieren erst auf den Rückgang, deshalb verkaufen sie nie ganz oben.
+
+### 12.11 Abgestimmt (06.10.2026; E-69)
+
+**Aufbau:** 70/20/10 mit Ausgleich über die Raten.
+
+**Klima-Ampel in der Mail (Inhalt für den Bau in S7):**
+
+| Feld | Inhalt |
+|---|---|
+| Ampel | *Kapitulation · Bodenbildung · Wende bestätigt · Aufwärtstrend · überhitzt* (§8.3), mit q und den drei Zutaten |
+| **K1-Hinweis Verkauf** | sobald q in diesem Zyklus über 0,90 war und unter 0,85 / 0,75 / 0,65 fällt: *„Starke Überhitzung kippt – Teilverkauf erwägen (je ein Zehntel)“*; dazu die gemessene Wirkung (bis +16 % Stück 2017/2021, sonst wie Halten) und der Vorbehalt *im Wesentlichen ein Ereignis (2021)* |
+| **Hinweis Rückkauf** | in der Zone q ≤ 0,20 / 0,10 / 0,05: *„Rückkauf erwägen (je ein Drittel des wartenden Geldes)“*; nach 12 Monaten *„Rest kaufen“* |
+| Aufbau | Zielverhältnis 70/20/10, Abweichung je Wert, Vorschlag für die nächste Rate (Ausgleich über die Raten) |
+
+Kein Auslöser, keine automatische Handlung: Die Entscheidung bleibt beim Nutzer.

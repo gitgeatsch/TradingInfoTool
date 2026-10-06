@@ -827,3 +827,16 @@ prüfen und gegenprüfen"*.
 - **D1:** Kern = **BTC, ETH und SOL**. Mein Vorschlag, SOL in den Spot zu geben, ist abgelehnt. Die Gewichte werden gemessen (D1-M).
 - **D2:** Teilverkauf für **(b)** Geld für den nächsten Boden und **(d)** Entnahme. (a) Risiko senken und (c) Umschichten in Altcoins kommen später.
 - Messplan für alle relevanten Fälle vorab (Voranalyse_Spot §12). Gemessen wird nach dem Ja.
+
+# E-69 · Aufbau 70/20/10 mit Ausgleich über die Raten; K1 als Hinweis in der Klima-Ampel (Nutzer 06.10.2026)
+
+**06.10.2026** · Nutzer: *„1 ja“* (Aufbau) · *„ja, K1 als Hinweis in die Klima-Ampel aufnehmen“*
+- **Aufbau der Kernwerte:**
+  - BTC/ETH/SOL **70/20/10**, monatlich gleicher Betrag.
+  - **Ausgleich über die Raten** (R1): kein Verkauf, steuerneutral.
+  - Grundlage: Voranalyse_Spot §12.6.
+- **Teilverkauf (b) und Entnahme (d):** **kein automatischer Verkauf**.
+  - Die **Klima-Ampel** bekommt den Hinweis **K1** (§12.9/§12.10): *„Die starke Überhitzung kippt (q war über 0,90 und fällt unter 0,85 / 0,75 / 0,65) – Teilverkauf erwägen“*, samt der gemessenen Wirkung und dem Vorbehalt *ein Ereignis (2021)*.
+  - Ebenso der Hinweis für den **Rückkauf** in der Zone (q ≤ 0,20 / 0,10 / 0,05).
+  - Verkauf, Rückkauf und Entnahme entscheidet der Nutzer.
+- **Gebaut wird mit dem Spot-Betrieb (S7, O27).** Bis dahin kein Betriebscode (T-2).
