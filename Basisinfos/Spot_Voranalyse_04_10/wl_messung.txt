@@ -1,0 +1,39 @@
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+Erster Wurf Watchlist (§21) · 19681 Coin-Anker · V0 = oberstes Fuenftel der Kombination · 4002 Mitglieder
+
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+Monatsrechnung aller Coins: 24173 Zeilen, 2019-01-01 bis 2026-09-01
+
+B1 ASSETLISTE - Ausschlussregeln (Liste nach Ausschluss minus V0; Nullwelt gleich viele zufaellig entfernt)
+  XA Restwert (Kurs <= 1 % des Allzeithochs)   E2  -0.0 Pp Rang 0.43 · entfernt   2 % · bleiben 56.4 je Monat · verdoppelt 44.1 % (V0 44.3) · Absturz/eing. 28.2 % (V0 27.9) | E3  -0.6 Pp Rang 0.08 · entfernt   5 % · bleiben 72.3 je Monat · verdoppelt 26.8 % (V0 26.7) · Absturz/eing. 48.5 % (V0 48.4)  ->  traegt nicht
+  XB Umsatzschwund (90 T < 20 % von 365 T)     E2  -0.1 Pp Rang 0.23 · entfernt   3 % · bleiben 56.0 je Monat · verdoppelt 45.0 % (V0 44.3) · Absturz/eing. 28.3 % (V0 27.9) | E3  +0.1 Pp Rang 0.69 · entfernt   1 % · bleiben 75.3 je Monat · verdoppelt 26.9 % (V0 26.7) · Absturz/eing. 48.3 % (V0 48.4)  ->  traegt nicht
+  XC Mindestumsatz (unterstes Zehntel der Klasse) E2  -0.8 Pp Rang 0.04 · entfernt  11 % · bleiben 51.4 je Monat · verdoppelt 44.0 % (V0 44.3) · Absturz/eing. 28.4 % (V0 27.9) | E3  -0.3 Pp Rang 0.36 · entfernt  13 % · bleiben 66.0 je Monat · verdoppelt 26.1 % (V0 26.7) · Absturz/eing. 48.2 % (V0 48.4)  ->  traegt nicht
+  XD Datenfehler (Tagessprung > Faktor 5 bis t) E2  -0.0 Pp Rang 0.25 · entfernt   0 % · bleiben 57.6 je Monat · verdoppelt 44.3 % (V0 44.3) · Absturz/eing. 27.9 % (V0 27.9) | E3  +0.6 Pp Rang 1.00 · entfernt   1 % · bleiben 75.0 je Monat · verdoppelt 26.8 % (V0 26.7) · Absturz/eing. 48.1 % (V0 48.4)  ->  traegt nicht
+  Auskunft: alle vier zusammen                 E2  -0.9 Pp Rang 0.03 · entfernt  15 % · bleiben 48.9 je Monat · verdoppelt 44.6 % (V0 44.3) · Absturz/eing. 29.0 % (V0 27.9) | E3  -0.3 Pp Rang 0.38 · entfernt  17 % · bleiben 62.9 je Monat · verdoppelt 26.5 % (V0 26.7) · Absturz/eing. 48.1 % (V0 48.4)  ->  traegt nicht
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+  Auskunft Allzeithoch ab dem 31. Tag, E2: Saldo gg. Klasse +10.1 Pp (V0 +11.0) · Ueberschneidung mit V0  89 %
+  Auskunft Allzeithoch ab dem 31. Tag, E3: Saldo gg. Klasse +15.2 Pp (V0 +13.2) · Ueberschneidung mit V0  92 %
+  Auskunft Bitpanda (heute, Ticker): von 67 Coins der aktuellen Liste (2026-09-01) sind 64 bei Bitpanda gelistet
+
+B2 WATCHLIST - Bestaetigung und Laenge (Liste minus V0; Nullwelt gleich viele zufaellig aus V0)
+  V1 bestaetigt (auch im Vormonat)             E2  +2.1 Pp Rang 0.99 · entfernt  18 % · bleiben 47.3 je Monat · verdoppelt 45.1 % (V0 44.3) · Absturz/eing. 25.1 % (V0 27.9) | E3  +0.6 Pp Rang 0.84 · entfernt  14 % · bleiben 65.0 je Monat · verdoppelt 27.5 % (V0 26.7) · Absturz/eing. 48.1 % (V0 48.4)  ->  traegt nicht
+  V2 bestaetigt (auch t-1 und t-2)             E2  +2.4 Pp Rang 0.93 · entfernt  29 % · bleiben 40.9 je Monat · verdoppelt 45.9 % (V0 44.3) · Absturz/eing. 23.1 % (V0 27.9) | E3  +0.6 Pp Rang 0.73 · entfernt  23 % · bleiben 58.4 je Monat · verdoppelt 27.6 % (V0 26.7) · Absturz/eing. 47.5 % (V0 48.4)  ->  traegt nicht
+  K5 nur die besten 5 je Klasse (M, S)         E2  +2.0 Pp Rang 0.79 · entfernt  78 % · bleiben 12.9 je Monat · verdoppelt 40.0 % (V0 44.3) · Absturz/eing. 25.7 % (V0 27.9) | E3  +6.1 Pp Rang 0.91 · entfernt  83 % · bleiben 12.8 je Monat · verdoppelt 29.7 % (V0 26.7) · Absturz/eing. 37.1 % (V0 48.4)  ->  traegt nicht
+  K10 nur die besten 10 je Klasse (M, S)       E2  +5.1 Pp Rang 1.00 · entfernt  60 % · bleiben 22.9 je Monat · verdoppelt 43.4 % (V0 44.3) · Absturz/eing. 26.1 % (V0 27.9) | E3  +4.2 Pp Rang 0.90 · entfernt  70 % · bleiben 22.8 je Monat · verdoppelt 29.6 % (V0 26.7) · Absturz/eing. 41.4 % (V0 48.4)  ->  traegt nicht
+
+B5 FUEHRUNG UND AUSSTIEG (Korb je Stichtag, nach Kosten; gepaart gegen X0; Zufallswelt gleicher Haltedauer)
+  X0      E2 Korb +29.7 % (BTC +36.0 %) · gg. X0 Mittel  +0.0 / Median  +0.0 Pp · Bootstrap 0.00 · gleiche Dauer Rang - · Halten 355 T · realisiert >=x2  10 % · <=-70 %  14 %
+          E3 Korb -42.0 % (BTC +21.9 %) · gg. X0 Mittel  +0.0 / Median  +0.0 Pp · Bootstrap 0.00 · gleiche Dauer Rang - · Halten 331 T · realisiert >=x2   3 % · <=-70 %  34 %  ->  Bezug
+  X1      E2 Korb +23.4 % (BTC +14.0 %) · gg. X0 Mittel  -6.3 / Median +23.3 Pp · Bootstrap 0.73 · gleiche Dauer Rang 0.78 · Halten  85 T · realisiert >=x2  21 % · <=-70 %   0 %
+          E3 Korb  +0.1 % (BTC +13.7 %) · gg. X0 Mittel +42.1 / Median +42.3 Pp · Bootstrap 1.00 · gleiche Dauer Rang 1.00 · Halten  73 T · realisiert >=x2  15 % · <=-70 %   0 %  ->  traegt nicht
+  X2      E2 Korb +31.8 % (BTC +14.8 %) · gg. X0 Mittel  +2.1 / Median +20.7 Pp · Bootstrap 0.81 · gleiche Dauer Rang 0.99 · Halten  91 T · realisiert >=x2  10 % · <=-70 %   0 %
+          E3 Korb  -4.0 % (BTC +13.6 %) · gg. X0 Mittel +38.0 / Median +41.3 Pp · Bootstrap 1.00 · gleiche Dauer Rang 1.00 · Halten  76 T · realisiert >=x2   5 % · <=-70 %   0 %  ->  traegt nicht
+  X7a     E2 Korb +43.7 % (BTC +37.3 %) · gg. X0 Mittel +14.0 / Median  +4.9 Pp · Bootstrap 0.99 · gleiche Dauer Rang 1.00 · Halten 327 T · realisiert >=x2  13 % · <=-70 %  13 %
+          E3 Korb -39.5 % (BTC +21.6 %) · gg. X0 Mittel  +2.5 / Median  +2.4 Pp · Bootstrap 1.00 · gleiche Dauer Rang 0.00 · Halten 325 T · realisiert >=x2   3 % · <=-70 %  33 %  ->  traegt nicht
+  X7b     E2 Korb +28.1 % (BTC +28.0 %) · gg. X0 Mittel  -1.6 / Median +17.9 Pp · Bootstrap 0.82 · gleiche Dauer Rang 0.55 · Halten 219 T · realisiert >=x2  13 % · <=-70 %   8 %
+          E3 Korb -25.7 % (BTC +16.9 %) · gg. X0 Mittel +16.3 / Median +14.3 Pp · Bootstrap 1.00 · gleiche Dauer Rang 0.80 · Halten 239 T · realisiert >=x2   5 % · <=-70 %  24 %  ->  traegt nicht
+  Zufall  E2 Korb +23.3 % (BTC +16.9 %) · gg. X0 Mittel  -6.4 / Median +11.0 Pp · Bootstrap 0.62 · gleiche Dauer Rang 0.04 · Halten 193 T · realisiert >=x2   9 % · <=-70 %   6 %
+          E3 Korb -22.2 % (BTC +16.0 %) · gg. X0 Mittel +19.9 / Median +23.7 Pp · Bootstrap 1.00 · gleiche Dauer Rang 0.03 · Halten 187 T · realisiert >=x2   4 % · <=-70 %  12 %  ->  traegt nicht

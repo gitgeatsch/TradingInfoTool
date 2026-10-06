@@ -2400,3 +2400,99 @@ Nutzer 06.10.: *„Ja, ich denke, für den ersten Wurf mit Luft nach oben könne
   - Rang ≥ 0,95 in E2 und E3.
 - **Selbsttest B5:** X0 gegen X0 ergibt 0. Eine Zufallsregel *Verkauf nach zufälliger Monatszahl 1–12* darf unter der vollen Bedingung **nicht** tragen.
 - Bei X7 zählt ein Monat **ohne** Rangwert (Merkmal fehlt) als *halten*.
+
+### 21.6 Ergebnis erster Wurf Watchlist (06.10.2026, nach §21 mit §21.5)
+
+**Belege:**
+- `wl_messung.py` → `.txt`
+- Gegenprobe `wl_gegenprobe.py` → `.txt`: 28 von 28 gleich
+  - B5-Ausstiege und B1-Flags direkt aus SQL;
+  - ⚠️ G3 (Bestätigung) liest dieselbe Monatstabelle und prüft damit nur die Nachschlagelogik.
+
+**Selbsttest B5:** X0 gegen X0 ergibt 0. Der Zufallsausstieg trägt nicht: gleiche Dauer Rang 0,04 / 0,03.
+
+**B1 Ausschlussregeln — keine trägt, keine schadet nennenswert:**
+
+| Regel | entfernt E2 / E3 | Wirkung E2 / E3 (Rang) |
+|---|---|---|
+| XA Restwert (≤ 1 % des Allzeithochs) | 2 % / 5 % | −0,0 (0,43) / −0,6 Pp (0,08) |
+| XB Umsatzschwund | 3 % / 1 % | −0,1 / +0,1 Pp |
+| XC Mindestumsatz (unterstes Zehntel) | 11 % / 13 % | −0,8 (0,04) / −0,3 Pp |
+| XD Datenfehler (Sprung > ×5) | 0 % / 1 % | −0,0 / +0,6 Pp (1,00) |
+
+**Auskunft:**
+- Allzeithoch erst ab dem 31. Tag: Saldo E3 +15,2 statt +13,2 Pp, 89–92 % der Liste gleich.
+- **Bitpanda:** 64 der 67 Coins der aktuellen Liste sind gelistet.
+
+⇒ *Tote Projekte* lassen sich mit diesen Fakten **nicht** vom Rest unterscheiden. FTT verhielt sich im Mittel wie die übrigen Listenmitglieder.
+
+**B2 Bestätigung und Länge — keine trägt, kurze Listen deuten in die gute Richtung:**
+
+| Variante | E2 Wirkung (Rang) | E3 Wirkung (Rang) | je Monat | E3 Absturz/eingestellt (V0 48,4 %) |
+|---|---|---|---|---|
+| V1 bestätigt (Vormonat) | +2,1 Pp (0,99) | +0,6 Pp (0,84) | 47 / 65 | 48,1 % |
+| V2 bestätigt (2 Vormonate) | +2,4 Pp (0,93) | +0,6 Pp (0,73) | 41 / 58 | 47,5 % |
+| **K10** (beste 10 je Klasse M, S) | **+5,1 Pp (1,00)** | **+4,2 Pp (0,90)** | 23 / 23 | **41,4 %** |
+| K5 (beste 5 je Klasse) | +2,0 Pp (0,79) | +6,1 Pp (0,91) | 13 / 13 | 37,1 % |
+
+**B5 Führung und Ausstieg** (Korb je Stichtag nach Kosten; BTC an denselben Tagen):
+
+| Regel | E2 Korb (BTC) · gg. X0 Mittel / Median · Bootstrap · gleiche Dauer | E3 Korb (BTC) · gg. X0 · Bootstrap · gleiche Dauer | Urteil |
+|---|---|---|---|
+| X0 12 Monate halten | +29,7 % (+36,0 %) | **−42,0 %** (+21,9 %) | Bezug |
+| X1 gestaffelt | +23,4 % · −6,3 / +23,3 Pp · 0,73 · 0,78 | **+0,1 %** · +42,1 / +42,3 Pp · 1,00 · 1,00 | E2 nein |
+| **X2 Nachlauf −35 % / Notbremse −50 %** | **+31,8 %** (+14,8 %) · +2,1 / +20,7 Pp · **0,81** · **0,99** | **−4,0 %** (+13,6 %) · +38,0 / +41,3 Pp · 1,00 · 1,00 | **knapp nein** (nur Bootstrap E2 0,81) |
+| X7a Rang-Ausstieg (obere Hälfte) | +43,7 % · +14,0 / +4,9 Pp · 0,99 · 1,00 | −39,5 % · +2,5 Pp · 1,00 · **0,00** | E3 nein |
+| X7b Rang-Ausstieg (Fünftel) | +28,1 % · −1,6 / +17,9 Pp · 0,82 · 0,55 | −25,7 % · +16,3 Pp · 1,00 · 0,80 | nein |
+| *Zufall (Selbsttest)* | gleiche Dauer 0,04 | 0,03 | richtig *nein* |
+
+⇒ **Die Führung ist der größte Hebel im ganzen Strang.**
+- Mit Nachlauf (X2) wird aus dem E3-Korb **−4 % statt −42 %**: kein Absturz ≤ −70 % mehr, statt 34 %.
+- In E2 liegt X2 gleichauf bis besser als Halten (Median +21 Pp, Mittel +2 Pp).
+- Der Mittelwert in E2 ist schwach, weil der Nachlauf in der Altseason 2021 die großen Läufe früh beendet.
+- **Nach der vorab festen Regel trägt X2 knapp nicht** (Bootstrap E2 0,81 < 0,95).
+- Gegen BTC liegt auch der geführte Korb in E3 darunter (−4 % gegen +14 %).
+
+## 22. FAZIT Spot-Altcoins nach allen Messungen des 06.10.2026 — zur gemeinsamen Abstimmung
+
+### 22.1 Was wir heute gelernt haben (alles mit Gegenprobe)
+
+| # | Frage | Antwort | Beleg |
+|---|---|---|---|
+| 1 | Schlägt eine **Zeitpunkt-Regel** (Boden, Momentum, Zyklus) BTC im Mittel? | **nein**, in keiner Form, seit 2024 schon gar nicht | §15–§17 |
+| 2 | Hilft **Makro** (Liquidität, Stablecoins, MACD)? | 2021–23 ja, **seit 2024 nicht**. Stablecoins umgekehrt zur Faustregel, der MACD hatte 07/2025 ein Fehlsignal | §16, §20 |
+| 3 | Gibt es Altcoins mit **asymmetrischem** Chance-Risiko-Verhältnis? | **ja**: alte Überlebende am Boden. Saldo E3 +13 Pp gegen die Klasse, monoton, jedes Jahr positiv | §19.6 |
+| 4 | Woher kommt der Vorteil? | vor allem **weniger Absturz und Einstellung**, dazu eine etwas höhere Chance auf eine Verdopplung. Das **Alter** trägt am meisten | §19.7 |
+| 5 | Lassen sich **tote Projekte** ausfiltern? | mit Kurs- und Umsatzfakten **nicht** | §21.6 B1 |
+| 6 | Hilft **Bestätigung** oder eine **kurze** Liste? | Bestätigung nicht; eine kurze Liste deutet in die gute Richtung (K10: E3 +4,2 Pp, Rang 0,90) | §21.6 B2 |
+| 7 | Hilft **Führung**? | **stark**: Nachlauf −35 % macht E3 aus −42 % zu −4 %. Nach der strengen Regel knapp nicht bestätigt (E2) | §21.6 B5 |
+| 8 | Schlägt das **BTC**? | **nein, nicht seit 2024**: weder gehalten noch geführt. Es beantwortet *welche Altcoins und wie führen*, nicht *Altcoins statt BTC* | §19.6, §21.6 |
+
+### 22.2 Was daraus folgt — das System im ersten Wurf
+
+| Baustein | Vorschlag | Status |
+|---|---|---|
+| **B1 Assetliste** | Klassen H/M/S wie §14. Als **Betriebsfakten**: bei Bitpanda handelbar, Datenfehler-Ausschluss, Allzeithoch erst ab dem 31. Tag (Hygiene, gemessen neutral) | Fakten |
+| **B2 Watchlist** | Kombination aus Alter, Absturz, Dauer und TVL; monatlicher Rang je Klasse mit Begründung je Faktor. **Kurze Form:** alle H + die besten 10 je M und S (rund 23 Coins) | gemessen (§19.6); die Länge ist Hinweis |
+| **B3 Phase** | BTC-Klima, MACD-Stand, Netto-Liquidität, Stablecoins, Breite **als Fakt** in derselben Mail | Fakt |
+| **B5 Führung** | für jede Watchlist-Position die **Nachlauf-Marke** (−35 % vom Hoch seit Kauf, Notbremse −50 %) als **Hinweis** | Hinweis, knapp nicht bestätigt |
+| **B4 Allokation** | **offen, Nutzerentscheidung** nach dem Vorwärtsprotokoll: Anteil des Satelliten neben dem Kern, fester kleiner Einsatz je Coin | offen |
+| **Vorwärtsprotokoll** | ab dem nächsten Monatsersten: Liste, Rang und Begründung protokolliert, **ohne Geld**. Abgerechnet nach 6 und 12 Monaten gegen die Klasse und gegen BTC, gehalten **und** geführt (X0, X2). Abrechnungsregel vorab wie §19.2 / §21 | einziger sauberer Test |
+
+### 22.3 Zur Abstimmung
+
+| # | Punkt | Empfehlung |
+|---|---|---|
+| **W1** | Watchlist als **Auskunft** in der Klima-Ampel-Mail, mit Vorwärtsprotokoll, **ohne Geld** | ja |
+| **W2** | Listenform | **kurz** (H alle + M/S je 10): praktisch handhabbar, Messung zeigt in die gute Richtung |
+| **W3** | Filter | keine Leistungsfilter (keiner trägt); nur die Betriebsfakten aus B1 |
+| **W4** | Führung | **Nachlauf-Marke X2** als Hinweis je Position; das Protokoll führt X0 und X2 nebeneinander |
+| **W5** | Allokation (B4) | nach 6 Monaten Protokoll gemeinsam entscheiden |
+| **W6** | Bau | Voranalyse Betrieb am NB: Stammdaten Allzeithoch und Erstdatum vom Desktop, laufend fortgeschrieben; TVL am NB; monatlicher Job; Mailabschnitt; Betriebsprüfung B1–B9 |
+| **W7** | Weitere Messungen | mit Luft nach oben: X2-Varianten (Nachlauf −25 / −45 %), Listenlänge feiner, ein Freigabekalender für die Verwässerung, falls eine Quelle gefunden wird |
+
+⚠️ **Was nicht folgt:**
+- Kein Kaufsignal.
+- Kein Hebel aus dieser Liste (Regel 3).
+- Keine Änderung am Kern 70/20/10.
+- Keine Aussage, dass Altcoins BTC schlagen.
