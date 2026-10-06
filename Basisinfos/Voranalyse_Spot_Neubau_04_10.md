@@ -2090,3 +2090,17 @@ Der Index umfasst 93 Altcoins (2017: 19, 2021: 87, 2026: 70); SOL, TON und ander
 - Der monatliche MACD ist mit 1–5 Fällen je Form eine **Auskunft**, kein Signal (Regime nicht vorab erkennbar, 2.599).
 - Er gehört als **Fakt** in die Klima-Ampel: Stand von MACD und Signallinie für I2 und I4, letztes Kreuz.
 - Die Einschränkung gehört immer dazu: Das letzte Nulllinien-Kreuz (11/2024) war ein Fehlsignal.
+
+### 20.2 Abgleich mit der Quelle des Nutzers (06.10.2026; Bild eines X-Beitrags)
+
+Die Behauptung: *„Der monatliche MACD bei Alts hat gerade bullisch gekreuzt. Die letzten 3 Male: 2017, 2020, 2023. Alle 3 endeten in Altcoin-Saison.“* Das Bild zeigt den Gesamtmarktwert im Monatschart, MACD(12, 26, 9), Kreuz mit der **Signallinie**.
+
+| | Quelle | unsere Messung (I1 Signallinie, ähnlich) |
+|---|---|---|
+| **Signale** | 2017 · 2020 · 2023 | 03/2017 (I2–I4) · **07/2020 · 11/2023 · 07/2025** |
+| **„Altcoin-Saison“** | gemeint: der Alt-Marktwert steigt **in USD** stark | 07/2020: I1 +271 % in 12 M, **BTC +275 %** · 11/2023: I1 **+116 %**, **BTC +159 %**. ⇒ In USD stark, **gegen BTC nicht** |
+| **ausgelassen** | — | **07/2025:** I1 −56 % in 12 M (BTC −45 %). Das Kreuz steht in unserer Näherung, im Bild nicht. Unser Index ist ohne SOL, TON und andere; ob das Kreuz im Original-Index fehlt, ist nicht geprüft |
+| **„gerade gekreuzt“** | 2026 | In unserer Näherung zum Monatsschluss 30.09. **noch nicht**: Histogramm −3,15, aber steigend seit 06/2026 (−6,80). Der **laufende** Oktober steht bei −1,78. ⚠️ Ein Kreuz auf einer **nicht abgeschlossenen** Monatskerze kann bis zum 31.10. wieder verschwinden (die letzte Periode ist nicht abgeschlossen) |
+| **Grundrate** | — | In 24 % aller Monate verdoppelte sich I1 binnen 12 Monaten; Median +12 %, BTC im selben Fenster +57 % |
+
+⇒ **Die Aussage ist in USD für 2020 und 2023 richtig**: Die Altcoins stiegen danach stark. **Gegen BTC** stimmt sie nur für 2017. Im Fenster von 12 Monaten stieg BTC 2020/21 genauso stark und 2023/24 stärker. Das Kreuz 07/2025 fehlt in der Aufzählung. Als **Fakt** für die Ampel taugt der Stand (Histogramm steigt, Kreuz nahe); als Signal mit drei Fällen nicht.
