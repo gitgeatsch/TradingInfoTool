@@ -1,0 +1,51 @@
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\macd_messung.py:41: RuntimeWarning: invalid value encountered in divide
+  r = np.where(beide, v, 0).sum(axis=1) / np.where(beide, h, 0).sum(axis=1)
+Monatlicher MACD(12,26,9) der Altcoins (§20) · CoinMetrics bis 2026-10-05 · 93 Altcoin-Assets im Index (ohne BTC, Stablecoins, Wrapped) · NUR AUSKUNFT
+
+Anzahl Assets im Index (mit Wert): 2014: 5 · 2015: 9 · 2016: 12 · 2017: 19 · 2018: 53 · 2019: 63 · 2020: 69 · 2021: 87 · 2022: 85 · 2023: 83 · 2024: 81 · 2025: 74 · 2026: 70
+
+I1 Alt-Marktwert USD (mit ETH)  (ausgewertet ab 2016-12-31; Altseason-Pruefung auf I2)
+  S MACD kreuzt Signallinie nach oben: 3 Signale
+     2020-07 | I1 3/6/12 M   -13 /  +146 /  +271 % | Alt/BTC 12 M    -1 % · Hoechststand   +66 % | Breite max 100 % | Altseason JA
+     2023-11 | I1 3/6/12 M   +48 /   +57 /  +116 % | Alt/BTC 12 M   -17 % · Hoechststand    +5 % | Breite max  93 % | Altseason nein
+     2025-07 | I1 3/6/12 M    -6 /   -40 /   -56 % | Alt/BTC 12 M   -19 % · Hoechststand   +19 % | Breite max  91 % | Altseason nein
+  N MACD kreuzt Nulllinie nach oben: 2 Signale
+     2020-11 | I1 3/6/12 M  +113 /  +209 /  +323 % | Alt/BTC 12 M   +43 % · Hoechststand   +95 % | Breite max 100 % | Altseason JA
+     2024-02 | I1 3/6/12 M    +6 /   -26 /    +1 % | Alt/BTC 12 M   -27 % · Hoechststand    +8 % | Breite max  87 % | Altseason nein
+  Grundrate alle 106 Monate: Altseason danach in 26 % (Hoechststand Alt/BTC >= +50 % in 12 M)
+  HEUTE (Monatsschluss 2026-09-30): MACD -4.755 · Signal -1.604 · Histogramm -3.151 · MACD unter Null · letztes S-Signal 2025-07 · letztes N-Signal 2024-02
+
+I2 Alt / BTC (mit ETH)  (ausgewertet ab 2016-12-31; Altseason-Pruefung auf I2)
+  S MACD kreuzt Signallinie nach oben: 5 Signale
+     2017-03 | I2 3/6/12 M  +205 /   +78 /  +115 % | Alt/BTC 12 M  +115 % · Hoechststand  +281 % | Breite max   -  | Altseason JA
+     2020-07 | I2 3/6/12 M   -29 /   -16 /    -1 % | Alt/BTC 12 M    -1 % · Hoechststand   +66 % | Breite max 100 % | Altseason JA
+     2022-08 | I2 3/6/12 M    +2 /   -14 /   -26 % | Alt/BTC 12 M   -26 % · Hoechststand    +8 % | Breite max 100 % | Altseason nein
+     2024-12 | I2 3/6/12 M   -24 /   -32 /   -18 % | Alt/BTC 12 M   -18 % · Hoechststand   +11 % | Breite max  91 % | Altseason nein
+     2025-07 | I2 3/6/12 M    -1 /   -11 /   -19 % | Alt/BTC 12 M   -19 % · Hoechststand   +19 % | Breite max  91 % | Altseason nein
+  N MACD kreuzt Nulllinie nach oben: 1 Signale
+     2017-04 | I2 3/6/12 M   +30 /   -21 /   +97 % | Alt/BTC 12 M   +97 % · Hoechststand  +157 % | Breite max   -  | Altseason JA
+  Grundrate alle 106 Monate: Altseason danach in 26 % (Hoechststand Alt/BTC >= +50 % in 12 M)
+  HEUTE (Monatsschluss 2026-09-30): MACD -0.05815 · Signal -0.06901 · Histogramm +0.01086 · MACD unter Null · letztes S-Signal 2025-07 · letztes N-Signal 2017-04
+
+I3 ohne ETH, USD  (ausgewertet ab 2016-12-31; Altseason-Pruefung auf I4)
+  S MACD kreuzt Signallinie nach oben: 2 Signale
+     2020-07 | I3 3/6/12 M   -21 /  +102 /  +158 % | Alt/BTC 12 M   -31 % · Hoechststand   +35 % | Breite max 100 % | Altseason nein
+     2023-11 | I3 3/6/12 M   +30 /   +27 /  +156 % | Alt/BTC 12 M    -1 % · Hoechststand    +7 % | Breite max  93 % | Altseason nein
+  N MACD kreuzt Nulllinie nach oben: 3 Signale
+     2017-03 | I3 3/6/12 M  +730 /  +738 / +1798 % | Alt/BTC 12 M  +184 % · Hoechststand  +516 % | Breite max   -  | Altseason JA
+     2020-12 | I3 3/6/12 M  +233 /  +148 /  +236 % | Alt/BTC 12 M  +107 % · Hoechststand  +245 % | Breite max 100 % | Altseason JA
+     2024-11 | I3 3/6/12 M   -23 /   -23 /   -27 % | Alt/BTC 12 M   -23 % · Hoechststand   +21 % | Breite max  91 % | Altseason nein
+  Grundrate alle 106 Monate: Altseason danach in 25 % (Hoechststand Alt/BTC >= +50 % in 12 M)
+  HEUTE (Monatsschluss 2026-09-30): MACD -2.076 · Signal -0.608 · Histogramm -1.468 · MACD unter Null · letztes S-Signal 2023-11 · letztes N-Signal 2024-11
+
+I4 ohne ETH / BTC  (ausgewertet ab 2016-12-31; Altseason-Pruefung auf I4)
+  S MACD kreuzt Signallinie nach oben: 5 Signale
+     2017-03 | I4 3/6/12 M  +262 /  +105 /  +184 % | Alt/BTC 12 M  +184 % · Hoechststand  +516 % | Breite max   -  | Altseason JA
+     2020-08 | I4 3/6/12 M   -32 /   -40 /   -25 % | Alt/BTC 12 M   -25 % · Hoechststand   +15 % | Breite max 100 % | Altseason nein
+     2021-01 | I4 3/6/12 M   +48 /    +1 /    +5 % | Alt/BTC 12 M    +5 % · Hoechststand   +98 % | Breite max 100 % | Altseason JA
+     2023-07 | I4 3/6/12 M   -24 /   -29 /   -51 % | Alt/BTC 12 M   -51 % · Hoechststand    -0 % | Breite max  93 % | Altseason nein
+     2024-08 | I4 3/6/12 M   +65 /   +46 /   +44 % | Alt/BTC 12 M   +44 % · Hoechststand  +100 % | Breite max  87 % | Altseason JA
+  N MACD kreuzt Nulllinie nach oben: 1 Signale
+     2017-05 | I4 3/6/12 M   -35 /   -61 /    -8 % | Alt/BTC 12 M    -8 % · Hoechststand   +48 % | Breite max   -  | Altseason nein
+  Grundrate alle 106 Monate: Altseason danach in 25 % (Hoechststand Alt/BTC >= +50 % in 12 M)
+  HEUTE (Monatsschluss 2026-09-30): MACD -0.023 · Signal -0.02561 · Histogramm +0.002612 · MACD unter Null · letztes S-Signal 2024-08 · letztes N-Signal 2017-05

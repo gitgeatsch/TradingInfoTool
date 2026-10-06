@@ -2049,3 +2049,44 @@ Nutzer 06.10.: *„Prüfe den monatlichen MACD bei den Altcoins – dies war ers
 - Zählung der **Fehlsignale**, also Signale ohne folgende Altseason.
 
 **Heute:** Wo stehen MACD und Signallinie jeder Reihe zum letzten Monatsschluss?
+
+### 20.1 Ergebnis monatlicher MACD (06.10.2026, nach §20) — nur Auskunft
+
+Belege:
+- `lade_altcap.py`: CoinMetrics, 135 Assets, 347.242 Tageswerte, nach `data/_spot/altcap.db`.
+- `macd_messung.py` → `.txt`.
+- Gegenprobe `macd_gegenprobe.py` → `.txt`:
+  - eigene EMA-Schleife: alle Kreuzungsdaten gleich;
+  - Kettenindex in 85 von 86 Monaten ohne Zu- oder Abgang gleich der einfachen Summe. Der eine Monat (04/2023) weicht um 0,3 % ab, weil ein Asset dort an einzelnen Tagen den Marktwert 0 hat.
+
+Der Index umfasst 93 Altcoins (2017: 19, 2021: 87, 2026: 70); SOL, TON und andere fehlen. Gewertet wird ab 12/2016.
+
+| Reihe · Signal | Signale (Monat) | danach Altseason (Alt/BTC ≥ +50 % binnen 12 M) |
+|---|---|---|
+| **I3 ohne ETH, USD · MACD über Null** (am nächsten an *OTHERS*) | **3:** 03/2017 · 12/2020 · **11/2024** | **JA · JA · nein** (11/2024: Alt/BTC 12 M −23 %, Höchststand nur +21 %) |
+| I1 mit ETH, USD · Signallinie | 3: 07/2020 · 11/2023 · 07/2025 | JA · nein · nein |
+| I1 · Nulllinie | 2: 11/2020 · 02/2024 | JA · nein |
+| I2 Alt/BTC · Signallinie | 5: 03/2017 · 07/2020 · 08/2022 · 12/2024 · 07/2025 | JA · JA · nein · nein · nein |
+| I2 · Nulllinie | 1: 04/2017 | JA |
+| I3 · Signallinie | 2: 07/2020 · 11/2023 | nein · nein |
+| I4 ohne ETH / BTC · Signallinie | 5: 03/2017 · 08/2020 · 01/2021 · 07/2023 · 08/2024 | JA · nein · JA · nein · JA |
+| I4 · Nulllinie | 1: 05/2017 | nein |
+
+- **Grundrate:** In **25–26 %** aller Monate folgte binnen 12 Monaten eine Altseason.
+- **Über alle Signale:** 2/5 (I1), 3/6 (I2), 2/5 (I3), 3/6 (I4), also rund **40–50 %**. Das ist etwas besser als die Grundrate, aber **nicht „jedes Mal“**.
+- **Die Aussage „erst 3-mal, jedes Mal Altseason“** passt in unseren Daten am ehesten zu **I3, Nulllinie**: drei Signale. Die ersten beiden (2017, 2020) gingen einer Altseason voraus, das **dritte (11/2024) nicht**.
+  - Die Faustregel stammt vermutlich aus der Zeit **vor** 2024.
+  - Seit 2024 gab es in jeder Form **nur Fehlsignale**, außer I4 08/2024 (Höchststand +100 % gegen BTC, danach wieder abgegeben).
+- ⚠️ Die Breite ≥ 75 % wird in den 12 Monaten nach fast **jedem** Signal erreicht (87–100 %). Sie trennt hier also nicht.
+
+**Heute** (Monatsschluss 30.09.2026):
+
+| Reihe | Lage |
+|---|---|
+| I1 und I3 (USD) | MACD unter Null, unter der Signallinie, Histogramm fallend |
+| I2 und I4 (gegen BTC) | MACD unter Null, aber **knapp über der Signallinie** (Histogramm leicht positiv) |
+
+**Zwischenfazit:**
+- Der monatliche MACD ist mit 1–5 Fällen je Form eine **Auskunft**, kein Signal (Regime nicht vorab erkennbar, 2.599).
+- Er gehört als **Fakt** in die Klima-Ampel: Stand von MACD und Signallinie für I2 und I4, letztes Kreuz.
+- Die Einschränkung gehört immer dazu: Das letzte Nulllinien-Kreuz (11/2024) war ein Fehlsignal.
