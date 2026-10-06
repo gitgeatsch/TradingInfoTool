@@ -1,0 +1,15 @@
+2022-07-21 MOVR     X1  Messung +0.0176  Gegenprobe +0.0176
+2022-07-21 MOVR     X2  Messung +0.0176  Gegenprobe +0.0176
+2022-07-21 MOVR     X3  Messung -0.7350  Gegenprobe -0.7350
+2022-03-19 DGB      X1  Messung +0.2701  Gegenprobe +0.2701
+2022-03-19 DGB      X2  Messung +0.2701  Gegenprobe +0.2701
+2022-03-19 DGB      X3  Messung -0.3092  Gegenprobe -0.3092
+2023-01-12 QUICK    X1  Messung +0.1732  Gegenprobe +0.1732
+2023-01-12 QUICK    X2  Messung +0.0025  Gegenprobe +0.0025
+2023-01-12 QUICK    X3  Messung -0.0966  Gegenprobe -0.0966
+2022-02-11 AVA      X1  Messung -0.1902  Gegenprobe -0.1902
+2022-02-11 AVA      X2  Messung -0.1902  Gegenprobe -0.1902
+2022-02-11 AVA      X3  Messung -0.2167  Gegenprobe -0.2167
+2022-10-31 BEL      X1  Messung -0.1338  Gegenprobe -0.1338
+2022-10-31 BEL      X2  Messung -0.1338  Gegenprobe -0.1338
+2022-10-31 BEL      X3  Messung -0.3568  Gegenprobe -0.3568

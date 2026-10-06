@@ -1,0 +1,19 @@
+A1 M+S, X2 - 1258 Handel
+
+E2 (542 Handel)
+  (1) Ausstieg nach Tagen: Median 56 · innerhalb 30 T 16 % · innerhalb 60 T 57 %
+  (2) groesster Gewinn VOR dem Ausstieg (MFE): Median +39 % · >= +50 %: 40 %
+  (3) Coin gegen BTC in den 180 T NACH dem Ausstieg: Median -28 % (> 0 heisst: zu frueh ausgestiegen)
+  (4) Wende auch gegen BTC = False: n 327 · Vorteil Mittel +6.0 % · Median -9.2 %
+  (4) Wende auch gegen BTC = True: n 215 · Vorteil Mittel -4.8 % · Median -10.8 %
+  (5) BTC im Aufwaertstrend = False: n 492 · Vorteil Mittel +1.1 % · Median -9.6 %
+  (5) BTC im Aufwaertstrend = True: n 50 · Vorteil Mittel +7.3 % · Median -21.2 %
+
+E3 (716 Handel)
+  (1) Ausstieg nach Tagen: Median 41 · innerhalb 30 T 35 % · innerhalb 60 T 76 %
+  (2) groesster Gewinn VOR dem Ausstieg (MFE): Median +16 % · >= +50 %: 18 %
+  (3) Coin gegen BTC in den 180 T NACH dem Ausstieg: Median -36 % (> 0 heisst: zu frueh ausgestiegen)
+  (4) Wende auch gegen BTC = False: n 398 · Vorteil Mittel -11.5 % · Median -15.6 %
+  (4) Wende auch gegen BTC = True: n 318 · Vorteil Mittel -16.0 % · Median -21.1 %
+  (5) BTC im Aufwaertstrend = False: n 515 · Vorteil Mittel -10.6 % · Median -13.5 %
+  (5) BTC im Aufwaertstrend = True: n 201 · Vorteil Mittel -20.7 % · Median -27.6 %

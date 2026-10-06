@@ -1548,3 +1548,56 @@ Nutzer 06.10.: *„hier kann und soll nicht die Kernwert-Berechnung angewendet w
 | Vergleich | BTC zu denselben Tagen (der faire Maßstab: BTC ist am Boden ebenfalls billig) |
 | Fallzahl | A: Hunderte Ereignisse je Jahr. B: nur 7 Episoden, also Beschreibung |
 | Betrieb | Tageskerzen aus `stundenkurse_alle.db` am NB (ab 2023, 365-T-Hoch ✔); Bitpanda-Handelbarkeit als Auskunft |
+
+### 15.7 Ergebnis Altcoin Fassung 2 (06.10.2026, nach §15) — und WORAN
+
+Belege:
+- `Spot_Voranalyse_04_10/a2_messung.py` → `.txt`
+- Gegenprobe `a2_gegenprobe.py`: 15 von 15 Handeln gleich
+- Ursache `a2_woran.py` → `.txt`
+
+Nutzer vor der Messung: *„müssen jedenfalls die Altcoin-Strategie so weit wie möglich optimieren, sehen wir, was die Messungen bringen“*.
+
+**Korrigiert vor der Bewertung:** Die Kennzahl *eingestellt* zählte Coins, die irgendwann innerhalb von 730 T nach dem Kauf eingestellt wurden, auch wenn der Handel längst beendet war. Richtig ist nur ein **erzwungenes** Ende durch Einstellung. Alle anderen Zahlen sind unverändert.
+
+**Vorteil gegen BTC (an denselben Tagen, nach Kosten; Tagesklammer Mittel / Median):**
+
+| Fall | E2 2021–23 | E3 ETF-Markt | E3: ≥ +100 % gg. BTC · Haltedauer | Nullwelt-Rang E2/E3 |
+|---|---|---|---|---|
+| A1 Boden + Wende · H · X1/X2 | +22 % / +16 % (n 15) | −6 % / −3 % (n 11) | 0 % · 47 T | 0,64 / 0,49 |
+| A1 · M · X1 | −2 % / −10 % | −11 % / −14 % | 0 % · 51 T | 0,47 / 0,43 |
+| A1 · S · X1 | +6 % / −7 % | −13 % / −17 % | 1 % · 51 T | **1,00** / 0,82 |
+| A1 · M/S · X3 (365 T ungeführt) | −36 / −24 % | −31 / −32 % | ≤ 1 % · 230–250 T | — |
+| A2 fallendes Messer · M/S · X2 | −11 % / −18 % | −14 bis −17 % | 1 % | 0,00 / 0,36–0,57 |
+| B Markt-Boden-Korb · H/M | −0 bis −10 % | −7 bis −11 % | 2–3 % | ≤ 0,81 / 0,00 |
+
+- **Nach der vorab festen Regel: keine Kombination trägt.**
+- **E1 (2019–2020)** zeigte die *massive Outperformance*: A1 · M · X3 +238 % im Mittel; der Markt-Boden-Korb 03/2020 +47 bis +75 % gegen BTC. Das ist **eine** Phase (Altcoin-Saison 2021).
+- **Die Führung hilft deutlich** gegenüber ungeführtem Halten (X1/X2 statt X3: +20 bis +40 Pp). Das reicht aber nicht über BTC.
+- **Der Zeitpunkt Boden ist besser als Zufall** (A1 · S: Rang 1,00 in E2): Die Wende trennt. Gegen BTC verliert der Coin trotzdem, weil die Grundrate stärker zieht.
+- **Wende abwarten** ist besser als ins fallende Messer greifen (A2: Rang 0,00 in E2).
+
+**WORAN** (A1 · M/S · X2, 1.258 Handel):
+
+| | E2 | E3 |
+|---|---|---|
+| Ausstieg nach (Median) | 56 T | 41 T |
+| **größter Gewinn vor dem Ausstieg** (Median) | **+39 %**; ≥ +50 % in 40 % der Handel | **+16 %**; ≥ +50 % in 18 % |
+| Coin gegen BTC in den 180 T **nach** dem Ausstieg | **−28 %** | **−36 %** |
+| Wende auch gegen BTC (Coin/BTC über 50-T) | hilft nicht (Mittel −5 % gegen +6 %) | hilft nicht |
+| BTC im Aufwärtstrend als Filter | hilft nicht | schadet (−21 % gegen −11 %) |
+
+⇒ **Nach dem Boden kommt eine kurze Erholung, dann fällt der Coin gegen BTC weiter.**
+- Der Nachlauf von −35 % gibt die Erholung zurück, das Ziel +100 % wird selten erreicht.
+- **Länger halten wäre schlechter**, nicht besser.
+
+### 15.8 Vorschlag Fassung 3 — die Erholung nach dem Boden mitnehmen (begründet aus §15.7, E-63)
+
+| | |
+|---|---|
+| **Gedanke** | Altcoin-Spot nicht als *Halten bis zur Altcoin-Saison*, sondern als **Gegenbewegung über Wochen**: Bodenkauf mit Wende (A1, der Zeitpunkt trennt) und **schnelle Gewinnmitnahme**, bevor die Erholung verpufft. Das ist dieselbe Wette wie die REGEL0, nur auf Tagesbasis, ohne Hebel, über Wochen |
+| **X4** | die Hälfte bei **+30 %**, der Rest bei **+60 %**; Nachlauf −20 % vom Hoch; höchstens 120 T |
+| **X5** | ganz bei **+40 %**; Stop −25 % vom Einstieg; höchstens 90 T |
+| **Klassen** | H, M, S |
+| **Messung, Regel** | wie §15.4/§15.5: gegen BTC an denselben Tagen, Nullwelt, Kosten, Tagesklammer, E2 wählt, E3 bestätigt einmal |
+| ⚠️ **Ehrlich** | Die Gewinnziele sind aus dem **E2**-MFE abgeleitet (+39 %), nicht nachgestellt. **E3 ist nicht mehr ganz unberührt**: Sein MFE (+16 %) ist jetzt bekannt. Es ist der dritte Blick auf die Altcoin-Daten, also **Beschreibung**. Der echte Test wäre vorwärts |

@@ -1,0 +1,103 @@
+Altcoin-Spot Fassung 2 (Voranalyse_Spot §15) - antizyklisch kaufen, Positionen fuehren · Daten bis 2026-09-20
+Ereignisse: A1 1296 · A2 1496 · B 7 Tage (2018-11-20, 2020-03-12, 2022-05-11, 2023-05-12, 2023-08-04, 2026-02-05, 2026-06-02)
+
+A1 Boden je Coin mit Wende · Klasse H · X1  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   15 (  9 Tage) | Vorteil gg. BTC: Mittel  +21.7 % · Median  +16.1 % (Tagesklammer) · Median je Handel   -1.0 % | >= +100 % gg. BTC   7 % · Ertrag <= -50 %   0 % | Ertrag Coin Median    +0 % (BTC    -9 %) | Halten  70 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang 0.64
+  E3  n   11 ( 10 Tage) | Vorteil gg. BTC: Mittel   -5.5 % · Median   -3.0 % (Tagesklammer) · Median je Handel   -5.3 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %   0 % | Ertrag Coin Median    +3 % (BTC    +2 %) | Halten  47 T, offen 45 %, eingestellt  0 % | Nullwelt-Rang 0.49
+
+A1 Boden je Coin mit Wende · Klasse H · X2  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   15 (  9 Tage) | Vorteil gg. BTC: Mittel  +20.8 % · Median  +15.8 % (Tagesklammer) · Median je Handel   -1.0 % | >= +100 % gg. BTC   7 % · Ertrag <= -50 %   0 % | Ertrag Coin Median    +0 % (BTC    -9 %) | Halten  70 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang 0.51
+  E3  n   11 ( 10 Tage) | Vorteil gg. BTC: Mittel   -5.5 % · Median   -3.0 % (Tagesklammer) · Median je Handel   -5.3 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %   0 % | Ertrag Coin Median    +3 % (BTC    +2 %) | Halten  47 T, offen 45 %, eingestellt  0 % | Nullwelt-Rang 0.47
+
+A1 Boden je Coin mit Wende · Klasse H · X3  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   15 (  9 Tage) | Vorteil gg. BTC: Mittel  -32.6 % · Median  -32.8 % (Tagesklammer) · Median je Handel  -41.9 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %  47 % | Ertrag Coin Median   -37 % (BTC    +5 %) | Halten 352 T, offen  0 %, eingestellt  7 % | Nullwelt-Rang 0.21
+  E3  n   11 ( 10 Tage) | Vorteil gg. BTC: Mittel   -9.6 % · Median   -3.0 % (Tagesklammer) · Median je Handel   -5.3 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %   9 % | Ertrag Coin Median    +3 % (BTC    +4 %) | Halten 158 T, offen  0 %, eingestellt  9 % | Nullwelt-Rang 0.71
+
+A1 Boden je Coin mit Wende · Klasse M · X1  ->  traegt nicht
+  E1  n    9 (  9 Tage) | Vorteil gg. BTC: Mittel  +57.9 % · Median  +24.8 % (Tagesklammer) · Median je Handel  +24.8 % | >= +100 % gg. BTC  33 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   +70 % (BTC   +27 %) | Halten 100 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang -
+  E2  n  142 ( 76 Tage) | Vorteil gg. BTC: Mittel   -1.9 % · Median   -9.8 % (Tagesklammer) · Median je Handel   -6.7 % | >= +100 % gg. BTC   6 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -13 % (BTC    -6 %) | Halten  70 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.47
+  E3  n  125 ( 66 Tage) | Vorteil gg. BTC: Mittel  -11.1 % · Median  -14.4 % (Tagesklammer) · Median je Handel  -20.7 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -23 % (BTC    +1 %) | Halten  51 T, offen 16 %, eingestellt  1 % | Nullwelt-Rang 0.43
+
+A1 Boden je Coin mit Wende · Klasse M · X2  ->  traegt nicht
+  E1  n    9 (  9 Tage) | Vorteil gg. BTC: Mittel  +99.7 % · Median   +9.1 % (Tagesklammer) · Median je Handel   +9.1 % | >= +100 % gg. BTC  33 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   +52 % (BTC   +32 %) | Halten 100 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang -
+  E2  n  142 ( 76 Tage) | Vorteil gg. BTC: Mittel   -3.1 % · Median   -9.8 % (Tagesklammer) · Median je Handel   -7.1 % | >= +100 % gg. BTC   4 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -13 % (BTC    -6 %) | Halten  70 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.24
+  E3  n  125 ( 66 Tage) | Vorteil gg. BTC: Mittel  -13.0 % · Median  -14.9 % (Tagesklammer) · Median je Handel  -20.9 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -23 % (BTC    +1 %) | Halten  51 T, offen 16 %, eingestellt  1 % | Nullwelt-Rang 0.48
+
+A1 Boden je Coin mit Wende · Klasse M · X3  ->  traegt nicht
+  E1  n    9 (  9 Tage) | Vorteil gg. BTC: Mittel +238.2 % · Median  +57.0 % (Tagesklammer) · Median je Handel  +57.0 % | >= +100 % gg. BTC  44 % · Ertrag <= -50 %   0 % | Ertrag Coin Median  +535 % (BTC  +306 %) | Halten 354 T, offen  0 %, eingestellt 11 % | Nullwelt-Rang -
+  E2  n  142 ( 76 Tage) | Vorteil gg. BTC: Mittel  -36.3 % · Median  -49.8 % (Tagesklammer) · Median je Handel  -50.7 % | >= +100 % gg. BTC   4 % · Ertrag <= -50 %  49 % | Ertrag Coin Median   -48 % (BTC   +27 %) | Halten 358 T, offen  0 %, eingestellt  3 % | Nullwelt-Rang 0.30
+  E3  n  125 ( 66 Tage) | Vorteil gg. BTC: Mittel  -30.5 % · Median  -36.1 % (Tagesklammer) · Median je Handel  -42.5 % | >= +100 % gg. BTC   0 % · Ertrag <= -50 %  46 % | Ertrag Coin Median   -48 % (BTC   -12 %) | Halten 253 T, offen  0 %, eingestellt  4 % | Nullwelt-Rang 0.64
+
+A1 Boden je Coin mit Wende · Klasse S · X1  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  400 (147 Tage) | Vorteil gg. BTC: Mittel   +5.9 % · Median   -7.3 % (Tagesklammer) · Median je Handel   -9.7 % | >= +100 % gg. BTC   4 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -14 % (BTC    -8 %) | Halten  74 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 1.00
+  E3  n  591 (172 Tage) | Vorteil gg. BTC: Mittel  -12.8 % · Median  -16.9 % (Tagesklammer) · Median je Handel  -16.9 % | >= +100 % gg. BTC   1 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -24 % (BTC    +3 %) | Halten  51 T, offen 19 %, eingestellt  1 % | Nullwelt-Rang 0.82
+
+A1 Boden je Coin mit Wende · Klasse S · X2  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  400 (147 Tage) | Vorteil gg. BTC: Mittel   +2.7 % · Median   -9.0 % (Tagesklammer) · Median je Handel  -10.0 % | >= +100 % gg. BTC   4 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -14 % (BTC    -8 %) | Halten  74 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.99
+  E3  n  591 (172 Tage) | Vorteil gg. BTC: Mittel  -13.1 % · Median  -17.2 % (Tagesklammer) · Median je Handel  -17.2 % | >= +100 % gg. BTC   1 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -24 % (BTC    +3 %) | Halten  51 T, offen 19 %, eingestellt  1 % | Nullwelt-Rang 0.93
+
+A1 Boden je Coin mit Wende · Klasse S · X3  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  400 (147 Tage) | Vorteil gg. BTC: Mittel  -23.9 % · Median  -39.4 % (Tagesklammer) · Median je Handel  -40.5 % | >= +100 % gg. BTC   5 % · Ertrag <= -50 %  35 % | Ertrag Coin Median   -35 % (BTC   +31 %) | Halten 350 T, offen  0 %, eingestellt  8 % | Nullwelt-Rang 0.82
+  E3  n  591 (172 Tage) | Vorteil gg. BTC: Mittel  -31.5 % · Median  -40.5 % (Tagesklammer) · Median je Handel  -42.8 % | >= +100 % gg. BTC   1 % · Ertrag <= -50 %  48 % | Ertrag Coin Median   -47 % (BTC   -12 %) | Halten 231 T, offen  0 %, eingestellt 15 % | Nullwelt-Rang 1.00
+
+A2 Boden ohne Wende (fallendes Messer) · Klasse M · X2  ->  traegt nicht
+  E1  n   49 ( 25 Tage) | Vorteil gg. BTC: Mittel  +26.8 % · Median   -4.9 % (Tagesklammer) · Median je Handel  +12.0 % | >= +100 % gg. BTC  14 % · Ertrag <= -50 %   4 % | Ertrag Coin Median   +76 % (BTC   +82 %) | Halten 112 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang -
+  E2  n  194 (112 Tage) | Vorteil gg. BTC: Mittel  -11.0 % · Median  -18.1 % (Tagesklammer) · Median je Handel  -12.9 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   4 % | Ertrag Coin Median   -22 % (BTC    -4 %) | Halten  58 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.00
+  E3  n  168 (112 Tage) | Vorteil gg. BTC: Mittel  -13.8 % · Median  -20.2 % (Tagesklammer) · Median je Handel  -19.9 % | >= +100 % gg. BTC   1 % · Ertrag <= -50 %   3 % | Ertrag Coin Median   -23 % (BTC    -3 %) | Halten  58 T, offen 11 %, eingestellt  1 % | Nullwelt-Rang 0.57
+
+A2 Boden ohne Wende (fallendes Messer) · Klasse S · X2  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  418 (183 Tage) | Vorteil gg. BTC: Mittel  -10.5 % · Median  -20.3 % (Tagesklammer) · Median je Handel  -18.6 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   2 % | Ertrag Coin Median   -20 % (BTC    -4 %) | Halten  74 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.00
+  E3  n  621 (223 Tage) | Vorteil gg. BTC: Mittel  -16.5 % · Median  -19.5 % (Tagesklammer) · Median je Handel  -19.8 % | >= +100 % gg. BTC   1 % · Ertrag <= -50 %   3 % | Ertrag Coin Median   -26 % (BTC    -4 %) | Halten  60 T, offen  9 %, eingestellt  3 % | Nullwelt-Rang 0.36
+
+B Markt-Boden-Korb · Klasse H · X1  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   37 (  3 Tage) | Vorteil gg. BTC: Mittel   -0.0 % · Median   -5.0 % (Tagesklammer) · Median je Handel  -13.3 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -16 % (BTC    -3 %) | Halten 195 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang 0.81
+  E3  n   42 (  2 Tage) | Vorteil gg. BTC: Mittel   -7.6 % · Median   -7.6 % (Tagesklammer) · Median je Handel  -14.3 % | >= +100 % gg. BTC   2 % · Ertrag <= -50 %   0 % | Ertrag Coin Median    -9 % (BTC    +6 %) | Halten 113 T, offen 48 %, eingestellt  0 % | Nullwelt-Rang 0.01
+    je Episode (Korb gegen BTC): 2020-03-13 +23 % · 2022-05-12 +12 % · 2023-05-13 -5 % · 2023-08-05 -7 % · 2026-02-06 -9 % · 2026-06-03 -6 %
+
+B Markt-Boden-Korb · Klasse H · X2  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   37 (  3 Tage) | Vorteil gg. BTC: Mittel   -0.7 % · Median   -1.9 % (Tagesklammer) · Median je Handel  -18.1 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   0 % | Ertrag Coin Median   -16 % (BTC    -3 %) | Halten 195 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang 0.62
+  E3  n   42 (  2 Tage) | Vorteil gg. BTC: Mittel   -6.9 % · Median   -6.9 % (Tagesklammer) · Median je Handel  -14.3 % | >= +100 % gg. BTC   2 % · Ertrag <= -50 %   0 % | Ertrag Coin Median    -9 % (BTC    +6 %) | Halten 113 T, offen 48 %, eingestellt  0 % | Nullwelt-Rang 0.00
+    je Episode (Korb gegen BTC): 2020-03-13 +40 % · 2022-05-12 +12 % · 2023-05-13 -2 % · 2023-08-05 -12 % · 2026-02-06 -9 % · 2026-06-03 -4 %
+
+B Markt-Boden-Korb · Klasse M · X1  ->  traegt nicht
+  E1  n   93 (  2 Tage) | Vorteil gg. BTC: Mittel  +23.2 % · Median  +23.2 % (Tagesklammer) · Median je Handel  +31.0 % | >= +100 % gg. BTC  15 % · Ertrag <= -50 %   0 % | Ertrag Coin Median  +145 % (BTC   +75 %) | Halten 153 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang -
+  E2  n  263 (  3 Tage) | Vorteil gg. BTC: Mittel   -7.3 % · Median   -7.3 % (Tagesklammer) · Median je Handel  -18.4 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   1 % | Ertrag Coin Median   -20 % (BTC    -4 %) | Halten 116 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.71
+  E3  n  158 (  2 Tage) | Vorteil gg. BTC: Mittel  -10.5 % · Median  -10.5 % (Tagesklammer) · Median je Handel  -19.5 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   1 % | Ertrag Coin Median   -20 % (BTC    -1 %) | Halten  92 T, offen 27 %, eingestellt  2 % | Nullwelt-Rang 0.00
+    je Episode (Korb gegen BTC): 2018-11-21 -1 % · 2020-03-13 +47 % · 2022-05-12 +6 % · 2023-05-13 -20 % · 2023-08-05 -7 % · 2026-02-06 -2 % · 2026-06-03 -19 %
+
+B Markt-Boden-Korb · Klasse M · X2  ->  traegt nicht
+  E1  n   93 (  2 Tage) | Vorteil gg. BTC: Mittel  +33.7 % · Median  +33.7 % (Tagesklammer) · Median je Handel  +16.8 % | >= +100 % gg. BTC  25 % · Ertrag <= -50 %   0 % | Ertrag Coin Median  +122 % (BTC   +86 %) | Halten 153 T, offen  0 %, eingestellt  0 % | Nullwelt-Rang -
+  E2  n  263 (  3 Tage) | Vorteil gg. BTC: Mittel  -10.1 % · Median  -13.7 % (Tagesklammer) · Median je Handel  -22.0 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   1 % | Ertrag Coin Median   -20 % (BTC    -4 %) | Halten 116 T, offen  0 %, eingestellt  1 % | Nullwelt-Rang 0.68
+  E3  n  158 (  2 Tage) | Vorteil gg. BTC: Mittel  -11.0 % · Median  -11.0 % (Tagesklammer) · Median je Handel  -19.5 % | >= +100 % gg. BTC   3 % · Ertrag <= -50 %   1 % | Ertrag Coin Median   -20 % (BTC    -1 %) | Halten  92 T, offen 27 %, eingestellt  2 % | Nullwelt-Rang 0.00
+    je Episode (Korb gegen BTC): 2018-11-21 -8 % · 2020-03-13 +75 % · 2022-05-12 +5 % · 2023-05-13 -22 % · 2023-08-05 -14 % · 2026-02-06 -3 % · 2026-06-03 -19 %
+
+AUSKUNFT Smallcaps mit 3 % Kosten je Seite (A1 · S):
+  X1: E2 Mittel +2.2 % Median -10.5 % · E3 Mittel -15.8 % Median -19.7 %
+  X2: E2 Mittel -0.8 % Median -12.1 % · E3 Mittel -16.1 % Median -20.1 %
+  X3: E2 Mittel -26.5 % Median -41.5 % · E3 Mittel -33.9 % Median -42.5 %
+
+GESAMT (vorab §15.5: E2 UND E3 Mittel > 0, Median > 0, Nullwelt-Rang >= 0,95):
+  A1 Boden je Coin mit Wende · Klasse H · X1                   -
+  A1 Boden je Coin mit Wende · Klasse H · X2                   -
+  A1 Boden je Coin mit Wende · Klasse H · X3                   -
+  A1 Boden je Coin mit Wende · Klasse M · X1                   -
+  A1 Boden je Coin mit Wende · Klasse M · X2                   -
+  A1 Boden je Coin mit Wende · Klasse M · X3                   -
+  A1 Boden je Coin mit Wende · Klasse S · X1                   -
+  A1 Boden je Coin mit Wende · Klasse S · X2                   -
+  A1 Boden je Coin mit Wende · Klasse S · X3                   -
+  A2 Boden ohne Wende (fallendes Messer) · Klasse M · X2       -
+  A2 Boden ohne Wende (fallendes Messer) · Klasse S · X2       -
+  B Markt-Boden-Korb · Klasse H · X1                           -
+  B Markt-Boden-Korb · Klasse H · X2                           -
+  B Markt-Boden-Korb · Klasse M · X1                           -
+  B Markt-Boden-Korb · Klasse M · X2                           -
