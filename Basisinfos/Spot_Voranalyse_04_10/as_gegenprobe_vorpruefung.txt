@@ -1,0 +1,14 @@
+2023-06-01 COS       S  Messung R2/R3/L/eing (True, True, False, False)  Gegenprobe (True, True, False, False)  gleich
+2022-07-01 1INCH     S  Messung R2/R3/L/eing (False, False, False, False)  Gegenprobe (False, False, False, False)  gleich
+2025-02-01 CFX       S  Messung R2/R3/L/eing (False, False, False, False)  Gegenprobe (False, False, False, False)  gleich
+2021-07-01 SLP       M  Messung R2/R3/L/eing (True, False, True, False)  Gegenprobe (True, False, True, False)  gleich
+2021-08-01 ALICE     M  Messung R2/R3/L/eing (True, False, True, False)  Gegenprobe (True, False, True, False)  gleich
+2024-04-01 SSV       M  Messung R2/R3/L/eing (False, False, True, False)  Gegenprobe (False, False, True, False)  gleich
+2023-06-01 DGB       S  Messung R2/R3/L/eing (True, False, False, False)  Gegenprobe (True, False, False, False)  gleich
+2024-03-01 CELR      S  Messung R2/R3/L/eing (False, False, False, False)  Gegenprobe (False, False, False, False)  gleich
+2024-05-01 OMG       S  Messung R2/R3/L/eing (False, False, True, True)  Gegenprobe (False, False, True, True)  gleich
+2021-08-01 SUSHI     M  Messung R2/R3/L/eing (False, False, True, False)  Gegenprobe (False, False, True, False)  gleich
+2021-04-01 KNC       S  Messung R2/R3/L/eing (False, False, False, False)  Gegenprobe (False, False, False, False)  gleich
+2023-04-01 DUSK      M  Messung R2/R3/L/eing (True, True, False, False)  Gegenprobe (True, True, False, False)  gleich
+
+12 von 12 gleich

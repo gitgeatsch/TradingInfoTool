@@ -1929,6 +1929,8 @@ Gleichzeitig enden 57–61 % der Mid- und Smallcaps bei −70 % oder eingestellt
 | Funding | 29 % (3.054) | 49 % (3.693) | Teilmenge, eigene Nullwelt |
 | Terminmarkt OI | 8 % | 18 % | **nur Auskunft** (ab 12/2021) |
 
+**Gegenprobe der Vorprüfung** (`as_gegenprobe_vorpruefung.py` → `.txt`): 12 zufällige Coin-Anker mit eigener Schleife direkt aus SQL, R2/R3/L/eingestellt **12 von 12 gleich**.
+
 ### 19.2 Messplan Asymmetrie (vorab)
 
 **Merkmale.**
