@@ -1766,3 +1766,43 @@ Belege:
 - **Nächster Schritt (Nutzer):**
   - entweder Fassung 4 **Momentum** statt Umkehr (Literatur §16.1), eigener Plan;
   - oder D4: Altcoin-Spot ruht als Regel, Auskunft in der Mail, Wiedervorlage vorwärts.
+
+## 17. Messplan Altcoin Fassung 4 — Momentum statt Umkehr, VOR der Messung (06.10.2026; Nutzer: *„Ok, messe alles durch und stimmen die Punkte danach ab“*)
+
+**Warum Fassung 4 (E-63):**
+- Drei Fassungen *Bodenkauf* (eine Umkehr-Wette) tragen nicht (§15.7, §15.10).
+- Die Literatur (§16.1) findet im Krypto-Querschnitt **Momentum**. Eine Umkehr gibt es nur kurz und nur bei kleinen, illiquiden Coins.
+- ⇒ Die Gegenhypothese wird gemessen: **Stärke kaufen statt Schwäche.**
+
+| Fall | Regel | Klassen |
+|---|---|---|
+| **M1 Querschnitt 4 W** | Am Monatsersten t: Rang der Coins der Klasse nach Ertrag **gegen BTC** über 28 T. Kauf des **oberen Fünftels** (mindestens 2), gleich gewichtet, Schluss t+1; Verkauf nach 28 T | H, M, S |
+| **M2 Querschnitt 12 W** | wie M1, Rückblick **84 T** | H, M, S |
+| **M3 Trend gegen BTC je Coin** | Kauf, wenn Coin/BTC über seinen 50-T-Schnitt schließt **und** der 28-T-Ertrag gegen BTC > 0 ist (Signal t, Kauf t+1). Verkauf, wenn Coin/BTC unter den 50-T-Schnitt schließt (t+1), höchstens 365 T. Neuer Kauf erst nach dem Verkauf | H, M, S |
+| *M0 Auskunft* | Literatur 1 W: Rückblick 7 T, Halten 7 T, wöchentlich, **brutto und netto** | H, M |
+
+**Maßstab und Kosten (wie §15.4):**
+- Vorteil gegen BTC an denselben Tagen; Coin 1,25 % je Seite, BTC 0,4 %.
+- Bei M1/M2 voller Umschlag je Monat. Als Auskunft kommt **brutto** dazu, damit Signal und Kosten getrennt sichtbar sind.
+- Eingestellte bis zum letzten Kurs.
+- Klasse am Monatsersten wie §14; gerankt werden nur Coins mit Kurs an t und t−Rückblick.
+
+**Nullwelten:**
+- **M1/M2:** am selben Monatsersten **zufällig** gleich viele Coins derselben Klasse, 200 Ziehungen. Die Frage: Bringt die **Auswahl** etwas?
+- **M3:** 20 Zufallseinstiege desselben Coins im selben Kalenderjahr, gleiche Ausstiegsregel (N1 wie §15.4).
+
+**Statistik:**
+- M1/M2: Vorteil je Monat (Portfolio), Mittel und Median über die Monate.
+- M3: Tagesklammer je Einstiegstag.
+
+**Trägt (vorab):** in **E2 und E3** Mittel **und** Median > 0 **und** Rang ≥ 0,95.
+- 9 Fälle (M1–M3 × H/M/S). M0 und E1 nur Auskunft.
+
+**Folge:**
+- Trägt ein Fall: Voranalyse für den Betrieb (Signal je Monat, Bitpanda-Katalog, Betriebsprüfung).
+- Trägt keiner: WORAN, dann Abstimmung über D4.
+
+⚠️ **Ehrlich:**
+- Es ist der fünfte Blick auf die Altcoin-Daten seit §14: **Beschreibung**.
+- M1/M2 haben je Epoche nur rund 36 bzw. 32 Monate.
+- Die Ränge vergleichen Coins untereinander (Regel 3 erlaubt den Querschnitt). Ein **Hebel** folgt daraus nie (Regel 3).
