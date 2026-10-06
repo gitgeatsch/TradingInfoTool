@@ -1,0 +1,11 @@
+Universum: 523 Altcoins (ohne BTC, ETH, SOL, 11 Stablecoins) · Daten ab 2017-08-17
+  Jahr | Coins mit Kurs | High | Mid | Small | davon >= 2 Jahre gelistet | LINK-Rang (Juli)
+  2019 |      41        |  20  |  21 |    0  |       0                  | 6
+  2020 |     105        |  20  |  80 |    5  |      13                  | 5
+  2021 |     228        |  20  |  80 |  128  |      41                  | 9
+  2022 |     318        |  20  |  80 |  218  |      99                  | 11
+  2023 |     339        |  20  |  80 |  239  |     202                  | 22
+  2024 |     380        |  20  |  80 |  280  |     279                  | 34
+  2025 |     405        |  20  |  80 |  305  |     261                  | 18
+  2026 |     361        |  20  |  80 |  261  |     268                  | 16
+Highcaps 07/2026 (Top 20 nach Umsatz): ZEC, WLD, XRP, BNB, NEAR, DOGE, XLM, TAO, TRX, SUI, ADA, ENA, HYPE, EUR, TON, AVAX, LINK, PEPE, HOME, AAVE

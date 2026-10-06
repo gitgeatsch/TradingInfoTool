@@ -1376,3 +1376,72 @@ Beleg `Spot_Voranalyse_04_10/s1_messung.py` → `.txt`.
 | **Die Phase ist nicht rechtzeitig erkennbar** | Mit Kursfakten lässt sich eine Altcoin-Phase nicht so anzeigen, dass sie hilft: entweder ständiger Fehlalarm (F1) oder zu spät (F2). Seit 2024 gab es keine Phase |
 | **Was folgt** | Ein Altcoin-Weg muss **innerhalb** des Marktes tragen, unabhängig davon, ob eine Phase gerade erkennbar ist: Auswahl, Einstieg, Ausstieg und Streuung (S3–S6). Dort gibt es viele Fälle |
 | **Nutzerhinweis 06.10.** | *„die Assets unterteilen und die Ergebnisse bewerten, z. B. stabile Highcaps wie LINK im Vergleich zu riskanten Smallcaps“* → kommt in den Messplan S3–S6 (§14) |
+
+## 14. Messplan S3–S6 — Altcoin-Spot je Asset-Klasse, VOR der Messung (06.10.2026; Nutzer: *„die Assets unterteilen und die Ergebnisse bewerten, z. B. stabile Highcaps wie LINK im Vergleich zu riskanten Smallcaps“* · *„Messplan S3–S6 vorbereiten, prüfen und gegenprüfen“*)
+
+### 14.1 Vorprüfung (`Spot_Voranalyse_04_10/s3_vorpruefung.py`, keine Erträge)
+
+| Jahr (Juli) | Altcoins mit Kurs | Top 20 · 21–100 · 101+ | ≥ 2 Jahre gelistet | LINK nach 30-T-Umsatz |
+|---|---|---|---|---|
+| 2019 | 41 | 20 · 21 · 0 | 0 | 6 |
+| 2020 | 105 | 20 · 80 · 5 | 13 | 5 |
+| 2021 | 228 | 20 · 80 · 128 | 41 | 9 |
+| 2022 | 318 | 20 · 80 · 218 | 99 | 11 |
+| 2023 | 339 | 20 · 80 · 239 | 202 | 22 |
+| 2024 | 380 | 20 · 80 · 280 | 279 | **34** |
+| 2025 | 405 | 20 · 80 · 305 | 261 | 18 |
+| 2026 | 361 | 20 · 80 · 261 | 268 | 16 |
+
+**Befunde:**
+- **Kein Marktwert über die Jahre:** Die Umlaufmenge gibt es erst ab 09/2025. Größe heißt deshalb **Umsatz**.
+- **Der Rang schwankt stark:** LINK lag auf Platz 5–34. Deshalb ein **90-T-Umsatz** und eine Stabilitätsbedingung.
+- **19 Sonder-Tokens** in den Daten: Fiat (EUR, AEUR, EURI, GBP, AUD), Gold (PAXG), Wrapped (WBTC, WBETH, BNSOL) und Stablecoins. Sie werden **ausgeschlossen**. „EUR“ stand sonst unter den Highcaps.
+- **Smallcaps und das Alter** sind erst **ab 2021** sinnvoll; davor gibt es zu wenige Coins und keine 2-Jahres-Historie.
+
+### 14.2 Universum und Klassen (vorab, am Monatsersten, nur mit Daten bis zum Vortag)
+
+- **Universum:** alle Altcoins in `messdaten.db` **mit eingestellten**. Ohne BTC, ohne die Kernwerte ETH und SOL (Auskunft getrennt), ohne Stablecoins, Fiat, Gold und Wrapped.
+
+| Klasse | Regel |
+|---|---|
+| **H stabile Highcaps** | 90-T-Umsatzrang **≤ 30 an drei Monatsersten in Folge** **und** ≥ 2 Jahre Kurs |
+| **M Midcaps** | Rang 31–100 (90-T-Umsatz), nicht H |
+| **S Smallcaps** | Rang ≥ 101 |
+| quer (Auskunft) | **Alter** ≥ 2 J / 1–2 J / < 1 J · **Schwankung** (90 T) in Dritteln |
+
+### 14.3 Stufe 1 — Grundrate gegen BTC je Klasse (beschreibend)
+
+- **Messung:** wie G1-M2 (§10.7), getrennt je Klasse.
+  - Relativer Ertrag gegen BTC über **90 / 180 / 365 T**.
+  - Kennzahlen: Median, Anteil vor BTC, **Korb** (gleich gewichtet, Median über die Starts) und **Median-Korb**, Anteil mit −90 %, Anteil eingestellt.
+- **Starts:** monatlich, getrennt nach **E2** (2021 bis 10.01.2024) und **E3** (ab 11.01.2024). E1 nur Auskunft (Messfokus).
+- **Auskunft:** LINK einzeln; ETH und SOL gegen BTC; Querklassen Alter und Schwankung.
+- **Zulässig für Stufe 2, vorab:** Der Korb der Klasse liegt in **E3** auf 180 **oder** 365 T im Median **höchstens 10 Pp hinter BTC**.
+  - Begründung: Auswahl- und Ausstiegsregeln bringen erfahrungsgemäß einige Prozentpunkte, nicht Dutzende. Dazu kommen rund 2,5 % Kosten je Hin- und Rückweg.
+  - **Ist keine Klasse zulässig:** D4 kommt zur Vorlage (Altcoin-Spot entfällt bzw. nur Auskunft), mit dem WORAN je Klasse.
+
+### 14.4 Stufe 2 — Regeln innerhalb der zulässigen Klassen (Rahmen vorab; der genaue Plan kommt nach Stufe 1 zur Abstimmung)
+
+| Schicht | Kandidaten (höchstens 12 Kombinationen) |
+|---|---|
+| **S3 Auswahl** | relative Stärke gegen BTC (90 T, stärkste) · Gegenbewegung (90 T, schwächste) · Spiegel der jeweils anderen |
+| **S4 Einstieg** | sofort am Monatsersten · **nach Korrektur im Aufwärtstrend** (≥ 20 % unter dem 30-T-Hoch bei steigendem 200-T-Schnitt; Nutzeridee) |
+| **S5 Ausstieg** | 365 T halten · Trendbruch (Schluss unter dem 200-T-Schnitt) · Nachlauf −35 % vom Hoch |
+| **S6 Streuung** | 5 / 10 / 20 Coins gleich gewichtet (Auskunft) |
+
+- **Simulation:** monatlicher Zufluss; dieselben Geldflüsse in BTC als Maßstab (PME, §10.7); **Kosten 1,25 % je Kauf und je Verkauf** in der **Erfolgsmessung** (Ebene B, nicht in der Bewertung); eingestellte bis zum letzten Kurs.
+- **Wahl auf E2, einmal bestätigt auf E3** (wie beim Hebel E-21/E-24).
+- **Nullwelt:** zufällige Auswahl aus derselben Klasse, gleiche Zahl und Zeitpunkte, 200 Ziehungen.
+- **Trägt:** in E3 nach Kosten **vor BTC** **und** Nullwelt-Rang ≥ 0,95. Sonst D4.
+
+### 14.5 Gegenprüfung des Plans (vor jeder Ertragsrechnung)
+
+| | |
+|---|---|
+| Vorgriff | Klassen nur aus Daten bis zum Vortag; Umsatz rückblickend 90 T; der Einstieg zum Schluss des Folgetags |
+| Überleben | eingestellte im Universum (186 von 525, G1-M2) |
+| Sonder-Tokens | 19 ausgeschlossen (sonst stünde „EUR“ unter den Highcaps) |
+| Größenmaß | Umsatz statt Marktwert (kein Marktwert vor 09/2025); Stabilität über drei Monate |
+| Mehrfachtesten | Stufe 1 beschreibend (3 Klassen × 3 Horizonte × 2 Epochen); Stufe 2 höchstens 12 Kombinationen, eine Bestätigung |
+| Messfokus | E2 wählt, E3 bestätigt; E1 nur Auskunft |
+| **Betrieb (B-Punkte)** | Klassen sind am NB aus `stundenkurse_alle.db` rechenbar (Umsatz ✔, ab 2023; das Alter ≥ 2 J erst ab 2025 aus eigenen Daten). ⚠️ **Gehandelt wird bei Bitpanda:** Im Betrieb zählt nur, was dort handelbar ist (Katalog am NB). In Stufe 2 als Auskunft prüfen |
