@@ -1,0 +1,43 @@
+Spot S1 - Altcoin-Phase als Fakt (Voranalyse_Spot §13) · Daten bis 2026-09-20
+Phasen: 2020-04-10..2020-06-17 (68 T) · 2020-11-12..2021-03-23 (131 T) · 2022-05-11..2022-06-15 (35 T) · 2023-10-16..2023-10-25 (9 T) [Auskunft]
+
+F1 ETH/BTC ueber steigendem 200-T-Schnitt - an an 918 Tagen
+  Phase 2020-04-10 ( 68 T): Deckung  87 % (Gegenrichtung: aus an  13 %) · schon AN bei Phasenbeginn
+  Phase 2020-11-12 (131 T): Deckung  55 % (Gegenrichtung: aus an  45 %) · eingeschaltet 1 T nach Beginn, bis dahin +7 % Vorsprung verpasst
+  Phase 2022-05-11 ( 35 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2023-10-16 (  9 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an  [Auskunft]
+  S1-H1 Deckung >= 50 % in >= 2 von 3 grossen Phasen: STIMMIG (87 % / 55 % / 0 %) · S1-H3 Fehlalarm 74 % der An-Tage ausserhalb (Puffer 30 T): nicht
+  S1-H4 Auskunft - Korb gegen BTC in 90 T nach jedem Einschalten: 2020-02-16 -20 % · 2021-01-04 +120 % · 2021-04-14 +1 % · 2022-02-01 -22 % · 2022-04-11 -28 % · 2022-08-14 -15 % · 2022-11-13 +3 % · 2022-12-01 -4 % · 2024-06-07 -30 % · 2024-06-29 -5 % · 2025-08-14 -24 %
+         Median -15 % · positiv 3 von 11
+
+F2 Altseason-Breite >= 75 % - an an 242 Tagen
+  Phase 2020-04-10 ( 68 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2020-11-12 (131 T): Deckung   1 % (Gegenrichtung: aus an  99 %) · eingeschaltet 131 T nach Beginn, bis dahin +45 % Vorsprung verpasst
+  Phase 2022-05-11 ( 35 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2023-10-16 (  9 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an  [Auskunft]
+  S1-H1 Deckung >= 50 % in >= 2 von 3 grossen Phasen: nicht (0 % / 1 % / 0 %) · S1-H3 Fehlalarm 86 % der An-Tage ausserhalb (Puffer 30 T): nicht
+  S1-H4 Auskunft - Korb gegen BTC in 90 T nach jedem Einschalten: 2019-12-03 +2 % · 2020-07-11 -14 % · 2021-03-23 +16 % · 2022-01-16 -27 % · 2022-08-09 -8 % · 2023-12-25 -10 % · 2024-03-01 -17 % · 2024-12-01 -45 % · 2025-09-10 -31 %
+         Median -14 % · positiv 2 von 9
+
+F3 Korb/BTC ueber steigendem 200-T-Schnitt - an an 292 Tagen
+  Phase 2020-04-10 ( 68 T): Deckung  32 % (Gegenrichtung: aus an  68 %) · eingeschaltet 7 T nach Beginn, bis dahin +2 % Vorsprung verpasst
+  Phase 2020-11-12 (131 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2022-05-11 ( 35 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2023-10-16 (  9 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an  [Auskunft]
+  S1-H1 Deckung >= 50 % in >= 2 von 3 grossen Phasen: nicht (32 % / 0 % / 0 %) · S1-H3 Fehlalarm 80 % der An-Tage ausserhalb (Puffer 30 T): nicht
+  S1-H4 Auskunft - Korb gegen BTC in 90 T nach jedem Einschalten: 2020-03-03 -9 % · 2020-04-08 +21 % · 2020-06-08 +29 % · 2021-04-22 -9 % · 2021-08-14 -5 % · 2024-01-28 -22 % · 2024-03-18 -28 %
+         Median -9 % · positiv 2 von 7
+
+F4 mind. 2 von F1-F3 - an an 341 Tagen
+  Phase 2020-04-10 ( 68 T): Deckung  32 % (Gegenrichtung: aus an  68 %) · eingeschaltet 7 T nach Beginn, bis dahin +2 % Vorsprung verpasst
+  Phase 2020-11-12 (131 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2022-05-11 ( 35 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an
+  Phase 2023-10-16 (  9 T): Deckung   0 % (Gegenrichtung: aus an 100 %) · waehrend der Phase NIE an  [Auskunft]
+  S1-H1 Deckung >= 50 % in >= 2 von 3 grossen Phasen: nicht (32 % / 0 % / 0 %) · S1-H3 Fehlalarm 80 % der An-Tage ausserhalb (Puffer 30 T): nicht
+  S1-H4 Auskunft - Korb gegen BTC in 90 T nach jedem Einschalten: 2020-03-03 -9 % · 2020-04-08 +21 % · 2020-06-08 +29 % · 2021-04-14 +1 % · 2021-08-14 -5 % · 2022-01-16 -27 % · 2022-08-14 -15 % · 2024-01-29 -23 % · 2025-09-10 -31 %
+         Median -9 % · positiv 3 von 9
+
+AUSWAHL nach der Regel (§13.3): KEIN Fakt erfuellt H1 und H3 -> die Ampel zeigt nur die Altseason-Breite als Zahl
+
+KONTEXT BTC-Klima q waehrend der Phasen (Auskunft): 2020-04-10 Mittel 0.43 (0.25..0.54) · 2020-11-12 Mittel 0.89 (0.76..0.97) · 2022-05-11 Mittel 0.20 (0.09..0.25) · 2023-10-16 Mittel 0.22 (0.16..0.33)
+Altseason-Breite heute (2026-09-20): 51 % der Top 50 schlugen BTC in 90 T

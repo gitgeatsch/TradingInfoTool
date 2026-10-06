@@ -1346,3 +1346,33 @@ Kein Auslöser, keine automatische Handlung: Die Entscheidung bleibt beim Nutzer
 ⚠️ **Ehrlich:**
 - 3–4 Phasen, **alle vor dem ETF-Markt**. Für den heutigen Markt kann S1 **nicht** bestätigt werden; dort gab es keine Phase.
 - S1 liefert eine **Beschreibung** der Vergangenheit und einen Fakt für die Mail, keine Vorhersage.
+
+### 13.4 Ergebnis S1 (06.10.2026, nach §13)
+
+Beleg `Spot_Voranalyse_04_10/s1_messung.py` → `.txt`.
+
+**Gegenprobe** (`s1_gegenprobe.py`, direkt aus SQL): Korb-Rendite Januar 2021 **+63,89 %**, Breite am 29.03.2021 **0,848**, beide gleich.
+
+**Zwei Umsetzungsfehler, vor der Bewertung behoben** (die Regel blieb unverändert):
+1. Die Verzögerung H2 zählte einen An-Tag *vor* der Phase als „eingeschaltet“, auch wenn der Fakt während der Phase aus war.
+2. Die Breite F2 zählte Coins ohne Kurs vor 90 Tagen als „schlägt BTC nicht“. Das drückte die Breite gerade bei vielen neuen Listings (2021).
+
+| Fakt | Deckung 2020-04 · 2020-11 · 2022-05 | Einschalten | Fehlalarm (an außerhalb) | Korb gegen BTC in den 90 T nach dem Einschalten (Auskunft) |
+|---|---|---|---|---|
+| **F1** ETH/BTC über steigendem 200-T-Schnitt | **87 % · 55 %** · 0 % | 2020-04 schon an, 2020-11 nach 1 T | **74 %** ✗ | Median **−15 %**, 3 von 11 positiv |
+| **F2** Altseason-Breite ≥ 75 % | 0 % · 1 % · 0 % | 2020-11 erst **nach 131 T** (+45 % verpasst) | 86 % ✗ | Median **−32 %**, 1 von 6 positiv |
+| F3 Korb/BTC über steigendem 200-T-Schnitt | 32 % · 0 % · 0 % | 2020-04 nach 7 T | 80 % ✗ | Median −9 %, 2 von 7 |
+| F4 mind. 2 von 3 | 32 % · 0 % · 0 % | — | 80 % ✗ | Median −5 %, 3 von 7 |
+
+- **Nach der vorab festen Regel: kein Fakt erfüllt Deckung (H1) und Fehlalarm (H3).** F1 deckt zwei Phasen, ist aber zu drei Vierteln **außerhalb** einer Phase an.
+- **Folge (vorab):** Die Klima-Ampel zeigt **nur die Altseason-Breite als Zahl**, keine Altcoin-Phase. Heute (20.09.2026): 51 % der Top 50 schlugen BTC in 90 T.
+- **Auskunft, kein Befund (wenige Fälle):** Eine **hohe** Breite war eher ein **Endsignal**. Nach dem Einschalten von F2 lag der Korb in 5 von 6 Fällen 90 T später **hinter** BTC (Median −32 %). Der bekannte „Altcoin Season Index“ blickt 90 T zurück und kommt damit zu spät.
+- **BTC-Klima in den Phasen:** 0,43 · 0,89 · 0,20 · 0,22. Die Phasen kamen in **jedem** BTC-Zustand; kein Zusammenhang.
+
+#### Zwischenfazit für Altcoin-Spot
+
+| | |
+|---|---|
+| **Die Phase ist nicht rechtzeitig erkennbar** | Mit Kursfakten lässt sich eine Altcoin-Phase nicht so anzeigen, dass sie hilft: entweder ständiger Fehlalarm (F1) oder zu spät (F2). Seit 2024 gab es keine Phase |
+| **Was folgt** | Ein Altcoin-Weg muss **innerhalb** des Marktes tragen, unabhängig davon, ob eine Phase gerade erkennbar ist: Auswahl, Einstieg, Ausstieg und Streuung (S3–S6). Dort gibt es viele Fälle |
+| **Nutzerhinweis 06.10.** | *„die Assets unterteilen und die Ergebnisse bewerten, z. B. stabile Highcaps wie LINK im Vergleich zu riskanten Smallcaps“* → kommt in den Messplan S3–S6 (§14) |
