@@ -1601,3 +1601,31 @@ Nutzer vor der Messung: *„müssen jedenfalls die Altcoin-Strategie so weit wie
 | **Klassen** | H, M, S |
 | **Messung, Regel** | wie §15.4/§15.5: gegen BTC an denselben Tagen, Nullwelt, Kosten, Tagesklammer, E2 wählt, E3 bestätigt einmal |
 | ⚠️ **Ehrlich** | Die Gewinnziele sind aus dem **E2**-MFE abgeleitet (+39 %), nicht nachgestellt. **E3 ist nicht mehr ganz unberührt**: Sein MFE (+16 %) ist jetzt bekannt. Es ist der dritte Blick auf die Altcoin-Daten, also **Beschreibung**. Der echte Test wäre vorwärts |
+
+### 15.9 Messplan Altcoin Fassung 3 — Swing UND Zyklus, VOR der Messung (06.10.2026; Nutzer: *„die Zeiträume sind eng … ein Zyklus ist länger als ein Kalenderjahr“* · *„Ja“*)
+
+**Einstieg:** A1 Boden je Coin mit Wende (§15.3). Er trennt nachweislich besser als Zufall, das fallende Messer (A2) nicht. Klassen H, M, S.
+
+| Ausstieg | Regel | höchstens |
+|---|---|---|
+| **X4 Swing gestaffelt** | ½ bei Schluss ≥ **+30 %**, Rest bei ≥ **+60 %**; Nachlauf −20 % vom Hoch seit Einstieg auf den Rest | 120 T |
+| **X5 Swing einfach** | alles bei Schluss ≥ **+40 %**; Stop bei Schluss ≤ **−25 %** vom Einstieg | 90 T |
+| **X6 Zyklus** | Halten, bis das **Klima** endet: BTC-Klima war nach dem Einstieg über **0,80** und fällt **0,10** unter sein Zyklushoch (K2-Regel) **oder** die Altseason-Breite (Top 50 gegen BTC über 90 T, §13.4) erreicht **75 %** (das Endsignal aus S1) | **1.095 T** |
+
+Alle Ausstiege werden am Folgetag zum Schluss ausgeführt.
+
+**Nullwelten** (beide, je Ereignis 20 Zufallseinstiege desselben Coins, gleiche Ausstiegsregel):
+- **N1:** im selben Kalenderjahr (wie Fassung 2);
+- **N2 Zyklus:** im Abstand von bis zu **±365 Tagen** um das Ereignis. Sie zeigt, ob der Boden im **Zyklus** besser lag.
+
+**Trägt (vorab):** in **E2 und E3** Mittel **und** Median des Vorteils gegen BTC (Tagesklammer, nach Kosten) > 0 **und** Rang ≥ 0,95 in **N1 und N2**.
+
+**Sonst wie §15.4:**
+- Kosten 1,25 % je Seite (BTC 0,4 %);
+- eingestellte bis zum letzten Kurs;
+- **offene** Handel am Datenende werden zum letzten Kurs bewertet und getrennt ausgewiesen.
+
+⚠️ **Ehrlich:**
+- Die Ziele von X4/X5 kommen aus dem E2-MFE (+39 %). Der E3-MFE (+16 %) ist bekannt.
+- X6 hat nur **etwa zwei** Zyklen, und der ETF-Zyklus ist **nicht abgeschlossen**; viele E3-Handel sind offen.
+- Es ist der dritte Blick auf die Altcoin-Daten: **Beschreibung**.
