@@ -1629,3 +1629,44 @@ Alle Ausstiege werden am Folgetag zum Schluss ausgeführt.
 - Die Ziele von X4/X5 kommen aus dem E2-MFE (+39 %). Der E3-MFE (+16 %) ist bekannt.
 - X6 hat nur **etwa zwei** Zyklen, und der ETF-Zyklus ist **nicht abgeschlossen**; viele E3-Handel sind offen.
 - Es ist der dritte Blick auf die Altcoin-Daten: **Beschreibung**.
+
+### 15.10 Ergebnis Altcoin Fassung 3 (06.10.2026, nach §15.9) — und WORAN
+
+Belege:
+- `Spot_Voranalyse_04_10/a3_messung.py` → `.txt`
+- Gegenprobe `a3_gegenprobe.py` → `.txt`: 15 von 15 Handeln gleich (eigene Schleife direkt aus SQL), dazu die Ausstiegsgründe von X6
+
+**Vorteil gegen BTC (an denselben Tagen, nach Kosten; Tagesklammer Mittel / Median; Rang N1 / N2):**
+
+| Fall | E2 2021–23 | E3 ETF-Markt | E3: Coin selbst (Median) · offen |
+|---|---|---|---|
+| H · X4 gestaffelt | **+21 % / +16 %** · 0,99 / 0,95 (n 15) | −1 % / −1 % · 0,63 / 0,53 (n 11) | +4 % · 36 % |
+| H · X5 +40/−25 | **+23 % / +24 %** · 0,93 / 1,00 | −3 % / −3 % · 0,43 / 0,33 | +3 % · 36 % |
+| H · X6 Zyklus | −0 % / +2 % · 0,57 / 0,69 | +2 % / +0 % · 0,74 / 0,60 | +4 % · **82 %** |
+| M · X4 / X5 | +2 % / −0 % · +0 % / −5 % · Rang 0,83–0,94 | −4 % / −10 % · −3 % / −8 % | −13 % / −24 % |
+| M · X6 | +4 % / −5 % · 0,67 / 0,67 | **−15 % / −14 %** · 0,12 / 0,12 | −12 % · 59 % |
+| S · X4 / X5 | +6 % / +1 % · +4 % / −3 % · Rang **1,00 / 1,00** | −7 % / −11 % · −11 % / −14 % · Rang 0,08–0,28 | −14 % / −25 % |
+| S · X6 | +10 % / −0 % · 0,81 / 0,99 | **−16 % / −19 %** · 0,54 / 0,27 | −15 % · 53 % |
+
+- **Nach der vorab festen Regel: keine der 9 Kombinationen trägt.**
+- **Nächster Kandidat:** Highcaps mit Swing (H · X4/X5). In E2 ist der Vorteil gegen BTC deutlich, der Rang 0,93–1,00. In E3 liegt er bei null: n 11, davon 36 % noch offen.
+- **Länger halten (X6) hilft nicht.** In E2 ist es schlechter als der Swing, in E3 bei M/S am schlechtesten.
+
+**WORAN:**
+
+| | |
+|---|---|
+| **Der Bruch ist die EPOCHE, nicht die Regel** | Drei Fassungen, ein Muster. In E2 schlägt der Bodenzeitpunkt den Zufall (S: Rang 1,00 mit jeder Führung). In E3 fällt er **unter** den Zufall (S · X4: 0,08). Nach dem Boden mit Wende fällt der Coin in E3 **auch absolut** (M/S Median −13 bis −25 %), während BTC ±0 % macht. Die *Wende über den 50-T-Schnitt* ist in E3 bei M/S kein Boden mehr |
+| **X6 ist kein Zyklus-Halten geworden** | Ausstiegsgründe X6 (alle Klassen): **E2** Breite 451 · K2 89 · Frist/Ende 17. **E3** Frist/Ende **450** · K2 210 · Breite 67. In E2 löst die Altseason-Breite schon bei **kurzen** Alt-Rallyes aus (90-T-Fenster; Halten 152–182 T im Mittel). In E3 ist der Zyklus **nicht abgeschlossen**: 53–82 % der Handel sind offen. ⇒ X6 kann für E3 **noch nicht** urteilen |
+| **Highcaps sind die Ausnahme, aber dünn** | 15 bzw. 11 Ereignisse an 9 bzw. 10 Tagen. Das reicht nicht für eine Regel |
+
+**Zwischenfazit zum Ziel (Potential je Asset und Handlung):**
+- Ein Altcoin-Spot-Signal *Boden mit Wende* hatte 2021–23 Potential gegen BTC (Highcaps deutlich, Smallcaps im Zeitpunkt).
+- Im ETF-Markt hat es das bisher **nicht**. Dort ist BTC der bessere Spot-Wert.
+- Ein Betriebssignal folgt daraus **nicht**.
+- Was bleibt: **Auskunft** in der Mail (Boden + Wende als Fakt neben dem Klima) und die Wiedervorlage vorwärts, sobald der ETF-Zyklus abgeschlossen ist (X6 offen).
+
+**Messbare Ursache für E3 (Vorschlag, noch nicht gemessen):** Verwässerung durch Token-Freigaben.
+- `umlaufmenge_cg.db` hat Tageswerte erst ab 21.09.2025.
+- Messbar sind damit nur A1-Ereignisse ab etwa 03/2026, mit 180-T-Wachstum **vor** dem Ereignis.
+- Das wäre der vierte Blick auf die Daten: **Beschreibung**.

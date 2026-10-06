@@ -1,0 +1,22 @@
+2022-07-18 FUN       X4  Messung +0.0846  Gegenprobe +0.0846  gleich
+2025-04-21 MOVR      X4  Messung +0.0444  Gegenprobe +0.0444  gleich
+2021-07-30 NEAR      X4  Messung +0.4179  Gegenprobe +0.4179  gleich
+2025-04-25 CFX       X4  Messung -0.0295  Gegenprobe -0.0295  gleich
+2025-04-20 ENJ       X4  Messung -0.2438  Gegenprobe -0.2438  gleich
+2026-07-26 APT       X5  Messung -0.0544  Gegenprobe -0.0544  gleich
+2022-03-02 BEAM      X5  Messung -0.2312  Gegenprobe -0.2312  gleich
+2026-01-02 CKB       X5  Messung -0.1664  Gegenprobe -0.1664  gleich
+2024-09-19 GTC       X5  Messung -0.0482  Gegenprobe -0.0482  gleich
+2023-01-07 SNX       X5  Messung +0.0624  Gegenprobe +0.0624  gleich
+2025-04-23 FIL       X6  Messung -0.2532  Gegenprobe -0.2532  gleich  (K2)
+2025-04-26 OMNI      X6  Messung -0.2909  Gegenprobe -0.2909  gleich  (K2)
+2024-08-23 ALPHA     X6  Messung +0.1764  Gegenprobe +0.1764  gleich  (Breite)
+2025-04-23 RDNT      X6  Messung -0.2313  Gegenprobe -0.2313  gleich  (K2)
+2023-01-09 SAND      X6  Messung -0.5125  Gegenprobe -0.5125  gleich  (Breite)
+
+15 von 15 gleich
+
+X6 Ausstiegsgrund je Epoche (alle A1-Ereignisse H/M/S):
+  E1  Breite 6  Frist/Ende 1  K2 4
+  E2  Breite 451  Frist/Ende 17  K2 89
+  E3  Breite 67  Frist/Ende 450  K2 210

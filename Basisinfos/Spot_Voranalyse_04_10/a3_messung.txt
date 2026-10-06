@@ -1,0 +1,57 @@
+Altcoin-Spot Fassung 3 (Voranalyse_Spot §15.9) - Einstieg A1 (Boden + Wende), 1296 Ereignisse · Daten bis 2026-09-20
+
+A1 · Klasse H · X4 Swing gestaffelt +30/+60, Nachlauf -20 %, 120 T  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   15 (  9 Tage) | Vorteil gg. BTC: Mittel  +20.9 % · Median  +16.3 % · Handel vor BTC  73 % · >= +100 %   0 % | Ertrag Coin Median   +25 % (BTC   +10 %) · <= -50 %   0 % | Halten   36 T · offen  0 % · eingestellt  0 % | Rang N1 0.99 · N2 0.95
+  E3  n   11 ( 10 Tage) | Vorteil gg. BTC: Mittel   -0.8 % · Median   -1.0 % · Handel vor BTC  45 % · >= +100 %   0 % | Ertrag Coin Median    +4 % (BTC    +4 %) · <= -50 %   0 % | Halten   25 T · offen 36 % · eingestellt  0 % | Rang N1 0.63 · N2 0.53
+
+A1 · Klasse H · X5 Swing +40 % / -25 %, 90 T  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   15 (  9 Tage) | Vorteil gg. BTC: Mittel  +23.0 % · Median  +24.2 % · Handel vor BTC  80 % · >= +100 %   0 % | Ertrag Coin Median   +36 % (BTC    +6 %) · <= -50 %   0 % | Halten   37 T · offen  0 % · eingestellt  0 % | Rang N1 0.93 · N2 1.00
+  E3  n   11 ( 10 Tage) | Vorteil gg. BTC: Mittel   -3.0 % · Median   -3.0 % · Handel vor BTC  36 % · >= +100 %   0 % | Ertrag Coin Median    +3 % (BTC    +2 %) · <= -50 %   0 % | Halten   33 T · offen 36 % · eingestellt  0 % | Rang N1 0.43 · N2 0.33
+
+A1 · Klasse H · X6 Zyklus: Klima-Ausstieg (K2 oder Breite >= 75 %), bis 3 J  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n   15 (  9 Tage) | Vorteil gg. BTC: Mittel   -0.1 % · Median   +1.8 % · Handel vor BTC  53 % · >= +100 %   0 % | Ertrag Coin Median    -0 % (BTC    +1 %) · <= -50 %   0 % | Halten   73 T · offen  0 % · eingestellt  0 % | Rang N1 0.57 · N2 0.69
+  E3  n   11 ( 10 Tage) | Vorteil gg. BTC: Mittel   +1.5 % · Median   +0.1 % · Handel vor BTC  45 % · >= +100 %   0 % | Ertrag Coin Median    +4 % (BTC    +4 %) · <= -50 %   0 % | Halten  117 T · offen 82 % · eingestellt  0 % | Rang N1 0.74 · N2 0.60
+
+A1 · Klasse M · X4 Swing gestaffelt +30/+60, Nachlauf -20 %, 120 T  ->  traegt nicht
+  E1  n    9 (  9 Tage) | Vorteil gg. BTC: Mittel   +4.0 % · Median  +11.1 % · Handel vor BTC  67 % · >= +100 %   0 % | Ertrag Coin Median   +23 % (BTC   +14 %) · <= -50 %   0 % | Halten   24 T · offen  0 % · eingestellt  0 % | Rang N1 - · N2 -
+  E2  n  142 ( 76 Tage) | Vorteil gg. BTC: Mittel   +1.8 % · Median   -0.3 % · Handel vor BTC  55 % · >= +100 %   0 % | Ertrag Coin Median    +1 % (BTC    +2 %) · <= -50 %   0 % | Halten   27 T · offen  0 % · eingestellt  1 % | Rang N1 0.93 · N2 0.94
+  E3  n  125 ( 66 Tage) | Vorteil gg. BTC: Mittel   -4.0 % · Median   -9.9 % · Handel vor BTC  26 % · >= +100 %   0 % | Ertrag Coin Median   -13 % (BTC    -1 %) · <= -50 %   0 % | Halten   22 T · offen  6 % · eingestellt  1 % | Rang N1 0.58 · N2 0.83
+
+A1 · Klasse M · X5 Swing +40 % / -25 %, 90 T  ->  traegt nicht
+  E1  n    9 (  9 Tage) | Vorteil gg. BTC: Mittel   +3.3 % · Median   +8.6 % · Handel vor BTC  67 % · >= +100 %   0 % | Ertrag Coin Median   +36 % (BTC   +22 %) · <= -50 %   0 % | Halten   32 T · offen  0 % · eingestellt  0 % | Rang N1 - · N2 -
+  E2  n  142 ( 76 Tage) | Vorteil gg. BTC: Mittel   +0.0 % · Median   -5.2 % · Handel vor BTC  47 % · >= +100 %   0 % | Ertrag Coin Median    -3 % (BTC    -4 %) · <= -50 %   0 % | Halten   36 T · offen  0 % · eingestellt  1 % | Rang N1 0.83 · N2 0.92
+  E3  n  125 ( 66 Tage) | Vorteil gg. BTC: Mittel   -2.5 % · Median   -8.4 % · Handel vor BTC  32 % · >= +100 %   0 % | Ertrag Coin Median   -24 % (BTC    -2 %) · <= -50 %   0 % | Halten   32 T · offen 11 % · eingestellt  1 % | Rang N1 0.93 · N2 0.97
+
+A1 · Klasse M · X6 Zyklus: Klima-Ausstieg (K2 oder Breite >= 75 %), bis 3 J  ->  traegt nicht
+  E1  n    9 (  9 Tage) | Vorteil gg. BTC: Mittel  +29.6 % · Median  +20.8 % · Handel vor BTC  67 % · >= +100 %  11 % | Ertrag Coin Median   +83 % (BTC   +20 %) · <= -50 %   0 % | Halten   95 T · offen  0 % · eingestellt  0 % | Rang N1 - · N2 -
+  E2  n  142 ( 76 Tage) | Vorteil gg. BTC: Mittel   +3.6 % · Median   -5.3 % · Handel vor BTC  43 % · >= +100 %   6 % | Ertrag Coin Median    +9 % (BTC    +2 %) · <= -50 %  11 % | Halten  152 T · offen  0 % · eingestellt  2 % | Rang N1 0.67 · N2 0.67
+  E3  n  125 ( 66 Tage) | Vorteil gg. BTC: Mittel  -14.5 % · Median  -14.4 % · Handel vor BTC  30 % · >= +100 %   0 % | Ertrag Coin Median   -12 % (BTC    +8 %) · <= -50 %  18 % | Halten  142 T · offen 59 % · eingestellt  4 % | Rang N1 0.12 · N2 0.12
+
+A1 · Klasse S · X4 Swing gestaffelt +30/+60, Nachlauf -20 %, 120 T  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  400 (147 Tage) | Vorteil gg. BTC: Mittel   +6.3 % · Median   +0.6 % · Handel vor BTC  52 % · >= +100 %   2 % | Ertrag Coin Median    -2 % (BTC    -3 %) · <= -50 %   0 % | Halten   26 T · offen  0 % · eingestellt  0 % | Rang N1 1.00 · N2 1.00
+  E3  n  591 (172 Tage) | Vorteil gg. BTC: Mittel   -7.3 % · Median  -10.7 % · Handel vor BTC  23 % · >= +100 %   0 % | Ertrag Coin Median   -14 % (BTC    -0 %) · <= -50 %   0 % | Halten   25 T · offen 15 % · eingestellt  1 % | Rang N1 0.08 · N2 0.20
+
+A1 · Klasse S · X5 Swing +40 % / -25 %, 90 T  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  400 (147 Tage) | Vorteil gg. BTC: Mittel   +3.9 % · Median   -2.9 % · Handel vor BTC  43 % · >= +100 %   2 % | Ertrag Coin Median   -15 % (BTC    -7 %) · <= -50 %   1 % | Halten   36 T · offen  0 % · eingestellt  0 % | Rang N1 1.00 · N2 1.00
+  E3  n  591 (172 Tage) | Vorteil gg. BTC: Mittel  -10.5 % · Median  -13.7 % · Handel vor BTC  25 % · >= +100 %   1 % | Ertrag Coin Median   -25 % (BTC    +1 %) · <= -50 %   0 % | Halten   37 T · offen 16 % · eingestellt  1 % | Rang N1 0.15 · N2 0.28
+
+A1 · Klasse S · X6 Zyklus: Klima-Ausstieg (K2 oder Breite >= 75 %), bis 3 J  ->  traegt nicht
+  E1  zu wenige Ereignisse
+  E2  n  400 (147 Tage) | Vorteil gg. BTC: Mittel   +9.5 % · Median   -0.3 % · Handel vor BTC  47 % · >= +100 %   5 % | Ertrag Coin Median    +9 % (BTC   +12 %) · <= -50 %  12 % | Halten  182 T · offen  0 % · eingestellt  4 % | Rang N1 0.81 · N2 0.99
+  E3  n  591 (172 Tage) | Vorteil gg. BTC: Mittel  -16.1 % · Median  -19.1 % · Handel vor BTC  22 % · >= +100 %   2 % | Ertrag Coin Median   -15 % (BTC    +9 %) · <= -50 %  17 % | Halten  122 T · offen 53 % · eingestellt  8 % | Rang N1 0.54 · N2 0.27
+
+GESAMT (vorab §15.9: E2 UND E3 Mittel > 0, Median > 0, Rang N1 UND N2 >= 0,95):
+  A1 · H · X4            -
+  A1 · H · X5            -
+  A1 · H · X6            -
+  A1 · M · X4            -
+  A1 · M · X5            -
+  A1 · M · X6            -
+  A1 · S · X4            -
+  A1 · S · X5            -
+  A1 · S · X6            -
