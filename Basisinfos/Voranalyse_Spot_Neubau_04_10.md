@@ -1200,3 +1200,27 @@ Beleg `Spot_Voranalyse_04_10/d_kern_teilverkauf.py` → `.txt`.
 **6. Wie belastbar das ist**
 - **Wenige Zyklen:** BTC 3, ETH 2, SOL 1–2. Alles ist **Beschreibung**, kein Nachweis für die Zukunft.
 - **Rückschau:** Das Verhältnis 70/20/10 war in der Vergangenheit sinnvoll. Ob ETH und SOL künftig mithalten, sagt es nicht.
+
+### 12.8 Messplan D2 Fassung 2 — verkaufen, wenn die Überhitzung KIPPT, VOR der Messung (06.10.2026; Nutzer: *„1 ja, 2 Fassung 2 messen, prüfen und gegenprüfen“*)
+
+**Abgestimmt:** Aufbau **70/20/10** mit **Ausgleich über die Raten** (R1).
+
+**Begründung der Fassung 2** (E-63, aus der Ursache in §12.6): *„Überhitzt“ kommt zu früh.* Fassung 2 verkauft erst, wenn q nach der Überhitzung **wieder fällt**. Alles andere bleibt wie §12.3: Rückkauf gestaffelt wie b2, Zufluss, Ausführung t+1, Maßstab H0, Kriterium *stimmig*.
+
+| Fall | scharf ab | Verkauf (je 10 % des Bestands) |
+|---|---|---|
+| **K1** | q ≥ 0,90 | beim Fall unter 0,85 · 0,75 · 0,65 |
+| **K2** | q ≥ 0,80 | beim Fall 0,10 · 0,20 · 0,30 unter das **Zyklushoch von q** |
+| dK1 / dK2 | wie K1/K2 | Entnahme statt Rückkauf (Preis der Entnahme mit späterem Zeitpunkt) |
+| Auskunft | — | K1/K2 mit 20 % je Stufe |
+
+Wieder scharf werden die Stufen erst nach einer Zone (q ≤ 0,20), wie in Fassung 1.
+
+**Vorprüfung, nur Klima und Datum** (`d2f2_vorpruefung.py`):
+- **K1** verkauft 06./11.01.2017 und 21.01. / 16.05. / 19.05.2021.
+- **K2** verkauft 06.01. / 11.01.2017 und 30.01.2018, dann 21.01. / 15.05. / 19.05.2021, dann 19.03. / 01.05. / 05.08.2024.
+
+⚠️ **Offen, und vor der Messung bekannt:**
+- Beide verkaufen schon im **Januar 2017** (kurzer Ausschlag im Dezember 2016). Weil jede Stufe nur einmal je Zyklus auslöst, bleibt für das Hoch im Dezember 2017 nichts übrig.
+- Die Regeln werden **nicht** nachgestellt, um bekannte Hochs zu treffen; das wäre Kurvenanpassung mit Wissen aus der Zukunft.
+- **Zweiter Blick** auf dieselben 2–3 Zyklen: Das Ergebnis ist **Beschreibung**.
