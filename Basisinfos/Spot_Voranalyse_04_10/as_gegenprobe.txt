@@ -1,0 +1,3 @@
+G1 Merkmale: 66 von 66 Werten gleich (10 Coin-Anker)
+G2/G3 F3 oben E2: Saldo Gegenprobe -0.08688 Messung -0.08688 · Lift R2 0.95798 / 0.95798 · Lift D2 1.12572 / 1.12572
+G2/G3 F3 oben E3: Saldo Gegenprobe -0.11294 Messung -0.11294 · Lift R2 0.82738 / 0.82738 · Lift D2 1.09699 / 1.09699

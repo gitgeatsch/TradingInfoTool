@@ -1,10 +1,240 @@
 Asymmetrie-Messung (§19.2) · Kurse bis 2026-09-20 · 20180 Coin-Anker (12 Monate) · Saldo = (R2 - L) im Fuenftel minus Zelle
 
-SELBSTTEST der Anlage (§19.2, vorab)
-  (a) 80 Zufallstests: Rang >= 0,975 in E2 2 (2.5 %) · in E3 1 (1.2 %) · in beiden 0 · traegt 0  ->  BESTANDEN
-  (b) gepflanzt 0,3 x R2 + N(0,1), oberes Fuenftel  ->  NICHT BESTANDEN
-      E1  -
-      E2  Saldo  +9.1 Pp  Rang 1.000 | Lift R2 1.18 · D2 0.97 · Spiegel  1.21 | R3 +3.2 Pp | 311 Coins mit R2 | n 2136 an 37 Stichtagen | Korb    -6 % (ganze Klasse    -9 %) gg. BTC
-      E3  Saldo  +9.9 Pp  Rang 1.000 | Lift R2 1.34 · D2 0.97 · Spiegel  1.38 | R3 +3.0 Pp | 232 Coins mit R2 | n 1611 an 31 Stichtagen | Korb   -40 % (ganze Klasse   -47 %) gg. BTC
+Bewegungswelten fuer die Spiegelprobe: 8100 je Epoche (s -2..2 in 0.05, je 100 Ziehungen)
 
-SELBSTTEST NICHT BESTANDEN - keine Messung (Plan §19.2: erst die Anlage reparieren).
+SELBSTTEST der Anlage (§19.2, vorab)
+  (a) 80 Zufallstests: Rang >= 0,975 in E2 3 (3.8 %) · in E3 1 (1.2 %) · in beiden 1 · traegt 0  ->  BESTANDEN
+  (b) gepflanzt 0,3 x R2 + N(0,1), oberes Fuenftel  ->  BESTANDEN
+      E1  -
+      E2  Saldo  +6.8 Pp  Rang 1.000 | Lift R2 1.15 · D2 0.95 · Spiegel  1.21 | R3 +2.7 Pp | 319 Coins mit R2 | n 2136 an 37 Stichtagen | Korb    -5 % (ganze Klasse    -8 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.954 gegen Grenze 1.041  ->  besteht
+      E3  Saldo  +5.4 Pp  Rang 1.000 | Lift R2 1.30 · D2 0.98 · Spiegel  1.33 | R3 +1.7 Pp | 237 Coins mit R2 | n 1611 an 31 Stichtagen | Korb   -41 % (ganze Klasse   -47 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.976 gegen Grenze 1.030  ->  besteht
+
+SELBSTTEST BESTANDEN - Messung
+
+Abdeckung je Merkmal (Anteil der Coin-Anker mit Wert): F1 88 % · F2 88 % · F3 98 % · F4 83 % · F5 88 % · F6 88 % · F7 88 % · F8 100 % · F9 20 % · F10 16 % · F11 41 % · F12 12 %
+
+EINZELMERKMALE (Trägt: Saldo > 0 und Rang >= 0,975 in E2 UND E3, Spiegel >= 1,717, >= 10 Coins; F12 nur Auskunft)
+  F1 Tiefe (Schluss/Allzeithoch) · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  -1.6 Pp  Rang 0.325 | Lift R2 1.00 · D2 0.97 · Spiegel  1.03 | R3 +1.1 Pp |  49 Coins mit R2 | n  232 an 24 Stichtagen | Korb   +97 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo  -7.8 Pp  Rang 0.000 | Lift R2 0.88 · D2 1.02 · Spiegel  0.86 | R3 -2.0 Pp | 155 Coins mit R2 | n 1900 an 37 Stichtagen | Korb   -13 % (ganze Klasse    -7 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.022 gegen Grenze 0.889  ->  nein
+      E3  Saldo  -2.2 Pp  Rang 0.060 | Lift R2 0.86 · D2 1.00 · Spiegel  0.86 | R3 -0.7 Pp |  77 Coins mit R2 | n 1486 an 31 Stichtagen | Korb   -36 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.996 gegen Grenze 0.933  ->  nein
+  F1 Tiefe (Schluss/Allzeithoch) · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  +9.2 Pp  Rang 0.980 | Lift R2 1.04 · D2 1.00 · Spiegel  1.04 | R3 +0.1 Pp |  24 Coins mit R2 | n  210 an 24 Stichtagen | Korb   +54 % (ganze Klasse   +86 %) gg. BTC
+      E2  Saldo  +6.0 Pp  Rang 1.000 | Lift R2 1.16 · D2 1.03 · Spiegel  1.12 | R3 +4.4 Pp | 148 Coins mit R2 | n 1812 an 37 Stichtagen | Korb    -8 % (ganze Klasse    -8 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.034 gegen Grenze 1.055  ->  besteht
+      E3  Saldo  -5.7 Pp  Rang 0.000 | Lift R2 1.06 · D2 1.05 · Spiegel  1.01 | R3 -0.9 Pp |  96 Coins mit R2 | n 1431 an 31 Stichtagen | Korb   -53 % (ganze Klasse   -47 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.045 gegen Grenze 0.979  ->  nein
+  F2 Dauer seit Allzeithoch · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  +9.2 Pp  Rang 0.990 | Lift R2 1.00 · D2 0.76 · Spiegel  1.30 | R3 -1.5 Pp |  31 Coins mit R2 | n  232 an 24 Stichtagen | Korb   +47 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo  +3.4 Pp  Rang 1.000 | Lift R2 1.04 · D2 0.92 · Spiegel  1.13 | R3 +0.5 Pp | 116 Coins mit R2 | n 1908 an 37 Stichtagen | Korb    -8 % (ganze Klasse    -9 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.925 gegen Grenze 0.979  ->  besteht
+      E3  Saldo  +2.7 Pp  Rang 0.965 | Lift R2 1.00 · D2 0.98 · Spiegel  1.02 | R3 -0.3 Pp |  72 Coins mit R2 | n 1477 an 31 Stichtagen | Korb   -33 % (ganze Klasse   -46 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.981 gegen Grenze 0.967  ->  nein
+  F2 Dauer seit Allzeithoch · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  +5.4 Pp  Rang 0.925 | Lift R2 1.00 · D2 0.97 · Spiegel  1.04 | R3 +0.1 Pp |  52 Coins mit R2 | n  205 an 24 Stichtagen | Korb  +115 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo  -6.2 Pp  Rang 0.000 | Lift R2 0.96 · D2 1.12 · Spiegel  0.86 | R3 -0.2 Pp | 167 Coins mit R2 | n 1817 an 37 Stichtagen | Korb   -13 % (ganze Klasse    -7 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.116 gegen Grenze 0.939  ->  nein
+      E3  Saldo -10.7 Pp  Rang 0.000 | Lift R2 0.77 · D2 1.08 · Spiegel  0.71 | R3 -2.1 Pp |  86 Coins mit R2 | n 1436 an 31 Stichtagen | Korb   -42 % (ganze Klasse   -44 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.077 gegen Grenze 0.911  ->  nein
+  F3 Schwankung 90 T · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  -3.6 Pp  Rang 0.150 | Lift R2 1.03 · D2 1.30 · Spiegel  0.79 | R3 +1.1 Pp |  88 Coins mit R2 | n  323 an 24 Stichtagen | Korb   +59 % (ganze Klasse   +77 %) gg. BTC
+      E2  Saldo  -8.7 Pp  Rang 0.000 | Lift R2 0.96 · D2 1.13 · Spiegel  0.85 | R3 +0.9 Pp | 227 Coins mit R2 | n 2088 an 37 Stichtagen | Korb   -20 % (ganze Klasse    -9 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.126 gegen Grenze 0.936  ->  nein
+      E3  Saldo -11.3 Pp  Rang 0.000 | Lift R2 0.83 · D2 1.10 · Spiegel  0.75 | R3 -0.8 Pp | 135 Coins mit R2 | n 1583 an 31 Stichtagen | Korb   -56 % (ganze Klasse   -47 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.097 gegen Grenze 0.930  ->  nein
+  F3 Schwankung 90 T · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  +0.0 Pp  Rang 0.510 | Lift R2 0.96 · D2 0.69 · Spiegel  1.40 | R3 -1.5 Pp |  57 Coins mit R2 | n  297 an 24 Stichtagen | Korb  +146 % (ganze Klasse   +99 %) gg. BTC
+      E2  Saldo  +1.2 Pp  Rang 0.825 | Lift R2 0.89 · D2 0.89 · Spiegel  1.01 | R3 -2.6 Pp | 203 Coins mit R2 | n 1998 an 37 Stichtagen | Korb    -3 % (ganze Klasse    -7 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.888 gegen Grenze 0.900  ->  besteht
+      E3  Saldo +19.0 Pp  Rang 1.000 | Lift R2 1.27 · D2 0.78 · Spiegel  1.63 | R3 +3.3 Pp | 123 Coins mit R2 | n 1531 an 31 Stichtagen | Korb   -19 % (ganze Klasse   -47 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.783 gegen Grenze 1.029  ->  besteht
+  F4 Basisbildung (Schw. 90/365) · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  -0.1 Pp  Rang 0.420 | Lift R2 1.00 · D2 1.10 · Spiegel  0.91 | R3 -1.5 Pp |  53 Coins mit R2 | n  188 an 22 Stichtagen | Korb  +137 % (ganze Klasse  +106 %) gg. BTC
+      E2  Saldo  -7.2 Pp  Rang 0.000 | Lift R2 0.90 · D2 1.07 · Spiegel  0.84 | R3 -0.4 Pp | 221 Coins mit R2 | n 1777 an 37 Stichtagen | Korb   -21 % (ganze Klasse    -7 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.072 gegen Grenze 0.900  ->  nein
+      E3  Saldo  -2.6 Pp  Rang 0.015 | Lift R2 0.91 · D2 1.03 · Spiegel  0.88 | R3 +0.2 Pp | 135 Coins mit R2 | n 1440 an 31 Stichtagen | Korb   -40 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.034 gegen Grenze 0.954  ->  nein
+  F4 Basisbildung (Schw. 90/365) · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  -4.8 Pp  Rang 0.180 | Lift R2 0.97 · D2 1.01 · Spiegel  0.96 | R3 +1.1 Pp |  50 Coins mit R2 | n  166 an 22 Stichtagen | Korb  +128 % (ganze Klasse   +97 %) gg. BTC
+      E2  Saldo  -2.9 Pp  Rang 0.015 | Lift R2 0.93 · D2 1.01 · Spiegel  0.92 | R3 -1.9 Pp | 189 Coins mit R2 | n 1686 an 37 Stichtagen | Korb    +3 % (ganze Klasse    -6 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.008 gegen Grenze 0.916  ->  nein
+      E3  Saldo  +7.0 Pp  Rang 1.000 | Lift R2 1.14 · D2 0.93 · Spiegel  1.22 | R3 +3.2 Pp | 130 Coins mit R2 | n 1382 an 31 Stichtagen | Korb   -37 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.932 gegen Grenze 1.000  ->  besteht
+  F5 Abstand zum 365-T-Tief · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  -3.0 Pp  Rang 0.165 | Lift R2 0.99 · D2 1.10 · Spiegel  0.90 | R3 -0.6 Pp |  53 Coins mit R2 | n  232 an 24 Stichtagen | Korb  +104 % (ganze Klasse   +85 %) gg. BTC
+      E2  Saldo  -5.4 Pp  Rang 0.000 | Lift R2 0.99 · D2 1.10 · Spiegel  0.90 | R3 +1.6 Pp | 180 Coins mit R2 | n 1899 an 37 Stichtagen | Korb    -7 % (ganze Klasse    -5 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.100 gegen Grenze 0.958  ->  nein
+      E3  Saldo  -4.1 Pp  Rang 0.005 | Lift R2 0.91 · D2 1.05 · Spiegel  0.87 | R3 +0.4 Pp |  96 Coins mit R2 | n 1486 an 31 Stichtagen | Korb   -48 % (ganze Klasse   -46 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.047 gegen Grenze 0.955  ->  nein
+  F5 Abstand zum 365-T-Tief · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  -4.4 Pp  Rang 0.130 | Lift R2 0.98 · D2 1.05 · Spiegel  0.93 | R3 +0.1 Pp |  56 Coins mit R2 | n  210 an 24 Stichtagen | Korb   +87 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo  +0.9 Pp  Rang 0.770 | Lift R2 0.96 · D2 0.97 · Spiegel  1.00 | R3 -1.1 Pp | 254 Coins mit R2 | n 1831 an 37 Stichtagen | Korb   -11 % (ganze Klasse    -6 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.968 gegen Grenze 0.939  ->  nein
+      E3  Saldo  +3.8 Pp  Rang 0.995 | Lift R2 1.17 · D2 0.97 · Spiegel  1.20 | R3 +1.6 Pp | 169 Coins mit R2 | n 1399 an 28 Stichtagen | Korb   -33 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.972 gegen Grenze 1.011  ->  besteht
+  F6 Ertrag 180 T · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  -3.8 Pp  Rang 0.160 | Lift R2 0.99 · D2 1.02 · Spiegel  0.97 | R3 -1.4 Pp |  54 Coins mit R2 | n  232 an 24 Stichtagen | Korb   +92 % (ganze Klasse   +85 %) gg. BTC
+      E2  Saldo  -4.2 Pp  Rang 0.000 | Lift R2 0.94 · D2 1.05 · Spiegel  0.89 | R3 -1.0 Pp | 199 Coins mit R2 | n 1895 an 37 Stichtagen | Korb   -16 % (ganze Klasse    -7 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.052 gegen Grenze 0.919  ->  nein
+      E3  Saldo  -0.6 Pp  Rang 0.335 | Lift R2 0.93 · D2 0.98 · Spiegel  0.95 | R3 +0.9 Pp | 111 Coins mit R2 | n 1486 an 31 Stichtagen | Korb   -37 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.983 gegen Grenze 0.959  ->  nein
+  F6 Ertrag 180 T · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  +2.7 Pp  Rang 0.765 | Lift R2 1.02 · D2 1.00 · Spiegel  1.02 | R3 +1.5 Pp |  60 Coins mit R2 | n  210 an 24 Stichtagen | Korb   +86 % (ganze Klasse   +86 %) gg. BTC
+      E2  Saldo  -0.0 Pp  Rang 0.500 | Lift R2 1.01 · D2 1.08 · Spiegel  0.93 | R3 -0.3 Pp | 239 Coins mit R2 | n 1809 an 37 Stichtagen | Korb   -14 % (ganze Klasse    -8 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.079 gegen Grenze 0.963  ->  nein
+      E3  Saldo  -2.9 Pp  Rang 0.020 | Lift R2 1.19 · D2 1.06 · Spiegel  1.12 | R3 +0.4 Pp | 168 Coins mit R2 | n 1430 an 31 Stichtagen | Korb   -43 % (ganze Klasse   -44 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.059 gegen Grenze 1.012  ->  nein
+  F7 Umsatz 90/365 T · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  -4.2 Pp  Rang 0.120 | Lift R2 0.98 · D2 0.91 · Spiegel  1.08 | R3 -1.4 Pp |  55 Coins mit R2 | n  232 an 24 Stichtagen | Korb   +82 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo  -4.3 Pp  Rang 0.000 | Lift R2 0.94 · D2 1.06 · Spiegel  0.89 | R3 -0.7 Pp | 227 Coins mit R2 | n 1898 an 37 Stichtagen | Korb   -20 % (ganze Klasse    -7 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.062 gegen Grenze 0.919  ->  nein
+      E3  Saldo  -1.4 Pp  Rang 0.155 | Lift R2 0.89 · D2 1.03 · Spiegel  0.86 | R3 +0.1 Pp | 119 Coins mit R2 | n 1486 an 31 Stichtagen | Korb   -42 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.028 gegen Grenze 0.945  ->  nein
+  F7 Umsatz 90/365 T · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  +4.3 Pp  Rang 0.890 | Lift R2 1.02 · D2 1.21 · Spiegel  0.84 | R3 -0.4 Pp |  52 Coins mit R2 | n  210 an 24 Stichtagen | Korb  +116 % (ganze Klasse   +83 %) gg. BTC
+      E2  Saldo  -0.5 Pp  Rang 0.340 | Lift R2 0.97 · D2 1.00 · Spiegel  0.98 | R3 -0.8 Pp | 221 Coins mit R2 | n 1810 an 37 Stichtagen | Korb    +7 % (ganze Klasse    -8 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.997 gegen Grenze 0.953  ->  nein
+      E3  Saldo  +1.6 Pp  Rang 0.880 | Lift R2 1.10 · D2 1.00 · Spiegel  1.10 | R3 -0.9 Pp | 152 Coins mit R2 | n 1430 an 31 Stichtagen | Korb   -42 % (ganze Klasse   -44 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.998 gegen Grenze 0.991  ->  nein
+  F8 Alter · oben Fuenftel  ->  TRAEGT
+      E1  Saldo  +9.5 Pp  Rang 1.000 | Lift R2 0.99 · D2 0.77 · Spiegel  1.28 | R3 -2.5 Pp |  41 Coins mit R2 | n  354 an 24 Stichtagen | Korb   +63 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo  +3.2 Pp  Rang 0.995 | Lift R2 0.98 · D2 0.93 · Spiegel  1.05 | R3 -1.6 Pp |  86 Coins mit R2 | n 2132 an 37 Stichtagen | Korb   -12 % (ganze Klasse    -9 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.934 gegen Grenze 0.955  ->  besteht
+      E3  Saldo  +9.7 Pp  Rang 1.000 | Lift R2 1.21 · D2 0.91 · Spiegel  1.33 | R3 +2.5 Pp |  85 Coins mit R2 | n 1616 an 31 Stichtagen | Korb   -28 % (ganze Klasse   -48 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.909 gegen Grenze 1.014  ->  besteht
+  F8 Alter · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  -2.5 Pp  Rang 0.245 | Lift R2 1.00 · D2 1.16 · Spiegel  0.86 | R3 -1.9 Pp | 114 Coins mit R2 | n  324 an 24 Stichtagen | Korb   +49 % (ganze Klasse   +74 %) gg. BTC
+      E2  Saldo  -5.8 Pp  Rang 0.000 | Lift R2 0.98 · D2 1.13 · Spiegel  0.87 | R3 +0.2 Pp | 195 Coins mit R2 | n 2052 an 37 Stichtagen | Korb   -15 % (ganze Klasse    -9 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.126 gegen Grenze 0.953  ->  nein
+      E3  Saldo -14.1 Pp  Rang 0.000 | Lift R2 0.78 · D2 1.10 · Spiegel  0.71 | R3 -2.7 Pp | 109 Coins mit R2 | n 1553 an 31 Stichtagen | Korb   -58 % (ganze Klasse   -47 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.100 gegen Grenze 0.911  ->  nein
+  F9 TVL gegen Kurs (Teilmenge) · oben Fuenftel  ->  traegt nicht
+      E1  -
+      E2  Saldo  +7.6 Pp  Rang 0.995 | Lift R2 1.11 · D2 0.90 · Spiegel  1.23 | R3 +0.5 Pp |  51 Coins mit R2 | n  371 an 28 Stichtagen | Korb   -31 % (ganze Klasse   -31 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.902 gegen Grenze 1.025  ->  besteht
+      E3  Saldo  +3.6 Pp  Rang 0.955 | Lift R2 1.13 · D2 1.00 · Spiegel  1.13 | R3 +1.6 Pp |  49 Coins mit R2 | n  440 an 26 Stichtagen | Korb   -58 % (ganze Klasse   -53 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.003 gegen Grenze 0.997  ->  nein
+  F9 TVL gegen Kurs (Teilmenge) · unten Fuenftel  ->  traegt nicht
+      E1  -
+      E2  Saldo  -1.2 Pp  Rang 0.290 | Lift R2 0.90 · D2 1.05 · Spiegel  0.86 | R3 -1.0 Pp |  39 Coins mit R2 | n  329 an 28 Stichtagen | Korb   -16 % (ganze Klasse   -29 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.051 gegen Grenze 0.905  ->  nein
+      E3  Saldo  -0.9 Pp  Rang 0.430 | Lift R2 1.08 · D2 0.97 · Spiegel  1.11 | R3 +0.6 Pp |  41 Coins mit R2 | n  401 an 26 Stichtagen | Korb   -30 % (ganze Klasse   -53 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.971 gegen Grenze 0.982  ->  besteht
+  F10 Aktive Adressen (Teilmenge) · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  +9.9 Pp  Rang 1.000 | Lift R2 1.11 · D2 0.85 · Spiegel  1.32 | R3 +7.6 Pp |  21 Coins mit R2 | n   80 an 22 Stichtagen | Korb   +27 % (ganze Klasse   +62 %) gg. BTC
+      E2  Saldo  -4.9 Pp  Rang 0.060 | Lift R2 0.93 · D2 1.05 · Spiegel  0.89 | R3 +2.2 Pp |  36 Coins mit R2 | n  342 an 37 Stichtagen | Korb   -33 % (ganze Klasse   -31 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.047 gegen Grenze 0.916  ->  nein
+      E3  Saldo  -9.0 Pp  Rang 0.020 | Lift R2 0.93 · D2 1.07 · Spiegel  0.87 | R3 +2.5 Pp |  21 Coins mit R2 | n  180 an 20 Stichtagen | Korb   -40 % (ganze Klasse   -24 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.069 gegen Grenze 0.959  ->  nein
+  F10 Aktive Adressen (Teilmenge) · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  -6.4 Pp  Rang 0.065 | Lift R2 0.89 · D2 1.10 · Spiegel  0.81 | R3 -8.0 Pp |  19 Coins mit R2 | n   66 an 22 Stichtagen | Korb    -9 % (ganze Klasse   +62 %) gg. BTC
+      E2  Saldo  +4.1 Pp  Rang 0.870 | Lift R2 1.10 · D2 0.94 · Spiegel  1.17 | R3 +1.4 Pp |  37 Coins mit R2 | n  285 an 37 Stichtagen | Korb   -25 % (ganze Klasse   -29 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.940 gegen Grenze 1.024  ->  besteht
+      E3  Saldo +15.9 Pp  Rang 1.000 | Lift R2 1.19 · D2 0.88 · Spiegel  1.35 | R3 +5.1 Pp |  25 Coins mit R2 | n  149 an 20 Stichtagen | Korb   +35 % (ganze Klasse   -19 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.882 gegen Grenze 1.012  ->  besteht
+  F11 Funding 30 T (Teilmenge) · oben Fuenftel  ->  traegt nicht
+      E1  Saldo  +2.3 Pp  Rang 0.555 | Lift R2 1.01 · D2 0.72 · Spiegel  1.41 | R3 -3.5 Pp |  27 Coins mit R2 | n   59 an 10 Stichtagen | Korb   +52 % (ganze Klasse   +73 %) gg. BTC
+      E2  Saldo  +3.9 Pp  Rang 0.985 | Lift R2 1.06 · D2 1.07 · Spiegel  1.00 | R3 +3.6 Pp | 115 Coins mit R2 | n  724 an 37 Stichtagen | Korb   -10 % (ganze Klasse   -19 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.066 gegen Grenze 0.995  ->  nein
+      E3  Saldo  -1.8 Pp  Rang 0.230 | Lift R2 1.14 · D2 1.04 · Spiegel  1.09 | R3 +1.9 Pp | 105 Coins mit R2 | n  880 an 20 Stichtagen | Korb   -57 % (ganze Klasse   -49 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.044 gegen Grenze 1.002  ->  nein
+  F11 Funding 30 T (Teilmenge) · unten Fuenftel  ->  traegt nicht
+      E1  Saldo  +2.3 Pp  Rang 0.515 | Lift R2 1.01 · D2 1.23 · Spiegel  0.82 | R3 +0.7 Pp |  32 Coins mit R2 | n   47 an 10 Stichtagen | Korb  +104 % (ganze Klasse   +73 %) gg. BTC
+      E2  Saldo  -2.0 Pp  Rang 0.180 | Lift R2 0.97 · D2 1.00 · Spiegel  0.97 | R3 -2.7 Pp |  95 Coins mit R2 | n  657 an 37 Stichtagen | Korb   -20 % (ganze Klasse   -19 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.005 gegen Grenze 0.948  ->  nein
+      E3  Saldo  +0.8 Pp  Rang 0.670 | Lift R2 0.91 · D2 0.98 · Spiegel  0.92 | R3 -0.9 Pp |  83 Coins mit R2 | n  836 an 20 Stichtagen | Korb   -43 % (ganze Klasse   -49 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.982 gegen Grenze 0.954  ->  nein
+  F12 OI-Aenderung 90 T (Auskunft) · oben Fuenftel  ->  Auskunft
+      E1  -
+      E2  Saldo  -7.0 Pp  Rang 0.035 | Lift R2 0.94 · D2 0.98 · Spiegel  0.95 | R3 -2.6 Pp |  29 Coins mit R2 | n  188 an 22 Stichtagen | Korb   -42 % (ganze Klasse   -39 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.984 gegen Grenze 0.917  ->  nein
+      E3  Saldo  -3.3 Pp  Rang 0.180 | Lift R2 0.89 · D2 1.01 · Spiegel  0.88 | R3 -0.6 Pp |  30 Coins mit R2 | n  289 an 20 Stichtagen | Korb   -59 % (ganze Klasse   -58 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.014 gegen Grenze 0.946  ->  nein
+  F12 OI-Aenderung 90 T (Auskunft) · unten Fuenftel  ->  Auskunft
+      E1  -
+      E2  Saldo  -3.4 Pp  Rang 0.180 | Lift R2 0.99 · D2 1.03 · Spiegel  0.96 | R3 -0.9 Pp |  33 Coins mit R2 | n  149 an 22 Stichtagen | Korb   -41 % (ganze Klasse   -40 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 1.029 gegen Grenze 0.956  ->  nein
+      E3  Saldo  +2.5 Pp  Rang 0.740 | Lift R2 1.15 · D2 1.00 · Spiegel  1.15 | R3 -0.1 Pp |  37 Coins mit R2 | n  259 an 20 Stichtagen | Korb   -59 % (ganze Klasse   -58 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.996 gegen Grenze 1.004  ->  besteht
+
+KOMBINATION (Auswahl auf E2: Rang >= 0,90, Spiegel >= 1,717): F1 unten, F2 oben, F8 oben, F9 oben
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\as_messung.py:307: RuntimeWarning: Mean of empty slice
+  wert = np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(np.where(np.isnan(P), np.nan, P), axis=0))
+  Wert aus 4 Merkmalen · oberes Fuenftel · Pruefung E3 (E2 = Auswahl, nur Auskunft)  ->  TRAEGT
+      E1  Saldo  +9.1 Pp  Rang 1.000 | Lift R2 1.00 · D2 0.87 · Spiegel  1.16 | R3 -0.8 Pp |  45 Coins mit R2 | n  351 an 24 Stichtagen | Korb   +79 % (ganze Klasse   +84 %) gg. BTC
+      E2  Saldo +11.0 Pp  Rang 1.000 | Lift R2 1.14 · D2 0.87 · Spiegel  1.31 | R3 +0.7 Pp | 153 Coins mit R2 | n 2136 an 37 Stichtagen | Korb    -6 % (ganze Klasse    -8 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.872 gegen Grenze 1.035  ->  besteht
+      E3  Saldo  +7.8 Pp  Rang 1.000 | Lift R2 1.21 · D2 0.94 · Spiegel  1.29 | R3 +2.3 Pp | 103 Coins mit R2 | n 1609 an 31 Stichtagen | Korb   -39 % (ganze Klasse   -48 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.941 gegen Grenze 1.014  ->  besteht
+
+PRUEFUNGEN F8 Alter (oben Fuenftel)
+  Dosis E2  Fuenftel 1..5 Saldo:  -5.8  -4.0  +1.7  +5.0  +3.2
+  Dosis E3  Fuenftel 1..5 Saldo: -14.1  -4.9  +0.9  +7.7  +9.7
+  Klasse H  E2 Saldo  +6.3 Pp Spiegel 1.26 · E3 Saldo +40.2 Pp Spiegel 4.12
+  Klasse M  E2 Saldo  +2.8 Pp Spiegel 0.98 · E3 Saldo +29.1 Pp Spiegel 1.53
+  Klasse S  E2 Saldo  +3.3 Pp Spiegel 1.07 · E3 Saldo  +6.6 Pp Spiegel 1.23
+  Jahr 2019  Saldo +15.5 Pp · Spiegel 1.07 · 15 Coins
+  Jahr 2020  Saldo  +3.5 Pp · Spiegel 1.44 · 41 Coins
+  Jahr 2021  Saldo +13.8 Pp · Spiegel 1.18 · 58 Coins
+  Jahr 2022  Saldo  +1.7 Pp · Spiegel 0.94 · 31 Coins
+  Jahr 2023  Saldo  -6.3 Pp · Spiegel 1.08 · 73 Coins
+  Jahr 2024  Saldo +23.2 Pp · Spiegel 1.56 · 77 Coins
+  Jahr 2025  Saldo  +7.1 Pp · Spiegel 1.00 · 23 Coins
+  Jahr 2026  Saldo  -4.8 Pp · Spiegel 0.60 · 2 Coins
+  Weglassprobe E2 ohne DUSK,FET,WAVES,CTXC,COCOS: Saldo  +0.7 Pp · Spiegel 0.98
+  Weglassprobe E3 ohne ZEC,DASH,FUN,XLM,ALGO: Saldo  +6.9 Pp · Spiegel 1.18
+
+AUSKUNFT 24 Monate (ohne Nullwelt; E3 nur 8 Stichtage):
+  F1   Tiefe (Schluss/Allzeithoch)    oben  E2 Saldo  -8.6 Pp Spiegel 0.86 · E3 Saldo  -2.2 Pp Spiegel 0.82
+  F1   Tiefe (Schluss/Allzeithoch)    unten E2 Saldo  +5.5 Pp Spiegel 1.13 · E3 Saldo  -1.7 Pp Spiegel 1.06
+  F2   Dauer seit Allzeithoch         oben  E2 Saldo  +5.3 Pp Spiegel 1.10 · E3 Saldo  -1.3 Pp Spiegel 1.00
+  F2   Dauer seit Allzeithoch         unten E2 Saldo -10.6 Pp Spiegel 0.85 · E3 Saldo  -6.0 Pp Spiegel 0.70
+  F3   Schwankung 90 T                oben  E2 Saldo -12.6 Pp Spiegel 0.85 · E3 Saldo  -4.3 Pp Spiegel 0.74
+  F3   Schwankung 90 T                unten E2 Saldo  +5.5 Pp Spiegel 1.08 · E3 Saldo  +8.0 Pp Spiegel 1.49
+  F4   Basisbildung (Schw. 90/365)    oben  E2 Saldo  -9.2 Pp Spiegel 0.86 · E3 Saldo  -0.7 Pp Spiegel 0.85
+  F4   Basisbildung (Schw. 90/365)    unten E2 Saldo  -2.3 Pp Spiegel 0.93 · E3 Saldo  +2.9 Pp Spiegel 1.18
+  F5   Abstand zum 365-T-Tief         oben  E2 Saldo -10.8 Pp Spiegel 0.83 · E3 Saldo  -4.5 Pp Spiegel 0.79
+  F5   Abstand zum 365-T-Tief         unten E2 Saldo  +1.3 Pp Spiegel 1.01 · E3 Saldo  +3.5 Pp Spiegel 1.23
+  F6   Ertrag 180 T                   oben  E2 Saldo  -7.0 Pp Spiegel 0.88 · E3 Saldo  -5.5 Pp Spiegel 0.79
+  F6   Ertrag 180 T                   unten E2 Saldo  -4.0 Pp Spiegel 0.92 · E3 Saldo  +5.6 Pp Spiegel 1.24
+  F7   Umsatz 90/365 T                oben  E2 Saldo  -7.0 Pp Spiegel 0.87 · E3 Saldo  -0.6 Pp Spiegel 0.85
+  F7   Umsatz 90/365 T                unten E2 Saldo  +1.0 Pp Spiegel 1.01 · E3 Saldo  +1.9 Pp Spiegel 1.10
+  F8   Alter                          oben  E2 Saldo  +6.6 Pp Spiegel 1.09 · E3 Saldo  +3.8 Pp Spiegel 1.33
+  F8   Alter                          unten E2 Saldo -10.1 Pp Spiegel 0.89 · E3 Saldo  -4.8 Pp Spiegel 0.72
+  F9   TVL gegen Kurs (Teilmenge)     oben  E2 Saldo  +9.0 Pp Spiegel 1.15 · E3 Saldo  +7.5 Pp Spiegel 1.28
+  F9   TVL gegen Kurs (Teilmenge)     unten E2 Saldo  -7.6 Pp Spiegel 0.81 · E3 Saldo  -2.5 Pp Spiegel 1.05
+  F10  Aktive Adressen (Teilmenge)    oben  E2 Saldo -10.6 Pp Spiegel 0.83 · E3 Saldo  +1.1 Pp Spiegel 1.06
+  F10  Aktive Adressen (Teilmenge)    unten E2 Saldo  +8.8 Pp Spiegel 1.16 · E3 Saldo +12.3 Pp Spiegel 1.24
+  F11  Funding 30 T (Teilmenge)       oben  E2 Saldo  +5.4 Pp Spiegel 1.05 · E3 Saldo  -5.7 Pp Spiegel 0.99
+  F11  Funding 30 T (Teilmenge)       unten E2 Saldo  -1.6 Pp Spiegel 0.97 · E3 Saldo  +6.6 Pp Spiegel 1.09
+  F12  OI-Aenderung 90 T (Auskunft)   oben  E2 Saldo -10.4 Pp Spiegel 0.88 · E3 Saldo  +1.1 Pp Spiegel 1.09
+  F12  OI-Aenderung 90 T (Auskunft)   unten E2 Saldo  +0.2 Pp Spiegel 0.96 · E3 Saldo  -2.2 Pp Spiegel 0.98
+
+GESAMT (vorab §19.2):
+  F1   Tiefe (Schluss/Allzeithoch)    oben  -
+  F1   Tiefe (Schluss/Allzeithoch)    unten -
+  F2   Dauer seit Allzeithoch         oben  -
+  F2   Dauer seit Allzeithoch         unten -
+  F3   Schwankung 90 T                oben  -
+  F3   Schwankung 90 T                unten -
+  F4   Basisbildung (Schw. 90/365)    oben  -
+  F4   Basisbildung (Schw. 90/365)    unten -
+  F5   Abstand zum 365-T-Tief         oben  -
+  F5   Abstand zum 365-T-Tief         unten -
+  F6   Ertrag 180 T                   oben  -
+  F6   Ertrag 180 T                   unten -
+  F7   Umsatz 90/365 T                oben  -
+  F7   Umsatz 90/365 T                unten -
+  F8   Alter                          oben  TRAEGT
+  F8   Alter                          unten -
+  F9   TVL gegen Kurs (Teilmenge)     oben  -
+  F9   TVL gegen Kurs (Teilmenge)     unten -
+  F10  Aktive Adressen (Teilmenge)    oben  -
+  F10  Aktive Adressen (Teilmenge)    unten -
+  F11  Funding 30 T (Teilmenge)       oben  -
+  F11  Funding 30 T (Teilmenge)       unten -
+  Kombination                               TRAEGT

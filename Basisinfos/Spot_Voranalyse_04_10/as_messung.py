@@ -9,6 +9,8 @@ AUSLEGUNG, vor dem ersten Lauf festgelegt (im Plan nicht genau bestimmt):
   - Saldo der Zelle = (Anteil R2 - Anteil L) im Fuenftel minus derselbe Saldo aller Coins der Zelle MIT Merkmal; Stichtag = nach Coinzahl gewichtetes
     Mittel seiner Zellen; Epoche = Mittel ueber die Stichtage. Nullwelt: in jeder Zelle gleich viele Coins zufaellig, 200 Ziehungen; Rang = Anteil < echt
   - Spiegelprobe: Lift = Treffer im Fuenftel / erwartete Treffer (Anteil der Zelle x Fuenftelgroesse), ueber die Epoche summiert; Verhaeltnis Lift(R2)/Lift(D2)
+    NACHTRAG 06.10. (§19.4, E-72): die Schwelle 1,717 ist ersetzt durch die bewegungsgleiche Spiegelprobe (spiegel_ok) - der Selbsttest (b)
+    war an 1,717 gescheitert; das Verhaeltnis wird weiter ausgewiesen
   - F1/F2/F5 erst ab 180 T Kursgeschichte; F4 braucht 250 T fuer die 365-T-Schwankung; F7 180 T Umsatz fuer das 365-T-Mittel
   - F6 = 180-T-Ertrag (der Klassenmedian ist je Zelle konstant und aendert den Rang nicht)
   - Externe Quellen (TVL, Adressen, Funding, OI) nur mit Daten bis t-1 (ein Tag Abstand, Veroeffentlichung); asof hoechstens 7 T alt
@@ -205,8 +207,35 @@ def bewerte(Z, f, seite, nz=NZ, null=True, ohne=None, ep_liste=("E1", "E2", "E3"
     return out
 
 
+# ---------------------------------------------------------------- Spiegelprobe 'bewegungsgleich' (§19.4, ersetzt 1,717 - Entscheid 06.10., E-72)
+GRID = {}
+G_SCHRITT = float(os.environ.get("AS_SCHRITT", "0.05"))
+G_ZIEH = int(os.environ.get("AS_ZIEH", "100"))
+
+
+def baue_grid(Z):
+    """Bewegungswelten f = s*(R2+D2) + N(0,1), s von -2 bis +2 (negativ: ruhige Coins, beide Enden seltener), je Epoche alle (Lift R2, Lift D2)."""
+    pts = {"E2": [], "E3": []}
+    for s in np.round(np.arange(-2.0, 2.0001, G_SCHRITT), 2):
+        for _ in range(G_ZIEH):
+            o = bewerte(Z, s * (Z.r2 + Z.d2) + RNG.normal(size=len(Z.D)), "oben", null=False, ep_liste=("E2", "E3"))
+            for e in pts:
+                pts[e].append((o[e]["lift_r2"], o[e]["lift_d2"]))
+    for e in pts:
+        GRID[e] = np.array(pts[e])
+
+
+def spiegel_ok(x, e):
+    """besteht, wenn Lift(D2) unter dem 2,5. Perzentil der 200 Bewegungswelten mit dem naechstliegenden BEOBACHTETEN Lift(R2) liegt."""
+    g = GRID[e]
+    nb = g[np.argsort(np.abs(g[:, 0] - x["lift_r2"]))[:200]]
+    grenze = np.percentile(nb[:, 1], 2.5)
+    x["spiegel_grenze"] = grenze
+    return bool(x["lift_d2"] < grenze)
+
+
 def traegt(o, eps=("E2", "E3"), schwelle=0.975):
-    return all(o.get(e) and o[e]["saldo"] > 0 and o[e]["rang"] >= schwelle and o[e]["spiegel"] >= SPIEGEL and o[e]["coins"] >= 10 for e in eps)
+    return all(o.get(e) and o[e]["saldo"] > 0 and o[e]["rang"] >= schwelle and spiegel_ok(o[e], e) and o[e]["coins"] >= 10 for e in eps)
 
 
 def drucke(name, o):
@@ -218,6 +247,9 @@ def drucke(name, o):
         print("      %s  Saldo %+5.1f Pp%s | Lift R2 %.2f · D2 %.2f · Spiegel %5.2f | R3 %+4.1f Pp | %3d Coins mit R2 | n %4d an %2d Stichtagen | Korb %+5.0f %% (ganze Klasse %+5.0f %%) gg. BTC" % (
             e, 100 * x["saldo"], ("  Rang %.3f" % x["rang"]) if x["rang"] is not None else "", x["lift_r2"], x["lift_d2"], x["spiegel"], 100 * x["r3"], x["coins"],
             x["n"], x["tage"], 100 * x["korb"], 100 * x["korb_k"]))
+        if e in GRID:
+            ok = spiegel_ok(x, e)
+            print("            Spiegelprobe bewegungsgleich: Lift D2 %.3f gegen Grenze %.3f  ->  %s" % (x["lift_d2"], x["spiegel_grenze"], "besteht" if ok else "nein"))
 
 
 # ---------------------------------------------------------------- Selbsttest
@@ -247,6 +279,8 @@ def main():
     D = paare(365).reset_index(drop=True)
     Z = Zellen(D)
     print("Asymmetrie-Messung (§19.2) · Kurse bis %s · %d Coin-Anker (12 Monate) · Saldo = (R2 - L) im Fuenftel minus Zelle\n" % (ENDE.date(), len(D)))
+    baue_grid(Z)
+    print("Bewegungswelten fuer die Spiegelprobe: %d je Epoche (s -2..2 in %.2f, je %d Ziehungen)\n" % (len(GRID["E2"]), G_SCHRITT, G_ZIEH))
     ok, _ = selbsttest(Z)
     if not ok:
         print("\nSELBSTTEST NICHT BESTANDEN - keine Messung (Plan §19.2: erst die Anlage reparieren).")
@@ -265,7 +299,7 @@ def main():
             t = traegt(o) and k != "F12"
             drucke("%s %s · %s Fuenftel  ->  %s" % (k, NAMEN[k], seite, "TRAEGT" if t else ("Auskunft" if k == "F12" else "traegt nicht")), o)
     # Kombination
-    wahl = [(k, s) for (k, s), o in erg.items() if k != "F12" and o.get("E2") and o["E2"]["rang"] >= 0.90 and o["E2"]["spiegel"] >= SPIEGEL and o["E2"]["saldo"] > 0]
+    wahl = [(k, s) for (k, s), o in erg.items() if k != "F12" and o.get("E2") and o["E2"]["rang"] >= 0.90 and spiegel_ok(o["E2"], "E2") and o["E2"]["saldo"] > 0]
     print("\nKOMBINATION (Auswahl auf E2: Rang >= 0,90, Spiegel >= 1,717): %s" % (", ".join("%s %s" % w for w in wahl) or "keine"))
     komb_tr = False
     if wahl:
