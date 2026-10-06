@@ -1670,3 +1670,57 @@ Belege:
 - `umlaufmenge_cg.db` hat Tageswerte erst ab 21.09.2025.
 - Messbar sind damit nur A1-Ereignisse ab etwa 03/2026, mit 180-T-Wachstum **vor** dem Ereignis.
 - Das wäre der vierte Blick auf die Daten: **Beschreibung**.
+
+## 16. Makro-Liquidität, Verwässerung und externe Recherche — Voranalyse und Messplan VOR der Messung (06.10.2026)
+
+Nutzer 06.10.: *„Denke, du solltest noch wichtige Makrodaten wie Liquiditätsausweitung etc. heranziehen und eine externe Recherche zu unseren Themen durchführen.“*
+
+⚠️ **Stehende Vorgabe (01.10.):** Übergeordnete Kräfte werden nur **gewichtet**, sie werden **kein Signal und kein Blocker**. Liquidität kommt deshalb höchstens als **Gewicht** in die Klima-Ampel und als **Auskunft** in die Mail.
+
+**Prüffrage:** Hat das Merkmal zur selben Stunde für zwei Assets verschiedene Werte?
+- **Nein** bei der Liquidität: Sie ist eine Zeitachse, und deren Fallzahl ist die Zahl der Phasenwechsel (2.599).
+- **Ja** bei der Verwässerung: Sie ist ein Kandidat je Asset.
+
+### 16.1 Externe Recherche — was zu unseren Befunden passt
+
+| Thema | Quelle | Aussage | Bezug zu uns |
+|---|---|---|---|
+| **Altseason nach dem ETF** | Bybit × Block Scholes | Frühere Zyklen: BTC-Dominanz von > 80 % auf < 32 %, Alt-Marktwert ×6–7. 2024 blieb die Dominanz trotz neuer BTC-Hochs fast flach. ETH hat die Führungsrolle verloren (ETH/BTC 0,03 gegen 0,08 im letzten Zyklus). Mögliche Ursache: Kapital in Spot-ETFs **gebunden**, die Rotation fällt aus | **deckt §15.10:** Der Bruch ist die Epoche E3 |
+| **M2 und BTC** | CF Benchmarks (monatlich 2000–02/2026) | 4-Jahres-Korrelation 0,4–0,6; R² 0,71–0,90 im Jahr 2022. **2025/26 entkoppelt:** M2 +12 %, BTC −12 %, R² auf 0,59, Abstand zum Modellwert 46 % | Liquidität erklärt **nicht** stabil, gerade in E3 nicht |
+| **„M2 führt BTC um 10–13 Wochen“** | Au79, Netliquidity, arXiv 2607.26188 | Verbreitete Faustregel; als Artefakt **einer** Epoche kritisiert | Verzögerung nur als Auskunft, nicht als Hauptarm |
+| **Indikatoren verfallen** | arXiv 2607.26188 („Bitcoin Runs on a Clock“) | Pi Cycle, **MVRV**, Mayer, Puell: Ausschläge werden von Zyklus zu Zyklus kleiner, feste Schwellen veralten. Die Halving-Zeitstruktur sei stabil. **Vorab-Prognose: Boden 05.10.–16.11.2026** | Unser Klima nutzt MVRV, aber als Perzentil im wachsenden Fenster, nicht als feste Schwelle. Die Prognose ist **Auskunft** (ein Autor, nicht begutachtet); sie ist jetzt überprüfbar |
+| **Token-Freigaben** | Keyrock (16.000 Freigaben, 40 Tokens) | 90 % drücken den Kurs. Wirkung beginnt **30 T vorher**. Große Freigaben (> 5 % des Umlaufs): Median −8 bis −15 %. **Team-Freigaben −25 %**, Ökosystem +1 % | Ursache für E3 plausibel: 2024er Tokens starteten mit im Schnitt **12 % Umlauf** zum vollen Wert |
+| **Querschnitt Krypto** | Liu, Tsyvinski, Wu (NBER 25882); Studie zu Größe und Umsatz | **Momentum** über 1–4 Wochen trägt im Querschnitt. Kleine, illiquide Coins zeigen **kurzfristige Umkehr**, große und liquide Momentum | Unser Bodenkauf ist eine **Umkehr**-Wette über Wochen. Die Literatur spricht für Umkehr nur kurz und nur bei Kleinen, sonst für **Momentum** → mögliche Fassung 4 |
+| **Altseason-Auslöser** | Acheron, Block Scholes | ETH/BTC über dem 250-T-Schnitt, Dominanz unter dem 250-T-Schnitt, wachsender Stablecoin-Umlauf, Zinssenkungen | Stablecoins: siehe 16.2 |
+
+### 16.2 Vorprüfung Datenlage (`l1_vorpruefung.py` → `.txt`, nur Datenlage)
+
+Quellen ohne Schlüssel, live:
+- FRED `fredgraph.csv`: WALCL, WTREGEN, RRPONTSYD, M2SL, bis 30.09.2026;
+- DefiLlama: Stablecoins gesamt, bis 06.10.2026.
+
+| | |
+|---|---|
+| **Netto-Liquidität USA** (Fed-Bilanz − TGA − RRP) | heute **5,78 Bio. USD**, RRP praktisch leer (0,012 Bio.). 13-W-Änderung ab 2019: steigend in **52 %** (E2) und **48 %** (E3) der Zeit; **14** bzw. **27** Vorzeichenwechsel ⇒ als Zeitachse **messbar**, mit zirkulärer Nullwelt |
+| **Stablecoin-Umlauf** (91-T-Änderung) | E2 nur **2** Wechsel; E3 zu **89 %** steigend, 4 Wechsel ⇒ als Zeitachse **nicht messbar**, nur Auskunft. ⚠️ **Fakt dazu:** In E3 wuchs der Stablecoin-Umlauf fast durchgehend, und die Altcoins fielen trotzdem gegen BTC (§15.10). Die Faustregel *Stablecoins steigen → Alts steigen* hat in E3 **nicht** gegolten |
+| **Verwässerung** (Umlaufmenge 180 T vor dem Ereignis) | Coin Metrics `splycur` 66 Coins ab 2013 (eher ältere Coins); CoinGecko `umlaufmenge_cg` ab 21.09.2025. A1-Ereignisse mit Wert: **E2 86** (H 6, M 28, S 52), **E3 209** (H 6, M 31, S 172) |
+
+### 16.3 Messplan (vorab; Einstieg A1, Ausstiege X4/X5 wie §15.9; Vergleich, Kosten und Tagesklammer wie §15.4)
+
+| | Frage | Zustand / Gruppe | Trägt (vorab) |
+|---|---|---|---|
+| **L1** | Bringt der Bodenkauf bei **steigender** Netto-Liquidität mehr gegen BTC? | 13-W-Änderung des **zuletzt veröffentlichten** Wochenwerts am Ereignistag (Mittwochswert gilt ab Freitag): steigend gegen fallend. Klassen **gepoolt**, je Klasse Auskunft. Verzögerung 13 W nur als Auskunft | Unterschied (steigend − fallend) **> 0 in E2 und E3** und Rang **≥ 0,95** gegen 200 **zirkuläre Verschiebungen** der Liquiditätsreihe (mindestens 26 W). Je X4 und X5 |
+| **L2** | Stablecoin-Umlauf | — | **nur Auskunft** (zu wenige Wechsel) |
+| **L3** | Bringt **geringe Verwässerung** mehr gegen BTC? (Kandidat je Asset) | Umlaufwachstum 180 T vor dem Ereignis, Hälften am Median **je Epoche**. Wachstum > +300 % oder Sprung > 50 % an einem Tag gilt als Datenfehler (Token-Umstellung): ausgeschlossen und ausgewiesen; bei CoinGecko nur `urteil = ok` | niedrig − hoch **> 0 in E2 und E3**, Rang **≥ 0,95** gegen 200 Permutationen des Wachstums innerhalb der Epoche. Je X4 und X5 |
+| **L4** | **Kern:** Liquidität als zusätzliches **Gewicht** zum BTC-Klima? | BTC-Folgeertrag 180 T je Tag, nach Klima-Drittel (q) × Liquidität steigend/fallend | in E2 und E3 je Klima-Drittel steigend − fallend > 0 **und** Rang ≥ 0,95 (zirkulär, wie L1). Sonst bleibt die Liquidität Auskunft in der Ampel |
+
+- **Mehrfachtesten:** 5 Hauptfragen (L1 ×2, L3 ×2, L4). Die Forderung *beide Epochen* gilt überall.
+- **Folge:**
+  - Trägt eines davon, kommt es als **Gewicht** in die Ampel bzw. ins Altcoin-Signal; Voranalyse vor dem Bau.
+  - Trägt nichts, geht die Liquidität als **Fakt** in die Ampel und die Mail; die Altcoins gehen nach D4.
+
+⚠️ **Ehrlich:**
+- Es ist der vierte Blick auf die Altcoin-Ereignisse: **Beschreibung**.
+- Bei L3 ist die Fallzahl in E2 klein (86), und Coin Metrics deckt eher Überlebende ab.
+- L4 überschneidet sich mit der Klima-Messung K3 (gleiche Tage).
+- **Möglicher nächster Schritt aus der Recherche, kein Teil dieses Plans:** Fassung 4 **Momentum** statt Umkehr (Querschnitt der H/M-Coins gegen BTC), eigener Plan nach diesem Ergebnis.
