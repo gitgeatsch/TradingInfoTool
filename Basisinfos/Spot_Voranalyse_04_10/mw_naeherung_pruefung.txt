@@ -1,0 +1,11 @@
+Gegenpruefung Naeherung Marktwert · Coins mit CoinMetrics-Marktwert, heutigem Umlauf und Kurs: 40
+
+  Stichtag      n  Spearman      Abweichung Median    andere Klasse (relativ)
+  2020-01-01   16     0.959                    26 %                  4 von 16 (25 %) · am staerksten zu gross: DASH x1.4, XTZ x1.5, ZEC x2.1 · zu klein: XLM x0.33, XRP x0.63
+  2021-01-01   30     0.970                    22 %                  6 von 30 (20 %) · am staerksten zu gross: SUSHI x1.6, DOT x1.7, SNX x2.7 · zu klein: XLM x0.33, UNI x0.62
+  2021-06-01   32     0.979                    22 %                  0 von 32 (0 %) · am staerksten zu gross: KNC x1.9, LPT x2.1, SNX x2.6 · zu klein: XLM x0.33, UNI x0.63
+  2022-06-01   36     0.951                    17 %                  4 von 36 (11 %) · am staerksten zu gross: LPT x2.0, SNX x2.2, KNC x3.9 · zu klein: GNO x0.26, XLM x0.33
+  2023-01-01   34     0.953                    16 %                  2 von 34 (6 %) · am staerksten zu gross: SNX x1.9, LPT x2.0, KNC x7.3 · zu klein: GNO x0.27, XLM x0.33
+  2024-01-01   36     0.842                    15 %                  6 von 36 (17 %) · am staerksten zu gross: LPT x2.0, GAS x2.3, KNC x9.0 · zu klein: XVG x0.01, GNO x0.26
+  2025-01-01   37     0.878                    10 %                  4 von 37 (11 %) · am staerksten zu gross: LPT x2.0, GAS x2.2, KNC x16.5 · zu klein: XVG x0.01, GNO x0.27
+  2026-01-01   35     0.902                     6 %                  4 von 35 (11 %) · am staerksten zu gross: SNX x1.7, LPT x2.0, KNC x18.3 · zu klein: XVG x0.01, GNO x0.26

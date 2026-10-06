@@ -2783,3 +2783,66 @@ Beleg: `sp_vorpruefung.py` → `.txt`, Daten nach `data/_spot/strukturprofil.db`
    - D **Bestand**: Alter, Widerstandskraft gegen die Klasse;
    - E **Kategorie**: Meme, Gaming, L1, DeFi, Infrastruktur.
 4. **Messbar als Auskunft** (mit Vorgriffsvorbehalt, weil die Fakten von heute stammen): Stürzen Coins mit fester, voll ausgegebener Menge, mit Nutzung, mit RWA-Kategorie bzw. ohne Meme-Kategorie seltener ab, und verdoppeln sie sich häufiger?
+
+## 25. Messplan Marktwert-Klassen, Strukturprofil und Prüfstein QNT — VOR der Messung (06.10.2026)
+
+Nutzer 06.10.: *„Ja, Messplan vorbereiten, prüfen und gegenprüfen.“*
+
+### 25.1 Vorprüfung: Taugt die Näherung *Marktwert(t) = Umlauf heute × Kurs(t)*? (`mw_naeherung_pruefung.py` → `.txt`)
+
+Verglichen mit dem echten Marktwert von CoinMetrics an 16–40 Coins je Stichtag:
+
+| Stichtag | n | Rangkorrelation | Abweichung Median | andere Klasse |
+|---|---|---|---|---|
+| 01.01.2020 | 16 | 0,96 | 26 % | 25 % |
+| 01.01.2021 | 30 | 0,97 | 22 % | 20 % |
+| 01.06.2022 | 36 | 0,95 | 17 % | 11 % |
+| 01.01.2024 | 36 | 0,84 | 15 % | 17 % |
+| 01.01.2026 | 35 | 0,90 | 6 % | 11 % |
+
+- Ausreißer: KNC ×18 (Token-Umstellung), XVG ×0,01, XLM ×0,33, GNO ×0,26. Das sind Unterschiede in der **Definition** der Umlaufmenge zwischen CoinMetrics und CoinGecko, nicht nur Näherungsfehler.
+- ⇒ **Brauchbar als Näherung.** Die Rangfolge stimmt weitgehend; rund 10–25 % der Coins stehen an einem Stichtag in einer anderen Klasse.
+- ⚠️ Geprüft nur an älteren, großen Coins; bei jungen Coins mit späteren Freigaben ist die Näherung schlechter (sie wirken früher zu groß).
+
+### 25.2 Teil 1 — Watchlist auf Marktwert-Klassen
+
+| | |
+|---|---|
+| **Marktwert** | Umlauf heute (CoinGecko) × Schluss t. Wo CoinMetrics eine Umlaufmenge zu t hat (66 Coins), gilt die echte |
+| ⚠️ **Überlebensverzerrung** | **Eingestellte** Coins haben heute bei CoinGecko keinen Umlauf. Ohne Gegenmaßnahme fielen sie heraus, und genau sie sind das linke Ende. ⇒ Coins **ohne** Umlauf behalten ihre **Umsatz-Klasse** als Ersatz (Ersatzklasse). Ihr Anteil wird je Epoche ausgewiesen |
+| **Klassen** | Rang nach Marktwert unter den Altcoins des Universums (ohne BTC, ETH, SOL und Stablecoins wie §14): H Rang 1–30 an t, t−1 und t−2 und ≥ 730 T Kurs · M Rang ≤ 100 (oder ≤ 30 ohne H) · S übrige |
+| **Kombination** | **unverändert** aus §19.6 (F1 unten, F2 oben, F8 oben, F9 oben). Keine neue Auswahl, damit es eine Prüfung bleibt und keine neue Suche |
+| **Trägt** | wie §19.2/§19.4: Saldo > 0 und Rang ≥ 0,975 in E2 **und** E3, bewegungsgleiche Spiegelprobe besteht, ≥ 10 Coins mit R2. Selbsttest (a)/(b) läuft auf den neuen Zellen erneut vorweg |
+| **Ausgewiesen** | je Klasse, Dosis, Weglassprobe, Zeitstabilität, Korb gegen BTC und gegen die Klasse; Wechsel der Klassenbesetzung gegenüber den Umsatz-Klassen |
+
+### 25.3 Teil 2 — Strukturprofil A–E als Auskunft
+
+| Gruppe | Fakt (Stand **heute**) | Vergleich in der Zelle |
+|---|---|---|
+| A Angebot | Höchstmenge fest · ausgegeben ≥ 90 % · FDV/Marktwert ≤ 1,2 | mit gegen ohne |
+| B Nutzung | Gebühren ≥ 1 Mio. $ in den 365 T vor t (DefiLlama, Historie) · Halter-Einnahmen > 0 | mit gegen ohne, nur Stichtage mit Daten (meist E3) |
+| C Institution | Kategorie RWA · Coinbase-50-Index | mit gegen ohne |
+| D Bestand | Widerstandskraft: Rückgang kleiner als der Median der Klasse | Fünftel (= F1 oben, §19.6) |
+| E Kategorie | Meme · L1 · DeFi · Infrastruktur · Gaming · KI | je Kategorie gegen den Rest |
+
+- **Statistik:** Anteil verdoppelt (R2), Anteil Absturz/eingestellt (L), Saldo und Lift gegen die Zelle.
+- **Nullwelt:** das Merkmal innerhalb der Zelle vertauscht, 200 Ziehungen.
+- **Vergleich nur unter Coins MIT Fakt.** Fehlt der Fakt (häufig bei eingestellten Coins), zählt der Coin nicht als *ohne*, sonst misst man Überleben statt Fakt. Der Anteil fehlender Fakten wird je Epoche ausgewiesen.
+- ⚠️ **Kein Urteil *trägt*.** Die Fakten stammen von heute (Vorgriff: Kategorien und Angebot kennt man nur für Coins, die es noch gibt). Hervorgehoben wird *deutlich*, wenn Rang ≥ 0,975 in E2 und E3 und die Spiegelprobe besteht.
+
+### 25.4 Teil 3 — Prüfstein QNT (Anschauung, keine Regel)
+
+- Für 04/2022 bis 12/2022: Klasse nach Marktwert, Rang in der Watchlist (Marktwert-Klassen), die Profil-Fakten A–E.
+- Frage: Hätte die Verbindung *gutes Profil + Rang* QNT am Boden gezeigt? QNT bestimmt **keine** Schwelle und keine Auswahl.
+
+### 25.5 Gegenprüfung des Plans
+
+| | |
+|---|---|
+| **Vorgriff** | Teil 1: der Umlauf von heute (Näherung, §25.1 geprüft). Teil 2: alle Fakten von heute ⇒ nur Auskunft. Gebühren mit echter Historie bis t−1 |
+| **Überleben** | Ersatzklasse für Coins ohne Umlauf (Teil 1); Vergleich nur mit Fakt (Teil 2); Anteile ausgewiesen |
+| **Grundgesamtheit** | Das Universum bleibt wie §14, nur die **Einteilung** ändert sich. Die Wirkung wird gemessen (Kreuztabelle je Epoche), nicht angenommen |
+| **Mehrfachtesten** | Teil 1 ist **ein** Test (unveränderte Kombination). Teil 2 ist Auskunft (rund 14 Fakten), *deutlich* verlangt beide Epochen |
+| **Reproduktion (R-R11)** | Vor Teil 1 wird §19.6 mit den **Umsatz-Klassen** bitgleich reproduziert (Saldo E2 +11,0, E3 +13,2 Pp). Erst dann wird die Einteilung getauscht |
+| **Gegenprobe** | Marktwert und Klasse für 10 Coins von Hand; Saldo eines Fakts mit pandas; QNT-Werte direkt aus SQL |
+| **Ehrlich** | Siebter Blick auf die Altcoin-Daten: Beschreibung. Teil 2 ist mit dem Vorgriff belastet. Der eigentliche Test bleibt vorwärts |
