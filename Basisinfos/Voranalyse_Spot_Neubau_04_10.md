@@ -1224,3 +1224,59 @@ Wieder scharf werden die Stufen erst nach einer Zone (q ≤ 0,20), wie in Fassun
 - Beide verkaufen schon im **Januar 2017** (kurzer Ausschlag im Dezember 2016). Weil jede Stufe nur einmal je Zyklus auslöst, bleibt für das Hoch im Dezember 2017 nichts übrig.
 - Die Regeln werden **nicht** nachgestellt, um bekannte Hochs zu treffen; das wäre Kurvenanpassung mit Wissen aus der Zukunft.
 - **Zweiter Blick** auf dieselben 2–3 Zyklen: Das Ergebnis ist **Beschreibung**.
+
+### 12.9 Ergebnis D2 Fassung 2 — Verkauf beim Kippen (06.10.2026, nach §12.8)
+
+Beleg `Spot_Voranalyse_04_10/d2_fassung2.py` → `.txt`.
+
+**Gegenprobe** (`d2f2_gegenprobe.py`, eigene Schleife): BTC K1 ab 2017 = **1,164**, ETH K2 ab 2019 = **1,203**, beide gleich.
+
+**(b) Stück am Ende ÷ nie verkaufen:**
+
+| | BTC (2015 / 17 / 19 / 21 / 23 / 24) | ETH (2017 / 19 / 21 / 23 / 24) | SOL (2020 / 21 / 23 / 24) |
+|---|---|---|---|
+| Fassung 1 b2 (zum Vergleich) | 0,87 · 1,00 · 1,01 · 0,98 · 0,98 · 1,00 | 0,89 · 0,93 · 1,02 · 1,01 · 1,00 | 0,90 · 0,95 · 1,01 · 1,00 |
+| **K1** (ab 0,90, Fall unter 0,85/0,75/0,65) | 0,99 · **1,16** · **1,14** · 1,01 · 1,00 · 1,00 | **1,10** · **1,15** · 1,02 · 1,00 · 1,00 | 1,03 · 1,03 · 1,00 · 1,00 |
+| **K2** (ab 0,80, Fall unter das Zyklushoch) | 1,10 · 1,15 · 1,04 · 0,93 · 0,94 · 0,98 | **1,86** · 1,20 · 1,05 · 1,01 · 1,00 | 1,16 · 1,15 · 1,09 · 1,02 |
+
+- **Nach der vorab festen Regel: beide nicht stimmig.**
+  - **K1:** BTC liegt nur in 3 von 6 Starts über 1. Bei den Starts 2023 und 2024 gab es **keinen Verkauf** (q kam nie über 0,90), Ergebnis genau 1,000. ETH 3 von 5.
+  - **K2:** ETH ✔ und SOL ✔, aber BTC 3 von 6. Die jüngeren Starts liegen bei 0,93–0,98.
+- **Im Vergleich zu Fassung 1 deutlich besser:**
+  - **K1** ist nie spürbar schlechter als Halten (BTC schlechtestenfalls 0,99) und in den Zyklen 2017/2021 bis zu 16 % besser.
+  - K1 handelt **selten**: nur bei echter, starker Überhitzung. Sonst ist es dasselbe wie Halten.
+- **WORAN K2:**
+  - Im ETF-Markt verkaufte K2 03.–08.2024 bei 68.000 / 59.000 / 56.000 $. Zurückgekauft wurde 2026 bei ~60.000–70.000 $, also kein Vorteil.
+  - Am Stichtag warten noch **21 %** des Eingezahlten auf den Rückkauf (zweite Zone ≤ 0,05 kam nicht, Frist 02/2027). Das unfertige Ende drückt die jüngeren Starts.
+- **2017:** Beide verkauften im **Januar 2017** (kurzer Ausschlag). Beim Start 2015 kostete das, bei späteren Starts kaum, weil der Bestand damals klein war.
+
+**(d) Entnahme mit dem späteren Zeitpunkt, Rest + Entnommenes ÷ Halten:**
+
+| | BTC | ETH | SOL |
+|---|---|---|---|
+| Fassung 1 d1 | 0,62 · 0,78 · 0,86 · 0,98 · 0,99 · 1,00 | 0,76 · 0,87 · 1,01 · 1,01 · 1,00 | 0,89 · 0,94 · 1,01 · 1,00 |
+| **dK1** | 0,66 · 0,85 · 0,90 · 0,99 · 1,00 · 1,00 | 0,91 · 0,97 · 1,00 · 1,00 · 1,00 | 0,87 · 0,93 · 1,00 · 1,00 |
+| **dK2** | 0,62 · 0,77 · 0,84 · 0,93 · 0,95 · 0,98 | 0,92 · 1,00 · 1,02 · 1,01 · 1,00 | 0,97 · 1,03 · 1,09 · 1,02 |
+
+Mit dem späteren Zeitpunkt (dK1) kostet die Entnahme **weniger** als in Fassung 1.
+
+#### Zwischenfazit
+
+| | |
+|---|---|
+| **Ergebnis** | Die Ursache aus Fassung 1 (zu früh) war richtig erkannt: Verkaufen beim **Kippen** hilft deutlich, vor allem K1. **Nach der vorab festen Regel ist es trotzdem nicht belegt**, weil BTC nicht in 2/3 der Starts vorne liegt |
+| ⚠️ **Ehrlich** | zweiter Blick auf dieselben 2–3 Zyklen. Das Ergebnis von K1 hängt praktisch an **einem** Ereignis: 2021 verkauft bei 33.000–46.000 $, zurückgekauft 2022 bei 30.000–16.000 $ |
+| **Was daraus folgt** | K1 als **Hinweis** statt als Regel: *„Die Überhitzung kippt, Teilverkauf erwägen“* als Fakt in der Mail, samt der gemessenen Wirkung. Den Verkauf entscheidest du (passt zu (d)). Automatisch handeln lässt sich das nicht begründen |
+| **Was NICHT folgt** | K2 im ETF-Markt: Das Klima erreicht dort keine starke Überhitzung, die Verkäufe 2024 brachten nichts |
+
+### 12.10 Regeln in Klartext — Ergänzung Fassung 2 (für den Nutzer)
+
+- **K1 *„die starke Überhitzung kippt“***
+  - Das Klima q steigt einmal über **0,90**: Das ist starke Überhitzung, bisher nur 2017 und 2021. Ab dann gilt K1 als *scharf*.
+  - Fällt q danach unter **0,85**, wird ein Zehntel verkauft. Ein weiteres Zehntel bei **0,75**, ein drittes bei **0,65**.
+  - Zurückgekauft wird in der nächsten Zone in drei Teilen: bei q ≤ 0,20 / 0,10 / 0,05, der Rest spätestens nach 12 Monaten.
+  - Danach ist K1 erst wieder scharf, wenn q erneut über 0,90 steigt.
+- **K2 *„die Überhitzung lässt nach“***
+  - Scharf ab **0,80**.
+  - Verkauf je ein Zehntel, wenn q 0,10 / 0,20 / 0,30 unter seinem **bisherigen Höchstwert im Zyklus** liegt.
+- **Was beide NICHT tun:** im Voraus wissen, ob das Hoch schon da war. Sie reagieren erst auf den Rückgang, deshalb verkaufen sie nie ganz oben.

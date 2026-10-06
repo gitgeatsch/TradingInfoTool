@@ -1,0 +1,35 @@
+Spot D2 Fassung 2 - Verkauf beim KIPPEN der Ueberhitzung (Voranalyse_Spot §12.8)
+
+BTC (Ende 2026-10-04)
+  Fall  | (b) Stueck / H0 je Start 2015-01/2017-01/2019-01/2021-01/2023-01/2024-01 | Verm. / H0 | Rueckgang (H0) | Geld am Ende | Verk./Rueckk.
+  K1    | 0.988 1.164 1.143 1.013 1.000 1.000 | 0.99 1.16 1.14 1.01 1.00 1.00 | -76 % (-79 %) |   0 % | 18/18
+  K2    | 1.098 1.153 1.041 0.933 0.938 0.977 | 1.18 1.23 1.11 0.98 0.98 0.99 | -76 % (-79 %) |  21 % | 36/30
+  K1_20 | 0.921 1.284 1.253 1.025 1.000 1.000 | 0.92 1.28 1.25 1.02 1.00 1.00 | -73 % (-79 %) |   0 % | 18/18   (Auskunft)
+  K2_20 | 1.103 1.263 1.051 0.880 0.889 0.957 | 1.26 1.44 1.19 0.97 0.96 0.98 | -73 % (-79 %) |  41 % | 36/30   (Auskunft)
+  dK1   | (d) Rest + Entnahme / H0: 0.66 0.85 0.90 0.99 1.00 1.00 | entnommen in % des Eingezahlten: 465 % 98 % 37 % 1 % 0 % 0 %
+  dK2   | (d) Rest + Entnahme / H0: 0.62 0.77 0.84 0.93 0.95 0.98 | entnommen in % des Eingezahlten: 1045 % 225 % 102 % 31 % 20 % 5 %
+  K2 Verkaeufe (Start 2015-01): 2017-01-07 Stufe 0.10 Kurs 903 · 2017-01-12 Stufe 0.20 Kurs 807 · 2018-01-31 Stufe 0.30 Kurs 10050 · 2021-01-22 Stufe 0.10 Kurs 32986 · 2021-05-16 Stufe 0.20 Kurs 46023 · 2021-05-20 Stufe 0.30 Kurs 40799 · 2024-03-20 Stufe 0.10 Kurs 67848 · 2024-05-02 Stufe 0.20 Kurs 59170 · 2024-08-06 Stufe 0.30 Kurs 56047
+
+ETH (Ende 2026-10-04)
+  Fall  | (b) Stueck / H0 je Start 2017-01/2019-01/2021-01/2023-01/2024-01 | Verm. / H0 | Rueckgang (H0) | Geld am Ende | Verk./Rueckk.
+  K1    | 1.104 1.149 1.023 1.000 1.000 | 1.10 1.15 1.02 1.00 1.00 | -82 % (-85 %) |   0 % | 12/12
+  K2    | 1.864 1.203 1.048 1.014 1.003 | 2.04 1.31 1.12 1.06 1.02 | -78 % (-85 %) |   9 % | 27/22
+  K1_20 | 1.153 1.250 1.041 1.000 1.000 | 1.15 1.25 1.04 1.00 1.00 | -79 % (-85 %) |   0 % | 12/12   (Auskunft)
+  K2_20 | 2.774 1.363 1.094 1.029 1.006 | 3.24 1.58 1.22 1.11 1.03 | -73 % (-85 %) |  16 % | 27/22   (Auskunft)
+  dK1   | (d) Rest + Entnahme / H0: 0.91 0.97 1.00 1.00 1.00 | entnommen in % des Eingezahlten: 250 % 86 % 3 % 0 % 0 %
+  dK2   | (d) Rest + Entnahme / H0: 0.92 1.00 1.02 1.01 1.00 | entnommen in % des Eingezahlten: 511 % 185 % 27 % 16 % 4 %
+  K2 Verkaeufe (Start 2017-01): 2017-01-07 Stufe 0.10 Kurs 10 · 2017-01-12 Stufe 0.20 Kurs 10 · 2018-01-31 Stufe 0.30 Kurs 1096 · 2021-01-22 Stufe 0.10 Kurs 1235 · 2021-05-16 Stufe 0.20 Kurs 3566 · 2021-05-20 Stufe 0.30 Kurs 2778 · 2024-03-20 Stufe 0.10 Kurs 3519 · 2024-05-02 Stufe 0.20 Kurs 2989 · 2024-08-06 Stufe 0.30 Kurs 2459
+
+SOL (Ende 2026-09-20)
+  Fall  | (b) Stueck / H0 je Start 2020-09/2021-01/2023-01/2024-01 | Verm. / H0 | Rueckgang (H0) | Geld am Ende | Verk./Rueckk.
+  K1    | 1.033 1.032 1.000 1.000 | 1.03 1.03 1.00 1.00 | -91 % (-92 %) |   0 % | 6/6
+  K2    | 1.156 1.148 1.091 1.018 | 1.29 1.27 1.19 1.04 | -89 % (-92 %) |  30 % | 18/14
+  K1_20 | 1.043 1.052 1.000 1.000 | 1.04 1.05 1.00 1.00 | -91 % (-92 %) |   0 % | 6/6   (Auskunft)
+  K2_20 | 1.275 1.275 1.171 1.035 | 1.51 1.50 1.35 1.07 | -87 % (-92 %) |  56 % | 18/14   (Auskunft)
+  dK1   | (d) Rest + Entnahme / H0: 0.87 0.93 1.00 1.00 | entnommen in % des Eingezahlten: 29 % 11 % 0 % 0 %
+  dK2   | (d) Rest + Entnahme / H0: 0.97 1.03 1.09 1.02 | entnommen in % des Eingezahlten: 203 % 117 % 57 % 6 %
+  K2 Verkaeufe (Start 2020-09): 2021-01-22 Stufe 0.10 Kurs 3 · 2021-05-16 Stufe 0.20 Kurs 47 · 2021-05-20 Stufe 0.30 Kurs 44 · 2024-03-20 Stufe 0.10 Kurs 192 · 2024-05-02 Stufe 0.20 Kurs 138 · 2024-08-06 Stufe 0.30 Kurs 144
+
+STIMMIG (b) nach §12.3/§12.8 (Stueck > H0 bei BTC UND ETH in >= 2/3 der Starts, Start 2024 >= 0,95; SOL Auskunft):
+  K1: BTC nein, ETH nein, SOL (Auskunft) nein -> nicht stimmig
+  K2: BTC nein, ETH ja, SOL (Auskunft) ja -> nicht stimmig
