@@ -1896,3 +1896,111 @@ Nutzer 06.10.: *„Altcoins sind mehr als 2 Jahre gefallen und sollten einen gew
 | **Merkmale je Asset** (Querschnitt, Regel 3) | Tiefe und Dauer des Absturzes · **Basisbildung** (Schwankung zusammengezogen; Bezug Spot M-0) · Widerstandskraft (hielt das Tief, fiel weniger als die Klasse) · Umsatz hält trotz Kursverfall · Alter/Überleben · TVL gegen Kurs (188 Protokolle) · aktive Adressen (66 Coins) · Positionierung (Funding, Terminmarkt) |
 | **Nullwelt** | Merkmal innerhalb desselben Datums vertauscht |
 | ⚠️ **Grenze** | Es gibt nur **zwei** Alt-Aufschwünge in den Daten (2019–21 und 2023/24). In E3 (ab 2024) ist noch keiner abgeschlossen. ⇒ Das Ergebnis ist **Beschreibung**; ein Vorwärtsprotokoll gehört dazu |
+
+### 19.1 Vorprüfung Asymmetrie (`as_vorpruefung.py` → `.txt`; nur Grundrate und Datenlage, kein Merkmalsschnitt)
+
+**Zielgröße je Coin und Monatserstem** (Kauf am Schluss t+1):
+- **R2 / R3:** Der höchste Schluss im Fenster erreicht das Zwei- bzw. Dreifache des Einstiegs; das ist das **Potential**.
+- **L:** Der tiefste Schluss liegt bei −70 % oder tiefer, **oder** der Coin wird eingestellt.
+
+**Grundrate, Fenster 12 Monate:**
+
+| Epoche | Klasse | Paare / Anker | R2 | R3 | L | davon eingestellt | Endwert Median | Korb gg. BTC |
+|---|---|---|---|---|---|---|---|---|
+| E1 2019–20 | H / M / S | 96 · 1.464 · 156 | 100 / 79 / 97 % | 93 / 68 / 94 % | 0 / 12 / 10 % | 0 / 3 / 10 % | +304 / +184 / +395 % | +50 / +67 / +99 % |
+| E2 2021–23 | H / M / S | 493 · 3.207 · 6.794 (37 Anker) | **35 / 36 / 40 %** | 16 / 19 / 21 % | 21 / 38 / 31 % | 1 / 5 / 8 % | −14 / −39 / −21 % | −11 / −3 / −7 % |
+| E3 ab 2024 | H / M / S | 251 · 1.748 · 5.472 (20 Anker) | **25 / 21 / 22 %** | 9 / 7 / 7 % | **30 / 61 / 57 %** | 6 / 4 / 18 % | −45 / −67 / −65 % | −28 / −58 / −57 % |
+
+**24 Monate:**
+- In E3 gibt es nur **8** Anker ⇒ nur Auskunft.
+- In E2: R2 44–52 %, L 35–62 %.
+
+⇒ **Auch in E3 (ab 2024) verdoppelt sich jeder vierte bis fünfte Coin binnen 12 Monaten zeitweise.** Das rechte Ende ist also vorhanden.
+
+Gleichzeitig enden 57–61 % der Mid- und Smallcaps bei −70 % oder eingestellt. Die Frage ist also, ob ein Merkmal das rechte Ende **anhebt** und das linke **senkt**.
+
+**Datenlage der Merkmalsquellen** (Coin-Anker mit Werten über [t−180, t], 12 Monate):
+
+| Quelle | E2 | E3 | Folge |
+|---|---|---|---|
+| Kurs und Umsatz | alle | alle | Hauptmerkmale |
+| TVL (188 Protokolle) | 20 % (2.092) | 30 % (2.274) | Teilmenge, eigene Nullwelt |
+| Aktive Adressen (66 Coins) | 18 % (1.839) | 12 % (926) | Teilmenge, eigene Nullwelt |
+| Funding | 29 % (3.054) | 49 % (3.693) | Teilmenge, eigene Nullwelt |
+| Terminmarkt OI | 8 % | 18 % | **nur Auskunft** (ab 12/2021) |
+
+### 19.2 Messplan Asymmetrie (vorab)
+
+**Merkmale.**
+- Alle Werte sind am Tag t bekannt.
+- Gerankt wird je Stichtag **innerhalb der Klasse**.
+- Die Richtung ist fachlich **nicht** vorgegeben ⇒ **zweiseitig**: Geprüft werden das oberste **und** das unterste Fünftel.
+
+| # | Merkmal | Definition |
+|---|---|---|
+| F1 | Tiefe | Schluss t / Allzeithoch bis t − 1 |
+| F2 | Dauer | Tage seit dem Allzeithoch |
+| F3 | Schwankung | Standardabweichung der Tagesrenditen über 90 T |
+| F4 | Basisbildung | Schwankung 90 T / Schwankung 365 T |
+| F5 | Abstand zum Tief | Schluss t / 365-T-Tief − 1 |
+| F6 | Stärke in der Klasse | 180-T-Ertrag minus Median der Klasse |
+| F7 | Umsatzverlauf | mittlerer Umsatz 90 T / 365 T |
+| F8 | Alter | Tage seit dem ersten Kurs |
+| F9 | TVL gegen Kurs | log(TVL t / t−180) − log(Kurs t / t−180) · Teilmenge |
+| F10 | Aktive Adressen | log(30-T-Mittel t / 30-T-Mittel t−180) · Teilmenge |
+| F11 | Funding | Mittel der 30 T vor t · Teilmenge |
+| *F12* | *OI-Änderung 90 T* | *nur Auskunft* |
+
+**Statistik je Merkmal und Seite (Fünftel):**
+- **Saldo** = Anteil R2 − Anteil L im Fünftel, abzüglich desselben Saldos der **ganzen Klasse am selben Stichtag**.
+- Erst gemittelt je Stichtag (Klassen nach Paarzahl gewichtet), dann über die Stichtage.
+- Ausgewiesen werden zusätzlich:
+  - R2-Überschuss und L-Überschuss getrennt, dazu R3;
+  - Korb des Fünftels gegen BTC und gegen den Korb der ganzen Klasse;
+  - alle fünf Fünftel (Dosis-Wirkung);
+  - je Klasse und je Jahr.
+
+**Nullwelt:** das Merkmal innerhalb von Stichtag und Klasse vertauscht, 200 Ziehungen. Bei F9–F11 nur innerhalb der Teilmenge.
+
+**Trägt (vorab), alle drei Bedingungen:**
+1. Saldo-Überschuss > 0 in **E2 und E3**, mit Rang ≥ **0,975** in beiden (zweiseitig 5 %).
+2. **Spiegelprobe** (stehende Regel 2.603): Lift(R2) / Lift(D2) ≥ **1,717** in E2 und E3. D2 ist das gespiegelte Ereignis *tiefster Schluss ≤ −50 % oder eingestellt*; ×2 und ÷2 sind auf der Log-Skala gleich weit. Ohne diese Probe ist *mehr Potential* nur *mehr Bewegung*.
+3. **Je Asset:** Die R2-Treffer des Fünftels stammen in jeder Epoche aus mindestens **10 verschiedenen Coins** (keine Ein-Coin-Geschichte).
+
+**Mehrfachtesten:**
+- 11 Merkmale × 2 Seiten = 22 Tests.
+- Bei unabhängigen Tests und *beide Epochen bei 0,975* liegt der Fehlalarm je Test bei etwa 0,06 %, für die Familie bei etwa 1,4 %.
+
+**Stufe 2, Kombination** (Einzelbeitrag schwach, die Kombination ist die Anwendung):
+- Merkmale, deren eine Seite in **E2** Rang ≥ 0,90 **und** die Spiegelprobe besteht, werden zu einem **Wert** zusammengefasst: Mittel der richtungsgerechten Perzentile innerhalb der Klasse.
+- Die Auswahl fällt nur auf E2.
+- Das oberste Fünftel des Werts wird **einmal auf E3** geprüft, mit Saldo-Rang ≥ 0,95 und Spiegelprobe.
+- Dazu als Auskunft: der Korb gegen BTC.
+
+**Selbsttest der Anlage, vor dem Hauptlauf:**
+- (a) 40 **Zufallsmerkmale** durch dieselbe Anlage. Erwartet sind höchstens 2,5 % je Epoche über 0,975, und kein einziges *trägt* in beiden.
+- (b) Ein **gepflanztes** Merkmal = R2-Ausgang · 0,3 + Normalrauschen muss *tragen*.
+- Fällt (a) oder (b) durch, wird nicht gemessen; erst die Anlage reparieren.
+
+**Die sechs Prüfungen vor jeder Meldung:**
+- Nullwelt;
+- Zeitstabilität (je Jahr);
+- **Weglassprobe**: ohne die 5 Coins mit dem größten Beitrag;
+- Mehrfachtesten;
+- Ebene: Klasse;
+- je Asset.
+
+**Folge:**
+- Trägt ein Merkmal oder die Kombination: Voranalyse *Diamanten-Kandidaten* für die Ampel. Gemeint ist eine Liste je Monat mit Begründung als **Auskunft**, mit kleinem Einsatz je Coin, und dazu das Vorwärtsprotokoll.
+- Trägt nichts: WORAN, dann Abstimmung.
+
+### 19.3 Gegenprüfung des Plans
+
+| | |
+|---|---|
+| **Vorgriff** | Alle Merkmale nutzen nur Daten bis t. Umsatz `U90` ist schon um einen Tag verschoben (s3_stufe1), das Allzeithoch reicht bis t, der Kauf erfolgt zum Schluss t+1. TVL, Adressen und Funding gelten am Tag ihres Datums ⚠️; ob das der Veröffentlichungstag ist, wird im Lauf je Quelle ausgewiesen (Tageswert an Stundenanker war schon einmal ein Vorgriff, hier ist die Auflösung Tag gegen Monat) |
+| **Überleben** | Eingestellte zählen ins **linke** Ende. Genau das ist bei Smallcaps das Risiko |
+| **Grundgesamtheit** | wie §14 (Universum ohne Stablecoins, Sondertokens, BTC/ETH/SOL), Klasse am Stichtag. Nicht verändert |
+| **Überlappung** | 12-Monats-Fenster an Monatsersten überlappen. Die Nullwelt vertauscht innerhalb des Stichtags, die Zeitstruktur bleibt erhalten |
+| **Fallzahl** | E2 37 und E3 20 Stichtage. H hat nur 13–20 Coins je Stichtag, also 3–4 im Fünftel ⇒ H vor allem gepoolt, je Klasse Auskunft |
+| **Ehrlich** | Zwei Alt-Aufschwünge in den Daten. E1 (2019–20) war ein Aufschwung, in dem fast **alles** stieg; dort trennt kein Merkmal, also nur Auskunft. Es ist **Beschreibung**; das Vorwärtsprotokoll ist der eigentliche Test |

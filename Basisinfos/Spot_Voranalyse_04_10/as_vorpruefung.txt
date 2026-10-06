@@ -1,0 +1,32 @@
+Vorpruefung Asymmetrie (§19) · Kurse bis 2026-09-20 · nur Grundrate und Datenlage, kein Merkmalsschnitt
+
+Fenster 365 T · Anker = Monatserste ab 2019 mit abgeschlossenem Fenster
+  Ep  Kl  Paare   Anker |     R2     R3 |      L  eing. | Endwert Median | Korb gg. BTC (Mittel je Anker, dann Mittel)
+  E1  H      96      13 |   100%    93% |     0%     0% |   +304 %       |    +50 %
+  E1  M    1464      24 |    79%    68% |    12%     3% |   +184 %       |    +67 %
+  E1  S     156       5 |    97%    94% |    10%    10% |   +395 %       |    +99 %
+  E2  H     493      37 |    35%    16% |    21%     1% |    -14 %       |    -11 %
+  E2  M    3207      37 |    36%    19% |    38%     5% |    -39 %       |     -3 %
+  E2  S    6794      37 |    40%    21% |    31%     8% |    -21 %       |     -7 %
+  E3  H     251      20 |    25%     9% |    30%     6% |    -45 %       |    -28 %
+  E3  M    1748      20 |    21%     7% |    61%     4% |    -67 %       |    -58 %
+  E3  S    5472      20 |    22%     7% |    57%    18% |    -65 %       |    -57 %
+
+Fenster 730 T · Anker = Monatserste ab 2019 mit abgeschlossenem Fenster
+  Ep  Kl  Paare   Anker |     R2     R3 |      L  eing. | Endwert Median | Korb gg. BTC (Mittel je Anker, dann Mittel)
+  E1  H      96      13 |   100%    99% |     5%     0% |    +80 %       |    +80 %
+  E1  M    1464      24 |    98%    95% |    19%     6% |   +229 %       |   +116 %
+  E1  S     156       5 |    97%    95% |    20%    17% |    +76 %       |    +82 %
+  E2  H     493      37 |    50%    33% |    35%     7% |    -14 %       |    -32 %
+  E2  M    3207      37 |    44%    26% |    62%    11% |    -60 %       |    -54 %
+  E2  S    6794      37 |    52%    29% |    53%    21% |    -46 %       |    -40 %
+  E3  H     103       8 |    46%    20% |    56%    10% |    -59 %       |    -46 %
+  E3  M     696       8 |    30%    11% |    87%    10% |    -88 %       |    -77 %
+  E3  S    2110       8 |    31%    11% |    89%    36% |    -84 %       |    -72 %
+
+Datenlage Merkmalsquellen (Anteil der Coin-Anker im 365-T-Fenster mit Werten im Zeitraum [t-180, t]):
+  TVL             E1    1 % (H 0 · M 7 · S 2) · E2   20 % (H 26 · M 538 · S 1528) · E3   30 % (H 79 · M 518 · S 1677)
+  Adressen        E1   28 % (H 64 · M 391 · S 18) · E2   18 % (H 257 · M 698 · S 884) · E3   12 % (H 105 · M 243 · S 578)
+  Funding         E1    6 % (H 47 · M 49 · S 0) · E2   29 % (H 390 · M 1524 · S 1140) · E3   49 % (H 214 · M 1089 · S 2390)
+  Terminmarkt OI  E1    0 % (H 0 · M 0 · S 0) · E2    8 % (H 83 · M 394 · S 348) · E3   18 % (H 87 · M 418 · S 866)
+  Kurs/Umsatz     alle Coin-Anker (Tiefe, Dauer, Schwankung, Abstand zum Tief, Staerke in der Klasse, Umsatzverlauf, Alter)
