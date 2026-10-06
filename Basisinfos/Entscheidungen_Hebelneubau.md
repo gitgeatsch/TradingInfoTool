@@ -875,3 +875,11 @@ prüfen und gegenprüfen"*.
   - Bau-Voranalyse NB;
   - weitere Messungen.
 - **Vor jedem Bau:** eine konkrete Beschreibung, was das System leistet. Als Beispiel des Mailabschnitts aus echten Daten und als Ablauf: was der Nutzer jeden Monat bekommt und was er damit tut (Voranalyse_Spot §22.4).
+
+# E-74 · Spot-Altcoins: zwei Ebenen (Fortbestand vor Gelegenheit), Smallcaps wieder in der Liste, QNT als Fallbeispiel (06.10.2026)
+
+**06.10.2026** · Nutzer: *„Ja – Quant sollte hier das Beispiel eines optimalen Kaufs am Boden und eines massiven Anstiegs als Beispiel darstellen. Bitte nimm die Smallcaps nun doch zur Liste hinzu, da Quant zu den Smallcaps zählt. Zu deinem Vorschlag – ja, finde ich gut. Das Strukturprofil werden wir noch besser gruppieren, ist aber ein guter Anfang, finde ich.“*
+- **Zwei Ebenen** (Voranalyse_Spot §23.6): 1 Fortbestand (Strukturprofil, Fakten, vom Nutzer gewichtet), 2 Gelegenheit (gemessene Watchlist).
+- **Smallcaps wieder in der Rangliste.** Der Entscheid *nur H/M* (§23.5) ist aufgehoben. ⚠️ Gemessen senkt die Auswahl bei S das Absturzrisiko nicht (§23.2); das wird in der Mail ausgewiesen.
+- **QNT** ist das Fallbeispiel *Kauf am Boden, massiver Anstieg* (§23.7). Das Strukturprofil muss es erkennen können.
+- **Voranalyse Strukturprofil** wird gestartet (§24); die Gruppierung wird später verfeinert.

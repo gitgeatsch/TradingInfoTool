@@ -1,0 +1,37 @@
+Strukturprofil Vorpruefung (§24) · Klassen zum 2026-09-01 · CoinGecko-Markt: 1500 Coins
+
+(1) Abdeckung: 332 Coins im Universum · mit CoinGecko-ID 332 · mit Marktwert 312 · mit Hoechstmenge 223
+
+(2) Klasse nach Binance-Umsatz (Zeilen) gegen Klasse nach Marktwert (Spalten):
+klasse_mw       -   H   M    S
+klasse_umsatz                 
+H               0  19   1    0
+M               2  10  26   42
+S              18   1  43  170
+   QNT   Umsatz-Klasse S · Marktwert 3.81 Mrd (Rang 16) -> Klasse H · Hoechstmenge fest · ausgegeben 100 % · FDV/MW 1.00
+   LINK  Umsatz-Klasse H · Marktwert 10.51 Mrd (Rang 6) -> Klasse H · Hoechstmenge fest · ausgegeben 75 % · FDV/MW 1.34
+   XLM   Umsatz-Klasse H · Marktwert 7.55 Mrd (Rang 8) -> Klasse H · Hoechstmenge offen · ausgegeben 70 % · FDV/MW 1.43
+   HBAR  Umsatz-Klasse M · Marktwert 4.42 Mrd (Rang 15) -> Klasse H · Hoechstmenge fest · ausgegeben 88 % · FDV/MW 1.14
+   ONDO  Umsatz-Klasse M · Marktwert 2.49 Mrd (Rang 21) -> Klasse H · Hoechstmenge fest · ausgegeben 49 % · FDV/MW 2.05
+   ALGO  Umsatz-Klasse M · Marktwert 1.13 Mrd (Rang 31) -> Klasse M · Hoechstmenge fest · ausgegeben 91 % · FDV/MW 1.00
+
+(3) Angebot je Marktwert-Klasse: Anteil mit fester Hoechstmenge · Median ausgegeben · Anteil FDV/MW > 1,5 (viel kommt noch)
+   H  n  30 · fest  77 % · ausgegeben Median  82 % · FDV/MW > 1,5 bei  20 %
+   M  n  70 · fest  66 % · ausgegeben Median  89 % · FDV/MW > 1,5 bei  24 %
+   S  n 212 · fest  73 % · ausgegeben Median  86 % · FDV/MW > 1,5 bei  29 %
+   ... Kategorien 0 / 332
+   ... Kategorien 50 / 332
+   ... Kategorien 100 / 332
+   ... Kategorien 150 / 332
+   ... Kategorien 200 / 332
+   ... Kategorien 250 / 332
+   ... Kategorien 300 / 332
+
+(4) Kategorien: 332 Coins mit Kategorie · Projektstart bekannt bei 40 · haeufigste: Ethereum Ecosystem 178, Smart Contract Platform 129, BNB Chain Ecosystem 108, Decentralized Finance (DeFi) 86, Base Ecosystem 77, YZi Labs (Prev. Binance Labs) Portfolio 76, Made in USA 72, Layer 1 (L1) 68, GMCI Index 63, Solana Ecosystem 59, Arbitrum Ecosystem 53, Governance 47, Base Native 45, Polygon Ecosystem 43, Coinbase 50 Index 42, Binance Launchpool 40, NFT 39, Artificial Intelligence (AI) 39, Energi Ecosystem 36, Coinbase Ventures Portfolio 36
+   Meme: 29 · RWA: 18 · je Marktwert-Klasse Meme H/M/S: 3/6/19 · RWA H/M/S: 4/3/11
+
+(5) RWA-Volumen je Blockchain heute (DefiLlama, Mrd USD): Ethereum 2.52, Solana 0.60, Arbitrum 0.37, borrowed 0.37, Avalanche 0.18, xDai 0.16, Pharos 0.13, Algorand 0.13, Binance 0.12, Plume Mainnet 0.12, Monad 0.11, Tron 0.06, Polygon 0.05, Base 0.05, Flare 0.02
+
+geschrieben: data\_spot\strukturprofil.db (332 Coins)
+
+HISTORIE (fuer die Messbarkeit): CoinGecko frei nur 365 T Marktwert-Verlauf; Angebot historisch nur umlaufmenge_cg (ab 09/2025) und CoinMetrics (66 Coins ab 2013); Kategorien und Hoechstmenge nur HEUTE -> als Merkmal der Vergangenheit nur mit Vorgriffsvorbehalt

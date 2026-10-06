@@ -2700,3 +2700,86 @@ Zusammen: zuerst Ebene 1, dann Ebene 2. *Ein Asset mit gutem Strukturprofil, das
 ⇒ **Der Weg ist noch nicht klar. Der Nutzer hat recht:**
 - Ebene 2 ist gemessen; Ebene 1 fehlt.
 - Nächster Schritt: eine **Voranalyse Strukturprofil**. Welche Fakten gibt es frei und mit welcher Historie (CoinGecko: Angebot, Kategorien, Projektstart; DefiLlama: Gebühren, RWA; ETF/ETP-Liste)? Welche lassen sich als Auskunft messen? Und die Klasseneinteilung nach Marktwert statt nach Binance-Umsatz neu rechnen.
+
+### 23.7 Fallbeispiel QNT — Kauf am Boden, massiver Anstieg (06.10.2026; E-74)
+
+Beleg: Abfrage 06.10. auf `messdaten.db` und `beispiel_watchlist_mail.monat()`.
+
+| | |
+|---|---|
+| Hoch | 394,9 $ am 10.09.2021 |
+| **Boden** | **44,4 $ am 16.06.2022** (−89 %) |
+| **Anstieg** | **209,9 $ am 17.10.2022 = ×4,73 in vier Monaten**; BTC im selben Zeitraum ×0,96 |
+| danach | 2023 um 100–150 $, heute 64 $ |
+
+**Was die gemessene Watchlist (Ebene 2) am Boden gezeigt hätte:**
+
+| Stichtag | Klasse | Perzentil in der Klasse | Teilränge Alter / Absturz / Dauer | 12-M-Hoch danach |
+|---|---|---|---|---|
+| 01.06.2022 | S | **0,22** | 0,30 / 0,20 / 0,33 | ×3,13 |
+| 01.07.2022 | S | **0,21** | 0,32 / 0,21 / 0,36 | **×4,00** |
+
+⇒ QNT stand am Boden im **untersten** Fünftel und wäre **aussortiert** worden. Zwei Gründe:
+- auf Binance erst seit 07/2021, also *jung*;
+- **weniger tief** gefallen als die anderen Coins.
+
+Die gemessenen Faktoren beschreiben den **Durchschnitt** (alte Überlebende am Boden stürzen seltener ab). QNT ist ein **Qualitätsfall**, den sie nicht sehen.
+
+**Was das Strukturprofil (Ebene 1) für QNT zeigen müsste:**
+- feste Gesamtmenge, praktisch voll ausgegeben;
+- Kategorie Tokenisierung (RWA) und Infrastruktur;
+- Projektstart 2018 statt Binance 2021;
+- Marktwert-Klasse statt Umsatz-Klasse;
+- **Widerstandskraft:** fiel weniger als die Klasse.
+
+⚠️ **Ehrlich:**
+- Ein Einzelfall begründet keine Regel (*Kleine Läufe täuschen*); QNT ist ein **Prüfstein**, kein Beweis.
+- Im Mittel waren *weniger tief gefallene* Coins **schlechter** (F1 oben: E2 −7,8, E3 −2,2 Pp).
+- Ob das Strukturprofil den Unterschied macht, muss eine Messung zeigen. Dabei darf QNT nicht die Messung bestimmen.
+
+**Nachlauf am Beispiel:**
+- Kauf Juni/Juli 2022 bei rund 52–67 $; Marke −35 % vom Hoch 209,9 ⇒ Verkauf bei rund 136 $ im November 2022, also **×2 bis ×2,6**.
+- 12 Monate halten hätte ×1,7 bis ×2,1 gebracht.
+
+## 24. Voranalyse Strukturprofil (Ebene 1) — Datenlage (06.10.2026; E-74)
+
+Beleg: `sp_vorpruefung.py` → `.txt`, Daten nach `data/_spot/strukturprofil.db`. Ergebnis folgt in §24.1.
+
+### 24.1 Ergebnis Datenlage Strukturprofil (06.10.2026)
+
+**Abdeckung (Universum zum 01.09.2026: 332 Altcoins):**
+
+| Fakt | Quelle | Abdeckung | Historie |
+|---|---|---|---|
+| Marktwert | CoinGecko | 312 | frei nur 365 T. Länger: CoinMetrics (93 Altcoins), sonst eigene Rechnung Umlauf × Kurs |
+| Höchstmenge, Anteil ausgegeben, FDV / Marktwert | CoinGecko | 223 mit fester Höchstmenge | nur **heute**; Umlaufmenge ab 09/2025 (`umlaufmenge_cg`), CoinMetrics 66 Coins ab 2013 |
+| Kategorien (Meme 29, RWA 18, L1 68, DeFi 86 …) | CoinGecko | 332 | nur heute |
+| Projektstart | CoinGecko | **nur 40** | — ⇒ das *echte Alter* bleibt eine Lücke |
+| Gebühren, Halter-Einnahmen | DefiLlama | 121 (§23.4) | meist erst ab 2023/24 |
+| RWA-Volumen je Blockchain | DefiLlama | Ethereum 2,52 · Solana 0,60 · Arbitrum 0,37 · Avalanche 0,18 · Algorand 0,13 Mrd. USD … | heute (Verlauf je Protokoll abrufbar) |
+
+**Klasse nach Binance-Umsatz gegen Klasse nach Marktwert:**
+
+| Umsatz \ Marktwert | H | M | S | ohne |
+|---|---|---|---|---|
+| **H** | 19 | 1 | 0 | 0 |
+| **M** | 10 | 26 | **42** | 2 |
+| **S** | 1 | **43** | 170 | 18 |
+
+⇒ **Fast die Hälfte der Midcaps und Smallcaps steht nach Marktwert in einer anderen Klasse.**
+- **QNT: Umsatz-Klasse S, nach Marktwert Rang 16 ⇒ Highcap** (3,81 Mrd. USD; feste Menge, 100 % ausgegeben, FDV/Marktwert 1,00).
+- Ebenso HBAR (M → H), ONDO (M → H).
+- ⇒ **Für Spot bei Bitpanda ist der Marktwert die richtige Klassengrundlage.** Der Binance-Umsatz stammt aus dem Hebel-Strang.
+
+**Angebot je Marktwert-Klasse** (heute): feste Höchstmenge H 77 % · M 66 % · S 73 %. Median ausgegeben 82–89 %. *Viel kommt noch* (FDV/Marktwert > 1,5): H 20 % · M 24 % · S 29 %.
+
+**Folgen:**
+1. **Betrieb:** Klasse nach Marktwert ist am NB machbar (CoinGecko `markets`, eine Abfrage je 250 Coins).
+2. **Messung:** Die gemessene Watchlist (§19.6) beruht auf **Umsatz-Klassen**. Für Marktwert-Klassen in der Vergangenheit fehlt eine freie Historie. Möglich ist eine **Näherung** aus heutiger Umlaufmenge × damaligem Kurs (Vorbehalt: Coins mit späteren großen Freigaben wirken früher zu groß) oder CoinMetrics für 93 Altcoins.
+3. **Strukturprofil, erste Gruppierung** (wird verfeinert):
+   - A **Angebot**: fest, % ausgegeben, FDV/Marktwert;
+   - B **Nutzung**: Gebühren, Halter-Einnahmen, Trend;
+   - C **Institution und Tokenisierung**: RWA-Kategorie, RWA-Volumen der eigenen Blockchain, ETF/ETP, Indexaufnahme (z. B. Coinbase 50);
+   - D **Bestand**: Alter, Widerstandskraft gegen die Klasse;
+   - E **Kategorie**: Meme, Gaming, L1, DeFi, Infrastruktur.
+4. **Messbar als Auskunft** (mit Vorgriffsvorbehalt, weil die Fakten von heute stammen): Stürzen Coins mit fester, voll ausgegebener Menge, mit Nutzung, mit RWA-Kategorie bzw. ohne Meme-Kategorie seltener ab, und verdoppeln sie sich häufiger?
