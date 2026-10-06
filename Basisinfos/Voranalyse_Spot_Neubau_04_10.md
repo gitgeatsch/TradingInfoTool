@@ -1724,3 +1724,45 @@ Quellen ohne Schlüssel, live:
 - Bei L3 ist die Fallzahl in E2 klein (86), und Coin Metrics deckt eher Überlebende ab.
 - L4 überschneidet sich mit der Klima-Messung K3 (gleiche Tage).
 - **Möglicher nächster Schritt aus der Recherche, kein Teil dieses Plans:** Fassung 4 **Momentum** statt Umkehr (Querschnitt der H/M-Coins gegen BTC), eigener Plan nach diesem Ergebnis.
+
+### 16.4 Ergebnis L1–L4 (06.10.2026, nach §16.3) — und WORAN
+
+Belege:
+- `Spot_Voranalyse_04_10/l_messung.py` → `.txt`
+- Gegenprobe `l_gegenprobe.py` → `.txt`, eigener Rechenweg:
+  - Liquiditätszustand 1.295 von 1.295 gleich;
+  - Umlaufwachstum 8 von 8 gleich;
+  - L1-Unterschied E2/E3 gleich;
+  - L4 *q Mitte* E2/E3 gleich.
+
+⚠️ In E1 steht bei L1 *Rang 0,00*, weil alle Ereignisse in steigende Liquidität fielen. Dort ist kein Vergleich möglich; E1 ist ohnehin nur Auskunft.
+
+**Nach der vorab festen Regel trägt keine der fünf Fragen.**
+
+| | E2 2021–23 | E3 ETF-Markt | Urteil |
+|---|---|---|---|
+| **L1** Liquidität × Bodenkauf, X4 | steigend +15,6 % gegen fallend +2,6 % gg. BTC · **+12,9 Pp, Rang 0,97** (nur 70 von 557 Ereignissen in steigender Liquidität) | −6,8 % gegen −7,8 % · +1,0 Pp, Rang **0,57** | trägt nicht (E3) |
+| **L1** X5 | +11,0 Pp, Rang 0,94 | +1,3 Pp, Rang 0,56 | trägt nicht |
+| **L2** Stablecoins (Auskunft) | steigend +2,6 % · fallend +5,4 % | steigend **−9,3 %** · fallend −0,2 % | Faustregel in **beiden** Epochen **umgekehrt** |
+| **L3** geringe gegen hohe Verwässerung, X4 | +3,7 Pp, Rang 0,81 (n 85) | **−8,6 Pp**, Rang 0,04 (n 191, 15 Datenfehler aus) | trägt nicht; in E3 eher umgekehrt |
+| **L3** X5 | +4,7 Pp, Rang 0,73 | −8,0 Pp, Rang 0,08 | trägt nicht |
+| **L4** Kern BTC 180 T, *q Mitte* | **+68,7 Pp**, Rang 0,91 | +20,9 Pp, Rang 0,58 | trägt nicht |
+| **L4** *q billig* / *q teuer* | −1,0 Pp (0,56) / nicht beurteilbar (fast nur steigend) | nicht beurteilbar (54 Tage, alle steigend) / **−14,0 Pp** (0,27) | trägt nicht. Auskunft E1 2019/20: steigende Liquidität ging **schlechter** aus (−87 / −58 Pp) |
+
+**WORAN:**
+
+| | |
+|---|---|
+| **Liquidität wirkte 2021–23, im ETF-Markt nicht** | Das passt genau zur Recherche (CF Benchmarks: 2025/26 entkoppelt). Ein Gewicht, das in der laufenden Epoche nichts trennt, verbessert die Ampel nicht. In E2 hängt der Effekt zudem an **70** Ereignissen in wenigen Phasen |
+| **Stablecoins: das Gegenteil der Faustregel** | Wachsender Stablecoin-Umlauf ging in **beiden** Epochen mit **schlechteren** Bodenkäufen einher. Wenige Phasen, also keine Regel, aber die Faustregel ist für uns widerlegt |
+| **Die Verwässerung ist mit unseren Daten NICHT messbar** | Coin Metrics zeigt bei **45 von 85** (E2) bzw. **29 von 48** (E3) Ereignissen **keine** Veränderung in 180 T. Vermutlich zählt die Reihe bei vertragsgebundenen Tokens die ausgegebene Menge, und Freigaben aus Sperrverträgen sieht sie nicht (nicht geprüft). CoinGecko gibt es erst ab 09/2025. **Und:** Keyrock misst **bevorstehende** Freigaben (Wirkung ab 30 T vorher), wir die **vergangene** Ausweitung. Das ist eine andere Frage. ⇒ **Verworfen, weil:** kein historischer Freigabekalender. **Neu prüfen, falls** ein Freigabekalender (z. B. Tokenomist) mit Historie verfügbar ist |
+| **Kern: Liquidität ändert das Klima-Urteil nicht stabil** | Das Vorzeichen wechselt zwischen den Epochen (E1 negativ, E2 und E3 *Mitte* positiv, E3 *teuer* negativ) |
+
+**Zwischenfazit zum Ziel:**
+- Die Makro-Liquidität **rettet** den Altcoin-Spot nicht. Sie **bestätigt** den Bruch im ETF-Markt: 2021–23 hing der Erfolg des Bodenkaufs an der Liquidität, seit 2024 nicht mehr.
+- **Für den Betrieb:**
+  - Netto-Liquidität (Stand und 13-W-Richtung) und Stablecoin-Umlauf kommen als **Fakt** in die Klima-Ampel und die Mail, ohne Gewicht (Vorgabe 01.10.).
+  - Am Kern-Aufbau 70/20/10 mit R1 ändert sich nichts.
+- **Nächster Schritt (Nutzer):**
+  - entweder Fassung 4 **Momentum** statt Umkehr (Literatur §16.1), eigener Plan;
+  - oder D4: Altcoin-Spot ruht als Regel, Auskunft in der Mail, Wiedervorlage vorwärts.

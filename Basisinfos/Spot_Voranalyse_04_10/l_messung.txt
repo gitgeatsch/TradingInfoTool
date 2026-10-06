@@ -1,0 +1,41 @@
+Messung L1-L4 (Voranalyse_Spot §16.3) · Kursdaten bis 2026-09-20 · Netto-Liquiditaet bis 2026-09-30 (5.78 Bio. USD)
+Vorab: traegt = Unterschied > 0 in E2 UND E3 und Rang >= 0,95 (L1/L4 zirkulaere Verschiebung, L3 Permutation), je 200 Ziehungen
+
+L1 · A1 Boden + Wende · X4 · Vorteil gg. BTC bei steigender gegen fallende Netto-Liquiditaet (Klassen gepoolt)  ->  traegt nicht
+  E1  n   11 (steigend   11) | steigend   -0.6 % · fallend    -    · Unterschied    -    · Rang 0.00 | Auskunft: Verzoegerung 13 W  +20.4 % · je Klasse H    -    M    -    S    -   
+  E2  n  557 (steigend   70) | steigend  +15.6 % · fallend   +2.6 % · Unterschied  +12.9 % · Rang 0.97 | Auskunft: Verzoegerung 13 W   -3.8 % · je Klasse H   -7.5 % M  +19.2 % S  +12.7 %
+  E3  n  727 (steigend  335) | steigend   -6.8 % · fallend   -7.8 % · Unterschied   +1.0 % · Rang 0.57 | Auskunft: Verzoegerung 13 W   +4.5 % · je Klasse H  +17.0 % M   +1.4 % S   -0.2 %
+  L2 Auskunft Stablecoin-Umlauf (91-T-Aenderung) · X4:
+    E2  n  557 (steigend  239) | steigend   +2.6 % · fallend   +5.4 %
+    E3  n  727 (steigend  580) | steigend   -9.3 % · fallend   -0.2 %
+
+L3 · A1 · X4 · Vorteil gg. BTC bei GERINGER gegen HOHE Verwaesserung (Umlaufwachstum 180 T vor dem Ereignis)  ->  traegt nicht
+  E2  n   85 (Datenfehler aus 1) · Wachstum Median   +0.0 % (gering   +0.0 % / hoch   +3.0 %) | gering   +5.4 % · hoch   +1.6 % · Unterschied   +3.7 % · Rang 0.81 | Quelle {'CM': 85} · Klassen {'S': 51, 'M': 28, 'H': 6}
+  E3  n  191 (Datenfehler aus 15) · Wachstum Median   +1.2 % (gering   +0.0 % / hoch   +6.7 %) | gering   -3.1 % · hoch   +5.5 % · Unterschied   -8.6 % · Rang 0.04 | Quelle {'CG': 143, 'CM': 48} · Klassen {'S': 157, 'M': 28, 'H': 6}
+
+L1 · A1 Boden + Wende · X5 · Vorteil gg. BTC bei steigender gegen fallende Netto-Liquiditaet (Klassen gepoolt)  ->  traegt nicht
+  E1  n   11 (steigend   11) | steigend   +2.2 % · fallend    -    · Unterschied    -    · Rang 0.00 | Auskunft: Verzoegerung 13 W  +32.4 % · je Klasse H    -    M    -    S    -   
+  E2  n  557 (steigend   70) | steigend  +11.8 % · fallend   +0.8 % · Unterschied  +11.0 % · Rang 0.94 | Auskunft: Verzoegerung 13 W   -2.5 % · je Klasse H   -0.5 % M  +13.1 % S  +12.0 %
+  E3  n  727 (steigend  335) | steigend   -8.8 % · fallend  -10.1 % · Unterschied   +1.3 % · Rang 0.56 | Auskunft: Verzoegerung 13 W   +5.1 % · je Klasse H  +18.2 % M   +0.7 % S   +0.6 %
+
+L3 · A1 · X5 · Vorteil gg. BTC bei GERINGER gegen HOHE Verwaesserung (Umlaufwachstum 180 T vor dem Ereignis)  ->  traegt nicht
+  E2  n   85 (Datenfehler aus 1) · Wachstum Median   +0.0 % (gering   +0.0 % / hoch   +3.0 %) | gering   +6.6 % · hoch   +1.9 % · Unterschied   +4.7 % · Rang 0.73 | Quelle {'CM': 85} · Klassen {'S': 51, 'M': 28, 'H': 6}
+  E3  n  191 (Datenfehler aus 15) · Wachstum Median   +1.2 % (gering   +0.0 % / hoch   +6.7 %) | gering   -2.5 % · hoch   +5.5 % · Unterschied   -8.0 % · Rang 0.08 | Quelle {'CG': 143, 'CM': 48} · Klassen {'S': 157, 'M': 28, 'H': 6}
+
+L4 · Kern BTC · Folgeertrag 180 T bei steigender gegen fallende Netto-Liquiditaet, je Klima-Drittel  ->  traegt nicht
+  E1 q < 1/3 (Zone billig)  Tage  225 (steigend  103) | steigend  +53.8 % · fallend +140.5 % · Unterschied  -86.7 % · Rang 0.04
+  E1 q Mitte                Tage  430 (steigend  243) | steigend  +80.0 % · fallend +137.9 % · Unterschied  -58.0 % · Rang 0.42
+  E1 q >= 2/3 (teuer)       Tage   76 (steigend   67)  nicht beurteilbar (< 30 Tage je Zustand)
+  E2 q < 1/3 (Zone billig)  Tage  547 (steigend  171) | steigend  +38.6 % · fallend  +39.6 % · Unterschied   -1.0 % · Rang 0.56
+  E2 q Mitte                Tage  272 (steigend  122) | steigend  +37.3 % · fallend  -31.5 % · Unterschied  +68.7 % · Rang 0.91
+  E2 q >= 2/3 (teuer)       Tage  286 (steigend  280)  nicht beurteilbar (< 30 Tage je Zustand)
+  E3 q < 1/3 (Zone billig)  Tage   54 (steigend   54)  nicht beurteilbar (< 30 Tage je Zustand)
+  E3 q Mitte                Tage  307 (steigend  121) | steigend  +32.5 % · fallend  +11.6 % · Unterschied  +20.9 % · Rang 0.58
+  E3 q >= 2/3 (teuer)       Tage  442 (steigend  166) | steigend   -7.7 % · fallend   +6.3 % · Unterschied  -14.0 % · Rang 0.27
+
+GESAMT (vorab §16.3):
+  L1 Liquiditaet x A1 · X4       -
+  L3 Verwaesserung · X4          -
+  L1 Liquiditaet x A1 · X5       -
+  L3 Verwaesserung · X5          -
+  L4 Kern Liquiditaet x Klima    -

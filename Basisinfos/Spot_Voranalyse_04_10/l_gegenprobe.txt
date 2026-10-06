@@ -1,0 +1,14 @@
+G1 Liquiditaetszustand: 1295 von 1295 Ereignissen gleich
+G2 2026-04-17 STRK     CG  Messung +0.3565  Gegenprobe +0.3565
+G2 2026-08-08 PIXEL    CG  Messung +0.0000  Gegenprobe +0.0000
+G2 2026-04-16 KSM      CG  Messung +0.0489  Gegenprobe +0.0489
+G2 2022-07-18 DASH     CM  Messung +0.0273  Gegenprobe +0.0273
+G2 2026-03-09 FLOW     CM  Messung +0.0237  Gegenprobe +0.0237
+G2 2022-10-26 1INCH    CM  Messung +0.0000  Gegenprobe +0.0000
+G2 2026-04-14 OG       CG  Messung +0.0675  Gegenprobe +0.0675
+G2 2026-08-21 UMA      CM  Messung +0.0148  Gegenprobe +0.0148
+G2 8 von 8 gleich
+G3 L1 X4 E2  Unterschied Gegenprobe +0.1292  (Messung siehe l_messung.txt)
+G3 L1 X4 E3  Unterschied Gegenprobe +0.0096  (Messung siehe l_messung.txt)
+G4 L4 E2 q Mitte  Tage 272 (steigend 122) · steigend +0.3726 · fallend -0.3147 · Unterschied +0.6873
+G4 L4 E3 q Mitte  Tage 307 (steigend 121) · steigend +0.3250 · fallend +0.1157 · Unterschied +0.2093
