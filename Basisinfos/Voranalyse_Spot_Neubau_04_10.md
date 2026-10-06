@@ -2530,7 +2530,7 @@ Beleg: `beispiel_watchlist_mail.py` → `.txt`, Stichtag 01.09.2026, Datenstand 
   | S | **+63 %** | +19 % | +4 % |
 
 ⚠️⚠️ **Was das Beispiel an Lücken zeigt (vor einem Bau zu beheben):**
-1. **ONE (+464 % in 18 Tagen) und AUDIO** stehen in der Symbolzuordnung als **gesperrt** (Verwechslungsgefahr mit gleichnamigen Coins, 2.705). Der Smallcap-Wert +63 % hängt an ONE. ⇒ B1 braucht als **Pflicht** den Abgleich mit `symbol_zuordnung.csv` (gesperrt = nicht in die Liste).
+1. **ONE (+464 % in 18 Tagen)** ist in `symbol_zuordnung.csv` **gesperrt** (Kollision mit dem gleichnamigen Bitpanda-Asset, +23,76 %). **AUDIO** (wie MBL und ONE) ist bei den Markpreisen als *fremdes Instrument* gesperrt (2.705, `markpreis_alle.db`), steht aber nicht in der csv. Der Smallcap-Wert +63 % hängt an ONE. ⇒ B1 braucht als **Pflicht** beide Sperrlisten (gesperrt = nicht in die Liste) und eine Plausibilitätsprüfung extremer Kurssprünge.
 2. *NEU* bezog sich auf die **kurze** Liste, nicht auf das Fünftel. Deshalb steht bei ZIL und WIN zugleich *neu* und *seit 6 Monaten*. ⇒ getrennt beschriften: *neu im Fünftel* und *neu unter den besten 10*.
 3. Viele Werte zeigen *100 % unter dem Hoch* (gerundet ≥ 99,5 %). Bei Allzeithochs aus den ersten Handelstagen ist das Allzeithoch ab dem 31. Tag sauberer (§21.6 Auskunft).
 4. TVL gibt es nur für wenige Coins der kurzen Liste.
