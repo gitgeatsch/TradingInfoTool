@@ -1295,3 +1295,54 @@ Mit dem späteren Zeitpunkt (dK1) kostet die Entnahme **weniger** als in Fassung
 | Aufbau | Zielverhältnis 70/20/10, Abweichung je Wert, Vorschlag für die nächste Rate (Ausgleich über die Raten) |
 
 Kein Auslöser, keine automatische Handlung: Die Entscheidung bleibt beim Nutzer.
+
+## 13. Messplan S1 — die Altcoin-Phase als Fakt, VOR der Messung (06.10.2026; Nutzer: *„Messplan für S1 vorbereiten, prüfen und gegenprüfen“*)
+
+**Zweck:** Für Altcoin-Spot braucht es zuerst einen **Fakt**: *Ist der Markt gerade in einer Altcoin-Phase?* Er ist **kein Auslöser** (§11.1: Fragen über die Phase haben wenige Fälle). Er gehört in die Klima-Ampel, und **du gewichtest** ihn.
+
+### 13.1 Vorprüfung (`Spot_Voranalyse_04_10/s1_vorpruefung.py`, keine Messung der Vorhersagekraft)
+
+- ⛔ **Für die BTC-Dominanz gibt es keine Historie:** am Desktop nur 10 Tage (07/2026), eine freie Langzeitquelle fehlt (CoinGecko nur in der Bezahlversion). Sie bleibt **ungeeicht**: im Betrieb höchstens als Tageswert in der Mail.
+- **Universum:** `messdaten.db` mit eingestellten Werten, 82 Altcoins (2019), 181 (2020), 295 bis 457 (2021–2025). Gemessen wird **ab 2019**.
+- **Korb:** die 50 umsatzstärksten Altcoins (30-Tage-Umsatz in USD am Monatsersten), gleich gewichtet, monatlich neu, ohne BTC und Stablecoins, eingestellte bis zum letzten Kurs.
+- **Ereignis „echte Altcoin-Phase“** (wie K-4, per Definition rückblickend): Der Korb schlägt BTC in den **folgenden 90 Tagen** um **mindestens 25 Pp**. Episoden mit Lücke unter 30 Tagen werden verbunden, Mindestdauer 7 Tage.
+
+| Phase | Dauer | bester Vorsprung |
+|---|---|---|
+| 10.04. – 17.06.2020 | 68 T | +88 % |
+| 12.11.2020 – 23.03.2021 | 131 T | +156 % |
+| 11.05. – 15.06.2022 | 35 T | +50 % |
+| 16. – 25.10.2023 | 9 T | +39 % |
+| **2024 – 2026 (ETF-Markt)** | **keine** | — |
+
+### 13.2 Die Kandidaten-Fakten (vorab, alle kausal, nur aus Kursen)
+
+| # | Fakt | Tage *an* je Jahr 2019 · 2020 · … · 2026 |
+|---|---|---|
+| **F1** | ETH/BTC über seinem **steigenden** 200-Tage-Schnitt | 0 · 266 · 303 · 135 · 20 · 17 · 139 · 38 |
+| **F2** | **Altseason-Breite:** ≥ 75 % der Top 50 schlugen BTC in den **letzten** 90 Tagen (die gängige Definition des „Altcoin Season Index“) | 0 · 28 · 79 · 37 · 0 · 10 · 16 · 0 |
+| **F3** | Korb/BTC über seinem **steigenden** 200-Tage-Schnitt | 0 · 141 · 132 · 0 · 0 · 19 · 0 · 0 |
+| **F4** | mindestens 2 von F1–F3 | — |
+| Kontext | BTC-Klima q (Auskunft: in welchem BTC-Zustand liefen die Phasen?) | — |
+
+### 13.3 Die Fragen (Beschreibung, wie F1 H1–H3)
+
+| # | Frage | stimmig, wenn |
+|---|---|---|
+| **S1-H1 Deckung** | Ist der Fakt **während** einer Phase an? | an in ≥ 50 % der Phasentage, in ≥ 2 der 3 Phasen mit ≥ 30 Tagen |
+| **S1-H2 Verzögerung** | Wie spät schaltet er nach Phasenbeginn ein, und wie viel Vorsprung ist bis dahin schon verpasst? | ausgewiesen |
+| **S1-H3 Fehlalarm** | Wie oft ist er **außerhalb** jeder Phase an (±30 T Puffer)? | ≤ 50 % seiner An-Tage |
+| S1-H4 Wirkung | Korb gegen BTC in den 90 T nach jedem Einschalten | **Auskunft** (zu wenige Phasen für ein Urteil) |
+| zweiseitig | Gegenrichtung: Fakt aus, obwohl Phase | ausgewiesen |
+
+**Folge, vorab:**
+- Der Fakt mit der besten Kombination aus Deckung und wenig Fehlalarm kommt **als Fakt** in die Klima-Ampel.
+- Erfüllt keiner H1 und H3, bekommt die Ampel **keine** Altcoin-Phase, nur die Breite als Zahl.
+
+**Betriebsprüfung (vorab):** F1–F3 lassen sich am NB aus den laufend nachgeladenen Stundenkursen rechnen (`stundenkurse.db` / `stundenkurse_alle.db`, ab 2023, 537 Werte). Das reicht für 200 + 90 Tage. Die BTC-Dominanz kommt live aus `macro_snapshot`, ungeeicht.
+
+**Gegenprobe:** Korb-Index für einen Monat und Breite für einen Tag, unabhängig nachgerechnet.
+
+⚠️ **Ehrlich:**
+- 3–4 Phasen, **alle vor dem ETF-Markt**. Für den heutigen Markt kann S1 **nicht** bestätigt werden; dort gab es keine Phase.
+- S1 liefert eine **Beschreibung** der Vergangenheit und einen Fakt für die Mail, keine Vorhersage.

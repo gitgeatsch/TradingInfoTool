@@ -1,0 +1,11 @@
+ECHTE ALTCOIN-PHASEN (Korb Top 50 schlaegt BTC in den folgenden 90 T um >= 25 Pp; Luecke < 30 T verbindet):
+  2020-04-10 bis 2020-06-17 ( 68 T) · bester Vorsprung +88 %
+  2020-11-12 bis 2021-03-23 (131 T) · bester Vorsprung +156 %
+  2022-05-11 bis 2022-06-15 ( 35 T) · bester Vorsprung +50 %
+  2023-10-16 bis 2023-10-25 (  9 T) · bester Vorsprung +39 %
+  Tage mit Phase je Jahr: {2019: 1, 2020: 85, 2021: 81, 2022: 24, 2023: 9, 2024: 0, 2025: 0, 2026: 0}
+
+KANDIDATEN-FAKTEN, Tage 'an' je Jahr (nur Zustand):
+  F1 ETH/BTC ueber steigendem 200-T-Schnitt                                {2019: 0, 2020: 266, 2021: 303, 2022: 135, 2023: 20, 2024: 17, 2025: 139, 2026: 38}
+  F2 Altseason-Breite: >= 75 % der Top 50 schlugen BTC in den letzten 90 T {2019: 0, 2020: 28, 2021: 79, 2022: 37, 2023: 0, 2024: 10, 2025: 16, 2026: 0}
+  F3 Korb/BTC ueber steigendem 200-T-Schnitt                               {2019: 0, 2020: 141, 2021: 132, 2022: 0, 2023: 0, 2024: 19, 2025: 0, 2026: 0}
