@@ -2846,3 +2846,76 @@ Verglichen mit dem echten Marktwert von CoinMetrics an 16–40 Coins je Stichtag
 | **Reproduktion (R-R11)** | Vor Teil 1 wird §19.6 mit den **Umsatz-Klassen** bitgleich reproduziert (Saldo E2 +11,0, E3 +13,2 Pp). Erst dann wird die Einteilung getauscht |
 | **Gegenprobe** | Marktwert und Klasse für 10 Coins von Hand; Saldo eines Fakts mit pandas; QNT-Werte direkt aus SQL |
 | **Ehrlich** | Siebter Blick auf die Altcoin-Daten: Beschreibung. Teil 2 ist mit dem Vorgriff belastet. Der eigentliche Test bleibt vorwärts |
+
+### 25.6 Ergebnis Messung §25 (06.10.2026)
+
+**Belege:**
+- `mk_messung.py` → `.txt`
+- Gegenprobe `mk_gegenprobe.py` → `.txt`: 11 von 11 gleich (Marktwert, Rang und Klasse für 10 Fälle direkt aus SQL; Saldo eines Fakts mit pandas)
+
+**Teil 0 (R-R11):** §19.6 reproduziert: E2 +0,1098, E3 +0,1319.
+
+**Teil 1 — Watchlist auf Marktwert-Klassen: TRÄGT.**
+
+| | E2 2021–23 | E3 ab 2024 |
+|---|---|---|
+| Saldo gegen die Klasse · Rang | **+10,4 Pp · 1,000** | **+14,4 Pp · 1,000** |
+| Lift verdoppelt / Absturz | 1,12 / 0,86 | 1,24 / 0,93 |
+| Spiegelprobe bewegungsgleich | besteht | besteht |
+| Korb gg. BTC (Klasse) | −7 % (−12 %) | −26 % (−45 %) |
+
+- **Selbsttest auf den neuen Zellen bestanden.**
+- **Dosis** monoton: E3 −16,4 · −6,1 · +2,8 · +4,6 · +14,4 Pp.
+- **Weglassprobe** hält: E2 +9,9, E3 +10,2 Pp.
+- **Jedes Jahr positiv**, 2019–2025.
+
+| Klasse (Marktwert) | E3 Saldo | Lift verdoppelt / Absturz | Korb E3 (Klasse) |
+|---|---|---|---|
+| H | **+21,0 Pp** | 1,29 / **0,83** | −4 % (−24 %) |
+| M | **+26,5 Pp** | 1,47 / **0,88** | −17 % (−50 %) |
+| S | +9,4 Pp | 1,16 / 0,96 | −55 % (−59 %) |
+
+⚠️ **Vorbehalte:**
+- **Ersatzklasse 30–39 %:** So viele Coins haben heute bei CoinGecko keinen Umlauf; meist sind sie eingestellt oder klein. Sie stehen mit ihrer Umsatz-Klasse in der Messung. Die Marktwert-Einteilung gilt also voll nur für etwa zwei Drittel.
+- **Smallcaps** bleiben auch nach Marktwert schwach (Absturz 0,96).
+- **QNT im Juni 2022:** CoinMetrics nennt 24,4 Mio. Umlauf, CoinGecko heute 14,6 Mio. Die Quellen definieren den Umlauf verschieden.
+
+**Teil 2 — Strukturprofil (Auskunft; die Fakten stammen von heute, außer Gebühren und Halter-Einnahmen):**
+
+| Fakt | E2 Saldo (Rang) | E3 Saldo (Rang) | Urteil |
+|---|---|---|---|
+| A1 Höchstmenge fest | +0,6 (0,82) | +0,8 (0,92) | neutral |
+| A2 ausgegeben ≥ 90 % | −0,3 (0,32) | +1,5 (0,94) | neutral |
+| A3 FDV/Marktwert ≤ 1,2 | +0,2 (0,74) | +4,1 (1,00) | nur E3 |
+| B1 Gebühren ≥ 1 Mio. $/J | −11,9 (0,00; nur 4 % bekannt) | −3,2 (0,01) | **deutlich ungünstig** (wenige Fälle) |
+| B2 Halter-Einnahmen > 0 | — | +3,6 (0,95; 7 % bekannt) | zu wenig Daten |
+| **C1 Kategorie RWA** | **+8,8 (1,00)** | **+14,2 (1,00)** | **deutlich günstig** (11 bzw. 13 Coins) |
+| **C2 Coinbase 50 Index** | **+15,3 (1,00)** | **+13,3 (1,00)** | **deutlich günstig** — ⚠️ starker Vorgriff, siehe unten |
+| D1 Widerstand (fiel weniger) | −3,0 (0,00) | −2,3 (0,01) | **deutlich ungünstig** (wie F1 oben) |
+| E1 Meme | +2,4 (0,67) | **−15,1 (0,01)** | ungünstig in E3 |
+| E2 Layer 1 | +10,6 (1,00) | +0,8 (0,69) | nur E2 |
+| E3 DeFi | −9,5 (0,00) | +11,3 (1,00) | **dreht** |
+| E4 Infrastruktur | +8,6 (1,00) | −4,5 (0,03) | **dreht** |
+| E5 Gaming | +4,5 (0,94) | **−23,8 (0,00)** | ungünstig in E3 |
+| E6 KI | +10,8 (1,00) | **−18,2 (0,00)** | **dreht** |
+
+**Einordnung Teil 2:**
+1. **Der Vorgriff ist bei C2 am stärksten.** In den Coinbase-50-Index kommt, wer **heute** groß und erfolgreich ist. Damit misst das Merkmal zu einem guten Teil das spätere Ergebnis. ⇒ **Kein Beleg.**
+2. **RWA** ist günstig in beiden Epochen. Die Fallzahl ist klein (11–13 Coins), und die Kategorie ist heute vergeben: Wer heute als RWA gilt, hat das Thema überlebt. ⇒ **Hinweis, kein Beleg.**
+3. **Angebot (fest, voll ausgegeben)** war in der Vergangenheit **neutral**. Die These *begrenzte Menge schützt* ist mit den Kursen bis heute nicht bestätigt, aber auch nicht widerlegt; der Strukturwandel kommt laut These erst.
+4. **Gebühren** wirkten eher **ungünstig**, bei wenigen Fällen. Eine mögliche Ursache sind Freigabe-lastige L2- und DeFi-Tokens (ARB, OP …); das ist **nicht** gemessen.
+5. **Kategorien drehen zwischen den Epochen** (DeFi, KI, Infrastruktur). Das sind Moden, keine Qualität. Nur Meme und Gaming waren in E3 klar ungünstig.
+
+**Teil 3 — QNT (Anschauung):**
+- Nach Marktwert in 2022 **Midcap** (Rang 47 → 37 → 16 bis 11/2022).
+- **Watchlist-Perzentil am Boden 0,26–0,28**, also auch mit Marktwert-Klassen **nicht** im Fünftel.
+- **Strukturprofil am Boden:** Höchstmenge fest, voll ausgegeben, FDV/Marktwert ≤ 1,2, RWA, Coinbase 50, Infrastruktur, Widerstand.
+- ⇒ Das **Profil** hätte QNT hervorgehoben, die **Watchlist** nicht. Genau dafür ist die Ebene 1 da.
+
+**Zwischenfazit zum Ziel:**
+- **Ebene 2 (Gelegenheit)** steht jetzt auf der richtigen Grundlage: Marktwert-Klassen, trägt, am stärksten bei H und M.
+- **Ebene 1 (Fortbestand)** lässt sich mit der Vergangenheit nur begrenzt prüfen:
+  - Die günstigsten Fakten (RWA, Coinbase 50) sind vom Vorgriff belastet.
+  - Das Angebot war neutral, und die Kategorien wechseln mit den Moden.
+  - ⇒ Ebene 1 bleibt ein **Fakten-Profil, das der Nutzer gewichtet** (Vorgabe 01.10.). In der Mail wird kenntlich gemacht, welche Fakten in der Vergangenheit **neutral**, **günstig mit Vorbehalt** oder **ungünstig** waren.
+- Der echte Test der Nutzer-These *Fortbestand bei Tokenisierung* ist **vorwärts**: Das Protokoll führt das Profil je Coin mit.

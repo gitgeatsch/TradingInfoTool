@@ -1,0 +1,14 @@
+G1/G2 2022-06-01 QNT     Rang eigen 39.0 / Messung 39.0 · Klasse eigen M / Messung M  gleich
+G1/G2 2024-03-01 LINK    Rang eigen 6.0 / Messung 6.0 · Klasse eigen H / Messung H  gleich
+G1/G2 2025-05-01 HBAR    Rang eigen 14.0 / Messung 14.0 · Klasse eigen H / Messung H  gleich
+G1/G2 2021-07-01 DUSK    Rang eigen 131.0 / Messung 131.0 · Klasse eigen S / Messung S  gleich
+G1/G2 2024-04-01 FOR     Rang eigen - / Messung - · Klasse eigen S / Messung S  gleich
+G1/G2 2024-09-01 GTC     Rang eigen 231.0 / Messung 231.0 · Klasse eigen S / Messung S  gleich
+G1/G2 2025-01-01 AST     Rang eigen - / Messung - · Klasse eigen S / Messung S  gleich
+G1/G2 2024-06-01 UTK     Rang eigen - / Messung - · Klasse eigen S / Messung S  gleich
+G1/G2 2023-10-01 PNT     Rang eigen - / Messung - · Klasse eigen S / Messung S  gleich
+G1/G2 2022-04-01 LAZIO   Rang eigen - / Messung - · Klasse eigen S / Messung S  gleich
+G3 A1 Hoechstmenge fest, E3: Saldo pandas +0.00805 · Messung +0.00805  gleich
+G4 QNT 2022-06-01: Kurs 67.00 · Umlauf 24431259 · Marktwert 1.64 Mrd · Rang 39 von 184
+
+11 von 11 gleich
