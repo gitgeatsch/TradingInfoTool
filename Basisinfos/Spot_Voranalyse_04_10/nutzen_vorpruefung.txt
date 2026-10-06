@@ -1,0 +1,21 @@
+Vorpruefung inhaltliche Bewertung (§23) · Klassen zum 2026-09-01 · DefiLlama: 468 Blockchains, 2839 Protokolle mit Gebuehren
+
+  H   20 Coins · mit Gebuehrenreihe  18 ( 90 %) · davon mehrdeutig 12
+  M   80 Coins · mit Gebuehrenreihe  55 ( 69 %) · davon mehrdeutig 25
+  S  232 Coins · mit Gebuehrenreihe 102 ( 44 %) · davon mehrdeutig 46
+
+Gespeichert: 125066 Tageswerte fuer 121 Symbole -> data\_spot\gebuehren.db
+
+Abdeckung je Stichtag (Coins der Klasse mit Gebuehrenwerten in den 180 T davor):
+  2021-01-01  H 0/9 · M 1/91 · S 0/67
+  2022-01-01  H 2/12 · M 6/88 · S 1/182
+  2023-01-01  H 6/18 · M 8/82 · S 10/208
+  2024-01-01  H 6/12 · M 16/88 · S 19/248
+  2025-01-01  H 5/9 · M 29/91 · S 33/270
+  2026-01-01  H 12/18 · M 33/82 · S 63/290
+
+Beispiele (aktuelle Klassen, Jahresgebuehren der letzten 365 T in Mio. USD):
+  H: BNB 787.6, ENA 257.9, AVAX 124.6, TRX 82.9, SUI 78.6, NEAR 56.1, XLM 19.0, ADA 8.3, XRP 6.2, TAO 3.7, WLD 1.4, BCH 0.6, LTC 0.5, DOGE 0.1
+  M: LDO 615.8, POL 365.2, ARB 321.8, ONDO 62.4, OP 42.5, EIGEN 27.8, APT 22.4, PENDLE 16.5, SEI 16.0, VIRTUAL 15.7, JST 13.2, RESOLV 10.1, DODO 8.7, GALA 5.0, ATOM 4.5, HBAR 3.8, ALGO 2.0, RENDER 1.9, CELO 0.9, ICP 0.8, HOME 0.5, TST 0.4, RIF 0.4, KAITO 0.3, FIL 0.3
+
+Mehrdeutig (nicht zugeordnet): AAVE, ALT, BNT, BONK, CAKE, CETUS, COMP, COW, CRV, ETHFI, GMX, GPS, HYPER, JOE, JTO, JUP, KMNO, KNC, LINK, LISTA, LQTY, MAV, OGN, PYTH, QI, QUICK, RAY, SNX, SPK, STG, SUN, SUSHI, T, THE, TREE, TWT, UNI, XVS, YFI, ZRO

@@ -2542,3 +2542,73 @@ Beleg: `beispiel_watchlist_mail.py` → `.txt`, Stichtag 01.09.2026, Datenstand 
 | Aus über 300 Altcoins monatlich rund 23 mit nachweislich besserem Chance-Risiko-Verhältnis als ihre Klasse, **begründet** | sagt nicht, **ob** man Altcoins kaufen soll statt BTC; seit 2024 hat BTC jede Altcoin-Auswahl geschlagen |
 | eine Verkaufsmarke je Coin, die in der Rückmessung die großen Abstürze verhindert hätte | keine Garantie; der Nachlauf ist knapp nicht bestätigt |
 | ein ehrliches Vorwärtsprotokoll, an dem nach 6 und 12 Monaten entschieden wird | keinen Kaufzeitpunkt (Phase nur als Fakt) |
+
+## 23. Nutzer-Rückmeldung zum Beispiel: Bestand, Smallcaps, Lesbarkeit, inhaltliche Bewertung (06.10.2026)
+
+Nutzer 06.10.:
+1. *„Kennzeichen im Bitpanda-Bestand wird benötigt.“*
+2. *„Bin unsicher, ob das System bei Smallcaps überhaupt Sinn macht.“*
+3. *„Ranking und eine reine Faktenliste je Asset ohne Bewertungsschema ist viel Lesen mit zu vielen Zahlenwerten.“*
+4. *„Prüfe, ob man je Asset auch eine inhaltliche Bewertung zusammenbringen kann. Das Problem bei Krypto ist, die wenigsten Assets haben einen echten Nutzen, z. B. ETH, und somit auch höheres Potential bzw. ein geringeres Risiko, dass das Asset stirbt. Kann man diesen Aspekt sinnvoll integrieren, ohne dass man auf wertlose News angewiesen ist?“*
+
+### 23.1 Bestand
+
+- Die Tabelle `holdings` gibt es. Am Desktop ist sie eine **alte Kopie** (19.07.2026, 28 Symbole); der aktuelle Stand liegt am NB.
+- ⇒ Im Bau liest der Mailabschnitt den Bestand am NB, **nur lesend** (`mode=ro`).
+- Er zeigt:
+  - je Listen-Coin das Kennzeichen *im Bestand*;
+  - einen eigenen Block *deine gehaltenen Altcoins*: Einstufung und Rang in der Klasse, auch wenn sie nicht in der Liste stehen (z. B. LINK, XLM, QNT, KAS), samt Nachlauf-Marke.
+
+### 23.2 Smallcaps — gemessen schon beantwortet (§19.6, `as_pruefungen_komb.txt`)
+
+| Klasse | Saldo E3 gegen die Klasse | Lift verdoppelt / Absturz | Korb E3 (Klasse) |
+|---|---|---|---|
+| H | **+27,9 Pp** | 1,53 / **0,74** | −0 % (−28 %) |
+| M | **+27,5 Pp** | 1,36 / **0,85** | −44 % (−58 %) |
+| **S** | +7,9 Pp | 1,15 / **0,98** | **−57 % (−56 %)** |
+
+⇒ Bei **Smallcaps** senkt die Auswahl das Absturzrisiko **nicht** (0,98), und der Korb ist nicht besser als die Klasse. Dazu sitzen dort die Datenfehler (ONE, AUDIO). **Vorschlag: Smallcaps raus**, die Watchlist nur für H und M.
+
+### 23.3 Lesbarkeit — Bewertungsschema statt Zahlenliste
+
+Je Coin **eine Zeile**: Stufe · Begründung in Worten · Status. Die Zahlen kommen in einen Anhang.
+
+```
+★★★ FIL      Midcap · alt, sehr tief gefallen, Hoch lange her            · Marke ok (−35 %)
+★★  LTC      Highcap · sehr alt, Hoch lange her · Nutzung gering         · im Bestand · Marke ok
+★★  ATOM     Midcap · sehr alt · Nutzung 4,5 Mio. USD Gebühren/Jahr      · NEU · Marke ok
+```
+
+- **Stufe:**
+  - ★★★ Wert im obersten Zehntel der Klasse;
+  - ★★ übriges oberstes Fünftel;
+  - ★ Bestand außerhalb der Liste (nur bei gehaltenen Coins).
+- **Begründung:** die zwei bis drei Faktoren mit dem höchsten Teilrang, in Worten.
+- **Status:** im Bestand · neu · Marke ok / nahe (< 10 %) / unterschritten.
+
+### 23.4 Inhaltliche Bewertung ohne News — Vorprüfung (`nutzen_vorpruefung.py` → `.txt`, Daten nach `data/_spot/gebuehren.db`)
+
+**Gedanke:** Echten Nutzen kann man messen, ohne Nachrichten zu lesen. **Gebühren** sind das, was Nutzer für die Nutzung **bezahlen**.
+
+| Quelle (frei) | was sie sagt | Historie |
+|---|---|---|
+| **DefiLlama Gebühren** | tatsächliche Nachfrage nach der Blockchain oder dem Protokoll (BNB 788, LDO 616, POL 365, ARB 322 Mio. USD im Jahr; LTC 0,5, DOGE 0,1) | ETH ab 2015; die meisten Coins erst ab 2023/24 |
+| DefiLlama Einnahmen für Tokenhalter | ob der **Token** etwas davon hat | wie oben (noch nicht geladen) |
+| TVL, aktive Adressen | Nutzung (schon gemessen: F9, F10) | Teilmengen |
+| Kategorie (CoinGecko: Meme, Gaming, L1, DeFi …) | ob es überhaupt einen Nutzen **gibt** | nur der heutige Stand |
+
+**Abdeckung:**
+- Zum 01.09.2026 haben **H 18 von 20, M 55 von 80**, S 102 von 232 eine Gebührenreihe.
+- Je Stichtag mit 180 T Vorlauf:
+  - 2022: H 2/12 · M 6/88;
+  - 2024: H 6/12 · M 16/88;
+  - 2026: H 12/18 · M 33/82.
+- ⚠️ **Mehrdeutig** (ein Kürzel, mehrere Protokolle), also noch nicht zugeordnet: unter anderem **AAVE, UNI, LINK, COMP, CRV, SNX, JUP**. Lösbar über die CoinGecko-ID, die für 407 Symbole schon vorliegt (`umlaufmenge_cg.abruf_symbol`).
+
+**Folge für die Messung:**
+- Mit Wahl auf E2 und Bestätigung auf E3 ist ein Gebührenfaktor **nicht** prüfbar; die Historie beginnt dafür zu spät.
+- Möglich sind:
+  - (a) Nutzung als **Fakt** in der Begründungszeile, ohne Gewicht;
+  - (b) eine **Beschreibung** auf E3, ob Coins mit hohen und wachsenden Gebühren seltener abstürzen;
+  - (c) der Vorwärtstest.
+- Die Kategorie *Meme ohne Nutzen* kann als Fakt mitlaufen. Ob sie das Absturzrisiko trennt, ist mit dem heutigen Stand auf E2/E3 als Auskunft messbar; dabei ist der Vorgriff zu prüfen.
