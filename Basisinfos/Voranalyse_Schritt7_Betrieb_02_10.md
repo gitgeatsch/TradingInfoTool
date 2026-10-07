@@ -2005,3 +2005,51 @@ Nutzer 07.10.: *„Ja, ich schalte später XDC ab, mach bitte eine Erinnerung. Z
 1. **Jetzt der Hebel:** A1 (WORAN abschließen) und A2 (Ist die Information da?), beides am Desktop, ohne Kontingent und ohne Eingriff am NB.
 2. **Spot-Weiterbau O28 (W2–W7) erst nach der Testwoche (ab 10.10.)**, nach Abstimmung des Bauumfangs. Grund: Betriebscode am NB würde die Testwoche stören.
 3. Die Themen bleiben getrennt (T-1..T-6).
+
+### 23.14 A1 — WORAN: Der Trader urteilt nach TREND, die Wette ist GEGENBEWEGUNG (07.10.2026)
+
+**Belege:**
+- `Rechenkern_02_10/a1_woran.py` → `.txt` (Plan im Kopf des Skripts, vorab festgelegt; nur die Ablage, keine Aufrufe)
+- Gegenprobe `a1_gegenprobe.py` → `.txt`: **16 von 16 gleich** (Urteile selbst gezählt, Zahlenzerlegung zweiter Weg an 10 Ankern, Rangkorrelation mit scipy, Trend-Anteil aus dem Rohtext)
+
+**A1-a — welche Fakten der Trader als *dagegen* nimmt** (1.245 Stimmen, Belege je Fakt):
+
+| Fakt-Typ | Belege | davon *dagegen* | als Gegengrund |
+|---|---|---|---|
+| **Trend lang (60 T, 200-T-Schnitt)** | 1.145 | **75 %** | 14 % |
+| Widerstand | 486 | 55 % | 5 % |
+| Umsatz-Höhe | 1.213 | 50 % | 8 % |
+| Unterstützung | 966 | 47 % | **23 %** |
+| Umsatz an Aufwärtstagen | 610 | 48 % | 2 % |
+| Marktstruktur | 1.262 | 35 % | 12 % |
+| Schwankung | 614 | 6 % | 9 % |
+
+**A1-b/c — woran das Urteil hängt und ob dieselbe Zahl die Wette ordnet:**
+
+| Eingabezahl | Urteil (Saldo) folgt der Zahl: rho 2025 / 2026 | **24-h-Ertrag** folgt der Zahl: rho 2025 / 2026 (p zweiseitig) |
+|---|---|---|
+| Marktstruktur *höhere Hochs* | **+0,50 / +0,47** | −0,04 / −0,08 (0,51 / 0,18) |
+| Abstand zum 200-T-Schnitt | **+0,40 / +0,24** | +0,05 / +0,05 (0,25 / 0,24) |
+| Umsatz-Faktor | **+0,41 / +0,26** | **−0,14 / −0,25** (0,45 / **0,05**) |
+| 60-T-Änderung | +0,33 / +0,35 | +0,09 / +0,10 (0,93 / 0,30) |
+| Anteil Umsatz an Aufwärtstagen | +0,29 / +0,39 | +0,07 / −0,15 (0,49 / 0,17) |
+
+- **Drittel:** Bei tiefstem 60-T-Rückgang sagt der Trader **zu 71 % *dagegen*, *stützt* zu 1 %**. Bei *höheren Hochs* sagt er zu 10 % *dagegen*, sonst zu 65 %.
+- **W6-Stichprobe (30 Begründungen):** durchgehend Trend-Logik. *„übergeordneter Aufwärtstrend … stützt“*, *„anhaltender Abwärtstrend und schwaches Volumen sprechen gegen eine Gegenbewegung“*.
+
+**WORAN (endgültig bis auf W3):**
+
+| | |
+|---|---|
+| **W6 ✔** | Der Trader **argumentiert mit Trend und Volumen**, obwohl die Aufgabe die Wette *Gegenbewegung nach Rückgang* ausdrücklich nennt (`geplant`). Er stützt, was **wie ein Aufwärtstrend aussieht**, und lehnt ab, was **tief gefallen** ist. Genau das sind aber die Fälle, für die die REGEL0 gebaut ist |
+| **W5 ✔** | **Keine** der Eingabezahlen ordnet den 24-h-Ertrag in beiden Jahren (alle p > 0,05). Der Umsatz wirkt eher **umgekehrt** (höherer Umsatz, schlechterer Ertrag; 2026 p 0,05). Die Eingabe trägt die nötige Information **nicht** |
+| **Mechanismus** | Das erklärt die **negative Rangkorrelation** aus dem Bericht: Der Trader belohnt Merkmale (Umsatz, Struktur), die den Ertrag nicht oder umgekehrt ordnen |
+| W1 ✔ | *stützt* selten, weil fast alle REGEL0-Signale tief gefallen sind |
+| W3 | offen, nach R_v |
+
+**Folge für A3** (die Lösungswege, *nicht* umgesetzt):
+1. **Am Prompt feilen hilft allein nicht** (W5): Selbst ein Trader, der die Wette richtig liest, hätte in diesen neun Fakten nichts Trennendes.
+2. Der Weg geht über **A2**: Gibt es Information, die **innerhalb** der REGEL0-Signale trennt (Terminmarkt, Funding, Markpreis-Prämie, Käuferanteil, Liquidationen, Kapitulationsmerkmale)? Nur was dort trägt, gehört in die Eingabe.
+3. **Zusätzlich** zu prüfen: Die neun Fakten selbst sind **trendlastig**. Für eine Umkehrwette fehlen Umkehr-Fakten ganz.
+
+**K-XDC:** Nutzer 07.10.: *„XDC Hebel ist ausgeschaltet und gepullt“*. Die Erinnerung ist abgeschaltet. Nachweis im nächsten Teilexport.

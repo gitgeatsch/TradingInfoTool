@@ -1,0 +1,18 @@
+G1   gleich  {'spricht_dagegen': 130, 'neutral': 100, 'stuetzt': 16, 'uneinig': 3}
+G2   gleich  pos 59 abst200 -13.3 / -13.3 · umsatz 0.6 / 0.6
+G2   gleich  pos 95 abst200 0.3 / 0.3 · umsatz 0.2 / 0.2
+G2   gleich  pos 247 abst200 -15.4 / -15.4 · umsatz 0.6 / 0.6
+G2   gleich  pos 97 abst200 -12.4 / -12.4 · umsatz 2.1 / 2.1
+G2   gleich  pos 33 abst200 1.5 / 1.5 · umsatz 0.8 / 0.8
+G2   gleich  pos 50 abst200 -0.2 / -0.2 · umsatz 0.2 / 0.2
+G2   gleich  pos 181 abst200 -6.0 / -6.0 · umsatz 1.2 / 1.2
+G2   gleich  pos 12 abst200 0.5 / 0.5 · umsatz 0.7 / 0.7
+G2   gleich  pos 22 abst200 nan / nan · umsatz 0.7 / 0.7
+G2   gleich  pos 36 abst200 -0.7 / -0.7 · umsatz 1.5 / 1.5
+G3   gleich  abst200 2025 scipy +0.4012 gegen Bericht +0.401
+G3   gleich  abst200 2026 scipy +0.2411 gegen Bericht +0.241
+G3   gleich  struktur_hoch 2025 scipy +0.5007 gegen Bericht +0.501
+G3   gleich  struktur_hoch 2026 scipy +0.4680 gegen Bericht +0.468
+G4   gleich  Trend-Fakt 1145 Belege, dagegen 75.1 % (Bericht 75 %)
+
+16 von 16 gleich
