@@ -2134,3 +2134,48 @@ Zusätzlich als Auskunft das **linke Ende**: Fängt eine LLM-Gegenmeinung die gr
   - Das gilt, wenn Eingabe und Aufgabe stimmen (§23.15 F1–F4).
   - Am ehesten trägt das LLM bei **Ausnahmen**: widersprüchliche Lagen, Abwicklung, Datenfehler, Extremereignisse. Das ist das **linke Ende**, nicht der Durchschnitt.
 - **Wo ein LLM wirklich mehr kann:** bei Information, die eine Regel nicht fassen kann (Text, Ereignisse). Die ist bewusst nicht vorgesehen (Nutzervorgabe: keine wertlosen News; übergeordnete Kräfte nur gewichten).
+
+### 23.17 Weitere Information (Text, Ereignisse) für das LLM: wie bewerten, wie ausgeben (07.10.2026; E-79)
+
+Nutzer 07.10.: *„Ok, dann kurze Korrektur bzw. Klarstellung: Du kannst gerne weitere Informationen für das LLM nutzen, wenn wir diese haben. Ich frage mich nur, wie wir dies bewerten und wie das LLM dies ausgeben soll, z. B. ein neuer Partner des Assets hat investiert – die Info selbst trägt nichts, es sei denn, es erfolgt ein Kursanstieg. Wie soll das tragen?“*
+
+**Klarstellung festgehalten:** Weitere Information für das LLM ist **erlaubt**, wenn wir sie haben. Die frühere Einschränkung *keine wertlosen News* betraf den Spot-Strang und den Fall ohne Bewertung.
+
+**Wie eine Nachricht *trägt*:**
+- Eine einzelne Nachricht trägt **nie für sich**. Tragen heißt **statistisch**: Über viele Fälle laufen REGEL0-Signale **mit** einem bestimmten Ereignistyp **besser** (oder brechen seltener ein) als Signale **ohne**.
+- Der Kursanstieg ist dabei die **Zielgröße**, nicht der Beweis im Einzelfall.
+- Gemessen wird wie jedes andere Merkmal: Ereignisstudie innerhalb der REGEL0-Signale, Nullwelt, beide Jahre, Spiegelprobe, M-1 bis M-3.
+
+**Was ein LLM hier leisten kann, was die Regel nicht kann:**
+- Text lesen und **einordnen**: Ist die Meldung wesentlich, ist sie neu, und ist sie **schon eingepreist**? Eingepreist heißt: Der Kurs hat seit der Meldung schon reagiert.
+- Beispiel *Partner investiert*:
+  - trägt **nichts**, wenn es alt oder schon eingepreist ist;
+  - **möglicherweise** etwas, wenn es frisch, wesentlich und noch nicht eingepreist ist und zugleich eine REGEL0-Gegenbewegung ansteht.
+
+**Wie das LLM es ausgeben soll — feste Form statt Fließtext** (sonst nicht messbar):
+
+```
+ereignisse: [ { typ: Finanzierung | Partnerschaft | Börsenlisting | Delisting | Sicherheitsvorfall | Regulierung |
+                     Token-Freigabe | Produkt | Rechtsstreit | sonstiges,
+               richtung: +1 | 0 | -1,  wesentlichkeit: 1-3,
+               neu_seit_stunden: n,  eingepreist: nein | teilweise | ja  (Kurs seit Meldung in ATR),
+               quelle, zeitpunkt } ]
+urteil: stützt | neutral | spricht dagegen     (nur aus den Ereignissen, getrennt vom Zahlen-Urteil)
+```
+
+- In der Mail steht es als **Fakt in Worten**, z. B. *„Partner X hat investiert (Finanzierung, wesentlich 2/3), vor 18 h gemeldet, Kurs seither +0,8 ATR, teilweise eingepreist“*.
+- Die **Gewichtung** liegt bei dir (Vorgabe 01.10.), bis eine Messung zeigt, dass ein Ereignistyp trägt.
+
+⚠️⚠️ **Die harte Grenze: Rückblickend ist Text NICHT ehrlich messbar.**
+1. **Kontamination:** Eine Nachricht nennt Asset und Zeit. Das LLM kennt die Folgen oft aus dem Training, die Anonymisierung aus N4 (K-Probe) ist dann unmöglich.
+2. **Zeitstempel:** Für 2024–2026 fehlt uns ein Nachrichtenarchiv mit verlässlichem Veröffentlichungszeitpunkt je Coin (freie Quellen sind lückenhaft oder brauchen einen Schlüssel).
+
+⇒ **Text und Ereignisse lassen sich nur VORWÄRTS testen:**
+- Ab Start wird je REGEL0-Signal die Ereignislage in der festen Form protokolliert (ohne Wirkung auf das Signal).
+- Abgerechnet wird nach genug Fällen mit Ereignis, Richtwert **≥ 100 je Ereignistyp-Gruppe** (das sind eher Monate).
+- Eine Datenquelle mit Zeitstempel ist vorher zu prüfen (Datenquellen-Inventar, E-75).
+
+**Reihenfolge:**
+1. A2 Teil 2 (Zahlen, rückblickend messbar).
+2. Dann Fassung 2 der Eingabe.
+3. Parallel als **eigener** Punkt die Voranalyse *Ereignisquelle und Vorwärtsprotokoll*.

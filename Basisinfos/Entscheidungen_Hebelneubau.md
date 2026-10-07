@@ -908,3 +908,10 @@ prüfen und gegenprüfen"*.
 - **Ziel:** Das LLM trennt besser als die Regel mit denselben Fakten.
 - **Minimum für das Bleiben der Stufe:** gleich oder etwas darüber, in der Rolle **Bestätigung oder Gegenmeinung**. Messbar gefasst in Schritt7 §23.16 (M-1 bis M-3).
 - A2 Teil 2 wird gemessen (Nutzer-Ja).
+
+# E-79 · Weitere Information (Text, Ereignisse) für das LLM erlaubt; bewertet nur statistisch und nur vorwärts (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ok, dann kurze Korrektur bzw. Klarstellung: Du kannst gerne weitere Informationen für das LLM nutzen, wenn wir diese haben. Ich frage mich nur, wie wir dies bewerten und wie das LLM dies ausgeben soll, z. B. ein neuer Partner des Assets hat investiert – die Info selbst trägt nichts, es sei denn, es erfolgt ein Kursanstieg. Wie soll das tragen?“*
+- Erlaubt, wenn vorhanden. Ein Ereignis trägt nur **statistisch**: Signale mit dem Ereignistyp laufen besser als ohne.
+- Ausgabe in **fester Form** (Typ, Richtung, Wesentlichkeit, Neuheit, eingepreist), in der Mail als Fakt in Worten.
+- **Nur vorwärts testbar** (Kontamination, fehlende Zeitstempel). Schritt7 §23.17.
