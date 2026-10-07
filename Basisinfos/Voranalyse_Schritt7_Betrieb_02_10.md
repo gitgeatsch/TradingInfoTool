@@ -1869,3 +1869,42 @@ ALLE BESTANDEN
 - Der Läufer ist danach selbst in T weitergegangen: 172 von 997 Ankern am 06.10. nachmittags, ungültige Stimmen 0.
 - Der nächste Halt ist der Zwischenentscheid nach 250 Ankern. Ausgegeben wird dann nur das Wort, keine Zahl.
 - ⚠️ Die Kennzahlen der Probe stehen nur im Lauf-Protokoll als Wort, nicht in der Ablage. Sie lassen sich mit `n4_auswertung.entscheide(c, "ENTSCHEID_K")` jederzeit nachrechnen, ohne Blick auf T.
+
+### 23.10 Teilexport 07.10.2026 07:19 — Testwoche und alle offenen Hebel-Punkte (07.10.2026)
+
+Nutzer 07.10.: *„Teilexport am NB erledigt, prüfe die Abdeckung und noch alle offenen Punkte beim Hebel.“*
+
+**Betrieb laut Teilexport:**
+- Stundenkurse 116/116 und 533/537 auf Stand, 0 Fehler.
+- Rechnung stündlich (frisch 632/636, Laufzeit rund 200 s, Modell 2026-10).
+- 146 Signale, 4 mit Hebel-Schalter an, 4 Signalmails, 1 Erinnerung, 3 entfallen (keine offene Position), nachgeholt 0.
+- Keine offene Hebelposition.
+
+**Testwoche an der Kopie** (`pruefe_testwoche.py`, 03.10. 04:00 bis 07.10. 05:00):
+
+| | Ergebnis | Einordnung |
+|---|---|---|
+| T1 jede Stunde gerechnet | ✔ 98/98, verloren 0 | zugleich ein indirekter Nachweis für K-MISFIRE-2: keine Stunde verloren |
+| **T2 Frische** | ⛔ 45 Läufe mit 3–4 *veralteten* Assets: 1000000BOB, PROMPT, PUMPBTC (seit 05.10. 09:00), dazu STG | **Befund:** Die vier stehen bei Binance-Futures auf **SETTLING** (abgewickelt, Abfrage 07.10.). Der Nachlader zählt sie richtig als *nicht im Handel*, `regel0_rechnung` (Zeile 572: `veraltet = aktiv − frisch`) als aktiv. ⇒ funktional harmlos (kein Signal ohne Daten), aber die Frischeprüfung meldet falsch. **Kleiner Fix in der Rechnung:** Status SETTLING/BREAK des Nachladers übernehmen. Voranalyse und Ja nötig |
+| T3 Laufzeit | ✔ Median 201 s, höchstens 855 s | |
+| F1–F4 Mails | ✔ vollständig, rechtzeitig (Median 9 min), keine Korrektur, Ausstieg 1 verschickt / 3 entfallen | |
+| **L1 Prüfblock** | ⛔ 1 von 4 gemailten ohne Trader-Zeile | **kein Betriebsfehler:** SEI, gemailt **03.10. 11:10**, also **vor** dem Einbau des Prüfblocks (Fassung 0.1e, 04.10.). Die Regel sollte erst ab dem Pull von 0.1e gelten (`--von` anpassen) |
+| A1/A2 | im Rahmen (4 beobachtet, 1,8 erwartet; Korrekturen 0) | Auskunft |
+
+**Alle offenen Hebel-Punkte (Stand 07.10.):**
+
+| # | Punkt | Stand | nächster Schritt |
+|---|---|---|---|
+| H1 | **Testwoche** bis ≥ 10.10. | läuft; T2 und L1 erklärt (oben) | am 10.10. letzte Auswertung, dann **Freigabe nur mit Nutzer-Ja** (`testwoche_freigegeben: true`) |
+| H2 | **Fix T2** (SETTLING als *nicht im Handel*) | neu gefunden | Voranalyse, Ja, Bau, Prüfung an der Kopie |
+| H3 | **XDC**: Hebel-Schalter an, aber **keine REGEL0-Daten** (Binance führt XDC nicht) | Teilexport: *kein Signal möglich* | Nutzer: Schalter aus **oder** Datenquelle (heute keine) |
+| H4 | **N4 Rückspiel** (Kern K → T → R) | K bestanden; T 202/997, wartet auf das Kontingent (Pazifik-Tag, ~07:00 UTC) | Zwischenentscheid nach 250 melden; bei *keiner aktiv* über WMI neu starten |
+| H5 | **F5 / S7-6** R-R11 am NB | 05.10. zeilengleich 103/103 | Wiederholung zum Wochenende, dazu ohne `--modelle` (Training) |
+| H6 | **K-MAIL-2** | offen | Nutzerblick: nächste REGEL0-Mail am Handy |
+| H7 | **K-ALARM-2** | ohne Anlass | beim nächsten Halt > 45 min |
+| H8 | **K-MISFIRE-2** | indirekt ✔ (T1 98/98) | eine Misfire-Mail mit Toleranz 300 s wäre ein Befund |
+| H9 | **O22** Stufen und Entscheider neu prüfen | nach N4 | mit dem N4-Ergebnis |
+| H10 | **O13** Positionsführung REGEL0 + **Importer 2.679** (Teilschließungen, Liquidationen) | offen | spätestens Phase 2 |
+| H11 | **O21** Selbstmessung (alle Signale), **D2** Hebelstufen je Asset | offen | nach der Testwoche |
+| H12 | Concrete-Sperre (Bestand ohne Watchlist-Eintrag, O26) | 1 Mail am Tag | Nutzerentscheid O26 |
+| ✔ | Schalter R-4 | **Wahl A gesetzt** (E-67, 05.10.) | — |

@@ -3067,3 +3067,29 @@ Stand der Desktop-Kopie: Prod-OHLC bis 19.08.; am NB laufend.
 | W7 | **Betriebsprüfung B1–B9** am NB; dann Pull, Neustart, Export nach ~30 min | NB | Kontrollen K-WL-1… |
 
 ⚠️ **Für Hebel und Spot gilt weiter:** Der Hebel hat Vorrang (Testwoche bis 10.10., N4). Die Watchlist ist Spot-Strang (T-1..T-6) und **kein** Kaufsignal.
+
+### 27.5 W0/W1 — Abdeckung AM NB nachgewiesen (Teilexport 07.10.2026 07:19, `nb_betriebsdaten_T440.txt`, *SCHLUSS: vollständig*)
+
+Nutzer 07.10.: *„Teilexport am NB erledigt, prüfe die Abdeckung und noch alle offenen Punkte beim Hebel.“*
+
+| Bedarf (§27.3) | am NB vorgefunden | Urteil |
+|---|---|---|
+| Tageskurse Binance-Spot | `messdaten.db` Betriebskopie (`_nur_betrieb`): **532 Symbole**, 2019-02-14 bis 2026-10-07, rund 488.000 Zeilen, Stand heute | ✔. ⚠️ Die Spanne reicht weiter zurück als 500 T (im Mittel rund 900 Zeilen je Symbol). Ob das Allzeithoch je Coin vollständig drin ist, zeigt der Export nicht ⇒ **W2 Stammdatei bleibt**, sie ist auch die robustere Lösung |
+| Umlaufmenge → Marktwert-Klasse | `umlaufmenge_cg.db`: **374 Symbole**, 08.09. bis **07.10.** (täglich frisch), Zuordnung `abruf_symbol` 407 | ✔ |
+| Marktwert direkt | Prod `marktscan_candidates` **955 Symbole** mit `market_cap_usd` (CoinGecko, zweimal täglich) | ✔ zusätzliche Quelle, Gegenprobe zu Umlauf × Kurs |
+| Bestand | Prod `holdings` **39 Symbole** mit Menge > 0. Krypto u. a.: ALGO, ASTER, AVAX, BEAMX, BIO, BRETT, BTC, CANTON, ETH, INJ, KAIA, KAS, LINK, MON, MORPHO, PLUME, QNT, SOL, SUPRA, TURBO, XDC, XLM; dazu ETC/ETF/Aktien | ✔. Die Desktop-Kopie (12 Krypto) ist **veraltet**; im Betrieb rund 22 Krypto-Positionen |
+| Kurse Bestand außerhalb Binance | Prod `price_history_ohlc` **67 Symbole** (bis 06.10.), `price_cache` **61 Symbole** (Watchlist + Bestand) | ✔ |
+| Neuzugänge | `portfolio_wert_historie` 08.05. bis 06.10. (`mengen_json`) | ✔ |
+| TVL-Verlauf (F9) | Prod `lebendigkeit_beobachtung` **203 Symbole**, rund 8.450 Zeilen (im Mittel ~42 je Symbol); Zeitspanne im Export **nicht** ausgewiesen | ◐ für eine 180-T-Änderung vermutlich zu kurz ⇒ **W3:** DefiLlama-Protokollverlauf monatlich (ein Abruf je Protokoll liefert den ganzen Verlauf) |
+| Höchstmenge, FDV, Kategorien | — | ✘ wie erwartet ⇒ W3 CoinGecko monatlich. Kontingent messbar über `api_call_kontingent(_taeglich)` |
+| Gebühren, Halter-Einnahmen | — | ✘ ⇒ W3 DefiLlama monatlich |
+| Phase: Stablecoins, Liquidität | `externe_reihe` 7.087 Zeilen ab 2017, `macro_snapshot` bis 07.10. | ✔ |
+| Phase: BTC-Klima (MVRV), MACD | — | ✘ ⇒ W3 CoinMetrics täglich |
+| `tvl_historie.db`, Spot-Messdateien (`data/_spot/*`) | nicht am NB | wie erwartet (Desktop) |
+
+**Ergebnis W1:**
+- Der **Kern** der Watchlist (Kurse, Klasse, Rang, Bestand, Neuzugänge, Liquidität, Stablecoins) ist **am NB nachgewiesen**.
+- **Offen bleiben:**
+  - W2 Stammdatei Allzeithoch und Erstdatum;
+  - W3 drei Abrufe (CoinGecko-Profil, DefiLlama-Gebühren und TVL-Verlauf, CoinMetrics).
+- **Neu:** Der Bestand ist am NB fast doppelt so groß wie in der Desktop-Kopie. Der Bestand-Block muss rund 22 Krypto-Positionen tragen; XDC und PLUME liegen dort ebenfalls außerhalb von Binance-Spot.
