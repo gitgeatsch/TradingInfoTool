@@ -2369,3 +2369,29 @@ Nutzer 07.10.: *„Wie kann der Entscheider immer wie der Trader entscheiden? So
 2. **Jede Eingangssicht muss für sich unterscheiden**, ehe der Entscheider sie bekommt: Eine konstante Sicht macht ihn zur Mitte oder zum Echo.
 3. **Gemessen wie jede Rolle:** Rückspiel auf denselben Ankern gegen den Trader allein, eine Zählregel und den Zufall. Er bleibt nur, wenn er beide schlägt.
 4. **Reihenfolge:** Erst zeigt N5, ob der Trader 0.2 trennt. Dann die Voranalyse *Information für den Entscheider*, dann das Rückspiel.
+
+
+### 23.22 Ereignisquellen — Datenquellen-Inventar (07.10.2026; E-79, E-75)
+
+**Werkzeug:** `Rechenkern_02_10/e79_quellen_inventar.py`, Beleg `.txt`. Nur lesende Abrufe öffentlicher Quellen ohne Schlüssel; gespeichert wird nichts.
+
+| Quelle | erreichbar | Zeitstempel | Archiv rückwirkend | Asset zuordenbar | Ereignistyp | Urteil |
+|---|---|---|---|---|---|---|
+| **Binance-Ankündigungen** (CMS der Website: Kataloge Delisting 161, Listing 48, News 49) | ✔ ohne Schlüssel | **minutengenau** | Delisting **439 Meldungen seit 02/2022**, Listing bis 10/2023, News 1.950 seit 12/2022 (darunter 26 *Monitoring Tag*) | ◐ Kürzel oft nur im **Text**, nicht im Titel (*„Delist Multiple … Contracts“*) → Detailabruf je Meldung nötig | Delisting (Spot, Futures, Margin), Listing, Monitoring-Kennzeichen | ⭐ **beste Quelle** |
+| **DefiLlama Hacks** (`api.llama.fi/hacks`) | ✔ | nur **Tag** | 1.295 seit 2011 | ◐ Protokollname, nicht Token → Zuordnung nötig | Sicherheitsvorfall | brauchbar, selten |
+| DefiLlama Raises / Unlocks | ✘ **kostenpflichtig** (402) | — | — | — | Finanzierung, Token-Freigabe | entfällt |
+| RSS Cointelegraph / CoinDesk | ✔ | ✔ | ✘ **nur die letzten ~1–2 Tage** | Titel | allgemein | nur **vorwärts** |
+| GDELT (Pressearchiv) | ✘ heute 429 (Drossel) | ✔ | ✔ | Titel | allgemein | später erneut prüfen |
+
+**Die wichtigste Erkenntnis:**
+- Ein **strukturiertes Ereignis** mit Zeitstempel und Archiv ist **kein Text-Thema mehr**: *„Delisting angekündigt vor X Stunden“* ist ein Fakt wie eine Zahl.
+- Es lässt sich **rückblickend ehrlich messen**, innerhalb der REGEL0-Signale wie A2. Ein LLM braucht es dafür nicht, und eine Kontamination gibt es nicht.
+- Fachlich ist das genau das **linke Ende**: Eine angekündigte Abwicklung ist ein Rückgang, auf den **keine** Gegenbewegung folgt (vgl. H2: abgewickelte Futures im Betrieb).
+- Das LLM bleibt für unstrukturierten Text (RSS), und der ist nur vorwärts testbar.
+
+**Vorschlag (zur Abstimmung), Messung E-1 am Desktop:**
+- Binance-Ankündigungen 2024–2026 laden: Delisting, Monitoring, Listing, mit Detailabruf für die Kürzel.
+- Den REGEL0-Einstiegen (kern48jbz, vier Mengen) zuordnen: Ankündigung **vor** der Signalstunde (kein Vorgriff).
+- Messen: Chance, Spiegel, 24-h-Ertrag und linkes Ende mit Ereignis gegen ohne, Nullwelt im Tag, je Jahr.
+- Trägt es, gehört es zuerst **in die REGEL0 oder in die Hebelstufe** (billig, prüfbar), dann als Fakt in die Mail. Erst danach stellt sich die Frage, ob das LLM es braucht.
+- Für den Betrieb wäre später ein Abrufer am NB nötig (öffentlich, ohne Schlüssel), erst nach der Messung.

@@ -1,0 +1,11 @@
+E-79 Datenquellen-Inventar Ereignisse · 2026-10-07 14:41 UTC
+  Binance Listing   50 Meldungen auf Seite 1, Zeitstempel 2026-08-13 07:15 .. 2026-10-07 04:00, Beispiel: Binance Will Add 4 bStocks Tokenized Securities as Collateral Asset - 2026-10-07
+            Rueckreichweite: Seite 20 reicht bis 2023-10-31 16:08
+  Binance Delisting 50 Meldungen auf Seite 1, Zeitstempel 2026-05-25 11:00 .. 2026-10-01 02:45, Beispiel: Binance Futures Will Delist Multiple USDⓈ-M Perpetual Contracts (2026-10-05)
+            Rueckreichweite: Seite 5 reicht bis 2024-06-12 05:00
+  DefiLlama Hacks     1295 Eintraege, 2011-06-19 00:00 .. 2026-10-06 00:00, mit Zuordnung (name) 1295 · Felder ['amount', 'bridgeHack', 'chain', 'classification', 'date', 'defillamaId', 'language', 'name', 'returnedFunds', 'source', 'targetType', 'technique']
+  DefiLlama Raises    402 Upgrade to the paid API plan at https://defillama.com/subscription
+  DefiLlama Unlocks   402 Upgrade to the paid API plan at https://defillama.com/subscription
+  RSS Cointelegraph 30 Eintraege, Tue, 06 Oct 2026 12:54 .. Wed, 07 Oct 2026 13:07 (nur die letzten Tage, kein Archiv; Asset nur aus dem Titel)
+  RSS CoinDesk     25 Eintraege, Tue, 06 Oct 2026 09:25 .. Wed, 07 Oct 2026 14:27 (nur die letzten Tage, kein Archiv; Asset nur aus dem Titel)
+  GDELT        429
