@@ -963,3 +963,13 @@ prüfen und gegenprüfen"*.
 - abgerechnet nach M-3: Ändert das LLM sein Urteil, und liegt es damit richtig?
 
 Schritt7 §23.24.
+
+
+# E-84 · O29 vorbauen mit Schalter AUS (Paket P3), unter einer Bedingung (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ja, O29 so vorbauen mit Schalter aus - wenn es Sinn macht und sich nichts mehr ändert.“*
+- Ergänzt E-83: Der Bau darf **vor** dem 10.10. fertig werden, ist aber per Schalter `ankuendigung_aktiv: false` **unwirksam**. Eingeschaltet wird erst nach der Freigabe in P5.
+- **Bedingung vor dem Start von P3:**
+  1. P1 (NB-Prüfung) verlangt keine Änderung an `regel0_mail`, `_regel0_mails` oder der Ablage;
+  2. P2 (O30) ändert den Zuschnitt von O29 nicht, z. B. durch eine bessere Quelle oder weitere Ereignisarten.
+- Trifft eines davon zu, wird zuerst der Zuschnitt abgestimmt.
