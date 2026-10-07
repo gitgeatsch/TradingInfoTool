@@ -2271,3 +2271,71 @@ Mail am Seiteneffekt (`pruefe_o25.py`) **11/11**.
 - keine Zeile mit Fehler `keine Eingabe` oder `nicht anonym`;
 - bei einem Wert aus `open_interest_snapshot` der Terminmarkt-Satz;
 - Aufrufe je Tag ≤ 150.
+
+
+### 23.20 N5 — Rückspiel der Fassung 0.2 auf den N4-Ankern statt Schatten im Betrieb (07.10.2026; E-81)
+
+**Warum kein Schatten im Betrieb:**
+- Nutzer 07.10.: *„Ja, Pull und App erledigt. Hinweis: Für Prüfungen sollten wir genug Kontingent haben, es sind seit Tagen keine Signalmails gekommen.“*
+- Befund aus dem Teilexport 07.10.: 146 REGEL0-Signale vom 03.10. bis 07.10., davon nur **4 mit Hebel-Schalter AN**, alle gemailt. Kein Ausfall; der Prüfblock läuft nur bei gemailten Signalen.
+- Nutzer: *„Bin unsicher, was gewinnen wir an tatsächlicher Erkenntnis – prüfe, ob es sich lohnt.“*
+- Rechnung aus den N4-Daten (24-h-Ertrag Schwankung 4,7 %, Designeffekt 1,45):
+
+  | Urteile | kleinster erkennbarer Unterschied stützt − dagegen |
+  |---|---|
+  | 100 | 4–7 Pp |
+  | 1.000 | 1,3–2,2 Pp |
+  | 2.000 | 1,0–1,5 Pp |
+
+  Ein realistischer Effekt liegt bei 0,5–1 Pp. Der Schatten bräuchte dafür etwa 3 Monate; 100 Urteile in 5 Tagen zeigen nur ein grobes Versagen.
+- Nutzer: *„Ja, prüfen und gegenprüfen“* zum Rückspiel.
+
+**Was gebaut ist** (`Rechenkern_02_10/n5_rueckspiel.py`, `n5_auswertung.py`, `n5_start.cmd`, `n5_stand.cmd`):
+- **Läufer:** derselbe wie N4 (Wiederanlauf, Herzschlag-Sperre, Fassungsriegel, Kontingent, Platzhalter). Die Abweichungen sind vorab im Kopf festgelegt.
+- **Fassung und Anker:** Fassung 0.2 aus dem eingefrorenen Katalog `regel0_llm_0_2_n5.yaml`, ohne Terminmarkt (rückblickend keine Betriebsquelle). Dieselben 1.000 Anker in derselben Reihenfolge wie N4, damit der Vergleich gepaart ist.
+- **Reihenfolge des Betriebs:** N4 friert die Eingabe alphabetisch ein; ohne Korrektur stünde der weite Rahmen **vor** der Lage zur Signalstunde.
+- **Plan:**
+  - K_a (50 Anker): Das Modell soll Wert und Monat raten, denn die Bitcoin-Angaben könnten das Datum verraten.
+  - ENTSCHEID_K nur aus K_a. K_b entfällt: Es prüft das Wissen desselben Modells, und das war in N4 bestanden.
+  - T: 1.000 Anker × 5 Stimmen mit den Zwischenentscheiden von N4 (250/500/750).
+  - R_v: 100 Anker mit vertauschten Blöcken (F3). R_w entfällt, der Rauschboden ist in N4 gemessen.
+- **Kontingent:** N4 und N5 werden **zusammen** gezählt (dieselben Schlüssel). Der NB-Prüfblock auf Schlüssel 1 behält seinen Teil.
+- **Start:** erst, wenn N4 beendet ist (`--warte-auf-n4`). R_v aus N4 ist die Grundlage von W3.
+
+**Auswertung (vorab, `n5_auswertung.py`):**
+- **H** wie N4: Unterschied *stützt* − *dagegen* je Jahr über der Nullwelt im Tag.
+- **V1** 0.2 gegen 0.1e gepaart, nur Auskunft.
+- **Regel-Arm F** (*die Regel mit denselben Fakten*, §23.16): linear auf den Zahlen der Lage zur Signalstunde, geschätzt auf den REGEL0-Einstiegen 2024; die Anker 2025/26 liegen außerhalb. Der **Auswahlanteil ist angeglichen**: je Jahr gibt es genau so viele *stützt* und *dagegen* wie beim LLM.
+- **Referenz je Jahr:** die bessere der beiden Regeln (F oder N4-Arm 20 T), wenn sie über null liegt; sonst der Zufall.
+- **M-1 bis M-3 und Ziel** gegen diese Referenz (§23.16). Das Ziel verlangt zusätzlich, dass H in beiden Jahren über der Nullwelt liegt.
+
+⚠️ **Korrektur VOR dem ersten Aufruf** (aus der Prüfung, P8):
+- In der ersten Fassung war die Referenz immer Regel F. Ein **Zufalls-LLM erreichte damit das Ziel**, weil Regel F 2025/26 **unter dem Zufall** liegt (−5 bis −12 Pp; dieselbe Umkehr wie in A2).
+- Eine schlechte Regel zu schlagen beweist nichts. Deshalb gilt jetzt die bessere Regel, mindestens der Zufall, und das Ziel verlangt zusätzlich H.
+
+**Prüfung** `n5_pruefe.py` (Platzhalter, Wegwerf-Ablagen, Kopie der N4-Ablage): **12/12**
+- dieselben Anker wie N4;
+- Eingabe 0.2 bei 100 % der Anker, kein Terminmarkt-Satz;
+- Reihenfolge des Betriebs vor dem Aufruf, R_v mit vertauschten Blöcken;
+- Plan wie oben;
+- Kontingent N4 + N5 zusammen: N4 hat 400/300 verbraucht, also bleiben N5 genau 80/0;
+- ohne beendetes N4 kein Start, mit `--warte-auf-n4` Start nach dem Ende von N4;
+- Fassung 0.2 in der Ablage, N4-Fingerabdruck unverändert;
+- Riegel gegen die echte Ablage;
+- Orakel: Ziel, H und M-3 erreicht. Zufall: Ziel und H nicht erreicht;
+- Standard-DB, Messbasen und echte N4-Ablage unberührt.
+
+⚠️ M-1 ist beim Zufall in einem Jahr rot (p 0,021): Das ist die erwartete Fehlalarmrate von 5 % je Jahr.
+
+**Gegenprobe** `n5_gegenprobe.py` (eigener Rechenweg): **16/16**
+- Mehrheiten selbst gezählt;
+- Trennwerte und Referenz mit numpy;
+- Auswahlanteil und Rangzuordnung von Regel F;
+- Regel F über einen zweiten Schätzweg (Normalgleichungen, Rangkorrelation 1,000000);
+- M-2 und M-3 mit `binom.sf`;
+- an 10 Ankern ist die N5-Eingabe **gleich** der Eingabe, die der Betrieb zeigen würde (Inhalt und Reihenfolge).
+
+**Ablauf und Kontingent:**
+- N4 beendet R_v voraussichtlich am 08.10.; N5 übernimmt den Rest des Tages.
+- Bis zum Blick 250: ~1.300 Aufrufe, also etwa 2 Tage. Ganz (1.000 Anker + R_v): ~5.550 Aufrufe, etwa 7,5 Tage.
+- Kein Zwischenblick; der Bericht kommt erst am Zwischenentscheid oder am Ende.

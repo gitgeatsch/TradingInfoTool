@@ -1,0 +1,28 @@
+N5 ENDBERICHT · Fassung 0.2 · Ablage C:\Users\Geatsch\AppData\Local\Temp\tmpwxet5jr7\zufall\n5.db · T 499 Anker (beendet am ENTSCHEID_T500)
+Verteilung: {'neutral': 211, 'spricht_dagegen': 193, 'uneinig': 90, 'stuetzt': 5}
+
+H  Unterschied stuetzt - dagegen (24 h) je Jahr, Nullwelt im Tag
+  2025: n 249 (stuetzt 3, dagegen 102) · +0.62 Pp · Band +0.69 · p 0.073 · Regel-Arm 20 T +1.40 Pp
+  2026: n 250 (stuetzt 2, dagegen 91) · -2.84 Pp · Band -0.28 · p 0.979 · Regel-Arm 20 T -0.20 Pp
+  -> H TRAEGT NICHT
+
+V1 0.2 gegen 0.1e GEPAART (dieselben Anker aus N4-T) - Auskunft
+  2025: n 124 · 0.2 minus 0.1e -0.01 Pp · p (0.2 besser) 0.498 · gleiches Urteil 38 %
+  2026: n 125 · 0.2 minus 0.1e +6.01 Pp · p (0.2 besser) 0.077 · gleiches Urteil 40 %
+
+REGEL-ARM F (lineare Regel auf denselben Zahlen, geschaetzt auf 2324 Einstiegen 2024; Auswahlanteil = LLM)
+  2025: Regel F -7.08 Pp · Regel 20 T +1.40 Pp · LLM +0.62 Pp -> Referenz 20T · LLM minus Referenz -0.79 Pp · p besser 0.621 · p schlechter 0.379
+  2026: Regel F -11.62 Pp · Regel 20 T -0.20 Pp · LLM -2.84 Pp -> Referenz Zufall · LLM minus Referenz -2.84 Pp · p besser 0.979 · p schlechter 0.021
+  M-1 nicht schlechter: NICHT erfuellt
+  M-2 kein Echo: gleiches Urteil wie F 54.1 %, wie 20 T 43.1 % -> ERFUELLT
+  M-3 Gegenmeinung: richtig 115 von 231 uneinigen (49.8 %), p 0.552 -> NICHT erfuellt
+  ZIEL ueber der Nullwelt UND besser als die bessere Regel (beide Jahre): nicht erreicht
+
+R_v Bloecke vertauscht: gleiches Mehrheitsurteil 37 % (99 Anker) - Auskunft zu F3
+KONTAMINATION (K_a): WEITER (Kontaminationsprobe K_a bestanden) {"kuerzel_treffer": 0, "zeit_treffer": 0, "gefragt": 49}
+ZWISCHENENTSCHEID ENTSCHEID_T250: WEITER {"blick": 250, "z_gepoolt": 0.638, "p_je_jahr": {"2025": 0.295, "2026": 1.0}}
+ZWISCHENENTSCHEID ENTSCHEID_T500: STOP-ANPASSEN (der Trader trennt erkennbar nicht) - Zeit in Anpassungen, Schritt7 §23.7 {"blick": 500, "z_gepoolt": -0.152, "p_je_jahr": {"2025": 0.077, "2026": 0.972}}
+
+SIGNALBILANZ JE ASSET: SUPER 11 (0/6) -0.6 % · USTC 11 (1/5) -0.9 % · GMX 10 (0/4) -1.5 % · BAND 10 (0/6) +0.5 % · PORTAL 9 (0/4) -0.0 % · NOT 8 (0/2) -1.3 % · ZK 8 (0/4) -1.1 % · SCR 8 (0/5) -0.6 % · IMX 7 (1/1) +5.1 % · BIO 7 (0/1) -2.8 % · BIGTIME 7 (0/4) +2.3 % · BLUR 7 (0/4) +0.6 % · ADA 7 (0/1) -2.4 % · DOGS 7 (1/3) -1.4 % · LUMIA 7 (0/2) +0.2 % · KAVA 7 (0/3) +1.8 % · SNX 7 (0/5) -0.1 % · PENGU 7 (0/2) +0.7 % · XTZ 7 (0/0) +2.2 % · W 6 (0/0) +2.6 % · MAGIC 6 (0/1) -1.9 % · SOL 6 (0/1) -1.0 % · IO 6 (0/1) -5.3 % · IOTX 6 (0/3) -0.8 % · CFX 6 (0/2) -3.1 %
+
+ERGEBNIS (vorab): Minimum M-1..M-3 NICHT erfuellt · Ziel nicht erreicht · H traegt nicht

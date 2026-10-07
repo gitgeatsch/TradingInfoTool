@@ -1,0 +1,18 @@
+G1   gleich  {'spricht_dagegen': 139, 'neutral': 57, 'stuetzt': 48, 'uneinig': 5} / {'spricht_dagegen': 139, 'neutral': 57, 'stuetzt': 48, 'uneinig': 5}
+G2   gleich  2025 LLM +0.0925 Regel F -0.0145 Regel 20 T -0.0116 Referenz Zufall
+G2   gleich  2026 LLM +0.1075 Regel F -0.0461 Regel 20 T -0.0022 Referenz Zufall
+G3   gleich  Auswahlanteil gleich dem LLM, Zuordnung nach Rang
+G4   gleich  Rangkorrelation zweiter Schaetzweg 1.000000 · Einstiege 2324 / 2324
+G5   gleich  gleich 0.3655 · richtig 175 von 187 · p 1.456e-38 (Bericht 1.456e-38)
+G6   gleich  pos 0 MOVR 2025-08-27 11:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 1 SFP 2026-04-15 02:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 2 BNB 2025-07-16 18:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 3 IOTX 2026-02-14 16:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 5 USTC 2026-02-21 03:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 6 ETHFI 2025-01-30 12:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 7 MOVR 2026-05-18 05:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 8 CTSI 2025-09-27 23:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 9 GMX 2026-06-30 13:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+G6   gleich  pos 10 PENDLE 2025-02-04 16:00 · Schluessel ['geplant', 'lage_zur_signalstunde', 'lage_des_werts']
+
+16 von 16 gleich

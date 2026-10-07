@@ -1,0 +1,39 @@
+# EINGEFRORENE FASSUNG 0.2 fuer das Rueckspiel N5 (07.10.2026, Schritt7 Par. 23.20). Der Betrieb liest Basisinfos/regel0_llm.yaml.
+# NICHT aendern, solange N5 laeuft: der Laeufer prueft einen Fingerabdruck und verweigert bei Abweichung.
+#
+# Rollenkatalog der LLM-Ebene zur REGEL0 (E-50, E-51, E-52; Voranalyse_Schritt7 Par. 20.11).
+#
+# EINE Aenderung hier ist EINE NEUE FASSUNG: `fassung` hochzaehlen, sonst sind Urteile alter und neuer Fassung nicht zu
+# trennen (jede Zeile in regel0_signale.db/pruefung traegt Fassung, Prompt- und Eingabe-Pruefsumme).
+#
+# Die Rollen pruefen und kommentieren nur (F2) - KEIN Urteil aendert das REGEL0-Signal.
+
+fassung: "0.2-sofort"            # 0.2 (07.10., E-80): Trader bekommt die LAGE ZUR SIGNALSTUNDE (A2-Kandidaten N-a..N-f, neutral, Reihenfolge F3),
+                                 # N4 bleibt auf der eingefrorenen 0.1e (regel0_llm_0_1e_n4.yaml). Vorher 0.1e: E-53 (04.10.): 5 Stimmen, OHNE Entscheider (Echo 98 %), Block in der Mail - Trader P1 bestanden (Par. 20.12.4).
+                                 # 0.1d: Markt nur Auskunft, Entscheider nur auf dem Trader (P1 Markt 85 %
+                                 # stuetzt ueber 2025/26). 0.1c: drei Stimmen je Rolle (P1-c 65 % gleich). 0.1b: Plan nennt die Wette,
+                                 # Trader ohne die rsi-Spiegel (Verlauf 5/20 Tage, Abstand 20/50-Tage-Schnitt) - Par. 20.12
+modell: "gemini-3.5-flash-lite"   # N-h: Messung und Betrieb auf demselben Modell (E1); 3.1 ist durch die Spot-Kette ausgelastet
+temperatur: 0.0
+stimmen: 5                        # 0.1e: Mehrheit aus FUENF Aufrufen (P1-c 3 Stimmen 83 %, 5 Stimmen 90 %), ohne Mehrheit *uneinig*
+mail_block: true                  # der Block PRUEFUNG in der Signalmail - EIN seit 0.1e (E-53, Nutzer 04.10.)
+schatten: true                    # Block wird je Signalmail BERECHNET und in der Ablage gespeichert, aber NICHT gemailt (Live-Urteile sammeln)
+zeitgrenze_s: 120                 # je Signal; 0.1e: 5 Stimmen Trader im Mittel 27 s, hoechstens 52 s, dazu der erste Markt des Tages (~25 s)
+# KEIN RESSOURCEN- UND ABFRAGESTAU (Nutzer 03.10.; Lehren 2.454-gemini, G19, zweite_meinung AUSFALL_SCHWELLE):
+tageslimit_aufrufe: 150           # hoechstens so viele Aufrufe je Tag (Pazifik-Tag wie Googles Grenze), gezaehlt in der Ablage
+max_signale_je_lauf: 6            # mehr Signale in einer Stunde bekommen den Block nicht (Vermerk), die Mail geht trotzdem
+lauf_zeitgrenze_s: 600            # alle LLM-Aufrufe eines Stundenlaufs zusammen
+ausfall_schwelle: 3               # so viele Fehler in Folge -> der Rest des Laufs fragt nicht mehr
+
+rollen:
+  markt:
+    an: true                      # Umfeld (Leitmaerkte, Makro, Stimmung), neu nur bei geaenderten Fakten
+    nur_auskunft: true            # 0.1d (K-b, P1 03.10.): unterscheidet nicht (85 % stuetzt ueber 2025 UND 2026) - Begruendung ja, Urteilswort nein
+  trader:
+    an: true                      # eigene Kurs- und Volumenlage, anonym
+    bausteine: [struktur, lange_sicht, marken, schwankung, volumen]   # 0.1b: bewegung/schnitte spiegeln den rsi (R-R2)
+    signal: [liquiditaet, fall, docht, kapitulation, praemie, btc, terminmarkt]   # 0.2: Lage zur Signalstunde, VOR dem weiten Rahmen (F3); leer = 0.1e
+  entscheider:
+    an: false                     # 0.1e (E-53, Nutzer 04.10. *ja, nur fuer die aktuelle Messung und Bewertung*): AUS - mit nur dem Trader
+                                  # als Eingang ein Echo (39/40 gleiche Richtung). Wird mit dem Rueckspiel N4 erneut fachlich geprueft.
+    eingaenge: [trader]           # 0.1d: der Markt traegt als Konstante nichts zum Gesamturteil bei (R-T6)

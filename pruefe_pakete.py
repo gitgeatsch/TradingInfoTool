@@ -31443,7 +31443,8 @@ def paket_regel0_betrieb() -> None:
         _n4 = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Basisinfos", "Rechenkern_02_10", "n4_rueckspiel.py"),
                       encoding="utf-8").read()
         pruefe(P, "E-80: der N4-Laeufer laedt die EINGEFRORENE 0.1e, nicht den Betriebskatalog",
-               'regel0_llm_0_1e_n4.yaml"))' in _n4 and "K = L.lade()\n" not in _n4)
+               'KATALOG_PFAD = os.path.join(os.path.dirname(HIER), "regel0_llm_0_1e_n4.yaml")' in _n4 and "K = L.lade(KATALOG_PFAD)" in _n4
+               and "K = L.lade()\n" not in _n4)
         pruefe(P, "Gegenprobe Anonymitaet: ein Name in der Eingabe wird gefunden",
                bool(LLM.anonym_verletzt({"x": "ETH steht 2026 bei 2513.17"}, _r)))
         _gueltig = LLM.validiere("trader", {"urteil": "Spricht dagegen", "begruendung": "x", "belege": [{"fakt": "a", "richtung": "x"}]})

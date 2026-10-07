@@ -1,0 +1,27 @@
+N5 ENDBERICHT · Fassung 0.2 · Ablage C:\Users\Geatsch\AppData\Local\Temp\tmpwxet5jr7\orakel\n5.db · T 249 Anker (beendet am ENTSCHEID_T250)
+Verteilung: {'spricht_dagegen': 139, 'neutral': 59, 'stuetzt': 47, 'uneinig': 4}
+
+H  Unterschied stuetzt - dagegen (24 h) je Jahr, Nullwelt im Tag
+  2025: n 124 (stuetzt 27, dagegen 68) · +8.97 Pp · Band +8.13 · p 0.000 · Regel-Arm 20 T -1.16 Pp
+  2026: n 125 (stuetzt 20, dagegen 71) · +11.07 Pp · Band +9.65 · p 0.000 · Regel-Arm 20 T -0.22 Pp
+  -> H TRAEGT
+
+V1 0.2 gegen 0.1e GEPAART (dieselben Anker aus N4-T) - Auskunft
+  2025: n 124 · 0.2 minus 0.1e +7.43 Pp · p (0.2 besser) 0.000 · gleiches Urteil 39 %
+  2026: n 125 · 0.2 minus 0.1e +17.08 Pp · p (0.2 besser) 0.000 · gleiches Urteil 43 %
+
+REGEL-ARM F (lineare Regel auf denselben Zahlen, geschaetzt auf 2324 Einstiegen 2024; Auswahlanteil = LLM)
+  2025: Regel F -1.54 Pp · Regel 20 T -1.16 Pp · LLM +8.97 Pp -> Referenz Zufall · LLM minus Referenz +8.97 Pp · p besser 0.000 · p schlechter 1.000
+  2026: Regel F -4.56 Pp · Regel 20 T -0.22 Pp · LLM +11.07 Pp -> Referenz Zufall · LLM minus Referenz +11.07 Pp · p besser 0.000 · p schlechter 1.000
+  M-1 nicht schlechter: ERFUELLT
+  M-2 kein Echo: gleiches Urteil wie F 34.9 %, wie 20 T 37.8 % -> ERFUELLT
+  M-3 Gegenmeinung: richtig 173 von 186 uneinigen (93.0 %), p 0.000 -> ERFUELLT
+  ZIEL ueber der Nullwelt UND besser als die bessere Regel (beide Jahre): ERREICHT
+
+R_v Bloecke vertauscht: gleiches Mehrheitsurteil 96 % (99 Anker) - Auskunft zu F3
+KONTAMINATION (K_a): WEITER (Kontaminationsprobe K_a bestanden) {"kuerzel_treffer": 0, "zeit_treffer": 0, "gefragt": 49}
+ZWISCHENENTSCHEID ENTSCHEID_T250: STOP-TRAEGT-FRUEH (beide Jahre p < 0,001) - weiter zur Bestaetigung {"blick": 250, "z_gepoolt": 5.055, "p_je_jahr": {"2025": 0.0, "2026": 0.0}}
+
+SIGNALBILANZ JE ASSET: IOTX 6 (1/5) -0.8 % · GMX 6 (1/2) -1.5 % · SNX 6 (2/2) -0.4 % · USTC 6 (1/4) +0.1 % · SUPER 5 (2/3) +0.9 % · SOL 5 (1/3) -1.3 % · BLUR 5 (0/3) -0.9 % · XTZ 5 (1/1) +2.2 % · BAND 5 (1/2) +1.6 % · ADA 5 (0/5) -3.0 % · IOST 4 (1/3) -0.4 % · CFX 4 (0/4) -4.5 % · PENGU 4 (0/3) -1.2 % · NOT 4 (1/3) -1.7 % · GRT 4 (1/1) -0.0 % · SCR 4 (0/2) -1.6 % · PORTAL 4 (1/2) +1.3 % · RSR 4 (3/1) +4.6 % · TIA 4 (0/2) -2.6 % · NEAR 4 (0/4) -3.9 % · SFP 4 (0/3) -2.3 % · BIGTIME 3 (0/1) -1.6 % · BANANA 3 (0/3) -1.3 % · BANANAS31 3 (1/2) +1.4 % · ALGO 3 (0/2) -1.8 %
+
+ERGEBNIS (vorab): Minimum M-1..M-3 ERFUELLT · Ziel ERREICHT · H traegt

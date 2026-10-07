@@ -1,0 +1,15 @@
+OK    P7 Riegel: Platzhalter nie in die echte N5-Ablage, N5 nie in die N4-Ablage  
+OK    P5 ohne beendetes N4 verweigert  N4 ist noch nicht beendet (C:\Users\Geatsch\AppData\Local\Temp\tmpwxet5jr7\n4_kopie.db) - N5 startet erst danach (--warte-auf-n4 wartet)
+
+OK    P5 mit --warte-auf-n4: wartet, startet nach dem Ende von N4  Stimmen 3
+OK    P1 dieselben 1.000 Anker in derselben Reihenfolge wie N4  1000 / 1000
+OK    P2 Eingabe 0.2: Lage zur Signalstunde in 100.0 % der Anker, kein Terminmarkt-Satz  Terminmarkt 0
+OK    P2 vor dem Aufruf Reihenfolge des Betriebs; R_v Bloecke vertauscht; die eingefrorene Eingabe ist alphabetisch  ['geplant', 'lage_zur_signalstunde', 'lage_des_werts'] / ['geplant', 'lage_des_werts', 'lage_zur_signalstunde'] / ['geplant', 'lage_des_werts', 'lage_zur_signalstunde']
+OK    P6 Fassung 0.2 in der Ablage, anders als N4; N4-Fingerabdruck unveraendert  N5 8bed22b7e0e0bbe2 · N4 15db113c7ee15894 / 15db113c7ee15894
+OK    P3 Plan: K_a 50x1, ENTSCHEID_K vor T, T 1000x5 mit Blicken 250/500/750, R_v 100x5, kein K_b/R_w  {'K_a': 50, 'ENTSCHEID_K': 1, 'T': 1000, 'ENTSCHEID_T250': 1, 'ENTSCHEID_T500': 1, 'ENTSCHEID_T750': 1, 'R_v': 100}
+OK    P4 Kontingent N4 + N5 zusammen: N4 400/300 verbraucht -> N5 genau 80 auf Schluessel 2, 0 auf Schluessel 1  {2: 80}
+OK    P8 Orakel: H traegt, Ziel erreicht, M-3 erfuellt; Bericht und JSON entstehen  {'H_traegt': True, 'ZIEL': True, 'M1': True, 'M2': True, 'M3': True, 'n': 249}
+OK    P8 Zufall: H traegt nicht, Ziel nicht erreicht  {'H_traegt': False, 'ZIEL': False, 'M1': False, 'M2': True, 'M3': False, 'n': 499, 'gestoppt': 'ENTSCHEID_T500'}
+OK    P9 Standard-DB, Messbasen und die echte N4-Ablage unberuehrt  Aenderungen: []
+
+12 von 12 bestanden

@@ -923,3 +923,10 @@ prüfen und gegenprüfen"*.
 - **Bewusst gegen F1:** Einzeln trennt keiner der Kandidaten. Sie stehen drin, weil das LLM sie **verbinden** könnte; das zeigt nur der Vorwärtstest. Abgerechnet wird mit M-1 bis M-3.
 - Am NB nicht verfügbar: Käuferanteil (N-g); Terminmarkt nur für rund 40 Werte. **Text- und Ereignisquellen gibt es noch keine.** Das ist ein eigener Punkt (Datenquellen-Inventar, E-75/E-79).
 - N4 bleibt auf der **eingefrorenen 0.1e** (`regel0_llm_0_1e_n4.yaml`, Fingerabdruck unverändert). Schritt7 §23.19.
+
+
+# E-81 · Fassung 0.2 rückblickend prüfen (N5) statt Schatten im Betrieb (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Bin unsicher, was gewinnen wir an tatsächlicher Erkenntnis – prüfe, ob es sich lohnt.“* → Vorlage: Der Schatten liefert in Wochen nur ein grobes Versagen; ein Rückspiel auf den 1.000 N4-Ankern beantwortet die Frage in Tagen, gepaart gegen 0.1e. Nutzer: *„Ja, prüfen und gegenprüfen.“*
+- N5 nach dem Ende von N4: Kontaminationsprobe K_a, T mit Zwischenentscheiden, R_v mit vertauschten Blöcken. Kontingent mit N4 zusammen gezählt.
+- Vergleich gegen die **bessere Regel, mindestens den Zufall**. Diese Korrektur wurde vor dem ersten Aufruf aus der Prüfung gewonnen: Regel F liegt 2025/26 unter dem Zufall. Schritt7 §23.20.

@@ -48,6 +48,7 @@ ANKER_DATEI = os.path.join(HIER, "n4_anker_entwicklung.csv")
 BEST_DATEI = os.path.join(HIER, "n4_anker_bestaetigung.csv")
 BELEG = os.path.join(HIER, "n4_anker_beleg.txt")
 ABLAGE_VORGABE = os.path.join(PROJ, "data", "_n4", "n4_ablage.db")
+KATALOG_PFAD = os.path.join(os.path.dirname(HIER), "regel0_llm_0_1e_n4.yaml")   # 07.10.: eingefrorene 0.1e (N5 setzt 0.2)
 B0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
 SAAT = 20261005
 STIMMEN = 5
@@ -409,7 +410,7 @@ def lauf(ablage: str, platzhalter: str | None, kein_warten: bool, max_aufrufe: i
         return 0
     try:
         # 07.10.2026: der Betrieb ist auf Fassung 0.2 (regel0_llm.yaml); N4 bleibt auf der EINGEFRORENEN 0.1e (Fingerabdruck)
-        K = L.lade(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "regel0_llm_0_1e_n4.yaml"))
+        K = L.lade(KATALOG_PFAD)
         K = dict(K, stimmen=STIMMEN)
         f = fassung(K)
         alt = c.execute("SELECT v FROM meta WHERE k='fassung'").fetchone()
