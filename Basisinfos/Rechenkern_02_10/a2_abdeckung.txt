@@ -1,0 +1,11 @@
+A2 Schritt 0 - Abdeckung je Kandidat auf 10732 REGEL0-Einstiegen (2024 2324, 2025 4715, 2026 3693) · Assets 127
+
+  Kandidat                                           2024 · 2025 · 2026
+  N-a Markpreis-Praemie                               98.9 % ·  99.0 % ·  99.2 % · Assets mit Wert 126/127
+  N-b/c/d Kapitulation, Docht, Fall (24 h luecklos)  100.0 % · 100.0 % · 100.0 % · Assets mit Wert 127/127
+  N-e BTC-Umfeld (168 h davor)                       100.0 % · 100.0 % · 100.0 % · Assets mit Wert 127/127
+  N-f OI / Long-Short / Taker (stuendlich)            95.7 % ·  96.1 % ·  94.3 % · Assets mit Wert 120/127
+  N-f Funding (Vortag)                                97.7 % ·  98.1 % ·  97.6 % · Assets mit Wert 124/127
+  N-g Kaeuferanteil (fluss)                           95.6 % ·  93.6 % ·  91.2 % · Assets mit Wert 116/127
+
+  Am NB im Betrieb (Teilexport 07.10.): markpreis_alle 396/411 laufend, stundenkurse_alle 533/537 laufend; terminmarkt/funding nur Symbolliste, Prod open_interest_snapshot 40 Symbole (15 min); richtung_historie fehlt

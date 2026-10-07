@@ -1,0 +1,39 @@
+G1   gleich  2024 Chance 0.3559 Spiegel 0.2164
+G1   gleich  2025-26 Chance 0.2626 Spiegel 0.1915
+G2   gleich  SOLV 2025-11-30 21:00 c_docht 0.26923/0.26923 a_praemie 0.00037343/0.00037343 g_kauf6 0.53936/0.53936 f_funding 0.00033445/0.00033445 e_btc24 0.0018189/0.0018189
+G2   gleich  DOGS 2025-09-17 23:00 c_docht 0.21739/0.21739 a_praemie 0.00013966/0.00013966 g_kauf6 0.54497/0.54497 f_funding 0.0003/0.0003 e_btc24 -0.002923/-0.002923
+G2   gleich  RVN 2025-10-20 15:00 c_docht 0.14286/0.14286 a_praemie -0.0030151/-0.0030151 g_kauf6 0.52488/0.52488 f_funding 2.318e-05/2.318e-05 e_btc24 0.024499/0.024499
+G2   gleich  BLUR 2026-02-21 02:00 c_docht 1/1 a_praemie -0.00089204/-0.00089204 g_kauf6 0.49712/0.49712 f_funding 4.227e-05/4.227e-05 e_btc24 0.011288/0.011288
+G2   gleich  SSV 2024-11-27 23:00 c_docht 0.4/0.4 a_praemie 0.00075527/0.00075527 g_kauf6 0.54099/0.54099 f_funding 0.00033027/0.00033027 e_btc24 0.042385/0.042385
+G2   gleich  API3 2026-07-15 13:00 c_docht 0.2381/0.2381 a_praemie -0.0017905/-0.0017905 g_kauf6 0.33917/0.33917 f_funding 0.0003/0.0003 e_btc24 0.020018/0.020018
+G2   gleich  QTUM 2024-03-20 20:00 c_docht 0.65/0.65 a_praemie 0.0011776/0.0011776 g_kauf6 0.45992/0.45992 f_funding 0.00068675/0.00068675 e_btc24 0.051547/0.051547
+G2   gleich  BTC 2025-12-19 10:00 c_docht 0.82328/0.82328 a_praemie -0.0003341/-0.0003341 g_kauf6 0.54529/0.54529 f_funding 0.00013718/0.00013718 e_btc24 0.010592/0.010592
+G2   gleich  KAS 2025-04-08 14:00 c_docht 0.050926/0.050926 a_praemie 0/0 g_kauf6 nan/nan f_funding -0.0004819/-0.0004819 e_btc24 -0.0069996/-0.0069996
+G2   gleich  BABY 2025-07-10 20:00 c_docht 0.65909/0.65909 a_praemie -0.00035319/-0.00035319 g_kauf6 0.45522/0.45522 f_funding 0.00017077/0.00017077 e_btc24 0.025093/0.025093
+G2   gleich  ICP 2024-10-19 02:00 c_docht 0.95833/0.95833 a_praemie -0.00061478/-0.00061478 g_kauf6 0.53587/0.53587 f_funding 0.0001628/0.0001628 e_btc24 0.0052214/0.0052214
+G2   gleich  RUNE 2026-04-20 22:00 c_docht 0/0 a_praemie 0.0004717/0.0004717 g_kauf6 0.48398/0.48398 f_funding 4.771e-05/4.771e-05 e_btc24 0.026023/0.026023
+G2   gleich  QNT 2026-06-12 00:00 c_docht 0.91333/0.91333 a_praemie -0.002022/-0.002022 g_kauf6 0.57255/0.57255 f_funding 5.366e-05/5.366e-05 e_btc24 0.029716/0.029716
+G2   gleich  HBAR 2024-09-07 13:00 c_docht 0.5/0.5 a_praemie 0.00020747/0.00020747 g_kauf6 0.43075/0.43075 f_funding -0.00024154/-0.00024154 e_btc24 -0.024134/-0.024134
+G2   gleich  NEAR 2026-06-19 14:00 c_docht 0.16667/0.16667 a_praemie 0/0 g_kauf6 0.50626/0.50626 f_funding 4.274e-05/4.274e-05 e_btc24 -0.0096069/-0.0096069
+G2   gleich  W 2025-10-12 16:00 c_docht 0.63158/0.63158 a_praemie -0.00084032/-0.00084032 g_kauf6 0.50019/0.50019 f_funding -0.0023916/-0.0023916 e_btc24 0.019877/0.019877
+G2   gleich  ZIL 2025-07-16 17:00 c_docht 0.72727/0.72727 a_praemie -0.00056525/-0.00056525 g_kauf6 0.47085/0.47085 f_funding 0.0003/0.0003 e_btc24 0.014487/0.014487
+G2   gleich  ADA 2024-11-20 04:00 c_docht 0.95219/0.95219 a_praemie 0.00038221/0.00038221 g_kauf6 0.51473/0.51473 f_funding 0.00057726/0.00057726 e_btc24 0.0064812/0.0064812
+G2   gleich  MINA 2026-07-21 08:00 c_docht 0.8/0.8 a_praemie -0.00269/-0.00269 g_kauf6 0.57697/0.57697 f_funding 5.53e-06/5.53e-06 e_btc24 0.03398/0.03398
+G2   gleich  RSR 2026-07-02 11:00 c_docht 0.72727/0.72727 a_praemie 1.7699e-05/1.7699e-05 g_kauf6 0.58611/0.58611 f_funding 0.0003/0.0003 e_btc24 0.046672/0.046672
+G3   gleich  a_praemie numpy -0.0656 Bericht -0.066
+G3   gleich  b_kapitul numpy -0.0396 Bericht -0.040
+G3   gleich  c_docht numpy -0.0064 Bericht -0.006
+G3   gleich  d_fall6 numpy -0.0426 Bericht -0.043
+G3   gleich  d_fall24 numpy -0.0426 Bericht -0.043
+G3   gleich  e_btc24 numpy -0.0377 Bericht -0.038
+G3   gleich  e_btc168 numpy +0.0297 Bericht +0.030
+G3   gleich  f_oi24 numpy -0.0451 Bericht -0.045
+G3   gleich  f_ls numpy -0.0860 Bericht -0.086
+G3   gleich  f_taker numpy +0.0226 Bericht +0.023
+G3   gleich  f_funding numpy -0.1565 Bericht -0.156
+G3   gleich  g_kauf6 numpy +0.0216 Bericht +0.022
+G4a  gleich  Wertemenge je Tag erhalten, Anteil veraendert 91 %
+G4b  gleich  Zufallsmerkmale gewaehlt 23 von 200 (11.5 %, Soll ~10 %)
+G4c  gleich  gepflanzt Chance+Rauschen(1,5): Unterschied +0.319 gegen P90 0.130
+
+37 von 37 gleich

@@ -2179,3 +2179,48 @@ urteil: stützt | neutral | spricht dagegen     (nur aus den Ereignissen, getren
 1. A2 Teil 2 (Zahlen, rückblickend messbar).
 2. Dann Fassung 2 der Eingabe.
 3. Parallel als **eigener** Punkt die Voranalyse *Ereignisquelle und Vorwärtsprotokoll*.
+
+### 23.18 A2 Teil 2 — Ergebnis: Keine der zwölf Zahlen trennt innerhalb der REGEL0-Signale (07.10.2026)
+
+**Werkzeug:** `Rechenkern_02_10/a2_messung.py` (Beleg `a2_messung.txt`), Auslegung im Skriptkopf **vor** dem ersten Lauf festgelegt. **Gegenprobe** `a2_gegenprobe.py` mit eigenem Rechenweg: **37 von 37 gleich** (Grundraten aus der CSV, Merkmale an 20 Einstiegen per direkter SQL-Abfrage, Wahl-Unterschiede mit numpy, Nullwelt erhält die Werte je Tag, 200 Zufallsmerkmale → 11,5 % gewählt bei Soll 10 %, gepflanztes Merkmal gefunden). Abdeckung vorab: `a2_abdeckung.py` (Beleg `a2_abdeckung.txt`).
+
+**Basis (R-R11):** die REGEL0-Einstiege der Kern-Befunde, `data/_vergleich/kern48jbz_einstiege_{bestand, unverzerrt_1..3}.csv`, 10.481 bis 11.177 Einstiege je Menge, davon 2024 1.873 bis 2.324. Eingestellte Assets kommen aus `eingestellt_historie.db` (24 bis 29 Assets, rund 1.380 Einstiege je unverzerrter Menge). Zielgröße wie im Kern: **Chance** = +5 % vor −5 % binnen 24 h, **Spiegel** = −5 % zuerst, Auskunft 24-h-Ertrag. Abdeckung der Merkmale 90 bis 100 %.
+
+**Regel (vorab):** Wahl auf 2024 (oberes gegen unteres Drittel, Nullwelt 500 Vertauschungen im Tag, |Unterschied| über dem 90. Perzentil), Bestätigung 2025-01..2026-08 in jeder Menge (über dem 95. Perzentil der Null **und** Chance stärker als Spiegel), **trägt bei ≥ 3 von 4**.
+
+| Merkmal | Wahl 2024 (Chance oben − unten) | Bestätigung 2025/26 | Urteil |
+|---|---|---|---|
+| N-a Markpreis-Prämie | −6,6 Pp, gewählt (unten besser) | 1/4 (bestand +2,5; die drei unverzerrten 0 oder umgekehrt) | trägt nicht |
+| N-b Kapitulation (Umsatz 6 h) | −4,0 Pp | — | nicht gewählt |
+| N-c Docht | −0,6 Pp | — | nicht gewählt |
+| N-d Fall 6 h / 24 h in Tagesspannen | −4,3 / −4,3 Pp | — | nicht gewählt |
+| N-e BTC 24 h / 7 T | −3,8 / +3,0 Pp | — | nicht gewählt |
+| N-f OI 24 h | −4,5 Pp | — | nicht gewählt |
+| N-f Konten Long/Short | −8,6 Pp, gewählt (unten besser) | **0/4** | trägt nicht |
+| N-f Taker-Verhältnis | +2,3 Pp | — | nicht gewählt |
+| N-f Funding Vortag | −15,6 Pp, gewählt (unten besser) | 1/4, in `unverzerrt_1` **umgekehrt** (−6,9 Pp) | trägt nicht |
+| N-g Käuferanteil 6 h | +2,2 Pp | (2/4 über der Null, ohne Wahl) | nicht gewählt |
+
+**Lesart:**
+- **Drei von zwölf** wurden 2024 gewählt. Erwartet wären durch Zufall 1,2, und drei oder mehr kommen mit rund 11 % Wahrscheinlichkeit vor. **Keines** bestätigt sich in 2025/26.
+- Die Messung war **nicht blind:** Die Nullwelt in 2025/26 liegt beim 95. Perzentil bei 0,5 bis 5 Pp. Ein Unterschied von 2 bis 3 Pp Chance wäre also erkannt worden. Die Weglassprobe (ohne die fünf häufigsten Assets) ändert nichts.
+- Das bestätigt **W5 aus A1** mit neuen Zahlen: **Innerhalb** der REGEL0-Signale ordnet keine weitere Zahl die Chance. Die Regel hat die messbare Zahleninformation schon ausgeschöpft (Ruhe, Lage, Liquidität 2.704).
+
+**Was daraus folgt (zum Ziel E-76 / E-78):**
+1. **„Besser als die Regel“ ist über Zahlenfakten nicht zu erreichen.** Die Information dafür ist in den Daten nicht vorhanden. Damit ist die Einschätzung aus §23.16 gestützt.
+2. **Das Minimum M-1 bis M-3 (gleich, Bestätigung oder Gegenmeinung) bleibt erreichbar**, aber nur über **Form und Aufgabe** (§23.15 F1–F4) mit dem **Bestand**:
+   - Liquidität und Umsatz neutral formulieren, damit das LLM sie nicht verkehrt herum liest (2.704);
+   - die trendlastigen Fakten heraus oder ans Ende;
+   - die Wette (Gegenbewegung) zuerst.
+   
+   Damit argumentiert das LLM nicht mehr gegen die Wette. Ziel ist *gleich* (M-1), nicht *besser*.
+3. **Die eigentliche Chance liegt bei Information, die keine Regel fassen kann:** Text und Ereignisse (E-79). Sie ist nur **vorwärts** testbar.
+4. **Was NICHT folgt:**
+   - kein Urteil über den Kern selbst (er trägt über der Nullwelt und verliert an den Kosten);
+   - kein Urteil über diese Merkmale **außerhalb** der REGEL0, etwa als eigener Einstieg;
+   - Funding bleibt an der Nachweisgrenze, wie schon dreimal gemessen;
+   - die Hebel-Freigabe nach der Testwoche hängt **nicht** daran (das LLM ist Prüfung, nicht Entscheider).
+
+**Zur Abstimmung:**
+- **Fassung 2 als Minimum-Weg:** F1–F4 nur mit dem Bestand, dazu Kalibrierlauf P1, der Arm mit vertauschter Reihenfolge und eine neue Ablage. Prüfmaß: M-1 bis M-3 gegen den Regel-Arm. Kosten: Gemini-Kontingent über mehrere Tage, frühestens nach R_v und W3.
+- **Parallel** die Voranalyse *Ereignisquelle und Vorwärtsprotokoll* (E-79).

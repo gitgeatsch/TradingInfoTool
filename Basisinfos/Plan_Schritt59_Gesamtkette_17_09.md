@@ -2428,3 +2428,5 @@ Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
 **Nachtrag 07.10.2026 (20) — Teilexport geprüft:** 07.10. Teilexport: Watchlist-Kern am NB nachgewiesen (W1, §27.5), offen W2/W3. Hebel: Testwoche T1/F1-F4 ok, T2 rot = SETTLING-Assets falsch als veraltet (kleiner Fix H2), L1 rot = SEI vor dem Prüfblock (kein Fehler), XDC ohne Daten (H3); alle offenen Hebel-Punkte H1–H12 in Voranalyse_Schritt7 §23.10.
 
 **Nachtrag 07.10.2026 (21) — Reihenfolge:** E-77: Hebel A1/A2 jetzt (Desktop, ohne Eingriff am NB), Spot-Bau O28 erst nach der Testwoche (≥ 10.10.). N4 am Zwischenentscheid 250 gestoppt (STOP-ANPASSEN); Analyse A1–A4 in Schritt7 §23.13.
+
+**Nachtrag 07.10.2026 (22) — A2 gemessen:** Innerhalb der REGEL0-Signale trennt keine weitere Zahl (12 Merkmale, 4 Mengen, Gegenprobe 37/37; Schritt7 §23.18). Für die LLM-Stufe heißt das: *besser als die Regel* ist über Zahlenfakten nicht erreichbar, das Minimum (gleich, Bestätigung/Gegenmeinung) nur über Form und Aufgabe; Text und Ereignisse nur vorwärts (E-79). Hebel-Freigabe nach der Testwoche hängt nicht daran.

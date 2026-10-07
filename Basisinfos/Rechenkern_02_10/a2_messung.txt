@@ -1,0 +1,101 @@
+A2 Teil 2 (Schritt7 §23.15) · REGEL0-Einstiege je Menge: bestand 10732, unverzerrt_1 11177, unverzerrt_2 10481, unverzerrt_3 10793
+Abdeckung je Merkmal (Anteil mit Wert, bestand 2024 / 2025-26): a_praemie 100/99 % · b_kapitul 100/100 % · c_docht 100/100 % · d_fall6 100/100 % · d_fall24 100/100 % · e_btc24 100/100 % · e_btc168 100/100 % · f_oi24 92/96 % · f_ls 92/96 % · f_taker 91/96 % · f_funding 97/98 % · g_kauf6 90/94 %
+Grundrate Chance A24 / Spiegel B24 (bestand): 2024 0.356 / 0.216 · 2025-26 0.263 / 0.191
+
+a_praemie  WAHL 2024: Chance oben-unten -0.066 (|Null| P90 0.055) Spiegel +0.009 Ertrag +0.22 % -> gewaehlt Richtung UNTEN
+      bestand       2025-26 n  8317: Chance +0.025 (Null P95 +0.016) ueber · Spiegel +0.011 · Richtung ja · Ertrag +0.08 % · ohne Top-5 +0.023
+      unverzerrt_1  2025-26 n  9033: Chance -0.016 (Null P95 +0.017) nicht ueber · Spiegel -0.009 · Richtung nein · Ertrag -0.24 % · ohne Top-5 -0.017
+      unverzerrt_2  2025-26 n  8488: Chance -0.009 (Null P95 +0.016) nicht ueber · Spiegel -0.004 · Richtung nein · Ertrag +0.02 % · ohne Top-5 -0.003
+      unverzerrt_3  2025-26 n  8833: Chance +0.008 (Null P95 +0.023) nicht ueber · Spiegel -0.004 · Richtung ja · Ertrag -0.24 % · ohne Top-5 +0.016
+      -> traegt nicht (1/4)
+
+b_kapitul  WAHL 2024: Chance oben-unten -0.040 (|Null| P90 0.049) Spiegel +0.026 Ertrag -0.02 % -> nicht gewaehlt
+      bestand       2025-26 n  8398: Chance -0.006 (Null P95 +0.011) nicht ueber · Spiegel +0.002 · Richtung nein · Ertrag -0.12 % · ohne Top-5 -0.009
+      unverzerrt_1  2025-26 n  9114: Chance +0.006 (Null P95 +0.023) nicht ueber · Spiegel -0.008 · Richtung ja · Ertrag +0.07 % · ohne Top-5 +0.005
+      unverzerrt_2  2025-26 n  8572: Chance +0.000 (Null P95 +0.021) nicht ueber · Spiegel -0.008 · Richtung ja · Ertrag +0.10 % · ohne Top-5 +0.006
+      unverzerrt_3  2025-26 n  8904: Chance +0.002 (Null P95 +0.026) nicht ueber · Spiegel +0.004 · Richtung nein · Ertrag +0.06 % · ohne Top-5 +0.004
+      -> nicht gewaehlt
+
+c_docht    WAHL 2024: Chance oben-unten -0.006 (|Null| P90 0.035) Spiegel +0.010 Ertrag +0.03 % -> nicht gewaehlt
+      bestand       2025-26 n  8408: Chance +0.008 (Null P95 +0.019) nicht ueber · Spiegel -0.011 · Richtung ja · Ertrag -0.15 % · ohne Top-5 +0.005
+      unverzerrt_1  2025-26 n  9126: Chance +0.001 (Null P95 +0.020) nicht ueber · Spiegel +0.002 · Richtung nein · Ertrag -0.12 % · ohne Top-5 -0.000
+      unverzerrt_2  2025-26 n  8582: Chance +0.009 (Null P95 +0.014) nicht ueber · Spiegel +0.019 · Richtung nein · Ertrag -0.13 % · ohne Top-5 +0.011
+      unverzerrt_3  2025-26 n  8919: Chance +0.000 (Null P95 +0.014) nicht ueber · Spiegel +0.010 · Richtung nein · Ertrag +0.14 % · ohne Top-5 -0.001
+      -> nicht gewaehlt
+
+d_fall6    WAHL 2024: Chance oben-unten -0.043 (|Null| P90 0.047) Spiegel +0.026 Ertrag -0.13 % -> nicht gewaehlt
+      bestand       2025-26 n  8408: Chance -0.016 (Null P95 +0.011) nicht ueber · Spiegel +0.011 · Richtung nein · Ertrag +0.05 % · ohne Top-5 -0.013
+      unverzerrt_1  2025-26 n  9126: Chance +0.007 (Null P95 +0.024) nicht ueber · Spiegel +0.003 · Richtung ja · Ertrag +0.07 % · ohne Top-5 +0.006
+      unverzerrt_2  2025-26 n  8585: Chance +0.008 (Null P95 +0.021) nicht ueber · Spiegel -0.001 · Richtung ja · Ertrag +0.17 % · ohne Top-5 +0.011
+      unverzerrt_3  2025-26 n  8920: Chance -0.018 (Null P95 +0.020) nicht ueber · Spiegel -0.003 · Richtung nein · Ertrag +0.31 % · ohne Top-5 -0.012
+      -> nicht gewaehlt
+
+d_fall24   WAHL 2024: Chance oben-unten -0.043 (|Null| P90 0.049) Spiegel +0.009 Ertrag -0.51 % -> nicht gewaehlt
+      bestand       2025-26 n  8408: Chance -0.024 (Null P95 +0.007) nicht ueber · Spiegel +0.012 · Richtung nein · Ertrag +0.24 % · ohne Top-5 -0.022
+      unverzerrt_1  2025-26 n  9126: Chance -0.002 (Null P95 +0.014) nicht ueber · Spiegel +0.014 · Richtung nein · Ertrag +0.23 % · ohne Top-5 -0.002
+      unverzerrt_2  2025-26 n  8585: Chance -0.001 (Null P95 +0.017) nicht ueber · Spiegel +0.006 · Richtung nein · Ertrag +0.17 % · ohne Top-5 +0.003
+      unverzerrt_3  2025-26 n  8920: Chance -0.001 (Null P95 +0.016) nicht ueber · Spiegel +0.001 · Richtung nein · Ertrag +0.60 % · ohne Top-5 +0.000
+      -> nicht gewaehlt
+
+e_btc24    WAHL 2024: Chance oben-unten -0.038 (|Null| P90 0.048) Spiegel +0.012 Ertrag -1.08 % -> nicht gewaehlt
+      bestand       2025-26 n  8408: Chance -0.010 (Null P95 +0.011) nicht ueber · Spiegel +0.009 · Richtung nein · Ertrag +0.64 % · ohne Top-5 -0.011
+      unverzerrt_1  2025-26 n  9126: Chance +0.002 (Null P95 +0.014) nicht ueber · Spiegel +0.012 · Richtung nein · Ertrag +0.76 % · ohne Top-5 +0.004
+      unverzerrt_2  2025-26 n  8585: Chance -0.007 (Null P95 +0.018) nicht ueber · Spiegel +0.006 · Richtung nein · Ertrag +0.72 % · ohne Top-5 -0.002
+      unverzerrt_3  2025-26 n  8920: Chance +0.002 (Null P95 +0.023) nicht ueber · Spiegel -0.007 · Richtung ja · Ertrag +0.77 % · ohne Top-5 +0.006
+      -> nicht gewaehlt
+
+e_btc168   WAHL 2024: Chance oben-unten +0.030 (|Null| P90 0.040) Spiegel +0.007 Ertrag -0.37 % -> nicht gewaehlt
+      bestand       2025-26 n  8408: Chance +0.030 (Null P95 +0.028) ueber · Spiegel -0.027 · Richtung ja · Ertrag -0.06 % · ohne Top-5 +0.029
+      unverzerrt_1  2025-26 n  9126: Chance +0.001 (Null P95 +0.024) nicht ueber · Spiegel -0.003 · Richtung ja · Ertrag -0.01 % · ohne Top-5 -0.001
+      unverzerrt_2  2025-26 n  8585: Chance -0.007 (Null P95 +0.012) nicht ueber · Spiegel -0.011 · Richtung ja · Ertrag -0.07 % · ohne Top-5 -0.009
+      unverzerrt_3  2025-26 n  8920: Chance -0.005 (Null P95 +0.015) nicht ueber · Spiegel +0.007 · Richtung nein · Ertrag +0.12 % · ohne Top-5 -0.010
+      -> nicht gewaehlt
+
+f_oi24     WAHL 2024: Chance oben-unten -0.045 (|Null| P90 0.049) Spiegel +0.006 Ertrag -0.51 % -> nicht gewaehlt
+      bestand       2025-26 n  8110: Chance -0.017 (Null P95 +0.015) nicht ueber · Spiegel -0.006 · Richtung nein · Ertrag +0.24 % · ohne Top-5 -0.020
+      unverzerrt_1  2025-26 n  8449: Chance +0.007 (Null P95 +0.015) nicht ueber · Spiegel -0.001 · Richtung ja · Ertrag +0.24 % · ohne Top-5 +0.008
+      unverzerrt_2  2025-26 n  8127: Chance -0.003 (Null P95 +0.018) nicht ueber · Spiegel +0.006 · Richtung nein · Ertrag +0.12 % · ohne Top-5 -0.000
+      unverzerrt_3  2025-26 n  8409: Chance -0.004 (Null P95 +0.012) nicht ueber · Spiegel -0.007 · Richtung ja · Ertrag +0.49 % · ohne Top-5 -0.001
+      -> nicht gewaehlt
+
+f_ls       WAHL 2024: Chance oben-unten -0.086 (|Null| P90 0.056) Spiegel -0.007 Ertrag +0.12 % -> gewaehlt Richtung UNTEN
+      bestand       2025-26 n  8110: Chance -0.008 (Null P95 +0.022) nicht ueber · Spiegel -0.012 · Richtung ja · Ertrag -0.15 % · ohne Top-5 -0.004
+      unverzerrt_1  2025-26 n  8450: Chance -0.016 (Null P95 +0.015) nicht ueber · Spiegel +0.009 · Richtung nein · Ertrag -0.32 % · ohne Top-5 -0.010
+      unverzerrt_2  2025-26 n  8127: Chance -0.004 (Null P95 +0.020) nicht ueber · Spiegel -0.001 · Richtung nein · Ertrag -0.26 % · ohne Top-5 +0.007
+      unverzerrt_3  2025-26 n  8410: Chance -0.004 (Null P95 +0.017) nicht ueber · Spiegel +0.031 · Richtung nein · Ertrag -0.08 % · ohne Top-5 -0.002
+      -> traegt nicht (0/4)
+
+f_taker    WAHL 2024: Chance oben-unten +0.023 (|Null| P90 0.034) Spiegel -0.003 Ertrag -0.52 % -> nicht gewaehlt
+      bestand       2025-26 n  8097: Chance -0.019 (Null P95 +0.010) nicht ueber · Spiegel -0.009 · Richtung nein · Ertrag -0.07 % · ohne Top-5 -0.018
+      unverzerrt_1  2025-26 n  8432: Chance +0.009 (Null P95 +0.021) nicht ueber · Spiegel +0.008 · Richtung ja · Ertrag +0.05 % · ohne Top-5 +0.012
+      unverzerrt_2  2025-26 n  8112: Chance -0.009 (Null P95 +0.016) nicht ueber · Spiegel -0.008 · Richtung nein · Ertrag +0.02 % · ohne Top-5 -0.009
+      unverzerrt_3  2025-26 n  8394: Chance +0.012 (Null P95 +0.012) nicht ueber · Spiegel +0.014 · Richtung nein · Ertrag -0.13 % · ohne Top-5 +0.016
+      -> nicht gewaehlt
+
+f_funding  WAHL 2024: Chance oben-unten -0.156 (|Null| P90 0.124) Spiegel +0.026 Ertrag +0.19 % -> gewaehlt Richtung UNTEN
+      bestand       2025-26 n  8237: Chance +0.045 (Null P95 +0.034) ueber · Spiegel +0.019 · Richtung ja · Ertrag -0.02 % · ohne Top-5 +0.045
+      unverzerrt_1  2025-26 n  8773: Chance -0.069 (Null P95 +0.014) nicht ueber · Spiegel -0.017 · Richtung nein · Ertrag -0.62 % · ohne Top-5 -0.066
+      unverzerrt_2  2025-26 n  8381: Chance -0.002 (Null P95 +0.029) nicht ueber · Spiegel +0.017 · Richtung nein · Ertrag -0.30 % · ohne Top-5 +0.006
+      unverzerrt_3  2025-26 n  8671: Chance +0.023 (Null P95 +0.049) nicht ueber · Spiegel +0.024 · Richtung nein · Ertrag -0.51 % · ohne Top-5 +0.017
+      -> traegt nicht (1/4)
+
+g_kauf6    WAHL 2024: Chance oben-unten +0.022 (|Null| P90 0.042) Spiegel +0.007 Ertrag -0.25 % -> nicht gewaehlt
+      bestand       2025-26 n  7913: Chance +0.013 (Null P95 +0.017) nicht ueber · Spiegel -0.018 · Richtung ja · Ertrag -0.17 % · ohne Top-5 +0.010
+      unverzerrt_1  2025-26 n  8500: Chance -0.019 (Null P95 +0.005) nicht ueber · Spiegel +0.004 · Richtung nein · Ertrag -0.19 % · ohne Top-5 -0.021
+      unverzerrt_2  2025-26 n  7956: Chance +0.015 (Null P95 +0.013) ueber · Spiegel +0.003 · Richtung ja · Ertrag -0.17 % · ohne Top-5 +0.016
+      unverzerrt_3  2025-26 n  8306: Chance +0.010 (Null P95 +0.009) ueber · Spiegel -0.002 · Richtung ja · Ertrag -0.33 % · ohne Top-5 +0.013
+      -> nicht gewaehlt
+
+GESAMT (vorab: Wahl 2024 und Bestaetigung >= 3 von 4 Mengen):
+  a_praemie  traegt nicht (1/4)
+  b_kapitul  nicht gewaehlt
+  c_docht    nicht gewaehlt
+  d_fall6    nicht gewaehlt
+  d_fall24   nicht gewaehlt
+  e_btc24    nicht gewaehlt
+  e_btc168   nicht gewaehlt
+  f_oi24     nicht gewaehlt
+  f_ls       traegt nicht (0/4)
+  f_taker    nicht gewaehlt
+  f_funding  traegt nicht (1/4)
+  g_kauf6    nicht gewaehlt
