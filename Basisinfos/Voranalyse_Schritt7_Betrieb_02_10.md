@@ -1977,3 +1977,26 @@ Nutzer 07.10.: *„Ok, also keine wichtige Abweichung, alles ok? Dann umsetzen. 
 
 - ⚠️ **Auskunft, nicht vorab geprüft:** Die Rangkorrelation ist in **beiden** Jahren **negativ** (−0,15), und 2026 lagen *stützt*-Urteile **schlechter** als *dagegen*. Die Prüfung war einseitig angelegt; eine Umkehr ist damit **nicht** belegt (mehrere Blicke, keine Vorabfestlegung). Ob sie hält, wäre eine eigene Messung.
 - **Folge für den Betrieb:** Der LLM-Block bleibt **Auskunft** in der Mail, wie bisher als *ungemessen* gekennzeichnet. Am Signal und an der Stufe ändert sich nichts. Die Messung bestätigt jetzt, dass er **nicht trennt**.
+
+### 23.13 Auftrag: Wie wird der LLM-Block trennend? (07.10.2026; Nutzer, E-76)
+
+Nutzer 07.10.: *„Ja, ich schalte später XDC ab, mach bitte eine Erinnerung. Zu LLM ja, jetzt keine Entscheidung, aber die Stufe bleibt, wenn wir eine positive Lösung erreichen; hier müssen wir analysieren, wie wir das schaffen.“*
+
+**Festgehalten:**
+- **XDC:** Der Nutzer schaltet am NB selbst ab. Die Erinnerung ist eingerichtet: geplante Aufgabe `erinnerung-xdc-hebelschalter`, 07.10. 19:00, einmalig. Kontrolle **K-XDC** im nächsten Teilexport.
+- **LLM:** **keine Entscheidung jetzt.** Die **LLM-Stufe bleibt im Aufbau, wenn eine positive Lösung erreicht wird.** Bis dahin bleibt sie Auskunft in der Mail.
+- **Auftrag:** analysieren, **wie** der Block trennend wird.
+
+**Weg der Analyse (Vorschlag, je Schritt mit Ursache, E-63):**
+
+| # | Schritt | Grundlage | Aufrufe |
+|---|---|---|---|
+| A1 | **WORAN abschließen:** W3 (Reihenfolge) nach R_v, **W6** Stichprobe von 30 Begründungen (argumentiert der Trader mit Trend statt Gegenbewegung?), dazu die **Ursache des Übergewichts *spricht dagegen*** (52 %) | Ablage N4 | keine |
+| A2 | **Ist die Information überhaupt da?** Trennen Merkmale, die das LLM sieht oder sehen könnte, *innerhalb* der REGEL0-Signale? Gemessen direkt, ohne LLM: Terminmarkt (Open Interest, Long/Short, Taker), Funding, Markpreis-Prämie, Käuferanteil, Lage zum Tagesrang, BTC-Umfeld. Wenn keines trennt, kann auch ein LLM nicht trennen (W5) | Messbasis Desktop | keine |
+| A3 | **Lösungswege, je zu einem A1/A2-Befund:** (a) **neue Information** in die Eingabe, nur was in A2 trennt; (b) **andere Aufgabe**: Vergleich zweier Signale (welches ist besser?) statt Ja/Nein, gegen die Schieflage zu *dagegen*; (c) Stufe als **Saldo** der Stimmen oder als Wahrscheinlichkeit statt Mehrheit (W1); (d) die P1-Lehre: die **Wette** des Plans (*Gegenbewegung nach Rückgang*) ausdrücklich in die Aufgabe | A1, A2 | — |
+| A4 | **Messplan Fassung 2** vorab: eine neue Ablage, ein Hebel je Fassung, zuerst der Kalibrierlauf P1, dann die Entwicklungsmenge. Die **Bestätigungsmenge bleibt unberührt** bis zur endgültigen Fassung | §23.7 | Kontingent |
+
+**Grenze (vorab §23.7):**
+- Nach **drei** Fassungen ohne TRÄGT bleibt der Block Auskunft.
+- ⚠️ Die negative Rangkorrelation (−0,15 in beiden Jahren) ist **kein** Lösungsweg. Ein umgekehrt gelesenes Urteil wäre eine nachträgliche Deutung. Es wäre höchstens als **vorab** festgelegte, zweiseitige Hypothese auf neuen Daten zu prüfen.
+- **Reihenfolge:** A1 nach R_v (voraussichtlich 08.10.), A2 am Desktop ohne Kontingent, dann Vorlage A3/A4 an den Nutzer.

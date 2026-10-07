@@ -889,3 +889,10 @@ prüfen und gegenprüfen"*.
 **07.10.2026** · Nutzer: *„Ok, ja, Aufbau der Mail ist ok – gib mir ein echtes Beispiel der E-Mail aus. Prüfe die Datenquellen, wir haben bereits einiges angebunden; lies dich ein, was wir haben und was wir benötigen. Ohne Datenquellen und Abdeckungsprüfung bringt das System nichts. Ich bin unterwegs bis abends – schreibe alles Relevante ins Memory, Zentraldokumente und Regelwerke, dann trage alles in den Gesamtplan ein, damit nichts verloren geht.“*
 - Der **Aufbau der Mail** (§26) ist bestätigt. Das echte Beispiel liegt als HTML vor (§27.1).
 - **Stehende Regel:** Vor jedem Bau stehen ein **Datenquellen-Inventar** und eine **Abdeckungsprüfung** je Bedarf, mit Nachweis am NB. Ergebnis 07.10. in §27.3: Kern weitgehend da; Stammdatei (Allzeithoch, Erstdatum) und drei Abrufe fehlen (CoinGecko-Profil, DefiLlama-Gebühren, CoinMetrics); der Bestand außerhalb von Binance ist die größte Lücke.
+
+# E-76 · LLM-Block: keine Entscheidung jetzt, die Stufe bleibt bei positiver Lösung; Analyse, wie er trennend wird (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ja, ich schalte später XDC ab, mach bitte eine Erinnerung. Zu LLM ja, jetzt keine Entscheidung, aber die Stufe bleibt, wenn wir eine positive Lösung erreichen; hier müssen wir analysieren, wie wir das schaffen.“*
+- N4 hat am Zwischenentscheid 250 *STOP-ANPASSEN* ergeben (Schritt7 §23.12).
+- Der Block bleibt **Auskunft**. Die **Stufe bleibt im Aufbau**, sobald eine Fassung nach §23.7 trägt.
+- Weg der Analyse A1–A4 in Schritt7 §23.13. Erst WORAN und die Frage, ob die Information überhaupt da ist; dann **ein** Hebel je Fassung, höchstens drei Fassungen.
