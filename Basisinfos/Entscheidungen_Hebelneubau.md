@@ -901,3 +901,10 @@ prüfen und gegenprüfen"*.
 
 **07.10.2026** · Nutzer: *„Ok, nur damit wir die Themen nicht vermischen: Ok, wenn du meinst, können wir Hebel A1 bzw. A2 angehen oder Spot weiter umbauen – was denkst du als Experte?“* · *„Ok, dann halte alles fest in Memory, Doku und Plan, danach A1 mit Prüfung und Gegenprüfung.“*
 - Empfehlung angenommen: A1/A2 am Desktop (Vorrang Hebel, E-59). Der Spot-Betriebscode wartet bis nach der Testwoche (≥ 10.10.) und der Abstimmung O28.
+
+# E-78 · LLM-Stufe: Ziel *besser als die Regel*, Minimum *gleich oder etwas darüber* als Bestätigung oder Gegenmeinung (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ja, zur Grundfrage teilweise ok. Ja, Ziel wäre, dass das LLM besser trennt, aber als Minimum würde ich eher gleich oder etwas darüber ansetzen, also als Bestätigung oder Gegenmeinung. Was sagst du, wie realistisch ist es, dass das LLM besser ist?“*
+- **Ziel:** Das LLM trennt besser als die Regel mit denselben Fakten.
+- **Minimum für das Bleiben der Stufe:** gleich oder etwas darüber, in der Rolle **Bestätigung oder Gegenmeinung**. Messbar gefasst in Schritt7 §23.16 (M-1 bis M-3).
+- A2 Teil 2 wird gemessen (Nutzer-Ja).

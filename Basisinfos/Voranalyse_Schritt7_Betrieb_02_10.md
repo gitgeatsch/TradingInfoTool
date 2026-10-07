@@ -2108,3 +2108,29 @@ Nutzer 07.10.: *„Ja, wir müssen den LLM-Rollen jene Informationen, die sie be
 2. Ergebnis und Zwischenfazit zur Abstimmung.
 3. Bei Erfolg Fassung 2 der Eingabe (Teil 3) mit Kalibrierlauf P1 und dem Arm *vertauschte Reihenfolge*, eine neue Ablage.
 4. W3 aus R_v fließt in F3 ein.
+
+### 23.16 Messbares Minimum für die LLM-Stufe und Einschätzung, wie realistisch *besser* ist (07.10.2026; E-78)
+
+Nutzer 07.10.: *„Ja, zur Grundfrage teilweise ok. Ja, Ziel wäre, dass das LLM besser trennt, aber als Minimum würde ich eher gleich oder etwas darüber ansetzen, also als Bestätigung oder Gegenmeinung. Was sagst du, wie realistisch ist es, dass das LLM besser ist?“*
+
+**Das Minimum, messbar gefasst** (gilt für jede Fassung ab 2, gegen den **Regel-Arm mit denselben Fakten**, auf der Bestätigungsmenge):
+
+| # | Bedingung | Warum |
+|---|---|---|
+| **M-1 nicht schlechter** | Unterschied (*stützt* − *dagegen*) im 24-h-Ertrag **nicht signifikant unter** dem des Regel-Arms (Nullwelt Tagesblock, je Jahr) | *gleich* |
+| **M-2 kein Echo** | Das LLM stimmt in **höchstens 90 %** der Anker mit dem Regel-Arm überein | sonst ist es nur eine teure Kopie der Regel |
+| **M-3 die Gegenmeinung trägt** | Wo LLM und Regel **uneins** sind, liegt das LLM **in mehr als 50 %** richtig (24-h-Ertrag), Binomialtest einseitig 5 % | *etwas darüber*: Die Abweichungen enthalten Information |
+| *Ziel* | Unterschied **signifikant über** dem Regel-Arm | *besser* |
+
+Zusätzlich als Auskunft das **linke Ende**: Fängt eine LLM-Gegenmeinung die großen Verluste (24 h unter −2 ATR, Liquidationsnähe) häufiger ab als die Regel?
+
+**Einschätzung (Experte, keine Messung):**
+- **Besser trennen mit Zahlenfakten: eher unwahrscheinlich**, grob jede vierte bis fünfte Chance.
+  - Der Vorteil der REGEL0 ist klein, und das Rauschen ist groß.
+  - Ein LLM bringt eigenes Rauschen mit (Wiederholung 81 % gleich).
+  - Es bringt Lehrbuch-Vorurteile aus dem Training mit (Trend folgen, Volumen bestätigt). Sie widersprechen genau der Umkehr-Wette (A1).
+  - Bei Zahlen ist eine Regel, die an Tausenden Fällen gemessen ist, fast immer genauer.
+- **Gleichwertig als Bestätigung oder Gegenmeinung (M-1 bis M-3): realistisch**, etwa eine Chance von eins zu eins.
+  - Das gilt, wenn Eingabe und Aufgabe stimmen (§23.15 F1–F4).
+  - Am ehesten trägt das LLM bei **Ausnahmen**: widersprüchliche Lagen, Abwicklung, Datenfehler, Extremereignisse. Das ist das **linke Ende**, nicht der Durchschnitt.
+- **Wo ein LLM wirklich mehr kann:** bei Information, die eine Regel nicht fassen kann (Text, Ereignisse). Die ist bewusst nicht vorgesehen (Nutzervorgabe: keine wertlosen News; übergeordnete Kräfte nur gewichten).
