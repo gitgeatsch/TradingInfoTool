@@ -1,0 +1,46 @@
+P1   gleich  N4-Fingerabdruck 15db113c7ee15894 (abgelegt 15db113c7ee15894)
+P2   gleich  pos 0 MOVR 2025-08-27 11:00
+P2   gleich  pos 1 SFP 2026-04-15 02:00
+P2   gleich  pos 2 BNB 2025-07-16 18:00
+P2   gleich  pos 3 IOTX 2026-02-14 16:00
+P2   gleich  pos 5 USTC 2026-02-21 03:00
+P2   gleich  pos 6 ETHFI 2025-01-30 12:00
+P2   gleich  pos 7 MOVR 2026-05-18 05:00
+P2   gleich  pos 8 CTSI 2025-09-27 23:00
+P2   gleich  pos 9 GMX 2026-06-30 13:00
+P2   gleich  pos 10 PENDLE 2025-02-04 16:00
+P3   gleich  docht        60/60 gleich
+P3   gleich  fall6        60/60 gleich
+P3   gleich  fall24       60/60 gleich
+P3   gleich  kapitulation 60/60 gleich
+P3   gleich  praemie      60/60 gleich
+P3   gleich  btc24        60/60 gleich
+P3   gleich  btc168       60/60 gleich
+P4   gleich  nicht anonym: keiner
+P5   gleich  signal_werte je Signal: Mittel 0.01 s, hoechstens 0.01 s
+
+Beispiel einer 0.2-Eingabe (ADA):
+{
+ "geplant": "Geplant ist ein Kauf (LONG) auf eine Gegenbewegung nach einem Rueckgang, mit Hebel 3-fach: Einstieg zum Schlusskurs der naechsten Stunde, Ausstieg genau 24 Stunden danach. Hebel und Risiko werden gesondert gerechnet; zu beurteilen ist nur, ob die Gegenbewegung in diesen 24 Stunden traegt.",
+ "lage_zur_signalstunde": [
+  "Umsatz der letzten 24 Stunden: 5 bis 20 Mio. USD.",
+  "Kursaenderung bis zur Signalstunde: ueber 6 Stunden +1,8 % (+0,33 Tagesspannen), ueber 24 Stunden +2,9 % (+0,52 Tagesspannen). Eine Tagesspanne ist hier das Mittel der Spannen (Hoch minus Tief) der 14 vorangegangenen 24-Stunden-Abschnitte.",
+  "Die Signalstunde schloss bei 24 % ihrer Spanne (0 % = Stundentief, 100 % = Stundenhoch).",
+  "Der Umsatz der letzten 6 Stunden liegt beim 0,75-fachen des mittleren 6-Stunden-Umsatzes der 30 Tage davor (Median).",
+  "Der Markpreis am Terminmarkt liegt 0,008 % unter dem Kassakurs.",
+  "Bitcoin bis zur Signalstunde: ueber 24 Stunden -0,1 %, ueber 7 Tage -6,7 %."
+ ],
+ "lage_des_werts": [
+  "Eine Schwankungsbreite ist hier die durchschnittliche Spanne eines 24-Stunden-Abschnitts der letzten 14 Abschnitte; ein Tag ist ein 24-Stunden-Abschnitt, der mit der juengsten vollen Stunde endet.",
+  "Auf Sicht der letzten 19 Handelstage zeigt die Marktstruktur tiefere Hochs und tiefere Tiefs; der letzte Wendepunkt liegt 2 Handelstage zurueck.",
+  "In der langen Sicht steht der Kurs ueber 60 Tage -13,9 %, 7,5 Schwankungsbreiten unter dem 200-Tage-Schnitt.",
+  "Die naechste Widerstandsmarke liegt 0,6 Schwankungsbreiten hoeher (2-mal beruehrt: 2-mal nach unten gedreht, 0-mal gehalten).",
+  "Die naechste Unterstuetzungsmarke liegt 0,8 Schwankungsbreiten tiefer (2-mal beruehrt: 0-mal nach unten gedreht, 2-mal gehalten; seitdem per Schlusskurs durchbrochen).",
+  "Die Schwankungsbreite liegt im 40. Perzentil der letzten 250 Tage - im gewohnten Bereich.",
+  "Der Umsatz liegt beim 0,5-fachen des 20-Tage-Schnitts.",
+  "Von den letzten 20 Tagen entfielen 52 % des Umsatzes auf Aufwaertstage - ohne klares Uebergewicht.",
+  "An 6 der letzten 10 Tage lag er ueber dem Schnitt - stetig ueber mehrere Sitzungen."
+ ]
+}
+
+20 von 20 gleich

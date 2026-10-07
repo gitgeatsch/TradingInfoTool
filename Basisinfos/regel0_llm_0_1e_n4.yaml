@@ -1,3 +1,7 @@
+# EINGEFRORENE FASSUNG 0.1e fuer den N4-Rueckspiel-Laeufer (07.10.2026). Der Betrieb laeuft ab 0.2 mit Basisinfos/regel0_llm.yaml.
+# Der Laeufer prueft einen Fingerabdruck aus Prompt, Bausteinen, Modell und Stimmen - geaendert bricht er ab (eine neue Fassung ist ein
+# neuer Versuch in einer neuen Ablage). Diese Datei NICHT aendern, solange N4 (R_v, W3) nicht beendet ist.
+#
 # Rollenkatalog der LLM-Ebene zur REGEL0 (E-50, E-51, E-52; Voranalyse_Schritt7 Par. 20.11).
 #
 # EINE Aenderung hier ist EINE NEUE FASSUNG: `fassung` hochzaehlen, sonst sind Urteile alter und neuer Fassung nicht zu
@@ -5,8 +9,7 @@
 #
 # Die Rollen pruefen und kommentieren nur (F2) - KEIN Urteil aendert das REGEL0-Signal.
 
-fassung: "0.2-sofort"            # 0.2 (07.10., E-80): Trader bekommt die LAGE ZUR SIGNALSTUNDE (A2-Kandidaten N-a..N-f, neutral, Reihenfolge F3),
-                                 # N4 bleibt auf der eingefrorenen 0.1e (regel0_llm_0_1e_n4.yaml). Vorher 0.1e: E-53 (04.10.): 5 Stimmen, OHNE Entscheider (Echo 98 %), Block in der Mail - Trader P1 bestanden (Par. 20.12.4).
+fassung: "0.1e-sofort"           # E-53 (04.10.): 5 Stimmen, OHNE Entscheider (Echo 98 %), Block in der Mail - Trader P1 bestanden (Par. 20.12.4).
                                  # 0.1d: Markt nur Auskunft, Entscheider nur auf dem Trader (P1 Markt 85 %
                                  # stuetzt ueber 2025/26). 0.1c: drei Stimmen je Rolle (P1-c 65 % gleich). 0.1b: Plan nennt die Wette,
                                  # Trader ohne die rsi-Spiegel (Verlauf 5/20 Tage, Abstand 20/50-Tage-Schnitt) - Par. 20.12
@@ -29,7 +32,6 @@ rollen:
   trader:
     an: true                      # eigene Kurs- und Volumenlage, anonym
     bausteine: [struktur, lange_sicht, marken, schwankung, volumen]   # 0.1b: bewegung/schnitte spiegeln den rsi (R-R2)
-    signal: [liquiditaet, fall, docht, kapitulation, praemie, btc, terminmarkt]   # 0.2: Lage zur Signalstunde, VOR dem weiten Rahmen (F3); leer = 0.1e
   entscheider:
     an: false                     # 0.1e (E-53, Nutzer 04.10. *ja, nur fuer die aktuelle Messung und Bewertung*): AUS - mit nur dem Trader
                                   # als Eingang ein Echo (39/40 gleiche Richtung). Wird mit dem Rueckspiel N4 erneut fachlich geprueft.

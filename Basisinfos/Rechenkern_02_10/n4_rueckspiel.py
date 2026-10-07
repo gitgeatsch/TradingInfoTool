@@ -408,7 +408,8 @@ def lauf(ablage: str, platzhalter: str | None, kein_warten: bool, max_aufrufe: i
         print("Ein anderer Laeufer ist aktiv (Herzschlag juenger als %d s) - nichts zu tun." % HERZSCHLAG_TOT_S)
         return 0
     try:
-        K = L.lade()
+        # 07.10.2026: der Betrieb ist auf Fassung 0.2 (regel0_llm.yaml); N4 bleibt auf der EINGEFRORENEN 0.1e (Fingerabdruck)
+        K = L.lade(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "regel0_llm_0_1e_n4.yaml"))
         K = dict(K, stimmen=STIMMEN)
         f = fassung(K)
         alt = c.execute("SELECT v FROM meta WHERE k='fassung'").fetchone()

@@ -8,6 +8,9 @@ Rollenmodell M3 (Startfassung, anpassbar ueber Basisinfos/regel0_llm.yaml):
     TRADER       *Spricht die eigene Kurs- und Volumenlage DIESES Werts fuer oder gegen den geplanten Handel?* - ANONYM (kein
                  Name, kein Datum, kein absoluter Kurs), Bausteine aus agent/lagebeschreibung (R-T1 bis R-T12) auf 24-h-Kerzen,
                  die mit der Signalstunde enden. KEIN Markt (bleibt exklusiv und messbar), KEIN rsi (Eingang der REGEL0)
+                 AB 0.2 (07.10.2026, E-80): davor die LAGE ZUR SIGNALSTUNDE aus Stundenkerzen - Umsatzklasse, Fall 6/24 h, Docht,
+                 Kapitulation, Markpreis-Praemie, Bitcoin 24 h/7 T, Terminmarkt (nur Werte in open_interest_snapshot). Definitionen
+                 wie die A2-Messung (Par. 23.18: einzeln trennt keiner), neutral, Vorwaertstest. N4 bleibt auf 0.1e (eigener Katalog)
     ENTSCHEIDER  *Bestaetigst du diesen Handel?* - aus den ERGEBNISSEN von Markt und Trader, keine Rohdaten. Gesamturteil
                  bestaetigt / mit Vorbehalt / Einwand. Er kippt NICHTS (F2): die REGEL0 hat schon entschieden
 
@@ -37,12 +40,12 @@ import agent.regel0_ablage as AB
 HIER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KATALOG = os.path.join(HIER, "Basisinfos", "regel0_llm.yaml")
 VORGABE = {
-    "fassung": "0.1e-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": True, "schatten": True,
+    "fassung": "0.2-sofort", "modell": "gemini-3.5-flash-lite", "temperatur": 0.0, "mail_block": True, "schatten": True,
     "zeitgrenze_s": 120,
     "stimmen": 5,
     "tageslimit_aufrufe": 150, "max_signale_je_lauf": 6, "lauf_zeitgrenze_s": 600, "ausfall_schwelle": 3,
     "rollen": {"markt": {"an": True, "nur_auskunft": True}, "trader": {"an": True, "bausteine": ["struktur", "lange_sicht", "marken", "schwankung",
-                                                                        "volumen"]},
+                                                                        "volumen"], "signal": []},
                "entscheider": {"an": False, "eingaenge": ["trader"]}},
 }
 URTEILE_PRUEFER = ("stuetzt", "neutral", "spricht_dagegen")
@@ -216,11 +219,174 @@ def trader_saetze(k: dict, bausteine: list) -> list:
     return aus
 
 
-def trader_eingabe(r: dict, ordner: str, katalog: dict) -> dict | None:
+# ---------------------------------------------------------------------------- Trader ab 0.2: die Lage ZUR SIGNALSTUNDE (A2, E-80)
+# ⚠️ 0.2 (07.10.2026, Nutzer: *die neuen Kandidaten und Quellen als LLM-Rollenbeitrag sofort in Prod, messen und vorwaerts pruefen*).
+# Die Kandidaten N-a bis N-f aus A2 (Voranalyse_Schritt7 Par. 23.15/23.18). EINZELN trennt keiner innerhalb der REGEL0-Signale
+# (Par. 23.18) - sie stehen hier, weil das LLM sie VERBINDEN koennte und nur der Vorwaertstest das zeigt. Deshalb:
+#   * DIESELBEN Definitionen wie a2_messung.merkmale_je_symbol (sonst rechnet der Vorwaertstest etwas anderes ab als gemessen)
+#   * NEUTRAL formuliert, KEINE gemessene Richtung (F2/F4) - sonst wiederholt das LLM nur eine Regel (Echo)
+#   * Terminmarkt nur aus der Produktion (`open_interest_snapshot`, rund 40 Werte, Lesegrenze 2 h); sonst steht der Satz nicht da
+#   * Kaeuferanteil (N-g) fehlt am NB (keine Quelle im Betrieb) - nicht enthalten
+SIGNAL_BAUSTEINE = ("liquiditaet", "fall", "docht", "kapitulation", "praemie", "btc", "terminmarkt")
+LIQ_KLASSEN = ((1e6, "unter 1 Mio. USD"), (5e6, "1 bis 5 Mio. USD"), (20e6, "5 bis 20 Mio. USD"), (100e6, "20 bis 100 Mio. USD"),
+               (float("inf"), "ueber 100 Mio. USD"))
+TERMIN_LESEGRENZE_H = 2.0
+
+
+def _reihe_stunden(ordner: str, dateien: tuple, tabelle: str, spalten: str, symbol: str, ab: datetime, bis: datetime) -> dict:
+    """{stunde-Text: Zeile} aus ALLEN Dateien (die Basis-Assets liegen in der ersten, die zusaetzlichen in *_alle) - erste gewinnt."""
+    q = "SELECT stunde, %s FROM %s WHERE symbol=? AND stunde >= ? AND stunde <= ?" % (spalten, tabelle)
+    arg = (symbol, ab.strftime("%Y-%m-%d %H:%M"), bis.strftime("%Y-%m-%d %H:%M"))
+    aus: dict = {}
+    for name in dateien:
+        p_ = os.path.join(ordner, name)
+        if not os.path.exists(p_):
+            continue
+        c = sqlite3.connect("file:%s?mode=ro" % p_.replace("\\", "/"), uri=True, timeout=10)
+        try:
+            for z in c.execute(q, arg).fetchall():
+                aus.setdefault(z[0], z[1:])
+        except sqlite3.Error:
+            pass
+        finally:
+            c.close()
+    return aus
+
+
+def signal_werte(r: dict, ordner: str, db: str | None = None) -> dict:
+    """Die Zahlen zur Signalstunde t (nur Kerzen bis einschliesslich t) - Definitionen wie a2_messung.merkmale_je_symbol."""
+    t = _t(r["signalstunde"]).replace(tzinfo=None)
+    sym = r["symbol"]
+    k = _reihe_stunden(ordner, ("stundenkurse.db", "stundenkurse_alle.db"), "stundenkurse", "high, low, close, volumen", sym,
+                       t - timedelta(hours=24 * 15 + 30 * 24 + 6), t)
+    s_ = lambda d: d.strftime("%Y-%m-%d %H:%M")          # noqa: E731
+    w: dict = {}
+    z = k.get(s_(t))
+    if not z or z[2] is None:
+        return w
+    c_t = float(z[2])
+
+    def spanne(te):                                      # (Hoch - Tief) der 24 Stunden bis te / Schluss te; luecklos
+        zz = [k.get(s_(te - timedelta(hours=j))) for j in range(24)]
+        if not all(zz) or not zz[0][2]:
+            return None
+        return (max(x[0] for x in zz) - min(x[1] for x in zz)) / float(zz[0][2])
+    sp = [spanne(t - timedelta(hours=24 * i)) for i in range(1, 15)]
+    sp = [x for x in sp if x is not None]
+    atr = float(np.mean(sp)) if len(sp) >= 10 else None
+    v24 = [k.get(s_(t - timedelta(hours=j))) for j in range(24)]
+    if all(v24):
+        w["umsatz_usd_24h"] = float(sum((x[3] or 0.0) * (x[2] or 0.0) for x in v24))
+    for n_, name in ((6, "fall6"), (24, "fall24")):
+        z0 = k.get(s_(t - timedelta(hours=n_)))
+        if z0 and z0[2] and atr:
+            w[name + "_pct"] = c_t / float(z0[2]) - 1.0
+            w[name] = w[name + "_pct"] / atr
+    if z[0] is not None and z[1] is not None and z[0] > z[1]:
+        w["docht"] = (c_t - float(z[1])) / (float(z[0]) - float(z[1]))
+    v6 = [k.get(s_(t - timedelta(hours=j))) for j in range(6)]
+    if all(v6):
+        bl = []
+        for b in range(120):                              # 6-h-Bloecke der 720 Stunden davor, endend t-6, t-12, ...
+            e = [k.get(s_(t - timedelta(hours=6 + 6 * b + j))) for j in range(6)]
+            if all(e):
+                bl.append(sum(x[3] or 0.0 for x in e))
+        if len(bl) >= 100:
+            m6 = float(np.median(bl))
+            if m6 > 0:
+                w["kapitulation"] = sum(x[3] or 0.0 for x in v6) / m6
+    mk = _reihe_stunden(ordner, ("markpreis_historie.db", "markpreis_alle.db"), "markpreis", "close", sym, t, t).get(s_(t))
+    if mk and mk[0]:
+        w["praemie"] = float(mk[0]) / c_t - 1.0
+    if sym != "BTC":
+        b = _reihe_stunden(ordner, ("stundenkurse.db", "stundenkurse_alle.db"), "stundenkurse", "close", "BTC",
+                           t - timedelta(hours=168), t)
+        for n_, name in ((24, "btc24"), (168, "btc168")):
+            b0, b1 = b.get(s_(t - timedelta(hours=n_))), b.get(s_(t))
+            if b0 and b1 and b0[0]:
+                w[name] = float(b1[0]) / float(b0[0]) - 1.0
+    if db and os.path.exists(str(db)):
+        w.update(_terminmarkt(sym, t + timedelta(hours=1), str(db)))
+    return w
+
+
+def _terminmarkt(sym: str, ende: datetime, db: str) -> dict:
+    """Funding, Anteil Long-Konten und OI-Aenderung 24 h aus `open_interest_snapshot` (Binance) - der juengste Stand vor `ende`,
+    hoechstens TERMIN_LESEGRENZE_H alt; der Vergleich 24 h davor hoechstens 1 h daneben."""
+    c = sqlite3.connect("file:%s?mode=ro" % db.replace("\\", "/"), uri=True, timeout=10)
+    try:
+        q = ("SELECT fetched_at, open_interest, funding_rate, long_account_pct FROM open_interest_snapshot WHERE symbol=? AND "
+             "exchange='binance' AND fetched_at <= ? AND fetched_at >= ? ORDER BY fetched_at DESC LIMIT 1")
+        iso = lambda d: d.strftime("%Y-%m-%dT%H:%M:%S")   # noqa: E731
+        jetzt = c.execute(q, (sym, iso(ende), iso(ende - timedelta(hours=TERMIN_LESEGRENZE_H)))).fetchone()
+        if not jetzt:
+            return {}
+        w = {}
+        if jetzt[2] is not None:
+            w["funding"] = float(jetzt[2])
+        if jetzt[3] is not None:
+            w["long_konten_pct"] = float(jetzt[3])
+        t0 = datetime.strptime(jetzt[0][:19], "%Y-%m-%dT%H:%M:%S") - timedelta(hours=24)
+        vor = c.execute(q, (sym, iso(t0 + timedelta(hours=1)), iso(t0 - timedelta(hours=1)))).fetchone()
+        if vor and vor[1] and jetzt[1] is not None:
+            w["oi24"] = float(jetzt[1]) / float(vor[1]) - 1.0
+        return w
+    except sqlite3.Error:
+        return {}
+    finally:
+        c.close()
+
+
+def signal_saetze(w: dict, bausteine: list) -> list:
+    """Die Zahlen zur Signalstunde als neutrale Saetze - ohne Wertwort, ohne gemessene Richtung (F2/F4)."""
+    from agent import schreibweise as S
+    aus = []
+    if "liquiditaet" in bausteine and "umsatz_usd_24h" in w:
+        klasse = next(txt for grenze, txt in LIQ_KLASSEN if w["umsatz_usd_24h"] < grenze)
+        aus.append("Umsatz der letzten 24 Stunden: %s." % klasse)
+    if "fall" in bausteine and "fall6" in w and "fall24" in w:
+        aus.append("Kursaenderung bis zur Signalstunde: ueber 6 Stunden %s %% (%s Tagesspannen), ueber 24 Stunden %s %% (%s Tagesspannen). "
+                   "Eine Tagesspanne ist hier das Mittel der Spannen (Hoch minus Tief) der 14 vorangegangenen 24-Stunden-Abschnitte."
+                   % (S.de(100 * w["fall6_pct"], 1, True), S.de(w["fall6"], 2, True), S.de(100 * w["fall24_pct"], 1, True),
+                      S.de(w["fall24"], 2, True)))
+    if "docht" in bausteine and "docht" in w:
+        aus.append("Die Signalstunde schloss bei %s %% ihrer Spanne (0 %% = Stundentief, 100 %% = Stundenhoch)." % S.de(100 * w["docht"], 0))
+    if "kapitulation" in bausteine and "kapitulation" in w:
+        aus.append("Der Umsatz der letzten 6 Stunden liegt beim %s-fachen des mittleren 6-Stunden-Umsatzes der 30 Tage davor (Median)."
+                   % S.de(w["kapitulation"], 2))
+    if "praemie" in bausteine and "praemie" in w:
+        aus.append("Der Markpreis am Terminmarkt liegt %s %% %s dem Kassakurs." % (S.de(abs(100 * w["praemie"]), 3),
+                                                                                  "ueber" if w["praemie"] >= 0 else "unter"))
+    if "btc" in bausteine and "btc24" in w and "btc168" in w:
+        aus.append("Bitcoin bis zur Signalstunde: ueber 24 Stunden %s %%, ueber 7 Tage %s %%." % (
+            S.de(100 * w["btc24"], 1, True), S.de(100 * w["btc168"], 1, True)))
+    if "terminmarkt" in bausteine:
+        teile = []
+        if "funding" in w:
+            teile.append("Finanzierungssatz (Funding) %s %% je Abrechnung" % S.de(100 * w["funding"], 4, True))
+        if "long_konten_pct" in w:
+            teile.append("Anteil der Konten mit Long-Position %s %%" % S.de(w["long_konten_pct"], 1))
+        if "oi24" in w:
+            teile.append("offene Positionen (Open Interest) ueber 24 Stunden %s %%" % S.de(100 * w["oi24"], 1, True))
+        if teile:
+            aus.append("Am Terminmarkt: " + "; ".join(teile) + ".")
+    return aus
+
+
+def trader_eingabe(r: dict, ordner: str, katalog: dict, db: str | None = None) -> dict | None:
+    """Ab 0.2 (F3): zuerst der Plan (die Wette), dann die Lage ZUR SIGNALSTUNDE, der weite Rahmen zuletzt. Ohne `signal` im
+    Katalog (0.1e, N4) genau die alte Eingabe."""
     k = tageskerzen(ordner, r["symbol"], _t(r["signalstunde"]) + timedelta(hours=1))
     if k is None:
         return None
-    return {"geplant": plan_text(r), "lage_des_werts": trader_saetze(k, katalog["rollen"]["trader"].get("bausteine") or [])}
+    sig = list(katalog["rollen"]["trader"].get("signal") or [])
+    aus = {"geplant": plan_text(r)}
+    if sig:
+        saetze = signal_saetze(signal_werte(r, ordner, db), sig)
+        if saetze:
+            aus["lage_zur_signalstunde"] = saetze
+    aus["lage_des_werts"] = trader_saetze(k, katalog["rollen"]["trader"].get("bausteine") or [])
+    return aus
 
 
 # ---------------------------------------------------------------------------- Markt: die Datenschicht der alten Rolle A
@@ -316,6 +482,14 @@ Antworte AUSSCHLIESSLICH mit JSON:
  "begruendung": "<ein Satz>",
  "gegengrund": "<der staerkste Grund gegen dein Urteil>"}"""
 
+# 0.2 (F3): sagt, was die zwei Teile der Lage sind - OHNE eine Richtung zu verraten (F4)
+SYSTEM_TRADER_02 = ("Du beurteilst einen geplanten Handel - einen Kauf auf eine Gegenbewegung nach einem Rueckgang, "
+                    "gehalten fuer 24 Stunden - anhand der Lage EINES Werts. Name und Datum erfaehrst du bewusst nicht. "
+                    "'lage_zur_signalstunde' beschreibt die Stunden bis zum Signal (Kurs, Umsatz, Terminmarkt, Bitcoin), "
+                    "'lage_des_werts' den weiteren Rahmen ueber Tage und Monate, relativ zur eigenen Vergangenheit des Werts. "
+                    "Gewichte die Angaben selbst; keine Angabe ist fuer sich ein Ausschluss.\n\n"
+                    + _SCHRITTE_PRUEFER + "\n\n" + _SCHLUSS_PRUEFER)
+
 SYSTEM = {"markt": SYSTEM_MARKT, "trader": SYSTEM_TRADER, "entscheider": SYSTEM_ENTSCHEIDER}
 
 
@@ -323,6 +497,8 @@ def system_fuer(rolle: str, katalog: dict) -> str:
     """Der Prompt einer Rolle in DIESER Fassung (0.1d: Entscheider mit nur einem Eingang)."""
     if rolle == "entscheider" and list((katalog.get("rollen") or {}).get("entscheider", {}).get("eingaenge") or []) == ["trader"]:
         return SYSTEM_ENTSCHEIDER_EIN
+    if rolle == "trader" and (katalog.get("rollen") or {}).get("trader", {}).get("signal"):
+        return SYSTEM_TRADER_02
     return SYSTEM[rolle]
 
 
@@ -583,7 +759,7 @@ def pruefe_signal(r: dict, client, ordner_ablage: str, ordner_daten: str, db: st
             ein_m = None
         _rolle("markt", ein_m, wiederverwenden=True)
         try:
-            ein_t = trader_eingabe(r, ordner_daten, katalog)
+            ein_t = trader_eingabe(r, ordner_daten, katalog, db)
         except Exception:                                    # noqa: BLE001
             ein_t = None
         if ein_t is not None and anonym_verletzt(ein_t, r):

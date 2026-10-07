@@ -915,3 +915,11 @@ prüfen und gegenprüfen"*.
 - Erlaubt, wenn vorhanden. Ein Ereignis trägt nur **statistisch**: Signale mit dem Ereignistyp laufen besser als ohne.
 - Ausgabe in **fester Form** (Typ, Richtung, Wesentlichkeit, Neuheit, eingepreist), in der Mail als Fakt in Worten.
 - **Nur vorwärts testbar** (Kontamination, fehlende Zeitstempel). Schritt7 §23.17.
+
+# E-80 · LLM Fassung 0.2: die A2-Kandidaten sofort als Trader-Eingabe in den Betrieb, vorwärts prüfen (07.10.2026)
+
+**07.10.2026** · Nutzer nach A2 (§23.18): *„Ok, ja, bitte berücksichtigen, gleich die neuen Kandidaten und Quellen als LLM-Rollenbeitrag sofort einsetzen in Prod; messen und vorwärtsprüfen wird ohnehin schwer und dauert.“*
+- Fassung **0.2-sofort**: Der Trader bekommt zuerst den Plan, dann die **Lage zur Signalstunde** (N-a bis N-f, neutral, ohne gemessene Richtung), den weiten Rahmen zuletzt (F3). Die Definitionen sind dieselben wie in A2 (Gegenprobe 60/60 gleich).
+- **Bewusst gegen F1:** Einzeln trennt keiner der Kandidaten. Sie stehen drin, weil das LLM sie **verbinden** könnte; das zeigt nur der Vorwärtstest. Abgerechnet wird mit M-1 bis M-3.
+- Am NB nicht verfügbar: Käuferanteil (N-g); Terminmarkt nur für rund 40 Werte. **Text- und Ereignisquellen gibt es noch keine.** Das ist ein eigener Punkt (Datenquellen-Inventar, E-75/E-79).
+- N4 bleibt auf der **eingefrorenen 0.1e** (`regel0_llm_0_1e_n4.yaml`, Fingerabdruck unverändert). Schritt7 §23.19.

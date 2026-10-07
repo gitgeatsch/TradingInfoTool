@@ -2224,3 +2224,50 @@ urteil: stützt | neutral | spricht dagegen     (nur aus den Ereignissen, getren
 **Zur Abstimmung:**
 - **Fassung 2 als Minimum-Weg:** F1–F4 nur mit dem Bestand, dazu Kalibrierlauf P1, der Arm mit vertauschter Reihenfolge und eine neue Ablage. Prüfmaß: M-1 bis M-3 gegen den Regel-Arm. Kosten: Gemini-Kontingent über mehrere Tage, frühestens nach R_v und W3.
 - **Parallel** die Voranalyse *Ereignisquelle und Vorwärtsprotokoll* (E-79).
+
+### 23.19 Fassung 0.2 im Betrieb: die A2-Kandidaten als Trader-Eingabe, Vorwärtstest (07.10.2026; E-80)
+
+Nutzer 07.10.: *„Ok, ja, bitte berücksichtigen, gleich die neuen Kandidaten und Quellen als LLM-Rollenbeitrag sofort einsetzen in Prod; messen und vorwärtsprüfen wird ohnehin schwer und dauert.“*
+
+**Was gebaut ist** (`agent/regel0_llm.py`, `Basisinfos/regel0_llm.yaml`):
+
+| Teil der Trader-Eingabe | Inhalt | Quelle am NB |
+|---|---|---|
+| `geplant` (zuerst) | der Plan mit der Wette, unverändert | — |
+| `lage_zur_signalstunde` (neu) | Umsatz 24 h als **Klasse** (unter 1 / 1–5 / 5–20 / 20–100 / über 100 Mio. USD) · Kursänderung 6 h und 24 h in % und in Tagesspannen · Schluss der Signalstunde in % ihrer Spanne · Umsatz 6 h gegen den Median der 6-h-Umsätze der 30 Tage davor · Markpreis gegen Kassakurs · Bitcoin 24 h / 7 T · Terminmarkt: Funding, Anteil Long-Konten, Open Interest 24 h | Stundenkurse und Markpreis (`regel0_nachlader`, stündlich) · Terminmarkt aus `open_interest_snapshot` (Binance, rund 40 Werte, höchstens 2 h alt) |
+| `lage_des_werts` (zuletzt) | der weite Rahmen wie bisher (Struktur, lange Sicht, Marken, Schwankung, Volumen) | Stundenkurse |
+
+- **Prompt 0.2:** sagt, was die zwei Teile sind, ohne Richtung (F4): *„Gewichte die Angaben selbst; keine Angabe ist für sich ein Ausschluss.“*
+- **Bewusst gegen F1** (E-80): Einzeln trennt keiner der Kandidaten (§23.18). Sie stehen drin, weil das LLM sie verbinden könnte, und das zeigt nur der Vorwärtstest.
+- **Nicht enthalten:**
+  - Käuferanteil (N-g, keine Quelle am NB);
+  - Text und Ereignisse: **Es gibt noch keine angebundene Quelle mit Zeitstempel.** Das ist ein eigener Punkt (Datenquellen-Inventar vor dem Bau, E-75/E-79). Kandidat zum Prüfen: Binance-Ankündigungen (Listing, Delisting, Monitoring-Kennzeichen).
+- **N4 bleibt unberührt:** Der Läufer lädt den eingefrorenen Katalog `regel0_llm_0_1e_n4.yaml`. Der Fingerabdruck ist unverändert (`15db113c7ee15894`), sonst bräche R_v beim Neustart ab.
+
+**Prüfung** (`Rechenkern_02_10/f02_pruefstand.py`, Beleg `.txt`, **20/20**):
+- N4-Fingerabdruck gleich; 0.1e-Eingabe an 10 eingefrorenen N4-Ankern bitgleich;
+- die Zahlen des Betriebs gleich der A2-Messung an **60 zufälligen REGEL0-Einstiegen, 60/60 je Merkmal**;
+- anonym an allen 60; 0,01 s je Signal.
+
+Suite `--paket Regel0Betrieb` ohne rote Zeile, mit sechs neuen Prüfungen E-80:
+- Fassungsriegel N4;
+- Reihenfolge F3;
+- neutrale Sätze;
+- kein Satz ohne Wert;
+- Terminmarkt nur Binance mit Lesegrenze;
+- der Läufer lädt die eingefrorene 0.1e.
+
+Mail am Seiteneffekt (`pruefe_o25.py`) **11/11**.
+
+**Vorwärtstest (wie abgerechnet wird):**
+- Je Signal steht die 0.2-Eingabe in `regel0_signale.db/pruefung` (Fassung, Eingabe, Urteil, Stimmen).
+- Die Zahlen sind aus den Stundendaten jederzeit nachrechenbar (dieselbe Funktion `signal_werte`).
+- Abgerechnet wird gegen M-1 bis M-3 (§23.16) und den Regel-Arm, frühestens ab etwa 100 Signalen mit Urteil.
+- Dazu als Auskunft: Trennt das 0.2-Urteil anders als 0.1e auf denselben Monaten?
+
+**NB-Kontrolle K-F02** (nächster Teilexport nach Pull und Neustart):
+- `pruefung`-Zeilen mit Fassung `0.2-sofort`;
+- Eingabe mit `lage_zur_signalstunde`;
+- keine Zeile mit Fehler `keine Eingabe` oder `nicht anonym`;
+- bei einem Wert aus `open_interest_snapshot` der Terminmarkt-Satz;
+- Aufrufe je Tag ≤ 150.

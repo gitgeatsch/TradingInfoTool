@@ -31402,8 +31402,48 @@ def paket_regel0_betrieb() -> None:
         _t = LLM.trader_eingabe(_r, "data", _k)
         if _t is not None:
             _tx = _js.dumps(_t, ensure_ascii=False).lower()
-            pruefe(P, "E-52: die Trader-Eingabe ist ANONYM (kein Name, kein Jahr, kein Kurs) und kennt weder rsi noch den Markt",
-                   LLM.anonym_verletzt(_t, _r) == [] and "rsi" not in _tx and "bitcoin" not in _tx and "us-aktien" not in _tx, _tx[:160])
+            # 0.2 (E-80): Bitcoin steht NUR in der Lage zur Signalstunde (N-e, BTC-Umfeld kurz) - der weite Rahmen bleibt ohne Markt
+            _tw = _js.dumps(_t.get("lage_des_werts"), ensure_ascii=False).lower()
+            pruefe(P, "E-52: die Trader-Eingabe ist ANONYM (kein Name, kein Jahr, kein Kurs) und kennt weder rsi noch den Markt (0.2: Bitcoin nur zur Signalstunde)",
+                   LLM.anonym_verletzt(_t, _r) == [] and "rsi" not in _tx and "bitcoin" not in _tw and "us-aktien" not in _tx, _tx[:160])
+        # E-80 (07.10.): Fassung 0.2 - Lage zur Signalstunde VOR dem weiten Rahmen, neutral; N4 bleibt auf der eingefrorenen 0.1e
+        _k01 = LLM.lade(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Basisinfos", "regel0_llm_0_1e_n4.yaml"))
+        _t01 = LLM.trader_eingabe(_r, "data", _k01)
+        pruefe(P, "E-80: die eingefrorene 0.1e (N4) bekommt die ALTE Eingabe und den ALTEN Prompt - ohne Lage zur Signalstunde",
+               _k01["fassung"] == "0.1e-sofort" and not _k01["rollen"]["trader"].get("signal") and LLM.system_fuer("trader", _k01) == LLM.SYSTEM_TRADER
+               and (_t01 is None or list(_t01) == ["geplant", "lage_des_werts"]))
+        pruefe(P, "E-80: der Betrieb laeuft auf 0.2 - Prompt 0.2, und in der Eingabe steht die Lage zur Signalstunde VOR dem weiten Rahmen (F3)",
+               str(_k["fassung"]).startswith("0.2") and LLM.system_fuer("trader", _k) == LLM.SYSTEM_TRADER_02
+               and (_t is None or list(_t) == ["geplant", "lage_zur_signalstunde", "lage_des_werts"]), str(list(_t or {})))
+        _sz = " ".join(LLM.signal_saetze({"umsatz_usd_24h": 3e6, "fall6": -1.2, "fall6_pct": -0.04, "fall24": -2.0, "fall24_pct": -0.07,
+                                          "docht": 0.3, "kapitulation": 2.5, "praemie": -0.0012, "btc24": -0.02, "btc168": 0.01,
+                                          "funding": -0.0001, "long_konten_pct": 61.0, "oi24": -0.05}, list(LLM.SIGNAL_BAUSTEINE))).lower()
+        pruefe(P, "E-80: die Saetze zur Signalstunde sind NEUTRAL (F2/F4) - kein Wertwort, keine gemessene Richtung, Umsatz nur als Klasse",
+               "1 bis 5 mio. usd" in _sz and "-0,0100 %" in _sz and not any(w in _sz for w in (
+                   "guenstig", "günstig", "schwach", "stark", "riskant", "bullisch", "baerisch", "bärisch", "positiv", "negativ",
+                   "gut", "schlecht", "chance", "warnung", "3000000")), _sz[:200])
+        pruefe(P, "Gegenprobe E-80: ohne Werte entsteht KEIN Satz (lieber kein Fakt als ein falscher)",
+               LLM.signal_saetze({}, list(LLM.SIGNAL_BAUSTEINE)) == [])
+        with _tf.TemporaryDirectory() as _d8:
+            _db8 = os.path.join(_d8, "wegwerf.db")
+            _c8 = _sq.connect(_db8)
+            _c8.execute("CREATE TABLE open_interest_snapshot (symbol TEXT, exchange TEXT, open_interest REAL, open_interest_usd REAL, "
+                        "funding_rate REAL, long_account_pct REAL, fetched_at TEXT)")
+            _c8.executemany("INSERT INTO open_interest_snapshot VALUES (?,?,?,?,?,?,?)", [
+                ("AAA", "binance", 100.0, None, 0.0001, 60.0, "2026-09-13T10:40:00+00:00"),
+                ("AAA", "binance", 90.0, None, 0.0002, 55.0, "2026-09-14T10:45:00+00:00"),
+                ("AAA", "bybit", 999.0, None, 0.9, 1.0, "2026-09-14T10:50:00+00:00"),
+                ("BBB", "binance", 50.0, None, 0.0003, 50.0, "2026-09-14T07:00:00+00:00")])
+            _c8.commit(); _c8.close()
+            _ta = LLM._terminmarkt("AAA", _dt.datetime(2026, 9, 14, 11, 0), _db8)
+            _tb = LLM._terminmarkt("BBB", _dt.datetime(2026, 9, 14, 11, 0), _db8)
+        pruefe(P, "E-80: Terminmarkt nur Binance, juengster Stand vor der Signalstunde, OI gegen 24 h davor; aelter als 2 h -> kein Satz",
+               abs(_ta.get("oi24", 9) + 0.1) < 1e-9 and _ta.get("funding") == 0.0002 and _ta.get("long_konten_pct") == 55.0 and _tb == {},
+               "%s / %s" % (_ta, _tb))
+        _n4 = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Basisinfos", "Rechenkern_02_10", "n4_rueckspiel.py"),
+                      encoding="utf-8").read()
+        pruefe(P, "E-80: der N4-Laeufer laedt die EINGEFRORENE 0.1e, nicht den Betriebskatalog",
+               'regel0_llm_0_1e_n4.yaml"))' in _n4 and "K = L.lade()\n" not in _n4)
         pruefe(P, "Gegenprobe Anonymitaet: ein Name in der Eingabe wird gefunden",
                bool(LLM.anonym_verletzt({"x": "ETH steht 2026 bei 2513.17"}, _r)))
         _gueltig = LLM.validiere("trader", {"urteil": "Spricht dagegen", "begruendung": "x", "belege": [{"fakt": "a", "richtung": "x"}]})
@@ -31430,7 +31470,7 @@ def paket_regel0_betrieb() -> None:
             _ein = {"geplant": "p", "lage_des_werts": ["s"]}
             _orig_t, _orig_m = LLM.trader_eingabe, LLM.markt_eingabe
             try:
-                LLM.trader_eingabe = lambda r, o, k: dict(_ein)
+                LLM.trader_eingabe = lambda r, o, k, db=None: dict(_ein)
                 LLM.markt_eingabe = lambda r, db: {"geplant": "p", "marktlage": ["m"]}
                 # eigener Katalog MIT Entscheider: die Verdrahtung der drei Rollen bleibt pruefbar, auch wenn der Betrieb ihn
                 # (0.1e, E-53) ausgeschaltet hat
@@ -31467,7 +31507,7 @@ def paket_regel0_betrieb() -> None:
         with _tf.TemporaryDirectory() as d2:
             _orig_t, _orig_m = LLM.trader_eingabe, LLM.markt_eingabe
             try:
-                LLM.trader_eingabe = lambda r, o, k: dict(_ein)
+                LLM.trader_eingabe = lambda r, o, k, db=None: dict(_ein)
                 LLM.markt_eingabe = lambda r, db: None
                 _k3 = dict(_k, stimmen=3, rollen=dict(_k["rollen"], entscheider=dict(_k["rollen"]["entscheider"], an=False)))
                 e_m = LLM.pruefe_signal(dict(_r, symbol="MMM", bitpanda="MMM"), _Wechsel(["stuetzt", "neutral", "stuetzt"]), d2, d2, "x", _k3)

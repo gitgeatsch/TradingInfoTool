@@ -2430,3 +2430,5 @@ Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
 **Nachtrag 07.10.2026 (21) — Reihenfolge:** E-77: Hebel A1/A2 jetzt (Desktop, ohne Eingriff am NB), Spot-Bau O28 erst nach der Testwoche (≥ 10.10.). N4 am Zwischenentscheid 250 gestoppt (STOP-ANPASSEN); Analyse A1–A4 in Schritt7 §23.13.
 
 **Nachtrag 07.10.2026 (22) — A2 gemessen:** Innerhalb der REGEL0-Signale trennt keine weitere Zahl (12 Merkmale, 4 Mengen, Gegenprobe 37/37; Schritt7 §23.18). Für die LLM-Stufe heißt das: *besser als die Regel* ist über Zahlenfakten nicht erreichbar, das Minimum (gleich, Bestätigung/Gegenmeinung) nur über Form und Aufgabe; Text und Ereignisse nur vorwärts (E-79). Hebel-Freigabe nach der Testwoche hängt nicht daran.
+
+**Nachtrag 07.10.2026 (23) — Fassung 0.2 (E-80):** Auf Nutzerwunsch gehen die A2-Kandidaten sofort als *Lage zur Signalstunde* in die Trader-Eingabe des Betriebs (neutral, Reihenfolge F3) und werden vorwärts geprüft. Prüfstand 20/20 (gleiche Zahlen wie A2 an 60 Einstiegen), Suite grün, Mail 11/11. N4 bleibt auf der eingefrorenen 0.1e. Text- und Ereignisquellen: noch keine angebunden, eigener Punkt. Schritt7 §23.19.
