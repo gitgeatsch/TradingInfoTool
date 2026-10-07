@@ -930,3 +930,14 @@ prüfen und gegenprüfen"*.
 **07.10.2026** · Nutzer: *„Bin unsicher, was gewinnen wir an tatsächlicher Erkenntnis – prüfe, ob es sich lohnt.“* → Vorlage: Der Schatten liefert in Wochen nur ein grobes Versagen; ein Rückspiel auf den 1.000 N4-Ankern beantwortet die Frage in Tagen, gepaart gegen 0.1e. Nutzer: *„Ja, prüfen und gegenprüfen.“*
 - N5 nach dem Ende von N4: Kontaminationsprobe K_a, T mit Zwischenentscheiden, R_v mit vertauschten Blöcken. Kontingent mit N4 zusammen gezählt.
 - Vergleich gegen die **bessere Regel, mindestens den Zufall**. Diese Korrektur wurde vor dem ersten Aufruf aus der Prüfung gewonnen: Regel F liegt 2025/26 unter dem Zufall. Schritt7 §23.20.
+
+
+# E-82 · Der Entscheider bleibt vorgesehen, muss aber eigene Information bekommen (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ich bin schon der Meinung, dass der Entscheider Sinn macht, jedoch muss dieser genau so konstruiert werden. Offenbar ist ‚der Markt stützt einen Handel‘ zu wenig und u. U. nicht die erforderliche Information. Gut, wenn es am Plan steht, dann weiter.“*
+- Der Entscheider fiel 0.1c bis 0.1e nicht an der Idee, sondern an den Eingängen: Die Markt-Sicht war konstant (85 % *stützt*), mit nur dem Trader war er ein Echo (39/40).
+- Neubau nach N5 (Plan O22):
+  - erst die Information bestimmen, die ein Gesamturteil braucht (z. B. Gegenwind/Rückenwind für die Gegenbewegung statt *„stützt“*);
+  - jede Eingangssicht muss für sich unterscheiden;
+  - gemessen gegen den Trader allein, eine Zählregel und den Zufall.
+- Schritt7 §23.21.

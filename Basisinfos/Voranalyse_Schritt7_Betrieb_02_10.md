@@ -2339,3 +2339,33 @@ Mail am Seiteneffekt (`pruefe_o25.py`) **11/11**.
 - N4 beendet R_v voraussichtlich am 08.10.; N5 übernimmt den Rest des Tages.
 - Bis zum Blick 250: ~1.300 Aufrufe, also etwa 2 Tage. Ganz (1.000 Anker + R_v): ~5.550 Aufrufe, etwa 7,5 Tage.
 - Kein Zwischenblick; der Bericht kommt erst am Zwischenentscheid oder am Ende.
+
+
+### 23.21 Der Entscheider — richtig gedacht, aber ohne die nötige Information (07.10.2026; E-82)
+
+Nutzer 07.10.: *„Wie kann der Entscheider immer wie der Trader entscheiden? Sollte der Entscheider nicht auf Basis der Marktdaten und Trader-Informationen die Entscheidung treffen, oder haben wir den Entscheider u. U. falsch angelegt?“*
+
+**Wie er angelegt war (M3, §20.11):** Markt und Trader urteilen unabhängig. Der Entscheider bekommt beider **Ergebnisse** (Urteil, Belege, Gegengrund), keine Rohdaten, und fällt ein Gesamturteil *bestätigt / mit Vorbehalt / Einwand*. Am Signal ändert er nichts.
+
+**Warum er nicht trug:**
+
+| Fassung | Eingänge | Ergebnis | Ursache |
+|---|---|---|---|
+| 0.1c | Markt und Trader | 75 % *mit Vorbehalt* | Der Markt sagte über 2025/26 zu 85 % *stützt*, der Trader meist *dagegen*. Der Entscheider erbte die Konstanz des Markts |
+| 0.1d | nur Trader | 39/40 gleich dem Trader | Ein Eingang bringt keine eigene Information: Echo |
+| 0.1e | — | aus | — |
+
+- Der Fehler lag in den **Eingängen**, nicht in der Idee.
+- Die Markt-Sicht trug keine Information (vgl. 2.599: Der Marktzustand ist vorab nicht erkennbar).
+- Wer nur zwei Urteile verrechnet, ist im Kern eine Zählregel. Ein LLM bringt erst dann etwas, wenn es **Inhalte** besser abwägt als die Zählregel.
+
+**Nutzerhaltung (E-82):** *„Ich bin schon der Meinung, dass der Entscheider Sinn macht, jedoch muss dieser genau so konstruiert werden. Offenbar ist ‚der Markt stützt einen Handel‘ zu wenig und u. U. nicht die erforderliche Information. Gut, wenn es am Plan steht, dann weiter.“*
+
+**Was daraus für den Neubau des Entscheiders folgt** (Plan O22, nach N5):
+1. **Die Frage zuerst:** Welche Information braucht ein Gesamturteil über *diesen* Handel, die weder die REGEL0 noch der Trader hat? Zum Beispiel:
+   - Umfeld als **Gegenwind / Rückenwind für die Gegenbewegung** (Regime; der Kern verliert im Gegenwind, 2.694/2.697), nicht als *„stützt den Handel“*;
+   - Ausnahmen am linken Ende (Abwicklung, Datenfehler, Extremereignis);
+   - später Ereignisse (E-79).
+2. **Jede Eingangssicht muss für sich unterscheiden**, ehe der Entscheider sie bekommt: Eine konstante Sicht macht ihn zur Mitte oder zum Echo.
+3. **Gemessen wie jede Rolle:** Rückspiel auf denselben Ankern gegen den Trader allein, eine Zählregel und den Zufall. Er bleibt nur, wenn er beide schlägt.
+4. **Reihenfolge:** Erst zeigt N5, ob der Trader 0.2 trennt. Dann die Voranalyse *Information für den Entscheider*, dann das Rückspiel.
