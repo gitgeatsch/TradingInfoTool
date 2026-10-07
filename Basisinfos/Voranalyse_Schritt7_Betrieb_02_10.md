@@ -1908,3 +1908,36 @@ Nutzer 07.10.: *„Teilexport am NB erledigt, prüfe die Abdeckung und noch alle
 | H11 | **O21** Selbstmessung (alle Signale), **D2** Hebelstufen je Asset | offen | nach der Testwoche |
 | H12 | Concrete-Sperre (Bestand ohne Watchlist-Eintrag, O26) | 1 Mail am Tag | Nutzerentscheid O26 |
 | ✔ | Schalter R-4 | **Wahl A gesetzt** (E-67, 05.10.) | — |
+
+### 23.11 Voranalyse H2 (abgewickelte Assets) und H3 (XDC) — Nutzer 07.10.: *„Ja ok 1. und 2. Was ist der Fix konkret?“*
+
+**H3 XDC — Hebel-Schalter aus (Nutzer-Ja 07.10.):**
+- Der Schalter steht in der **Produktion** am NB (`asset_hebel_settings.hebel_pruefung_erlaubt`). Er wird nicht von hier geschrieben (CLAUDE.md: die Produktion beschreibt kein Prüfskript).
+- **Bedienweg:** App am NB → Asset-Übersicht → Zeile **XDC** markieren → Knopf **„Hebel-Prüfung umschalten“** (`ui/app.py:405`).
+- **Nachweis:** Im nächsten Teilexport steht XDC nicht mehr in der HEBEL-LISTE, und die Zeile *Hebel-Schalter AN, aber OHNE REGEL0-Daten* ist leer.
+
+**H2 — was am Code los ist (gelesen 07.10.):**
+
+| Stelle | Verhalten |
+|---|---|
+| `agent/regel0_rechnung.py:420` | `AKTIV_H = 48`: Ein Asset gilt als **aktiv**, solange seine letzte Stunde höchstens 48 h alt ist. Erst danach zählt es als *nicht im Handel*. So steht es dort mit Absicht (*kein Frischefehler*) |
+| `:517–518, :571–572` | `aktiv` = letzte Stunde ≤ 48 h · `frisch` = letzte Stunde = jetzt−1 · **`veraltet = aktiv − frisch`** |
+| `agent/regel0_nachlader.py:74` `_im_handel()` | fragt bei **jedem** Lauf Binance `exchangeInfo` ab und kennt den Status (TRADING gegen SETTLING/BREAK). Das Ergebnis geht nur als **Anzahl** in `_nachlader.nicht_im_handel`, nicht als Liste je Asset |
+
+⇒ Ein Asset, das Binance abwickelt (PROMPT, PUMPBTC, 1000000BOB seit 05.10. ~08:00, dazu STG), bleibt bis zu **48 h** *aktiv, aber nicht frisch*, also *veraltet*, und fällt danach von selbst heraus.
+
+**Wirkung im Betrieb: keine.**
+- Für Assets ohne frische Stunde gibt es kein Signal (B-8, `:557`). Das ist richtig.
+- Der Datenausfall-Alarm liest `price_cache`, nicht diese Zahl.
+- Betroffen sind nur die **Berichte**: `lauf.veraltet` im Teilexport und die Testwochen-Bedingung **T2**.
+
+**Zwei Wege:**
+
+| | Was | Wo | Eingriff in den Betrieb | Empfehlung |
+|---|---|---|---|---|
+| **F-a** | **Die Prüfung T2 richtigstellen.** Ein veraltetes Asset ist nur dann ein Frischefehler, wenn es **danach wieder frisch** wird (echte Lücke) oder nach 48 h **noch** aktiv ist. Ein Asset, das veraltet bleibt, bis es nach 48 h herausfällt, ist eine **Abwicklung**. Es wird als Auskunft gelistet, nicht als Fehler. Dazu **L1** erst ab dem Einbau des Prüfblocks (Fassung 0.1e, 04.10.) werten | `Basisinfos/Rechenkern_02_10/pruefe_testwoche.py` (Desktop, nur lesend) | **keiner**, die Testwoche läuft unverändert weiter | ✔ **jetzt** |
+| **F-b** | **Die Rechnung kennt den Handelsstatus.** Der Nachlader schreibt je Lauf die Liste der Assets, die nicht TRADING sind (z. B. Tabelle `_handel` in `stundenkurse_alle.db`). Die Rechnung zählt sie sofort als *nicht im Handel* statt 48 h als *veraltet* | `regel0_nachlader.py`, `regel0_rechnung.py` | ja: Pull und Neustart am NB, Betriebsprüfung | **nach** der Testwoche; nur für saubere Berichte, ohne Wirkung auf Signale |
+
+⚠️ **Warum F-b nicht jetzt:** Ein Eingriff in den Betrieb mitten in der Testwoche würde sie unterbrechen. Den gleichen Nutzen für die Auswertung bringt F-a ohne Eingriff.
+
+⚠️ **Vorabfestlegung:** T2 und L1 sind vorab festgelegte Bedingungen (§22). F-a ändert ihre **Auslegung** ⇒ nur mit Nutzer-Ja. Danach wird die Testwoche an der vorhandenen Kopie neu ausgewertet. Die alte Auswertung bleibt mit Begründung stehen.
