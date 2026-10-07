@@ -2510,3 +2510,8 @@ Nutzer 07.10.: *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen. Hinweis
 **Zur Abstimmung:**
 - **(a)** Bau nach der Testwoche: Abrufer, Ablage, Mailzeile, Vorwärtsprotokoll, Export-Abschnitt.
 - **(b)** Das LLM-Rückspiel nach N5 als Kandidat für Fassung 0.3.
+
+
+**Abgestimmt (07.10.2026, E-83):** Nutzer: *„Ja, a und b.“*
+- (a) Bau ab dem 10.10. nach der Testwoche, mit Prüfstand, Gegenprobe gegen E-1 und Suite.
+- (b) LLM-Rückspiel nach N5 als Kandidat für Fassung 0.3.

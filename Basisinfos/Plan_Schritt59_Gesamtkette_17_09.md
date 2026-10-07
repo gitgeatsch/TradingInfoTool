@@ -2438,3 +2438,9 @@ Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
 **Nachtrag 07.10.2026 (25) — Entscheider (E-82):** Der Entscheider bleibt vorgesehen (Nutzer: *„macht Sinn, muss aber genau so konstruiert werden“*). Er fiel an den Eingängen, nicht an der Idee: Die Markt-Sicht war konstant, und mit nur dem Trader war er ein Echo. Der Neubau folgt nach N5: erst die Information bestimmen, dann messen gegen Trader allein, Zählregel und Zufall. Schritt7 §23.21.
 
 **Nachtrag 07.10.2026 (26) — E-1 Binance-Ankündigungen:** Ereignisquellen-Inventar (§23.22) und Messung (§23.23): Delisting- und Monitoring-Ankündigungen in den REGEL0-Signalen tragen nach der Vorabregel nicht (2/4). Die drei unverzerrten Mengen zeigen aber das linke Ende (24 h −1,0 bis −1,5 %, Verlust ≥ 10 % +7–9 Pp; Token-Delisting stark, aber selten). Folge: keine Regel; vorgeschlagen ist die Ankündigung als Fakt in der Mail plus Vorwärtsprotokoll.
+
+**Nachtrag 07.10.2026 (27) — E-83 / O29:** Abgestimmt:
+- (a) Bau *Binance-Ankündigung als Fakt in der Signalmail plus Vorwärtsprotokoll* ab dem 10.10. (nach der Testwoche), Kontrolle K-ANK-1;
+- (b) gezieltes, gepaartes LLM-Rückspiel nach N5 als Kandidat für Fassung 0.3.
+
+Schritt7 §23.24.

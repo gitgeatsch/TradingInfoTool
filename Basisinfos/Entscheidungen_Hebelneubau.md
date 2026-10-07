@@ -941,3 +941,25 @@ prüfen und gegenprüfen"*.
   - jede Eingangssicht muss für sich unterscheiden;
   - gemessen gegen den Trader allein, eine Zählregel und den Zufall.
 - Schritt7 §23.21.
+
+
+# E-83 · Binance-Ankündigung: als Fakt in die Signalmail (Bau nach der Testwoche) und als LLM-Kandidat 0.3 (Rückspiel nach N5) (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ja, a und b, halte alles fest in den Dokumenten und Plänen.“*
+
+**(a) Bau ab dem 10.10. (nach der Testwoche):**
+- Bestandteile:
+  - eigener Abrufer-Job;
+  - ein Modul `agent/binance_ankuendigungen.py` für Betrieb und Messung;
+  - Ablage in `regel0_signale.db` (`ankuendigung`, `signal_ereignis`);
+  - Mailzeile *„Binance“* in der Einschätzung, nur bei Token- oder Futures-Delisting oder Monitoring, **nur Fakt**;
+  - Vorwärtsprotokoll für alle Signale;
+  - Abschnitt im Teilexport.
+- Kontrolle K-ANK-1.
+
+**(b) LLM-Kandidat für Fassung 0.3:**
+- gezieltes, **gepaartes** Rückspiel (mit und ohne den anonymen Satz) auf den rund 150 REGEL0-Einstiegen mit Ereignis, nach N5;
+- dazu die Kontaminationsprobe der Untermenge;
+- abgerechnet nach M-3: Ändert das LLM sein Urteil, und liegt es damit richtig?
+
+Schritt7 §23.24.
