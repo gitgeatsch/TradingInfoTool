@@ -2000,3 +2000,8 @@ Nutzer 07.10.: *„Ja, ich schalte später XDC ab, mach bitte eine Erinnerung. Z
 - Nach **drei** Fassungen ohne TRÄGT bleibt der Block Auskunft.
 - ⚠️ Die negative Rangkorrelation (−0,15 in beiden Jahren) ist **kein** Lösungsweg. Ein umgekehrt gelesenes Urteil wäre eine nachträgliche Deutung. Es wäre höchstens als **vorab** festgelegte, zweiseitige Hypothese auf neuen Daten zu prüfen.
 - **Reihenfolge:** A1 nach R_v (voraussichtlich 08.10.), A2 am Desktop ohne Kontingent, dann Vorlage A3/A4 an den Nutzer.
+
+**Reihenfolge festgelegt (07.10.2026, E-77):** Nutzer: *„Ok, nur damit wir die Themen nicht vermischen: Ok, wenn du meinst, können wir Hebel A1 bzw. A2 angehen oder Spot weiter umbauen – was denkst du als Experte?“* · *„Ok, dann halte alles fest in Memory, Doku und Plan, danach A1 mit Prüfung und Gegenprüfung.“*
+1. **Jetzt der Hebel:** A1 (WORAN abschließen) und A2 (Ist die Information da?), beides am Desktop, ohne Kontingent und ohne Eingriff am NB.
+2. **Spot-Weiterbau O28 (W2–W7) erst nach der Testwoche (ab 10.10.)**, nach Abstimmung des Bauumfangs. Grund: Betriebscode am NB würde die Testwoche stören.
+3. Die Themen bleiben getrennt (T-1..T-6).

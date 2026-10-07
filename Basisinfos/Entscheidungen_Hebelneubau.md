@@ -896,3 +896,8 @@ prüfen und gegenprüfen"*.
 - N4 hat am Zwischenentscheid 250 *STOP-ANPASSEN* ergeben (Schritt7 §23.12).
 - Der Block bleibt **Auskunft**. Die **Stufe bleibt im Aufbau**, sobald eine Fassung nach §23.7 trägt.
 - Weg der Analyse A1–A4 in Schritt7 §23.13. Erst WORAN und die Frage, ob die Information überhaupt da ist; dann **ein** Hebel je Fassung, höchstens drei Fassungen.
+
+# E-77 · Reihenfolge: Hebel A1/A2 jetzt, Spot-Bau O28 nach der Testwoche (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ok, nur damit wir die Themen nicht vermischen: Ok, wenn du meinst, können wir Hebel A1 bzw. A2 angehen oder Spot weiter umbauen – was denkst du als Experte?“* · *„Ok, dann halte alles fest in Memory, Doku und Plan, danach A1 mit Prüfung und Gegenprüfung.“*
+- Empfehlung angenommen: A1/A2 am Desktop (Vorrang Hebel, E-59). Der Spot-Betriebscode wartet bis nach der Testwoche (≥ 10.10.) und der Abstimmung O28.
