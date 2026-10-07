@@ -18,7 +18,7 @@
 |---|---|
 | **Spot-Altcoins** | Spot-Altcoins 06./07.10.: Watchlist (Fortbestand + Gelegenheit) auf Marktwert-Klassen **trägt** (E3 +14 Pp, §25.6). Strukturprofil als Fakten, vom Nutzer gewichtet. Mailaufbau **bestätigt**, echtes Beispiel `mail_beispiel_altcoins.html`. **Datenquellen-Inventar und Abdeckung** (§27): Kern am NB da; es fehlen die Stammdatei Allzeithoch/Erstdatum, Abrufe CoinGecko-Profil/DefiLlama-Gebühren/CoinMetrics und Kurse/IDs für 7 von 12 Bestand-Coins außerhalb Binance. Bau = Plan Hebel **O28**, erst nach Abstimmung und Betriebsprüfung |
 | **Stehende Regel (E-75)** | Vor jedem Bau Datenquellen-Inventar und Abdeckungsprüfung je Bedarf, nachgewiesen am NB |
-| **Offen beim Nutzer** | Bauumfang O28; Korrektur der CLAUDE.md-Zeile `messdaten.db` am NB (Betriebskopie seit 20.09.) |
+| **Offen beim Nutzer** | W0 NB-Export (Teilexport empfohlen, voll nur bei Bedarf), dann W1–W7 (Voranalyse_Spot §27.4). ✔ CLAUDE.md-Zeile korrigiert. ✔ Korrektur: Bestand-Coins außerhalb Binance haben Kurse und IDs in Prod; Übersetzung über symbol_zuordnung.csv |
 | **Hebel** | N4 läuft; Testwoche bis 10.10. |
 
 # ⭐⭐⭐ NACHTRAG 06.10.2026 — zuerst lesen

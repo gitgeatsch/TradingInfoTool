@@ -3026,3 +3026,44 @@ Der Inhalt ist der gegengeprüfte Entwurf (§26, 19/19). Der Nutzer hat den Aufb
 - **Der Bestand ist die größte Lücke.** 7 von 12 Positionen liegen außerhalb des Binance-Universums. Sie brauchen Prod-Kurse und eine ID-Zuordnung.
 - ⚠️ **Am NB nicht nachgewiesen.** Es gibt keinen aktuellen NB-Export, und die Desktop-Prod-Kopie ist vom 19.07. ⇒ Vor dem Bau eine **Betriebsprüfung B1–B9** mit sparsamem Teilexport: Tabellen `lebendigkeit_beobachtung` (Verlaufslänge), `price_history_ohlc` (Nicht-Binance-Coins), `price_cache.coingecko_id`, `umlaufmenge_cg.db` (Frische).
 - ⚠️ **Widerspruch in CLAUDE.md:** Die Messbasis-Tabelle sagt *messdaten.db am NB fehlt – mit Absicht*, der Job `betriebsreihen` schreibt dort aber seit 20.09. eine **Betriebskopie** (500 T, `_nur_betrieb`). Beides stimmt im Sinn von *keine Messbasis*; die Zeile ist missverständlich. ⇒ **Dem Nutzer zur Korrektur vorgelegt**, nicht selbst geändert.
+
+### 27.4 KORREKTUR zum Bestand und nächste Schritte für den Weiterbau (07.10.2026)
+
+Nutzer 07.10.: *„Ja, CLAUDE.md korrigieren, falls erforderlich – du hast meinen Bestand bereits mit Kursen abgeglichen, MORPHO, CANTON etc. sollten auch Kurse haben, soweit mir bekannt. Jetzt machen wir Pause, halte alles fest und die nächsten Schritte für den Weiterbau; u. U. sollten wir einen NB-Export full starten davor.“* · *„Hinweis: es gibt bereits eine Übersetzungstabelle für die Symbole bei Hebel.“*
+
+⚠️⚠️ **Korrektur zu §27.3:** Die Bestand-Coins haben **Kurse und CoinGecko-IDs**. Ich hatte nur das Binance-Spot-Universum und die Umlauf-Zuordnung (`abruf_symbol`) abgefragt, nicht die Produktion.
+
+| Coin | Prod `price_history_ohlc` (täglich, Job `refresh_ohlc`) | Prod `price_cache` (15 min) | `stundenkurse_alle` |
+|---|---|---|---|
+| KAS | ✔ seit 2023 (Bybit/gemessen) | kaspa | ✔ |
+| MORPHO | ✔ seit 2024 (Binance/gemessen) | morpho | — |
+| BRETT | ✔ seit 2024 (Bybit) | based-brett | ✔ |
+| SUPRA | ✔ seit 2024 (Bybit) | supra | — |
+| MON | ✔ seit 2025 | monad | ✔ |
+| ASTER | ✔ seit 2025 | aster-2 | ✔ |
+| CANTON | — | canton-network | ✔ als **CC** (Futures) |
+
+Stand der Desktop-Kopie: Prod-OHLC bis 19.08.; am NB laufend.
+
+- ⇒ Die Lücke ist **kleiner** als in §27.3 beschrieben. Diese Coins liegen nur außerhalb des **Binance-Spot-Universums der Rangliste**.
+- Ihre Einstufung wird aus den **Prod-Kursen** gerechnet, ihr Marktwert aus `price_cache`.
+- **Übersetzungstabelle:** `Basisinfos/symbol_zuordnung.csv` (Bitpanda ↔ Binance, z. B. CANTON → CC) wird im Hebel-Strang schon genutzt (`agent/regel0_rechnung.py`, `agent/regel0_stundenlauf.py`). Die Watchlist nutzt **dieselbe** Tabelle, dazu `price_cache.coingecko_id` für CoinGecko. **Keine neue Tabelle.**
+
+**CLAUDE.md korrigiert (Nutzer-Ja 07.10.):**
+- Die Zeile `messdaten.db` am NB nennt jetzt die Betriebskopie (500 T Binance-Spot, Job `betriebsreihen` 03:30, `_nur_betrieb`, keine Messbasis).
+- Bei `umlaufmenge_cg.db` steht jetzt die tägliche Fortschreibung durch `externe_reihen`.
+
+**Nächste Schritte für den Weiterbau (O28), in dieser Reihenfolge:**
+
+| # | Schritt | Wo | Nachweis |
+|---|---|---|---|
+| **W0** | **NB-Export.** Empfehlung: der **Teilexport** `python nb_teilexport_betriebsdaten.py`; er ist für die Betriebsprüfung B1–B9 gebaut, nur lesend und leicht. Er zeigt Datenbanken, Tabellen, Zeitauflösung und Historie: `lebendigkeit_beobachtung` (TVL-Verlauf), `price_history_ohlc` und `price_cache` (Bestand außerhalb Binance), `umlaufmenge_cg.db` (Frische), `holdings`, `portfolio_wert_historie`. Der **volle** Export (`extract_notebook_diagnose.py`, rund 295 MB) belastet den Betrieb und ist nur nötig, wenn Logs oder Mailverläufe gebraucht werden — **Entscheidung beim Nutzer** | NB | Datei `nb_betriebsdaten_T440.txt` im Austauschordner |
+| W1 | Abdeckung **am NB** gegen §27.3 nachweisen; Lücken neu bewerten | Desktop, aus W0 | Tabelle *Bedarf → am NB → Abdeckung* |
+| W2 | **Stammdatei** Allzeithoch, Datum des Hochs, erster Kurs je Coin aus der vollen Messbasis (Desktop), ins Repo; am NB täglich fortschreiben (neues Hoch → überschreiben) | Desktop → Repo → NB | Prüfung gegen die volle Messbasis |
+| W3 | **Abrufe am NB:** CoinGecko-Profil monatlich (Höchstmenge, FDV, Kategorien; rund 330 Abfragen im Kontingent), DefiLlama-Gebühren und Halter-Einnahmen monatlich (Zuordnung über die CoinGecko-ID), CoinMetrics täglich (MVRV, Marktwerte für BTC-Klima und MACD) | NB-Job | Wache und Seiteneffekt-Nachweis |
+| W4 | **Bestand-Einstufung** aus Prod-Kursen für Coins außerhalb Binance-Spot; Übersetzung über `symbol_zuordnung.csv`; Sperrlisten (csv + Markpreis-Sperre) zusammenführen | Code | Gegenprobe wie §26 |
+| W5 | **Vorwärtsprotokoll:** eigene Datei/Tabelle; Schreiber nur der Monatsjob | Code | — |
+| W6 | **Monatsjob + Mail** (Inhalt `mail_entwurf.py`, Darstellung `mail_beispiel_html.py`) | Code | Prüfstand mit echter config.yaml |
+| W7 | **Betriebsprüfung B1–B9** am NB; dann Pull, Neustart, Export nach ~30 min | NB | Kontrollen K-WL-1… |
+
+⚠️ **Für Hebel und Spot gilt weiter:** Der Hebel hat Vorrang (Testwoche bis 10.10., N4). Die Watchlist ist Spot-Strang (T-1..T-6) und **kein** Kaufsignal.
