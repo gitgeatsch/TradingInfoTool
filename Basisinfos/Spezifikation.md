@@ -1414,3 +1414,5 @@ mit Zeit zum Auflösen als Datengrundlage.
   `.claude/backups/` (nicht versioniert).
 
 **Nachtrag 06.10.2026 — Spot-Altcoins (geplant, nicht gebaut, vorläufig E-73):** monatliche **Watchlist** je Klasse nach Asymmetrie (Alter, Absturz, Dauer seit dem Hoch, TVL gegen Kurs) mit Begründung je Faktor und **Nachlauf-Marke** je Position, als **Auskunft** in der Klima-Ampel-Mail, ohne Kaufsignal, mit Vorwärtsprotokoll. Herleitung: `Voranalyse_Spot_Neubau_04_10.md` §19–§22.
+
+**Nachtrag 07.10.2026 — Altcoin-Watchlist (geplant, O28):** Mail *Altcoins – Fortbestand und Gelegenheit* monatlich: Phase (Fakten), Bestand (alle Krypto-Positionen und Neuzugänge, auch außerhalb Binance), Rangliste H/M/S nach Marktwert mit Sternen, Fortbestand in Sätzen mit Einordnung je Fakt, Nachlauf-Marke, Protokoll, Anhang mit Skalen. Datenbedarf: Voranalyse_Spot §27.3.

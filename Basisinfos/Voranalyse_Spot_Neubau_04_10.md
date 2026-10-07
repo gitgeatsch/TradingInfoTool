@@ -2956,3 +2956,73 @@ Nutzer 06.10.: *„Ja, Mailentwurf mit beiden Ebenen vorbereiten, prüfen und ge
 3. **Smallcaps:** Fast alle der besten 10 stehen im obersten Zehntel (★★★). Die Sterne trennen dort nicht; das ist mit dem Nutzer zu klären.
 4. **QNT** erscheint mit *100 % ausgegeben* (99,5 %, gerundet).
 5. Neuzugänge kommen im Betrieb aus dem Bitpanda-Abgleich (im Entwurf Platzhalter).
+
+## 27. Echtes Beispiel der E-Mail und Prüfung der Datenquellen mit Abdeckung (07.10.2026; E-75)
+
+Nutzer 07.10.: *„Ok, ja, Aufbau der Mail ist ok – gib mir ein echtes Beispiel der E-Mail aus. Prüfe die Datenquellen, wir haben bereits einiges angebunden; lies dich ein, was wir haben und was wir benötigen. Ohne Datenquellen und Abdeckungsprüfung bringt das System nichts. Ich bin unterwegs bis abends – schreibe alles Relevante ins Memory, Zentraldokumente und Regelwerke, dann trage alles in den Gesamtplan ein, damit nichts verloren geht.“*
+
+### 27.1 Echtes Beispiel der E-Mail
+
+`mail_beispiel_html.py` → **`mail_beispiel_altcoins.html`**:
+- im Stil der REGEL0-Mail (`agent/regel0_mail._als_html`: Inline-CSS, 680 px, Abschnittsüberschriften, Tabellen);
+- Betreff *Altcoins September · Fortbestand und Gelegenheit · Watchlist 26 Coins, Bestand 11*;
+- am Handy (375 px) im Browser geprüft;
+- **nicht versendet.**
+
+Der Inhalt ist der gegengeprüfte Entwurf (§26, 19/19). Der Nutzer hat den Aufbau bestätigt: *„Aufbau der Mail ist ok“*.
+
+### 27.2 Inventar der angebundenen Datenquellen (gelesen am Code, 07.10.)
+
+**Am NB im Betrieb (Scheduler `scheduler/background.py`, Jobs ab Zeile 5110):**
+
+| Job | Takt | Quelle | Ziel |
+|---|---|---|---|
+| refresh_prices | 15 min | CoinGecko `/simple/price` | Prod `price_cache` (Kurs, Marktwert) |
+| refresh_ohlc | 24 h | Kraken OHLC, Rückfall Binance/Bybit | Prod `price_history_ohlc` (auch Nicht-Binance-Coins) |
+| marktscan | 04:00 / 16:00 | CoinGecko `/coins/markets` | Prod `marktscan_candidates` (Marktwert, Volumen, Alter geschätzt) |
+| lebendigkeit | 03:20 | DefiLlama `/protocols`, `/v2/chains` (TVL-Tageswert); CoinGecko Commits | Prod `lebendigkeit_beobachtung` |
+| externe_reihen | 06:35 | CoinMetrics SplyCur; **CoinGecko Umlauf** (`hole_umlaufmenge_cg.taeglich`); DefiLlama Stablecoins; Deribit; CFTC | Prod `externe_reihe`, **`umlaufmenge_cg.db`** (Betriebskopie) |
+| lagebild_reihen | 06:40 | **FRED Netto-Liquidität**, Zinsen, Fear & Greed | Prod `macro_snapshot` |
+| betriebsreihen | 03:30 | Binance Spot 1d (TRADING + BREAK) | `messdaten.db` **Betriebskopie 500 T** (`_nur_betrieb`) |
+| regel0_nachlader | stündlich | Binance Spot/Futures klines, Markpreise | `stundenkurse*.db`, `markpreis*.db` |
+| bitpanda_holdings | 30 min | Bitpanda Public API (Schlüssel `BITPANDA_API_KEY`) | Prod **`holdings`** |
+| portfolio_wert | 06:30 | — | Prod `portfolio_wert_historie` (`mengen_json` täglich, daraus **Neuzugänge**) |
+| Mail | — | Gmail SMTP | `api/email_notify.send_notification_email` |
+
+**Nur am Desktop, von Hand:**
+- volle Messbasis (`lade_messreihen.py`, 1,5 GB);
+- `hole_tvl_historie.py` (TVL-Verlauf);
+- `hole_fremdreihen.py` (Funding, aktive Adressen);
+- volle `umlaufmenge_cg.db`.
+
+**Nur in den Spot-Voranalyse-Skripten:** CoinMetrics PriceUSD/MVRV/Marktwert (`coinmetrics.db`, `altcap.db`), **DefiLlama Gebühren und Halter-Einnahmen** (`gebuehren.db`), **CoinGecko Höchstmenge, FDV, Kategorien** (`strukturprofil.db`). Im Betriebscode gibt es sie **nicht**.
+
+### 27.3 Abdeckungsprüfung (`Abfrage 07.10.`, Universum 01.09.2026: 332 Altcoins, Marktwert-Klassen)
+
+| Bedarf der Watchlist | Quelle | im Betrieb angebunden? | Abdeckung (Desktop gemessen) | Lücke / Maßnahme |
+|---|---|---|---|---|
+| Tageskurs je Altcoin | Binance Spot (`betriebsreihen`) | ✔ NB | **332/332** | — |
+| Umlaufmenge → Marktwert-Klasse | CoinGecko (`externe_reihen` → `umlaufmenge_cg.db`) | ✔ NB | **324/332 (98 %)**, Zuordnung 332/332 | 8 Smallcaps ohne Urteil *ok* |
+| Allzeithoch, Datum des Hochs, Erstdatum (F1, F2, F8) | volle Kursgeschichte | ✘ NB hat nur **500 T** Betriebskopie | 308/332 brauchen mehr als 500 T | **Stammdatei vom Desktop** (Allzeithoch, Datum, erster Kurs je Coin) per Repo oder USB, am NB täglich fortgeschrieben (neues Hoch → überschreiben) |
+| Umsatz 90/365 T (F7, Klassen-Ersatz) | Binance Volumen | ✔ NB (500 T reichen) | 332/332 | — |
+| TVL-Verlauf (F9) | DefiLlama | ◐ NB nur Tageswert in `lebendigkeit_beobachtung` | Zuordnung 124/332 (37 %) | prüfen, ob der Tagesverlauf am NB ≥ 180 T reicht; sonst Teilmenge/Desktop-Stammdaten |
+| Höchstmenge, FDV, Kategorien (Ebene 1 A, C, E) | CoinGecko `/coins/markets`, `/coins/{id}` | ✘ | **312/332 (94 %)** im Spot-Skript | **monatlicher Abruf am NB** (rund 330 Abfragen; Kontingent 10.000/Monat, gedrosselt) |
+| Gebühren, Halter-Einnahmen (Ebene 1 B) | DefiLlama | ✘ | **121/332 (36 %)**; mehrdeutige Kürzel (UNI, LINK, AAVE …) offen | monatlicher Abruf am NB, Zuordnung über die CoinGecko-ID |
+| Sperrlisten | `symbol_zuordnung.csv`, Markpreis-Sperre | ✔ Repo/Code | — | beide Listen zusammenführen |
+| **Bestand** | Bitpanda (`bitpanda_holdings`) | ✔ NB | 12 Krypto-Positionen (Desktop-Kopie 19.07.) | — |
+| **Kurs für Bestand ohne Binance-Spot** | Prod `price_history_ohlc` (Kraken/Bybit), `price_cache` (CoinGecko) | ✔ NB | **7 von 12** ohne Binance-Spot: KAS, MORPHO, BRETT, SUPRA, MON, CANTON, ASTER | Einstufung aus Prod-Kursen rechnen (Universum bleibt Binance; diese Coins nur im Bestand-Block) |
+| CoinGecko-ID für Bestand | `abruf_symbol`, config-Watchlist, Prod `price_cache.coingecko_id` | ✔ teilweise | **6 von 12 ohne ID** in `abruf_symbol` | über `price_cache.coingecko_id` (am NB) ergänzen; sonst Zuordnungstabelle |
+| Neuzugänge | `portfolio_wert_historie.mengen_json` | ✔ NB | — | Tagesvergleich der Mengen |
+| Phase: Netto-Liquidität, Stablecoins | FRED, DefiLlama | ✔ NB | — | — |
+| Phase: BTC-Klima (MVRV) | CoinMetrics | ✘ (nur Spot-Skript) | — | Lader am NB (frei, ohne Schlüssel) |
+| Phase: Altseason-Breite | Binance-Kurse | ✔ NB (rechenbar) | — | Rechnung einbauen |
+| Phase: MACD der Altcoins | CoinMetrics-Marktwerte (`altcap.db`) | ✘ | 93 Altcoins | Lader am NB oder Index aus Umlauf × Kurs |
+| Vorwärtsprotokoll | — | ✘ | — | eigene Tabelle/Datei; Schreiber nur der Monatsjob |
+| Versand | Gmail SMTP | ✔ | — | neuer Mailtyp |
+
+**Ergebnis:**
+- Für den **Kern der Watchlist** (Kurse, Klassen, Rang) sind die Daten am NB **weitgehend da**. Es fehlt eine **Stammdatei** für Allzeithoch und Erstdatum.
+- Für **Ebene 1** fehlen im Betrieb **drei Abrufe**: CoinGecko-Profil monatlich, DefiLlama-Gebühren monatlich, CoinMetrics MVRV/Marktwerte täglich.
+- **Der Bestand ist die größte Lücke.** 7 von 12 Positionen liegen außerhalb des Binance-Universums. Sie brauchen Prod-Kurse und eine ID-Zuordnung.
+- ⚠️ **Am NB nicht nachgewiesen.** Es gibt keinen aktuellen NB-Export, und die Desktop-Prod-Kopie ist vom 19.07. ⇒ Vor dem Bau eine **Betriebsprüfung B1–B9** mit sparsamem Teilexport: Tabellen `lebendigkeit_beobachtung` (Verlaufslänge), `price_history_ohlc` (Nicht-Binance-Coins), `price_cache.coingecko_id`, `umlaufmenge_cg.db` (Frische).
+- ⚠️ **Widerspruch in CLAUDE.md:** Die Messbasis-Tabelle sagt *messdaten.db am NB fehlt – mit Absicht*, der Job `betriebsreihen` schreibt dort aber seit 20.09. eine **Betriebskopie** (500 T, `_nur_betrieb`). Beides stimmt im Sinn von *keine Messbasis*; die Zeile ist missverständlich. ⇒ **Dem Nutzer zur Korrektur vorgelegt**, nicht selbst geändert.

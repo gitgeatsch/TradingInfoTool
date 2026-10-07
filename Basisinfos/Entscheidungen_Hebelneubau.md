@@ -883,3 +883,9 @@ prüfen und gegenprüfen"*.
 - **Smallcaps wieder in der Rangliste.** Der Entscheid *nur H/M* (§23.5) ist aufgehoben. ⚠️ Gemessen senkt die Auswahl bei S das Absturzrisiko nicht (§23.2); das wird in der Mail ausgewiesen.
 - **QNT** ist das Fallbeispiel *Kauf am Boden, massiver Anstieg* (§23.7). Das Strukturprofil muss es erkennen können.
 - **Voranalyse Strukturprofil** wird gestartet (§24); die Gruppierung wird später verfeinert.
+
+# E-75 · Spot-Altcoins: Mailaufbau bestätigt; ohne Datenquellen und Abdeckungsprüfung kein Bau (07.10.2026)
+
+**07.10.2026** · Nutzer: *„Ok, ja, Aufbau der Mail ist ok – gib mir ein echtes Beispiel der E-Mail aus. Prüfe die Datenquellen, wir haben bereits einiges angebunden; lies dich ein, was wir haben und was wir benötigen. Ohne Datenquellen und Abdeckungsprüfung bringt das System nichts. Ich bin unterwegs bis abends – schreibe alles Relevante ins Memory, Zentraldokumente und Regelwerke, dann trage alles in den Gesamtplan ein, damit nichts verloren geht.“*
+- Der **Aufbau der Mail** (§26) ist bestätigt. Das echte Beispiel liegt als HTML vor (§27.1).
+- **Stehende Regel:** Vor jedem Bau stehen ein **Datenquellen-Inventar** und eine **Abdeckungsprüfung** je Bedarf, mit Nachweis am NB. Ergebnis 07.10. in §27.3: Kern weitgehend da; Stammdatei (Allzeithoch, Erstdatum) und drei Abrufe fehlen (CoinGecko-Profil, DefiLlama-Gebühren, CoinMetrics); der Bestand außerhalb von Binance ist die größte Lücke.

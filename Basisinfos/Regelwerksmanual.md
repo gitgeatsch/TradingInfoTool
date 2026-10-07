@@ -5201,6 +5201,8 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Altcoins: Asymmetrie** | 06.10.: *aus den unsicheren Assets jene identifizieren, welche ein ausgewogeneres bzw. möglichst asymmetrisches Chance-Risiko-Verhältnis aufzeigen* (E-71) | Zielgröße rechtes gegen linkes Ende je Asset, nicht Mittel/Median gegen BTC (Voranalyse_Spot §19) |
 | **Delegiert** | 06.10.: *du entscheidest jetzt* (E-72) | Spiegelprobe bewegungsgleich; Maßstab Systemfunktion / Hinweis / Newsletter vorab |
 | **Erst verstehen, dann bauen** | 06.10.: *ich kann mir noch immer nicht vorstellen, was das System leistet* (E-73) | W1–W7 vorläufig; vor dem Bau ein Beispiel aus echten Daten |
+| **Zwei Ebenen** | 06.10.: Quant als Prüfstein; *das Strukturprofil werden wir noch besser gruppieren* (E-74) | Fortbestand (Fakten, Nutzer gewichtet) vor Gelegenheit (gemessener Rang); Klassen nach Marktwert; Smallcaps in der Liste |
+| **Datenquellen vor dem Bau** | 07.10.: *ohne Datenquellen und Abdeckungsprüfung bringt das System nichts* (E-75) | Inventar und Abdeckung je Bedarf, Nachweis am NB, vor jedem Bau (Voranalyse_Spot §27) |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
