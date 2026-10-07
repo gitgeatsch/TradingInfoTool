@@ -2053,3 +2053,58 @@ Nutzer 07.10.: *„Ja, ich schalte später XDC ab, mach bitte eine Erinnerung. Z
 3. **Zusätzlich** zu prüfen: Die neun Fakten selbst sind **trendlastig**. Für eine Umkehrwette fehlen Umkehr-Fakten ganz.
 
 **K-XDC:** Nutzer 07.10.: *„XDC Hebel ist ausgeschaltet und gepullt“*. Die Erinnerung ist abgeschaltet. Nachweis im nächsten Teilexport.
+
+### 23.15 A2 — Voranalyse und Messplan: welche Information, in welcher Form, in welcher Reihenfolge (07.10.2026, VOR der Messung)
+
+Nutzer 07.10.: *„Ja, wir müssen den LLM-Rollen jene Informationen, die sie benötigen, in der korrekten Form und Reihenfolge übergeben.“*
+
+**Teil 1 — Was innerhalb der REGEL0-Signale (Kern) schon gemessen ist** (Register, nicht neu messen; R-R11):
+
+| Befund | Was trennt im Kern | Steht es in der LLM-Eingabe? |
+|---|---|---|
+| **2.704** Liquidität | **geringe** Liquidität (USD-Volumen 24 h) hat die **bessere** Chance, 4/4 Mengen, mit Richtung (Spiegel) | ⚠️ **verkehrt herum:** Die Eingabe sagt *Umsatz beim 0,3-fachen des 20-T-Schnitts*, und der Trader wertet das als **Schwäche** (A1: Urteil +0,41 auf den Umsatz, Ertrag −0,14/−0,25) |
+| 2.691 / 2.692 | **Ruhe 48 h** davor hebt Chance und Potential (sie ist Teil der REGEL0); `ema_abstand_atr` oben und `volumenschub` oben heben das **Potential**, nicht die Chance | nein |
+| 2.694 / 2.697 / 2.695 | Der Kern verliert im **Gegenwind** (Regime). Ruhe 72 h hilft im schwachen und schadet im starken Markt | nein (kein Umfeld in der Eingabe) |
+| 2.695 | die Kurs-Vorgeschichte ist **ausgereizt** (Tiefe davor, Tempo fallen) | ⚠️ genau diese Trendfakten **dominieren** die Eingabe |
+| 2.691 | `top_konten_verh` unten +0,06 Chance, fällt aber an der Breite | nein |
+
+⇒ **Die bekannten Informationen fehlen in der Eingabe, und die eine, die drinsteht (Umsatz), ist so formuliert, dass der Trader sie umgekehrt liest.**
+
+**Teil 2 — neue Kandidaten, noch nicht im Kern gemessen** (Umkehr-Information):
+
+| # | Kandidat | Gedanke | Messbar am Desktop | **Im Betrieb am NB** |
+|---|---|---|---|---|
+| N-a | **Markpreis-Prämie** (Futures-Markpreis gegen Spot, stündlich) | Abschlag = Verkaufsdruck am Terminmarkt | `markpreis_alle` 411 | ✔ 411 (laufend) |
+| N-b | **Kapitulation:** Umsatzspitze in den Stunden des Rückgangs, gegen den eigenen Schnitt | Ausverkauf vor der Wende | Stundenkurse 537 | ✔ |
+| N-c | **Rückgewinn im Signal:** Abstand des Schlusses vom Stundentief (Docht) | Käufer bereits da | Stundenkurse | ✔ |
+| N-d | **Fallgeschwindigkeit:** Rückgang in ATR über 6 h und 24 h | Übertreibung | Stundenkurse | ✔ |
+| N-e | **BTC-Umfeld kurz:** BTC 24 h und 7 T zur Signalstunde | Gegenwind/Rückenwind (Teil 1) | ✔ | ✔ |
+| N-f | **OI-Änderung 24 h, Funding, Long/Short** | Positionsabbau = Ende des Drucks | `terminmarkt_historie` 122, `funding_historie` 302 | ◐ **nur 40 Symbole** (Prod `open_interest_snapshot`) ⇒ nur Auskunft, solange die NB-Daten fehlen |
+| N-g | Käuferanteil (Taker) | Druck der Marktkäufer | `richtung_historie` 116 | ✘ am NB ⇒ nur Auskunft |
+
+**Messplan Teil 2 (vorab):**
+- **Menge:** die REGEL0-Einstiege der Rechenkern-Messung (`messe_losfahren.py`, R-R11-Basis, Ruhe 48 h, s = 0,035), **Wahl auf 2024**, **Bestätigung einmal auf 2025-01..2026-08** in den vier Mengen (wie 2.691–2.704).
+- **Zielgröße:** wie im Kern: Chance (q5) und 24-h-Ertrag, dazu Potential, Spiegel.
+- **Zweiseitig** (oberes gegen unteres Drittel), Nullwelt im Tagesblock, die sechs Prüfungen.
+- **Trägt:** Wahl 2024 und Bestätigung in **≥ 3 von 4** Mengen, gleiche Richtung, Spiegel besteht.
+- ⚠️ Die Monate der N4-Anker (2025/26) überschneiden sich mit der Bestätigung. Das ist erlaubt: Gemessen werden **Merkmale**, keine LLM-Urteile. Die LLM-Bestätigungsmenge bleibt unberührt.
+
+**Teil 3 — Form und Reihenfolge der Eingabe** (erst nach Teil 2, als Fassung 2 nach §23.7):
+
+| Regel | Begründung |
+|---|---|
+| **F1** nur Fakten, die im Kern **gemessen tragen** (Teil 1 + Teil 2); die trendlastigen Fakten ohne Wirkung (2.695, A1) **raus** oder ans Ende | A1: Sie lenken ab und werden gegen die Wette gelesen |
+| **F2** jede Zahl **relativ zur eigenen Geschichte** (Perzentil je Asset) **und** in ATR, neutral formuliert, ohne Wertwörter wie *schwach* oder *stark* | Umsatz *0,3-fach* wurde als Schwäche gelesen, obwohl gering = günstig (2.704) |
+| **F3** **Reihenfolge:** zuerst die Wette, dann die Fakten in der Reihenfolge ihrer gemessenen Bedeutung, das Umfeld zuletzt. Eine Gegenprobe mit **vertauschter** Reihenfolge ist Pflicht | W3 (vorläufig 5/11 gleich) ⇒ es gibt einen Positionsbias |
+| **F4** **keine gemessene Richtung verraten** (z. B. *geringe Liquidität war günstig*) | Sonst wiederholt das LLM die Regel (*Echo*, Entscheider 39/40). Dann wäre die Regel selbst besser und billiger |
+
+⚠️⚠️ **Die Grundfrage, ehrlich gestellt:**
+- Ein LLM bringt nur dann einen Mehrwert, wenn es etwas kann, das die Regel nicht kann: **Fakten gewichten und verbinden**, die einzeln schwach sind.
+- Trennt in Teil 2 ein Merkmal **für sich**, gehört es zuerst **in die REGEL0** (billig, prüfbar, reproduzierbar). Das LLM muss dann zeigen, dass es **darüber hinaus** trennt (Regel-Arm als Vergleich, wie in N4).
+- **Positive Lösung** (E-76) heißt deshalb: Die LLM-Stufe trennt **besser als die Regel mit denselben Fakten**. Nicht: Sie trennt überhaupt.
+
+**Reihenfolge:**
+1. Teil 2 messen (Desktop, ohne Kontingent).
+2. Ergebnis und Zwischenfazit zur Abstimmung.
+3. Bei Erfolg Fassung 2 der Eingabe (Teil 3) mit Kalibrierlauf P1 und dem Arm *vertauschte Reihenfolge*, eine neue Ablage.
+4. W3 aus R_v fließt in F3 ein.
