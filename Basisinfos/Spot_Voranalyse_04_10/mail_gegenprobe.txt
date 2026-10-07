@@ -1,0 +1,21 @@
+G1     gleich Liste 26 Coins, gesperrt darin: []
+G2     gleich Krypto-Bestand 11, fehlt im Block: []
+G3-H   gleich 6 Coins, andere Klasse: []
+G3-M   gleich 10 Coins, andere Klasse: []
+G3-S   gleich 10 Coins, andere Klasse: []
+G4     gleich LTC Marke Text 37,88 / SQL 37.882 · Kauf Text 49,69, / SQL 49.69
+G4     gleich NEO Marke Text 1,58 / SQL 1.5769 · Kauf Text 2,01, / SQL 2.009
+G4     gleich ONT Marke Text 0,03697 / SQL 0.0369655 · Kauf Text 0,05245, / SQL 0.05245
+G4     gleich DOT Marke Text 0,8099 / SQL 0.8099 · Kauf Text 0,8680, / SQL 0.868
+G4     gleich FIL Marke Text 0,6252 / SQL 0.625235 · Kauf Text 0,7990, / SQL 0.799
+G4     gleich UMA Marke Text 0,2581 / SQL 0.25805 · Kauf Text 0,3580, / SQL 0.358
+G5     gleich QNT ausgegeben Text 100 % / DB 99.5 %
+G5     gleich LINK ausgegeben Text 75 % / DB 74.8 %
+G5     gleich THETA ausgegeben Text 100 % / DB 100.0 %
+G5     gleich XLM Gebuehren Text 13 Mio / DB 13.27 Mio
+G5     gleich ADA Gebuehren Text 10 Mio / DB 9.99 Mio
+G6a    gleich kein Kaufaufruf
+G6b    gleich keine e-Schreibweise
+G6c    gleich keine Dezimalpunkte bei Prozent/Mio./Mrd./Jahren
+
+19 von 19 gleich

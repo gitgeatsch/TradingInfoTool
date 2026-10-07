@@ -2919,3 +2919,40 @@ Verglichen mit dem echten Marktwert von CoinMetrics an 16–40 Coins je Stichtag
   - Das Angebot war neutral, und die Kategorien wechseln mit den Moden.
   - ⇒ Ebene 1 bleibt ein **Fakten-Profil, das der Nutzer gewichtet** (Vorgabe 01.10.). In der Mail wird kenntlich gemacht, welche Fakten in der Vergangenheit **neutral**, **günstig mit Vorbehalt** oder **ungünstig** waren.
 - Der echte Test der Nutzer-These *Fortbestand bei Tokenisierung* ist **vorwärts**: Das Protokoll führt das Profil je Coin mit.
+
+## 26. Mailentwurf mit beiden Ebenen (07.10.2026)
+
+Nutzer 06.10.: *„Ja, Mailentwurf mit beiden Ebenen vorbereiten, prüfen und gegenprüfen.“*
+
+**Belege:**
+- `mail_entwurf.py` → **`mail_entwurf_beide_ebenen.md`** (Stichtag 01.09.2026, Kurse bis 20.09.2026, Bestand aus der Desktop-Kopie vom 19.07.2026)
+- Gegenprobe `mail_gegenprobe.py` → `.txt`: **19 von 19 gleich**. Sie liest den erzeugten Text und rechnet aus SQL nach:
+  - keine gesperrten Symbole in der Liste;
+  - alle Krypto-Bestände im Bestand-Block;
+  - Klasse je Abschnitt;
+  - 6 Verkaufsmarken;
+  - Profil- und Gebührenwerte;
+  - Sprache: kein Kaufaufruf, deutsche Zahlen.
+
+**Aufbau:**
+1. Lesehilfe.
+2. Phase (Fakten).
+3. **Dein Bestand**: alle Krypto-Bestände; Kern gesondert; je Coin Einstufung oder Grund, warum keine; Fortbestand in Sätzen.
+4. **Rangliste** nach Marktwert-Klassen: H alle im obersten Fünftel, M und S je die besten 10. Je Coin Sterne, *Gelegenheit* in Worten, seit wann im Fünftel, *neu im Fünftel* bzw. *neu unter den besten 10*, *Fortbestand* mit der Einordnung aus §25.6 und die Verkaufsmarke.
+5. Protokoll.
+6. **Anhang mit Skalen.**
+
+**Beim Prüfen gefunden und behoben (vor der Gegenprobe):**
+- Zahlen mit Punkt und in e-Schreibweise.
+- Der irreführende Satz *öffentliche Blockchains*.
+- *0,00 Mio. $*.
+- Fehlender Warnhinweis bei FTT (kein Strukturprofil).
+- AUDIO doppelt unter *nicht mehr* und *gesperrt*.
+- Pauschaler Grund bei Bestand-Coins außerhalb des Universums.
+
+**Offene Punkte für den Bau** (aus dem Entwurf sichtbar geworden):
+1. **Kursquelle für Bestand-Coins ohne Binance-Spot:** KAS, MORPHO, SUPRA und BRETT enden in den Desktop-Messdaten am 19.08.2026; CANTON läuft als CC an den Futures. Am NB braucht es dafür den Bitpanda-Ticker oder CoinGecko.
+2. **Profil-Zuordnung über eine Tabelle statt Kürzelsuche.** CANTON und SUPRA wurden nicht gefunden; mehrdeutige Gebühren-Kürzel (UNI, LINK) sind offen.
+3. **Smallcaps:** Fast alle der besten 10 stehen im obersten Zehntel (★★★). Die Sterne trennen dort nicht; das ist mit dem Nutzer zu klären.
+4. **QNT** erscheint mit *100 % ausgegeben* (99,5 %, gerundet).
+5. Neuzugänge kommen im Betrieb aus dem Bitpanda-Abgleich (im Entwurf Platzhalter).
