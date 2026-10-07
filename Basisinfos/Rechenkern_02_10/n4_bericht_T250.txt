@@ -1,0 +1,26 @@
+N4 ENDBERICHT · Ablage D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_n4\n4_ablage.db · Fassung 15db113c7ee15894 · T 249 Anker (beendet am ENTSCHEID_T250)
+Verteilung Trader: {'spricht_dagegen': 130, 'neutral': 100, 'stuetzt': 16, 'uneinig': 3}
+
+R1 HAUPTREGEL (Tag) und R2 (Woche): Unterschied stuetzt - spricht dagegen im 24-h-Ertrag
+  2025: n 124 (stuetzt 8, dagegen 62) · Unterschied +1.54 Pp · R1 Band +2.98, p 0.922 nicht ueber · R2 Band +4.06, p 0.902
+  2026: n 125 (stuetzt 8, dagegen 68) · Unterschied -6.01 Pp · R1 Band -2.26, p 0.962 nicht ueber · R2 Band +0.80, p 1.000
+
+R3 Rangkorrelation Stimmen-Saldo (Woche):
+  2025: rho -0.148 · Band +0.011 · p 0.877
+  2026: rho -0.143 · Band +0.125 · p 0.980
+
+REGEL-ARM (antizyklisch, Lage in der 20-Tage-Spanne, gleiche Quote) und ZUFALL
+  2025: Regel -1.16 Pp · Trader +1.54 Pp · Zufall gleiche Quote Mittel -0.03, 95. Perz. +2.95
+  2026: Regel -0.22 Pp · Trader -6.01 Pp · Zufall gleiche Quote Mittel +0.02, 95. Perz. +2.97
+
+RAUSCHBODEN (Anker 0-99)
+  Wiederholung A/A'        gleiches Mehrheitsurteil 80 von 99 (81 %)
+  vertauschte Reihenfolge  gleiches Mehrheitsurteil 5 von 11 (45 %)
+
+KONTAMINATION: WEITER (Kontaminationsprobe bestanden) {"kuerzel_treffer": 0, "zeit_treffer": 0, "gefragt": 49, "benannt_minus_anonym_p": 0.836, "gleiches_urteil_benannt_anonym": 0.828}
+ZWISCHENENTSCHEID ENTSCHEID_T250: STOP-ANPASSEN (der Trader trennt erkennbar nicht) - Zeit in Anpassungen, Schritt7 §23.7 {"blick": 250, "z_gepoolt": -2.381, "p_je_jahr": {"2025": 0.921, "2026": 0.971}}
+
+SIGNALBILANZ JE ASSET (Anker mit stuetzt / dagegen, Mittel 24 h):
+  IOTX 6 (0/4) -0.8 % · GMX 6 (0/4) -1.5 % · SNX 6 (0/3) -0.4 % · USTC 6 (2/3) +0.1 % · SUPER 5 (0/2) +0.9 % · SOL 5 (2/2) -1.3 % · BLUR 5 (0/2) -0.9 % · XTZ 5 (0/3) +2.2 % · BAND 5 (0/3) +1.6 % · ADA 5 (0/5) -3.0 % · IOST 4 (0/2) -0.4 % · CFX 4 (0/2) -4.5 % · PENGU 4 (1/0) -1.2 % · NOT 4 (0/2) -1.7 % · GRT 4 (0/2) -0.0 % · SCR 4 (0/3) -1.6 % · PORTAL 4 (0/4) +1.3 % · RSR 4 (0/3) +4.6 % · TIA 4 (0/1) -2.6 % · NEAR 4 (0/3) -3.9 % · SFP 4 (1/1) -2.3 % · BIGTIME 3 (0/3) -1.6 % · BANANA 3 (0/2) -1.3 % · BANANAS31 3 (0/1) +1.4 % · ALGO 3 (0/1) -1.8 %
+
+P2 TRADER (vorab): TRAEGT NICHT (kein Unterschied ueber ~4-5 Pp nachweisbar, §23.2) -> Anpassen nach §23.5 oder Auskunft

@@ -6,13 +6,13 @@ NUR LESEND (mode=ro), kein Netz, keine Mail - CLAUDE.md: *Nachgewiesen wird gege
 festgelegte Regel (Voranalyse_Schritt7 Par. 22); was nur Auskunft ist, steht als AUSKUNFT da und entscheidet nichts.
 
     T1  jede Stunde gerechnet        verlorene Signalstunden = 0 (ein Lauf um h+1 legt die Signalstunde h ab - regel0_rechnung:530)
-    T2  Frische                      kein Lauf mit veralteten Assets (veraltet = 0)
+    T2  Frische                      kein Frischefehler (Auslegung 07.10., §23.11: Abwicklung im 48-h-Fenster ist Auskunft, alte Zahl steht dabei)
     T3  Laufzeit                     kein Lauf ueber 1.500 s (halbe Zeitgrenze 50 min); der Monatslauf mit Training ausgenommen
     F1  Signalmail vollstaendig      jedes Signal mit Schalter an und Stufe > 0 ist gemailt ODER begruendet gesperrt (Zuordnung)
     F2  Signalmail rechtzeitig       spaetestens 75 min nach Schluss der Signalstunde (zwei Laeufe: regulaer ~9 min, D1-Weg ~69 min)
     F3  Korrektur                    weicht die endgueltige Stufe ab, ist die Korrektur verschickt
     F4  Ausstieg                     jede faellige Erinnerung ist verschickt ODER als *entfallen* vermerkt - nie beides, nie keins
-    L1  Pruefblock                   zu jedem gemailten Signal eine Trader-Zeile (Urteil oder Grund), Aufrufe je Tag <= 150
+    L1  Pruefblock                   ab Einbau des Pruefblocks (erste pruefung-Zeile) zu jedem gemailten Signal eine Trader-Zeile, Aufrufe je Tag <= 150
     A1  AUSKUNFT Signalbilanz je Asset gegen die gemessene Rate 2025/26 (Poisson, auffaellig unter 1 %)
     A2  AUSKUNFT Korrekturquote gegen B-9 (1,6 %), gesperrte Zuordnungen mit Grund
 """
@@ -66,10 +66,37 @@ def auswerten(pfad: str, von: str | None = None, bis: str | None = None) -> dict
     B["T1 jede Stunde gerechnet"] = (not verloren, "%d von %d Laufstunden gerechnet, nachgeholt %d; verlorene Signalstunden: %s" % (
         len(soll) - len(fehlt), len(soll), len([x for x in nachgeholt if v <= _t(x) <= b]),
         ", ".join(h.strftime("%d.%m. %H:00") for h in verloren[:12]) or "keine"))
-    # T2
+    # T2 - AUSLEGUNG 07.10.2026 (Voranalyse_Schritt7 §23.11, Nutzer-Ja): die Rechnung haelt ein Asset 48 h als ,aktiv' (AKTIV_H,
+    #      regel0_rechnung:420). Ein Asset, das Binance ABWICKELT (SETTLING/BREAK), steht deshalb bis zu 48 h als ,veraltet' in der Liste
+    #      und faellt dann von selbst heraus - das ist KEIN Frischefehler, sondern eine Abwicklung (Auskunft).
+    #      Frischefehler ist: (a) das Asset verschwindet FRUEHER als 46 h nach dem ersten Auftreten aus der Liste (es wurde wieder frisch -
+    #      echte Luecke), (b) es steht laenger als 49 h drin (dann waere AKTIV_H verletzt), (c) es fehlt zwischendurch (unterbrochene Folge).
+    #      Steht es am Ende des Fensters noch drin und ist < 49 h alt, ist es ,offen' (noch nicht entscheidbar, Auskunft).
+    #      Die alte Fassung (jeder Lauf mit veraltet > 0 ist ein Fehler) steht in der Ausgabe als ALT mit dabei.
     alt = [r for r in laeufe if (r.get("veraltet") or 0) > 0]
-    B["T2 Frische"] = (not alt, "%d Laeufe mit veralteten Assets%s" % (len(alt), (": " + "; ".join(
-        "%s %s" % (r["jetzt"], r.get("veraltet_liste") or "") for r in alt[:5])) if alt else ""))
+    folge = {}
+    for r in laeufe:
+        for s_ in [x for x in (r.get("veraltet_liste") or "").split(",") if x]:
+            folge.setdefault(s_, []).append(_t(r["jetzt"]))
+    lauf_zeit = [_t(r["jetzt"]) for r in laeufe]
+    fehler_t2, abgewickelt, offen_t2 = [], [], []
+    for s_, zs in folge.items():
+        t0, t1 = zs[0], zs[-1]
+        dauer = (t1 - t0).total_seconds() / 3600
+        erwartet = [h for h in lauf_zeit if t0 <= h <= t1]
+        lueckenlos = len(erwartet) == len(zs)
+        am_ende = t1 >= lauf_zeit[-1]
+        if not lueckenlos or dauer > 49:
+            fehler_t2.append("%s (%s bis %s%s)" % (s_, t0.strftime("%d.%m. %H:00"), t1.strftime("%d.%m. %H:00"), "" if lueckenlos else ", unterbrochen"))
+        elif am_ende:
+            offen_t2.append("%s seit %s (%.0f h)" % (s_, t0.strftime("%d.%m. %H:00"), dauer))
+        elif dauer >= 46:
+            abgewickelt.append("%s (%s bis %s, %.0f h)" % (s_, t0.strftime("%d.%m. %H:00"), t1.strftime("%d.%m. %H:00"), dauer))
+        else:
+            fehler_t2.append("%s (%s bis %s, %.0f h - wieder frisch: Luecke)" % (s_, t0.strftime("%d.%m. %H:00"), t1.strftime("%d.%m. %H:00"), dauer))
+    B["T2 Frische"] = (not fehler_t2, "Frischefehler %d%s · Abwicklung (48-h-Fenster, Auskunft) %d%s · offen (noch < 49 h) %d%s · ALT (jeder Lauf mit veraltet > 0): %d Laeufe" % (
+        len(fehler_t2), (": " + "; ".join(fehler_t2)) if fehler_t2 else "", len(abgewickelt), (": " + "; ".join(abgewickelt)) if abgewickelt else "",
+        len(offen_t2), (": " + "; ".join(offen_t2)) if offen_t2 else "", len(alt)))
     # T3 - der erste Lauf eines Monats trainiert (pakete wechselt) und darf laenger dauern
     lang = []
     for i, r in enumerate(laeufe):
@@ -102,8 +129,12 @@ def auswerten(pfad: str, von: str | None = None, bis: str | None = None) -> dict
     B["F4 Ausstieg"] = (not weder and not beides, "%d faellig: verschickt %d, entfallen %d, keins %d, beides %d" % (
         len(faellig), sum(1 for r in faellig if r.get("mail_erinnerung_am")), sum(1 for r in faellig if r.get("erinnerung_entfallen_am")),
         len(weder), len(beides)))
-    # L1
-    gem = [r for r in an if r.get("mail_signal_am")]
+    # L1 - AUSLEGUNG 07.10.2026 (§23.11, Nutzer-Ja): gewertet wird erst ab dem Einbau des Pruefblocks im Betrieb = erste Zeile in
+    #      ,pruefung' (aus den Daten, nicht als Datum geschrieben). Mails davor (SEI 03.10. 11:10) stehen als Auskunft da.
+    pb_start = min((_t(p["am"]) for p in pr if p.get("am")), default=None)
+    gem_alle = [r for r in an if r.get("mail_signal_am")]
+    gem = [r for r in gem_alle if pb_start is None or _t(r["mail_signal_am"]) >= pb_start]
+    vor_pb = [r for r in gem_alle if r not in gem]
     mit = {(p["symbol"], p["signalstunde"]) for p in pr if p.get("rolle") == "trader"}
     ohne = [r for r in gem if (r["symbol"], r["signalstunde"]) not in mit]
     tag = {}
@@ -112,8 +143,9 @@ def auswerten(pfad: str, von: str | None = None, bis: str | None = None) -> dict
             tag[p.get("tag_pazifik")] = tag.get(p.get("tag_pazifik"), 0) + int(p.get("aufrufe") or 1)
     zuviel = {k: n for k, n in tag.items() if n > TAGESLIMIT}
     fehl = [p for p in pr if p.get("rolle") == "trader" and p.get("fehler")]
-    B["L1 Pruefblock"] = (not ohne and not zuviel, "gemailt %d, ohne Trader-Zeile %d; Trader mit Fehler/Sperre %d; Aufrufe je Tag %s" % (
-        len(gem), len(ohne), len(fehl), dict(sorted(tag.items())) or "-"))
+    B["L1 Pruefblock"] = (not ohne and not zuviel, "Pruefblock im Betrieb ab %s · gemailt %d, ohne Trader-Zeile %d; Trader mit Fehler/Sperre %d; Aufrufe je Tag %s%s" % (
+        pb_start.strftime("%d.%m. %H:%M") if pb_start else "-", len(gem), len(ohne), len(fehl), dict(sorted(tag.items())) or "-",
+        (" · vor dem Pruefblock gemailt (Auskunft): " + ", ".join("%s %s" % (r["symbol"], r["mail_signal_am"]) for r in vor_pb)) if vor_pb else ""))
     # A1 - Signalbilanz je Asset gegen die gemessene Rate 2025/26 (bestand; Zusatz-Assets ohne Rate)
     rate = {}
     if os.path.exists(REF):

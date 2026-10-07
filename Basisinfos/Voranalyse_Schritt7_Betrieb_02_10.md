@@ -1941,3 +1941,39 @@ Nutzer 07.10.: *„Teilexport am NB erledigt, prüfe die Abdeckung und noch alle
 ⚠️ **Warum F-b nicht jetzt:** Ein Eingriff in den Betrieb mitten in der Testwoche würde sie unterbrechen. Den gleichen Nutzen für die Auswertung bringt F-a ohne Eingriff.
 
 ⚠️ **Vorabfestlegung:** T2 und L1 sind vorab festgelegte Bedingungen (§22). F-a ändert ihre **Auslegung** ⇒ nur mit Nutzer-Ja. Danach wird die Testwoche an der vorhandenen Kopie neu ausgewertet. Die alte Auswertung bleibt mit Begründung stehen.
+
+### 23.12 F-a umgesetzt und N4 am Zwischenentscheid 250 gestoppt (07.10.2026)
+
+Nutzer 07.10.: *„Ok, also keine wichtige Abweichung, alles ok? Dann umsetzen. Wie weit sind wir bei den 8,5 Tagen?“*
+
+**F-a (Testwochen-Prüfung) umgesetzt** in `Rechenkern_02_10/pruefe_testwoche.py`:
+- **T2:** Frischefehler ist nur eine echte Lücke (wieder frisch vor 46 h), eine Dauer über 49 h oder eine unterbrochene Folge. Eine Abwicklung im 48-h-Fenster ist Auskunft; *offen* bedeutet unter 49 h und noch nicht entscheidbar. Die alte Zahl steht dabei.
+- **L1:** gewertet ab der ersten `pruefung`-Zeile (aus den Daten: 04.10. 09:09).
+- **Selbsttest an einer Wegwerfkopie** mit gepflanzten Fällen: Lücke 4 h, Dauer 56 h und Unterbrechung werden **als Fehler erkannt**, eine Abwicklung über 47 h als Auskunft.
+- **Neu ausgewertet an der Kopie vom 07.10.:** *SCHLUSS: alle Bedingungen erfüllt*. T2: 4 offen (1000000BOB, PROMPT, PUMPBTC seit 05.10. 09:00 / 44 h, STG 26 h). L1: 3 von 3 mit Trader-Zeile, SEI 03.10. als Auskunft.
+
+**N4 — ENTSCHEID_T250 am 07.10. 07:28: STOP-ANPASSEN** (z gepoolt −2,38; p je Jahr 0,92 / 0,97). Beleg `Rechenkern_02_10/n4_bericht_T250.txt`. Die Regel *Kandidat D* hat damit gegriffen, wie vorab geeicht; T ist bei 249 Ankern beendet. Die 8,5 Tage entfallen: Es läuft nur noch der Rauschboden R_v (10 von 99), voraussichtlich fertig am 08.10.
+
+| | 2025 | 2026 |
+|---|---|---|
+| Trader: Unterschied *stützt* − *dagegen* (24 h) | +1,54 Pp (Band +2,98) | **−6,01 Pp** (Band −2,26) |
+| Regel-Arm (antizyklisch, gleiche Quote) | −1,16 Pp | −0,22 Pp |
+| R3 Rangkorrelation Stimmen-Saldo | −0,148 | −0,143 |
+
+- **Verteilung:** *spricht dagegen* 130, *neutral* 100, **stützt 16**, uneinig 3.
+- **Rauschboden:** Wiederholung A/A′ 81 % gleich. Vertauschte Reihenfolge bisher 5 von 11 gleich (R_v läuft).
+
+**WORAN nach §23.7, Schritt 1 (vorläufig, R_v noch offen):**
+
+| # | trifft zu? | |
+|---|---|---|
+| **W1** *stützt* zu selten | **ja**: 16 von 249, etwa 8 je Jahr (Grenze 30) | |
+| W2 Rauschboden < 80 % | nein, knapp (81 %) | |
+| W3 vertauschte Reihenfolge ändert > 20 % | **vorläufig ja** (5/11 gleich) | Endurteil nach R_v |
+| W4 Regel-Arm trennt, Trader nicht | nein | |
+| **W5 weder Regel noch Trader trennen** | **ja** | ⇒ nach §20.11.5 **nicht** weiter am Prompt feilen. Der nächste Hebel ist **neue Information** (Terminmarkt, Funding, Text) = **O22, Nutzerentscheid** |
+| W6 Begründungen mit Trend statt Gegenbewegung | offen | Stichprobe 30 aus der Ablage, ohne Aufrufe |
+| W7 trennt nur in einem Jahr | nein | |
+
+- ⚠️ **Auskunft, nicht vorab geprüft:** Die Rangkorrelation ist in **beiden** Jahren **negativ** (−0,15), und 2026 lagen *stützt*-Urteile **schlechter** als *dagegen*. Die Prüfung war einseitig angelegt; eine Umkehr ist damit **nicht** belegt (mehrere Blicke, keine Vorabfestlegung). Ob sie hält, wäre eine eigene Messung.
+- **Folge für den Betrieb:** Der LLM-Block bleibt **Auskunft** in der Mail, wie bisher als *ungemessen* gekennzeichnet. Am Signal und an der Stufe ändert sich nichts. Die Messung bestätigt jetzt, dass er **nicht trennt**.
