@@ -2445,3 +2445,68 @@ Dazu eine Korrektur der **Gegenprobe**: Sie schnitt Rohwörter wie `PORT3USDT` z
 2. **Als FAKT in die Signalmail ist es gerechtfertigt:** *„Binance hat am … das Delisting / ein Monitoring-Kennzeichen angekündigt“*. Das ist Information, die du in laufenden Trades selbst gewichtest (Vorgabe 01.10.), und kein Auslöser. Es braucht einen Abrufer am NB (öffentlich, ohne Schlüssel), also einen eigenen kleinen Bau mit Voranalyse.
 3. **Vorwärtsprotokoll:** Derselbe Abrufer hält je REGEL0-Signal fest, ob ein Ereignis vorlag. Damit wird die Erklärung oben an **neuen** Daten prüfbar.
 4. **Für das LLM:** Ein strukturierter Fakt braucht kein LLM. Er gehört in die Mail und gegebenenfalls als Satz in die Trader-Eingabe (Fassung n+1), mit Messung.
+
+
+### 23.24 Voranalyse: Binance-Ankündigung als FAKT in der Signalmail und Vorwärtsprotokoll (07.10.2026, vor dem Bau)
+
+Nutzer 07.10.: *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen. Hinweis: Wäre ein LLM-Kandidat, oder?“*
+
+**Ziel:**
+- Steht bei einem REGEL0-Signal eine Delisting- oder Monitoring-Ankündigung von Binance im Fenster aus E-1, kommt **eine Zeile als Fakt** in die Mail. Sie löst nichts aus und ändert nichts.
+- Für **alle** Signale wird festgehalten, ob ein Ereignis vorlag (Vorwärtsprotokoll). Damit wird die Beschreibung aus §23.23 an **neuen** Daten prüfbar (E-63).
+
+**Ist-Stand am Code (gelesen):**
+
+| Teil | Stelle | Was dazukommt |
+|---|---|---|
+| Mail | `agent/regel0_mail._signal_teile`: Abschnitt *Einschätzung* (`ein_z`), dort steht schon `("Achtung", spot)` | eine Zeile `("Binance", satz)`; in der *Technik* Titel und Link der Meldung |
+| Mailversand | `regel0_mail.versende(..., spot=...)`: jeder Zusatz in `try/except`, ein Fehler ergibt eine Mail ohne Zusatz (P-8) | neuer Parameter `ankuendigung=` nach demselben Muster |
+| Stundenjob | `scheduler/background._regel0_mails` reicht `spot=_regel0_spot_hinweis` durch | `ankuendigung=` aus der Ablage, **nur lesend** |
+| Definitionen | `Rechenkern_02_10/e1_lade_binance.py` (Art, Kürzel), `e1_messung.FENSTER` | **ein** Modul `agent/binance_ankuendigungen.py` für Betrieb **und** Messung (wie `signal_werte` bei 0.2) |
+| Abrufer | — | **eigener** Job (Lehre 14.09.: eigenes Sammeln nicht im Job eines Verbrauchers), stündlich vor dem REGEL0-Lauf. Je Lauf nur Seite 1 beider Kataloge und Details nur neuer Meldungen: wenige Abrufe |
+| Ablage | `regel0_signale.db` (Ablage der REGEL0, **nicht** die Produktion) | Tabellen `ankuendigung` (Meldungen) und `signal_ereignis` (je Signal: Art, Zeitpunkt, Titel, oder *keins*) |
+| Teilexport | `nb_teilexport_betriebsdaten.py` (Abschnitte REGEL0-…) | Abschnitt **BINANCE-ANKÜNDIGUNGEN**: letzter Abruf, Fehler, neue Meldungen, Zuordnungen, Signale mit Ereignis |
+
+**Wortlaut (nur Fakt, keine Bewertung):**
+- Token-Delisting: *„Binance hat am 18.03. angekündigt, den Handel am 01.04. einzustellen.“*
+- Futures-Delisting: *„Binance stellt den Futures-Kontrakt am … ein (angekündigt am …).“* Das ist für den Hebel entscheidend, denn eine offene Position würde zwangsweise geschlossen.
+- Monitoring: *„Binance führt den Wert seit 24.07. mit Monitoring-Kennzeichen.“*
+- ⚠️ Die Beschreibung aus E-1 (*„häufiger große Verluste“*) kommt **nicht** in die Mail: Sie hat die Vorabregel nicht bestanden.
+- Entfernte Handelspaare und Margin kommen **nicht** in die Mail: kein Effekt, nur Rauschen.
+
+**Gegenprobe am echten Betrieb** (NB-Signale 03.–07.10. aus der Kopie vom 07.10.):
+- Von 146 Signalen hätten **4** die Zeile bekommen (NOM, HEI, LSK, MOVR; alle Monitoring).
+- Keines davon hatte den Hebel-Schalter an, gemailt worden wäre also keines.
+- QNT (Schalter an) hatte nur Margin- und Paar-Meldungen und bekäme keine Zeile.
+
+**Datenquelle am NB (E-75):**
+- Erreichbarkeit der Binance-Website vom NB ist **noch nicht nachgewiesen**. Kontrolle **K-ANK-1** im ersten Teilexport nach dem Bau: Abruf ok, neue Meldungen, keine Fehlerserie.
+- Fällt der Abruf aus, geht die Mail ohne Zeile, und der Export zeigt den Ausfall (*ein Schutz, den niemand ausführt, ist keiner*).
+
+**Risiken:**
+
+| Risiko | Gegenmittel |
+|---|---|
+| inoffizielle Website-Schnittstelle, kann sich ändern | Fehler und *Meldungen ohne Zuordnung* im Teilexport gezählt; Mail ohne Zeile |
+| Falschzuordnung (kurze Kürzel wie `D`, `AI`) | Kürzel aus dem **Titel** bei Delisting und Monitoring, nur Werte unserer Asset-Welt; Gegenprobe gegen E-1 |
+| Abfragestau | eigener Job, wenige Abrufe, Zeitgrenze; der REGEL0-Lauf liest nur die Ablage |
+| Testwoche | Bau **nach** dem 10.10. |
+
+**Prüfung (geplant):**
+- Prüfstand am Seiteneffekt: Wegwerf-Ablage, Versand abgefangen, echte `config.yaml`; die Zeile nur bei SCHWER, Ausfall gibt Mail ohne Zeile.
+- Abrufer gegen eine aufgezeichnete Antwort plus eine Live-Probe.
+- **Gegenprobe:** Die Betriebsfunktion setzt an **allen** E-1-Einstiegen dieselben Merkmale wie `e1_messung`.
+- Suite `Regel0Betrieb`: neue Prüfungen, kein Schreiben in die Produktion.
+
+**LLM-Kandidat? (Nutzerhinweis) — ja, aber in dieser Reihenfolge:**
+1. **Der Fakt selbst braucht kein LLM:** Er ist strukturiert und zeitgestempelt. In die Mail gehört er deterministisch, das ist billig, prüfbar und ohne Kontingent.
+2. **Als Satz in der Trader-Eingabe ist er ein guter Kandidat (Fassung 0.3).** Gerade an **Ausnahmen** sollte ein LLM laut §23.16 am ehesten etwas bringen. Anonym formuliert, z. B.: *„Die Börse hat vor 5 Tagen angekündigt, den Handel dieses Werts in 9 Tagen einzustellen.“*
+3. **Gemessen wird gezielt, denn N5 hat dafür zu wenige Fälle** (etwa 1,4 % der Anker):
+   - Rückspiel auf allen REGEL0-Einstiegen mit Ereignis (etwa 150), **gepaart mit und ohne den Satz**, 5 Stimmen; etwa 1.500 Aufrufe, rund 2 Tage, nach N5.
+   - Frage: Kippt das LLM durch den Satz, und **liegt es damit richtig**? Das ist M-3 auf diesem Teil.
+   - Kontaminationsprobe für diese Untermenge, denn Delistings sind auffällige Ereignisse.
+4. ⚠️ **Echo-Gefahr:** Das LLM wird bei *Delisting* fast immer *dagegen* sagen. Das wiederholt nur den Fakt. Wert hat es nur, wenn es **unterscheidet**, z. B. Monitoring ohne Folgen gegen Delisting mit Folgen.
+
+**Zur Abstimmung:**
+- **(a)** Bau nach der Testwoche: Abrufer, Ablage, Mailzeile, Vorwärtsprotokoll, Export-Abschnitt.
+- **(b)** Das LLM-Rückspiel nach N5 als Kandidat für Fassung 0.3.
