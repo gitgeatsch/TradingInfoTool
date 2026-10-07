@@ -1,0 +1,17 @@
+E-1 Lader · neue Meldungen 1877 · Ablage D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_e1\binance_ankuendigungen.db
+  futures_delist  Meldungen   47 · Zuordnungen   69 · Assets  68
+  margin          Meldungen   85 · Zuordnungen  445 · Assets 295
+  monitoring      Meldungen   18 · Zuordnungen   55 · Assets  55
+  monitoring_ende Meldungen    9 · Zuordnungen    0 · Assets   0
+  paar_entfernt   Meldungen  139 · Zuordnungen  696 · Assets 370
+  sonstiges       Meldungen 1683 · Zuordnungen    0 · Assets   0
+  token_delist    Meldungen   27 · Zuordnungen   67 · Assets  67
+  Meldungen einer bekannten Art OHNE zugeordnetes Asset: 62 (Asset nicht in unserer Welt oder Kuerzel nicht gefunden)
+     ohne: [margin] Binance Margin And Loans Token Delist on 2026-10-02
+     ohne: [token_delist] Binance Will Delist USDP on 2026-09-24
+     ohne: [margin] Binance Margin Will Delist WAN on 2026-04-10
+     ohne: [margin] Binance Margin Will Delist UTK on 2026-03-30
+     ohne: [futures_delist] Binance Futures Will Delist COIN-M APTUSD and OPUSD Perpetual Contracts (2026-03-25)
+     ohne: [margin] Binance Margin Will Delist ARDR on 2026-03-12
+     ohne: [paar_entfernt] Notice of Removal of Spot Trading Pair (BTC/RON) - 2026-01-02
+     ohne: [futures_delist] Binance Futures Will Delist COIN-M RUNEUSD Perpetual Contract (2025-11-19)

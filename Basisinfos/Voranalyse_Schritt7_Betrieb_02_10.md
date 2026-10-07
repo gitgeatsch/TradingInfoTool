@@ -2395,3 +2395,53 @@ Nutzer 07.10.: *„Wie kann der Entscheider immer wie der Trader entscheiden? So
 - Messen: Chance, Spiegel, 24-h-Ertrag und linkes Ende mit Ereignis gegen ohne, Nullwelt im Tag, je Jahr.
 - Trägt es, gehört es zuerst **in die REGEL0 oder in die Hebelstufe** (billig, prüfbar), dann als Fakt in die Mail. Erst danach stellt sich die Frage, ob das LLM es braucht.
 - Für den Betrieb wäre später ein Abrufer am NB nötig (öffentlich, ohne Schlüssel), erst nach der Messung.
+
+
+### 23.23 E-1 — Binance-Ankündigungen in den REGEL0-Signalen: nach Vorabregel TRÄGT NICHT, aber das linke Ende ist sichtbar (07.10.2026)
+
+Nutzer 07.10.: *„Ja, E-1 messen, prüfen und gegenprüfen.“*
+
+**Werkzeuge** (Desktop, nur lesend, Ablage `data/_e1/`):
+- `e1_lade_binance.py`: 2.008 Meldungen seit 06/2023; Zuordnungen: Token-Delisting 67, Futures-Delisting 69, Monitoring 55, Paar entfernt 696, Margin 445.
+- `e1_messung.py`: Auslegung vorab im Kopf.
+- `e1_gegenprobe.py`: **37/37** (Kürzel auf zweitem Weg, Fenster mit eigener Schleife, Unterschiede mit numpy, Nullwelt-Eichung 4,5 % bei Soll 5 %, gepflanztes Merkmal gefunden).
+
+Zwei Korrekturen beim Prüfen, beide **vor** der Messung:
+1. Der Lader brach bei einer gescheiterten Seitenabfrage ab (*„Seite leer“*) und hatte nur 150 statt 338 Delisting-Meldungen.
+2. Monitoring-Meldungen stehen auch im Delisting-Katalog.
+
+Dazu eine Korrektur der **Gegenprobe**: Sie schnitt Rohwörter wie `PORT3USDT` zu früh mit der Asset-Welt.
+
+**Regel (vorab):**
+- Hauptzielgröße ist der 24-h-Ertrag. Das Merkmal **SCHWER** = Token-Delisting (30 T) oder Futures-Delisting (30 T) oder Monitoring-Kennzeichen (180 T), angekündigt **vor** dem Ende der Signalstunde.
+- Es trägt bei ≥ 3 von 4 Mengen über dem 95. Perzentil der Nullwelt (zweiseitig), mit gleichem Vorzeichen, mit Richtung und mit ≥ 30 Ereignis-Einstiegen.
+
+| Menge | Einstiege mit SCHWER (Assets) | 24 h mit − ohne | Chance | Spiegel (−5 % zuerst) | Verlust ≥ 10 % | Urteil |
+|---|---|---|---|---|---|---|
+| bestand | 63 (6) | **+1,06 %** | +0,10 | +0,04 | ±0 | nicht über |
+| unverzerrt_1 | 162 (25) | **−1,14 %** | +0,02 | **+0,18** | **+8,7 Pp** | über |
+| unverzerrt_2 | 140 (24) | **−1,46 %** | +0,03 | **+0,11** | **+8,1 Pp** | über |
+| unverzerrt_3 | 158 (22) | **−0,95 %** | +0,06 | **+0,14** | **+6,5 Pp** | nicht über (p 0,13) |
+
+⇒ **Nach der Vorabregel trägt SCHWER NICHT** (2 von 4, Vorzeichen uneinheitlich).
+
+**Einzelne Arten (nur Auskunft):**
+
+| Art | Ergebnis |
+|---|---|
+| **Token-Delisting** | in den drei unverzerrten Mengen 24 h **−0,9 bis −6,1 %**, **Spiegel +42 bis +52 Pp**, **Verlust ≥ 10 % +15 bis +33 Pp**; aber nur **17–24 Einstiege** (unter der Mindestzahl 30) |
+| Monitoring | 2/4 über, −1,0 bis −1,6 % in den unverzerrten Mengen |
+| Futures-Delisting | zu wenige (≤ 8) |
+| Paar entfernt, Margin | nichts (wie erwartet: Der Token bleibt handelbar) |
+
+**Lesart:**
+- **Warum *bestand* abweicht:** Die Menge enthält nur **überlebende** Assets. Dort gibt es nur Monitoring-Fälle von Werten, die *nicht* gestrichen wurden (6 Assets, PORTAL allein 26 von 63). Die eingestellten Werte, um die es geht, fehlen dort per Bau (Grundgesamtheit, Kapitel 120.3).
+- ⚠️ Das ist eine **Erklärung nach der Messung**. Nach E-63 ist sie Beschreibung und kein Nachweis; eine Prüfung braucht **neue Daten**.
+- **Was die drei unverzerrten Mengen beschreiben:** Nach einer Delisting- oder Monitoring-Ankündigung läuft die Gegenbewegung **seltener**, die −5 % kommen häufiger zuerst, und große Verluste sind deutlich häufiger. Am stärksten ist das beim Token-Delisting, das aber selten ist (etwa 0,2 % der Einstiege).
+- **Signalbilanz:** SCHWER betrifft etwa **1,3–1,5 %** der REGEL0-Einstiege; in der Menge *bestand* 0,6 %.
+
+**Was daraus folgt (zum Ziel):**
+1. **Keine Sperre und keine Regel.** Die Vorabregel ist nicht bestanden, und das Token-Delisting liegt unter der Mindestzahl.
+2. **Als FAKT in die Signalmail ist es gerechtfertigt:** *„Binance hat am … das Delisting / ein Monitoring-Kennzeichen angekündigt“*. Das ist Information, die du in laufenden Trades selbst gewichtest (Vorgabe 01.10.), und kein Auslöser. Es braucht einen Abrufer am NB (öffentlich, ohne Schlüssel), also einen eigenen kleinen Bau mit Voranalyse.
+3. **Vorwärtsprotokoll:** Derselbe Abrufer hält je REGEL0-Signal fest, ob ein Ereignis vorlag. Damit wird die Erklärung oben an **neuen** Daten prüfbar.
+4. **Für das LLM:** Ein strukturierter Fakt braucht kein LLM. Er gehört in die Mail und gegebenenfalls als Satz in die Trader-Eingabe (Fassung n+1), mit Messung.

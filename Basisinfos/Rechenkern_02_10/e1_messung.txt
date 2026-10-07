@@ -1,0 +1,55 @@
+E-1 MESSUNG (Schritt7 §23.23) · Ereignisse {'futures_delist': 69, 'margin': 445, 'monitoring': 55, 'paar_entfernt': 696, 'token_delist': 67}
+Einstiege 2024-01..2026-08: bestand 10732, unverzerrt_1 11177, unverzerrt_2 10481, unverzerrt_3 10793
+
+SCHWER  (HAUPT)
+   bestand       mit   63 (Assets   6) · 24 h +1.06 % (|Null| P95 1.30, p2 0.115) · Chance +0.099 · Spiegel +0.041 · L10 +0.000 · 2024 +nan % / 2025-26 +1.17 % · ohne PORTAL +0.11 % · nicht ueber
+   unverzerrt_1  mit  162 (Assets  25) · 24 h -1.14 % (|Null| P95 1.08, p2 0.033) · Chance +0.024 · Spiegel +0.177 · L10 +0.087 · 2024 -7.55 % / 2025-26 -0.68 % · ohne PORTAL -1.40 % · TRAEGT
+   unverzerrt_2  mit  140 (Assets  24) · 24 h -1.46 % (|Null| P95 1.09, p2 0.003) · Chance +0.033 · Spiegel +0.108 · L10 +0.081 · 2024 +1.29 % / 2025-26 -1.38 % · ohne PORTAL -1.93 % · TRAEGT
+   unverzerrt_3  mit  158 (Assets  22) · 24 h -0.95 % (|Null| P95 1.19, p2 0.134) · Chance +0.059 · Spiegel +0.143 · L10 +0.065 · 2024 +2.10 % / 2025-26 -0.81 % · ohne PORTAL -1.59 % · nicht ueber
+   -> traegt nicht (2/4)
+
+token_delist  (Auskunft)
+   bestand       mit Ereignis 0 - zu wenige
+   unverzerrt_1  mit   18 (Assets  11) · 24 h -1.89 % (|Null| P95 2.83, p2 0.222) · Chance -0.001 · Spiegel +0.515 · L10 +0.203 · 2024 +nan % / 2025-26 -1.69 % · ohne MBOX -1.58 % · zu wenige
+   unverzerrt_2  mit   17 (Assets  13) · 24 h -6.07 % (|Null| P95 3.86, p2 0.000) · Chance -0.039 · Spiegel +0.499 · L10 +0.334 · 2024 +nan % / 2025-26 -5.89 % · ohne ACX -7.03 % · zu wenige
+   unverzerrt_3  mit   24 (Assets  13) · 24 h -0.94 % (|Null| P95 3.28, p2 0.736) · Chance +0.056 · Spiegel +0.419 · L10 +0.148 · 2024 +nan % / 2025-26 -1.02 % · ohne D -0.23 % · zu wenige
+   -> traegt nicht (0/4)
+
+futures_delist  (Auskunft)
+   bestand       mit Ereignis 1 - zu wenige
+   unverzerrt_1  mit    8 (Assets   4) · 24 h +4.44 % (|Null| P95 3.89, p2 0.024) · Chance +0.222 · Spiegel -0.083 · L10 -0.019 · 2024 +nan % / 2025-26 +5.20 % · ohne AI +0.57 % · zu wenige
+   unverzerrt_2  mit    2 (Assets   2) · 24 h +1.13 % (|Null| P95 5.90, p2 0.849) · Chance +0.226 · Spiegel -0.208 · L10 -0.020 · 2024 +nan % / 2025-26 +nan % · ohne CTK +nan % · zu wenige
+   unverzerrt_3  mit Ereignis 1 - zu wenige
+   -> traegt nicht (0/4)
+
+monitoring  (Auskunft)
+   bestand       mit   62 (Assets   5) · 24 h +1.06 % (|Null| P95 1.35, p2 0.131) · Chance +0.105 · Spiegel +0.045 · L10 +0.000 · 2024 +nan % / 2025-26 +1.17 % · ohne PORTAL +0.09 % · nicht ueber
+   unverzerrt_1  mit  143 (Assets  16) · 24 h -1.57 % (|Null| P95 1.14, p2 0.002) · Chance +0.022 · Spiegel +0.157 · L10 +0.087 · 2024 -8.84 % / 2025-26 -1.09 % · ohne PORTAL -1.97 % · TRAEGT
+   unverzerrt_2  mit  125 (Assets  13) · 24 h -0.96 % (|Null| P95 1.03, p2 0.063) · Chance +0.046 · Spiegel +0.065 · L10 +0.053 · 2024 +1.62 % / 2025-26 -0.87 % · ohne PORTAL -1.38 % · nicht ueber
+   unverzerrt_3  mit  142 (Assets  13) · 24 h -1.23 % (|Null| P95 1.22, p2 0.047) · Chance +0.069 · Spiegel +0.111 · L10 +0.067 · 2024 +nan % / 2025-26 -1.05 % · ohne PORTAL -2.02 % · TRAEGT
+   -> traegt nicht (2/4)
+
+paar_entfernt  (Auskunft)
+   bestand       mit  260 (Assets  86) · 24 h -0.09 % (|Null| P95 0.69, p2 0.833) · Chance -0.030 · Spiegel -0.005 · L10 -0.012 · 2024 +0.38 % / 2025-26 -0.09 % · ohne GALA -0.15 % · nicht ueber
+   unverzerrt_1  mit  270 (Assets  93) · 24 h -0.30 % (|Null| P95 0.76, p2 0.581) · Chance -0.027 · Spiegel +0.014 · L10 -0.008 · 2024 +0.79 % / 2025-26 -0.23 % · ohne GALA -0.39 % · nicht ueber
+   unverzerrt_2  mit  224 (Assets  84) · 24 h -0.75 % (|Null| P95 1.15, p2 0.362) · Chance -0.039 · Spiegel +0.070 · L10 +0.003 · 2024 +0.67 % / 2025-26 -0.69 % · ohne GALA -0.78 % · nicht ueber
+   unverzerrt_3  mit  265 (Assets  88) · 24 h -0.51 % (|Null| P95 0.83, p2 0.319) · Chance -0.044 · Spiegel +0.031 · L10 -0.004 · 2024 +1.14 % / 2025-26 -0.45 % · ohne GRT -0.41 % · nicht ueber
+   -> traegt nicht (0/4)
+
+margin  (Auskunft)
+   bestand       mit  287 (Assets  72) · 24 h -0.48 % (|Null| P95 0.62, p2 0.193) · Chance -0.061 · Spiegel -0.023 · L10 -0.002 · 2024 -1.71 % / 2025-26 -0.36 % · ohne 1INCH -0.43 % · nicht ueber
+   unverzerrt_1  mit  297 (Assets  73) · 24 h -0.58 % (|Null| P95 0.93, p2 0.455) · Chance -0.058 · Spiegel -0.034 · L10 -0.009 · 2024 -0.63 % / 2025-26 -0.40 % · ohne 1INCH -0.54 % · nicht ueber
+   unverzerrt_2  mit  253 (Assets  64) · 24 h -1.07 % (|Null| P95 1.24, p2 0.201) · Chance -0.103 · Spiegel -0.015 · L10 -0.004 · 2024 +nan % / 2025-26 -0.88 % · ohne LINK -1.14 % · nicht ueber
+   unverzerrt_3  mit  276 (Assets  67) · 24 h -0.68 % (|Null| P95 0.90, p2 0.257) · Chance -0.073 · Spiegel -0.030 · L10 -0.008 · 2024 +nan % / 2025-26 -0.49 % · ohne 1INCH -0.64 % · nicht ueber
+   -> traegt nicht (0/4)
+
+SIGNALBILANZ (Menge unverzerrt_1): Einstiege mit SCHWER je Asset - Mittel 24 h, Anteil L10
+   PORTAL 26 (+0.6 %, L10 8 %) · FLOW 21 (+1.0 %, L10 0 %) · HFT 14 (-3.3 %, L10 14 %) · STORJ 14 (+0.1 %, L10 0 %) · SXP 11 (-0.3 %, L10 0 %) · BLUR 8 (-2.4 %, L10 0 %) · LEVER 7 (+1.6 %, L10 0 %) · STX 7 (+2.4 %, L10 0 %) · ALPACA 6 (-0.9 %, L10 33 %) · XEM 6 (-7.5 %, L10 33 %) · NULS 6 (-9.2 %, L10 33 %) · VIDT 6 (+3.2 %, L10 0 %) · VANRY 6 (-5.3 %, L10 33 %) · AI 5 (+6.4 %, L10 0 %) · MBOX 3 (-3.8 %, L10 0 %) · COMBO 3 (-5.0 %, L10 33 %) · CHESS 2 (+10.4 %, L10 0 %) · TRU 2 (-14.3 %, L10 100 %) · OXT 2 (-4.3 %, L10 0 %) · HOOK 2 (+9.0 %, L10 0 %) · FLM 1 (+26.0 %, L10 0 %) · CTK 1 (+1.5 %, L10 0 %) · MOVR 1 (-10.8 %, L10 100 %) · LRC 1 (-4.9 %, L10 0 %) · NTRN 1 (-13.8 %, L10 100 %)
+
+GESAMT (vorab: HAUPT = SCHWER, >= 3 von 4 Mengen, gleiches Vorzeichen, Richtung, >= 30 Ereignis-Einstiege):
+   SCHWER          traegt nicht (2/4)
+   token_delist    traegt nicht (0/4)
+   futures_delist  traegt nicht (0/4)
+   monitoring      traegt nicht (2/4)
+   paar_entfernt   traegt nicht (0/4)
+   margin          traegt nicht (0/4)
