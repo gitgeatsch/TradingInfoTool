@@ -4402,3 +4402,42 @@ Nutzer 08.10.: *„Ja, Messplan §37 vorbereiten, prüfen und gegenprüfen.“*
 - In H ist die Richtung 2023 deutlich (1,84). Seit 2024 fällt der Altmarkt aber durchgehend gegen BTC (−87 %, §30.2).
 - Momentum *gegen* einen fallenden Gesamtmarkt kann tragen (relative Stärke), muss es aber nicht.
 - Für M erwarte ich eher *trägt nicht*.
+
+
+### 37.4 Ergebnis der Messung (08.10.2026, nach §37.2)
+
+`k37_messung.py` → `.txt`, Gegenprobe `k37_messung_gegenprobe.py` **10/10**:
+- Ertrag je Einstieg mit eigener Kursauswahl;
+- Korb;
+- Nullwelt **analytisch** (H −1,80 / M −6,15 Pp gegen gezogen −1,72 / −6,20);
+- Spiegelprobe;
+- Kosten.
+
+Teil 0 bestanden; Selbsttest in beiden Klassen bestanden (Fehlalarm 0 %, gepflanzt erkannt).
+
+| ab 2024 | Einstiege | Korb gegen BTC | Bootstrap | **Rang gegen Zufall derselben Klasse** | Spiegel | nach Kosten | **Urteil (vorab)** |
+|---|---|---|---|---|---|---|---|
+| **H** (Haupt) | 344 in 32 Monaten | −1,1 Pp | 0,28 | 0,72 (Zufall −1,7 Pp) | 0,76 | −1,8 Pp | **TRÄGT NICHT** |
+| **M** | 1.211 | −6,2 Pp | 0,00 | **0,47** (Zufall −6,2 Pp) | 1,03 | −8,0 Pp | **SCHADET** (formal) |
+| S (Gegenprobe) | 3.316 | −7,0 Pp | 0,00 | **0,00** | 0,83 | — | SCHADET |
+
+**Was das heißt:**
+1. **H: Die Richtung von 2023 (1,84) hielt ab 2024 nicht.** Momentum-Coins lagen nur unwesentlich besser als zufällige Highcaps (Rang 0,72) und stürzten häufiger ab (Spiegel 0,76). Die Wahl auf einem steigenden Jahr hat wieder nicht übertragen (wie §31.7).
+2. **M: „Schadet“ heißt hier nicht, dass Momentum umkehrt.** Der Zufall derselben Klasse liegt genauso tief (Rang 0,47). Es ist die **ganze Klasse**, die gegen BTC verliert (−6 % je 30 T). Das vorab festgelegte Urteil bleibt, die Ursache ist die Klasse.
+3. **S: Hier kehrt Momentum wirklich um.** Momentum-Coins liegen schlechter als **jeder** zufällige Smallcap (Rang 0,00). Das bestätigt *Pump & Dump*.
+4. **Kürzer ist besser** (M: 15 T −2,8 / 30 T −6,2 / 60 T −11,8 Pp). Wer im fallenden Altmarkt länger hält, verliert mehr gegen BTC (wie §31.7).
+
+**Auskunft (nach dem Urteil, Teilmengen, kein Test):**
+- In H lagen Einstiege bei **fallendem BTC** bei +4,4 Pp (n 146), bei steigendem BTC bei −1,3 Pp.
+- Einstiege nach einer **Dominanz-Spitze** (§33) lagen bei **+6,3 Pp** (n 71), sonst bei −0,8 Pp.
+- Das passt zu §33: Nach einer Dominanz-Spitze erholen sich Altcoins eher, und die starken Highcaps zuerst.
+- ⇒ Hypothese für Fassung n+1: *„H-Momentum nur nach Dominanz-Spitze“*. Auf 2024+ ist sie gefunden, also nur vorwärts prüfbar.
+
+### 37.5 Folge (vorab §37.3) und Stand Rolle K
+
+| | Folge |
+|---|---|
+| H trägt nicht | **kein Momentum-Einstieg in H** |
+| M, S | kein Momentum-Einstieg; in S ausdrücklich nicht (Umkehr) |
+| Rolle K insgesamt | **Mit Kurs-, Umsatz- und Terminmarktdaten gibt es ab 2024 in keiner Klasse einen belegten K-Einstieg.** K bleibt leer. Der stärkste Hinweis ist der **Kontext** Dominanz-Spitze (Ebene 2) für Highcaps; er geht ins Vorwärtsprotokoll |
+| Nächster Schritt | **C2 Listings** als Auslöser (§38), der einzige noch offene Weg zu K, vor allem bei Smallcaps |

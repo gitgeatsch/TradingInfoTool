@@ -1,0 +1,12 @@
+Q1  gleich  H: 40 Einstiege, Abweichungen 0
+Q2  gleich  H Korb neu -1.115 Pp · Ausgabe -1.12
+Q3  gleich  H Nullwelt analytisch -1.80 Pp · gezogen -1.72
+Q4  gleich  H Spiegel neu 0.760 · Ausgabe 0.76
+Q5  gleich  H nach Kosten neu -1.84 · Ausgabe -1.84
+Q1  gleich  M: 40 Einstiege, Abweichungen 0
+Q2  gleich  M Korb neu -6.239 Pp · Ausgabe -6.24
+Q3  gleich  M Nullwelt analytisch -6.15 Pp · gezogen -6.20
+Q4  gleich  M Spiegel neu 1.028 · Ausgabe 1.03
+Q5  gleich  M nach Kosten neu -8.00 · Ausgabe -8.00
+
+10 von 10 gleich

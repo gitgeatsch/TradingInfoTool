@@ -1,0 +1,29 @@
+MESSUNG K-H1 (§37.2) · Kurse bis 2026-09-20
+
+TEIL 0 (R-R11): Vorpruefung §35 reproduziert (H 1,84 / M 1,05) - bestanden
+
+K-H1-H ab 2024: Einstiege 344 an 32 Monaten (36 Coins) · Korb -1.12 Pp gegen BTC (Median der Monate -4.34) · Bootstrap 0.283 · Rang gegen Nullwelt 0.720 (Nullwelt-Mittel -1.72 Pp) · Spiegel 0.76 (Lauf 12 % / Absturz 16 %, Nullwelt 11 / 11 %)  ->  TRAEGT NICHT
+   nach Kosten (0.72 % Hin+Rueck): Korb -1.84 Pp -> lohnt nicht
+K-H1-M ab 2024: Einstiege 1211 an 32 Monaten (208 Coins) · Korb -6.24 Pp gegen BTC (Median der Monate -5.80) · Bootstrap 0.000 · Rang gegen Nullwelt 0.470 (Nullwelt-Mittel -6.20 Pp) · Spiegel 1.03 (Lauf 16 % / Absturz 32 %, Nullwelt 13 / 28 %)  ->  SCHADET
+   nach Kosten (1.76 % Hin+Rueck): Korb -8.00 Pp -> lohnt nicht
+
+SELBSTTEST (je Klasse):
+  H (a) Zufalls-Signal 100 Welten: Fehlalarm 0 % (Soll <= 2,5 %) -> bestanden · (b) gepflanzt (nur Einstiege mit >= +10 %, n 69): erkannt
+  M (a) Zufalls-Signal 100 Welten: Fehlalarm 0 % (Soll <= 2,5 %) -> bestanden · (b) gepflanzt (nur Einstiege mit >= +10 %, n 196): erkannt
+
+AUSKUNFT (nach dem Urteil):
+  H je Jahr: 2024 +1.1 Pp (n 129) · 2025 -3.2 Pp (n 134) · 2026 -1.4 Pp (n 81)
+    BTC 90T steigt -1.3 Pp (n 198) / faellt +4.4 Pp (n 146) · Dominanz-Spitze +6.3 Pp (n 71) / sonst -0.8 Pp
+    Weglassprobe ohne XRP,XLM,ZEC,LINK,ADA: -4.0 Pp · nur Bitpanda-handelbar (n 341): -1.0 Pp
+    Zeitgrenze 15 T: n 543 · Korb -1.4 Pp
+    Zeitgrenze 60 T: n 233 · Korb -5.0 Pp
+    Merkmal umsatz_schub statt rs30: n 316 · Korb -1.1 Pp
+    Merkmal hoch90 statt rs30: n 400 · Korb -2.2 Pp
+  M je Jahr: 2024 -6.5 Pp (n 515) · 2025 -7.7 Pp (n 413) · 2026 -3.6 Pp (n 283)
+    BTC 90T steigt -8.0 Pp (n 698) / faellt -7.2 Pp (n 513) · Dominanz-Spitze -4.6 Pp (n 245) / sonst -5.2 Pp
+    Weglassprobe ohne ZEC,HBAR,CRV,JST,SUI: -7.5 Pp · nur Bitpanda-handelbar (n 1141): -6.1 Pp
+    Zeitgrenze 15 T: n 1869 · Korb -2.8 Pp
+    Zeitgrenze 60 T: n 857 · Korb -11.8 Pp
+    Merkmal umsatz_schub statt rs30: n 1201 · Korb -5.8 Pp
+    Merkmal hoch90 statt rs30: n 1104 · Korb -5.9 Pp
+  S (Gegenprobe der Richtung, erwartet: traegt nicht/schadet): n 3316 · Korb -7.0 Pp · Bootstrap 0.000 · Rang 0.000 · Spiegel 0.83 -> SCHADET
