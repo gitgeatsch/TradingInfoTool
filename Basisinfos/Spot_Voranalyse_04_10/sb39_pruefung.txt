@@ -1,0 +1,37 @@
+V1  ok  Positionsfuehrung je Symbol (B1/B2): agent/positionsfuehrung.py
+V1  ok  O29 laedt 161/49, nicht 48 (D2): agent/binance_ankuendigungen.py
+V1  ok  O29-Abruf (B3): agent/binance_ankuendigungen.py
+V1  ok  Stop-Nachzieh-Mail je Signal (A6/O19): scheduler/background.py
+V1  ok  Stablecoins nur Momentanwert (D1): scheduler/background.py
+V1  ok  FRED/WALCL-Job (C1-Kontext): scheduler/background.py
+V1  ok  M2 aus FRED (C1/B2): api/macro.py
+V1  ok  Schalter alte Spot-Kette (A5): agent/regel0_groesse.py
+V1  ok  alte Spot-Kette angehalten (A5 erledigt): Basisinfos/regel0_betrieb.yaml
+V1  ok  Einstand in holdings (B2): database/db.py
+V1  ok  holdings OHNE Rolle/Starttag (A1 ist Neubau)
+V2  ok  NB hat holdings
+V2  ok  NB hat price_cache
+V2  ok  NB hat bitpanda_katalog
+V2  ok  NB hat bitpanda_wallet_saldo
+V2  ok  NB hat externe_reihe
+V2  ok  NB hat macro_snapshot
+V2  ok  NB hat stundenkurse
+V2  ok  NB hat umlaufmenge
+V2  ok  NB hat price_history_ohlc
+V2  ok  NB hat KEINE richtung_historie (BTCDOM fehlt -> D1)
+V3  ok  B1 Mitnahme x3 +5,5 Pp, traegt (fb_messung.txt)
+V3  ok  C1 3/3 -> 26 % Season-Tage (am_kalibrierung.txt)
+V3  ok  C1 heutiges Muster nie dagewesen (am_kalibrierung.txt)
+V3  ok  B3 Upbit -10 Pp, schadet (c2_messung.txt)
+V3  ok  B3 Upbit erste 4 h +12 % (c2_messung.txt)
+V3  ok  B3 Futures-Start 30 T -20 Pp (c2_messung.txt)
+V3  ok  D6 Kosten H 0,36 % (v32_vorpruefung.txt)
+V3  ok  D6 Kosten M 0,88 % (v32_vorpruefung.txt)
+V3  ok  D6 Kosten S 3,20 % (v32_vorpruefung.txt)
+V3  ok  B2 L-Preis -45 %/Jahr (e33_analyse.txt)
+V3  ok  C3 Dominanz-Spitze Lift 1,65 (e33_analyse.txt)
+V3  ok  A4 Momentum H traegt nicht (k37_messung.txt)
+V3  ok  A4 Schatten-Hypothese +6,3 Pp n 71 (k37_messung.txt)
+V4  ok  20 Punkte, davon mit leerer Pflichtspalte 0 []
+
+35 von 35 bestaetigt

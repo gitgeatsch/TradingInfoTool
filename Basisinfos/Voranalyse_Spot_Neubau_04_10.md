@@ -4537,3 +4537,76 @@ Nutzer 08.10.: *„Ja, Messung laufen lassen, prüfen und gegenprüfen.“* (zu 
 | **Führung** | Mitnahme ×3 trägt (§31); Marke ohne Zeitwert, kurze Haltedauer wirkt | Mitnahme je L-Bestand; kurze Haltedauer |
 | **Bestand** | Preis −45 %/Jahr gegen BTC (§33); Upbit-Listing und Futures-Start als **Verkaufsanlass** (§38) | Fakten mit Warnung in die Bestandsmail; Rolle je Coin durch dich |
 | **Daten / Betrieb** | Nachlader M2, Stablecoins, BTCDOM, Binance-Katalog 48, Upbit, alle frei; O26 für 11 Bestände außerhalb Binance | Bau nach Abstimmung (T-2, nach Hebel P5) |
+
+
+## 39. Bauumfang Spot — Vorlage zur Abstimmung Punkt für Punkt (09.10.2026; ersetzt den Zuschnitt von O28 §28)
+
+Nutzer 08.10.: *„Ja, Bauumfang Spot vorbereiten, prüfen und gegenprüfen. Hinweis: mit mir Punkt für Punkt abstimmen, auch was mit den Einstiegen ist und den Rollen.“*
+
+**Grundsatz:**
+- Gebaut wird nur, was **gemessen trägt** oder ein **Fakt** ist.
+- Was nicht trägt, wird **nicht** gebaut, auch nicht „zur Sicherheit“.
+- Jeder Punkt nennt seine Grundlage, die Datenlage am NB und den Anschluss an bestehenden Code (Regel *bestehendes Schema zuerst*).
+- Bau erst **nach Hebel P5 (10.10.)** und nach deinem Ja je Punkt (T-2).
+
+**Was sich gegenüber §28 ändert:**
+- Die Monatsmail bleibt, wird aber zur **Bestandsmail mit Rollen, Preis und Ampel**.
+- Neu dazu: **Ereignis-Mails** (Stufenwechsel, Mitnahme, Verkaufsanlass).
+- **Kein** Einstiegssignal für Einzelcoins (gemessen: nichts trägt).
+
+### Block A — Rollen und Einstiege
+
+| # | Inhalt | Grundlage | NB-Daten | Anschluss | Aufwand |
+|---|---|---|---|---|---|
+| **A1** | **Rollen im Bestand:** je Coin *Kern / L Season-Option / Abbau* (K ruht), dazu **Starttag** der Führung. Zuteilung durch dich, das System schlägt vor | §30.9 E-86, §34, §36.1 | `holdings` vorhanden, **ohne** Rolle und Starttag | Spalten an `holdings` (additiv) oder eigene Tabelle `spot_rolle`; App-Tab zum Setzen | mittel |
+| **A2** | **Rollen-Vorschlag je Coin** (einmalig jetzt, dann monatlich): Klasse, Fortbestand-Rang, Abstand zum Hoch, laufender Preis gegen BTC, Verkaufsanlässe → Vorschlag *L* oder *Abbau* mit Begründung in ganzen Sätzen | §25.6, §33.4, §38.5 | Kurse ✔ (Binance-Bestand), Prod-Kurse ✔ (11 außerhalb), Klasse über O26 (D5) | neu `agent/spot_rollen.py`, liest nur | mittel |
+| **A3** | **Einstieg Rolle L = Stufe der Season-Ampel**, kein Coin-Signal. Bei *Vorlauf* / *Season-Klima*: Kandidatenliste (Watchlist-Fortbestand, bei Bitpanda handelbar, Kosten je Klasse), Aufbau in Tranchen auf deine Freigabe | §36.4–36.5 | siehe C1/D1 | Kandidatenliste aus der Watchlist (W6) | klein |
+| **A4** | **Einstieg Rolle K: keiner.** Gemessen §35, §37, §38. Nur ein **Schatten-Protokoll** der Hypothese *H-Momentum nach Dominanz-Spitze* (§37.4), ohne Mail | §37.5, §38.6 | Kurse ✔, BTCDOM ✘ (D1) | Vorwärtsprotokoll (D7) | klein |
+| A5 | ~~alte Spot-Kette stilllegen~~ — **erledigt** seit 05.10. (`spot_kette_angehalten: true`, E-67) | — | — | — | — |
+| **A6** | **O19:** Die Stop-Nachzieh-Sammelmail **je Signal** für Spot wird durch B1 ersetzt und für Spot abgeschaltet. Der Hebel bleibt unberührt. *Wer schreibt/liest noch?* wird vor dem Abschalten geprüft | §31.7 (Marke ohne Zeitwert), O19 | — | `ausstiegs_job` | klein |
+
+### Block B — Führung und Bestand
+
+| # | Inhalt | Grundlage | NB-Daten | Anschluss | Aufwand |
+|---|---|---|---|---|---|
+| **B1** | **Mitnahme ×3 je L-Position:** Kurs ≥ 3 × Kurs am Starttag → Ereignis-Mail *„Hälfte verkaufen“* mit gemessener Begründung (+5,5 Pp gegen Halten, besser als Zufall; Hinweis: niedrigere Ziele waren ab 2024 besser, die Stufe wird nicht nachträglich getauscht) | §31.6 | Kurse ✔ | `agent/positionsfuehrung.py` (eine Position je Symbol) | klein |
+| **B2** | **Laufender Preis je Bestand** gegen BTC (30 / 90 / 365 T) und für L der Jahrespreis im Klima (≈ −45 %) | §33.4 | Kurse ✔ | `positionsfuehrung` | klein |
+| **B3** | **Verkaufsanlässe je gehaltenem Coin, sofort per Mail:** Upbit-Listing (*erste Stunden +12 %, danach −10 Pp in 7 T*), Futures-Start (*−20 Pp in 30 T*), Delisting/Monitoring (O29) | §38.4–38.5, E-1 | O29-Abruf ✔ (Kataloge 161/49), Katalog 48 ✘, Upbit ✘ (D2) | `agent/binance_ankuendigungen.py` erweitern | mittel |
+| **B4** | **Abbau:** keine gemessene Regel. Vorschlag: Verkauf beim nächsten Verkaufsanlass (B3) oder in Tranchen; du entscheidest je Coin | — (offen) | — | — | klein |
+
+### Block C — Fakten und Mails
+
+| # | Inhalt | Grundlage | NB-Daten | Anschluss | Aufwand |
+|---|---|---|---|---|---|
+| **C1** | **Season-Ampel** (B1 BTC 91 T, B2 M2 J/J, B3 Stablecoins 91 T; Kontext Breite, Dominanz-Spitze, Netto-Liquidität): Stufe *kalt / Vorlauf / Season-Klima / Überhitzung / ungewohnt*, Verlauf 12 Monate, im App-Tab und oben in jeder Spot-Mail; **Ereignis-Mail bei Stufenwechsel** | §34, §36.4–36.5 | BTC ✔; M2 in `macro_snapshot` ✔ (Verlauf zu prüfen); Stablecoins nur Momentanwert ✘ (D1) | neu `agent/season_ampel.py` | mittel |
+| **C2** | **Bestandsmail monatlich** (statt der reinen Watchlist-Mail): je Coin Rolle, Klasse, Preis, Fortbestand, Mitnahme-Stand; dazu Watchlist je Klasse als Information | §28 W6, §29.6 | ✔ | Mail-Entwurf §26/§27 | mittel |
+| **C3** | **Dominanz-Spitze als Fakt** (*„in 7 von 16 Fällen folgte binnen 45 T eine Alt-Rally, sonst in 27 % der Tage“*) | §33.4 | BTCDOM ✘ (D1) | in C1 | klein |
+
+### Block D — Daten und Betrieb
+
+| # | Inhalt | NB heute | was zu tun ist (alles frei) | Aufwand |
+|---|---|---|---|---|
+| **D1** | Nachlader **Stablecoin-Verlauf** (DefiLlama `stablecoincharts/all`, ein Abruf, ganzer Verlauf), **BTCDOM** (Binance-Futures-Kerzen), M2-Verlauf (FRED, wie `api/macro.py`) | Stablecoins nur Momentanwert (`externe_reihe`), BTCDOM ✘ | täglicher Job, Ablage wie `externe_reihe` | klein |
+| **D2** | **Ankündigungen:** Binance-Katalog 48 in den O29-Abruf, **Upbit** neu (freie Schnittstelle) | O29 ✔ (161/49) | stündlich, Ablage wie O29 | mittel |
+| **D3** | **Stammdatei** Allzeithoch, Datum des Hochs, erster Kurs (W2) | Betriebskopie nur 500 T ✘ | einmal aus der Messbasis, am NB fortschreiben | klein |
+| **D4** | **TVL-Verlauf** (W3t, Merkmal F9 der Rangliste) | ✘ | DefiLlama, monatlich | klein |
+| **D5** | **O26 Brücke** über die Asset-ID (11 Bestände außerhalb Binance; Klasse aus dem CoinGecko-Marktwert) | Katalog, Salden, `price_cache` ✔ | wie §28.4 | mittel |
+| **D6** | **Kosten je Klasse** als Konstanten (H 0,36 / M 0,88 / S 3,20 % je Seite), jährlich aus deinen Bitpanda-Handeln nachgemessen | Export 03.08. | — | klein |
+| **D7** | **Vorwärtsprotokoll:** Ampel-Wechsel, Rollen, Mitnahme-Auslösungen, Verkaufsanlässe, K-Schatten | — | eigene Tabelle | klein |
+| **D8** | **Betriebsprüfung** B1–B9 am NB, Pull, Neustart, Teilexport; Kontrollen K-SP-* | — | je Block | je Block |
+
+### Block E — was NICHT gebaut wird (gemessen)
+
+| | warum |
+|---|---|
+| Einstiegssignale je Coin (Momentum, Listings, Kursmerkmale, Watchlist-Eintritt) | §29, §35, §37, §38: nichts trägt ab 2024 |
+| Marke X2 als Ausstiegsregel | §31.7: kein Zeitwert gegen Zufall |
+| Zeitpunkt-Regeln (Boden, MACD, Liquidität als Auslöser) | §15–§20 |
+| Kostenpflichtige Quellen | Projektregel |
+
+### Reihenfolge (Vorschlag)
+
+| | |
+|---|---|
+| **Stufe 1** | A1, A2, B1, B2, B3 (mit D2), C1 (mit D1), C2, D5, D6, D7, D8 — das ist der Teil, der dir **heute** hilft: dein Bestand mit Rolle, Preis, Mitnahme, Verkaufsanlässen und Ampel |
+| Stufe 2 | A3 (Kandidatenliste), A4 (Schatten), C3, D3, D4, A6 |
