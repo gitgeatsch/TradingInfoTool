@@ -3093,3 +3093,90 @@ Nutzer 07.10.: *„Teilexport am NB erledigt, prüfe die Abdeckung und noch alle
   - W2 Stammdatei Allzeithoch und Erstdatum;
   - W3 drei Abrufe (CoinGecko-Profil, DefiLlama-Gebühren und TVL-Verlauf, CoinMetrics).
 - **Neu:** Der Bestand ist am NB fast doppelt so groß wie in der Desktop-Kopie. Der Bestand-Block muss rund 22 Krypto-Positionen tragen; XDC und PLUME liegen dort ebenfalls außerhalb von Binance-Spot.
+
+
+## 28. O28 Bauumfang — Vorlage zur Abstimmung (08.10.2026, Paket P4, nur Papier)
+
+Nutzer 08.10.: *„Ja, P4 vorbereiten, prüfen und gegenprüfen.“* Dazu der Entscheid zu O26: *„… ich habe CT wie auch XDC manuell hinzugefügt; wenn wir das automatisieren können analog Hebel, wäre das gut. Es muss sauber und stabil über die unterschiedlichen Symbole je Datenquelle funktionieren.“*
+
+⚠️ **Regeln für diesen Bau:**
+- **T-2:** Spot-Betriebscode erst, wenn der Hebel freigegeben **und** dieser Umfang abgestimmt ist, also frühestens nach dem 10.10.
+- **Hebel hat Vorrang** (T-4). **Eine NB-Änderung zur Zeit**, nicht parallel zu O29.
+- **Nur kostenfreie Quellen** (Projektregel). Alle unten genannten sind frei.
+- Die Watchlist-Mail ist **Information, kein Kaufsignal** (Regel 4); ihr Takt ist kein Signalgeber (Regel 1).
+
+### 28.1 Was das System liefert
+
+Die Monatsmail **„Altcoins: Fortbestand und Gelegenheit“**, Aufbau bestätigt (§26, E-75):
+1. Lesehilfe, Phase.
+2. **Dein Bestand**: alle Krypto-Positionen und Neuzugänge, mit Einstufung oder Grund, warum keine.
+3. **Rangliste** nach Marktwert-Klassen H/M/S.
+4. Protokoll, Anhang mit Skalen.
+
+Dazu **O26**: Neue Bitpanda-Bestände kommen von selbst in die Watchlist.
+
+### 28.2 Bausteine — Stufe 1 (Kern) und Stufe 2 (Ebene 1 Strukturprofil)
+
+| # | Baustein | Daten am NB (Nachweis §27.5 / 08.10.) | neu zu bauen | Prüfung | Stufe |
+|---|---|---|---|---|---|
+| **W2** | **Stammdatei** Allzeithoch, Datum des Hochs, erster Kurs je Coin | Betriebskopie `messdaten.db` reicht nicht sicher (≥ 500 T, Hoch oft früher) | einmal aus der vollen Messbasis (Desktop) ins Repo; am NB täglich fortschreiben (neues Hoch → überschreiben) | gegen die volle Messbasis, alle 332 Coins | 1 |
+| **W4** | **Bestand-Einstufung**, auch außerhalb Binance-Spot | ✔ Prod `price_history_ohlc` und `price_cache` (alle 25 Krypto-Bestände mit CoinGecko-ID; Kurs fehlt nur beim neuen CT) | Einstufung aus Prod-Kursen; Übersetzung `symbol_zuordnung.csv` (eine Tabelle für Hebel und Spot); Sperrlisten zusammenführen | Gegenprobe wie §26, an allen Beständen | 1 |
+| **W8 = O26** | **Automatische Aufnahme** neuer Bitpanda-Bestände in die Watchlist (Regeln §28.4) | ✔ `holdings`, `bitpanda_wallet_saldo` (asset_id), `bitpanda_katalog` (Gruppe), `price_cache` | Aufnahme über die **Asset-ID**, nicht über das Kürzel; ersetzt die tägliche Warnmail *„Position ohne Watchlist-Eintrag“* | Gegenprobe an allen 40 Beständen und den Fällen CT, XDC, BIO, CANTON | 1 |
+| **W5** | **Vorwärtsprotokoll** der Watchlist (welcher Coin stand wann wo, Folge nach 3/6/12 Monaten) | — | eigene Tabelle; Schreiber nur der Monatsjob | Seiteneffekt | 1 |
+| **W6** | **Monatsjob und Mail** (Inhalt `mail_entwurf.py`, Darstellung `mail_beispiel_html.py`) | ✔ Kern: Kurse, Klasse (`umlaufmenge_cg.db`), Rang, Bestand, Neuzugänge, Phase Liquidität/Stablecoins | Job, Mailtyp, Abschnitte | Prüfstand mit echter `config.yaml` | 1 |
+| W3a | **CoinMetrics** täglich: BTC-Klima (MVRV), Marktwerte für den MACD | ✘ | Lader (frei, ohne Schlüssel) | Wache, Seiteneffekt | 2 |
+| W3b | **CoinGecko-Profil** monatlich: Höchstmenge, FDV, Kategorien | ✘ | ~330 Abrufe im Monat (Kontingent 10.000, gedrosselt) | Seiteneffekt | 2 |
+| W3c | **DefiLlama** monatlich: Gebühren, Halter-Einnahmen, TVL-Verlauf | ✘ (TVL nur Tageswert) | Zuordnung über die CoinGecko-ID | Seiteneffekt | 2 |
+| **W7** | **Betriebsprüfung** B1–B9 am NB, dann Pull, Neustart, Export | — | — | Kontrollen K-WL-1… | je Stufe |
+
+**Stufe 1** liefert die bestätigte Mail **ohne** das Strukturprofil (Ebene 1 A–E) und ohne BTC-Klima/MACD in der Phase; diese Stellen stehen dann als *„noch nicht angebunden“* da. **Stufe 2** ergänzt sie.
+
+### 28.3 Aufwand und Reihenfolge (Schätzung)
+
+| | Inhalt | Aufwand | NB-Änderungen |
+|---|---|---|---|
+| Stufe 1 | W2 → W4 → W8 (O26) → W5 → W6 → W7 | etwa 2–3 Arbeitstage am Desktop | **eine** (Pull + Neustart, dann Kontrolle) |
+| Stufe 2 | W3a → W3b → W3c → W7 | etwa 1–2 Arbeitstage | eine |
+
+### 28.4 O26 — die Brücke der Symbolwelten (Befund an der NB-Sicherung 08.10. 06:31)
+
+**Bestand:** 40 Positionen mit Menge > 0, davon **25 Krypto** (Gruppe *coin* oder *token*), der Rest Aktien, ETF und ETC.
+
+| Befund | Fälle | Folge für die Regel |
+|---|---|---|
+| **Gleiches Kürzel, anderes Asset** | **BIO** steht im Bitpanda-Katalog als **Aktie** *und* als Token. Der Bestand ist der Token (CoinGecko `bio-protocol`, Binance BIO) | Zuordnung **über die Asset-ID** (`bitpanda_wallet_saldo.asset_id` → `bitpanda_katalog`), nie über das Kürzel. ⚠️ Die Hebel-Aufnahme (`auto_add_unknown_hebel_symbols`) sucht über das Kürzel; dieselbe Lücke ist dort möglich (zum Hebel-Strang gemeldet) |
+| **Anderer Name bei Binance** | CANTON → CC (Futures), CAT → 1000CAT | nur über `symbol_zuordnung.csv` (eine Tabelle), nie Namensgleichheit allein |
+| **Kein Binance-Spot** | XDC, SUPRA, VSN, EURCV, CANTON | Kurs aus Prod (`price_history_ohlc`, `price_cache`); nur im Bestand-Block, nicht in der Rangliste (Grundgesamtheit bleibt Binance) |
+| **Neu und noch ohne Prod-Kurshistorie** | **CT** (CoinGecko `concrete`; Binance führt ein CT) | **Preisabgleich** Bitpanda ↔ CoinGecko ↔ Binance vor der Aufnahme; bei Abweichung > 2 % keine Binance-Zuordnung |
+| CoinGecko-ID | alle 25 Krypto-Bestände haben eine in `price_cache` | — |
+
+**Regeln für die automatische Aufnahme (Vorschlag):**
+1. **Nur Krypto:** Gruppe *coin* oder *token* laut Katalog **zur Asset-ID**.
+2. **CoinGecko-ID:**
+   - zuerst aus `price_cache`;
+   - sonst Namenssuche (wie beim Hebel), aber **nur bei genau einem Treffer** und mit **Preisabgleich** gegen Bitpanda (≤ 2 %).
+3. **Binance-Zuordnung:**
+   - zuerst `symbol_zuordnung.csv`;
+   - sonst gleiches Kürzel **mit Preisabgleich** (≤ 2 %);
+   - sonst keine (der Coin steht nur im Bestand-Block).
+4. **Bei Zweifel** (mehrere Treffer, Preisabweichung, Gruppe unklar): **nicht** aufnehmen, sondern **einmal** melden mit Grund (*„manuell prüfen“*). Gesperrte Kürzel bleiben gesperrt.
+5. Aufgenommen mit `rolle=taktisch`, `beobachtungsstatus=beobachtung` wie beim Hebel; die Mail vermerkt *„neu aufgenommen“*.
+6. **Gegenprobe vor dem Bau:**
+   - Die Regel nachträglich auf alle 40 Bestände anwenden. Sie muss für die 25 Krypto-Werte dieselben IDs liefern wie heute in `price_cache`, die 15 übrigen ablehnen und BIO dem Token zuordnen.
+
+### 28.5 Zur Abstimmung (Nutzer)
+
+| | Frage | Empfehlung |
+|---|---|---|
+| U1 | Umfang: **Stufe 1 zuerst**, Stufe 2 danach — oder beides in einem Bau? | **Stufe 1 zuerst**: Der Kern ist am NB nachgewiesen, und die Mail kommt früher |
+| U2 | O26 wie §28.4 (Asset-ID, Preisabgleich ≤ 2 %, bei Zweifel melden statt aufnehmen)? | ja |
+| U3 | Takt: Monatsmail (wie entworfen); neue Bestände werden **sofort** aufgenommen, erscheinen aber erst in der nächsten Monatsmail | ja |
+
+**Fachlich, also von mir zu lösen und nicht abzustimmen:** Bei den Smallcaps trennen die Sterne nicht, weil fast alle im obersten Zehntel liegen (§26, offener Punkt 3). Das wird in W6 per Messung entschieden (Rang innerhalb der Klasse statt fester Zehntel).
+
+### 28.6 Gegenprüfung dieser Vorlage
+- **Daten am NB:** Kurse, Klasse, Rang, Bestand und Neuzugänge sind am Teilexport vom 07.10. nachgewiesen (§27.5); Bestand, IDs und Prod-Kurse an der Sicherung vom 08.10. (§28.4).
+- **Kostenfrei:** Binance, CoinGecko (Demo-Kontingent, schon genutzt), DefiLlama, CoinMetrics Community: ✔ alle frei.
+- **Keine neue Übersetzungstabelle:** `symbol_zuordnung.csv` ist die eine Tabelle (Nutzerhinweis 07.10.). ✔
+- **T-1 bis T-6:** Spot-Doku hier und Plan O28/O26; kein Spot-Code in diesem Paket. ✔
+- **Offen und genannt:** Preisabgleich CT, BIO-Lücke im Hebel-Weg.
