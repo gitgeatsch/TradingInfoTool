@@ -2591,7 +2591,7 @@ Nutzer 07.10.: *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen. Hinweis
 1. **K1** zuerst: Die Daten liegen am Desktop, die Literatur ist am stärksten, und es passt zur Wette. Vor einem Betrieb müsste der Nachlader den Taker-Anteil mitschreiben (E-75).
 2. **K2** danach: frei und neu, aber ein größerer Download.
 3. **K5** nur als **Datenprobe** (Abdeckung unserer Assets 2024–2026, Zeitstempel, Lizenz), noch keine Messung.
-4. **K3/K4 brauchen deine Kostenentscheidung:** CoinGlass 29 $/Monat für Liquidationen; für Freigaben ein Angebot einholen. Ohne Zahlung bleibt K4 nur vorwärts protokollierbar (frei).
+4. ⛔ **K3 entfällt, K4 nur vorwärts.** Nutzer 08.10.: *„Immer nur kostenfreie Angebote und Quellen nutzen ist eine Regel aktuell bei uns im Projekt.“* Für Token-Freigaben gibt es keine freie Quelle mit Historie. K4 Liquidationen bleibt als **freies Vorwärtsprotokoll** (Binance-Stream `!forceOrder@arr`) möglich, ein eigener kleiner Punkt nach P7.
 
 **Quellen:**
 - [arXiv 2608.21888](https://arxiv.org/abs/2608.21888) · [arXiv 2608.09576](https://arxiv.org/pdf/2608.09576)
