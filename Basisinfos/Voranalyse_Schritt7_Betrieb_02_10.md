@@ -2601,3 +2601,35 @@ Nutzer 07.10.: *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen. Hinweis
 - [CoinGlass Preise](https://coinglass.com/pricing) · [Binance Liquidation Streams](https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Market-Liquidation-Order-Streams) · [binance-public-data Issue 337](https://github.com/binance/binance-public-data/issues/337) · [Coin Metrics Liquidations](https://docs.coinmetrics.io/market-data/market-data-overview/liquidations/futures-liquidations)
 - [Free Crypto News](https://mcpservers.org/servers/nirholas/free-crypto-news) · [CoinDesk-API-Alternativen (CoinStats)](https://coinstats.app/blog/top-coindesk-api-alternatives-for-crypto-data/)
 - [Ereignisstudie Krypto-Ereignisse (RePEc)](https://ideas.repec.org/a/eme/sefpps/sef-08-2024-0521.html) · [Aufmerksamkeit, CFR Köln 25-02](https://www.cfr-cologne.de/download/workingpaper/cfr-25-02.pdf) · [Hoang/Vo, RePEc](https://ideas.repec.org/a/eee/beexfi/v44y2024ics2214635024001060.html)
+
+
+### 23.27 Betrieb NB: 40 Geister-Watchdogs — Ursache und Korrektur (08.10.2026)
+
+Nutzer 08.10.: *„Beim Beenden der App dürften immer wieder Prozesse hängen bleiben – prüfe dies, damit diese immer sauber beendet werden.“*
+
+**Befund am NB** (Prozessliste, nur lesend):
+- 40 Watchdog-Prozesse seit dem 20.09., alle von `explorer.exe` gestartet (Verknüpfung), **ohne Fenster**;
+- dazu der neue Watchdog von 07:02 mit `main.py` als Kind.
+
+**Ursache (in `pystray` und `monitor/watchdog.py` belegt):**
+- *„Beenden“* ruft `icon.stop()`. Das setzt `icon.visible` nicht auf False.
+- Die Schleife `while icon.visible` im Überwachungs-Thread (kein Hintergrund-Thread) lief endlos weiter und hielt den Prozess am Leben.
+- Zuvor hatte der Watchdog seine PID-Datei gelöscht, die Sperre gegen Doppelstarts ließ den nächsten durch.
+- ⇒ **Jedes „Beenden“ über das Tray hinterließ einen Geister-Watchdog.**
+- ⚠️ Ein Geister-Watchdog prüfte weiter die Neustart-Anforderung der Fernsteuerung und hätte eine zweite `main.py` starten können.
+
+**Korrektur** (`monitor/watchdog.py`):
+- Die Schleife hängt an einem Ende-Ereignis.
+- App normal geschlossen (Code 0): Der Watchdog endet mit. Bei einem Absturz bleibt er als Warnung stehen.
+- PID-Datei: nur die eigene wird gelöscht.
+- Zweiter Start: kein wartendes Fenster mehr, er endet sofort.
+
+**Nachweis** `monitor/pruefe_watchdog_ende.py`: vor der Korrektur 1/5 (W1 zeigte genau den Geister-Watchdog), danach **5/5**. ⚠️ W5 schlug vorher an einer falschen Annahme der Probe fehl (PID 4 ist ohne Adminrechte nicht abfragbar). Das Verhalten des alten Codes bei W5 ist deshalb nur am Code belegt.
+
+**NB-Ablauf** (die Korrektur wirkt erst beim nächsten Start des Watchdogs):
+1. Die 40 alten beenden. Unkritisch: `main.py` ist das Kind des Watchdogs von 07:02.
+2. Pull.
+3. Das App-Fenster normal schließen. `main.py` endet sauber; der laufende Watchdog hat noch den alten Code und bleibt deshalb stehen.
+4. Ihn beenden, dann über die Verknüpfung neu starten.
+
+Kontrolle **K-WD-1**: Danach läuft genau ein Watchdog. Nach dem nächsten *„Beenden“* + Neustart ist es immer noch genau einer.

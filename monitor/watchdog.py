@@ -17,6 +17,7 @@ from __future__ import annotations
 import ctypes
 import os
 import subprocess
+import threading
 import sys
 import time
 import webbrowser
@@ -111,19 +112,10 @@ def _check_existing_instance() -> None:
         except (ValueError, OSError):
             old_pid = None
         if old_pid and _pid_alive(old_pid):
-            import tkinter as tk
-            from tkinter import messagebox
-
-            root = tk.Tk()
-            root.withdraw()
-            messagebox.showwarning(
-                "TradingInfoTool - Watchdog laeuft bereits",
-                f"Ein Watchdog-Prozess laeuft offenbar schon (PID {old_pid}).\n\n"
-                "Bitte zuerst ueber das Tray-Icon beenden, bevor ein zweiter "
-                "gestartet wird.",
-            )
-            root.destroy()
-            sys.exit(1)
+            # 08.10.2026: KEIN wartendes Hinweisfenster mehr - sieht es niemand (gesperrter Bildschirm, Fernsitzung), bliebe dieser
+            # Prozess fuer immer stehen. Stattdessen das laufende Fenster nach vorne holen und sofort enden.
+            _bring_gui_to_front()
+            sys.exit(0)
     PID_PATH.write_text(str(os.getpid()), encoding="utf-8")
 
 
@@ -133,6 +125,10 @@ class Watchdog:
         self._proc: subprocess.Popen | None = None
         self._started_at: float = 0.0
         self._crash_log_fh = self._open_crash_log()
+        # 08.10.2026 (Befund NB: 40 Geister-Watchdogs seit 20.09.): pystray.Icon.stop() setzt icon.visible NICHT auf False - die alte
+        # Schleife `while icon.visible` lief nach 'Beenden' endlos weiter und hielt den Prozess (kein Hintergrund-Thread) am Leben,
+        # waehrend die PID-Datei schon geloescht war. Die Schleife haengt jetzt an diesem Ereignis.
+        self._ende = threading.Event()
 
     def _open_crash_log(self):
         # Einfache Groessenbremse statt echter Rotation - dieses Log ist ein
@@ -204,12 +200,18 @@ class Watchdog:
 
     def _monitor_loop(self, icon: pystray.Icon) -> None:
         icon.visible = True
-        while icon.visible:
+        while not self._ende.is_set():
             self._check_remote_restart_request(icon)
+            # 08.10.2026: App normal geschlossen (Code 0) = alles zu - der Watchdog endet mit. Nur ein Absturz (Code != 0) laesst
+            # ihn als rote Warnung stehen. Ein Neustart (terminate) endet unter Windows mit Code 1 und startet ohnehin neu.
+            if self._proc is not None and self._proc.poll() == 0:
+                self._ende.set()
+                icon.stop()
+                break
             state, tooltip = self._current_state()
             icon.icon = _build_icon_image(state)
             icon.title = tooltip
-            time.sleep(CHECK_INTERVAL_SECONDS)
+            self._ende.wait(CHECK_INTERVAL_SECONDS)
 
     def on_show_window(self, icon: pystray.Icon, item) -> None:
         """Leichtgewichtige Alternative zu 'Neu starten': holt das bestehende
@@ -233,6 +235,7 @@ class Watchdog:
         webbrowser.open(f"http://127.0.0.1:{DEFAULT_PORT}/?token={token}")
 
     def on_stop(self, icon: pystray.Icon, item) -> None:
+        self._ende.set()                                      # zuerst: die Ueberwachungsschleife endet, sonst bleibt der Prozess
         self._terminate_main_process()
         icon.stop()
 
@@ -248,10 +251,13 @@ class Watchdog:
         try:
             icon.run(setup=self._monitor_loop)
         finally:
+            self._ende.set()
             self._terminate_main_process()
             self._crash_log_fh.close()
+            # 08.10.2026: nur die EIGENE PID-Datei loeschen - sonst greift die Sperre gegen Doppelstarts fuer einen anderen nicht mehr
             try:
-                PID_PATH.unlink()
+                if PID_PATH.read_text(encoding="utf-8").strip() == str(os.getpid()):
+                    PID_PATH.unlink()
             except OSError:
                 pass
 

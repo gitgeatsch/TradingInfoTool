@@ -1722,6 +1722,13 @@ wäre im schlimmsten Fall selbst mitbetroffen.
 - Einfache PID-Datei (`data/watchdog.pid`) verhindert einen versehentlichen
   zweiten Start (zwei `main.py`-Instanzen würden sich um dieselbe SQLite-Datei
   und Port 8765 streiten).
+- ⚠️ **Korrektur 08.10.2026 – Geister-Watchdogs** (Befund NB: 40 Watchdog-Prozesse seit 20.09.):
+  - Ursache: `pystray.Icon.stop()` setzt `icon.visible` **nicht** auf False. Die Überwachungsschleife (`while icon.visible`) lief nach *„Beenden“* endlos weiter und hielt den Prozess am Leben; die PID-Datei war da schon gelöscht, der nächste Start ließ sich durch.
+  - Seitdem hängt die Schleife an einem Ende-Ereignis.
+  - **Schließt du das App-Fenster normal (Code 0), endet der Watchdog mit.** Nur ein Absturz lässt ihn als rote Warnung stehen.
+  - Die PID-Datei wird nur noch gelöscht, wenn sie dem eigenen Prozess gehört.
+  - Ein zweiter Start öffnet **kein** wartendes Hinweisfenster mehr. Er holt das laufende Fenster nach vorne und endet sofort.
+  - Nachweis am Seiteneffekt: `python monitor/pruefe_watchdog_ende.py` (echter Watchdog, Ersatz für `main.py`, Wegwerf-Ordner) – vor der Korrektur 1/5, danach 5/5.
 
 **Einmaliges Setup pro Gerät** (nicht Teil des USB-Syncs, da der
 Windows-Desktop-Ordner nicht mitgenommen wird):
