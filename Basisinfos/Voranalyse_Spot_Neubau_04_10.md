@@ -4487,3 +4487,53 @@ Nutzer 08.10.: *„Ja, Messung laufen lassen, prüfen und gegenprüfen.“* (zu 
 | trägt, frisst Kosten | kein Signal; die Meldung kommt als **Fakt** in die Mail (wie O29) |
 | schadet | als Fakt mit Warnung (*„nach solchen Meldungen fiel der Coin gegen BTC“*); wichtig für den Bestand |
 | nicht entscheidbar / trägt nicht | Vorwärtsprotokoll; Rolle K bleibt leer |
+
+
+### 38.4 Ergebnis (08.10.2026, nach §38.2)
+
+- `c2_lade.py`: 2.279 Binance- und 785 Upbit-Meldungen nach `data/_c2/`.
+- ⚠️ **Korrektur am Lader vor der Messung:** Das Ende des Binance-Katalogs kommt als *leere Katalogliste* (`catalogs: []`) und galt zunächst als Fehler. Es wird jetzt ausdrücklich erkannt; echte Fehlantworten brechen weiter ab.
+- `c2_messung.py` → `.txt`, Gegenprobe `c2_gegenprobe.py` **6/6**: Kürzel im Titel, Ertrag direkt aus SQL, Korb, *verpasst*, Klasse.
+
+**Wer in die Messung kam (ab 2024):**
+
+| | Meldungen | ohne Binance-Spot | Spot jünger als 90 T | gemessen |
+|---|---|---|---|---|
+| Futures-Start | 342 | 110 | 188 | **44** |
+| Upbit-Listing (KRW) | 137 | 30 | 75 | **32** |
+
+⇒ Ein Futures-Start begleitet meist ein **frisches** Listing. Gemessen werden die Fälle, in denen er einen schon gehandelten Coin trifft.
+
+| ab 2024, Kauf 4 h nach der Meldung, 7 T | Korb gegen BTC | Bootstrap | **Rang gegen Zufall der Klasse** | Spiegel | verpasst bis +4 h (Median / Mittel) | **Urteil** |
+|---|---|---|---|---|---|---|
+| **C2-a Futures-Start** | −6,2 Pp | 0,26 | **0,00** (Zufall −2,6) | 0,72 (Absturz 64 %) | +1,6 % / +6,8 % | **TRÄGT NICHT** |
+| **C2-b Upbit-Listing** | **−10,0 Pp** | 0,014 | **0,00** (Zufall −0,5) | **0,28** (Absturz 56 %) | **+12,0 % / +24,5 %** | **SCHADET** |
+| C2-c Binance-Spot-Listing (Auskunft) | Mittel −8,4 % / Median **−16,9 %** | | | | | |
+
+- Selbsttest (a) in beiden Fällen bestanden (0 %).
+- (b) war nicht prüfbar: Es gab zu wenige Ereignisse mit ≥ +5 % (6 bzw. 2). Das schwächt nur ein positives Urteil, und keines ist positiv.
+- Auskunft Futures-Start: Verzögerung und Haltedauer ändern nichts (+1 h −8,0 · +24 h −4,3 · 30 T **−20,1 Pp**).
+- Auskunft Upbit: (+1 h −9,9 · 30 T −15,6 Pp).
+
+### 38.5 Was das heißt
+
+1. **Ankündigungen sind kein Kaufsignal, sondern das Gegenteil.**
+   - Wer nach einer Meldung kauft, liegt nach 7 T schlechter als mit einem zufälligen Coin derselben Klasse, in beiden Fällen (Rang 0,00).
+   - Bei **Upbit** ist der Anstieg nach 4 h schon gelaufen (Median **+12 %**, Mittel +24,5 %), danach wird er abgegeben: *sell the news*.
+2. **Für deinen Bestand ist das eine nützliche Erkenntnis.**
+   - **Ein Upbit-Listing eines gehaltenen Coins ist eine Verkaufsgelegenheit:** In den ersten Stunden +12 % (Median), danach −10 Pp gegen BTC in 7 T.
+   - Ein **Futures-Start** auf einen gehaltenen Coin ging im Mittel mit −20 Pp gegen BTC in 30 T einher (mehr Leerverkäufer).
+   - ⇒ Beide gehören als **Fakt mit Warnung** in die Bestandsmail. Die Erweiterung von O29 (heute nur Delisting, Monitoring) bleibt bei frei verfügbaren Quellen.
+3. **Rolle K bleibt leer.**
+   - Mit Kurs-, Umsatz-, Terminmarkt- und Ankündigungsdaten gibt es ab 2024 **keinen** belegten Einstieg für Einzelausbrüche.
+   - Was es gibt, sind **Verkaufsanlässe** (Upbit, Futures-Start) und Mitnahme-Regeln.
+
+### 38.6 Gesamtbild Spot nach §29–§38 (Stand 08.10.2026)
+
+| | gemessen | Folge |
+|---|---|---|
+| **Einstieg Rolle K** | Momentum (§37), Ankündigungen (§38), Kursmerkmale (§35): **nichts trägt** | K ruht; Vorwärtsprotokoll H-Momentum nach Dominanz-Spitze |
+| **Einstieg Rolle L** | Season-Ampel kalibriert (§36), Watchlist-Fortbestand (§25.6) | L **bedingt** über die Ampel; heute *ungewohnt* (BTC + M2 ohne Stablecoins) → kein Aufbau |
+| **Führung** | Mitnahme ×3 trägt (§31); Marke ohne Zeitwert, kurze Haltedauer wirkt | Mitnahme je L-Bestand; kurze Haltedauer |
+| **Bestand** | Preis −45 %/Jahr gegen BTC (§33); Upbit-Listing und Futures-Start als **Verkaufsanlass** (§38) | Fakten mit Warnung in die Bestandsmail; Rolle je Coin durch dich |
+| **Daten / Betrieb** | Nachlader M2, Stablecoins, BTCDOM, Binance-Katalog 48, Upbit, alle frei; O26 für 11 Bestände außerhalb Binance | Bau nach Abstimmung (T-2, nach Hebel P5) |

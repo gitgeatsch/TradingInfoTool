@@ -1,0 +1,14 @@
+MESSUNG C2 (§38.2) · Kurse bis 2026-09-20 · Meldungen ab 2023: C2-a Futures-Start 445 · C2-b Upbit-Listing 137 · C2-c Spot-Listing 71 · Stundenreihen 506
+
+C2-a Futures-Start ab 2024: Ereignisse 44 an 16 Monaten (44 Coins; Klassen {'S': np.int64(23), 'M': np.int64(11), 'H': np.int64(10)}) · Korb -6.18 Pp gegen BTC in 7 T (Median der Monate -13.63) · Bootstrap 0.264 · Rang gegen Nullwelt 0.000 (Nullwelt -2.61 Pp) · Spiegel 0.72 (Lauf 25 % / Absturz 64 %, Nullwelt 14 / 26 %)  ->  TRAEGT NICHT
+   verpasst (Meldung bis +4 h) Median +1.6 % / Mittel +6.8 % · nach Kosten (Mittel 3.95 %): Korb -10.13 Pp -> lohnt nicht · 2023 (Auskunft, ab 09/2023): n 18, Mittel +1.8 %
+   SELBSTTEST (a) Zufalls-Ereignis 100 Welten: Fehlalarm 0 % -> bestanden · (b) gepflanzt (nur Ereignisse >= +5 %, n 6): NICHT erkannt (zu wenige)
+   AUSKUNFT (nach dem Urteil): +1 h / 7 T: -8.0 Pp (n 44) · +24 h / 7 T: -4.3 Pp (n 44) · +4 h / 1 T: -1.8 Pp (n 44) · +4 h / 3 T: -1.4 Pp (n 44) · +4 h / 30 T: -20.1 Pp (n 44)
+   je Klasse: H -7.3 Pp (n 10) · M -4.0 Pp (n 11) · S -8.0 Pp (n 23) · je Jahr: 2024 -1.0 Pp (n 30) · 2025 -19.4 Pp (n 14)
+C2-b Upbit-Listing ab 2024: Ereignisse 32 an 20 Monaten (32 Coins; Klassen {'U': np.int64(11), 'M': np.int64(10), 'S': np.int64(9), 'H': np.int64(2)}) · Korb -9.97 Pp gegen BTC in 7 T (Median der Monate -7.98) · Bootstrap 0.014 · Rang gegen Nullwelt 0.000 (Nullwelt -0.52 Pp) · Spiegel 0.28 (Lauf 22 % / Absturz 56 %, Nullwelt 20 / 14 %)  ->  SCHADET
+   verpasst (Meldung bis +4 h) Median +12.0 % / Mittel +24.5 % · nach Kosten (Mittel 4.60 %): Korb -14.57 Pp -> lohnt nicht · 2023 (Auskunft, ab 09/2023): n 0, Mittel +nan %
+   SELBSTTEST (a) Zufalls-Ereignis 100 Welten: Fehlalarm 0 % -> bestanden · (b) gepflanzt (nur Ereignisse >= +5 %, n 2): NICHT erkannt (zu wenige)
+   AUSKUNFT (nach dem Urteil): +1 h / 7 T: -9.9 Pp (n 32) · +24 h / 7 T: -9.0 Pp (n 32) · +4 h / 1 T: -2.8 Pp (n 32) · +4 h / 3 T: -6.6 Pp (n 32) · +4 h / 30 T: -15.6 Pp (n 32)
+   je Klasse: H -13.6 Pp (n 2) · M -6.7 Pp (n 10) · S -8.7 Pp (n 9) · U -18.0 Pp (n 11) · je Jahr: 2024 +10.6 Pp (n 4) · 2025 -16.0 Pp (n 14) · 2026 -13.6 Pp (n 14)
+
+C2-c Binance Spot-Listing (Auskunft, Kauf 4 h nach der Meldung, nur wo schon ein Binance-Kurs lag): n 19 · Mittel -8.4 % · Median -16.9 % gegen BTC in 7 T

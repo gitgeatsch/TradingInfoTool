@@ -1,0 +1,8 @@
+P1  gleich  20 Ereignisse: Kuerzel im Titel der Meldung zur selben Zeit, Verstoesse 0
+P2  gleich  30 Ereignisse direkt aus SQL, Abweichungen 0
+P3  gleich  C2-a Futures-Start Korb neu -6.184 · Ausgabe -6.18
+P3  gleich  C2-b Upbit-Listing Korb neu -9.971 · Ausgabe -9.97
+P4  gleich  verpasst an 10 Ereignissen, Abweichungen 0
+P5  gleich  Klasse an 10 Ereignissen, Abweichungen 0
+
+6 von 6 gleich
