@@ -988,3 +988,17 @@ Schritt7 §23.24.
 - Die Monatsübersicht (O28) bleibt daneben, als Information und nicht als Handlung.
 
 **Korrektur der Prüfanlage (§29.5):** Ein Spot-Urteil braucht mindestens **20 Einstiege an 6 Stichtagen**. Erst dann hält die Anlage ihr Soll.
+
+
+# E-86 · Spot: Zwei-Rollen-Modell (Season-Option L / Ausbruch K), Altbestand per Vorschlag je Coin (08.10.2026)
+
+**08.10.2026** · Nutzer: *„ja finde ich nicht schlecht“* (grundsätzlich Ja mit Vorbehalt) und: *„gehe ich recht in der Annahme, dass der Altbestand nicht in die Rollen fällt – oder ist das die Übersicht mit Vorschlag?“*
+
+**Festgelegt:**
+- Zwei Rollen, beim Kauf festgelegt, kein späterer Wechsel.
+  - **L:** Fortbestand-Auswahl, kein Nachlauf, Staffel, kleines Budget.
+  - **K:** Erkennung (Teil C), Marke.
+- Der Altbestand bekommt je Coin einen Rollen-Vorschlag des Systems; der Nutzer entscheidet. Dritte Möglichkeit *geplanter Abbau*. Die Führung startet am festen Starttag, der Einstand ist nur Anzeige.
+- Teil B wird je Rolle gemessen. Spot §30.9.
+
+**Vorbehalt des Nutzers:** Spot ist groß. Das Modell ist Grundlage, nicht Endstand.

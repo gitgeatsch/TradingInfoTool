@@ -3599,3 +3599,43 @@ Größte seit 2024: DEXE und ZEC ×24, TUT ×21, SYN ×15, BNX ×13, PEPE ×11, 
 | **Test oder Betrieb** | alles Desktop, nur lesend; nichts am NB geändert |
 | **Was folgt** | Teil B Messplan (B-1 bis B-11) zur Abstimmung. Die Erkennung von Ausbrüchen ist eine **eigene** Frage (Teil C), siehe die Punkte zur Abstimmung |
 | **Was nicht folgt** | kein Kaufsignal; keine Aussage, dass eine Altseason kommt oder nicht kommt |
+
+### 30.9 Zwei-Rollen-Modell für Spot (Nutzer 08.10.2026: *„ja finde ich nicht schlecht“*, grundsätzlich Ja mit Vorbehalt; E-86)
+
+Nutzer 08.10.:
+- *„SPOT ist ein großes Thema – 1. optimaler Einstieg für neue oder bestehende Assets und Positionen (langfristig und selten Altrally/Season, kurzfristig Einzelausbrüche, bestimmte Trends).“*
+- *„2. Positionsführung für den Bestand erforderlich; ob die einzelnen Käufe und Verkäufe hier noch relevant sind, ist zu prüfen, u. U. erst bei den neuen Assets.“*
+- *„3. Ausstieg ähnlich komplex wie Einstieg: lange halten bis zur möglichen Gewinnschwelle (Rally oder Season), kurze starke Anstiege und Gewinnmitnahmen.“*
+
+**Grundsatz:** Zwei Horizonte, zwei Rollen. Die Rolle wird **beim Kauf** festgelegt und **nicht nachträglich gewechselt**. Sonst wird ein Kurzfrist-Verlust zur „Langfrist-Anlage“ umgedeutet, oder eine Season-Option fliegt am Nachlauf heraus, bevor die Season kommt.
+
+| | **Rolle L — Season-Option** | **Rolle K — Ausbruch** |
+|---|---|---|
+| Wette | eine Altseason kommt, und dieser Coin überlebt bis dahin | dieser Coin läuft jetzt, für Wochen |
+| Einstieg | Tranchen, billig, kein Takt-Signal; Auswahl über **Fortbestand** (Watchlist §25.6) | nur mit Erkennung (**Teil C**, offen) |
+| Führung | **kein Nachlauf-Stop.** Das Risiko steuert die Größe; die Altregel *Spot ohne Stop* gilt hier | **Marke** (Nachlauf), gemessen wirksam (§30.2 L5) |
+| Ausstieg | gestaffelte Mitnahme bei Vielfachen (X1), Rest in der Season | Marke gerissen → raus |
+| Größe | kleines, festes Budget, das jahrelang hinter BTC liegen darf | je Handel begrenzt |
+| messbar | Fortbestand und Staffel ja; den **Season-Zeitpunkt nicht** (seit 2024 keine Season) | Führung ja (Teil B); Einstieg ab Teil C, belegbar nur vorwärts |
+
+**Altbestand:**
+- Auch der Altbestand fällt in die Rollen. Das System schlägt **je Coin** eine Rolle vor, mit Begründung; **der Nutzer entscheidet**.
+- Dazu kommt eine dritte Möglichkeit, nur für den Altbestand: **„passt in keine Rolle → geplanter Abbau nach Regel“**, etwa bei schlechtem Fortbestand und ohne laufenden Ausbruch.
+- Die Führung startet an einem **festen Starttag** mit *Hoch ab Start*.
+- Einstand und alte Einzelkäufe dienen nur der Anzeige und der G/V, **nicht der Entscheidung** (Regel 4). Damit entfällt für den Altbestand die Kaufablage aus B-1. Erst bei neuen Positionen rechnet das System ab dem eigenen Kauf.
+- **Erwartung:** Der Großteil wird L oder Abbau; K nur bei einem echten laufenden Ausbruch.
+
+**Ausstieg „bis zur Gewinnschwelle“ — Bewertung:**
+- Gewinnschwelle = Einstand ist dieselbe Denkfalle wie beim Einstieg (Regel 2 und 4).
+- Statt dessen für L: Staffel bei Vielfachen.
+- **Auskunft, die vorher gemessen wird:** Wie viele Positionen erreichten 2024+ ihren Einstand überhaupt wieder, und nach wie langer Zeit?
+
+**Reihenfolge (ersetzt §30.7 Reihenfolge):**
+1. Teil B Messplan **je Rolle**:
+   - K: Nachlauf-Weite (Dosis-Wirkung), Teilverkauf.
+   - L: Staffel, Rückkehr zum Einstand als Auskunft, Führung ab Start statt ab Kauf.
+   - Wahl 2023, Urteil ab 2024, ≤ 180 T, wo möglich.
+2. **Übersicht Altbestand je Coin:** Fortbestand-Rang, Abstand zum Hoch, läuft gerade ein Ausbruch, Abdeckung am NB, Rollen-Vorschlag in ganzen Sätzen → Nutzerentscheidung.
+3. **Teil C** Ausbruch erkennen.
+
+**Beim Nutzer bleiben:** Rollen-Zuteilung je Coin, Budget L gegen K, Freigaben.
