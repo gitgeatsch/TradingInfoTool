@@ -3761,3 +3761,12 @@ Grundgesamtheit wie die Watchlist (Umlauf Stufe 3), monatliche **Starttage** mit
 - Das ist der Preis der Regel *Wahl 2023 / Urteil ab 2024*. Die Dosis-Wirkung macht es sichtbar.
 - Für K erwarte ich, dass die Führung trägt (L5).
 - Für L ist es offen. Im fallenden Markt ist **jeder** Verkauf besser als Halten; erst die Nullwelt zeigt, ob das *Kriterium* den Zeitpunkt besser trifft als der Zufall.
+
+### 31.5 Korrektur der Nullwelt Rolle L VOR der Messung (08.10.2026)
+
+**Gefunden beim Ausarbeiten von `fb_messung.py`, vor dem ersten Lauf:** Die Nullwelt aus §31.3 (*gleicher Coin, Verkaufstag zufällig*) ist **trivial zu schlagen**. Der Auslösetag liegt per Bauart auf erhöhtem Kurs (das Ziel ist erreicht), ein zufälliger Tag desselben Coins im Schnitt darunter. Das ist ein Vorgriff in der Nullprobe selbst.
+
+**Die richtige Frage:** Fällt ein Coin **nach** dem Auslösen stärker zurück als ein **beliebiger** Coin im selben Markt? Im fallenden Markt schlägt jeder Verkauf das Halten; die Nullwelt muss genau diesen Markteffekt abziehen.
+
+**Haupt-Nullwelt Rolle L ab jetzt:** **zufällige L-Positionen desselben Starttags**, gleich viele wie ausgelöst, Verkaufstag aus der Verteilung der Auslösetage derselben Stufe (200). Die Form *gleicher Coin* läuft als Auskunft mit. Rolle K ist nicht betroffen: Der Ausstieg über die Marke liegt nach einem Rückgang, nicht auf einem ausgewählten Hoch. Dort bleibt die Nullwelt wie geplant.
+
