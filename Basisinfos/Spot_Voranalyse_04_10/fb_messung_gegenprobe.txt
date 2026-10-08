@@ -1,0 +1,10 @@
+F3  gleich  L Wahl neu Z1 x3 · Ausgabe Z1 x3 · 8 Wahl-Zeilen
+F1  gleich  L Z1 x3: 40 Anker, Abweichungen 0
+F2  gleich  L Korb neu +5.496 Pp · Ausgabe +5.50
+F6  gleich  K Wahl neu k 3 · Ausgabe k 3 · 11 Wahl-Zeilen
+F4  gleich  K k 3: 40 Anker ohne Luecke, Abweichungen 0
+F5  gleich  K Korb neu +3.355 Pp · Ausgabe +3.36
+F7  gleich  K 20 Einstiege: Bedingung und Sperre, Verstoesse 0
+F8  gleich  Urteil vor Dosis; Teil 0 ('+39.2', '-23.9') / ('+31.8', '-4.0', '4001', '4001')
+
+8 von 8 gleich

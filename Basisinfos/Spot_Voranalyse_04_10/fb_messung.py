@@ -162,7 +162,7 @@ def l_auswerten(pf, stufe, verkauf=None):
 
 def l_null(pf, df, nz=NZ, gleicher_coin=False):
     """Haupt: zufaellige Positionen desselben Starttags (gleiche Zahl), Tag aus der Ausloese-Verteilung. Auskunft: gleicher Coin, zufaelliger Tag."""
-    tage = df[df.aus].tag.values
+    tage = df[df.aus].tag.values.astype(int)
     if not len(tage):
         return np.full(nz, np.nan)
     je_t = {}
@@ -180,7 +180,8 @@ def l_null(pf, df, nz=NZ, gleicher_coin=False):
                 wahl = aus_idx[t] if gleicher_coin else list(RNG.choice(ks, size=n, replace=False))
                 for k in wahl:
                     x = pf[k]["x"]
-                    tau = min(int(RNG.choice(tage)), len(x) - 1)
+                    moeglich = tage[tage < len(x)]                      # KORREKTUR §31.6: nur Tage, an denen der Coin noch gehandelt wird
+                    tau = int(RNG.choice(moeglich)) if len(moeglich) else len(x) - 1
                     dd[ks.index(k)] = 0.5 * (x[tau] - x[-1])
             m.append(dd.mean())
         out.append(np.mean(m))
@@ -271,7 +272,8 @@ def k_null(ka, df, nz=NZ):
         dd = []
         for a in zeilen:
             v = K[a["sym"]].values
-            j = min(a["i0"] + int(RNG.choice(dauern)), a["he"])
+            moeglich = dauern[dauern <= a["he"] - a["i0"]]                 # KORREKTUR §31.6, wie Rolle L
+            j = a["i0"] + int(RNG.choice(moeglich)) if len(moeglich) else a["he"]
             dd.append(v[j] / v[a["i0"]] - v[a["he"]] / v[a["i0"]])
         out.append(pd.Series(dd).groupby(mon).mean().mean())
     return np.array(out)
@@ -345,12 +347,16 @@ def main():
             fehl, "bestanden" if fehl <= 5 else "NICHT bestanden", 100 * jg.mean(), np.mean(ng < jg.mean()), "erkannt" if (jg.mean() > 0 and np.mean(ng < jg.mean()) >= 0.95) else "NICHT erkannt"))
         print("  AUSKUNFT (nach dem Urteil) %s ab 2024: je Klasse %s · je Jahr %s" % (gew, " · ".join("%s %+.1f Pp" % (k, 100 * korb(g, "d", "t").mean()) for k, g in df.groupby("kl")),
               " · ".join("%d %+.1f Pp" % (j, 100 * korb(g, "d", "t").mean()) for j, g in df.groupby(df.t.dt.year))))
-        top = df.sort_values("d", ascending=False).sym.head(5).tolist()
+        top = df.sort_values("d", ascending=False).sym.drop_duplicates().head(5).tolist()
         print("    Weglassprobe ohne %s: Korb %+.2f Pp · gegen BTC Median: Regel %+.1f %% / Halten %+.1f %%" % (
             ",".join(top), 100 * korb(df[~df.sym.isin(top)], "d", "t").mean(), 100 * df.gg_btc.median(), 100 * df.halten_btc.median()))
         df.to_csv(os.path.join("data", "_spot", "fb_messung_l.csv"), sep=";", index=False)
-    print("  DOSIS ab 2024 (alle Stufen, Auskunft, nach dem Urteil): %s" % " · ".join(
-        "%s %+.1f" % (s, 100 * korb(l_auswerten(pU, s), "d", "t").mean()) for s in L_STUFEN))
+    teile = []
+    for s in L_STUFEN:
+        dfs = l_auswerten(pU, s)
+        js = korb(dfs, "d", "t").mean()
+        teile.append("%s %+.1f (Rang %.2f)" % (s, 100 * js, np.mean(l_null(pU, dfs, nz=100) < js)))
+    print("  DOSIS ab 2024 (alle Stufen, Auskunft, nach dem Urteil; Korb Pp, Rang gegen Haupt-Nullwelt): %s" % " · ".join(teile))
 
     # ------------------------------------------------ Rolle K
     ka = k_anker()
@@ -377,7 +383,7 @@ def main():
         fehl = 0
         dauern = df.dauer.values
         for _ in range(100):
-            zt = k_auswerten(kU, gew, ausstieg=lambda a: [(1.0, min(a["i0"] + int(RNG.choice(dauern)), a["he"]))])
+            zt = k_auswerten(kU, gew, ausstieg=lambda a: [(1.0, a["i0"] + int(RNG.choice(dauern[dauern <= a["he"] - a["i0"]])) if (dauern <= a["he"] - a["i0"]).any() else a["he"])])
             jz = korb(zt, "d", "mon")
             nz_ = k_null(kU, zt, nz=30)
             fehl += (jz.mean() > 0 and boot(jz.sort_index().values, 300) >= 0.95 and np.mean(nz_ < jz.mean()) >= 0.95)
@@ -390,11 +396,15 @@ def main():
             gew, " · ".join("%s %+.1f" % (k, 100 * korb(g, "d", "mon").mean()) for k, g in df.groupby("kl")),
             " · ".join("%d %+.1f" % (j, 100 * korb(g, "d", "mon").mean()) for j, g in df.groupby(df.t.dt.year)),
             100 * korb(df, "netto", "mon").mean(), 100 * df.gg_btc.median(), 100 * df.halten.median()))
-        top = df.sort_values("d", ascending=False).sym.head(5).tolist()
+        top = df.sort_values("d", ascending=False).sym.drop_duplicates().head(5).tolist()
         print("    Weglassprobe ohne %s: Korb %+.2f Pp" % (",".join(top), 100 * korb(df[~df.sym.isin(top)], "d", "mon").mean()))
         df.to_csv(os.path.join("data", "_spot", "fb_messung_k.csv"), sep=";", index=False)
-    print("  DOSIS ab 2024 (alle Stufen, Auskunft, nach dem Urteil): %s" % " · ".join(
-        "%s %+.1f" % (s, 100 * korb(k_auswerten(kU, s), "d", "mon").mean()) for s in K_STUFEN))
+    teile = []
+    for s in K_STUFEN:
+        dfs = k_auswerten(kU, s)
+        js = korb(dfs, "d", "mon").mean()
+        teile.append("%s %+.1f (Rang %.2f, %d T)" % (s, 100 * js, np.mean(k_null(kU, dfs, nz=100) < js), int(dfs.dauer.median())))
+    print("  DOSIS ab 2024 (alle Stufen, Auskunft, nach dem Urteil; Korb Pp, Rang gegen Nullwelt, Haltedauer): %s" % " · ".join(teile))
 
 
 if __name__ == "__main__":

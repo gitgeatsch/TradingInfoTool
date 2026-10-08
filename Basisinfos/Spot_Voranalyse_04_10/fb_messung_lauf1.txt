@@ -1,0 +1,43 @@
+MESSUNG Teil B (§31.3) · Kurse bis 2026-09-20
+
+TEIL 0 (R-R11)
+  Lagebild L5 mit der Marke dieser Messung: Ausbrecher Median +39.2 % (Soll +39,2) · alle -23.9 % (Soll -23,9) · Abweichung zu x2-Spalte 0
+  B5 X2 mit wl_messung.b5: E2 +31.8 % · E3 -4.0 % (Soll +31,8 / -4,0) · Ausstiegstag gleich an 4001 von 4001
+
+ROLLE L - Teilmitnahme 50 % (L-Kandidaten: 2023 799 an 12 Starttagen · ab 2024 1593 an 21)
+  WAHL 2023 (Korb = Mittel ueber Starttage von d = Regel - Halten; Rang gegen Haupt-Nullwelt):
+    Z1 x1,5    ausgeloest  85 % · Korb  -4.56 Pp · Rang 1.00
+    Z1 x2      ausgeloest  65 % · Korb  +8.64 Pp · Rang 1.00
+    Z1 x3      ausgeloest  30 % · Korb  +9.87 Pp · Rang 1.00
+    Z3 +50 %   ausgeloest  35 % · Korb  +2.25 Pp · Rang 1.00
+    Z3 +100 %  ausgeloest  16 % · Korb  +1.24 Pp · Rang 1.00
+    Z4 1 s     ausgeloest  82 % · Korb  -7.13 Pp · Rang 1.00
+    Z4 2 s     ausgeloest  57 % · Korb  +6.53 Pp · Rang 1.00
+    Z4 3 s     ausgeloest  33 % · Korb  +7.60 Pp · Rang 1.00
+  -> GEWAEHLT (vorab-Regel): Z1 x3
+  URTEIL ab 2024 Z1 x3: ausgeloest 146 an 21 Starttagen · Korb +5.50 Pp · Bootstrap 1.00 · Rang 1.00  ->  TRAEGT
+    Auskunft Nullwelt 'gleicher Coin, zufaelliger Tag' (trivial): Rang 1.00
+  SELBSTTEST (a) Zufalls-Kriterium 100 Welten: Fehlalarm 13 % -> NICHT bestanden · (b) gepflanzt (Verkauf am Hoch): Korb +62.5 Pp, Rang 1.00 -> erkannt
+  AUSKUNFT (nach dem Urteil) Z1 x3 ab 2024: je Klasse H +8.7 Pp · M -3.2 Pp · S +7.8 Pp · je Jahr 2024 +8.9 Pp · 2025 +1.0 Pp
+    Weglassprobe ohne VTHO,FUN,SNX,FUN,SNX: Korb +4.20 Pp · gegen BTC Median: Regel -61.0 % / Halten -61.3 %
+  DOSIS ab 2024 (alle Stufen, Auskunft, nach dem Urteil): Z1 x1,5 +15.2 · Z1 x2 +12.3 · Z1 x3 +5.5 · Z3 +50 % +10.1 · Z3 +100 % +6.1 · Z4 1 s +12.9 · Z4 2 s +8.0 · Z4 3 s +3.5
+
+ROLLE K - Nachlauf (Stellvertreter-Einstieg: 2023 886 in 12 Monaten · ab 2024 2656 in 27)
+  WAHL 2023 (Korb = Mittel ueber Monate von d = Regel - Halten 180 T):
+    w 15 %             n  886 · Korb -28.91 Pp · Haltedauer Median  12 T · Rang 0.71
+    w 20 %             n  886 · Korb -25.41 Pp · Haltedauer Median  20 T · Rang 0.98
+    w 25 %             n  886 · Korb -20.98 Pp · Haltedauer Median  30 T · Rang 0.99
+    w 30 %             n  886 · Korb -14.97 Pp · Haltedauer Median  44 T · Rang 1.00
+    w 35 %             n  886 · Korb  -9.07 Pp · Haltedauer Median  74 T · Rang 1.00
+    w 45 %             n  886 · Korb  -4.21 Pp · Haltedauer Median 125 T · Rang 1.00
+    k 1                n  886 · Korb -18.28 Pp · Haltedauer Median  48 T · Rang 0.88
+    k 1,5              n  886 · Korb  -5.34 Pp · Haltedauer Median 121 T · Rang 1.00
+    k 2                n  886 · Korb  -1.20 Pp · Haltedauer Median 180 T · Rang 0.99
+    k 3                n  886 · Korb  +0.43 Pp · Haltedauer Median 180 T · Rang 0.99
+    Teil 1/2 bei +50 % n  886 · Korb -13.50 Pp · Haltedauer Median  74 T · Rang 0.98
+  -> GEWAEHLT (vorab-Regel): k 3
+  URTEIL ab 2024 k 3: n 2656 in 27 Monaten · Korb +3.36 Pp · Bootstrap 0.97 · Rang 0.00  ->  TRAEGT NICHT
+  SELBSTTEST (a) Zufalls-Ausstieg 100 Welten: Fehlalarm 1 % -> bestanden · (b) gepflanzt (Ausstieg am Hoch): Korb +86.6 Pp, Rang 1.00 -> erkannt
+  AUSKUNFT (nach dem Urteil) k 3 ab 2024: je Klasse H -3.8 · M +2.2 · S +4.0 · je Jahr 2024 +1.1 · 2025 +5.4 · 2026 +4.1 · netto +3.3 Pp · Regel gegen BTC Median -45.0 % / Halten -49.0 % (absolut)
+    Weglassprobe ohne STO,REI,ALPINE,CTXC,STG: Korb +3.13 Pp
+  DOSIS ab 2024 (alle Stufen, Auskunft, nach dem Urteil): w 15 % +31.2 · w 20 % +29.4 · w 25 % +27.8 · w 30 % +25.1 · w 35 % +21.4 · w 45 % +14.2 · k 1 +19.9 · k 1,5 +10.8 · k 2 +6.5 · k 3 +3.4 · Teil 1/2 bei +50 % +23.6

@@ -3770,3 +3770,65 @@ Grundgesamtheit wie die Watchlist (Umlauf Stufe 3), monatliche **Starttage** mit
 
 **Haupt-Nullwelt Rolle L ab jetzt:** **zufällige L-Positionen desselben Starttags**, gleich viele wie ausgelöst, Verkaufstag aus der Verteilung der Auslösetage derselben Stufe (200). Die Form *gleicher Coin* läuft als Auskunft mit. Rolle K ist nicht betroffen: Der Ausstieg über die Marke liegt nach einem Rückgang, nicht auf einem ausgewählten Hoch. Dort bleibt die Nullwelt wie geplant.
 
+
+### 31.6 Ergebnis der Messung Teil B (08.10.2026, nach §31.3/§31.5)
+
+`fb_messung.py` → `.txt` (erster Lauf `fb_messung_lauf1.txt`), Gegenprobe `fb_messung_gegenprobe.py` **8/8**:
+- L-Auslösung und d an 40 Ankern mit pandas neu;
+- Körbe neu gemittelt;
+- Wahlregel beider Rollen neu angewendet;
+- K-Ausstieg an 40 Ankern mit zweiter Marke;
+- K-Einstiege an 20 Stichproben;
+- Reihenfolge Urteil vor Dosis.
+
+**Teil 0 (R-R11):** genau reproduziert. Lagebild L5: +39,2 % / −23,9 %, an allen Ankern gleich. B5 X2: +31,8 / −4,0 %, Ausstiegstag gleich an 4.001 von 4.001.
+
+**⚠️ Ein Fehler der Anlage, vom Selbsttest gefunden (erster Lauf):**
+- Fehlalarm 13 % in Rolle L. Nach der Regel galt das Urteil damit **nicht**.
+- Ursache: Die Nullwelt setzte einen Zufallstag hinter dem Ende eines eingestellten Coins auf den letzten Tag (d = 0). Der Zufall war dadurch schwächer als eine echte Regel, die nur zu Lebzeiten auslösen kann.
+- **Behoben:** Zufallstage nur innerhalb der Lebensdauer, für beide Rollen und den K-Selbsttest gleich.
+- Danach Fehlalarm **4 %** (L) und **0 %** (K). Das Urteil von L blieb gleich, K ebenso.
+- Randfall (Gegenprobe F4): Löst die Marke am Tag 180 aus, wird am Tag 181 verkauft, wie im alten Werkzeug. Das betrifft 6 von 2.656 Fällen.
+
+**Rolle L — Teilmitnahme 50 %:**
+
+| | |
+|---|---|
+| Wahl 2023 | alle Stufen Rang ≥ 0,99; größter Korb **Z1 ×3** (+9,9 Pp) → gewählt |
+| **Urteil ab 2024, Z1 ×3** | 146 Auslösungen an 21 Starttagen · Korb **+5,5 Pp** gegen Halten · Bootstrap 1,00 · Rang 1,00 → **TRÄGT** |
+| Selbsttest | (a) Fehlalarm 4 % ✔ · (b) gepflanzt erkannt ✔ |
+| je Klasse / Jahr | H +8,7 · M −3,2 · S +7,8 Pp · 2024 +8,9 · **2025 +1,0** Pp |
+| Weglassprobe (5 Coins) | +3,4 Pp |
+| gegen BTC (Median) | Regel −61,0 % · Halten −61,3 % |
+| **Dosis ab 2024** (Auskunft) | ×1,5 **+15,2** · ×2 +12,3 · ×3 +5,5 · BTC +50 % +10,1 · +100 % +6,1 · 1 σ +12,9 · 2 σ +8,0 · 3 σ +3,5 — **alle Rang 1,00** |
+
+**Rolle K — Nachlauf (Stellvertreter-Einstieg):**
+
+| | |
+|---|---|
+| Wahl 2023 | jeder Nachlauf **schlechter** als Halten (w 15 % −28,9 Pp … w 45 % −4,2 Pp); 2023 stieg der Markt. Gewählt **k 3** (+0,4 Pp; Haltedauer im Median 180 T = praktisch nie ausgestiegen) |
+| **Urteil ab 2024, k 3** | n 2.656 in 27 Monaten · Korb +3,4 Pp · Bootstrap 0,97 · **Rang 0,00** → **TRÄGT NICHT** |
+| Selbsttest | (a) 0 % ✔ · (b) erkannt ✔ |
+| **Dosis ab 2024** (Auskunft) | w 15 % **+31,2** (Rang 0,24, 10 T) · w 20 % +29,4 (0,11) · w 25 % +27,8 (0,18) · w 30 % +25,1 (0,04) · w 35 % +21,4 (0,00, 39 T) · w 45 % +14,2 (0,00) · k 1 … k 3 (0,00) · Teilverkauf +23,6 (0,15) |
+
+### 31.7 Was das heißt — und was es an früheren Aussagen korrigiert
+
+1. **Gewinnmitnahme nach starkem Anstieg hat echten Zeitwert (Rolle L).**
+   - Wer nach einem ×3 ab Start die Hälfte verkauft, liegt besser als Halten und besser als der Zufall.
+   - Starke Anstiege geben im Markt seit 2024 viel zurück, und der Verkauf nach dem Anstieg trifft genau das. Das gilt auf jeder Stufe (Dosis), am stärksten bei **niedrigen** Zielen.
+   - ⚠️ 2025 ist die Wirkung schwach (+1,0 Pp), in Klasse M negativ. Sie wird kleiner.
+2. **Die Wahl auf 2023 hat in beiden Rollen die falsche Stufe gefunden.** 2023 stieg der Markt: Hohe Ziele und kein Nachlauf waren dort besser. Ab 2024 fiel er: Niedrige Ziele und enger Nachlauf sind besser. Das war die vorab genannte Gefahr, und sie ist eingetreten. ⇒ **Die beste Stufe hängt an der Marktphase.** Eine feste Zahl, die über beide Phasen trägt, ist mit einem Aufwärtsjahr zum Wählen nicht zu finden.
+3. **⚠️ Die Marke selbst hat KEINEN Zeitwert (Rolle K). Das korrigiert §30.2 L5 und §21.6 B5.**
+   - Gegen Halten bringt der Nachlauf ab 2024 viel (+14 bis +31 Pp).
+   - Ein **Ausstieg an einem zufälligen Tag mit derselben Haltedauer** bringt aber **genauso viel oder mehr** (Rang 0,00 bis 0,24).
+   - Was wirkt, ist die **kurze Haltedauer im fallenden Markt**, nicht der Zeitpunkt, den die Marke wählt.
+   - Die Aussage *„die Führung halbiert den Verlust“* stimmt gegen Halten. Sie ist aber **kein Beleg für die Marke**: Eine Zeitgrenze leistet dasselbe.
+4. **Rolle L bleibt teuer:** L-Kandidaten verloren ab 2024 im Median **−61 %** gegen BTC binnen eines Jahres. Die Mitnahme ändert daran im Median nichts, weil nur 9 % auslösen. Sie hebt den Schnitt, nicht den Normalfall.
+
+### 31.8 Folgen (vorab §31.4) und offene Punkte
+
+| | Folge |
+|---|---|
+| **Rolle L trägt** | Mitnahme-Regel je L-Bestand: *„×3 ab Start erreicht → die Hälfte verkaufen“*. Begründung = gemessen: +5,5 Pp gegen Halten, besser als der Zufall. ⚠️ Mit Hinweis: Niedrigere Ziele waren ab 2024 besser (Dosis). Die Stufe wird **nicht** nachträglich getauscht (R-R11, Hypothesen nicht starr); eine Fassung n+1 braucht Vorwärtsdaten |
+| **Rolle K trägt nicht** | keine gemessene Weite. Die Marke X2 bleibt beschriebene Praxis **ohne Nachweis gegen den Zufall** |
+| **neu (Fassung n+1, nur vorwärts):** | **Zeitgrenze für K** (z. B. höchstens 2–6 Wochen halten). Auf 2024+ nur Beschreibung, denn diese Daten sind verbraucht. **Phasenabhängige Stufe** (enge Führung bei fallendem, weite bei steigendem Altmarkt) gehört zur Frage *wann entsteht eine Altrally* (§32) |
