@@ -1,0 +1,12 @@
+  for name, mm in (("nur BTC", b1 & ~b2 & ~b3), ("nur Geld \(M2 und Stable\)", ~b1 & b2 & b3), ("BTC \+ M2, Stablecoins fehlen", b1 & b2 & ~b3), ("alle drei", b1 & b2 & b3)):
+  for name, mm in (("nur BTC", b1 & ~b2 & ~b3), ("nur Geld \(M2 und Stable\)", ~b1 & b2 & b3), ("BTC \+ M2, Stablecoins fehlen", b1 & b2 & ~b3), ("alle drei", b1 & b2 & b3)):
+A1  gleich  Stand neu an 2639 Tagen, Abweichungen 0
+A2  gleich  neu {0: np.float64(1.2), 1: np.float64(3.8), 2: np.float64(6.3), 3: np.float64(26.0)} · Ausgabe {0: 1.2, 1: 3.8, 2: 6.3, 3: 26.0}
+A3  gleich  oberes Fuenftel B2 und Netto-Liq neu gegen Ausgabe
+A4  gleich  ohne 2020/21: Season bei 3/3 neu 2.68 % · Ausgabe 2.7
+A5  gleich  Fehlalarm-Abschnitte neu [('2019-08-05', '2019-08-25'), ('2021-08-20', '2021-09-12'), ('2021-09-30', '2021-11-19')] · Ausgabe [('2019-08-05', '2019-08-25'), ('2021-08-20', '2021-09-12'), ('2021-09-30', '2021-11-19')]
+A6  gleich  Season-Kennzeichen an 5 Tagen aus Korb/BTC neu, Abweichungen 0
+
+6 von 6 gleich
+A7  gleich  Muster nur BTC / nur Geld / BTC+M2 ohne Stable / alle drei neu gegen Ausgabe, Abweichungen 0
+7 von 7 gleich (mit A7)

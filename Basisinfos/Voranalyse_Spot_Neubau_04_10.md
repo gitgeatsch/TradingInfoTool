@@ -4251,3 +4251,99 @@ Die Klasse entscheidet nur über den **K-Einstieg**. **Führung, Rolle und Preis
 | **K5 Fehlalarm-Zeiten** | Abschnitte mit 3 von 3 über ≥ 14 T ohne Season in den folgenden 90 T, mit Einordnung |
 | Gegenprobe | eigener Rechenweg für Wahrheit, Stand und K1 |
 | **Folge** | eine **kalibrierte Einteilung** (gut / Übergang / schlecht, Grenzen, *Start Altseason ca.* = gemessener Vorlauf) als **Vorlage**. ⚠️ Es sind 2–4 Episoden, davon praktisch ein Zyklus. Das ist Beschreibung mit Stabilitätsprobe, kein Nachweis; vorwärts protokolliert |
+
+
+### 36.4 Ergebnis der Kalibrierung (08.10.2026, nach §36.3)
+
+`am_kalibrierung.py` → `.txt` (Muster mit `AM_MODUS=--muster`), Gegenprobe `am_gegenprobe.py` **7/7**.
+
+Zeitraum 2019-04 bis 2026-06: 2.639 Tage, davon 7,5 % Season-Tage, in 4 Episoden. Davon sind zwei echte Seasons (2020-04, 2020-11 bis 2021-03); 2022-05 und 2023-10 waren Gegenbewegungen im Bärenmarkt.
+
+⚠️ **Ein Umsetzungsfehler, vor der Bewertung behoben:** Die Zeile *Ampel heute* zählte den Stand mit `+` auf numpy-Wahrheitswerten, und das ist ein **ODER**. Sie meldete 1 statt 2 von 3. Die Auswertung K2 rechnete mit ganzen Zahlen und war richtig (Gegenprobe A1). Zwei Abweichungen der Gegenprobe lagen in der Gegenprobe selbst (Grenzregel der Fünftel).
+
+**K2 Stand X von 3:**
+
+| Stand | Tage | Season-Tage | Lift |
+|---|---|---|---|
+| 0 von 3 | 27,5 % | 1,2 % | 0,16 |
+| 1 von 3 | 23,8 % | 3,8 % | 0,51 |
+| 2 von 3 | 32,3 % | 6,3 % | 0,84 |
+| **3 von 3** | 16,3 % | **26,0 %** | **3,45** |
+
+⚠️ **Leave-one-out:** Ohne 2020/21 fällt 3 von 3 auf 2,7 %. **Die Ampel trägt über einen einzigen Zyklus.** Die zwei Bärenmarkt-Gegenbewegungen zeigte sie mit Stand 1 bzw. 0 richtig **nicht** als Season.
+
+**K2b Welche Bedingungen an sind — der Übergang:**
+
+| Muster | Tage | Season-Tage |
+|---|---|---|
+| keine | 727 | 1,2 % |
+| **nur BTC stark** | 295 | **0,0 %** |
+| **BTC + Stablecoins, M2 fehlt** | 297 | **0,0 %** |
+| nur Geld (M2 oder Stablecoins) | 334 | 7,2 % |
+| **nur Geld (M2 UND Stablecoins), BTC noch schwach** | 556 | **9,7 %** (2020) |
+| **alle drei** | 430 | **26,0 %** (2020, 2021) |
+| **BTC + M2, Stablecoins fehlen = HEUTE** | **0** | — **nie dagewesen** |
+
+⇒ **Die Reihenfolge zählt:**
+- **Zuerst das Geld** (Geldmenge und Stablecoins wachsen, oft Monate vorher), **dann** die BTC-Stärke: Das ist der Season-Vorlauf.
+- BTC-Stärke **ohne** Geld führte **nie** zu einer Season (2019, Spätphase 2021).
+
+**K3 Grenzen:**
+- Alle drei Schwellen liegen auf einem **Plateau**: B1 10–30 %, B2 3–7 %, B3 5–20 % liefern ähnliche Ergebnisse (Season-Anteil bei 3/3 18–34 %, erfasst 55–58 % der Season-Tage).
+- ⇒ Die Vorschlagsschwellen 20 / 5 / 10 % stehen **nicht auf einer Messerschneide** und bleiben.
+
+**K1 gut / schlecht je Bedingung** (oberes bzw. unteres Fünftel):
+
+| | gut (Lift ≥ 1,5) | schlecht (Lift ≤ 0,5) |
+|---|---|---|
+| BTC 91 T | > +49 % (2,6) | +18 bis +49 % (0,2) |
+| M2 J/J | > +12,6 % (3,7) | unter +5,3 % (0,0–0,2) |
+| Stablecoins 91 T | > +53 % (3,1) | −1 bis +19 % (0,0–0,1) |
+| **Netto-Liquidität FED 13 W** | **> +4,4 % (4,2), stärkste Einzelgröße** | −3 bis +4 % (0,0–0,2) |
+| Fear & Greed | > 72 (2,5) | 25–40 und 54–72 (0,4) |
+| **Breite** | **< 0,2 (1,7): Seasons starten aus niedriger Breite** | **> 0,6 (0,3): Endsignal** |
+| ETH/BTC 91 T | trennt nicht | — |
+
+**K4 Übergänge und Start:**
+- **2020-11 (die große Season):**
+  - M2 war 466 T, Stablecoins 574 T vorher an.
+  - **BTC-Stärke kam als letzte dazu, 12 T vor dem Start.**
+  - Der Stand fiel erst im Mai 2021; die Breite am Ende lag bei 0,82.
+- **2020-04:** Stand 2 am Start (Geld an, BTC nach dem Corona-Crash noch schwach), BTC kam 58 T später dazu. Breite am Ende 0,60.
+- ⇒ ***Start Altseason (ca.)*** = **das Geld ist seit Monaten an, und BTC-Stärke kommt dazu** (Wechsel auf 3 von 3).
+- ⇒ ***Ende*** = Breite ≥ 0,6–0,8 (Überhitzung). Danach kann 3 von 3 noch Monate an bleiben (2021-08 bis 11: Fehlalarm in der Spätphase).
+
+**K5 Fehlalarme (3/3 ≥ 14 T ohne Season):**
+- 2019-08: BTC +106 %, eine reine BTC-Rally, Breite 0,05.
+- 2021-08 bis 2021-11: Spätphase nach der Season, Breite 0,47–0,57.
+
+**Ampel heute (Kurse bis 20.09.2026):**
+
+| | Wert | Schwelle | vor 30 T |
+|---|---|---|---|
+| B1 BTC 91 T | **+27,2 %** ✔ | 20 % | +3,7 % (gerade erst eingeschaltet) |
+| B2 M2 J/J | **+5,7 %** ✔ (knapp) | 5 % | +5,4 % |
+| B3 Stablecoins 91 T | **−1,3 %** ✗ | 10 % | −4,4 % (steigt) |
+| Breite | 0,51 (mittel) | | |
+
+⇒ **Stand 2 von 3, aber im falschen Muster:**
+- BTC läuft, das Geld ist schwach: M2 nur knapp über der Schwelle (2020: über +20 %), und es kommen **keine** Stablecoins zu.
+- Diese Lage gab es seit 2019 nie. Die nächsten Verwandten (nur BTC; BTC + Stablecoins) führten **nie** zu einer Season.
+- **Fachlich ist das kein Season-Vorlauf.**
+
+### 36.5 Die kalibrierte Einteilung (Vorlage für die Ampel)
+
+| Stufe | Muster | Bedeutung | Vorschlag Rolle L |
+|---|---|---|---|
+| **kalt** | 0–1 von 3 **oder** nur BTC **oder** BTC + Stablecoins ohne M2 | keine Season-Grundlage | kein Aufbau; laufender Preis je L-Bestand sichtbar |
+| **Vorlauf** | **Geld an (M2 und Stablecoins), BTC noch schwach** | die Grundlage entsteht (2020) | Kandidatenliste bereit, erste kleine Tranche möglich |
+| **Season-Klima** | **alle drei**, Breite noch < 0,6 | Season wahrscheinlich (26 % der Tage) | Aufbau in Tranchen, Mitnahme ×3 |
+| **Überhitzung / Ende** | Breite ≥ 0,6 oder eine Bedingung fällt | Season endet | kein Neuaufbau, Mitnahme straffen |
+| **ungewohnt** | Muster ohne Vorbild (heute: BTC + M2, keine Stablecoins) | keine Erfahrung | wie *kalt*, mit Hinweis |
+
+⚠️ **Grenzen dieser Einteilung:**
+- ein Zyklus (Leave-one-out bricht);
+- Schwellen auf einem Plateau, aber nicht statistisch belegt;
+- Netto-Liquidität wäre die stärkste Einzelgröße und gehört als **vierte Bedingung in Fassung n+1** (vorwärts zu prüfen, nicht jetzt nachträglich eingebaut).
+
+Jeder Wechsel der Stufe wird vorwärts protokolliert.
