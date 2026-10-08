@@ -30,6 +30,8 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HIER)
 import as_messung as M  # noqa: E402
 import wl_messung as W  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.dirname(HIER)))
+import hole_umlaufmenge_cg as HU  # noqa: E402  (nur vervielfacher; keine Seiteneffekte beim Import)
 
 A, G = M.A, M.G
 K, IDX, POS, ENDE = M.K, M.IDX, M.POS, M.ENDE
@@ -43,13 +45,42 @@ SPLY = {s: g.set_index("datum")["wert"].sort_index() for s, g in pd.read_sql("SE
 _KLASSE = {}
 
 
-def umlauf(s, t):
-    r = SPLY.get(s)
+_cg = sqlite3.connect("file:data/umlaufmenge_cg.db?mode=ro", uri=True)
+CGH = {s: g.set_index("datum")["wert"].sort_index()          # CoinGecko-Historie ab 21.09.2025, Buendelfaktor SCHON angewandt (_quelle)
+       for s, g in pd.read_sql("SELECT symbol, datum, wert FROM umlaufmenge", _cg, parse_dates=["datum"]).groupby("symbol")}
+CM_PLAUSIBEL = {s: (UMLAUF_HEUTE.get(s) is None or 1 / 3 <= r.iloc[-1] / UMLAUF_HEUTE[s] <= 3) for s, r in SPLY.items() if len(r) and r.iloc[-1] > 0}
+
+
+def _asof(r, t):
     if r is not None:
         x = r[:t]
         if len(x) and (t - x.index[-1]).days <= 7 and x.iloc[-1] > 0:
             return x.iloc[-1]
-    return UMLAUF_HEUTE.get(s, np.nan)
+    return None
+
+
+def umlauf_stufe(s, t, stufe=3):
+    """Umlauf in der Einheit des KURSES, in drei nachrechenbaren Stufen (Spot §30.2, Wirkung je Stufe gemessen):
+      1  bis 08.10.: CoinMetrics SplyCur zu t, sonst CoinGecko HEUTE - ohne Buendelfaktor
+      2  + Buendelfaktor (Befund 2.501-buendelpaare): 1000SATS, 1MBABYDOGE ... handeln Buendel, die Quellen fuehren den Einzeltoken
+         -> Menge / hole_umlaufmenge_cg.vervielfacher (aus dem Namen). Ohne: Marktwert bis 10^6 zu hoch (mk_buendel_wirkung.txt)
+      3  + CoinGecko-HISTORIE zu t (umlaufmenge_cg.db, ab 21.09.2025) vor allem anderen, und CoinMetrics nur, wenn plausibel
+         (letzter Wert / CoinGecko heute in [1/3, 3]; verworfen XVG x100, KNC x0,05, GNO x3,8 - mk_umlauf_pruefung.txt U1)
+    ⚠️ Vor 21.09.2025 bleibt fuer die meisten Coins der Umlauf von HEUTE - ein Vorgriff, der Coins mit spaeterer Ausgabe
+    neuer Token historisch zu hoch einstuft (U3: Median +4,6 %/Jahr, 14 % > +50 %). Frei verfuegbar ist keine aeltere Historie."""
+    f = HU.vervielfacher(s)[0] if stufe >= 2 else 1.0
+    if stufe >= 3:
+        h = _asof(CGH.get(s), t)
+        if h is not None:
+            return h
+    cm = _asof(SPLY.get(s), t)
+    if cm is not None and (stufe < 3 or CM_PLAUSIBEL.get(s, True)):
+        return cm / f
+    return UMLAUF_HEUTE.get(s, np.nan) / f
+
+
+def umlauf(s, t):
+    return umlauf_stufe(s, t, 3)
 
 
 def rang_mw(t):

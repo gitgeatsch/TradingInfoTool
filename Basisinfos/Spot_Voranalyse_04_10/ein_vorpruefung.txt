@@ -1,27 +1,27 @@
 D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
   return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
 VORPRUEFUNG Spot-Einstieg (§29, Stufe 1) · Kurse bis 2026-09-20 · Stichtage 81 · Coin-Anker 19681
-Altseason-Breite je Epoche (Mittel, Anteil Stichtage >= 50 %): E2 38 % / 30 % · E3 32 % / 15 %
+Altseason-Breite je Epoche (Mittel, Anteil Stichtage >= 50 %): E2 38 % / 30 % · E3 32 % / 20 %
 
 ANZAHL Einstiege (abgeschlossene Fenster) je Arm, Epoche und Klasse - E3 NUR ANZAHL:
 ep   E1             E2               E3            
 kl    H     M   S    H     M     S    H     M     S
 arm                                                
-A0   16   316  19  138   785  1210   89   365  1065
-E-a   3    50   4   27   156   184   12    39   132
-E-b   3    12   0    8    74    61    5     6    17
-E-c   3    46   3   26   146   173   10    33   113
-KL   93  1525  98  669  3850  5975  406  1782  5283
+A0   16   316  19  137   785  1210   94   363  1065
+E-a   3    50   4   28   154   186   14    38   129
+E-b   3    12   0    8    74    61    5     9    20
+E-c   3    46   3   28   144   175   12    32   109
+KL   93  1525  98  667  3852  5975  418  1770  5283
 
 E2 (WAHL-Epoche) - Ertrag gegen BTC ueber dieselbe Haltedauer:
   KL   n 10494 · Mittel   +2.7 % · Median  -15.8 % · Anteil > BTC  28 % · Monatsmittel > 0 in 15 von 37 Monaten · Ausstieg Marke 98 % / 365 T  1 % / eingestellt  1 % · Haltedauer Median 65 T
-  A0   n 2133 · Mittel   +5.5 % · Median  -13.5 % · Anteil > BTC  29 % · Monatsmittel > 0 in 13 von 37 Monaten · Ausstieg Marke 99 % / 365 T  1 % / eingestellt  0 % · Haltedauer Median 68 T
-  E-a  n  367 · Mittel   +4.9 % · Median  -12.6 % · Anteil > BTC  31 % · Monatsmittel > 0 in 12 von 37 Monaten · Ausstieg Marke 99 % / 365 T  1 % / eingestellt  0 % · Haltedauer Median 50 T
-  E-b  n  143 · Mittel  +17.6 % · Median   -6.6 % · Anteil > BTC  43 % · Monatsmittel > 0 in 6 von 11 Monaten · Ausstieg Marke 100 % / 365 T  0 % / eingestellt  0 % · Haltedauer Median 38 T
-  E-c  n  345 · Mittel   +5.5 % · Median  -12.9 % · Anteil > BTC  30 % · Monatsmittel > 0 in 11 von 37 Monaten · Ausstieg Marke 99 % / 365 T  1 % / eingestellt  0 % · Haltedauer Median 48 T
+  A0   n 2132 · Mittel   +5.5 % · Median  -13.5 % · Anteil > BTC  29 % · Monatsmittel > 0 in 13 von 37 Monaten · Ausstieg Marke 99 % / 365 T  1 % / eingestellt  0 % · Haltedauer Median 68 T
+  E-a  n  368 · Mittel   +5.4 % · Median  -12.6 % · Anteil > BTC  31 % · Monatsmittel > 0 in 14 von 37 Monaten · Ausstieg Marke 99 % / 365 T  1 % / eingestellt  0 % · Haltedauer Median 50 T
+  E-b  n  143 · Mittel  +18.4 % · Median   -6.2 % · Anteil > BTC  43 % · Monatsmittel > 0 in 7 von 11 Monaten · Ausstieg Marke 100 % / 365 T  0 % / eingestellt  0 % · Haltedauer Median 34 T
+  E-c  n  347 · Mittel   +6.2 % · Median  -12.7 % · Anteil > BTC  31 % · Monatsmittel > 0 in 12 von 37 Monaten · Ausstieg Marke 99 % / 365 T  1 % / eingestellt  0 % · Haltedauer Median 48 T
   je Klasse (Mittel / Median gegen BTC):
-    KL   H n 669  -5.4 / -15.2 % · M n 3850  +7.5 / -16.3 % · S n 5975  +0.5 / -15.6 %
-    A0   H n 138 -10.5 / -13.7 % · M n 785 +15.6 / -15.3 % · S n 1210  +0.7 / -12.6 %
-    E-a  H n 27 -12.7 / -20.2 % · M n 156  +6.7 / -12.2 % · S n 184  +5.9 / -12.2 %
-    E-b  H n 8  +8.8 /  +9.7 % · M n 74 +17.1 /  -9.2 % · S n 61 +19.5 /  -4.2 %
-    E-c  H n 26 -14.7 / -25.5 % · M n 146  +7.1 / -10.2 % · S n 173  +7.2 / -12.7 %
+    KL   H n 667  -5.4 / -15.2 % · M n 3852  +7.4 / -16.4 % · S n 5975  +0.5 / -15.5 %
+    A0   H n 137 -10.7 / -13.0 % · M n 785 +15.6 / -15.3 % · S n 1210  +0.8 / -12.6 %
+    E-a  H n 28 -14.4 / -24.5 % · M n 154  +8.1 / -10.9 % · S n 186  +6.2 / -12.2 %
+    E-b  H n 8  +8.8 /  +9.7 % · M n 74 +18.4 /  -7.6 % · S n 61 +19.7 /  -4.2 %
+    E-c  H n 28 -16.1 / -27.0 % · M n 144  +8.3 /  -9.4 % · S n 175  +8.1 / -12.7 %

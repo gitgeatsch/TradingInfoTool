@@ -1,0 +1,53 @@
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+LAGEBILD Altcoins 2023 bis heute · Kurse bis 2026-09-20 · Markt (L1) 2023-01-01 bis 2026-08-01 · Ausbrueche (L2-L5, 180-T-Fenster) 2023-01-01 bis 2026-03-01 (39) · Coin-Stichtage 14084
+
+L1 MARKT je Halbjahr (Monatswerte; Altcoin-Index = Top 100 nach Marktwert ohne BTC, 30-T-Ertrag GEGEN BTC je Monat)
+  Halbjahr  BTC-Ertrag  Breite>=50%%  Altindex gleichgew.  marktwertgew.  (Summe der Monate, verkettet)
+  2023-H1     +72.2 %     0 von 6      -36.2 %              -35.6 %
+  2023-H2     +33.7 %     0 von 6      +11.4 %               +8.5 %
+  2024-H1     +42.6 %     3 von 6      -38.6 %              -35.2 %
+  2024-H2     +53.1 %     1 von 6      -11.4 %              +21.2 %
+  2025-H1      +9.3 %     0 von 6      -58.8 %              -34.8 %
+  2025-H2     -16.4 %     2 von 6      -22.1 %              +10.4 %
+  2026-H1     -25.7 %     1 von 6      -15.4 %              -10.6 %
+  2026-H2     +31.1 %     0 von 2      -12.9 %               -5.3 %
+  ab 2024 gesamt: BTC +94 % · Altindex gegen BTC gleichgew. -87 % / marktwertgew. -52 % · Breite offen an 7 von 32 Stichtagen
+  Kern ausserhalb des Universums (Auskunft): ETH/BTC -41 % · SOL/BTC -47 %
+
+L2 AUSBRUECHE (Coin/BTC binnen 180 T >= x2) - die 'Diamanten'
+  2023-H1  1890 Coin-Stichtage · Ausbrueche 120 ( 6.3 %) · Coins  61 · H/M/S 4/24/92 · nach 180 T noch >= x2:  19 % · Median-Rueckgabe vom Hoch  57 %
+  2023-H2  2033 Coin-Stichtage · Ausbrueche 426 (21.0 %) · Coins 132 · H/M/S 21/131/274 · nach 180 T noch >= x2:  30 % · Median-Rueckgabe vom Hoch  41 %
+  2024-H1  2157 Coin-Stichtage · Ausbrueche 155 ( 7.2 %) · Coins  71 · H/M/S 4/30/121 · nach 180 T noch >= x2:  18 % · Median-Rueckgabe vom Hoch  56 %
+  2024-H2  2205 Coin-Stichtage · Ausbrueche 230 (10.4 %) · Coins  81 · H/M/S 23/61/146 · nach 180 T noch >= x2:  14 % · Median-Rueckgabe vom Hoch  62 %
+  2025-H1  2268 Coin-Stichtage · Ausbrueche 108 ( 4.8 %) · Coins  59 · H/M/S 0/18/90 · nach 180 T noch >= x2:  19 % · Median-Rueckgabe vom Hoch  56 %
+  2025-H2  2370 Coin-Stichtage · Ausbrueche 193 ( 8.1 %) · Coins  89 · H/M/S 6/27/160 · nach 180 T noch >= x2:  19 % · Median-Rueckgabe vom Hoch  58 %
+  2026-H1  1161 Coin-Stichtage · Ausbrueche 142 (12.2 %) · Coins  69 · H/M/S 5/19/118 · nach 180 T noch >= x2:  20 % · Median-Rueckgabe vom Hoch  55 %
+  2023 (Training)  Ausbruchsquote 13.9 % (H 8.9 · M 12.8 · S 15.1 %) · 156 verschiedene Coins · Hoch nach Median 113 T · eingestellt unter den Ausbrechern 10
+  ab 2024          Ausbruchsquote 8.1 % (H 6.6 · M 6.6 · S 8.8 %) · 238 verschiedene Coins · Hoch nach Median 85 T · eingestellt unter den Ausbrechern 57
+  ab 2024 nach Alter am Stichtag: < 1 Jahr Quote 10.1 % (1650 Coin-Stichtage) · >= 1 Jahr 7.8 % · Anteil junger Coins unter den Ausbrechern 20 %
+  groesste ab 2024 (Hoch gegen BTC): DEXE x24.1 · ZEC x24.1 · TUT x20.8 · SYN x14.8 · BNX x12.8 · PEPE x11.2 · OM x10.9 · ALPACA x9.9 · ALPINE x9.0 · BANANAS31 x8.2 · STG x7.9 · STO x7.7 · REI x7.0 · FLOKI x7.0 · FUN x6.8
+
+L3 LAGE am Stichtag (vorab bekannt) -> Ausbruchsquote ab 2024
+  BTC 90T faellt  Breite zu     Stichtage 10 · Quote  9.3 % · Median Ende gegen BTC -31.9 %
+  BTC 90T steigt  Breite offen  Stichtage  6 · Quote  8.2 % · Median Ende gegen BTC -49.7 %
+  BTC 90T steigt  Breite zu     Stichtage 11 · Quote  7.1 % · Median Ende gegen BTC -43.9 %
+  RUECKSCHAU BTC im Fenster < -10 %   Stichtage  9 · Quote  8.6 %
+  RUECKSCHAU BTC -10..+10 %           Stichtage  3 · Quote  5.1 %
+  RUECKSCHAU BTC > +10 %              Stichtage 15 · Quote  8.4 %
+  Quote je Stichtag ab 2024: Median 8.5 % · hoechste 2024-11-01 16 % · 2026-03-01 15 % · 2024-02-01 14 % · 2024-01-01 13 % · 2024-08-01 13 %
+
+L4 WAREN DIE AUSBRECHER VORAB IN DER WATCHLIST? (oberstes Fuenftel am Stichtag; Kombination auf E2 gewaehlt)
+  2023 (Training)  Quote im Fuenftel 9.6 % gegen ausserhalb 15.0 % (Lift 0.64) · Anteil der Ausbrecher, die im Fuenftel waren 14 % (Fuenftel = 20 % der Coins)
+      H: im Fuenftel 0.0 % · ausserhalb 11.5 %
+      M: im Fuenftel 5.7 % · ausserhalb 14.6 %
+      S: im Fuenftel 12.9 % · ausserhalb 15.6 %
+  ab 2024          Quote im Fuenftel 8.1 % gegen ausserhalb 8.2 % (Lift 0.99) · Anteil der Ausbrecher, die im Fuenftel waren 20 % (Fuenftel = 20 % der Coins)
+      H: im Fuenftel 9.2 % · ausserhalb 5.8 %
+      M: im Fuenftel 8.8 % · ausserhalb 6.1 %
+      S: im Fuenftel 7.7 % · ausserhalb 9.0 %
+
+L5 WAS HAELT DIE FUEHRUNG X2 VOM AUSBRUCH? (ab 2024, Ertrag gegen BTC bis Ausstieg ueber die Marke)
+  Ausbrecher     n  828 · X2 gegen BTC Median  +39.2 % / Mittel  +58.4 % · > BTC  73 % · Halten 180 T Median   +6.6 % / Mittel  +44.4 % · Hoch Median +152.6 % · Vielfaches gehalten (1+X2)/(1+Hoch) Median 0.57
+  alle uebrigen  n 9333 · X2 gegen BTC Median  -25.1 % / Mittel  -22.0 % · > BTC  10 % · Halten 180 T Median  -43.0 % / Mittel  -40.5 % · Hoch Median  +12.9 % · Vielfaches gehalten (1+X2)/(1+Hoch) Median 0.65
+  alle           n 10161 · X2 gegen BTC Median  -23.9 % / Mittel  -15.5 % · > BTC  15 % · Halten 180 T Median  -40.9 % / Mittel  -33.5 % · Hoch Median  +15.2 % · Vielfaches gehalten (1+X2)/(1+Hoch) Median 0.64

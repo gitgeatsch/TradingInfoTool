@@ -1,5 +1,7 @@
 D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
   return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
 Messung §25 · Kurse bis 2026-09-20
 
 TEIL 0 (R-R11) Reproduktion §19.6 mit Umsatz-Klassen: E2 Saldo +0.1098 · E3 Saldo +0.1319 (Soll +0,110 / +0,132)
@@ -14,66 +16,65 @@ TEIL 1 Marktwert-Klassen · 19681 Coin-Anker · Bewegungswelten 8100 je Epoche
   E2 Ersatzklasse (ohne Umlauf) 39 % der Coins · Kreuztabelle Umsatz (Zeilen) gegen Marktwert (Spalten):
       Marktwert    H     M     S
       Umsatz                    
-      H          438    53     2
-      M          208  2598   401
-      S           23  1199  5572
+      H          437    53     3
+      M          209  2600   398
+      S           21  1199  5574
   E3 Ersatzklasse (ohne Umlauf) 30 % der Coins · Kreuztabelle Umsatz (Zeilen) gegen Marktwert (Spalten):
       Marktwert    H     M     S
       Umsatz                    
-      H          222    24     5
-      M          156  1175   417
-      S           28   583  4861
+      H          223    23     5
+      M          183  1144   421
+      S           12   603  4857
 SELBSTTEST der Anlage (§19.2, vorab)
-  (a) 80 Zufallstests: Rang >= 0,975 in E2 4 (5.0 %) · in E3 4 (5.0 %) · in beiden 1 · traegt 0  ->  BESTANDEN
+  (a) 80 Zufallstests: Rang >= 0,975 in E2 3 (3.8 %) · in E3 5 (6.2 %) · in beiden 0 · traegt 0  ->  NICHT BESTANDEN
   (b) gepflanzt 0,3 x R2 + N(0,1), oberes Fuenftel  ->  BESTANDEN
       E1  -
-      E2  Saldo  +7.7 Pp  Rang 1.000 | Lift R2 1.16 · D2 0.96 · Spiegel  1.21 | R3 +3.5 Pp | 309 Coins mit R2 | n 2132 an 37 Stichtagen | Korb    -0 % (ganze Klasse   -11 %) gg. BTC
-            Spiegelprobe bewegungsgleich: Lift D2 0.961 gegen Grenze 1.050  ->  besteht
-      E3  Saldo  +8.7 Pp  Rang 1.000 | Lift R2 1.28 · D2 0.98 · Spiegel  1.31 | R3 +3.0 Pp | 221 Coins mit R2 | n 1518 an 20 Stichtagen | Korb   -36 % (ganze Klasse   -45 %) gg. BTC
-            Spiegelprobe bewegungsgleich: Lift D2 0.975 gegen Grenze 1.030  ->  besteht
-D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
-  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
-  Kombination (unveraendert §19.6) auf Marktwert-Klassen, oberes Fuenftel  ->  TRAEGT
+      E2  Saldo  +7.8 Pp  Rang 1.000 | Lift R2 1.16 · D2 0.96 · Spiegel  1.21 | R3 +3.5 Pp | 308 Coins mit R2 | n 2132 an 37 Stichtagen | Korb    -0 % (ganze Klasse   -11 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.960 gegen Grenze 1.051  ->  besteht
+      E3  Saldo  +8.6 Pp  Rang 1.000 | Lift R2 1.27 · D2 0.97 · Spiegel  1.31 | R3 +2.9 Pp | 220 Coins mit R2 | n 1519 an 20 Stichtagen | Korb   -38 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.974 gegen Grenze 1.027  ->  besteht
+SELBSTTEST NICHT BESTANDEN - Teil 1 ohne Urteil
+  Kombination (unveraendert §19.6) auf Marktwert-Klassen, oberes Fuenftel  ->  traegt nicht
       E1  Saldo  +9.6 Pp  Rang 1.000 | Lift R2 1.00 · D2 0.84 · Spiegel  1.20 | R3 -0.7 Pp |  45 Coins mit R2 | n  351 an 24 Stichtagen | Korb   +76 % (ganze Klasse   +78 %) gg. BTC
-      E2  Saldo +10.4 Pp  Rang 1.000 | Lift R2 1.12 · D2 0.86 · Spiegel  1.30 | R3 +0.3 Pp | 150 Coins mit R2 | n 2133 an 37 Stichtagen | Korb    -7 % (ganze Klasse   -12 %) gg. BTC
-            Spiegelprobe bewegungsgleich: Lift D2 0.863 gegen Grenze 1.030  ->  besteht
-      E3  Saldo +14.4 Pp  Rang 1.000 | Lift R2 1.24 · D2 0.93 · Spiegel  1.33 | R3 +2.5 Pp |  97 Coins mit R2 | n 1519 an 20 Stichtagen | Korb   -26 % (ganze Klasse   -45 %) gg. BTC
-            Spiegelprobe bewegungsgleich: Lift D2 0.934 gegen Grenze 1.024  ->  besteht
-  Klasse H  E2 Saldo  +7.9 Pp · Lift R2 1.07 / D2 0.76 · Korb  -23 % (Klasse  -29 %) · E3 Saldo +21.0 Pp · Lift R2 1.29 / D2 0.83 · Korb   -4 % (Klasse  -24 %)
-  Klasse M  E2 Saldo  +9.8 Pp · Lift R2 1.07 / D2 0.84 · Korb   -4 % (Klasse   -7 %) · E3 Saldo +26.5 Pp · Lift R2 1.47 / D2 0.88 · Korb  -17 % (Klasse  -50 %)
-  Klasse S  E2 Saldo +11.0 Pp · Lift R2 1.15 / D2 0.89 · Korb   +5 % (Klasse   -2 %) · E3 Saldo  +9.4 Pp · Lift R2 1.16 / D2 0.96 · Korb  -55 % (Klasse  -59 %)
-  Dosis E2 Fuenftel 1..5:  -6.6  -3.8  -0.8  +0.3 +10.4
-  Weglassprobe E2 ohne GRT,NULS,RVN,WIN,MBL: Saldo  +9.9 Pp · Spiegelprobe besteht
-  Dosis E3 Fuenftel 1..5: -16.4  -6.1  +2.8  +4.6 +14.4
-  Weglassprobe E3 ohne DASH,ZEC,FUN,DCR,SNX: Saldo +10.2 Pp · Spiegelprobe besteht
+      E2  Saldo +10.5 Pp  Rang 1.000 | Lift R2 1.12 · D2 0.86 · Spiegel  1.30 | R3 +0.3 Pp | 150 Coins mit R2 | n 2132 an 37 Stichtagen | Korb    -7 % (ganze Klasse   -12 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.862 gegen Grenze 1.031  ->  besteht
+      E3  Saldo +13.6 Pp  Rang 1.000 | Lift R2 1.24 · D2 0.94 · Spiegel  1.32 | R3 +2.3 Pp |  97 Coins mit R2 | n 1522 an 20 Stichtagen | Korb   -29 % (ganze Klasse   -45 %) gg. BTC
+            Spiegelprobe bewegungsgleich: Lift D2 0.939 gegen Grenze 1.024  ->  besteht
+  Klasse H  E2 Saldo  +8.3 Pp · Lift R2 1.07 / D2 0.76 · Korb  -23 % (Klasse  -29 %) · E3 Saldo +18.7 Pp · Lift R2 1.34 / D2 0.86 · Korb  -15 % (Klasse  -26 %)
+  Klasse M  E2 Saldo  +9.7 Pp · Lift R2 1.07 / D2 0.84 · Korb   -4 % (Klasse   -7 %) · E3 Saldo +27.1 Pp · Lift R2 1.47 / D2 0.87 · Korb  -16 % (Klasse  -51 %)
+  Klasse S  E2 Saldo +11.2 Pp · Lift R2 1.15 / D2 0.89 · Korb   +6 % (Klasse   -3 %) · E3 Saldo  +8.3 Pp · Lift R2 1.15 / D2 0.97 · Korb  -56 % (Klasse  -59 %)
+  Dosis E2 Fuenftel 1..5:  -6.5  -4.0  -0.7  +0.3 +10.5
+  Weglassprobe E2 ohne GRT,RVN,NULS,WIN,MBL: Saldo +10.0 Pp · Spiegelprobe besteht
+  Dosis E3 Fuenftel 1..5: -16.3  -6.7  +3.2  +5.5 +13.6
+  Weglassprobe E3 ohne DASH,ZEC,FUN,DCR,SNX: Saldo  +9.4 Pp · Spiegelprobe besteht
   Jahr 2019 Saldo +14.7 Pp · Lift R2 0.93 / D2 0.84
   Jahr 2020 Saldo  +4.5 Pp · Lift R2 1.02 / D2 0.84
   Jahr 2021 Saldo +14.1 Pp · Lift R2 1.21 / D2 0.96
-  Jahr 2022 Saldo  +8.1 Pp · Lift R2 1.02 / D2 0.86
+  Jahr 2022 Saldo  +8.5 Pp · Lift R2 1.04 / D2 0.86
   Jahr 2023 Saldo  +9.6 Pp · Lift R2 1.11 / D2 0.64
-  Jahr 2024 Saldo +20.8 Pp · Lift R2 1.33 / D2 0.88
-  Jahr 2025 Saldo  +6.6 Pp · Lift R2 0.91 / D2 0.98
+  Jahr 2024 Saldo +19.9 Pp · Lift R2 1.33 / D2 0.89
+  Jahr 2025 Saldo  +5.9 Pp · Lift R2 0.91 / D2 0.99
 
 TEIL 2 STRUKTURPROFIL (Auskunft; Fakten von heute ausser B1/B2; Vergleich nur unter Coins mit bekanntem Fakt)
-  A1 Hoechstmenge fest                       E2 Saldo  +0.6 Pp Rang 0.815 · Lift R2 1.02 / D2 0.99 · Spiegel nein · 128 Coins · bekannt  58 % | E3 Saldo  +0.8 Pp Rang 0.915 · Lift R2 1.11 / D2 0.98 · Spiegel ja · 167 Coins · bekannt  72 %  ->  -
-  A2 ausgegeben >= 90 %                      E2 Saldo  -0.3 Pp Rang 0.320 · Lift R2 1.00 / D2 1.01 · Spiegel nein · 101 Coins · bekannt  56 % | E3 Saldo  +1.5 Pp Rang 0.940 · Lift R2 0.94 / D2 0.99 · Spiegel nein · 118 Coins · bekannt  68 %  ->  -
-  A3 FDV/Marktwert <= 1,2                    E2 Saldo  +0.2 Pp Rang 0.740 · Lift R2 0.99 / D2 1.00 · Spiegel nein · 148 Coins · bekannt  56 % | E3 Saldo  +4.1 Pp Rang 1.000 · Lift R2 1.05 / D2 0.97 · Spiegel ja · 168 Coins · bekannt  68 %  ->  -
-  B1 Gebuehren >= 1 Mio $/Jahr               E2 Saldo -11.9 Pp Rang 0.000 · Lift R2 0.82 / D2 1.38 · Spiegel nein · 10 Coins · bekannt   4 % | E3 Saldo  -3.2 Pp Rang 0.010 · Lift R2 1.05 / D2 1.01 · Spiegel nein · 33 Coins · bekannt  14 %  ->  DEUTLICH unguenstig
-  B2 Halter-Einnahmen > 0                    E2 - | E3 Saldo  +3.6 Pp Rang 0.945 · Lift R2 1.05 / D2 0.97 · Spiegel ja · 11 Coins · bekannt   7 %  ->  -
-  C1 Kategorie RWA                           E2 Saldo  +8.8 Pp Rang 1.000 · Lift R2 1.13 / D2 0.96 · Spiegel ja · 11 Coins · bekannt  58 % | E3 Saldo +14.2 Pp Rang 1.000 · Lift R2 1.38 / D2 0.89 · Spiegel ja · 13 Coins · bekannt  72 %  ->  DEUTLICH guenstig
-  C2 Coinbase 50 Index                       E2 Saldo +15.3 Pp Rang 1.000 · Lift R2 1.08 / D2 0.96 · Spiegel ja · 39 Coins · bekannt  58 % | E3 Saldo +13.3 Pp Rang 1.000 · Lift R2 1.17 / D2 0.95 · Spiegel ja · 40 Coins · bekannt  72 %  ->  DEUTLICH guenstig
-  D1 Widerstand (Rueckgang < Median Klasse)  E2 Saldo  -3.0 Pp Rang 0.000 · Lift R2 0.94 / D2 1.00 · Spiegel nein · 249 Coins · bekannt  88 % | E3 Saldo  -2.3 Pp Rang 0.005 · Lift R2 0.87 / D2 1.00 · Spiegel nein · 178 Coins · bekannt  92 %  ->  DEUTLICH unguenstig
-  E1 Meme                                    E2 Saldo  +2.4 Pp Rang 0.670 · Lift R2 1.06 / D2 1.13 · Spiegel nein · 6 Coins · bekannt  58 % | E3 Saldo -15.1 Pp Rang 0.005 · Lift R2 1.25 / D2 1.09 · Spiegel nein · 22 Coins · bekannt  72 %  ->  -
-  E2 Layer 1                                 E2 Saldo +10.6 Pp Rang 1.000 · Lift R2 1.12 / D2 0.95 · Spiegel ja · 54 Coins · bekannt  58 % | E3 Saldo  +0.8 Pp Rang 0.690 · Lift R2 1.04 / D2 0.96 · Spiegel ja · 56 Coins · bekannt  72 %  ->  -
-  E3 DeFi                                    E2 Saldo  -9.5 Pp Rang 0.000 · Lift R2 0.94 / D2 1.07 · Spiegel nein · 55 Coins · bekannt  58 % | E3 Saldo +11.3 Pp Rang 1.000 · Lift R2 1.17 / D2 0.97 · Spiegel ja · 67 Coins · bekannt  72 %  ->  -
-  E4 Infrastruktur                           E2 Saldo  +8.6 Pp Rang 1.000 · Lift R2 1.16 / D2 0.93 · Spiegel ja · 24 Coins · bekannt  58 % | E3 Saldo  -4.5 Pp Rang 0.025 · Lift R2 0.90 / D2 1.05 · Spiegel nein · 32 Coins · bekannt  72 %  ->  -
-  E5 Gaming                                  E2 Saldo  +4.5 Pp Rang 0.935 · Lift R2 1.02 / D2 1.17 · Spiegel nein · 19 Coins · bekannt  58 % | E3 Saldo -23.8 Pp Rang 0.000 · Lift R2 0.85 / D2 1.13 · Spiegel nein · 24 Coins · bekannt  72 %  ->  -
-  E6 KI                                      E2 Saldo +10.8 Pp Rang 1.000 · Lift R2 1.26 / D2 0.90 · Spiegel ja · 20 Coins · bekannt  58 % | E3 Saldo -18.2 Pp Rang 0.000 · Lift R2 0.69 / D2 1.12 · Spiegel nein · 31 Coins · bekannt  72 %  ->  -
+  A1 Hoechstmenge fest                       E2 Saldo  +0.6 Pp Rang 0.825 · Lift R2 1.02 / D2 0.99 · Spiegel nein · 128 Coins · bekannt  58 % | E3 Saldo  +0.7 Pp Rang 0.840 · Lift R2 1.11 / D2 0.98 · Spiegel ja · 167 Coins · bekannt  72 %  ->  -
+  A2 ausgegeben >= 90 %                      E2 Saldo  -0.4 Pp Rang 0.295 · Lift R2 1.00 / D2 1.01 · Spiegel nein · 101 Coins · bekannt  56 % | E3 Saldo  +1.7 Pp Rang 0.975 · Lift R2 0.94 / D2 0.99 · Spiegel nein · 118 Coins · bekannt  68 %  ->  -
+  A3 FDV/Marktwert <= 1,2                    E2 Saldo  +0.2 Pp Rang 0.720 · Lift R2 0.99 / D2 1.00 · Spiegel nein · 148 Coins · bekannt  56 % | E3 Saldo  +4.1 Pp Rang 1.000 · Lift R2 1.04 / D2 0.97 · Spiegel ja · 168 Coins · bekannt  68 %  ->  -
+  B1 Gebuehren >= 1 Mio $/Jahr               E2 Saldo -11.4 Pp Rang 0.000 · Lift R2 0.84 / D2 1.35 · Spiegel nein · 13 Coins · bekannt   4 % | E3 Saldo  -3.5 Pp Rang 0.000 · Lift R2 1.04 / D2 1.01 · Spiegel nein · 33 Coins · bekannt  14 %  ->  DEUTLICH unguenstig
+  B2 Halter-Einnahmen > 0                    E2 - | E3 Saldo  +3.0 Pp Rang 0.920 · Lift R2 1.04 / D2 0.98 · Spiegel ja · 12 Coins · bekannt   7 %  ->  -
+  C1 Kategorie RWA                           E2 Saldo  +8.8 Pp Rang 1.000 · Lift R2 1.13 / D2 0.96 · Spiegel ja · 11 Coins · bekannt  58 % | E3 Saldo +14.2 Pp Rang 1.000 · Lift R2 1.39 / D2 0.89 · Spiegel ja · 13 Coins · bekannt  72 %  ->  DEUTLICH guenstig
+  C2 Coinbase 50 Index                       E2 Saldo +15.3 Pp Rang 1.000 · Lift R2 1.08 / D2 0.96 · Spiegel ja · 39 Coins · bekannt  58 % | E3 Saldo +11.6 Pp Rang 0.995 · Lift R2 1.20 / D2 0.94 · Spiegel ja · 40 Coins · bekannt  72 %  ->  DEUTLICH guenstig
+  D1 Widerstand (Rueckgang < Median Klasse)  E2 Saldo  -3.0 Pp Rang 0.000 · Lift R2 0.94 / D2 1.00 · Spiegel nein · 249 Coins · bekannt  88 % | E3 Saldo  -2.0 Pp Rang 0.000 · Lift R2 0.88 / D2 1.00 · Spiegel nein · 179 Coins · bekannt  92 %  ->  DEUTLICH unguenstig
+  E1 Meme                                    E2 Saldo  +2.3 Pp Rang 0.605 · Lift R2 1.06 / D2 1.13 · Spiegel nein · 6 Coins · bekannt  58 % | E3 Saldo -12.4 Pp Rang 0.005 · Lift R2 1.25 / D2 1.09 · Spiegel nein · 22 Coins · bekannt  72 %  ->  -
+  E2 Layer 1                                 E2 Saldo +10.6 Pp Rang 1.000 · Lift R2 1.12 / D2 0.95 · Spiegel ja · 54 Coins · bekannt  58 % | E3 Saldo  +0.8 Pp Rang 0.580 · Lift R2 1.05 / D2 0.96 · Spiegel ja · 56 Coins · bekannt  72 %  ->  -
+  E3 DeFi                                    E2 Saldo  -9.5 Pp Rang 0.000 · Lift R2 0.94 / D2 1.07 · Spiegel nein · 55 Coins · bekannt  58 % | E3 Saldo +11.6 Pp Rang 1.000 · Lift R2 1.16 / D2 0.97 · Spiegel ja · 67 Coins · bekannt  72 %  ->  -
+  E4 Infrastruktur                           E2 Saldo  +8.7 Pp Rang 1.000 · Lift R2 1.16 / D2 0.93 · Spiegel ja · 24 Coins · bekannt  58 % | E3 Saldo  -4.4 Pp Rang 0.035 · Lift R2 0.91 / D2 1.05 · Spiegel nein · 32 Coins · bekannt  72 %  ->  -
+  E5 Gaming                                  E2 Saldo  +4.6 Pp Rang 0.955 · Lift R2 1.03 / D2 1.17 · Spiegel nein · 19 Coins · bekannt  58 % | E3 Saldo -23.5 Pp Rang 0.000 · Lift R2 0.85 / D2 1.13 · Spiegel nein · 24 Coins · bekannt  72 %  ->  -
+  E6 KI                                      E2 Saldo +10.8 Pp Rang 1.000 · Lift R2 1.26 / D2 0.90 · Spiegel ja · 20 Coins · bekannt  58 % | E3 Saldo -18.4 Pp Rang 0.000 · Lift R2 0.69 / D2 1.11 · Spiegel nein · 31 Coins · bekannt  72 %  ->  -
 
 TEIL 3 PRUEFSTEIN QNT (Anschauung, keine Regel)
-  2022-04-01 Klasse M (Marktwert-Rang 47) · Watchlist-Perzentil 0.41 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
-  2022-05-01 Klasse M (Marktwert-Rang 43) · Watchlist-Perzentil 0.38 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
-  2022-06-01 Klasse M (Marktwert-Rang 39) · Watchlist-Perzentil 0.26 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
+  2022-04-01 Klasse M (Marktwert-Rang 46) · Watchlist-Perzentil 0.41 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
+  2022-05-01 Klasse M (Marktwert-Rang 42) · Watchlist-Perzentil 0.37 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
+  2022-06-01 Klasse M (Marktwert-Rang 38) · Watchlist-Perzentil 0.27 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
   2022-07-01 Klasse M (Marktwert-Rang 37) · Watchlist-Perzentil 0.28 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
   2022-08-01 Klasse M (Marktwert-Rang 30) · Watchlist-Perzentil 0.18 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein
   2022-09-01 Klasse M (Marktwert-Rang 28) · Watchlist-Perzentil 0.18 · Fakten: A1=ja, A2=ja, A3=ja, B1=?, B2=?, C1=ja, C2=ja, D1=ja, E1=nein, E2=nein, E3=nein, E4=ja, E5=nein, E6=nein

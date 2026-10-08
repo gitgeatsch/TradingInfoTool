@@ -3329,6 +3329,8 @@ Nutzer 08.10.:
 
 ### 29.4 Ergebnis der Messung (08.10.2026, nach dem Plan §29.2)
 
+⚠️ **ÜBERHOLT am 08.10. nachmittags (§30.1/§30.3):** Nach drei Datenkorrekturen an den Umlaufmengen hat E3 **34 Einstiege an 4 Stichtagen** (−23,9 % gegen BTC). Das vorab festgelegte Urteil ist damit **TRÄGT NICHT** statt *nicht entscheidbar*; die Folge ist praktisch dieselbe. Die Zahlen unten sind der Stand vor der Korrektur.
+
 `ein_messung.py` → `.txt` (2 min, Kurse bis 20.09.2026). Gegenprobe `ein_messung_gegenprobe.py` **11/11**: Anzahlen, alle 186 E-b-Anker mit einer zweiten Umsetzung der Marke, Korb neu gemittelt, Erwartung der Zufallswelt analytisch, Kostenformel, Tor an 80 Stichtagen, X0.
 
 **Teil 0 (R-R11):** B5 X2 mit dem alten Werkzeug `wl_messung.b5` genau reproduziert: E2 **+31,8 %**, E3 **−4,0 %**. Die Marke dieser Messung liefert an **4.001 von 4.001** B5-Käufen denselben Ausstiegstag wie `a2_messung.ausstieg('X2')`.
@@ -3429,3 +3431,171 @@ Teil B **ersetzt** den Altbestand der Trailing-Regel vom 04.08. (+1,0 R / 1,0 R)
 | B-9 | **Mail:** *Marke gerissen* je Bestand als Ereignis-Mail, mit dem **gemessenen** Effekt als Begründung | Regel 4: Der Bruch der Marke ist ein Fakt. Begründung ist erst die Messung, dass Führen besser ist als Halten |
 
 **Reihenfolge:** Voranalyse B-1 bis B-9 (Datenlage, Altregel, Bestand am NB) → Messplan vorab → Messung am Desktop → Zwischenfazit → Bau erst nach Abstimmung (T-2: nach der Hebel-Freigabe).
+
+
+## 30. Situationsbewertung 2024 bis heute, Datenkorrekturen und Voranalyse Teil B (08.10.2026)
+
+Nutzer 08.10.:
+- *„Davor müssen wir die Situation bewerten. Der Markt 2021 als Maßstab war schon immer problematisch – eigentlich muss das System an die aktuellen Gegebenheiten 2024 bis heute angepasst werden, wir haben nur diese Daten.“*
+- *„Der gesamte Altcoinmarkt ist in einem Abstiegstrend. Zwischen den BTC-Anstiegen können einige Altcoins auch ausbrechen. Unabhängig davon ist die Annahme weiterhin, dass in bzw. vor positiven Phasen der Altcoins eine Altseason erforderlich ist, wobei nicht alles steigen wird, sondern wir unsere Diamanten identifizieren müssen.“*
+- *„Sauber auf Fehler oder Optimierung prüfen und gegenprüfen – das Thema ist komplex aufgrund der Rahmenbedingungen und der zeitlichen Faktoren.“*
+
+⚠️ **Selbstkorrektur:** Die Regel *Messfokus ab 2023/2024* (Urteil ab 2024, Training ab 2023, Älteres nur Auskunft) gilt seit 29.09. Der Spot-Strang hat sie verletzt:
+- E2 (2021 bis Jänner 2024) war die **Wahl**-Epoche für die Watchlist-Kombination (§25), für B5 (§21.6) und für O31 (§29).
+- Getestet wurde zwar auf E3, gewählt aber auf dem Markt von 2021.
+- Ab hier gilt die Regel auch im Spot (§30.6).
+
+### 30.1 Prüfung auf Fehler — fünf Funde, alle behoben und in ihrer Wirkung gemessen
+
+| # | Fund | Wirkung (gemessen) | Behebung |
+|---|---|---|---|
+| 1 | **Bündelfaktor fehlte** in `mk_messung.umlauf` (Befund 2.501-buendelpaare: 1000SATS, 1MBABYDOGE, 1000CHEEMS, 1000CAT handeln Bündel, die Quellen führen Einzeltoken) → Marktwert bis 10⁶ zu hoch, 1MBABYDOGE ab 2025 auf Rang 1 | E1/E2 unberührt (erst ab 2024 gelistet); E3 **1,4 %** der Klassen; Breite am 01.09.2025 0,46 → 0,50 (Tor geht auf) | Stufe 2: Menge / `hole_umlaufmenge_cg.vervielfacher` (eine Stelle, aus dem Namen) — `mk_buendel_wirkung.py` |
+| 2 | **CoinMetrics-Ausreißer:** XVG ×100, KNC ×0,054, GNO ×3,8 gegen CoinGecko (XVG mit 11 Mrd Marktwert unter den Top 15) | mit Fund 3 zusammen: E2 **0,36 %**, E3 **1,9 %** der Klassen | Stufe 3: CoinMetrics nur, wenn letzter Wert / CoinGecko heute in [1/3, 3] — `mk_umlauf_pruefung.py` U1 |
+| 3 | **Umlauf von HEUTE** für die Vergangenheit (342 von 384 Coins am 01.06.2025) — ein Vorgriff: Coins mit späterer Ausgabe neuer Token stehen historisch zu hoch | ab 10/2025 mit echter Historie gemessen: **3,5 %** der Klassen, Breite Juni 2026 0,46 → 0,50; für 2024 größer (U3: Umlauf wächst im Median +4,6 %/Jahr, 14 % der Coins > +50 %) | Stufe 3: CoinGecko-Historie zu t (`umlaufmenge_cg.db`, ab 21.09.2025) vor allem anderen. ⚠️ **Vor 21.09.2025 bleibt der Vorgriff** — keine freie ältere Historie |
+| 4 | Lagebild L5: Führung über 365 T, Hoch über 180 T (verschiedene Fenster) | Anteil „gehalten“ verzerrt | vor der Auswertung angeglichen (180 T beide) |
+| 5 | Lagebild L1 endete im März 2026 (180-T-Fenster der Ausbrüche mitbenutzt) | die letzten 5 Monate fehlten | L1 bis 08/2026 (30-T-Fenster genügt) |
+
+**Wirkung auf registrierte Ergebnisse** (alles neu gerechnet, Gegenproben 52/52, 11/11, 55/55):
+
+| | vorher | nach Stufe 3 | |
+|---|---|---|---|
+| Watchlist §25.6 E3 (oberes Fünftel, Saldo, Rang) | +14,4 Pp, 1,000 | **+13,9 Pp, 1,000**; Dosis −16,4 / −6,3 / +3,4 / +4,9 / +13,9; 2024 +20,4, 2025 +5,9 | **robust** |
+| Breite offen in E3 | 15 % der Stichtage | **20 %** | |
+| O31 E-b in E3 | 28 an 3 Stichtagen, −28,6 %, *nicht entscheidbar* | **34 an 4 Stichtagen, −23,9 %, 3 % > BTC, Zufallsrang 0,29 → TRÄGT NICHT** | §30.3 |
+| Eichung (Fehlalarm bei k Stichtagen, E3) | 17 / 7 / 2 % bei 3 / 4 / 6 | **29 / 11 / 0 %** | Mindestzahl **6** bleibt |
+
+### 30.2 Lagebild 2023 bis heute (`lage_e3.py` → `.txt`, Gegenprobe `lage_e3_gegenprobe.py` **55/55**) — reine Beschreibung
+
+Grundgesamtheit wie die Watchlist (Marktwert-Klassen, eingestellte Coins eingeschlossen, ohne die Kernwerte BTC, ETH, SOL). 2023 ist Trainingsjahr, Urteil ab 2024.
+
+**L1 Markt** (Top 100 nach Marktwert, 30-T-Ertrag gegen BTC je Monat, verkettet):
+
+| Halbjahr | BTC | Breite offen | Altindex gleichgewichtet | marktwertgewichtet |
+|---|---|---|---|---|
+| 2023-H1 | +72 % | 0 von 6 | −36 % | −36 % |
+| 2023-H2 | +34 % | 0 von 6 | +11 % | +9 % |
+| 2024-H1 | +43 % | 3 von 6 | −39 % | −35 % |
+| 2024-H2 | +53 % | 1 von 6 | −11 % | +21 % |
+| 2025-H1 | +9 % | 0 von 6 | −59 % | −35 % |
+| 2025-H2 | −16 % | 2 von 6 | −22 % | +10 % |
+| 2026-H1 | −26 % | 1 von 6 | −15 % | −11 % |
+| 2026 Jul–Aug | +31 % | 0 von 2 | −13 % | −5 % |
+| **ab 2024** | **+94 %** | **7 von 32** | **−87 %** | **−52 %** |
+
+Dazu ETH/BTC −41 %, SOL/BTC −47 % (Kern, Auskunft).
+
+**L2 Ausbrüche** („Diamant“ = Coin verdoppelt sich **gegen BTC** binnen 180 T):
+
+| | 2023 (Training) | ab 2024 |
+|---|---|---|
+| Quote je Coin und Monat | 13,9 % | **8,1 %** (H 6,6 · M 6,6 · S 8,8 %) |
+| verschiedene Coins | 156 | **238** |
+| Hoch erreicht nach (Median) | 113 T | **85 T** |
+| nach 180 T noch ≥ ×2 | 19–30 % | **14–20 %** |
+| Rückgabe vom Hoch (Median) | 41–57 % | **55–62 %** |
+| junge Coins (< 1 Jahr Kurs) | | Quote 10,1 % gegen 7,8 %; 20 % der Ausbrecher |
+
+Größte seit 2024: DEXE und ZEC ×24, TUT ×21, SYN ×15, BNX ×13, PEPE ×11, OM ×11.
+
+**L3 Lage am Stichtag → Ausbruchsquote ab 2024:**
+
+| | Stichtage | Quote | Median Ende gegen BTC |
+|---|---|---|---|
+| BTC 90 T fällt, Breite zu | 10 | 9,3 % | −32 % |
+| BTC 90 T steigt, Breite offen | 6 | 8,2 % | **−50 %** |
+| BTC 90 T steigt, Breite zu | 11 | 7,1 % | −44 % |
+| Rückschau: BTC im Fenster < −10 % / ±10 % / > +10 % | 9 / 3 / 15 | 8,6 / 5,1 / 8,4 % | |
+
+**L4 Waren die Ausbrecher vorab in der Watchlist?**
+
+| | Quote im Fünftel | außerhalb | Lift |
+|---|---|---|---|
+| 2023 | 9,6 % | 15,0 % | 0,64 |
+| **ab 2024** | 8,1 % | 8,2 % | **0,99** (H 9,2/5,8 · M 8,8/6,1 · S 7,7/9,0) |
+
+⚠️ **Kein Widerspruch zu §25.6.** Die Watchlist wurde auf *absolute* Verdopplung binnen 365 T gegen *Absturz* gemessen (Saldo R2 − L). Hier geht es um *Verdopplung gegen BTC* binnen 180 T. Die Watchlist ordnet **Fortbestand** (weniger Absturz), nicht **Ausbruch**.
+
+**L5 Was hält die Führung X2 (180 T, gegen BTC)?**
+
+| ab 2024 | n | X2 Median / Mittel | > BTC | Halten 180 T Median / Mittel | Vielfaches vom Hoch gehalten |
+|---|---|---|---|---|---|
+| Ausbrecher | 828 | **+39 % / +58 %** | 73 % | +7 % / +44 % | 0,57 |
+| übrige | 9.333 | −25 % / −22 % | 10 % | −43 % / −41 % | 0,65 |
+| **alle** | 10.161 | **−24 % / −16 %** | **15 %** | −41 % / −34 % | 0,64 |
+
+### 30.3 O31 nach der Korrektur — formales Urteil und Bewertung
+
+- **Vorab-Regel §29.2:** ≥ 20 Einstiege an ≥ 4 Stichtagen sind jetzt erfüllt (34 an 4). Korb −23,9 % gegen BTC, Bootstrap 0,00 → **TRÄGT NICHT**.
+- **Eichung §29.5:** Bei 4 Stichtagen liegt der Fehlalarm bei 11 %. Das schwächt nur ein *positives* Urteil. Ein negatives an 4 Stichtagen hat wenig Trennschärfe; einen kleinen echten Vorteil könnte es übersehen.
+- **Bewertung:** *Nicht bestätigt, und in allem Beschriebenen negativ* (E3 3 % > BTC, in E2 nur Zeitpunkt statt Auswahl, 2021 trägt alles).
+- **Folge:** Die Folgen „trägt nicht“ und „nicht entscheidbar“ (§29.3) fallen praktisch zusammen: **kein Kaufsignal**, Phase als Fakt in der Mail, Vorwärtsprotokoll bis ≥ 20 Einstiege an ≥ 6 offenen Stichtagen.
+
+### 30.4 Bewertung der Annahmen des Nutzers gegen die Daten 2024 bis heute
+
+| Annahme | Daten ab 2024 | Bewertung |
+|---|---|---|
+| Der Altcoin-Markt ist im **Abstiegstrend** | Altindex gegen BTC −87 % gleichgewichtet, −52 % marktwertgewichtet; ETH −41 %, SOL −47 % | **bestätigt — stärker als gedacht**, bei Smallcaps am stärksten |
+| Zwischen BTC-Anstiegen **brechen einige aus** | 8,1 % je Coin und Monat, 238 Coins | **bestätigt** — aber **unabhängig von der BTC-Lage** (7–9 % in jeder Lage), und **selten dauerhaft** (nach 180 T noch 14–20 %, Rückgabe 55–62 %) |
+| Es braucht eine **positive Phase / Altseason** | Breite nur an 7 von 32 Stichtagen offen, immer kurz; Käufe bei offener Phase endeten **schlechter** (−50 %) | **mit unseren Daten nicht prüfbar**: Seit 2024 gab es keine Altseason. Die Annahme ist weder belegt noch widerlegt; die kurzen Öffnungen waren Strohfeuer |
+| Wir müssen die **Diamanten identifizieren** | Watchlist Lift 0,99; Lage, Phase, Eintritt, Relativstärke trennen nicht | **offen — bisher ohne Werkzeug.** Was wir haben, ordnet Fortbestand, nicht Ausbruch |
+| (ergänzt) Die **Führung** hilft | Ausbrecher +39 % statt +7 % (Median), alle −24 % statt −41 % | **bestätigt** — sie halbiert den Verlust. Gegen BTC bleibt ein Altcoin-Kauf ohne Erkennung trotzdem im Minus (15 % > BTC) |
+
+⇒ **Das Gesamtbild 2024 bis heute:**
+- Ein Altcoin-Kauf schlägt BTC nur, wenn man einen **Ausbrecher** erwischt (8 % je Monat) **und** ihn führt.
+- Die Führung haben wir, gemessen.
+- Die Erkennung haben wir nicht.
+- Ohne Erkennung bleibt der Erwartungswert gegen BTC klar negativ, mit Führung halb so schlimm.
+
+### 30.5 Zeitliche Faktoren — was die Fenster an Daten kosten
+
+| Fenster | letzter auswertbarer Stichtag | Monate ab 2024 |
+|---|---|---|
+| 30 T (Markt) | 08/2026 | 32 |
+| 180 T (Ausbruch, Führung) | 03/2026 | 27 |
+| 365 T (§25, O31) | 09/2025 | 21 |
+
+⇒ Je länger das Fenster, desto weniger der ohnehin knappen Jahre 2024+.
+- **Teil B misst deshalb mit höchstens 180 T.** Die Haltedauer bei Ausstieg über die Marke liegt im Median bei 34–85 T, das passt.
+- **Anker täglich statt monatlich**, gebündelt nach Monat für den Bootstrap. Damit kommen mehr Fälle zusammen, ohne die Abhängigkeit zu verstecken.
+- **Neue Monate sind der einzige Weg zu mehr Fallzahl.** Jede Regel geht ab Bau ins Vorwärtsprotokoll.
+
+### 30.6 Methodische Folgen für den Spot-Strang (ab sofort)
+
+| | bisher | ab jetzt |
+|---|---|---|
+| Wahl einer Regel / Schwelle | E2 (2021–01/2024) | **2023** (Training) |
+| Urteil | E3 | **ab 2024** — und weil diese Jahre schon beschrieben sind: neue Hypothesen auf 2024+ nur als **Beschreibung**, Test **vorwärts** (Regel *Hypothesen nicht starr*) |
+| 2021/2022 | Wahl-Epoche | nur Auskunft, gekennzeichnet |
+| Watchlist-Kombination | auf E2 gewählt | **bleibt**, denn ihr E3-Test ist echt außerhalb der Wahl und hält nach Korrektur (+13,9 Pp). Eine Neuwahl auf 2023 wäre Fassung n+1 und bräuchte Vorwärtsdaten |
+| Umlauf | heute | Stufe 3 (Historie, Riegel); der Vorgriff vor 21.09.2025 steht als **Grenze** in jedem Ergebnis |
+
+### 30.7 Voranalyse Teil B — Führung und Ausstieg je Bestand (Fragen aus §29.7, mit Ist-Stand)
+
+**Bestand am NB** (Diagnose 08.10. 08:31):
+- **46** Positionen mit Menge, **44** mit Einstand (`holdings.avg_buy_price_eur`, gleitender Durchschnitt aus den Bitpanda-Käufen), **24** in der Binance-Kursbasis.
+- Außerhalb liegen vor allem Aktien und ETFs (3QSS, CEBS, OD7…, nicht Teil des Krypto-Spots) und EURCV (Stablecoin).
+- An Krypto liegen außerhalb ASTER, CANTON, CT, MON, XDC; BW, ROL, VSN und VST sind zu klären. Kurse dazu in Prod (`price_history_ohlc`), am NB nachzuweisen (B-8).
+
+| # | Frage | Ist-Stand (geprüft 08.10.) | für den Messplan |
+|---|---|---|---|
+| B-1 | Bezugspunkt *Hoch seit Kauf* | **Kein Kaufdatum abgelegt.** `holdings` trägt nur Menge und Einstand. Die Buchungen liest `importer/bitpanda_bestand.py` bei jedem Abgleich über die Schnittstelle, legt sie aber nicht ab. Der Export vom 03.08. hat **3.463 Käufe mit Datum und Preis** (89 Coins, ab 13.09.2024) | Messung braucht es nicht (Marktdaten). **Betrieb braucht eine Kaufablage am NB** (kostenfrei, eigene Schnittstelle) |
+| B-2 | Nachlaufweite gemessen | X2 (−35 % / −50 %) stammt aus dem ersten Wurf, gewählt auf E2 | Dosis-Wirkung über mehrere Weiten, zusätzlich in Schwankungseinheiten; **Wahl auf 2023, Urteil ab 2024**, Regel vorab, zweiseitig |
+| B-3 | Zielgröße | L5: Führung schlägt Halten deutlich, gegen BTC bleibt sie negativ | **drei** Bezüge ausweisen: gegen Halten (schützt die Führung?), gegen BTC (lohnt der Altcoin?), gegen Bargeld (absolut) |
+| B-4 | Teilverkauf | X1 in E3 stark, in E2 schwach | Variante im selben Plan, zweiseitig |
+| B-5 | *Phase zu* als Ausstieg | Die Phase war seit 2024 nur an 7 von 32 Stichtagen offen | nur Auskunft. Als Regel greift sie zu selten |
+| B-6 | Wohin nach dem Ausstieg | — | Bargeld oder BTC; beides ausweisen |
+| B-7 | Altregel *Spot hat keinen Stop* | `agent/verkaufsrechnung.py`: *beim Spot ist die Positionsgröße die einzige Risikosteuerung* (Nutzerangabe 14.08.). Der `ausstiegs_job` zieht Stops **je Signal** nach (O19); `agent/positionsfuehrung.py` beschreibt **eine Position je Symbol** (27.08.) | Die Messung entscheidet. Der Bau setzt auf `positionsfuehrung` auf, nicht auf den Signalweg |
+| B-8 | Abdeckung am NB | 24 von ~30 Krypto-Beständen in der Binance-Kursbasis; die übrigen in Prod | vor dem Bau am NB nachweisen (Teilexport) |
+| B-9 | Mail | — | *Marke gerissen* je Bestand, Begründung = gemessener Effekt |
+| **B-10** (neu) | **Einstieg in die Führung mitten in einer Position** | Viele Bestände liegen tief unter Einstand. Mit *Hoch seit Kauf* wäre die Marke bei vielen **schon gerissen**, sobald die Führung startet | Der Messplan muss den echten Fall messen: Führung **beginnt an einem beliebigen Tag** einer laufenden Position, nicht nur am Kauftag. Er braucht eine Regel für den Start (z. B. *Hoch ab Start* gegen *Hoch seit Kauf*) |
+| **B-11** (neu) | **Zeitfenster** | §30.5 | höchstens 180 T, Anker täglich, Bootstrap nach Monat, 2023 Wahl / ab 2024 Urteil |
+
+### 30.8 Zwischenfazit zum Ziel
+
+| | |
+|---|---|
+| **Ziel** | Spot: Einstieg je Asset und Führung je Bestand, gemessen gegen BTC |
+| **Stand** | Einstieg: *nicht belegt* (O31). Führung: *wirkt deutlich* (L5, B5). Erkennung der Diamanten: *kein Werkzeug* (L4) |
+| **Test oder Betrieb** | alles Desktop, nur lesend; nichts am NB geändert |
+| **Was folgt** | Teil B Messplan (B-1 bis B-11) zur Abstimmung. Die Erkennung von Ausbrüchen ist eine **eigene** Frage (Teil C), siehe die Punkte zur Abstimmung |
+| **Was nicht folgt** | kein Kaufsignal; keine Aussage, dass eine Altseason kommt oder nicht kommt |

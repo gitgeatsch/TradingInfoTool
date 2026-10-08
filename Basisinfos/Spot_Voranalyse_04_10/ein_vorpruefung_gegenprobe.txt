@@ -1,53 +1,53 @@
-G1  gleich  KL BLUR 2024-06-01: -0.3544/-0.0412 17 T (Skript -0.3544/-0.0412 17)
-G1  gleich  A0 AXS 2024-04-01: -0.2636/-0.1084 29 T (Skript -0.2636/-0.1084 29)
-G1  gleich  KL ATOM 2020-08-01: +0.3965/-0.0565 33 T (Skript +0.3965/-0.0565 33)
-G1  gleich  KL BEL 2022-12-01: +0.3653/+0.3074 92 T (Skript +0.3653/+0.3074 92)
-G1  gleich  KL TON 2025-02-01: -0.3787/-0.1955 36 T (Skript -0.3787/-0.1955 36)
-G1  gleich  KL CHZ 2019-11-01: -0.1670/-0.2129 21 T (Skript -0.1670/-0.2129 21)
-G1  gleich  KL AGIX 2023-06-01: -0.3277/-0.0604 13 T (Skript -0.3277/-0.0604 13)
-G1  gleich  KL EPS 2021-10-01: -0.3300/+0.0370 64 T (Skript -0.3300/+0.0370 64)
-G1  gleich  KL ENS 2023-11-01: +0.5825/+0.8295 163 T (Skript +0.5825/+0.8295 163)
-G1  gleich  A0 MITH 2022-05-01: -0.6413/-0.2465 10 T (Skript -0.6413/-0.2465 10)
-G1  gleich  KL ALT 2024-12-01: -0.2206/+0.0205 18 T (Skript -0.2206/+0.0205 18)
-G1  gleich  KL WOO 2022-05-01: -0.2414/-0.1949 8 T (Skript -0.2414/-0.1949 8)
-G1  gleich  KL BEL 2023-06-01: +0.1251/+1.3465 316 T (Skript +0.1251/+1.3465 316)
-G1  gleich  KL LTO 2023-11-01: +1.7298/+0.8278 179 T (Skript +1.7298/+0.8278 179)
-G1  gleich  A0 KMD 2024-04-01: -0.2716/-0.0075 78 T (Skript -0.2716/-0.0075 78)
-G1  gleich  E-a BURGER 2023-01-01: -0.0150/+0.6571 127 T (Skript -0.0150/+0.6571 127)
-G1  gleich  KL XRP 2019-11-01: -0.3355/-0.2166 46 T (Skript -0.3355/-0.2166 46)
-G1  gleich  KL AERGO 2024-05-01: -0.3249/+0.1001 48 T (Skript -0.3249/+0.1001 48)
-G1  gleich  KL PYR 2025-03-01: -0.3155/-0.1203 9 T (Skript -0.3155/-0.1203 9)
-G1  gleich  KL CHZ 2020-01-01: +0.5889/+0.2667 56 T (Skript +0.5889/+0.2667 56)
-G1  gleich  KL WRX 2023-06-01: -0.2284/-0.0140 133 T (Skript -0.2284/-0.0140 133)
-G1  gleich  KL RDNT 2024-02-01: -0.2929/+0.4797 71 T (Skript -0.2929/+0.4797 71)
-G1  gleich  KL PUNDIX 2024-12-01: -0.3082/+0.0824 58 T (Skript -0.3082/+0.0824 58)
-G1  gleich  KL INJ 2021-12-01: -0.3473/-0.1708 16 T (Skript -0.3473/-0.1708 16)
-G1  gleich  KL MDX 2021-11-01: -0.3744/-0.1344 25 T (Skript -0.3744/-0.1344 25)
-G1  gleich  KL STO 2025-08-01: +0.5817/-0.2436 111 T (Skript +0.5817/-0.2436 111)
-G1  gleich  KL SHIB 2023-11-01: +1.8893/+0.8792 164 T (Skript +1.8893/+0.8792 164)
-G1  gleich  A0 DOGE 2022-10-01: +0.2570/-0.1645 38 T (Skript +0.2570/-0.1645 38)
-G1  gleich  KL SUPER 2022-10-01: -0.2946/-0.1719 50 T (Skript -0.2946/-0.1719 50)
-G1  gleich  KL BEL 2024-01-01: +0.2103/+0.4222 102 T (Skript +0.2103/+0.4222 102)
+G1  gleich  KL BICO 2024-05-01: -0.1772/+0.1035 47 T (Skript -0.1772/+0.1035 47)
+G1  gleich  KL SLP 2024-09-01: +0.4065/+0.5652 129 T (Skript +0.4065/+0.5652 129)
+G1  gleich  KL FLOKI 2023-09-01: +0.6541/+0.6654 152 T (Skript +0.6541/+0.6654 152)
+G1  gleich  KL CHESS 2023-10-01: +0.4595/+1.3250 194 T (Skript +0.4595/+1.3250 194)
+G1  gleich  KL SUSHI 2022-03-01: -0.1209/-0.1061 56 T (Skript -0.1209/-0.1061 56)
+G1  gleich  A0 COCOS 2021-04-01: -0.4153/-0.1231 20 T (Skript -0.4153/-0.1231 20)
+G1  gleich  KL MDT 2024-12-01: -0.1397/-0.0136 42 T (Skript -0.1397/-0.0136 42)
+G1  gleich  KL CHR 2024-10-01: +0.2475/+0.5260 99 T (Skript +0.2475/+0.5260 99)
+G1  gleich  KL OCEAN 2022-11-01: -0.1531/-0.1266 8 T (Skript -0.1531/-0.1266 8)
+G1  gleich  KL CRV 2024-05-01: -0.3318/+0.1182 43 T (Skript -0.3318/+0.1182 43)
+G1  gleich  KL PYR 2024-11-01: +0.3612/+0.3677 51 T (Skript +0.3612/+0.3677 51)
+G1  gleich  KL AKRO 2022-10-01: -0.2885/-0.1134 79 T (Skript -0.2885/-0.1134 79)
+G1  gleich  KL BONK 2025-04-01: +0.3415/+0.2639 65 T (Skript +0.3415/+0.2639 65)
+G1  gleich  KL DNT 2021-11-01: -0.2739/-0.3185 65 T (Skript -0.2739/-0.3185 65)
+G1  gleich  A0 XEM 2022-08-01: -0.4025/-0.3073 99 T (Skript -0.4025/-0.3073 99)
+G1  gleich  KL CHESS 2023-09-01: +0.5763/+1.4710 224 T (Skript +0.5763/+1.4710 224)
+G1  gleich  A0 WRX 2022-01-01: -0.3405/-0.2335 21 T (Skript -0.3405/-0.2335 21)
+G1  gleich  KL CVX 2025-04-01: +0.1852/+0.2236 81 T (Skript +0.1852/+0.2236 81)
+G1  gleich  KL ALPINE 2022-10-01: -0.2357/-0.0764 39 T (Skript -0.2357/-0.0764 39)
+G1  gleich  KL BAKE 2023-07-01: +3.6061/+0.3764 181 T (Skript +3.6061/+0.3764 181)
+G1  gleich  KL MC 2023-07-01: +1.5437/+0.1562 128 T (Skript +1.5437/+0.1562 128)
+G1  gleich  KL LINA 2023-08-01: -0.3049/-0.0615 69 T (Skript -0.3049/-0.0615 69)
+G1  gleich  KL ILV 2024-02-01: +0.3403/+0.5199 72 T (Skript +0.3403/+0.5199 72)
+G1  gleich  KL DOGE 2020-02-01: -0.2846/-0.4022 40 T (Skript -0.2846/-0.4022 40)
+G1  gleich  KL SAND 2021-09-01: -0.4053/-0.1728 19 T (Skript -0.4053/-0.1728 19)
+G1  gleich  KL ALICE 2025-03-01: -0.3796/-0.1260 28 T (Skript -0.3796/-0.1260 28)
+G1  gleich  KL IDEX 2023-09-01: +0.2949/+1.4710 224 T (Skript +0.2949/+1.4710 224)
+G1  gleich  KL ERN 2023-09-01: +2.2628/+1.5382 225 T (Skript +2.2628/+1.5382 225)
+G1  gleich  KL FIL 2025-06-01: -0.4086/+0.0452 131 T (Skript -0.4086/+0.0452 131)
+G1  gleich  A0 KAVA 2025-01-01: -0.2052/+0.2099 225 T (Skript -0.2052/+0.2099 225)
 G2  gleich  2019-01-01 Breite 0.333
 G2  gleich  2020-03-01 Breite 0.333
 G2  gleich  2021-05-01 Breite 0.915
 G2  gleich  2022-07-01 Breite 0.143
-G2  gleich  2023-09-01 Breite 0.143
-G2  gleich  2024-11-01 Breite 0.298
-G3  gleich  EGLD 2024-11-01 Kauf 2024-11-25 nach 24 T
+G2  gleich  2023-09-01 Breite 0.122
+G2  gleich  2024-11-01 Breite 0.292
+G3  gleich  ANKR 2024-11-01 Kauf 2024-11-25 nach 24 T
 G3  gleich  MDX 2024-03-01 Kauf 2024-03-31 nach 30 T
-G3  gleich  SUSHI 2024-05-01 Kauf 2024-05-13 nach 12 T
-G3  gleich  ZRX 2022-08-01 Kauf 2022-08-05 nach 4 T
+G3  gleich  TFUEL 2024-05-01 Kauf 2024-05-02 nach 1 T
+G3  gleich  SC 2022-08-01 Kauf 2022-08-02 nach 1 T
 G3  gleich  HARD 2023-04-01 Kauf 2023-05-29 nach 58 T
 G3  gleich  VTHO 2021-08-01 Kauf 2021-08-12 nach 11 T
 G3  gleich  DASH 2021-04-01 Kauf 2021-04-05 nach 4 T
-G3  gleich  ZRX 2022-11-01 Kauf 2022-12-10 nach 39 T
-G3  gleich  SXP 2025-01-01 Kauf 2025-01-10 nach 9 T
+G3  gleich  ICP 2022-11-01 Kauf 2022-12-03 nach 32 T
+G3  gleich  STORJ 2025-01-01 Kauf 2025-01-10 nach 9 T
 G3  gleich  NKN 2023-07-01 Kauf 2023-07-16 nach 15 T
 G3  gleich  LTC 2021-08-01 Kauf 2021-08-16 nach 15 T
 G3  gleich  PERL 2021-05-01 Kauf 2021-05-04 nach 3 T
-G3  gleich  XVS 2025-02-01 Kauf 2025-02-19 nach 18 T
 G3  gleich  RUNE 2025-02-01 Kauf 2025-03-04 nach 31 T
+G3  gleich  ATA 2025-06-01 Kauf 2025-06-30 nach 29 T
 G3  gleich  DCR 2022-04-01 Kauf 2022-04-09 nach 8 T
 G4  gleich  E3-Zeilen mit Ertragszahl: 0
 

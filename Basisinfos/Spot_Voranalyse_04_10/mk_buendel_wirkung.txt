@@ -1,0 +1,10 @@
+W1 Buendelsymbole in der Kursbasis: 1000CAT (x1000), 1000CHEEMS (x1000), 1000SATS (x1000), 1MBABYDOGE (x1e+06)
+
+W2 Coin-Stichtage mit ANDERER Marktwert-Klasse:
+  E1  0 von 1716 (0.00 %) · davon Buendelsymbole selbst 0 · Uebergaenge 
+  E2  0 von 10494 (0.00 %) · davon Buendelsymbole selbst 0 · Uebergaenge 
+  E3  168 von 11963 (1.40 %) · davon Buendelsymbole selbst 63 · Uebergaenge S->M 63, M->S 54, M->H 42, H->S 9
+  ab 2024: 168 von 12311 (1.36 %)
+
+W3 Altseason-Breite (Top 50 nach Marktwert ohne BTC):
+  Stichtage 93 · mit anderem Wert 19 · groesste Abweichung 0.041 · Tor gekippt an 1: 2025-09-01 0.46->0.50

@@ -1,0 +1,57 @@
+Q1  gleich  CHESS 2023-10-01 Hoch +0.304 Ende -0.062
+Q1  gleich  BANANA 2024-09-01 Hoch +0.533 Ende -0.687
+Q1  gleich  ZK 2025-06-01 Hoch +0.385 Ende -0.206
+Q1  gleich  KLAY 2023-01-01 Hoch +0.459 Ende -0.394
+Q1  gleich  CVC 2024-02-01 Hoch +0.753 Ende -0.262
+Q1  gleich  CTSI 2024-04-01 Hoch +0.000 Ende -0.466
+Q1  gleich  TRU 2024-11-01 Hoch +0.598 Ende -0.581
+Q1  gleich  GAS 2024-10-01 Hoch +0.334 Ende -0.519
+Q1  gleich  BSW 2023-06-01 Hoch +0.044 Ende -0.487
+Q1  gleich  LPT 2023-06-01 Hoch +0.595 Ende -0.133
+Q1  gleich  SXP 2024-07-01 Hoch +0.287 Ende -0.192
+Q1  gleich  POWR 2025-12-01 Hoch +0.049 Ende -0.186
+Q1  gleich  CFX 2024-01-01 Hoch +0.610 Ende -0.461
+Q1  gleich  CHESS 2025-07-01 Hoch +0.098 Ende -0.489
+Q1  gleich  GNO 2025-07-01 Hoch +0.477 Ende +0.404
+Q1  gleich  MBL 2023-09-01 Hoch +0.782 Ende -0.159
+Q1  gleich  CATI 2024-11-01 Hoch +0.695 Ende -0.766
+Q1  gleich  GAS 2023-12-01 Hoch +0.000 Ende -0.652
+Q1  gleich  FORM 2025-06-01 Hoch +0.359 Ende -0.843
+Q1  gleich  XEC 2024-08-01 Hoch +0.049 Ende -0.460
+Q1  gleich  BURGER 2023-11-01 Hoch +0.568 Ende -0.312
+Q1  gleich  SLP 2025-07-01 Hoch +0.620 Ende -0.267
+Q1  gleich  ZK 2025-02-01 Hoch +0.011 Ende -0.625
+Q1  gleich  MANA 2023-03-01 Hoch +0.002 Ende -0.583
+Q1  gleich  ALICE 2024-06-01 Hoch +0.400 Ende -0.360
+Q1  gleich  FLUX 2024-03-01 Hoch +0.479 Ende -0.443
+Q1  gleich  CVP 2023-04-01 Hoch +0.058 Ende -0.285
+Q1  gleich  WLD 2024-10-01 Hoch +0.489 Ende -0.647
+Q1  gleich  DF 2025-08-01 Hoch +0.078 Ende -0.533
+Q1  gleich  ADX 2023-10-01 Hoch +0.029 Ende -0.005
+Q1  gleich  ONG 2023-11-01 Hoch +0.310 Ende +0.081
+Q1  gleich  TRX 2024-08-01 Hoch +1.250 Ende +0.152
+Q1  gleich  ALPHA 2024-02-01 Hoch +0.250 Ende -0.551
+Q1  gleich  RSR 2024-02-01 Hoch +2.463 Ende +0.427
+Q1  gleich  TUT 2026-03-01 Hoch +19.761 Ende +2.130
+Q1  gleich  POND 2024-11-01 Hoch +1.308 Ende -0.315
+Q1  gleich  ARK 2026-02-01 Hoch +0.062 Ende -0.465
+Q1  gleich  BAR 2025-07-01 Hoch +0.200 Ende -0.326
+Q1  gleich  1INCH 2025-10-01 Hoch +0.002 Ende -0.403
+Q1  gleich  ATOM 2025-12-01 Hoch +0.362 Ende +0.026
+Q2  gleich  Quote neu 8.15 % · Ausgabe ('8.1', '6.6', '6.6', '8.8')
+Q3  gleich  2024-02-01 Altindex gleichgew. neu +0.0717 · Ablage +0.0717
+Q3  gleich  2024-11-01 Altindex gleichgew. neu +0.3403 · Ablage +0.3403
+Q3  gleich  2025-05-01 Altindex gleichgew. neu -0.0989 · Ablage -0.0989
+Q3  gleich  2026-01-01 Altindex gleichgew. neu -0.0707 · Ablage -0.0707
+Q4  gleich  2023-01-01 Breite 0.163
+Q4  gleich  2023-08-01 Breite 0.200
+Q4  gleich  2024-03-01 Breite 0.543
+Q4  gleich  2024-10-01 Breite 0.388
+Q4  gleich  2025-05-01 Breite 0.061
+Q4  gleich  2025-12-01 Breite 0.200
+Q4  gleich  2026-07-01 Breite 0.440
+Q5  gleich  X2 (180 T) an 30 Ankern, Abweichungen 0
+Q6  gleich  Lift neu 0.988 · Ausgabe 0.99
+Q7  gleich  Top-100 mit Tagesschwankung < 0,5 %: keine
+
+55 von 55 gleich
