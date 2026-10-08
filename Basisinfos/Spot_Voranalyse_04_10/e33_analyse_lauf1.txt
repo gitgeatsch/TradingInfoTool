@@ -1,0 +1,97 @@
+  w = pd.concat([fred("WALCL", 2), fred("WTREGEN", 2), fred("RRPONTSYD", 1).resample("W-WED").last().shift(0)], axis=1).ffill().dropna()
+§33 · Kurse bis 2026-09-20
+
+TEIL 1 - EBENE 2: Dominanz-Spitze (BTCDOM 30 T) gegen die 6 Rally-Tiefs 2023-06-28, 2023-10-25, 2024-11-04, 2025-02-06, 2025-06-26, 2026-05-04
+
+  Dosis (Signale = erste Tage, Luecke 14 T; Treffer = Rally-Tief 10 T vor bis 45 T nach dem Signal):
+    Schwelle  5.0 %: Signale 19 · Treffer  7 · Fehlalarm 12 (63 %) · Rallyes erfasst 6 von 6
+    Schwelle  8.7 %: Signale 16 · Treffer  7 · Fehlalarm  9 (56 %) · Rallyes erfasst 6 von 6
+    Schwelle 12.0 %: Signale 13 · Treffer  5 · Fehlalarm  8 (62 %) · Rallyes erfasst 4 von 6
+    Schwelle 15.0 %: Signale 10 · Treffer  4 · Fehlalarm  6 (60 %) · Rallyes erfasst 3 von 6
+
+  JEDES SIGNAL (Schwelle 8,7 %%), Lage am Signaltag:
+    Signal             BTC 90T      BTC unter Ho ETH/BTC 30T  Breite       Funding Alts OI Alts 30T  Fear&Greed   Netto-Liq 13 Stablecoins  Zins 90T     Dollar 30T   S&P 30T      US10J 30T    | Index 60T | Chronik
+    2023-02-09 fehl    +28%         +68%         -7%          0.28         +0.00031     +5%          55           -1%          -0%          +0.75        -0%          +6%          +0.10        |    +2 % | US-Bankenkrise (SVB)
+    2023-03-16 fehl    +50%         +63%         -4%          0.28         +0.00018     -22%         52           -0%          -3%          +0.25        +2%          -6%          -0.21        |    +0 % | US-Bankenkrise (SVB)
+    2023-06-17 TREFFER -5%          +61%         -3%          0.06         +0.00007     -30%         47           -2%          -1%          +0.50        -1%          +6%          +0.20        |   +15 % | 
+    2023-10-09 TREFFER -10%         +59%         -9%          0.27         +0.00018     -7%          50           -1%          +0%          +0.26        +1%          -3%          +0.52        |    +6 % | 
+    2023-12-05 fehl    +71%         +35%         -4%          0.35         +0.00042     +13%         75           +4%          +3%          +0.00        -1%          +5%          -0.29        |   +25 % | BTC-Spot-ETF zugelassen
+    2024-02-11 fehl    +32%         +28%         -12%         0.49         +0.00030     +3%          71           +4%          +2%          +0.00        +1%          +5%          +0.19        |    +6 % | 
+    2024-03-26 fehl    +61%         +4%          -15%         0.39         +0.00051     +9%          81           +1%          +7%          +0.00        -0%          +3%          -0.01        |    +1 % | BTC-Halving
+    2024-07-27 fehl    +8%          +7%          -14%         0.12         +0.00026     -5%          72           +0%          +2%          +0.00        -0%          -0%          -0.12        |    +2 % | ETH-Spot-ETF Handelsstart; Carry-Trade-Ausverkauf (Yen)
+    2024-09-17 fehl    -7%          +17%         -13%         0.23         +0.00016     +5%          33           -2%          +2%          +0.00        -1%          +1%          -0.26        |    +9 % | erste Fed-Senkung
+    2024-10-25 TREFFER -2%          +9%          -10%         0.18         +0.00030     -8%          72           -1%          -0%          -0.50        +3%          +1%          +0.47        |   +58 % | US-Wahl
+    2024-12-31 TREFFER +54%         +12%         -7%          0.38         +0.00029     -40%         64           +1%          +6%          -0.50        +2%          -2%          +0.37        |   +15 % | 
+    2025-01-29 TREFFER +48%         +2%          -17%         0.32         +0.00030     -16%         72           +1%          +5%          -0.50        -0%          +2%          -0.07        |    +4 % | 
+    2025-06-09 TREFFER +33%         +1%          -1%          0.28         +0.00015     -21%         62           +1%          +3%          +0.00        -1%          +6%          +0.14        |   +26 % | 
+    2025-10-10 fehl    -4%          +10%         -11%         0.22         +0.00030     -46%         64           -6%          +6%          -0.23        +1%          +3%          +0.06        |   +11 % | Liquidationswelle 10./11.10. (Nutzer: Manipulation)
+    2026-02-01 fehl    -28%         +38%         -15%         0.24         +0.00004     -25%         14           +1%          -1%          -0.22        -2%          +1%          +0.08        |    +4 % | 
+    2026-05-01 TREFFER -1%          +37%         -7%          0.30         +0.00018     +10%         26           +1%          +1%          +0.00        -2%          +10%         +0.10        |   +16 % | 
+
+  MITTEL Treffer gegen Fehlalarm: BTC 90T +17%/+23% · BTC unter Hoch +26%/+30% · ETH/BTC 30T -8%/-11% · Breite 0.26/0.29 · Funding Alts +0.00021/+0.00027 · OI Alts 30T -16%/-7% · Fear&Greed 56/57 · Netto-Liq 13W +0%/+0% · Stablecoins 30T +2%/+2% · Zins 90T -0.11/+0.06 · Dollar 30T +0%/-0% · S&P 30T +3%/+2% · US10J 30T +0.25/-0.05
+
+  PAAR-SUCHE (13 Merkmale, 78 Paare x 4 Felder): bestes Youden 0.60 · der ZUFALL erreicht das in 45 % der 1.000 Vertauschungen -> KEIN Ansatz (vom Zufall nicht zu unterscheiden)
+    Youden 0.60 · ETH/BTC 30T hoch UND US10J 30T hoch · Treffer 5 von 7 · Fehlalarm 1 von 9
+    Youden 0.57 · OI Alts 30T tief UND US10J 30T hoch · Treffer 4 von 7 · Fehlalarm 0 von 9
+    Youden 0.57 · Funding Alts tief UND US10J 30T hoch · Treffer 4 von 7 · Fehlalarm 0 von 9
+    Youden 0.57 · Breite tief UND US10J 30T hoch · Treffer 4 von 7 · Fehlalarm 0 von 9
+    Youden 0.57 · BTC 90T tief UND US10J 30T hoch · Treffer 4 von 7 · Fehlalarm 0 von 9
+    Youden 0.46 · Stablecoins 30T tief UND US10J 30T hoch · Treffer 4 von 7 · Fehlalarm 1 von 9
+
+
+TEIL 2 - EBENE 1: Seasons 2019-2026 je Quartal (Beschreibung; Umlauf vor 21.09.2025 von heute = Vorgriff)
+  Quartal  Season  Altindex/BTC  BTC     ETH/BTC  Netto-Liq  M2 J/J   Leitzins  Stablecoins  S&P
+  2019Q2             -50 %       +162 %    -21 %    -2.0 %     +4.3 %  -0.03       +179 %        +4 %
+  2019Q3             -30 %        -22 %    -21 %    -0.8 %     +5.3 %  -0.57        +67 %        +1 %
+  2019Q4              -3 %        -13 %    -15 %    +7.1 %     +7.1 %  -0.35        +41 %        +8 %
+  2020Q1              +2 %        -11 %    +14 %   +27.1 %     +6.8 %  -1.46        +32 %       -18 %
+  2020Q2  SEASON      -6 %        +38 %    +21 %   +13.2 %    +22.0 %  +0.00       +107 %       +16 %
+  2020Q3             +17 %        +17 %    +33 %    -0.8 %    +23.0 %  +0.01        +69 %        +8 %
+  2020Q4  SEASON     -68 %       +172 %    -23 %    +7.2 %    +24.2 %  +0.00        +40 %       +11 %
+  2021Q1  SEASON    +137 %       +100 %    +31 %   +13.0 %    +26.8 %  -0.02       +133 %        +6 %
+  2021Q2              -7 %        -40 %    +94 %    -0.4 %    +14.1 %  +0.04        +76 %        +8 %
+  2021Q3             +10 %        +31 %     +9 %    +4.5 %    +13.2 %  +0.00        +15 %        +1 %
+  2021Q4              -9 %         -4 %    +16 %    +0.3 %    +12.3 %  +0.02        +27 %       +11 %
+  2022Q1             -14 %         -5 %     -9 %    -6.2 %    +10.6 %  +0.26        +15 %        -4 %
+  2022Q2  SEASON     -49 %        -57 %    -28 %   -10.1 %     +6.2 %  +1.25        -18 %       -17 %
+  2022Q3             +15 %         +1 %    +24 %    -2.8 %     +3.8 %  +1.50         -2 %        -4 %
+  2022Q4             -22 %        -14 %     +6 %    +2.1 %     +0.3 %  +1.25         -8 %        +7 %
+  2023Q1             -16 %        +71 %    -11 %    +6.6 %     -2.2 %  +0.50         -4 %        +5 %
+  2023Q2             -24 %         +7 %     -1 %    -4.6 %     -4.1 %  +0.24         -3 %        +9 %
+  2023Q3              +3 %        -12 %     -2 %    -1.9 %     -4.0 %  +0.25         -3 %        -4 %
+  2023Q4  SEASON      +7 %        +51 %    -13 %    +5.2 %     -3.1 %  +0.00         +5 %       +11 %
+  2024Q1             -12 %        +61 %     -4 %    -0.0 %     -1.5 %  +0.00        +15 %       +10 %
+  2024Q2             -30 %        -10 %     +9 %    -3.0 %     +0.9 %  +0.00         +7 %        +4 %
+  2024Q3              -1 %         +1 %    -25 %    -1.9 %     +2.0 %  -0.50         +7 %        +5 %
+  2024Q4             +12 %        +54 %    -11 %    +0.9 %     +3.4 %  -0.50        +19 %        +3 %
+
+  2025Q2             -19 %        +26 %     +4 %    -0.9 %     +3.9 %  +0.00         +8 %       +11 %
+  2025Q3             +25 %         +8 %    +60 %    -5.3 %     +4.2 %  -0.24        +17 %        +7 %
+  2025Q4             -14 %        -26 %     -8 %    -0.4 %     +3.8 %  -0.45         +4 %        +3 %
+  2026Q1              -4 %        -23 %     -9 %    +0.8 %     +4.6 %  +0.00         +2 %        -8 %
+  2026Q2              -2 %        -14 %    -15 %    +0.5 %     +5.4 %  -0.01         -1 %       +17 %
+  2026Q3              +2 %        +34 %    +19 %    +0.4 %     +5.7 %  +0.25         -1 %        +2 %
+
+  In den Season-Quartalen (5) gegen die uebrigen (25), Mittel:
+    BTC             Season   +0.61 · uebrige   +0.11
+    Netto-Liq       Season   +0.06 · uebrige   +0.01
+    M2 J/J          Season   +0.15 · uebrige   +0.05
+    Leitzins-Aend.  Season   +0.25 · uebrige   +0.01
+    Stablecoins     Season   +0.53 · uebrige   +0.24
+    ETH/BTC         Season   -0.02 · uebrige   +0.04
+  Kombination 'BTC > +20 % im Quartal UND M2 > +5 % J/J UND Stablecoins > +10 % im Quartal' (aus der Erzaehlung 2020/21, nicht gefittet): an in 4 Quartalen, davon Season 3: 2020Q2, 2020Q4, 2021Q1, 2021Q3
+
+
+TEIL 3 - F1: Kosten-Nutzen der Season-Option (Rolle L)
+  Kosten je Jahr ab 2024 (L-Korb gegen BTC, Mittel der Starttag-Koerbe): halten 45 % · mit Mitnahme x3 42 %
+  Season 2020-04-10 bis 2020-06-17: L-Korb (Fuenftel am 2020-04-01, n 18) gegen BTC +36 % · alle der Klassen (n 89) +32 % · Altindex -10 %
+    Break-even L-Korb   halten    Kosten Hin+Rueck M: Season darf hoechstens 0.5 Jahre auf sich warten lassen
+    Break-even L-Korb   Mitnahme  Kosten Hin+Rueck M: Season darf hoechstens 0.5 Jahre auf sich warten lassen
+    Break-even Altindex halten    Kosten Hin+Rueck M: Season darf hoechstens -0.2 Jahre auf sich warten lassen
+    Break-even Altindex Mitnahme  Kosten Hin+Rueck M: Season darf hoechstens -0.2 Jahre auf sich warten lassen
+  Season 2020-11-12 bis 2021-03-23: L-Korb (Fuenftel am 2020-11-01, n 31) gegen BTC +4878 % · alle der Klassen (n 149) +1128 % · Altindex +15 %
+    Break-even L-Korb   halten    Kosten Hin+Rueck M: Season darf hoechstens 6.5 Jahre auf sich warten lassen
+    Break-even L-Korb   Mitnahme  Kosten Hin+Rueck M: Season darf hoechstens 7.2 Jahre auf sich warten lassen
+    Break-even Altindex halten    Kosten Hin+Rueck M: Season darf hoechstens 0.2 Jahre auf sich warten lassen
+    Break-even Altindex Mitnahme  Kosten Hin+Rueck M: Season darf hoechstens 0.2 Jahre auf sich warten lassen
+  (Break-even: (1 + G) x (1 - k) x (1 - c)^T = 1; G Season-Vorsprung, c Kosten je Jahr, k Handelskosten Hin+Rueck je Klasse aus §32.1 D)

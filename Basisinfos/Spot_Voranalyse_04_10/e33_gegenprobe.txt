@@ -1,0 +1,9 @@
+P1  gleich  eigene Signale 16 · Ablage 16
+P2  gleich  Treffer eigene 7 · Ablage 7
+P3  gleich  Zeitpunkttreue an 3 + 5 Signalen, Verstoesse 0
+P4  gleich  bestes Youden neu 0.603 · Ausgabe 0.60
+P5  gleich  Kosten halten neu 45.3 % · Ausgabe ('45', '42')
+
+5 von 5 gleich
+P6  gleich  Basisrate neu 26.6 % · Signalquote 43.8 % · Lift 1.646 · Ausgabe ('27', '44', '1.65')
+6 von 6 gleich (mit P6)

@@ -4018,3 +4018,81 @@ Nutzer 08.10.: *„Damit wir diese Fehlalarme u. U. richtig einordnen, diese auc
 - Trennt ein Paar besser als der Zufall → Hypothese **H-R** für das Vorwärtsprotokoll und als **Fakt mit Einordnung** in die Mail.
 - Trennt keines → die Dominanz-Spitze kommt höchstens als Fakt mit ihrer Fehlalarmquote in die Mail.
 - Teil 2 und 3 liefern die Grundlage für die Entscheidung *Rolle L ja/nein, wie groß, wie lange*.
+
+
+### 33.4 Ergebnis (08.10.2026, nach §33.1–33.3)
+
+`e33_analyse.py` → `.txt` (erster Lauf `e33_analyse_lauf1.txt`), Gegenprobe `e33_gegenprobe.py` **6/6**:
+- Signale direkt aus SQL;
+- Treffer-Zuordnung;
+- Zeitpunkttreue an 8 Signalen;
+- Paar-Suche;
+- Kosten;
+- Basisrate.
+
+**Drei Korrekturen vor der Bewertung, nach dem ersten Lauf** (die Regeln blieben unverändert):
+1. **Basisrate ergänzt.** Ohne sie war die Fehlalarmquote nicht einzuordnen.
+2. **Season-Quartale** werden jetzt nach *Phase + 90 T* beschriftet. Die S1-Phasen sind Einstiegszeiträume. Daneben steht der **gleichgewichtete** Index, weil die Marktwertgewichte vor 2025 durch den Umlauf von heute verzerrt sind.
+3. **Season-Vorsprung als Median:** Im Mittel stand COCOS mit **+145.025 %**, eine Token-Umstellung (bekannter Datenfehler).
+
+**Teil 1 — Ebene 2, Dominanz-Spitze:**
+
+| Schwelle BTCDOM 30 T | Signale | Treffer | Fehlalarm | Rallyes erfasst |
+|---|---|---|---|---|
+| 5 % | 19 | 7 | 63 % | 6 von 6 |
+| **8,7 %** | **16** | **7** | **56 %** | **6 von 6** |
+| 12 % | 13 | 5 | 62 % | 4 von 6 |
+| 15 % | 10 | 4 | 60 % | 3 von 6 |
+
+- **Gegen die Basisrate:**
+  - Ein **beliebiger** Tag liegt in **27 %** der Fälle vor einer Rally, ein Signaltag in **44 %**. Das ist ein **Lift von 1,65**.
+  - Zufällige Signaltage (gleich viele, gleicher Abstand) erreichen das nur in **2 %** von 2.000 Welten.
+  - ⚠️ Die Schwelle 8,7 % stammt aus der Rückschau. Alle Schwellen liegen aber mit 37–44 % über der Basisrate.
+- **Einordnung der Fehlalarme mit Markt und Makro:**
+  - Die Paar-Suche über 13 Merkmale und 78 Paare findet das beste Paar (Youden 0,60). Der **Zufall erreicht das in 44 %** der Vertauschungen. ⇒ **Keine Kombination trennt Treffer von Fehlalarmen besser als der Zufall.**
+  - Beschreibend fallen die Fehlalarme in zwei Gruppen:
+    - **BTC-geführte Institutionen-Rallyes** (ETF-Zulassung 12/2023 bis 03/2024: BTC +32 bis +71 % in 90 T, Fear & Greed 71–81). Das Geld floss in BTC, und die Dominanz stieg weiter.
+    - **Schocks** (SVB 03/2023, Yen-Carry 08/2024, Liquidationswelle 10/2025, Bärenmarkt 02/2026 mit Fear & Greed 14).
+  - Treffer gab es aber **auch** bei starkem BTC (12/2024, 01/2025). Die Gruppen sind also Erzählung, keine Trennung.
+
+**Teil 2 — Ebene 1, Seasons 2019–2026 je Quartal:**
+- Season-Quartale (9) gegen die übrigen (21), im Mittel:
+  - Alt/BTC gleichgewichtet +29 % gegen −14 %;
+  - BTC +38 % gegen +11 %;
+  - M2 J/J +13 % gegen +4 %;
+  - Stablecoins +47 % gegen +21 %;
+  - Netto-Liquidität +3 % gegen +1 %.
+- **Die Kombination aus der Erzählung 2020/21:** *BTC > +20 % im Quartal UND M2 > +5 % J/J UND Stablecoins > +10 % im Quartal*. Die Schwellen wurden vor dem Lauf im Code festgelegt, nicht gefittet.
+  - Sie war **an in 4 Quartalen**: 2020Q2, 2020Q4, 2021Q1, 2021Q3. Alle 4 waren starke Altcoin-Quartale (3 Season, 2021Q3 gleichgewichtet +26 %).
+  - **Seit 2022 nie mehr.**
+- **Heute (2026Q3):** M2 wieder **+5,7 %** J/J (seit 2026Q2 über 5 %), BTC **+34 %** im Quartal, **Stablecoins −1 %** ⇒ **2 von 3 Bedingungen erfüllt**. Es fehlt das frische Geld *im Kryptomarkt*.
+- ⚠️ Das ist im Grunde **ein** Zyklus (2020/21). Belegt ist das nicht; es ist eine **Beobachtungs-Hypothese H-S** für vorwärts.
+
+**Teil 3 — F1, Kosten-Nutzen der Season-Option:**
+
+| | |
+|---|---|
+| Kosten ab 2024 (L-Korb gegen BTC) | **−45 % je Jahr** (Korb), je Position im Median −61 %; Mitnahme ×3 lindert auf −42 % |
+| Season 2020-04 bis 06 (Einstieg) | L-Korb Median **+6 %** gegen BTC, alle der Klassen +19 % |
+| Season 2020-11 bis 2021-03 | L-Korb Median **+121 %** gegen BTC (gestutzt +140 %), alle der Klassen +54 % |
+| **Break-even** (Kosten M, Hin und Rück 1,8 %) | eine Season wie 2020/21 darf höchstens **1,3 Jahre** auf sich warten lassen; eine wie 2020-04 nur **0,1 Jahre** |
+
+### 33.5 Was das heißt — fachlich
+
+1. **Ebene 2 hat einen echten, schwachen Hinweis.** Nach einer Dominanz-Spitze ist eine Gegenbewegung der Altcoins wahrscheinlicher (Lift 1,65).
+   - Er ist **kein Auslöser**: Mehr als die Hälfte sind Fehlalarme, und keine Markt- oder Makrogröße sortiert sie aus.
+   - Die Rallyes dauern zudem 3–9 Wochen und werden wieder abgegeben.
+   - ⇒ Als **Fakt in die Mail** (*„Dominanz-Spitze: in 7 von 16 Fällen folgte binnen 45 T eine Alt-Rally, sonst in 27 % der Tage“*) und als **Schalter für die Führung**: In dieser Lage kurz halten und niedrige Ziele setzen (§31.6 Dosis).
+2. **Ebene 1: Ihre Erzählung (Corona, Gelddrucken) ist in den Daten sichtbar.**
+   - Die großen Altcoin-Quartale kamen, als **BTC stark lief UND die Geldmenge kräftig wuchs UND frisches Geld als Stablecoins in den Kryptomarkt floss**.
+   - Seit 2022 war das nie gleichzeitig erfüllt. Heute sind 2 von 3 Bedingungen da.
+3. **⚠️ Die Season-Option L ist als DAUER-Bestand im heutigen Markt zu teuer.**
+   - −45 % gegen BTC je Jahr bedeuten: Selbst eine Season wie 2020/21 gleicht das nur aus, wenn sie binnen ~1,3 Jahren kommt.
+   - ⇒ **Vorschlag zur Abstimmung:** Rolle L wird **bedingt**. Aufgebaut wird sie, wenn sich die Ebene-1-Bedingungen einstellen (Fakt-Kombination, von dir gewichtet), nicht als Dauerbestand.
+   - Bis dahin kostet jeder gehaltene L-Coin laufend gegen BTC. Das gehört **in Zahlen** in die Mail.
+4. **Für den Altbestand** folgt daraus, dass *halten als Season-Option* einen Preis hat, der heute rund −45 % gegen BTC im Jahr beträgt. Die Zuteilung je Coin (L / K / Abbau) bleibt deine Entscheidung; das System zeigt künftig diesen Preis.
+
+**Was NICHT folgt:**
+- keine Regel aus 6 Rallyes oder einem Zyklus;
+- keine Vorhersage, ob die Season kommt;
+- kein Bau.
