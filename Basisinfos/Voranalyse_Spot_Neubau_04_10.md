@@ -3265,3 +3265,64 @@ Gleichzeitig wird die Hebel-Aufnahme (H13) auf **dieselbe** Regel umgestellt: **
 1. Eintrag als **E-85** und in Plan **O28/O26**.
 2. **Bau ab dem 10.10.** nach der Freigabe Hebel und nach P5 (O29 einschalten), in der Reihenfolge von U1.
 3. Vor dem Bau: **Messung der Preisabgleich-Schwelle** (U2) und **Gegenprobe O26** an allen 40 Beständen.
+
+
+## 29. Spot-EINSTIEG auf der Watchlist — Vorprüfung und Messplan VOR der Messung (08.10.2026)
+
+Nutzer 08.10.:
+- *„Also meine Meinung zur Spot-Lösung: Ein Newsletter 1× pro Monat ohne konkrete Handlungen, nur Rangfolgen mit Informationen, das ist nicht das eigentliche Ziel für den Einstieg – weil es somit keinen gibt.“*
+- *„Ja, Messplan vorbereiten, prüfen und gegenprüfen – den Newsletter-Plan nicht gänzlich verwerfen, sondern prüfen, wie wir zusätzlich sinnvolle Spot-Einstiege bewerten können.“*
+
+**Die Frage:** Gibt es auf der Watchlist eine **Einstiegsregel** (wann, welcher Coin, wie aussteigen), die **BTC schlägt**? Gemessen gegen BTC, weil das die Alternative ist: Wer keine Altcoins kauft, hält den Kern.
+
+**Was schon gilt (R-R11):**
+- Die Auswahl trägt gegen die eigene Klasse (§25.6).
+- Die Führung X2 (= Marke: Nachlauf −35 % vom Hoch seit Kauf, Notbremse −50 % vom Kauf) machte aus dem E3-Korb −4 % statt −42 %, nach der strengen Regel *knapp nicht bestätigt* (§21.6 B5).
+- **BTC schlug seit 2024 weder Halten noch Führen** (§22, Punkt 8).
+- Zeitpunkt-Regeln ohne Watchlist (Lage, Makro, Liquidität, Momentum, MACD) schlugen BTC nicht.
+
+### 29.1 Vorprüfung (Stufe 1) — nur die Wahl-Epoche E2, von E3 nur Anzahlen
+
+`ein_vorpruefung.py` → `.txt`, Gegenprobe `ein_vorpruefung_gegenprobe.py` **52/52** (Ausstieg mit zweiter Umsetzung, Breite mit eigener Rangrechnung, E-c-Einstiege, **E3 ohne Ertragszahl**).
+
+| Arm | Regel | E2 Einstiege | E2 gegen BTC Mittel / Median | Anteil > BTC | E3 Einstiege (nur Anzahl) |
+|---|---|---|---|---|---|
+| KL | ein beliebiger Coin der Klasse (Vergleich) | 10.494 | +2,7 % / −15,8 % | 28 % | 7.471 |
+| A0 | im obersten Fünftel (= die Liste der Monatsmail) | 2.133 | +5,5 % / −13,5 % | 29 % | 1.519 |
+| E-a | **Eintritt** ins Fünftel | 367 | +4,9 % / −12,6 % | 31 % | 183 |
+| **E-b** | E-a **und Phase offen** (Altseason-Breite ≥ 50 %) | **143** | **+17,6 % / −6,6 %** | **43 %** | **28** |
+| E-c | E-a und Relativstärke (30 T besser als BTC, binnen 60 T) | 345 | +5,5 % / −12,9 % | 30 % | 156 |
+
+**Was die Vorprüfung zeigt:**
+1. **Ausgestiegen wird fast immer über die Marke** (98–100 %), im Median nach 38–68 Tagen. Altcoins fallen fast immer irgendwann 35 % unter ihr Hoch.
+2. **Nur das Phasen-Tor (E-b) verschiebt das Bild deutlich:** Median −6,6 % statt −13 %, 43 % statt 30 % schlagen BTC. Eintritt (E-a) und Relativstärke (E-c) allein bringen kaum etwas gegenüber A0.
+3. ⚠️ **In E3 war die Phase selten offen:** Die Breite stand nur an **15 %** der Stichtage auf ≥ 50 % (E2: 30 %). E-b hat in E3 nur **28 Einstiege**. Ob das für eine Bestätigung reicht, ist offen. Das legt der Plan unten vorab fest.
+
+### 29.2 Messplan (vorab festgelegt; Rechnung `ein_messung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Grundlage | wie §25.6: Marktwert-Klassen, Kombination F1 unten / F2 oben / F8 oben / F9 oben, oberes Fünftel = Perzentil in der Zelle > 0,8, monatliche Stichtage, eingestellte Coins eingeschlossen; Kauf zum Schluss des Folgetags |
+| **Haupt-Hypothese** | **E-b:** Eintritt ins oberste Fünftel **bei offener Phase** (Altseason-Breite ≥ 50 % am Stichtag: Anteil der 50 größten Altcoins nach Marktwert mit 90-T-Ertrag über BTC) |
+| Ausstieg | **X2 = die Marke** (wie §21.6); Auskunft dazu **X0** 12 Monate halten |
+| Zielgröße | Ertrag **gegen BTC** über dieselbe Haltedauer, (1 + r_Coin) / (1 + r_BTC) − 1, brutto (Kosten beiderseits gleich; netto mit 1 % je Seite als Auskunft, `kosten_belegt=False`) |
+| Gewichtung | je Stichtag der Korb (Mittel seiner Einstiege), dann Mittel über die Stichtage (wie B5) |
+| **Teil 0 (R-R11)** | §21.6 B5 X2 mit dieser Ausstiegsumsetzung nachrechnen (Korb nach Kosten 1,25 % je Seite: E2 +31,8 %, E3 −4,0 %); Abweichung > 1 Pp **bricht ab** |
+| **Trägt** (E3, alle Bedingungen) | (1) Mittel der Stichtag-Körbe gegen BTC **> 0**, Block-Bootstrap über Stichtage (2.000) **≥ 95 %** über null; (2) **besser als die Zufallswelt** *gleiche Stichtage mit offener Phase, zufällige Coins derselben Klasse, gleicher Ausstieg* (200 Ziehungen, Rang ≥ 0,95); (3) **mindestens 20 Einstiege an mindestens 4 Stichtagen** |
+| **Nicht entscheidbar** | wenn (3) fehlt. ⇒ Das Ergebnis steht als Beschreibung da, und E-b geht ins **Vorwärtsprotokoll** |
+| Auskunft | E-a, E-c, A0, KL mit denselben Kennzahlen; E-b gegen E-a (bringt das Tor etwas?); je Klasse H/M/S; Jahre 2024/2025; Weglassprobe ohne die 5 größten Gewinner; Asymmetrie (realisiert ≥ ×2 gegen ≤ −50 %); X0 statt X2 |
+| Selbsttest | (a) **Zufalls-Tor**: dieselbe Zahl offener Stichtage zufällig verteilt, 100 Welten → Fehlalarm ≤ 5 %; (b) **gepflanzt**: nur Einstiege mit späterem Ertrag über BTC → muss tragen |
+| Mehrfachtesten | **eine** Haupt-Hypothese; alle anderen Arme sind Auskunft |
+
+### 29.3 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis | Folge für Spot und die Mail |
+|---|---|
+| **trägt** | Aus der Watchlist wird ein **Einstiegssignal je Coin**: *„Eintritt ins oberste Fünftel bei offener Phase → Kauf; Marke X; Ausstieg über die Marke.“* Es kommt als **Ereignis-Mail**, sobald es eintritt, mit Größe nach deinen Startwerten. Die Monatsübersicht bleibt daneben |
+| **nicht entscheidbar** (wahrscheinlich, 28 Fälle) | Die Monatsmail bekommt den Abschnitt **„Einstiegskandidaten“** mit dem Phasen-Tor als **Fakt** (*Phase offen / zu*) und den Eintritten ins Fünftel. Jeder E-b-Eintritt wird ab sofort **vorwärts protokolliert**; Prüfung, sobald 20 neue Fälle da sind |
+| **trägt nicht** | Ein Altcoin-Einstieg gegen BTC ist **nicht belegt**. Die Handlung ist dann der **Kern** (Akkumulation, G1 §10 offen); die Mail bleibt Beobachtung mit Vorwärtsprotokoll |
+
+⚠️ **Ehrliche Erwartung:**
+- E3 war für Altcoins gegen BTC ein **durchgehend fallender** Markt (Korb der Klasse −45 %).
+- Die Phase war nur an 15 % der Stichtage offen. Am wahrscheinlichsten ist **„nicht entscheidbar“**.
+- Das Phasen-Tor ist trotzdem die richtige Spur. Die Vorgabe des Nutzers (*„massive Altseason möglich“*) ist genau die Lage, in der das Tor aufgeht. Für diesen Fall braucht es die Regel **fertig und protokolliert**, bevor er eintritt.
