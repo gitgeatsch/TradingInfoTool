@@ -2680,3 +2680,5 @@ Kontrolle **K-WD-1**: Danach läuft genau ein Watchdog. Nach dem nächsten *„B
 - Monitoring allein: 3/4 über, scheitert aber am Vorzeichen (*bestand*).
 - Die Folgen bleiben dieselben: keine Regel, nur der Fakt in der Mail und das Vorwärtsprotokoll (O29).
 - Erste Fassung als Beleg: siehe Git-Verlauf von `e1_messung.txt`.
+
+**H13 (neu, 08.10.2026, aus Spot §28.4):** `importer/bitpanda_margin_positions.auto_add_unknown_hebel_symbols` sucht das Bitpanda-Asset über das **Kürzel** (`find_listed_asset(pos.symbol)`). Bei Doppelbelegungen wie **BIO** (im Bitpanda-Katalog Aktie *und* Token) kann eine Hebel-Position dem falschen Asset zugeordnet werden. Heute ohne Folge, denn es gibt keine offene Hebel-Position. ➤ Zusammen mit O26 auf die Asset-ID umstellen; eine gemeinsame Zuordnungsregel für Hebel und Spot.
