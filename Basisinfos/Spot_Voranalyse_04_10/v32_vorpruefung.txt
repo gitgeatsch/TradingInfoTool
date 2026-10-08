@@ -1,0 +1,49 @@
+VORPRUEFUNG §32 · Kurse bis 2026-09-20
+
+A) INVENTAR (Desktop gemessen · NB laut Teilexport 08.10.)
+  BTC-Dominanz BTCDOM (Binance-Index)           Desktop 2023-01-01 00:00 .. 2026-08-31 23:00 .. 32136 stuendlich   NB: FEHLT (richtung_historie mit Absicht nur Desktop); nachladbar: Binance BTCDOMUSDT, frei
+  BTC-Dominanz CoinGecko (macro_snapshot)       Desktop 2026-07-07 .. 2026-07-19 .. 10           taeglich     NB: live, ungeeicht (Historie nur kostenpflichtig)
+  ETH/BTC, BTC-Lage, Altindex, Breite (Kurse)   Desktop 2017-08-17 .. 2026-09-20 .. 537          taeglich     NB: messdaten Betriebskopie 500 T + stundenkurse(_alle) ab 2023 - ausreichend fuer 90/200 T
+  Umlauf fuer Marktwert                         Desktop 2025-09-21 .. 2026-09-22 .. 376          taeglich     NB: Betriebskopie 14 T + taeglich 06:35 fortgeschrieben
+  Funding Altcoins (Historie)                   Desktop 2019-09-10 .. 2026-08-31 .. 302          8 h          NB: nur Symbolliste; LIVE open_interest_snapshot (funding_rate)
+  Open Interest (Historie)                      Desktop 2021-12-01 .. 2026-08-31 .. 100          taeglich     NB: nur Symbolliste; LIVE open_interest_snapshot
+  Fear & Greed                                  Desktop 2018-02-01 .. 2026-08-12 .. 3111         taeglich     NB: macro_snapshot live
+  Makro monatlich (Zins, DXY, 10J, CPI, Oel, SPX) Desktop 1927-12 .. 2026-07 .. 1184               monatlich    NB: makro_historie_monat vorhanden
+  Netto-Liquiditaet FED (WALCL-TGA-RRP)         Desktop FRED, frei .. live abrufbar .. -         woechentlich NB: nicht abgelegt (nur in l_messung am Desktop abgerufen)
+  Stablecoin-Umlauf                             Desktop DefiLlama, frei .. live abrufbar .. -    taeglich     NB: nicht abgelegt
+  Halving-Zyklus                                Desktop 2020-05-11 .. 2024-04-20 .. Konstanten   -            NB: Konstante
+
+B) ALT-RALLY-EPISODEN ab 2023 (Ebene 2) - Index Top 100 nach Marktwert ohne BTC/ETH/SOL, gegen BTC, taeglich
+  marktwert gewichtet: Index/BTC 2023-01-02 1.017 -> 2026-09-20 0.314 · Episoden (>= +15 % in 60 T): 6
+    Tief 2023-06-28 -> Hoch 2023-07-20 ( 22 T)   +26 % · 90 T nach dem Hoch  -22 % | am Tief: BTC 90T   +7 % · BTC unter ATH  55 % · ETH/BTC 30T  -11 % · BTCDOM 30T +18.8 % · Breite 0.06
+    Tief 2023-10-25 -> Hoch 2023-12-28 ( 64 T)   +26 % · 90 T nach dem Hoch  -13 % | am Tief: BTC 90T  +18 % · BTC unter ATH  49 % · ETH/BTC 30T  -14 % · BTCDOM 30T +15.9 % · Breite 0.29
+    Tief 2024-11-04 -> Hoch 2024-12-07 ( 33 T)   +68 % · 90 T nach dem Hoch  -29 % | am Tief: BTC 90T  +21 % · BTC unter ATH   7 % · ETH/BTC 30T   -9 % · BTCDOM 30T +9.6 % · Breite 0.29
+    Tief 2025-02-06 -> Hoch 2025-03-02 ( 24 T)   +18 % · 90 T nach dem Hoch  -27 % | am Tief: BTC 90T  +26 % · BTC unter ATH   9 % · ETH/BTC 30T  -20 % · BTCDOM 30T +26.0 % · Breite 0.43
+    Tief 2025-06-26 -> Hoch 2025-07-21 ( 25 T)   +38 % · 90 T nach dem Hoch  -13 % | am Tief: BTC 90T  +27 % · BTC unter ATH   4 % · ETH/BTC 30T   -8 % · BTCDOM 30T +9.4 % · Breite 0.19
+    Tief 2026-05-04 -> Hoch 2026-06-03 ( 30 T)   +17 % · 90 T nach dem Hoch  -12 % | am Tief: BTC 90T   +5 % · BTC unter ATH  36 % · ETH/BTC 30T   -4 % · BTCDOM 30T +8.7 % · Breite 0.30
+    Season nach S1 (>= +25 % in den folgenden 90 T): Tage 56 von 1268
+  gleich gewichtet: Index/BTC 2023-01-02 1.019 -> 2026-09-20 0.111 · Episoden (>= +15 % in 60 T): 11
+    Tief 2023-01-02 -> Hoch 2023-02-07 ( 36 T)   +24 % · 90 T nach dem Hoch  -38 % | am Tief: BTC 90T  -18 % · BTC unter ATH  75 % · ETH/BTC 30T   -1 % · BTCDOM 30T -1.1 % · Breite 0.16
+    Tief 2023-10-20 -> Hoch 2023-12-26 ( 67 T)   +44 % · 90 T nach dem Hoch   -8 % | am Tief: BTC 90T   -0 % · BTC unter ATH  56 % · ETH/BTC 30T  -10 % · BTCDOM 30T +10.4 % · Breite 0.29
+    Tief 2024-02-28 -> Hoch 2024-03-09 ( 10 T)   +17 % · 90 T nach dem Hoch  -31 % | am Tief: BTC 90T  +65 % · BTC unter ATH   8 % · ETH/BTC 30T   +1 % · BTCDOM 30T +7.1 % · Breite 0.65
+    Tief 2024-08-05 -> Hoch 2024-09-27 ( 53 T)   +19 % · 90 T nach dem Hoch  -12 % | am Tief: BTC 90T  -13 % · BTC unter ATH  26 % · ETH/BTC 30T  -15 % · BTCDOM 30T +11.3 % · Breite 0.08
+    Tief 2024-11-04 -> Hoch 2024-12-06 ( 32 T)   +63 % · 90 T nach dem Hoch  -57 % | am Tief: BTC 90T  +21 % · BTC unter ATH   7 % · ETH/BTC 30T   -9 % · BTCDOM 30T +9.6 % · Breite 0.29
+    Tief 2025-05-06 -> Hoch 2025-05-13 (  7 T)   +23 % · 90 T nach dem Hoch  -20 % | am Tief: BTC 90T   +0 % · BTC unter ATH   9 % · ETH/BTC 30T   -7 % · BTCDOM 30T +25.5 % · Breite 0.06
+    Tief 2025-06-22 -> Hoch 2025-07-21 ( 29 T)   +35 % · 90 T nach dem Hoch  -27 % | am Tief: BTC 90T  +15 % · BTC unter ATH  10 % · ETH/BTC 30T   -6 % · BTCDOM 30T +13.0 % · Breite 0.19
+    Tief 2025-10-10 -> Hoch 2025-11-07 ( 28 T)   +19 % · 90 T nach dem Hoch  -26 % | am Tief: BTC 90T   -4 % · BTC unter ATH  10 % · ETH/BTC 30T  -11 % · BTCDOM 30T +14.8 % · Breite 0.60
+    Tief 2025-12-31 -> Hoch 2026-01-06 (  6 T)   +15 % · 90 T nach dem Hoch  -20 % | am Tief: BTC 90T  -27 % · BTC unter ATH  30 % · ETH/BTC 30T   +5 % · BTCDOM 30T +1.1 % · Breite 0.20
+    Tief 2026-04-14 -> Hoch 2026-06-03 ( 50 T)   +17 % · 90 T nach dem Hoch  -20 % | am Tief: BTC 90T  -24 % · BTC unter ATH  41 % · ETH/BTC 30T   +5 % · BTCDOM 30T +1.6 % · Breite 0.40
+    Tief 2026-08-30 -> Hoch 2026-09-19 ( 20 T)   +19 % · 90 T nach dem Hoch   -1 % | am Tief: BTC 90T   +9 % · BTC unter ATH  38 % · ETH/BTC 30T   +5 % · BTCDOM 30T -1.8 % · Breite 0.44
+    Season nach S1 (>= +25 % in den folgenden 90 T): Tage 29 von 1268
+
+C) LUECKE HANDELBARKEIT (Bitpanda-Katalog von heute, Kopie der Prod-Sicherung)
+  Bitpanda Krypto-Werte: 843 · Watchlist-Grundgesamtheit am 2026-09-01: 332 Coins · bei Bitpanda 303 (91 %) · H 24/24 · M 73/76 · S 206/232
+  Ausbrecher ab 2024 (Lagebild L2): 238 Coins · bei Bitpanda 212 (89 %) · die 15 groessten: DEXE(-) ZEC TUT SYN BNX PEPE OM ALPACA(-) ALPINE BANANAS31(-) STG STO REI FLOKI FUN(-)
+
+D) LUECKE KOSTEN - Bitpanda-Handel (Export 03.08.) gegen Binance-Stundenschluss zur Handelsstunde
+  Handel 3550 · mit Binance-Stundenkurs 2880 (81 %) · nach Ausreisserfilter |Aufschlag| < 50 %: 2875
+    H    Kauf n  571 Median +0.69 % · Verkauf n  303 Median -0.03 % -> halbe Spanne 0.36 % je Seite (Annahme bisher 1,25 %)
+    M    Kauf n  888 Median +1.35 % · Verkauf n  404 Median -0.41 % -> halbe Spanne 0.88 % je Seite (Annahme bisher 1,25 %)
+    S    Kauf n  140 Median +2.78 % · Verkauf n   43 Median -3.62 % -> halbe Spanne 3.20 % je Seite (Annahme bisher 1,25 %)
+    ?    Kauf n  347 Median +1.69 % · Verkauf n  179 Median -0.92 % -> halbe Spanne 1.31 % je Seite (Annahme bisher 1,25 %)
+    alle Kauf n 1946 Median +1.28 % · Verkauf n  929 Median -0.38 % -> halbe Spanne 0.83 % je Seite (Annahme bisher 1,25 %)

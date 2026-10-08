@@ -1302,7 +1302,7 @@ Kein Auslöser, keine automatische Handlung: Die Entscheidung bleibt beim Nutzer
 
 ### 13.1 Vorprüfung (`Spot_Voranalyse_04_10/s1_vorpruefung.py`, keine Messung der Vorhersagekraft)
 
-- ⛔ **Für die BTC-Dominanz gibt es keine Historie:** am Desktop nur 10 Tage (07/2026), eine freie Langzeitquelle fehlt (CoinGecko nur in der Bezahlversion). Sie bleibt **ungeeicht**: im Betrieb höchstens als Tageswert in der Mail.
+- ⚠️ *Korrektur 08.10. (§32.1): BTCDOM liegt stündlich ab 2023 in `richtung_historie.db` (Befund 2.661).* — ⛔ **Für die BTC-Dominanz gibt es keine Historie:** am Desktop nur 10 Tage (07/2026), eine freie Langzeitquelle fehlt (CoinGecko nur in der Bezahlversion). Sie bleibt **ungeeicht**: im Betrieb höchstens als Tageswert in der Mail.
 - **Universum:** `messdaten.db` mit eingestellten Werten, 82 Altcoins (2019), 181 (2020), 295 bis 457 (2021–2025). Gemessen wird **ab 2019**.
 - **Korb:** die 50 umsatzstärksten Altcoins (30-Tage-Umsatz in USD am Monatsersten), gleich gewichtet, monatlich neu, ohne BTC und Stablecoins, eingestellte bis zum letzten Kurs.
 - **Ereignis „echte Altcoin-Phase“** (wie K-4, per Definition rückblickend): Der Korb schlägt BTC in den **folgenden 90 Tagen** um **mindestens 25 Pp**. Episoden mit Lücke unter 30 Tagen werden verbunden, Mindestdauer 7 Tage.
@@ -3832,3 +3832,141 @@ Grundgesamtheit wie die Watchlist (Umlauf Stufe 3), monatliche **Starttage** mit
 | **Rolle L trägt** | Mitnahme-Regel je L-Bestand: *„×3 ab Start erreicht → die Hälfte verkaufen“*. Begründung = gemessen: +5,5 Pp gegen Halten, besser als der Zufall. ⚠️ Mit Hinweis: Niedrigere Ziele waren ab 2024 besser (Dosis). Die Stufe wird **nicht** nachträglich getauscht (R-R11, Hypothesen nicht starr); eine Fassung n+1 braucht Vorwärtsdaten |
 | **Rolle K trägt nicht** | keine gemessene Weite. Die Marke X2 bleibt beschriebene Praxis **ohne Nachweis gegen den Zufall** |
 | **neu (Fassung n+1, nur vorwärts):** | **Zeitgrenze für K** (z. B. höchstens 2–6 Wochen halten). Auf 2024+ nur Beschreibung, denn diese Daten sind verbraucht. **Phasenabhängige Stufe** (enge Führung bei fallendem, weite bei steigendem Altmarkt) gehört zur Frage *wann entsteht eine Altrally* (§32) |
+
+
+## 32. Fachprüfung des Spot-Konzepts und Voranalyse Ebenen / Zeithorizonte / Alt-Rally (08.10.2026)
+
+Nutzer 08.10.:
+- *„Versuche zu erheben, unter welchen Marktbedingungen eine Altrally entsteht. Wir müssen versuchen, auf mehreren Ebenen zu denken – inkl. Zeithorizonte je Spot-Strategie.“*
+- *„Hast du das aktuelle Konzept auf Herz und Nieren geprüft, ALS FACHEXPERTE – wo sind Lücken? Hypothese und Lösungskonzept, fachlich, technisch, Datenabdeckung etc.?“*
+
+### 32.1 Vorprüfung (`v32_vorpruefung.py` → `.txt`, Gegenprobe `v32_gegenprobe.py` **8/8**)
+
+Nur lesend. Der Bitpanda-Katalog stammt aus einer **Kopie** der Prod-Sicherung vom 08.10. 06:31 (mode=ro, im Scratchpad). Einziger Abruf nach außen: FRED EUR/USD (frei).
+
+**A) Datenquellen-Inventar:**
+
+| Kandidat | Desktop | Auflösung | NB |
+|---|---|---|---|
+| BTC-Dominanz **BTCDOM** (Binance-Index) | **2023-01 bis 2026-08**, 32.136 Stunden | stündlich | **fehlt** (richtung_historie mit Absicht nur Desktop); frei nachladbar (Binance BTCDOMUSDT) |
+| BTC-Dominanz CoinGecko | 10 Tage (07/2026) | täglich | live in `macro_snapshot`, ungeeicht; Historie nur kostenpflichtig |
+| Kurse: ETH/BTC, BTC-Lage, Altindex, Breite | 2017-08 bis 2026-09, 537 Werte | täglich | Betriebskopie 500 T + Stundenkurse ab 2023: reicht für 90/200 T |
+| Umlauf (Marktwert) | Historie ab 21.09.2025 | täglich | 14 T + täglich fortgeschrieben |
+| Funding Altcoins | 2019-09 bis 2026-08, 302 Symbole | 8 h | nur Symbolliste; live `open_interest_snapshot` |
+| Open Interest | 2021-12 bis 2026-08, 100 Symbole | täglich | nur Symbolliste; live |
+| Fear & Greed | 2018-02 bis 2026-08 | täglich | live |
+| Makro monatlich (Zins, DXY, 10J, CPI, Öl, SPX) | bis 2026-07 | monatlich | vorhanden |
+| Netto-Liquidität FED, Stablecoin-Umlauf | nur live abgerufen (FRED, DefiLlama, frei) | wöchentlich / täglich | **nicht abgelegt** |
+
+⚠️ **Korrektur zu S1 (§13.1):** Dort stand *„für die BTC-Dominanz gibt es keine Historie“*. Seit 27.09. liegt aber BTCDOM stündlich ab 2023 in `richtung_historie.db` (Befund 2.661).
+
+**B) Alt-Rally-Episoden ab 2023 (Ebene 2).**
+- Index: Top 100 nach Marktwert ohne BTC/ETH/SOL, täglich gegen BTC.
+- Episode: ≥ +15 % über dem 60-T-Tief.
+- **Seit 01/2023 fiel der Index gegen BTC von 1,02 auf 0,31** (marktwertgewichtet) bzw. auf 0,11 (gleichgewichtet).
+
+| Tief → Hoch (marktwertgewichtet) | Dauer | Anstieg | 90 T nach dem Hoch | am Tief: BTC 90 T | BTC unter Hoch | ETH/BTC 30 T | **BTCDOM 30 T** | Breite |
+|---|---|---|---|---|---|---|---|---|
+| 28.06. → 20.07.2023 | 22 T | +26 % | −22 % | +7 % | 55 % | −11 % | **+18,8 %** | 0,06 |
+| 25.10. → 28.12.2023 | 64 T | +26 % | −13 % | +18 % | 49 % | −14 % | **+15,9 %** | 0,29 |
+| 04.11. → 07.12.2024 | 33 T | **+68 %** | −29 % | +21 % | 7 % | −9 % | **+9,6 %** | 0,29 |
+| 06.02. → 02.03.2025 | 24 T | +18 % | −27 % | +26 % | 9 % | −20 % | **+26,0 %** | 0,43 |
+| 26.06. → 21.07.2025 | 25 T | +38 % | −13 % | +27 % | 4 % | −8 % | **+9,4 %** | 0,19 |
+| 04.05. → 03.06.2026 | 30 T | +17 % | −12 % | +5 % | 36 % | −4 % | **+8,7 %** | 0,30 |
+
+Gleichgewichtet sind es 11 Episoden (+15 bis +63 %), alle danach ebenfalls im Minus.
+
+**Was die Tabelle beschreibt (6 Fälle, nur Beschreibung, das Tief ist erst im Rückblick bekannt):**
+1. **Jede Alt-Rally seit 2023 dauerte 3 bis 9 Wochen und war 90 T nach dem Hoch wieder abgegeben** (−12 bis −29 %).
+2. **Vor jedem Tief war die BTC-Dominanz stark gestiegen** (+9 bis +26 % in 30 T), ETH/BTC fiel fast immer, und die Breite war niedrig (0,06–0,43).
+   - Die Rallyes begannen also **nach einer Dominanz-Spitze**, als Gegenbewegung.
+   - Das übliche Bild (BTC steigt → Dominanz fällt → ETH führt) passt **nicht**.
+3. BTC stieg vor dem Tief fast immer (+5 bis +27 % in 90 T). In 2024–25 lag BTC nahe seinem Hoch (4–9 %).
+4. ⚠️ **Wie oft dieselbe Lage OHNE folgende Rally auftrat, ist offen** (Basisrate, Fehlalarm). Erst das sagt, ob die Lage etwas trennt (vgl. S1: F1 deckte die Phasen, war aber zu 74 % Fehlalarm).
+
+**C) Lücke Handelbarkeit (Bitpanda-Katalog heute):**
+- 843 Krypto-Werte.
+- **Watchlist-Grundgesamtheit 303 von 332 (91 %)**: H 24/24, M 73/76, S 206/232.
+- Ausbrecher ab 2024: 212 von 238 (89 %). Es fehlt u. a. **DEXE**, der größte.
+- ⚠️ Das ist der Katalog von heute, für die Vergangenheit also eine Obergrenze.
+
+**D) Lücke Kosten** — Bitpanda-Handel aus dem Export 03.08.:
+- Vergleich gegen den Binance-Stundenschluss zur Handelsstunde, umgerechnet über EUR/USD.
+- 2.880 von 3.550 Handeln fanden einen Binance-Kurs. Die übrigen liegen in einer anderen Symbolwelt (O26).
+
+| Klasse | Kauf Median | Verkauf Median | **halbe Spanne je Seite** | bisher angenommen |
+|---|---|---|---|---|
+| H | +0,69 % | −0,03 % | **0,36 %** | 1,25 % |
+| M | +1,35 % | −0,41 % | **0,88 %** | 1,25 % |
+| **S** | +2,78 % | −3,62 % | **3,20 %** | 1,25 % |
+| alle | +1,28 % | −0,38 % | 0,83 % | |
+
+⇒ **Smallcaps kosten bei Bitpanda gut das 2½-fache der Annahme**, ein Hin- und Rückweg also rund 6,4 %. Highcaps sind billiger als angenommen.
+
+### 32.2 Fachprüfung — die Lücken des Konzepts
+
+**Fachlich (Hypothese und Lösung):**
+
+| # | Lücke | Wirkung | Schwere | was tun |
+|---|---|---|---|---|
+| F1 | **Rolle L hat keinen Preis.** Die Season-Option kostet im Median **−61 % gegen BTC im Jahr** (§31.6), doch es fehlt jede Rechnung, wie groß und wie bald eine Season sein müsste, damit L sich lohnt | L ist heute ein Glaubenssatz mit hohen laufenden Kosten | **hoch** | Kosten-Nutzen-Rechnung der Option: Kosten je Jahr gegen Szenarien (2020/21: +156 % in 131 T); daraus Budget und Höchstdauer. Das Budget entscheidest du |
+| F2 | **Season nicht prüfbar:** seit 2024 keine Season; alle L-Regeln stammen aus einem fallenden Altmarkt | Was in der Season gilt, wissen wir nicht | hoch | ehrlich als Grenze führen; Season-Fakten vorwärts protokollieren |
+| F3 | **Horizont-Bruch L:** L heißt Jahre, gemessen wurde 365 T. Ob ein Coin *bis zur nächsten Season überlebt* (Delisting O29, Einstellung), ist nicht gemessen | Auswahl für L ungeprüft auf ihren eigentlichen Zweck | mittel | Fortbestand über 2–3 Jahre auf 2021–2023 als Auskunft; Delisting-Sperre für L |
+| F4 | **Rolle K hat keinen Einstieg** (Teil C offen) | K ist heute leer | hoch | Teil C |
+| F5 | **Die beste Führung dreht mit der Phase** (§31.7): niedrige Ziele und kurze Haltedauer ab 2024, das Gegenteil 2023 | Eine feste Regel ist in einer der Phasen falsch | **hoch** | **Ebene 2** (§32.3): Erkennt man die Phase auch nur grob, kann die Stufe umschalten |
+| F6 | **Kosten der Smallcaps 3,2 % je Seite** statt 1,25 % | Kurze Handel in S rechnen sich nur bei großen Bewegungen; bisherige Nettozahlen für S sind zu günstig | **hoch** | Kosten je Klasse in alle Nettorechnungen; K in S nur mit Mindestbewegung |
+| F7 | **Maßstab:** Alles wird gegen BTC gemessen. Der Kern selbst verlor aber: ETH −41 %, SOL −47 % gegen BTC | Was „Kern“ ist, steht unter Druck | mittel | Akkumulation G1 (§10, offen) |
+| F8 | **Klumpenrisiko:** Altcoins laufen zusammen; L als Korb ist kaum Streuung | Risiko je Rolle nicht begrenzt | mittel | Risikobudget je Rolle (Anteil am Gesamtvermögen) |
+
+**Methodisch:**
+
+| # | Lücke | was tun |
+|---|---|---|
+| M1 | **Mehrfachtesten über den ganzen Spot-Strang:** seit 04.10. über 15 Messpläne, 2 tragen (§25.6 Watchlist, §31 L-Mitnahme) | Buchführung je Strang; jedes „trägt“ mit diesem Vorbehalt, Vorwärtsprotokoll als eigentlicher Beleg |
+| M2 | **Ein Regime:** Ab 2024 fällt der Altmarkt durchgehend, das Wahljahr 2023 stieg. Kein Ergebnis ist über Phasen hinweg geprüft | Ebene 2 als Achse; Ergebnisse je Phase ausweisen |
+| M3 | Umlauf vor 21.09.2025 von heute (Vorgriff) | als Grenze geführt (§30.1) |
+| M4 | K-Stellvertreter-Einstieg ist kein echter Einstieg | Teil C |
+| M5 | Lage am Tief ist Rückschau | Basisrate und Fehlalarm messen (§32.4) |
+
+**Technisch und Betrieb (Regel *Labor-only ist FAIL*):**
+
+| # | Lücke | was tun |
+|---|---|---|
+| T1 | **Alles läuft am Desktop.** Im Betrieb gibt es für Spot nur die alte, falsche Kette und die Stop-Mail je Signal (O19) | Bau erst nach Abstimmung (T-2), mit Betriebsprüfung B1–B9 |
+| T2 | **Daten am NB fehlen:** BTCDOM, Netto-Liquidität, Stablecoins, Stammdatei Allzeithoch/Erstdatum (W2), CoinGecko-Profil (W3); Funding/OI nur live | Nachlader (alle frei); W2/W3 aus O28 |
+| T3 | **Datenmodell:** Der Bestand hat weder Rolle noch Starttag; `positionsfuehrung` liest nur | Spalten Rolle/Starttag; Zuteilung durch dich |
+| T4 | **Symbolbrücke** Bitpanda ↔ Binance fehlt (O26): 19 % der Bitpanda-Handel ohne Binance-Kurs | O26 |
+| T5 | Mail für Mitnahme, Rollen und Phase fehlt | mit O28 |
+
+### 32.3 Ebenen und Zeithorizonte je Spot-Strategie (Stand nach den Messungen)
+
+| Ebene | Horizont | was wir wissen | Strategie | Führung |
+|---|---|---|---|---|
+| **1 Season** | Monate–Jahre | 4 Phasen 2019–2023, **keine seit 2024**; Kursfakten zu spät oder Dauer-Fehlalarm (S1); Liquidität wirkte nur 2021–23 (§16) | **L** Season-Option | Mitnahme bei Vielfachen (×3 trägt, §31.6), sonst halten; Budget begrenzt (F1) |
+| **2 Alt-Rally** | **3–9 Wochen** | 6 Rallyes seit 2023, **alle binnen 90 T abgegeben**; Beginn nach einer **Dominanz-Spitze** (§32.1 B) | taktisch für L und K: *in der Rally mitnehmen* | kurze Haltedauer, niedrige Ziele (Dosis §31.6 ab 2024) |
+| **3 Einzelausbruch** | Tage–Wochen | 8 % der Coins je Monat, selten dauerhaft (§30.2); Marke ohne Zeitwert, es wirkt die Haltedauer (§31.7) | **K** | Zeitgrenze (vorwärts), Kosten je Klasse (F6) |
+
+### 32.4 Hypothesen für Ebene 2 — vorab, aus der Beschreibung (noch kein Test)
+
+| # | Hypothese | Messfrage |
+|---|---|---|
+| H-R1 | **Umkehr nach Dominanz-Spitze:** Eine Alt-Rally folgt auf einen starken BTCDOM-Anstieg (≥ +9 % in 30 T) | Wie oft folgte auf diese Lage binnen 30 T eine Rally (Treffer), wie oft nicht (**Fehlalarm, Basisrate**)? |
+| H-R2 | dazu ETH/BTC fällt und die Breite ist tief (< 0,3) | verbessert die Kombination die Trennung? |
+| H-R3 | BTC liegt nahe seinem Hoch (< 10 % darunter) | trennt das 2024–25 von 2023? |
+| H-R4 | **Eine Rally hält 3–9 Wochen:** Mitnahme nach X Wochen oder Y % schlägt Halten | auf L- und K-Positionen in den Episoden |
+
+⚠️ **Ehrlich, vorab:**
+- 6 Ereignisse (marktwert) bzw. 11 (gleich) reichen für **keine** Regel mit Nachweis.
+- Machbar sind: (1) die **Fehlalarmquote** der Lage über alle 1.268 Tage seit 2023. Ist die Lage oft ohne Rally da, trennt sie nicht, und das Thema ist erledigt. (2) Sonst geht die Lage als **Fakt** in die Mail (*„Dominanz-Spitze: Rallyes folgten 6 von 6 Mal, Fehlalarm X %“*) und ins Vorwärtsprotokoll.
+- Wahl 2023, Urteil ab 2024, wo es geht. Mit 2 bzw. 4 Episoden je Seite ist auch das nur Beschreibung.
+
+### 32.5 Zwischenfazit zum Ziel
+
+| | |
+|---|---|
+| **Ziel** | Spot: Einstieg und Führung je Rolle, phasengerecht, gegen BTC |
+| **Stand** | L-Mitnahme trägt (§31). K ohne Einstieg. Die Phase (Ebene 2) ist der fehlende Schalter: Ihre Rallyes sind kurz und beginnen nach Dominanz-Spitzen. Ob das vorab trennt, ist offen |
+| **Neu sichtbar** | Kosten der Smallcaps 3,2 % je Seite (F6); die Season-Option hat keinen Preis (F1) |
+| **Test oder Betrieb** | Desktop, nur lesend; Prod nur als Kopie gelesen |
+| **Was folgt** | Messplan §33 Ebene 2 (H-R1–H-R4, Basisrate zuerst), dazu die Kosten-Nutzen-Rechnung von L (F1). Nutzerabstimmung |
+| **Was nicht folgt** | keine Phasen-Regel aus 6 Fällen; kein Bau |
