@@ -1,0 +1,35 @@
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+MESSUNG Spot-Einstieg (§29.2) · Kurse bis 2026-09-20
+
+TEIL 0 (R-R11) B5 X2 mit wl_messung.b5: Korb E2 +31.8 % · E3 -4.0 % (Soll +31,8 / -4,0)
+  Ausstiegstag der Marke dieser Messung = a2_messung.ausstieg('X2') an 4001 von 4001 B5-Kaeufen
+
+HAUPT-HYPOTHESE E-b (Eintritt ins Fuenftel bei Altseason-Breite >= 50 %, Ausstieg X2, gegen BTC)
+  E2 Einstiege 143 an 11 Stichtagen · Korb +21.7 % (Median der Koerbe +3.0 %) · Bootstrap 0.87 · Zufallswelt-Rang 0.66 · netto +19.7 % · realisiert >= x2 9 % / <= -50 % 3 % · Haltedauer Median 38 T
+  E3 Einstiege 28 an 3 Stichtagen · Korb -28.6 % (Median der Koerbe -31.1 %) · Bootstrap 0.00 · Zufallswelt-Rang 0.03 · netto -29.8 % · realisiert >= x2 3 % / <= -50 % 3 % · Haltedauer Median 57 T
+  -> URTEIL (vorab, E3): NICHT ENTSCHEIDBAR (zu wenige Faelle/Stichtage)
+
+SELBSTTEST (nur Bedingungen 1+2, E3)
+  (a) Zufalls-Tor (3 offene Stichtage zufaellig), 100 Welten: Fehlalarm 22 % (Soll <= 5 %) -> NICHT bestanden
+  (b) gepflanzt (27 Coins mit spaeterem Ertrag ueber BTC an den offenen Stichtagen): erkannt (bestanden)
+
+AUSKUNFT - alle Arme (Ausstieg X2), Korb gegen BTC je Epoche:
+  KL   E2 n 10494 · Korb   +8.9 % · Bootstrap 0.54 · Anteil > BTC  28 % | E3 n  7471 · Korb  -17.5 % · Bootstrap 0.00 · Anteil > BTC  14 %
+  A0   E2 n  2133 · Korb  +14.4 % · Bootstrap 0.61 · Anteil > BTC  29 % | E3 n  1519 · Korb  -12.5 % · Bootstrap 0.00 · Anteil > BTC  16 %
+  E-a  E2 n   367 · Korb  +10.1 % · Bootstrap 0.65 · Anteil > BTC  31 % | E3 n   183 · Korb  -10.7 % · Bootstrap 0.08 · Anteil > BTC  17 %
+  E-b  E2 n   143 · Korb  +21.7 % · Bootstrap 0.85 · Anteil > BTC  43 % | E3 n    28 · Korb  -28.6 % · Bootstrap 0.00 · Anteil > BTC   0 %
+  E-c  E2 n   345 · Korb   +6.2 % · Bootstrap 0.65 · Anteil > BTC  30 % | E3 n   156 · Korb  -14.0 % · Bootstrap 0.02 · Anteil > BTC  10 %
+  X0 (12 Monate halten) statt X2: E-b E2 Korb -5.5 % | E-b E3 Korb -54.3 % | A0 E2 Korb +1.8 % | A0 E3 Korb -44.5 %
+  E-b E2 je Klasse: H n 8 +9.6 % · M n 74 +16.5 % · S n 61 +24.7 %
+  E-b E2 je Jahr: 2021 n 116 +38.3 % · 2022 n 17 -14.2 % · 2024 n 10 -39.0 %
+  E-b E2 Weglassprobe ohne ANKR,DOGE,NKN,DENT,CTXC: Korb +6.4 %
+  E-b gegen E-a E2: +11.6 Pp (Korb E-a +10.1 %)
+  E-b E3 je Klasse: H n 5 -22.0 % · M n 6 -29.2 % · S n 17 -29.4 %
+  E-b E3 je Jahr: 2024 n 28 -28.6 %
+  E-b E3 Weglassprobe ohne SC,BNB,ONE,AKRO,BADGER: Korb -33.5 %
+  E-b gegen E-a E3: -17.9 Pp (Korb E-a -10.7 %)

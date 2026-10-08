@@ -3326,3 +3326,106 @@ Nutzer 08.10.:
 - E3 war für Altcoins gegen BTC ein **durchgehend fallender** Markt (Korb der Klasse −45 %).
 - Die Phase war nur an 15 % der Stichtage offen. Am wahrscheinlichsten ist **„nicht entscheidbar“**.
 - Das Phasen-Tor ist trotzdem die richtige Spur. Die Vorgabe des Nutzers (*„massive Altseason möglich“*) ist genau die Lage, in der das Tor aufgeht. Für diesen Fall braucht es die Regel **fertig und protokolliert**, bevor er eintritt.
+
+### 29.4 Ergebnis der Messung (08.10.2026, nach dem Plan §29.2)
+
+`ein_messung.py` → `.txt` (2 min, Kurse bis 20.09.2026). Gegenprobe `ein_messung_gegenprobe.py` **11/11**: Anzahlen, alle 186 E-b-Anker mit einer zweiten Umsetzung der Marke, Korb neu gemittelt, Erwartung der Zufallswelt analytisch, Kostenformel, Tor an 80 Stichtagen, X0.
+
+**Teil 0 (R-R11):** B5 X2 mit dem alten Werkzeug `wl_messung.b5` genau reproduziert: E2 **+31,8 %**, E3 **−4,0 %**. Die Marke dieser Messung liefert an **4.001 von 4.001** B5-Käufen denselben Ausstiegstag wie `a2_messung.ausstieg('X2')`.
+
+**Haupt-Hypothese E-b** (Eintritt ins Fünftel bei Altseason-Breite ≥ 50 %, Ausstieg X2, gegen BTC):
+
+| | E2 (Wahl) | E3 (Bestätigung) |
+|---|---|---|
+| Einstiege / Stichtage | 143 / 11 | **28 / 3** (01.02.2024, 01.03.2024, 01.12.2024) |
+| Korb gegen BTC (Median der Körbe) | +21,7 % (+3,0 %) | **−28,6 %** (−31,1 %) |
+| Anteil > BTC | 43 % | **0 %** |
+| Bootstrap · Rang gegen Zufallswelt | 0,87 · **0,66** | 0,00 · 0,03 |
+| Zufallswelt-Erwartung (H4) | +20,4 % | −17,8 % |
+| netto (Coin 1,25 %, BTC 0,4 % je Seite wie B5) | +19,7 % | −29,8 % |
+| X0 (12 Monate halten) statt X2 | −5,5 % | −54,3 % |
+
+⇒ **URTEIL nach Plan: NICHT ENTSCHEIDBAR** — Bedingung (3) fehlt (3 Stichtage statt ≥ 4).
+
+**Was die Zahlen beschreiben (kein Test, nur Beschreibung):**
+1. **In E3 schlug kein einziger E-b-Einstieg BTC.** Alle 28 lagen in den drei kurzen Öffnungen 2024 und waren schlechter als zufällige Coins derselben Klasse an denselben Tagen (−28,6 % gegen −17,8 %).
+2. **In E2 kommt der Vorteil aus dem ZEITPUNKT, nicht aus der Auswahl:**
+   - Zufällige Coins der Klasse an denselben offenen Tagen erreichen +20,4 %, E-b +21,7 % (Rang 0,66).
+   - Die Phase wirkt, die Watchlist-Auswahl innerhalb der Phase bringt nichts Messbares.
+3. **Getragen von 2021:**
+   - 2021: +38,3 % (116 Einstiege); 2022: −14,2 %; Jänner 2024: −39,0 %.
+   - Ohne die 5 größten Gewinner (ANKR, DOGE, NKN, DENT, CTXC) bleiben +6,4 %.
+4. **Die Führung trägt wieder den größten Teil:** X2 statt Halten bringt bei E-b +27 Pp (E2) und +26 Pp (E3), wie in B5.
+5. Die anderen Arme liegen in E3 alle unter BTC (KL −17,5 %, A0 −12,5 %, E-a −10,7 %, E-c −14,0 %). Eintritt (E-a) und Relativstärke (E-c) bringen gegenüber A0 auch in E2 nichts.
+
+**Selbsttest:**
+- (b) gepflanzt: **erkannt**.
+- (a) Zufalls-Tor: **Fehlalarm 22 %**, also NICHT bestanden. Ursache (Gegenprobe H7): Bei 3 Stichtagen und Blöcken zu 3 ist jede Bootstrap-Ziehung die volle Reihe, der Bootstrap kann dann nur 0 oder 1 sein.
+- ⇒ Die Anlage gilt bei dieser Fallzahl nicht. Das stützt das Urteil „nicht entscheidbar“, statt es zu schwächen.
+
+Abweichung vom Plan, offen ausgewiesen: Netto wurde mit den B5-Kosten gerechnet (Coin 1,25 %, BTC 0,4 % je Seite) statt mit pauschal 1 %. Es ist nur Auskunft und ändert kein Urteil.
+
+### 29.5 Eichung der Prüfanlage — Mindestzahl Stichtage (nachträglich, kein Ergebnis zu E-b)
+
+`ein_selbsttest_stichtage.py` → `.txt`. Gemessen wird der Fehlalarm des Zufalls-Tors (Bedingungen 1+2) nach der Zahl offener Stichtage, 100 Welten je Zeile:
+
+| offene Stichtage | 3 | 4 | 6 | 8 | 12 | 16 |
+|---|---|---|---|---|---|---|
+| E2 | 4 % | 4 % | 1 % | 1 % | 0 % | 0 % |
+| E3 | **17 %** | **7 %** | 2 % | 0 % | 0 % | 0 % |
+
+⇒ **Die Anlage hält ihr Soll (≤ 5 %) erst ab 6 offenen Stichtagen.** Das vorab gesetzte Kriterium (3) mit ≥ 4 Stichtagen war zu locker; hier hätte es nicht gegriffen, weil E3 nur 3 hatte.
+
+**Korrektur für alles Folgende** (Vorwärtsprotokoll, Teil B): **mindestens 20 Einstiege an mindestens 6 offenen Stichtagen.** Das ersetzt *„sobald 20 neue Fälle da sind“* in §29.3.
+
+⚠️ **Was das zeitlich heißt:** Die Phase war in E2 an 30 %, in E3 an 15 % der Monate offen. Sechs offene Stichtage dauern im Mittel **1½ bis 3 Jahre**. Kommt die Altseason wirklich, sind sie in wenigen Monaten erreicht, weil die Öffnungen zusammenhängen (2021).
+
+### 29.6 Zwischenfazit zum Ziel und Folge (Folge vorab §29.3: „nicht entscheidbar“)
+
+| Frage | Antwort |
+|---|---|
+| Gibt es eine belegte Einstiegsregel je Coin, die BTC schlägt? | **Nein.** Nicht entscheidbar; was beschrieben wird, spricht in E3 eher **dagegen** |
+| Was wirkt? | Die **Phase** (Zeitpunkt) und die **Führung** (X2). Die Auswahl innerhalb der Phase wirkt nicht messbar |
+| Was folgt (vorab festgelegt)? | Die Monatsmail bekommt den Abschnitt **„Einstiegskandidaten“**: die Phase als **Fakt** (offen/zu, Breite in %) und die Eintritte ins Fünftel. Jeder E-b-Eintritt wird **vorwärts protokolliert**, Prüfung bei ≥ 20 Einstiegen an ≥ 6 offenen Stichtagen (§29.5) |
+| Was folgt **nicht**? | Kein Einstiegssignal je Coin, keine Ereignis-Mail „Kauf“, keine Größe |
+| Was gewinnt das Ziel? | Die ehrliche Grenze: **Mit den vorhandenen Daten ist ein Altcoin-Einstieg gegen BTC nicht belegbar.** Der greifbare Hebel im Spot ist die **Führung je Bestand** (B5, hier wieder +26 Pp in E3), und die Phase als Fakt in der Mail |
+
+⚠️ **Der Zufallswelt-Befund ist neu und wichtig für O28:** Bei offener Phase brachte ein *beliebiger* Coin der Klasse gleich viel wie die Watchlist-Auswahl. Die Rangliste ist damit keine **Kauf**-Auswahl, sondern bleibt, was §25.6 gemessen hat: die Ordnung **innerhalb** der Klasse über alle Stichtage (Fortbestand, Gelegenheit).
+
+### 29.7 Teil B — Führung und Ausstieg JE BESTAND (Nutzer 08.10.2026, eingeplant, Messplan folgt)
+
+Nutzer 08.10.: *„Der optimale Einstieg je Asset ist nur ein Teil des Paketes. Analog Hebel brauchen wir je Bestand eine Führung bzw. optimalen Ausstieg. Wie du richtig angemerkt hast, sind diese Anstiege meist nicht dauerhaft.“*
+
+**Bestehendes Schema (nicht neu erfinden):**
+- S-B *Bestand und Ausstieg* (§2);
+- M-5 in der Reihenfolge S-c;
+- O14 Spot-Positionsführung und O19 Stop-Nachzieh-Sammelmail (Plan);
+- `Bestandsaufnahme_Positionsfuehrung_26_08.md` (holdings tragen weder Stop noch These);
+- B5 §21.6 (X0/X1/X2/X7).
+
+Teil B **ersetzt** den Altbestand der Trailing-Regel vom 04.08. (+1,0 R / 1,0 R).
+
+**Was schon gemessen ist:**
+
+| | |
+|---|---|
+| X2 (Nachlauf −35 % / Notbremse −50 %) | E3-Korb −4 % statt −42 %, kein Absturz ≤ −70 % mehr; E2 Bootstrap 0,81 → *knapp nein* (§21.6) |
+| hier bei E-b | +27 Pp (E2) / +26 Pp (E3) gegen Halten |
+| Ausstieg | 98–100 % über die Marke, Median 38–68 T (§29.1) — Anstiege halten selten |
+| X1 gestaffelt | E3 +42 Pp gegen Halten, E2 schwächer als Halten |
+
+**Fragen für den Messplan** (Voranalyse vor dem Plan, dann Nutzer-Ja):
+
+| # | Frage | warum |
+|---|---|---|
+| B-1 | **Bezugspunkt für Bestände, die nicht über das System gekauft wurden:** Kaufdatum und Einstand aus dem Bestand (Importer), Hoch seit Kauf aus den Kursen in Prod | Der Bestand ist älter als jede Regel. *Hoch seit Kauf* gilt dort ab dem echten Kauf, nicht ab heute |
+| B-2 | **Nachlaufweite gemessen statt gesetzt:** Dosis-Wirkung über mehrere Weiten, je Klasse H/M/S oder in Schwankungseinheiten; Regel vorab | −35 % stammt aus dem ersten Wurf. Eine Smallcap schwankt anders als LINK |
+| B-3 | **Zielgröße zweifach:** gegen **Halten** (schützt die Führung?) und gegen **BTC** (lohnt der Bestand überhaupt?) | Die Führung kann gegen Halten tragen und gegen BTC trotzdem verlieren (§29.4) |
+| B-4 | **Teilverkauf** (X1) gegen ganz | E3 stark, E2 schwach: zweiseitig planen (Regel *Messplan zweiseitig*) |
+| B-5 | **Phase zu** als Ausstiegsgrund (Breite fällt unter 50 %) | Es wirkt die Phase, nicht die Auswahl (§29.4) |
+| B-6 | **Wohin nach dem Ausstieg?** Bargeld oder Kern | Sonst ist der Ausstieg ein Verlust gegen BTC im Aufschwung |
+| B-7 | ⚠️ **Widerspruch zur Altregel *Spot hat keinen Stop*** (`verkaufsrechnung.py:27`) | X2 ist ein Nachlauf-Stop. Die Messung entscheidet; die Altregel wird abgelöst oder bestätigt, nicht stillschweigend übergangen |
+| B-8 | **Datenquellen-Inventar und Abdeckung am NB** je Bestand (auch außerhalb Binance: KAS, MORPHO, BRETT, SUPRA, MON, CANTON, ASTER) | Regel *vor jedem Bau Abdeckung am NB nachweisen* |
+| B-9 | **Mail:** *Marke gerissen* je Bestand als Ereignis-Mail, mit dem **gemessenen** Effekt als Begründung | Regel 4: Der Bruch der Marke ist ein Fakt. Begründung ist erst die Messung, dass Führen besser ist als Halten |
+
+**Reihenfolge:** Voranalyse B-1 bis B-9 (Datenlage, Altregel, Bestand am NB) → Messplan vorab → Messung am Desktop → Zwischenfazit → Bau erst nach Abstimmung (T-2: nach der Hebel-Freigabe).

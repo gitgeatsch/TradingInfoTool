@@ -973,3 +973,18 @@ Schritt7 §23.24.
   1. P1 (NB-Prüfung) verlangt keine Änderung an `regel0_mail`, `_regel0_mails` oder der Ablage;
   2. P2 (O30) ändert den Zuschnitt von O29 nicht, z. B. durch eine bessere Quelle oder weitere Ereignisarten.
 - Trifft eines davon zu, wird zuerst der Zuschnitt abgestimmt.
+
+
+# E-85 · Spot: Einstieg je Asset UND Führung je Bestand; der Newsletter bleibt daneben (08.10.2026)
+
+**08.10.2026** · Nutzer:
+- *„Ein Newsletter 1× pro Monat ohne konkrete Handlungen, nur Rangfolgen mit Informationen, das ist nicht das eigentliche Ziel für den Einstieg – weil es somit keinen gibt.“*
+- *„Den Newsletter-Plan nicht gänzlich verwerfen, sondern prüfen, wie wir zusätzlich sinnvolle Spot-Einstiege bewerten können.“*
+- *„Der optimale Einstieg je Asset ist nur ein Teil des Paketes. Analog Hebel brauchen wir je Bestand eine Führung bzw. optimalen Ausstieg … diese Anstiege sind meist nicht dauerhaft.“*
+
+**Festgelegt:** O31 hat zwei Teile.
+- **Teil A Einstieg:** gemessen 08.10., nicht entscheidbar (Spot §29.4–§29.6).
+- **Teil B Führung/Ausstieg je Bestand:** Fragen B-1 bis B-9 in Spot §29.7. Es gilt das bestehende Schema S-B/M-5/O14/O19, die Trailing-Altregel vom 04.08. wird abgelöst.
+- Die Monatsübersicht (O28) bleibt daneben, als Information und nicht als Handlung.
+
+**Korrektur der Prüfanlage (§29.5):** Ein Spot-Urteil braucht mindestens **20 Einstiege an 6 Stichtagen**. Erst dann hält die Anlage ihr Soll.
