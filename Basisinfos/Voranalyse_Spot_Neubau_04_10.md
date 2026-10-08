@@ -4441,3 +4441,49 @@ Teil 0 bestanden; Selbsttest in beiden Klassen bestanden (Fehlalarm 0 %, gepflan
 | M, S | kein Momentum-Einstieg; in S ausdrücklich nicht (Umkehr) |
 | Rolle K insgesamt | **Mit Kurs-, Umsatz- und Terminmarktdaten gibt es ab 2024 in keiner Klasse einen belegten K-Einstieg.** K bleibt leer. Der stärkste Hinweis ist der **Kontext** Dominanz-Spitze (Ebene 2) für Highcaps; er geht ins Vorwärtsprotokoll |
 | Nächster Schritt | **C2 Listings** als Auslöser (§38), der einzige noch offene Weg zu K, vor allem bei Smallcaps |
+
+
+## 38. C2 — Börsen-Ankündigungen als Auslöser (Rolle K): Datenlage und Messplan VOR der Messung (08.10.2026)
+
+Nutzer 08.10.: *„Ja, Messung laufen lassen, prüfen und gegenprüfen.“* (zu C2) — Plan vorab festgelegt und committet, dann gemessen.
+
+### 38.1 Datenlage (geprüft, alle Quellen frei)
+
+| Quelle | Inhalt | Tiefe | Schnittstelle |
+|---|---|---|---|
+| **Binance** Katalog 48 *New Cryptocurrency Listing* | Spot-Listings, **Futures-Starts** (Perpetual), neue Paare, Launchpool, Airdrops | 2.000 Meldungen bis **11/2019** | `cms/article/list` (wie E-1/O29), ohne Schlüssel |
+| **Upbit** Kategorie *trade* | **neue Handelsunterstützung** (신규 거래지원, mit Markt KRW/BTC/USDT), Warnhinweise | 785 Meldungen bis **10/2017** | `api-manager.upbit.com/api/v1/announcements`, ohne Schlüssel |
+| Stundenkurse | 537 + 116 Werte | ab 2023-01; **BTC stündlich erst ab 09/2023** | `stundenkurse(_alle).db` (Desktop und NB) |
+
+⚠️ **Was messbar ist und was nicht:**
+- Für ein **Binance-Spot-Listing** gibt es *vor* dem Listing keinen Binance-Kurs. Messbar ist nur *„nach dem Listing kaufen“* (Auskunft).
+- Messbar mit Kursen *vor und nach* der Meldung sind **Futures-Starts** (der Coin handelt schon auf Binance Spot) und **Upbit-Listings** von Coins, die schon auf Binance handeln.
+- **Coinbase** hat keine freie Listing-Historie: nicht Teil dieser Messung.
+
+### 38.2 Festlegungen (vorab; `c2_lade.py` lädt nach `data/_c2/`, `c2_messung.py` rechnet, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| **C2-a (Haupt)** | **Binance Futures-Start:** Titel *„Binance Futures Will Launch … XYZUSDT … Perpetual“*; jedes genannte Kürzel (1000er-Vorsatz entfernt) mit Binance-Spot-Stundenkurs **≥ 90 T vor** der Meldung |
+| **C2-b (Haupt)** | **Upbit-Listing:** Titel mit *신규 거래지원* und Markt *KRW*; Kürzel aus den Klammern; Coin mit Binance-Spot-Stundenkurs ≥ 90 T vor der Meldung |
+| C2-c (Auskunft) | Binance-Spot-Listing *„Binance Will List … (XYZ)“*: Kauf 4 h nach dem ersten Binance-Kurs |
+| **Einstieg** | Schluss der Stunde, die **4 h nach der Veröffentlichung** beginnt. Das ist realistisch bei Handel von Hand über Bitpanda. Auskunft: +1 h, +24 h; dazu der **verpasste** Ertrag von der Meldung bis +4 h |
+| **Ausstieg** | **Zeitgrenze 7 T** (168 h); Auskunft 1 / 3 / 30 T |
+| Zielgröße | Ertrag **gegen BTC** über dieselben Stunden, brutto; Kosten getrennt je Klasse (§32.1 D) |
+| Klasse | Watchlist-Marktwert-Klasse des Monats; ohne Klasse → *unklassiert* (Kosten wie S) |
+| Gewichtung | je Monat der Korb (Mittel seiner Ereignisse), dann über die Monate |
+| **Nullwelt** | dieselbe Stunde, gleich viele **zufällige Coins derselben Klasse** ohne Meldung, gleicher Ein- und Ausstieg (200) |
+| **Trägt (ab 2024), je Hypothese** | (1) Korb > 0, Block-Bootstrap über Monate ≥ 0,975 (**Bonferroni**, 2 Hypothesen); (2) Rang gegen die Nullwelt ≥ 0,975; (3) Spiegelprobe: Richtung (Lauf ≥ +15 % / Absturz ≤ −15 % gegen BTC binnen 7 T) gegen die Nullwelt > 1; (4) ≥ 20 Ereignisse an ≥ 6 Monaten |
+| zweiseitig | Korb < 0 und Bootstrap ≤ 0,025 → **SCHADET** („sell the news“) |
+| Lohnt nach Kosten | Korb minus Kosten der Klasse > 0 |
+| Selbsttest | (a) Zufalls-Ereignis: gleich viele zufällige Stunden je Monat und zufällige Coins → Fehlalarm ≤ 2,5 %; (b) gepflanzt → muss tragen |
+| 2023 | nur Auskunft (Training; BTC stündlich erst ab 09/2023) |
+
+### 38.3 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis | Folge |
+|---|---|
+| **trägt und lohnt** | **K-Signal „Listing“:** Ereignis-Mail binnen der Stunde (*„<Coin>: Futures-Start / Upbit-Listing; gemessen +x Pp gegen BTC in 7 T, besser als Zufall; Ausstieg nach 7 T“*). Abrufer stündlich am NB (Binance vorhanden über O29, Upbit neu, beide frei); Bau nach Abstimmung |
+| trägt, frisst Kosten | kein Signal; die Meldung kommt als **Fakt** in die Mail (wie O29) |
+| schadet | als Fakt mit Warnung (*„nach solchen Meldungen fiel der Coin gegen BTC“*); wichtig für den Bestand |
+| nicht entscheidbar / trägt nicht | Vorwärtsprotokoll; Rolle K bleibt leer |
