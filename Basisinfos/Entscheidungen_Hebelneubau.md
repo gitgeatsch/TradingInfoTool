@@ -1002,3 +1002,14 @@ Schritt7 §23.24.
 - Teil B wird je Rolle gemessen. Spot §30.9.
 
 **Vorbehalt des Nutzers:** Spot ist groß. Das Modell ist Grundlage, nicht Endstand.
+
+
+# E-87 · Spot: Season-Ampel (L bedingt) ja, aber kalibrieren; Reihenfolge Ampel → K-H1 (H und M) → C2 Listings (08.10.2026)
+
+**08.10.2026** · Nutzer: *„1. Ja, L-Vorschlag – aber noch kalibrieren und messen (gut, schlecht, Grenzen, Übergänge, Start Altseason ca.). 2. Werden nur Highcaps bewertet? Was ist mit Midcaps und dem Bestand mit Smallcaps? 3. Ja, wenn die Reihenfolge stimmt.“*
+
+**Festgelegt:**
+- Die Ampel wird sichtbar (App, jede Spot-Mail, Ereignis-Mail bei Zustandswechsel), aber erst nach der **Kalibrierung** §36.3.
+- Die Klasse gilt nur für den **K-Einstieg**: H Hauptprüfung, M eigene Prüfung, S über C2. Führung, Rolle und Preis gelten für **jeden** Bestand.
+- Die 11 Krypto-Bestände außerhalb des Binance-Spot-Universums werden über Prod-Kurse und O26 eingebunden.
+- Reihenfolge §36.2. Der Hebel hat Vorrang (P5 am 10.10.).

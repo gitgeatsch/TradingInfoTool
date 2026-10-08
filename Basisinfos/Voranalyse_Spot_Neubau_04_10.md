@@ -4198,3 +4198,56 @@ So siehst du jede Änderung sofort. Der Takt ist dabei kein Signalgeber (Regel 1
 | **K-H1 (Haupt)** | Klasse H (+ M als Auskunft), Relativstärke 30 T oberes Fünftel am Tag → Kauf am Folgetag; **Zeitgrenze 30 T** (Marke X2 nur Auskunft); gegen BTC; Kosten je Klasse; Nullwelt zufällige Coins derselben Klasse am selben Tag; Spiegelprobe; Mindestzahl ≥ 20 an ≥ 6 Monaten; **Urteil ab 2024** (das Merkmal ist auf 2023 gewählt) |
 | Auskunft | Umsatzschub und 90-T-Hoch in H; „Ruhiger Boden“ für L; „Erwachen vom Boden“; je Jahr 2024/2025/2026 |
 | C2 (eigene Voranalyse) | Listings und Ankündigungen als Auslöser (Binance frei; Upbit/Coinbase zu prüfen) |
+
+
+## 36. Klassen, Bestand und Reihenfolge — und Plan zur Kalibrierung der Season-Ampel VOR der Messung (08.10.2026, E-87)
+
+Nutzer 08.10.:
+- *„1. Ja, L-Vorschlag – aber noch kalibrieren und messen: Einteilung, was ist gut, schlecht, welche Grenzen und Übergänge gibt es, z. B. Start Altseason (ca.).“*
+- *„2. Bitte noch genauer – werden nur Highcaps bewertet? Oder sollten wir das anders angehen, was ist mit Midcaps, was ist mit dem Bestand mit Smallcaps, diese fallen durch?“*
+- *„Ja zu 3., wenn die Reihenfolge stimmt – prüfen und gegenprüfen.“*
+
+### 36.1 Zu 2: Was je Klasse gilt — niemand fällt durch
+
+Die Klasse entscheidet nur über den **K-Einstieg**. **Führung, Rolle und Preis gelten für jeden Bestand.**
+
+| | H (Highcaps) | M (Midcaps) | S (Smallcaps) |
+|---|---|---|---|
+| **K-Einstieg** (Teil C) | Momentum trägt Richtung (1,74–1,96) → **K-H1 Hauptprüfung** | schwach (1,05–1,11) → **eigene zweite Prüfung** im selben Plan | Momentum umgekehrt (0,83–0,90) → **kein** Momentum-Einstieg; Weg über **C2 Listings** und als Auskunft „Erwachen vom Boden“ |
+| **Führung** (Teil B) | Mitnahme ×3: +8,7 Pp | **−3,2 Pp** (schadet eher) | **+7,8 Pp** |
+| **Rolle L** | Auswahl Fortbestand; Ampel | ebenso | ebenso; „Ruhiger Boden“ als L-Kandidat |
+| Kosten je Seite (Bitpanda) | 0,36 % | 0,88 % | 3,20 % |
+
+**Dein Bestand (NB 08.10.):**
+- Kern: BTC, ETH, SOL.
+- **H 8:** AVAX, BNB, LINK, NEAR, QNT, SUI, TAO, XLM.
+- **M 4:** ALGO, INJ, KAIA, SEI.
+- **S 3:** BEAMX, BIO, TURBO.
+- **⚠️ Außerhalb des Messuniversums (nicht im Binance-Spot) 11 Krypto-Bestände:** HYPE, KAS, MORPHO, BRETT, SUPRA, PLUME, ASTER, CANTON, CT, MON, XDC. Nach weltweitem Marktwert sind darunter Mid- und Highcaps.
+- Für sie gelten Führung und Preis genauso: Sie brauchen nur Kurse, und die liegen in Prod. Die **Klasse** müsste aus dem CoinGecko-Marktwert kommen (`price_cache`), über O26.
+- ⇒ Die eigentliche Lücke sind nicht die Smallcaps, sondern diese 11 außerhalb.
+
+### 36.2 Zu 3: Reihenfolge, geprüft
+
+| # | Paket | warum hier |
+|---|---|---|
+| **1** | **Kalibrierung der Season-Ampel** (§36.3) | entscheidet über Rolle L und damit über den größten Teil des Altbestands (Preis −45 %/Jahr); Nutzer-Ja liegt vor; braucht nur vorhandene Daten |
+| **2** | **K-H1 Momentum H, dazu M** (§37) | braucht Kosten (§32.1 D, da) und Zeitgrenze (§31.7, da); kann die Ampel als Kontext nutzen |
+| **3** | **C2 Listings als Auslöser** (§38) | der größte Aufwand (Listing-Katalog von Binance laden, frei; Upbit/Coinbase prüfen); einziger Weg zu K in Smallcaps |
+
+⚠️ **Hebel hat Vorrang (T-1..T-6):** Am 10.10. kommt P5 (Testwoche, Freigabe, O29 einschalten). Das Spot-Paket ruht dann.
+
+### 36.3 Plan Kalibrierung Season-Ampel (vorab; Rechnung `am_kalibrierung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| **Wahrheit (Rückschau)** | Season-Tag = S1-Korb (Top 50 nach Umsatz, gleich gewichtet, ohne Umlauf, also ohne Vorgriff) schlägt BTC in den **folgenden** 90 T um ≥ 25 Pp; Season-Episoden wie S1 (≥ 7 T, Lücken < 30 T verbunden); **Season-Start** = erster Tag einer Episode |
+| Bedingungen (am Tag bekannt) | B1 BTC 91 T · B2 M2 J/J (+35 T Verzug) · B3 Stablecoins 91 T; Kontext: Breite (S1) · ETH/BTC 91 T · Netto-Liquidität 13 W · Fear & Greed |
+| Zeitraum | 2019-04 bis Ende der Wahrheit (90 T vor Kursende) |
+| **K1 gut/schlecht je Bedingung** | Fünftel über den Zeitraum → Anteil Season-Tage je Fünftel, Lift gegen die Basisrate; *gut* = Lift ≥ 1,5, *schlecht* = Lift ≤ 0,5 |
+| **K2 Stand X von 3** | mit den Vorschlagsschwellen (20 / 5 / 10 %): Anteil Season-Tage und Tage je Stand; **Leave-one-out** über die Episoden: bleibt die Ordnung 0 < 1 < 2 < 3? |
+| **K3 Grenzen = Plateau, nicht Maximum** | jede Schwelle in Stufen variieren (B1 10–30 %, B2 3–7 %, B3 5–20 %). Eine Schwelle gilt als gut gesetzt, wenn ihre **Nachbarn ähnlich** abschneiden. Gewählt wird **nicht** das Maximum (zu wenige Seasons) |
+| **K4 Übergänge und Start** | je Episode: wann jede Bedingung zuletzt einschaltete (**Vorlauf** in Tagen), Stand am Start, wann der Stand fiel, Breite am Ende (≥ 75 % Endsignal?) |
+| **K5 Fehlalarm-Zeiten** | Abschnitte mit 3 von 3 über ≥ 14 T ohne Season in den folgenden 90 T, mit Einordnung |
+| Gegenprobe | eigener Rechenweg für Wahrheit, Stand und K1 |
+| **Folge** | eine **kalibrierte Einteilung** (gut / Übergang / schlecht, Grenzen, *Start Altseason ca.* = gemessener Vorlauf) als **Vorlage**. ⚠️ Es sind 2–4 Episoden, davon praktisch ein Zyklus. Das ist Beschreibung mit Stabilitätsprobe, kein Nachweis; vorwärts protokolliert |
