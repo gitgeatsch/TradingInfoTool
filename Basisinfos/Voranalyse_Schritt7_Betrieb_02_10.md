@@ -2554,3 +2554,50 @@ Nutzer 07.10.: *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen. Hinweis
 - L1 bleibt für BEAMX **rot**, das ist ein Fakt.
 - Nach dem Pull kann L1 für die restlichen Signale zeigen, dass der Prüfblock arbeitet.
 - Die Freigabe am 10.10. (Nutzer) bewertet L1 mit dieser Ursache: ein Fehler im **Prüfblock**, nicht in der REGEL0; die Mail ging rechtzeitig und vollständig raus.
+
+
+### 23.26 O30 / P2 — Externe Recherche: Kandidaten für REGEL0-Beiträge und LLM-Information (08.10.2026)
+
+**Vorher das Register (R-R11):**
+- `funding` und `oi_aenderung` trugen im **Altbestand** (H20, vor dem Hebelneubau, nur als Vergleich).
+- **Innerhalb** der REGEL0 trug keiner von beiden (A2, §23.18).
+- `stablecoin_kapital` ist registriert, aber **nie gemessen**.
+- Liquidationen, Orderbuch, Token-Freigaben, Nachrichten und Aufmerksamkeit: **nie gemessen**.
+
+**Was die Literatur sagt (Kurzfassung, Quellen unten):**
+- **Kurzfristige Gegenbewegung** (arXiv 2608.21888, 08/2026, 183 Binance-Paare, 15-Minuten-Kerzen, außerhalb der Stichprobe geprüft): In 90 % der Paare tritt eine Umkehr auf. Sie konzentriert sich **nach Bewegungen, die von aggressiven Taker-Aufträgen getrieben sind**, und wächst mit deren Intensität. Die **verbrauchte Orderbuch-Tiefe bedingt sie nicht**. Der Vorteil liegt bei 1,3 bp gegen 5 bp Kosten. ⇒ Das passt zur Wette der REGEL0, allerdings auf viel kürzerem Horizont.
+- **Kleine, illiquide Werte kehren kurzfristig um** (Liu/Tsyvinski/Wu, schon §16.1). Das ist dieselbe Richtung wie 2.704 (geringe Liquidität günstiger).
+- **Funding/OI:** Die Befunde sind widersprüchlich. Steigendes Funding folgt eher dem Kurs, als dass es ihn anführt (Richey May 2024); auf Marktebene zeigen sich Hinweise für BTC (SSRN 2026, Vorabdruck). ⇒ Das deckt sich mit A2: innerhalb der Signale nichts.
+- **Token-Freigaben** (Keyrock 12/2024, über 16.000 Ereignisse): 90 % drücken den Kurs, die Wirkung beginnt etwa **30 Tage vorher**, und große Freigaben wirken stärker.
+- **Negative Börsen-Ereignisse** (Ereignisstudie: Listing/Delisting/SEC) wirken stärker als positive. ⇒ Das stützt E-1/O29.
+- **Aufmerksamkeit** (Google-Suchen, Twitter-Erwähnungen): Sie führt eher zu **Fortsetzung**, kaum zu Umkehr. ⇒ Das spräche bei der REGEL0 eher als Gegenwind.
+- **Liquidationskaskaden:** keine Studie, die eine Umkehr danach außerhalb der Stichprobe misst; aus der Praxis heißt es *„kann überschießen, kann echte Neubewertung sein“*.
+
+**Kandidatenliste** (nichts davon ist gemessen; Regel für P7: einzeln, vorab festgelegt, zweiseitig, innerhalb der REGEL0-Einstiege wie A2):
+
+| # | Kandidat | Gedanke | Daten rückwirkend | im Betrieb am NB | Kosten | Erwartung |
+|---|---|---|---|---|---|---|
+| **K1** | **Taker-Verkaufsdruck im Fall**: Anteil der Marktverkäufe in den fallenden Stunden × Umsatzschub | Umkehr folgt aggressivem Fluss (2608.21888). Einzeln trugen Käuferanteil und Kapitulation in A2 nicht (`g_kauf6` war 2/4 über der Null, aber nicht gewählt); die **Verbindung** ist neu | ✔ `richtung_historie` (Desktop, 116 Symbole); für alle 537 aus dem Binance-Archiv (aggTrades oder Kerzen mit Taker-Anteil) | ✘ heute nicht; die Binance-Stundenkerzen liefern den Taker-Kaufumsatz **mit**, der Nachlader müsste ihn mitschreiben | frei | mittel |
+| **K2** | **Orderbuch-Schieflage und -Tiefe** (Kaufseite gegen Verkaufsseite bei ±1/2 %, Tiefe gegen Umsatz) | Wer stützt den Kurs nach dem Fall? Literatur: Tiefe bedingt die 15-Minuten-Umkehr nicht; für 24 h offen | ✔ **frei**: Binance-Archiv `futures/um/daily/bookDepth` (alle 30 s, ±0,2–5 %, ab 2024 bis heute, auch kleine Werte wie BEAMX). Für die Einstiege ~4 GB Download | ✔ frei live (`/fapi/v1/depth`) | frei | niedrig bis mittel |
+| **K3** | **Token-Freigabe** in den 30 T vor oder nach dem Signal | Keyrock: Druck ab 30 T vorher; wie E-1 ein Fakt mit Zeitstempel, das linke Ende | ✘ frei nicht (DefiLlama-Unlocks kostenpflichtig); Tokenomist, The Tie, Messari kostenpflichtig, Preise auf Anfrage | ✘ | **kostenpflichtig** | mittel (linkes Ende) |
+| **K4** | **Liquidationsspitze** vor dem Signal (je Asset, marktweit) | Überschießen nach Zwangsverkäufen | ✘ frei nicht mehr (Binance-Archiv: 404); **CoinGlass Hobbyist 29 $/Monat** (nur privat, Historie je nach Intervall), Coin Metrics kostenpflichtig | ✔ frei **vorwärts** (Binance-Stream `!forceOrder@arr`) | 29 $/Monat oder nur vorwärts | unklar |
+| **K5** | **Nachrichtenaufkommen** je Asset gegen den eigenen Schnitt | Aufmerksamkeit führt zu Fortsetzung, also möglicher Gegenwind für die Umkehr; als **Zahl** ohne LLM messbar, damit ohne Kontamination | ◐ freies Archiv *Free Crypto News* (cryptocurrency.cv, CryptoPanic-basiert, ab 2017, Zeitstempel und Ticker), **Abdeckung und Lizenz zu prüfen**; CoinDesk-Gratisstufe seit 05/2026 eingestellt; CryptoPanic kostenpflichtig | ◐ dasselbe Archiv vorwärts | frei (zu prüfen) | niedrig bis mittel |
+| K6 | `stablecoin_kapital` | Zufluss in den Markt | ✔ DefiLlama (frei) | ✔ | frei | ⚠️ **Marktgröße, kein Beitrag je Asset** (stehende Regel) ⇒ nur als Achse oder Auskunft |
+| — | Delisting/Monitoring | E-1 gemessen, O29 abgestimmt | | | | erledigt |
+
+**Für das LLM** (E-79): Text ist rückblickend nicht ehrlich prüfbar. Die einzige freie Quelle mit Archiv ist K5. Für das Vorwärtsprotokoll eignet sich derselbe Dienst; RSS geht nur vorwärts. Für einen Bau ist das nicht reif; erst die Datenprobe K5.
+
+**Vorschlag für P7 (nach der Freigabe, einzeln, Desktop):**
+1. **K1** zuerst: Die Daten liegen am Desktop, die Literatur ist am stärksten, und es passt zur Wette. Vor einem Betrieb müsste der Nachlader den Taker-Anteil mitschreiben (E-75).
+2. **K2** danach: frei und neu, aber ein größerer Download.
+3. **K5** nur als **Datenprobe** (Abdeckung unserer Assets 2024–2026, Zeitstempel, Lizenz), noch keine Messung.
+4. **K3/K4 brauchen deine Kostenentscheidung:** CoinGlass 29 $/Monat für Liquidationen; für Freigaben ein Angebot einholen. Ohne Zahlung bleibt K4 nur vorwärts protokollierbar (frei).
+
+**Quellen:**
+- [arXiv 2608.21888](https://arxiv.org/abs/2608.21888) · [arXiv 2608.09576](https://arxiv.org/pdf/2608.09576)
+- [Bitcoin intraday predictability (ScienceDirect)](https://www.sciencedirect.com/science/article/abs/pii/S1062940822000833)
+- [Richey May Perps Primer 06/2024](https://richeymay.com/wp-content/uploads/2024/07/MktIntel_2024.06.10_Perps-1.pdf) · [SSRN 6725492](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6725492)
+- [Keyrock-Unlocks (BeInCrypto)](https://beincrypto.com/keyrock-research-token-unlocks/) · [Tokenomist API](https://docs.tokenomist.ai/api-documents/csv-export) · [The Tie Unlock API](https://thetie.io/solutions/token-unlock-api)
+- [CoinGlass Preise](https://coinglass.com/pricing) · [Binance Liquidation Streams](https://developers.binance.com/docs/derivatives/usds-margined-futures/websocket-market-streams/All-Market-Liquidation-Order-Streams) · [binance-public-data Issue 337](https://github.com/binance/binance-public-data/issues/337) · [Coin Metrics Liquidations](https://docs.coinmetrics.io/market-data/market-data-overview/liquidations/futures-liquidations)
+- [Free Crypto News](https://mcpservers.org/servers/nirholas/free-crypto-news) · [CoinDesk-API-Alternativen (CoinStats)](https://coinstats.app/blog/top-coindesk-api-alternatives-for-crypto-data/)
+- [Ereignisstudie Krypto-Ereignisse (RePEc)](https://ideas.repec.org/a/eme/sefpps/sef-08-2024-0521.html) · [Aufmerksamkeit, CFR Köln 25-02](https://www.cfr-cologne.de/download/workingpaper/cfr-25-02.pdf) · [Hoang/Vo, RePEc](https://ideas.repec.org/a/eee/beexfi/v44y2024ics2214635024001060.html)
