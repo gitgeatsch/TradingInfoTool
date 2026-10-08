@@ -3639,3 +3639,125 @@ Nutzer 08.10.:
 3. **Teil C** Ausbruch erkennen.
 
 **Beim Nutzer bleiben:** Rollen-Zuteilung je Coin, Budget L gegen K, Freigaben.
+
+
+## 31. Teil B — Führung und Ausstieg je Rolle: Vorprüfung und Messplan VOR der Messung (08.10.2026)
+
+Nutzer 08.10.: *„Ja, Messplan vorbereiten, prüfen und gegenprüfen – eine Korrektur bitte, wenn das möglich und sinnvoll ist: Den Einstandspreis oder neue ATH werden nur ganz wenige Assets erreichen, hier benötigen wir ein anderes Kriterium. Was sagt der Experte?“*
+
+### 31.1 Vorprüfung (Stufe 1) — wie oft wird welches Kriterium erreicht?
+
+`fb_vorpruefung.py` → `.txt`, Gegenprobe `fb_vorpruefung_gegenprobe.py` **48/48**.
+
+Grundgesamtheit wie die Watchlist (Umlauf Stufe 3), monatliche **Starttage** mit 365-T-Fenster. Der Starttag ist kein Kauf, sondern der Tag, an dem die Führung beginnt (Altbestand, §30.9). L-Kandidat = oberstes Fünftel der Watchlist (Fortbestand).
+
+**A) Nutzeraussage, binnen 365 T wieder erreicht:**
+
+| | n | Allzeithoch | Einstand-Stellvertreter 12 M / 6 M (nur Positionen im Minus) | Abstand zum Hoch am Start (Median) |
+|---|---|---|---|---|
+| 2023 alle / L-Kandidaten | 3.923 / 799 | 9,6 % / **0,9 %** | 52 % / 84 % · 57 % / 90 % | 91 % / 95 % |
+| **ab 2024** alle / L-Kandidaten | 7.819 / 1.593 | **5,5 % / 1,1 %** | **37 % / 41 % · 42 % / 46 %** | 87 % / 95 % |
+
+⇒ **Allzeithoch: Die Aussage ist klar bestätigt** (1–5 %).
+⇒ **Einstand: Er hängt an der Tiefe.** Ein Kurs von vor 6–12 Monaten kam ab 2024 bei rund 40 % der Verlustpositionen binnen eines Jahres zurück. Wer nahe am Hoch gekauft hat, ist im Fall *Allzeithoch* (1–5 %).
+
+⚠️ **Korrektur vor der Auswertung:** Der Stellvertreter galt anfangs auch dann, wenn er *unter* dem Start lag. Am ersten Tag galt er dann schon als „erreicht“, und das ergab 64 %. Jetzt zählen nur Positionen im Minus (G3).
+
+**B) Die Kandidaten, nur Wahl-Epoche 2023** (Anteil erreicht · Tage bis dahin; L-Kandidaten; H / M / S):
+
+| Kriterium | alle | L-Kandidaten | H / M / S |
+|---|---|---|---|
+| Z1 ×1,5 ab Start | 79 % · 113 T | 85 % | 76 / 75 / 82 % |
+| Z1 ×2 | 59 % · 153 T | 65 % | 57 / 53 / 63 % |
+| Z1 ×3 | 31 % · 184 T | 30 % | 27 / 27 / 33 % |
+| Z2 25 % des Absturzes zurück | 31 % · 150 T | **7,6 %** | 35 / 35 / 29 % |
+| Z2 50 % | 18 % · 158 T | **1,8 %** | 8 / 26 / 15 % |
+| Z3 +50 % gegen BTC ab Start | 37 % · 100 T | 35 % | 30 / 33 / 39 % |
+| Z3 +100 % | 19 % · 123 T | 16 % | 11 / 17 / 22 % |
+| Z4 1 Schwankungseinheit | 76 % · 102 T | 82 % | 79 / 69 / 79 % |
+| Z4 2 | 51 % · 150 T | 57 % | 60 / 43 / 54 % |
+| Z4 3 | 29 % · 162 T | 33 % | 39 / 23 / 32 % |
+
+⇒ **Z2 fällt heraus**, bevor gemessen wird. Nach −95 % heißt *25 % zurück* etwa das Fünffache ab Start. Z2 hängt damit doch am Allzeithoch.
+⇒ Erreichbar und damit messbar sind **Z1, Z3 und Z4**.
+
+**C) Fallzahl ab 2024 (nur Anzahlen):**
+- L: 1.593 Kandidaten an 21 Starttagen.
+- K-Stellvertreter (siehe unten): 2.733 Einstiege in 27 Monaten, dazu 907 Einstiege 2023 in 12 Monaten.
+- Beides liegt über der Mindestzahl ≥ 20 an ≥ 6 (§29.5).
+
+### 31.2 Expertensicht: welches Kriterium statt Einstand und Allzeithoch
+
+- **Einstand und Allzeithoch blicken zurück.** Der Markt kennt beide nicht, und als Ziel sind sie nach −90 % kaum erreichbar (Regel 2/4).
+- **Ein Ausstiegskriterium misst die Bewegung ab dem Start.** Drei Formen bleiben:
+  - Z1: **Vielfaches ab Start**, einfach, aber für jede Klasse gleich streng.
+  - Z3: **Vorsprung gegen BTC ab Start**. Das ist die eigentliche Frage *lohnt der Altcoin?*.
+  - Z4: **Schwankungseinheiten**. Sie machen LINK und eine Smallcap vergleichbar, analog zur absoluten Schwelle in ATR beim Hebel.
+- **Welches davon trägt, ist eine Messung, keine Wahl.** Gewählt wird auf 2023, geurteilt ab 2024.
+
+### 31.3 Messplan (vorab festgelegt; Rechnung `fb_messung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Grundlage | Watchlist-Grundgesamtheit (Umlauf Stufe 3, eingestellte Coins eingeschlossen, ohne BTC/ETH/SOL); Kurse bis 20.09.2026; brutto (Regel 2), netto als Auskunft |
+| Epochen | **Wahl 2023**, **Urteil ab 2024** (Regel *Messfokus*); 2021/2022 nur Auskunft |
+| Mindestzahl | ≥ 20 Fälle an ≥ 6 Stichtagen bzw. Monaten (§29.5), sonst *nicht entscheidbar* |
+| Mehrfachtesten | **je Rolle EINE Hypothese** (die auf 2023 gewählte); alle anderen Stufen nur Auskunft |
+
+**Teil 0 (R-R11), beide Rollen:**
+- Lagebild L5 nachrechnen (X2, 180 T, ab 2024): Ausbrecher Median +39,2 %, alle −23,9 % gegen BTC.
+- B5 X2 (+31,8 % / −4,0 %) mit derselben Ausstiegsumsetzung.
+- Eine Abweichung > 1 Pp **bricht ab**.
+
+**Rolle L — Season-Option, kein Nachlauf:**
+
+| | |
+|---|---|
+| Anker | monatliche Starttage, **L-Kandidaten** (oberstes Fünftel); alle Coins als Auskunft |
+| Regel | **Teilmitnahme 50 %** am Tag nach dem ersten Erreichen des Kriteriums, Rest bis zum Fensterende (365 T); eingestellt → letzter Kurs |
+| Kandidaten | Z1 ×1,5 / ×2 / ×3 · Z3 +50 / +100 % · Z4 1 / 2 / 3 σ (8 Stufen); dazu **X1 gestaffelt** (§21.6) als Vergleich |
+| Zielgröße | Ergebnis der Regel **minus Halten** über dasselbe Fenster (schützt die Mitnahme?); dazu gegen BTC und absolut (Auskunft) |
+| **Nullwelt** | **gleicher Coin, gleicher Anteil, Verkaufstag zufällig** aus der Verteilung der Auslösetage derselben Stufe (200). Damit misst die Probe den *Zeitpunkt aus dem Kriterium* und nicht nur „früher verkaufen“. Im fallenden Markt schlägt jeder frühe Verkauf das Halten |
+| **Wahl auf 2023** | die Stufe mit dem größten Korb (Regel − Halten) **und** Rang gegen die Nullwelt ≥ 0,90; bei Gleichstand (± 1 Pp) die einfachere (Z1 vor Z3 vor Z4); erfüllt keine Stufe die Bedingung → **keine Wahl, L ohne Mitnahme-Regel** |
+| **Trägt (ab 2024)** | (1) Korb > 0 und Block-Bootstrap über Starttage (2.000, Blöcke zu 3) ≥ 0,95; (2) Rang gegen die Nullwelt ≥ 0,95; (3) Mindestzahl |
+| zweiseitig | liegt der Korb ab 2024 mit Bootstrap ≤ 0,05 **unter** Halten → *Mitnahme schadet*, wird ausgewiesen |
+
+**Rolle K — Ausbruch, Marke:**
+
+| | |
+|---|---|
+| Anker | **Stellvertreter-Einstieg**, bis Teil C einen echten liefert: erster Tag, an dem Coin/BTC ≥ 1,3 × sein 30-T-Tief liegt, danach 30 T Sperre je Coin; nur Coins der Grundgesamtheit im Monat; Kauf zum Schluss des Folgetags |
+| Regel | **Nachlauf w** vom Hoch seit Kauf, Notbremse −50 % vom Kauf, Verkauf am Folgetag, höchstens 180 T |
+| Kandidaten | w = 15 / 20 / 25 / 30 / 35 / 45 % · in Schwankungseinheiten w = k × σ30 × √30 mit k = 1 / 1,5 / 2 / 3 · Teilverkauf: ½ bei +50 %, Rest mit w = 35 % (11 Stufen) |
+| Zielgröße | Ergebnis **minus Halten 180 T**; dazu gegen BTC (Auskunft) |
+| **Nullwelt** | gleicher Coin, Verkauf an einem zufälligen Tag aus der Verteilung der Haltedauern derselben Stufe (200) |
+| **Wahl auf 2023** | wie Rolle L (größter Korb, Rang ≥ 0,90, Gleichstand → feste Weite vor Schwankungseinheit vor Teilverkauf) |
+| **Trägt (ab 2024)** | wie Rolle L; Bootstrap über **Monate** als Blöcke |
+| zweiseitig | wie Rolle L |
+
+**Auskunft (beide Rollen):**
+- je Klasse H/M/S; Jahre 2024 / 2025 (/ 2026 bei K);
+- Weglassprobe ohne die 5 größten Beiträge;
+- Dosis-Wirkung über alle Stufen ab 2024, **erst nach** dem Urteil gedruckt;
+- netto (Coin 1,25 %, BTC 0,4 % je Seite);
+- Rückkehr zum Einstand (§31.1 A).
+
+**Selbsttest (beide Rollen):**
+- (a) **Zufalls-Kriterium:** Auslösung an zufälligen Tagen statt am Kriterium, 100 Welten → Fehlalarm ≤ 5 %.
+- (b) **gepflanzt:** Auslösung am wahren Hoch des Fensters → muss tragen.
+- Besteht (a) nicht → das Urteil gilt nicht.
+
+### 31.4 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis | Rolle L | Rolle K |
+|---|---|---|
+| **trägt** | Die gewählte Stufe wird zur **Mitnahme-Regel je L-Bestand**: *„Ziel erreicht → die Hälfte verkaufen“*, Begründung = gemessener Effekt gegen Halten und gegen den Zufall | Die gewählte Weite wird die **Marke für K-Positionen** (ersetzt die gesetzten −35 %) |
+| **nicht entscheidbar** | Vorwärtsprotokoll der Auslösungen; Mail zeigt die Ziele als **Fakt** | Vorwärtsprotokoll; X2 bleibt Auskunft |
+| **trägt nicht** | L **ohne** Mitnahme-Regel: nur Größe, Fortbestand und Season-Fakt (Breite). Die Season-Entscheidung bleibt beim Nutzer | Keine gemessene Weite. Die Marke X2 bleibt beschriebene Praxis (B5, L5), aber ohne Nachweis gegen den Zufall |
+| **schadet** | ausdrücklich in die Mail: *Mitnahme bei diesem Ziel war schlechter als Halten* | entsprechend |
+
+⚠️ **Ehrliche Erwartung, vorab:**
+- 2023 war ein steigendes Jahr, ab 2024 fiel der Markt. Die Wahl auf 2023 kann daher **hohe** Ziele bevorzugen, die ab 2024 selten erreicht werden.
+- Das ist der Preis der Regel *Wahl 2023 / Urteil ab 2024*. Die Dosis-Wirkung macht es sichtbar.
+- Für K erwarte ich, dass die Führung trägt (L5).
+- Für L ist es offen. Im fallenden Markt ist **jeder** Verkauf besser als Halten; erst die Nullwelt zeigt, ob das *Kriterium* den Zeitpunkt besser trifft als der Zufall.

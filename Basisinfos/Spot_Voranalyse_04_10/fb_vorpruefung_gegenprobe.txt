@@ -1,0 +1,50 @@
+G1  gleich  BAL 2024-10-01 ATH/x2/2s
+G1  gleich  CFX 2023-12-01 ATH/x2/2s
+G1  gleich  OG 2025-01-01 ATH/x2/2s
+G1  gleich  SAND 2025-05-01 ATH/x2/2s
+G1  gleich  MULTI 2023-01-01 ATH/x2/2s
+G1  gleich  KERNEL 2025-08-01 ATH/x2/2s
+G1  gleich  FARM 2024-05-01 ATH/x2/2s
+G1  gleich  IDEX 2024-10-01 ATH/x2/2s
+G1  gleich  KMD 2023-12-01 ATH/x2/2s
+G1  gleich  APE 2025-02-01 ATH/x2/2s
+G1  gleich  FORTH 2025-05-01 ATH/x2/2s
+G1  gleich  SNT 2024-04-01 ATH/x2/2s
+G1  gleich  ALGO 2024-10-01 ATH/x2/2s
+G1  gleich  BNB 2024-11-01 ATH/x2/2s
+G1  gleich  SC 2023-06-01 ATH/x2/2s
+G1  gleich  STX 2023-08-01 ATH/x2/2s
+G1  gleich  OMG 2023-07-01 ATH/x2/2s
+G1  gleich  CAKE 2024-03-01 ATH/x2/2s
+G1  gleich  UFT 2024-10-01 ATH/x2/2s
+G1  gleich  OXT 2023-01-01 ATH/x2/2s
+G1  gleich  BAKE 2025-02-01 ATH/x2/2s
+G1  gleich  MLN 2023-04-01 ATH/x2/2s
+G1  gleich  GALA 2024-08-01 ATH/x2/2s
+G1  gleich  XNO 2024-05-01 ATH/x2/2s
+G1  gleich  BAKE 2024-02-01 ATH/x2/2s
+G1  gleich  TVK 2023-06-01 ATH/x2/2s
+G1  gleich  PORTO 2025-06-01 ATH/x2/2s
+G1  gleich  ACM 2025-09-01 ATH/x2/2s
+G1  gleich  VIC 2024-11-01 ATH/x2/2s
+G1  gleich  SAND 2023-03-01 ATH/x2/2s
+G1  gleich  DOGE 2024-01-01 ATH/x2/2s
+G1  gleich  FIS 2023-02-01 ATH/x2/2s
+G1  gleich  JASMY 2024-01-01 ATH/x2/2s
+G1  gleich  RLC 2025-03-01 ATH/x2/2s
+G1  gleich  POLS 2023-07-01 ATH/x2/2s
+G1  gleich  TRX 2024-04-01 ATH/x2/2s
+G1  gleich  BONK 2024-05-01 ATH/x2/2s
+G1  gleich  ATA 2024-01-01 ATH/x2/2s
+G1  gleich  EPX 2024-04-01 ATH/x2/2s
+G1  gleich  BLUR 2024-04-01 ATH/x2/2s
+G2  gleich  Z3 +50 % an 30 Ankern, Abweichungen 0
+G3  gleich  Einstand-Stellvertreter nur bei Position im Minus, Abweichungen 0 von 300
+G4  gleich  alle ATH 5.54 % n 7819 · Ausgabe ('7819', '5.5')
+G4  gleich  L-Kandidaten ATH 1.13 % n 1593 · Ausgabe ('1593', '1.1')
+G5  gleich  Kandidatenteil nur 2023; Fallzahlteil nur Anzahlen
+G6  gleich  L ab 2024: 1593 L-Kandidaten an 21 Starttagen
+G6  gleich  K-Stellvertreter 2023: 907 Einstiege in 12 Monaten (338 Coins)
+G6  gleich  K-Stellvertreter ab 2024: 2733 Einstiege in 27 Monaten (470 Coins)
+
+48 von 48 gleich

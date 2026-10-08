@@ -1,0 +1,21 @@
+VORPRUEFUNG Teil B Rolle L (Spot §31.1) · Kurse bis 2026-09-20 · Starttage 2023-01-01 bis 2025-09-01 · Coin-Starttage 11742 (L-Kandidaten im Fuenftel 2392)
+
+A) NUTZERAUSSAGE - Einstand / Allzeithoch binnen 365 T wieder erreicht (Anteil der Coin-Starttage):
+  2023 (Wahl)       alle          n  3923 · ATH  9.6 % · Einstand vor 12 M 52.1 % (im Minus 74 %) · vor 6 M 83.7 % (im Minus 64 %) · Abstand zum ATH am Start Median  91 %
+  2023 (Wahl)       L-Kandidaten  n   799 · ATH  0.9 % · Einstand vor 12 M 56.6 % (im Minus 90 %) · vor 6 M 89.7 % (im Minus 72 %) · Abstand zum ATH am Start Median  95 %
+  ab 2024 (Urteil)  alle          n  7819 · ATH  5.5 % · Einstand vor 12 M 36.7 % (im Minus 47 %) · vor 6 M 40.6 % (im Minus 54 %) · Abstand zum ATH am Start Median  87 %
+  ab 2024 (Urteil)  L-Kandidaten  n  1593 · ATH  1.1 % · Einstand vor 12 M 41.9 % (im Minus 62 %) · vor 6 M 45.7 % (im Minus 61 %) · Abstand zum ATH am Start Median  95 %
+
+B) KANDIDATEN - nur WAHL-EPOCHE 2023 (Anteil erreicht · Tage bis dahin Median), alle / L-Kandidaten / je Klasse H M S:
+  Z1 x1,5    79.0 % · 113 T | 84.6 % | H 76.4 % | M 74.6 % | S 81.5 %
+  Z1 x2      59.2 % · 153 T | 65.0 % | H 56.8 % | M 53.3 % | S 62.5 %
+  Z1 x3      31.0 % · 184 T | 29.9 % | H 26.8 % | M 27.2 % | S 33.3 %
+  Z2 25 %    31.0 % · 150 T |  7.6 % | H 34.6 % | M 35.0 % | S 28.6 %
+  Z2 50 %    17.8 % · 158 T |  1.8 % | H  8.2 % | M 25.6 % | S 15.1 %
+  Z3 +50 %   36.7 % · 100 T | 35.2 % | H 29.6 % | M 33.4 % | S 39.1 %
+  Z3 +100 %  19.3 % · 123 T | 16.0 % | H 11.4 % | M 16.8 % | S 21.5 %
+  Z4 1 s     75.9 % · 102 T | 82.3 % | H 78.9 % | M 68.6 % | S 79.2 %
+  Z4 2 s     51.0 % · 150 T | 57.1 % | H 60.0 % | M 42.5 % | S 54.2 %
+  Z4 3 s     29.4 % · 162 T | 32.6 % | H 38.9 % | M 22.8 % | S 31.5 %
+
+C) FALLZAHL ab 2024 (nur Anzahlen, keine Kennzahl): Coin-Starttage 7819 an 21 Starttagen · L-Kandidaten 1593 · je Klasse H 440 M 1865 S 5514
