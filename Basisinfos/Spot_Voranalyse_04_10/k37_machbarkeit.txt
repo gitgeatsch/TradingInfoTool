@@ -1,0 +1,13 @@
+MACHBARKEIT §37 K-H1 · Kurse bis 2026-09-20
+
+M0 TEIL 0 (R-R11) - Vorpruefung §35 reproduziert (Richtung rs30 oberes Fuenftel, 2023):
+  H: Richtung 1.838 (Soll 1.84) -> gleich
+  M: Richtung 1.050 (Soll 1.05) -> gleich
+  S: Richtung 0.831 (Soll 0.83) -> gleich
+  -> Teil 0 BESTANDEN
+
+M1-M3 EINSTIEGE nach Regel §37.2 (nur Anzahlen):
+  H 2023 (Wahl)       Einstiege  114 · Monate 11 · Coins  27 · Nullwelt-Vorrat je Tag min 8 / Median 16 · bei Bitpanda 96 %
+  H ab 2024 (Urteil)  Einstiege  344 · Monate 32 · Coins  36 · Nullwelt-Vorrat je Tag min 7 / Median 15 · bei Bitpanda 99 %
+  M 2023 (Wahl)       Einstiege  512 · Monate 12 · Coins 160 · Nullwelt-Vorrat je Tag min 63 / Median 80 · bei Bitpanda 94 %
+  M ab 2024 (Urteil)  Einstiege 1211 · Monate 32 · Coins 208 · Nullwelt-Vorrat je Tag min 49 / Median 64 · bei Bitpanda 94 %

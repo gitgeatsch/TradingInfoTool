@@ -4347,3 +4347,58 @@ Zeitraum 2019-04 bis 2026-06: 2.639 Tage, davon 7,5 % Season-Tage, in 4 Episoden
 - Netto-Liquidität wäre die stärkste Einzelgröße und gehört als **vierte Bedingung in Fassung n+1** (vorwärts zu prüfen, nicht jetzt nachträglich eingebaut).
 
 Jeder Wechsel der Stufe wird vorwärts protokolliert.
+
+
+## 37. Messplan K-H1 — Momentum-Einstieg je Klasse (Rolle K), VOR der Messung (08.10.2026)
+
+Nutzer 08.10.: *„Ja, Messplan §37 vorbereiten, prüfen und gegenprüfen.“*
+
+**Frage:** Bringt ein Kauf von Coins, die gegen BTC gerade **stark** sind, in den folgenden 30 T **mehr als BTC** und **mehr als ein beliebiger Coin derselben Klasse** am selben Tag? Und bleibt nach den Bitpanda-Kosten etwas übrig?
+
+**Woher die Hypothese stammt:** aus der Vorprüfung §35 (2023). Dort hatte Momentum nur in Highcaps Richtung (H 1,84, M 1,05, S 0,83). Sie ist auf 2023 **gewählt**, aus 84 Feldern, also mit Auswahlrisiko. Das **Urteil** fällt deshalb ausschließlich ab 2024.
+
+### 37.1 Prüfung und Gegenprüfung des Plans (`k37_machbarkeit.py` → `.txt`, Gegenprobe `k37_gegenprobe.py` **12/12**)
+
+| | Ergebnis |
+|---|---|
+| **Teil 0 (R-R11)** | Vorprüfung exakt reproduziert: Richtung H **1,838** · M **1,050** · S **0,831** |
+| Einstiege H (nur Anzahlen) | 2023: 114 in 11 Monaten, 27 Coins · **ab 2024: 344 in 32 Monaten, 36 Coins** |
+| Einstiege M | 2023: 512 in 12 Monaten · **ab 2024: 1.211 in 32 Monaten, 208 Coins** |
+| Nullwelt-Vorrat (Coins derselben Klasse ohne Signal) | H mindestens 7, im Median 15 je Tag · M mindestens 49 |
+| bei Bitpanda handelbar | H 99 %, M 94 % |
+| Gegenprobe | zweite Umsetzung (Tag für Tag statt Coin für Coin): dieselben Einstiege; keine überlappenden Haltezeiten; Bedingung am Signaltag immer erfüllt |
+
+⇒ Mindestzahl (≥ 20 an ≥ 6 Monaten, §29.5) ist in beiden Klassen weit erfüllt.
+
+### 37.2 Festlegungen (vorab; Rechnung `k37_messung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Grundgesamtheit | Watchlist-Klassen des Monats (Umlauf Stufe 3), ohne BTC/ETH/SOL; Kurse bis 20.09.2026 |
+| **Signal** | am Tagesschluss d: Relativstärke gegen BTC über 30 T im **oberen Fünftel** des Tagesquerschnitts (≥ 30 Coins mit Wert) **und** Klasse H bzw. M |
+| Einstieg | Kauf zum Schluss d + 1 |
+| **Ausstieg** | **Zeitgrenze 30 T** (Schluss d + 31); eingestellt → letzter Kurs. Die Zeitgrenze, weil die Marke keinen Zeitwert hat (§31.7) |
+| Sperre | je Coin keine neue Position, solange eine offen ist |
+| Zielgröße | Ertrag **gegen BTC** über dieselbe Haltedauer, (1 + r_Coin) / (1 + r_BTC) − 1, **brutto** (Regel 2) |
+| Kosten (getrennt ausgewiesen) | Hin und Rück H **0,72 %**, M **1,76 %** (§32.1 D, aus deinen Bitpanda-Handeln) |
+| Gewichtung | je Monat der Korb (Mittel seiner Einstiege), dann Mittel über die Monate |
+| **Hypothesen** | **zwei**: K-H1-H (Haupt) und K-H1-M. **Mehrfachtesten:** je Prüfung Schwelle 0,975 statt 0,95 (Bonferroni) |
+| **Trägt (ab 2024), je Klasse** | (1) Korb > 0, Block-Bootstrap über Monate (2.000, Blöcke zu 3) ≥ 0,975; (2) **Nullwelt:** an denselben Einstiegstagen gleich viele **zufällige Coins derselben Klasse ohne Signal**, gleicher Ausstieg (200), Rang ≥ 0,975; (3) **Spiegelprobe:** Richtung = (Anteil Läufe ×1,3 / Anteil Abstürze ≤ 1/1,3) der Einstiege geteilt durch dasselbe der Nullwelt > 1; (4) ≥ 20 Einstiege an ≥ 6 Monaten |
+| zweiseitig | Korb < 0 und Bootstrap ≤ 0,025 → **SCHADET** (Momentum kehrt um) |
+| **Lohnt nach Kosten** | zusätzlich zum Urteil: Korb **minus** Kosten der Klasse > 0 |
+| Selbsttest | (a) Zufalls-Signal: gleich viele zufällige Coins der Klasse je Tag als „Signal“, 100 Welten → Fehlalarm ≤ 2,5 %; (b) gepflanzt: nur Einstiege mit späterem Vorsprung ≥ +10 % → muss tragen. Besteht (a) nicht → das Urteil gilt nicht |
+| Auskunft (nach dem Urteil) | Jahre 2024/2025/2026; BTC-Lage am Signaltag (BTC 90 T steigt/fällt); Dominanz-Spitze (§33); Zeitgrenze 15 / 60 T; Marke X2; Umsatzschub und 90-T-Hoch statt Relativstärke; Weglassprobe ohne die 5 größten Beiträge; nur Bitpanda-handelbare Coins; **S** als Gegenprobe der Richtung (erwartet: schadet oder trägt nicht) |
+
+### 37.3 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis je Klasse | Folge |
+|---|---|
+| **trägt und lohnt nach Kosten** | **K-Einstiegssignal für diese Klasse:** Ereignis-Mail *„Momentum-Einstieg <Coin>: gegen BTC im oberen Fünftel; Ausstieg nach 30 T; gemessen: +x Pp gegen BTC, besser als Zufall“*, kleine Größe, Vorwärtsprotokoll. Bau erst nach Abstimmung (T-2) |
+| **trägt, aber die Kosten fressen es** | kein Signal (wie der Kern, *verliert an den Kosten*); Auskunft in der Mail |
+| **nicht entscheidbar** | Vorwärtsprotokoll |
+| **trägt nicht / schadet** | kein Momentum-Einstieg in dieser Klasse; C2 (Listings) gewinnt an Gewicht |
+
+⚠️ **Ehrliche Erwartung, vorab:**
+- In H ist die Richtung 2023 deutlich (1,84). Seit 2024 fällt der Altmarkt aber durchgehend gegen BTC (−87 %, §30.2).
+- Momentum *gegen* einen fallenden Gesamtmarkt kann tragen (relative Stärke), muss es aber nicht.
+- Für M erwarte ich eher *trägt nicht*.

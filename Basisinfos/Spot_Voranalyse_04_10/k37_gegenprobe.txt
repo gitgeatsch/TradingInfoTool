@@ -1,0 +1,14 @@
+G1  gleich  H W: eigene 114 · Ablage 114 · nur eigene 0 · nur Ablage 0
+G2  gleich  H W: ueberlappende Haltezeiten 0
+G3  gleich  H W: Signaltag-Bedingung verletzt 0
+G1  gleich  H U: eigene 344 · Ablage 344 · nur eigene 0 · nur Ablage 0
+G2  gleich  H U: ueberlappende Haltezeiten 0
+G3  gleich  H U: Signaltag-Bedingung verletzt 0
+G1  gleich  M W: eigene 512 · Ablage 512 · nur eigene 0 · nur Ablage 0
+G2  gleich  M W: ueberlappende Haltezeiten 0
+G3  gleich  M W: Signaltag-Bedingung verletzt 0
+G1  gleich  M U: eigene 1211 · Ablage 1211 · nur eigene 0 · nur Ablage 0
+G2  gleich  M U: ueberlappende Haltezeiten 0
+G3  gleich  M U: Signaltag-Bedingung verletzt 0
+
+12 von 12 gleich
