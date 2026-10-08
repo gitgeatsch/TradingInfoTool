@@ -3126,16 +3126,20 @@ Dazu **O26**: Neue Bitpanda-Bestände kommen von selbst in die Watchlist.
 | **W6** | **Monatsjob und Mail** (Inhalt `mail_entwurf.py`, Darstellung `mail_beispiel_html.py`) | ✔ Kern: Kurse, Klasse (`umlaufmenge_cg.db`), Rang, Bestand, Neuzugänge, Phase Liquidität/Stablecoins | Job, Mailtyp, Abschnitte | Prüfstand mit echter `config.yaml` | 1 |
 | W3a | **CoinMetrics** täglich: BTC-Klima (MVRV), Marktwerte für den MACD | ✘ | Lader (frei, ohne Schlüssel) | Wache, Seiteneffekt | 2 |
 | W3b | **CoinGecko-Profil** monatlich: Höchstmenge, FDV, Kategorien | ✘ | ~330 Abrufe im Monat (Kontingent 10.000, gedrosselt) | Seiteneffekt | 2 |
-| W3c | **DefiLlama** monatlich: Gebühren, Halter-Einnahmen, TVL-Verlauf | ✘ (TVL nur Tageswert) | Zuordnung über die CoinGecko-ID | Seiteneffekt | 2 |
+| **W3t** | **DefiLlama TVL-Verlauf** je Protokoll (ein freier Abruf liefert den ganzen Verlauf) — ⚠️ **Korrektur 08.10.: gehört in Stufe 1**, denn F9 (*Nutzung wächst schneller als der Kurs*) ist eines der **vier Merkmale der gemessenen Rangliste** (F1, F2, F8, F9; `as_messung.txt`) | ◐ nur Tageswert (`lebendigkeit_beobachtung`, ~42 Werte je Symbol) | Zuordnung Protokoll ↔ Coin über die CoinGecko-ID | gegen `tvl_historie.db` der Messung | **1** |
+| W3c | **DefiLlama** monatlich: Gebühren, Halter-Einnahmen (nur Auskunft im Fortbestand) | ✘ | Zuordnung über die CoinGecko-ID | Seiteneffekt | 2 |
 | **W7** | **Betriebsprüfung** B1–B9 am NB, dann Pull, Neustart, Export | — | — | Kontrollen K-WL-1… | je Stufe |
 
-**Stufe 1** liefert die bestätigte Mail **ohne** das Strukturprofil (Ebene 1 A–E) und ohne BTC-Klima/MACD in der Phase; diese Stellen stehen dann als *„noch nicht angebunden“* da. **Stufe 2** ergänzt sie.
+**Grundsatz der Trennung (Korrektur 08.10.):**
+- **Stufe 1** enthält **alles, was in die Bewertung eingeht**: die vier Merkmale der Rangliste einschließlich TVL-Verlauf, die Klasse, den Bestand und die Marke.
+- **Stufe 2** enthält **nur Auskunft**: das Strukturprofil (Ebene 1 A–E), BTC-Klima und MACD in der Phase.
+- So rechnet der Betrieb von Anfang an **dieselbe** Rangliste wie die Messung. Die Auskunftsstellen stehen bis Stufe 2 als *„noch nicht angebunden“* da.
 
 ### 28.3 Aufwand und Reihenfolge (Schätzung)
 
 | | Inhalt | Aufwand | NB-Änderungen |
 |---|---|---|---|
-| Stufe 1 | W2 → W4 → W8 (O26) → W5 → W6 → W7 | etwa 2–3 Arbeitstage am Desktop | **eine** (Pull + Neustart, dann Kontrolle) |
+| Stufe 1 | W2 → W3t → W4 → W8 (O26) → W5 → W6 → W7 | etwa 3 Arbeitstage am Desktop | **eine** (Pull + Neustart, dann Kontrolle) |
 | Stufe 2 | W3a → W3b → W3c → W7 | etwa 1–2 Arbeitstage | eine |
 
 ### 28.4 O26 — die Brücke der Symbolwelten (Befund an der NB-Sicherung 08.10. 06:31)
@@ -3180,3 +3184,84 @@ Dazu **O26**: Neue Bitpanda-Bestände kommen von selbst in die Watchlist.
 - **Keine neue Übersetzungstabelle:** `symbol_zuordnung.csv` ist die eine Tabelle (Nutzerhinweis 07.10.). ✔
 - **T-1 bis T-6:** Spot-Doku hier und Plan O28/O26; kein Spot-Code in diesem Paket. ✔
 - **Offen und genannt:** Preisabgleich CT, BIO-Lücke im Hebel-Weg.
+
+
+### 28.7 Entscheidungsgrundlage U1–U3 im Detail (08.10.2026)
+
+Nutzer 08.10.: *„Ja, gib mir alle U1 bis U3 Details für die Entscheidung – was sind genau die Monatsmails, keine Signale je Asset? Halte alles fest in Plan und Doku.“*
+
+#### Was die Monatsmail ist — und was nicht
+
+**Sie ist eine Übersicht mit Bewertung je Asset, aber kein Signal mit Zeitpunkt.**
+
+| | Monatsmail Altcoins (Spot) | zum Vergleich: REGEL0-Mail (Hebel) |
+|---|---|---|
+| Frage | *Welche Altcoins haben auf 6–12 Monate ein günstiges Chance-Risiko-Verhältnis?* | *Lohnt dieser Kauf in den nächsten 24 Stunden?* |
+| je Asset | **Rang in seiner Marktwert-Klasse** (★★★ oberstes Zehntel, ★★ übriges oberstes Fünftel), *Gelegenheit* in Worten, *Fortbestand* als Fakten, die **Marke** | Kauf JETZT, Hebelstufe, Ausstieg nach 24 h |
+| Zeitpunkt | keiner; der Monatserste ist nur der **Berichtstag** (Regel 1: der Takt ist kein Signalgeber) | die Signalstunde |
+| Wer handelt | du, mit der Mail als Grundlage | du, nach der Signalmail |
+
+**Warum keine Signale mit Zeitpunkt:**
+- Für Spot-Altcoins wurden **Zeitpunkt-Regeln** gemessen: wann kaufen nach Lage, Makro, Liquidität, MACD, Momentum (§7, §16, §20 u. a.).
+- **Keine schlug BTC.** Was trägt, ist die **Auswahl**: Coins im obersten Fünftel ihrer Klasse hatten über 12 Monate häufiger eine Verdopplung und seltener einen Absturz. Der Saldo liegt in E3 bei **+14,4 Pp** gegen die eigene Klasse, bei H **+21,0**, bei M **+26,5**, bei S nur **+9,4** (§25.6).
+- Der Horizont ist **12 Monate**. Darauf passt ein Monatsbericht; eine Stundenauslösung würde dort einen Zeitpunkt vortäuschen, der nicht gemessen ist.
+
+**Inhalt Monat für Monat** (Aufbau bestätigt §26, Beispiel `mail_beispiel_altcoins.html`):
+1. **Lesehilfe:** die zwei Ebenen *Fortbestand* (Fakten, du gewichtest) und *Gelegenheit* (gemessener Rang); die Sterne; die Marke.
+2. **Phase**, nur Fakten: Altseason-Breite, Netto-Liquidität, Stablecoins. BTC-Klima und MACD kommen ab Stufe 2.
+3. **Dein Bestand:** jede Krypto-Position und jeder Neuzugang. Je Coin steht der Rang in der Klasse oder der Grund, warum keiner (zu jung, kein Binance-Spot …), dazu die Fakten des Fortbestands. BTC/ETH/SOL stehen als Kern gesondert.
+4. **Rangliste:** Highcaps alle im obersten Fünftel, Mid- und Smallcaps je die besten 10. Je Coin: Sterne, seit wann im Fünftel, *neu im Fünftel* bzw. *neu unter den besten 10*, Fortbestand und die **Marke**.
+5. **Nicht mehr in der Liste** und **wegen Datensperre ausgeschlossen**.
+6. **Protokoll:** Jede Liste wird gegen ihre Klasse und gegen BTC mitgeschrieben; abgerechnet wird nach 6 und 12 Monaten.
+7. **Anhang mit Skalen:** welches Kriterium günstig oder ungünstig war, und warum.
+
+**Die Marke** ist der gemessene Ausstieg des Protokolls: 35 % unter dem Höchststand seit dem Kauf, mindestens aber die Hälfte des Kaufkurses. In der Mail steht sie als Wert mit dem heutigen Abstand (*„ok“* oder *„unterschritten“*). **Sie löst nichts aus.** Bis das Protokoll nach 6 und 12 Monaten abgerechnet ist, wird über Geld nicht nach Regel entschieden (§26).
+
+#### U1 — Umfang des ersten Baus
+
+| Option | Inhalt | Für | Gegen |
+|---|---|---|---|
+| **A Stufe 1, danach Stufe 2** (Empfehlung) | Stufe 1 = alles, was in die **Bewertung** eingeht: Stammdatei Allzeithoch (W2), **TVL-Verlauf (W3t)**, Bestand-Einstufung (W4), O26 (W8), Protokoll (W5), Monatsjob und Mail (W6), Betriebsprüfung (W7). Stufe 2 = **Auskunft**: Strukturprofil, BTC-Klima, MACD | die Mail kommt früher; die Rangliste ist von Anfang an **dieselbe wie gemessen**; eine NB-Änderung je Stufe | der Fortbestand steht bis Stufe 2 nur teilweise da (Alter, Abstand zum Hoch; ohne Höchstmenge, FDV, Kategorien, Gebühren) |
+| B Stufe 1 und 2 in einem Bau | alles auf einmal | eine einzige NB-Änderung | ~1–2 Tage später, ein größerer Pull mit mehr Fehlerstellen |
+| C nur Stufe 1 | Stufe 2 entfällt | am wenigsten Aufwand | dein Wunsch nach einer *inhaltlichen* Bewertung (Fortbestand, z. B. Höchstmenge wie bei QNT) bliebe unerfüllt |
+
+**Folge von A:**
+- Erster Monatsbericht nach dem Bau von Stufe 1, etwa 3 Arbeitstage nach dem Start (frühestens ab dem 10.10., nach der Freigabe Hebel, T-2), dann nächster Monatserster oder einmalig sofort.
+- Stufe 2 folgt etwa 1–2 Tage später, als eigene NB-Änderung.
+
+#### U2 — Regeln der automatischen Aufnahme (O26)
+
+| Option | Ablauf | Risiko |
+|---|---|---|
+| **A streng** (Empfehlung) | (1) Asset über die **Bitpanda-Asset-ID** bestimmen, nicht über das Kürzel; (2) nur Gruppe *coin* oder *token*; (3) CoinGecko-ID aus `price_cache`, sonst Namenssuche mit **genau einem Treffer** und **Preisabgleich**; (4) Binance aus `symbol_zuordnung.csv`, sonst gleiches Kürzel **mit Preisabgleich**, sonst keine; (5) bei Zweifel **nicht** aufnehmen, sondern **einmal** melden *„manuell prüfen: Grund“* | gering. Im Zweifel macht es eine Meldung, nie eine falsche Aufnahme |
+| B wie beim Hebel | Kürzel-Suche im Bitpanda-Katalog, Namenssuche bei CoinGecko | **BIO** würde womöglich der **Aktie** zugeordnet (Kürzel doppelt); ein falscher Binance-Kurs ginge in Rang und Marke ein |
+| C weiter von Hand | wie heute (CT, XDC) | Aufwand bei dir; die Warnmail kommt täglich |
+
+**Was A mit dem heutigen Bestand täte** (geprüft an der NB-Sicherung 08.10.):
+
+| Fall | Ergebnis |
+|---|---|
+| BIO | Asset-ID → Token *Bio Protocol*, CoinGecko `bio-protocol`, Binance BIO ✔ |
+| CT | CoinGecko `concrete`; Binance-CT nur nach Preisabgleich, sonst nur im Bestand-Block |
+| XDC, SUPRA, VSN, EURCV | aufgenommen, kein Binance-Spot ⇒ nur im Bestand-Block (Prod-Kurse) |
+| CANTON | aufgenommen, Binance über die Tabelle als CC (Futures) |
+| Aktien, ETF, ETC (15) | nicht aufgenommen (Gruppe) |
+
+**Die Schwelle des Preisabgleichs** (Vorschlag ≤ 2 %) wird nach unserer Regel **gemessen, nicht gewählt**: vor dem Bau die Abweichungen Bitpanda ↔ CoinGecko ↔ Binance an allen Beständen, Schwelle über der normalen Streuung. Abzustimmen ist nur das Prinzip.
+
+Gleichzeitig wird die Hebel-Aufnahme (H13) auf **dieselbe** Regel umgestellt: **eine** Zuordnung für Hebel und Spot.
+
+#### U3 — Takt und Hinweise zwischendurch
+
+| Option | Inhalt | Für | Gegen |
+|---|---|---|---|
+| **A Monatsmail** (Empfehlung), O26-Aufnahme sofort und still | Rang, Bestand und Neuzugänge einmal im Monat; ein neuer Bestand wird sofort aufgenommen und steht in der nächsten Mail als *„neu aufgenommen“* | passt zum 12-Monats-Horizont; keine Scheinaktualität | ein Neukauf am 2. erscheint erst am nächsten Monatsersten |
+| A+ wie A, dazu ein **Sofort-Hinweis nur bei Fakten zum Bestand** | Binance kündigt für einen **gehaltenen** Coin ein Delisting an oder setzt ein Monitoring-Kennzeichen (Daten aus O29); oder O26 meldet *„manuell prüfen“* | wichtige Fakten zum Bestand kommen rechtzeitig, ohne neue Bewertung | eine zusätzliche Mailart; das Delisting eines gehaltenen Coins ist selten, aber teuer |
+| B wöchentlich | Rangliste jede Woche | häufiger Überblick | der Rang ändert sich wöchentlich kaum; mehr Lesen ohne neue Information |
+
+**Empfehlung A+:** Der Sofort-Hinweis zum Delisting eines **gehaltenen** Coins nutzt die O29-Daten. Er ist ein **Fakt** und kein Signal (Regel 4: kein Auslöser, du entscheidest).
+
+#### Was nach deiner Entscheidung geschieht
+1. Eintrag als **E-85** und in Plan **O28/O26**.
+2. **Bau ab dem 10.10.** nach der Freigabe Hebel und nach P5 (O29 einschalten), in der Reihenfolge von U1.
+3. Vor dem Bau: **Messung der Preisabgleich-Schwelle** (U2) und **Gegenprobe O26** an allen 40 Beständen.
