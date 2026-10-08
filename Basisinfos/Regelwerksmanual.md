@@ -1722,6 +1722,10 @@ wäre im schlimmsten Fall selbst mitbetroffen.
 - Einfache PID-Datei (`data/watchdog.pid`) verhindert einen versehentlichen
   zweiten Start (zwei `main.py`-Instanzen würden sich um dieselbe SQLite-Datei
   und Port 8765 streiten).
+- ⚠️ **Betriebsregel Neustart (08.10.2026):** Die App **nicht zwischen Minute 03 und 15** einer Stunde beenden oder neu starten. Dann laufen Nachlader (:05), REGEL0-Stundenlauf (eigener Prozess) und Mailversand (~:10).
+  - Am 08.10. 09:06 Ortszeit beendete ein Neustart den laufenden REGEL0-Lauf; die Stunde fehlte im Lauf-Protokoll.
+  - Die Stunde geht nicht verloren: Der nächste Lauf rechnet sie als *endgültig*, dazu kommt N-1 (bis 3 h nachholen).
+  - Ein Schalter-Signal dieser Stunde käme aber rund eine Stunde später als gemessen.
 - ⚠️ **Korrektur 08.10.2026 – Geister-Watchdogs** (Befund NB: 40 Watchdog-Prozesse seit 20.09.):
   - Ursache: `pystray.Icon.stop()` setzt `icon.visible` **nicht** auf False. Die Überwachungsschleife (`while icon.visible`) lief nach *„Beenden“* endlos weiter und hielt den Prozess am Leben; die PID-Datei war da schon gelöscht, der nächste Start ließ sich durch.
   - Seitdem hängt die Schleife an einem Ende-Ereignis.
