@@ -345,8 +345,12 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                        "AND mail_verpasst_am IS NULL AND COALESCE(stufe, stufe_vorlaeufig) > 0 AND einstieg < ? AND einstieg >= ?",
                        (jt, (jetzt - timedelta(hours=1) - VERPASST_NACH).strftime("%Y-%m-%d %H:%M"),
                         (jetzt - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M"))).rowcount
+        # ⚠️ IMMER committen (08.10.2026, Schritt7 §23.25): sqlite3 oeffnet schon mit dem UPDATE eine Schreibtransaktion, auch wenn es
+        # 0 Zeilen trifft. Ohne commit hielt diese Verbindung die Ablage gesperrt; der Pruefblock (eigene Verbindung) wartete 30 s und
+        # scheiterte mit 'database is locked' - die Mail ging ohne Pruefung raus, keine pruefung-Zeile (BEAMX 07.10., L1 rot).
+        c.commit()
         if _v:
-            c.commit(); zaehl["verpasst"] += _v
+            zaehl["verpasst"] += _v
         # 1  SIGNAL: Schalter an, Stufe > 0, noch nicht gemailt, Einstieg nicht laenger als NICHT_AELTER_H vorbei
         for r in c.execute("SELECT * FROM signal WHERE hebel_schalter=1 AND mail_signal_am IS NULL AND mail_gesperrt_am IS NULL "
                            "AND mail_verpasst_am IS NULL "
@@ -385,6 +389,9 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                     _pr = pruefung(r) or None
                 except Exception as exc:                        # noqa: BLE001
                     _pr = {"fehler": type(exc).__name__}
+                    # 08.10.2026: der Grund gehoert ins Protokoll - am 07.10. war der Ausfall dort unsichtbar (§23.25)
+                    __import__("logging").getLogger(__name__).warning("REGEL0-Pruefblock %s %s gescheitert: %s: %s", r.get("symbol"),
+                                                                      r.get("signalstunde"), type(exc).__name__, exc)
             _sp = None
             if spot is not None:
                 try:

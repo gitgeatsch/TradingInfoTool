@@ -2515,3 +2515,42 @@ Nutzer 07.10.: *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen. Hinweis
 **Abgestimmt (07.10.2026, E-83):** Nutzer: *„Ja, a und b.“*
 - (a) Bau ab dem 10.10. nach der Testwoche, mit Prüfstand, Gegenprobe gegen E-1 und Suite.
 - (b) LLM-Rückspiel nach N5 als Kandidat für Fassung 0.3.
+
+
+### 23.25 P1 Betriebsprüfung 08.10. — L1 rot: Der Prüfblock scheiterte im Mailversand an einer Sperre der Ablage (eigener Fehler aus E-57)
+
+**Grundlage:** Teilexport 08.10. 05:54, voller Export 08.10. 06:32 (72 h Protokoll), Testwochen-Prüfung an der Kopie.
+
+**Testwoche 03.10. 04:00 bis 08.10. 03:00:**
+- T1 120/120, T2 ok (4 Abwicklungen als Auskunft), T3 Median 200 s;
+- F1–F4 ok (5 Schalter-Signale gemailt, im Median 9 min nach Schluss der Stunde);
+- A1/A2 im Rahmen;
+- **⛔ L1: BEAMX (07.10. 19:00 UTC, gemailt 20:11) ohne Trader-Zeile.**
+
+**Ursache, am Seiteneffekt nachgewiesen** (`Rechenkern_02_10/pruefe_sperre_pruefblock.py`: echter `versende` mit echtem `pruefe_signal`, Platzhalter-Client, Wegwerf-Ablage):
+- `regel0_mail.versende` führt seit E-57 (05.10. 00:19, Commit 3c8f9b1) zuerst `UPDATE signal SET mail_verpasst_am …` aus. Committet wurde **nur bei rowcount > 0**.
+- sqlite3 öffnet die Schreibtransaktion aber schon mit dem UPDATE. Die Ablage blieb gesperrt.
+- Der Prüfblock schreibt über eine **eigene** Verbindung. Er wartete 30 s und scheiterte mit `database is locked`.
+- Die Mail ging trotzdem raus, mit *Prüfung nicht verfügbar (OperationalError)* und ohne Zeile.
+- Das NB-Protokoll passt genau dazu: 22:10:15 Markt-Eingabe, 22:11:06 Versand (51 s), kein Fehlereintrag, denn `versende` hielt nur den Typnamen fest.
+- **Vor** der Korrektur: 34 s, `database is locked`, 0 Zeilen. **Nach** der Korrektur: 1 s, Markt- und Trader-Zeile (Fassung 0.2).
+- Nicht die Ursache: Fassung 0.2 (nachgestellt, schreibt beide Zeilen), die Anonymitätsprüfung, die Zeitgrenze (Markt-Eingabe 1 s gegen die NB-Kopie).
+
+**Warum die Suite es nicht fand:** Sie prüfte `pruefe_signal` **für sich** und `versende` mit einem Prüfblock-Ersatz, nie den **Weg** dazwischen (*„ein Test deckt die Funktion ab, nicht den Pfad“*).
+
+**Korrektur** (`agent/regel0_mail.py`):
+- `c.commit()` nach dem UPDATE gilt jetzt **immer**.
+- Ein gescheiterter Prüfblock steht mit Grund im **Protokoll** (`REGEL0-Prüfblock … gescheitert: …`).
+- Neue Suite-Prüfung `§23.25` im Paket `Regel0Betrieb`: der Prüfblock aus dem Mailversand mit Zeilen, ohne Fehler, unter 15 s. Die Probe schlug vor der Korrektur fehl.
+- Suite `Regel0Betrieb` vollständig grün, Mail am Seiteneffekt 11/11.
+
+**Was sonst gilt (Export):**
+- K-XDC erledigt: XDC ist nicht mehr in der Hebel-Liste, *„Schalter an ohne Daten“* steht auf 0.
+- REGEL0-Datenbasis und -Rechnung lückenlos.
+- Protokoll ohne Störung im Hebel-Betrieb. Einzelne Netzfehler (Bitpanda 05.10. 23:04); `refresh_history` nach dem Neustart am 07.10. mit neuem Tagestakt (Auskunft).
+- 0 offene Hebel-Positionen.
+
+**Folge für die Testwoche:**
+- L1 bleibt für BEAMX **rot**, das ist ein Fakt.
+- Nach dem Pull kann L1 für die restlichen Signale zeigen, dass der Prüfblock arbeitet.
+- Die Freigabe am 10.10. (Nutzer) bewertet L1 mit dieser Ursache: ein Fehler im **Prüfblock**, nicht in der REGEL0; die Mail ging rechtzeitig und vollständig raus.

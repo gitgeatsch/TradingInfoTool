@@ -156,7 +156,7 @@ Umsatzdaten, die am Notebook **live** kommen. Das ist dort also eher leichter al
 
 | Paket | Wann | Inhalt | Strang | Ergebnis |
 |---|---|---|---|---|
-| **P1** | 08.10. früh | NB-Teilexport (Nutzer) → volle Betriebsprüfung: Jobs, REGEL0-Läufe, Testwoche T1/T2/L1/F1–F4, K-F02, K-XDC, H5 F5; dazu W3, sobald N4 beendet ist | Hebel | Befund Betrieb, Fortschritt ehrlich |
+| **P1** ✔ (§23.25: L1 rot = Sperre der Ablage aus E-57, korrigiert; Pull nötig) | 08.10. früh | NB-Teilexport (Nutzer) → volle Betriebsprüfung: Jobs, REGEL0-Läufe, Testwoche T1/T2/L1/F1–F4, K-F02, K-XDC, H5 F5; dazu W3, sobald N4 beendet ist | Hebel | Befund Betrieb, Fortschritt ehrlich |
 | **P2** | 08.–09.10. | **O30** externe Recherche: Kandidatenliste mit Datenlage, vorher das Faktenregister | Hebel | Kandidaten für die nächste Messrunde |
 | **P3** | 09.10. | **O29 vorbauen mit Schalter AUS** (`ankuendigung_aktiv: false`): Modul, Abrufer, Ablage, Mailzeile, Export-Abschnitt, Prüfstand, Gegenprobe gegen E-1, Suite. Ein Pull am NB ist harmlos, solange der Schalter aus ist ✔ *E-84 Nutzer-Ja, mit Bedingung: P1 verlangt keine Änderung an Mail/Ablage, und O30 ändert den Zuschnitt nicht* | Hebel | baufertig, nicht wirksam |
 | **P4** | 09.10. | **O28 Bauumfang-Vorlage** (nur Papier: Umfang W2–W7, Daten, Mail, Reihenfolge), damit die Abstimmung am 10.10. sofort möglich ist; **kein** Spot-Betriebscode (T-2) | Spot | Vorlage zur Abstimmung |

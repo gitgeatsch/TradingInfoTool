@@ -31442,6 +31442,18 @@ def paket_regel0_betrieb() -> None:
                "%s / %s" % (_ta, _tb))
         _n4 = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Basisinfos", "Rechenkern_02_10", "n4_rueckspiel.py"),
                       encoding="utf-8").read()
+        # 08.10.2026 (Schritt7 §23.25): der Pruefblock AUS DEM MAILVERSAND - am PFAD, nicht an der Funktion. Bis dahin hielt versende
+        # nach dem UPDATE mail_verpasst_am (0 Zeilen, kein commit) die Ablage gesperrt; der Pruefblock scheiterte nach 30 s mit
+        # 'database is locked', die Mail ging ohne Pruefung (BEAMX 07.10., L1 rot). Die Probe schlug VOR der Korrektur fehl (34 s, 0 Zeilen).
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "Basisinfos", "Rechenkern_02_10"))
+        import pruefe_sperre_pruefblock as _PSP
+        import time
+        with _tf.TemporaryDirectory() as _d9:
+            _t9 = time.time()
+            _z9, _g9, _r9, _f9 = _PSP.lauf(_d9)
+            _s9 = time.time() - _t9
+        pruefe(P, "§23.25: der Pruefblock schreibt AUS dem Mailversand seine Zeilen (keine Sperre der Ablage, unter 15 s)",
+               len(_r9) >= 2 and not _f9 and _s9 < 15 and len(_g9) == 1, "Zeilen %d · Fehler %s · %.0f s" % (len(_r9), _f9 or "-", _s9))
         pruefe(P, "E-80: der N4-Laeufer laedt die EINGEFRORENE 0.1e, nicht den Betriebskatalog",
                'KATALOG_PFAD = os.path.join(os.path.dirname(HIER), "regel0_llm_0_1e_n4.yaml")' in _n4 and "K = L.lade(KATALOG_PFAD)" in _n4
                and "K = L.lade()\n" not in _n4)
