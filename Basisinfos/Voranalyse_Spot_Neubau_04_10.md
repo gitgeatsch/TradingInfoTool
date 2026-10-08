@@ -4096,3 +4096,105 @@ Nutzer 08.10.: *„Damit wir diese Fehlalarme u. U. richtig einordnen, diese auc
 - keine Regel aus 6 Rallyes oder einem Zyklus;
 - keine Vorhersage, ob die Season kommt;
 - kein Bau.
+
+
+## 34. „Rolle L bedingt“ — Schritt für Schritt, sichtbar statt im Hintergrund (Vorschlag zur Abstimmung, 08.10.2026)
+
+Nutzer 08.10.: *„Schritt für Schritt, was genau ist L bedingt? Wenn es nur im Hintergrund läuft, ist es nicht sehr sinnvoll, und man sollte die Bedingungen und deren Änderungen laufend sehen, oder?“* — **Ja.** Eine Bedingung, die niemand sieht, ist wertlos, vor allem bei Ebene 1, wo du gewichtest.
+
+**1. Was es heißt:**
+- Rolle L (Season-Option) wird **nicht dauernd** gehalten.
+- Aufbau und Haltung richten sich nach dem **Stand der Season-Ampel**.
+- Grund: Im heutigen Klima kostet L rund −45 % gegen BTC im Jahr (§33.4).
+
+**2. Die Season-Ampel — drei Bedingungen, laufend sichtbar:**
+
+| | Bedingung | Schwelle | Quelle / Takt | heute |
+|---|---|---|---|---|
+| B1 | **BTC stark** | Ertrag 91 T > +20 % | Kurse, täglich | +34 % ✔ |
+| B2 | **Geldmenge wächst** | M2 J/J > +5 % | FRED (frei), monatlich, ~1 Monat Verzug | +5,7 % ✔ |
+| B3 | **frisches Geld im Kryptomarkt** | Stablecoin-Umlauf 91 T > +10 % | DefiLlama (frei), täglich | −1 % ✗ |
+| Kontext | Dominanz-Spitze (Ebene 2) · Breite (≥ 75 % eher **Endsignal**, S1) · Netto-Liquidität · Fear & Greed | — | — | — |
+
+Je Bedingung siehst du den **Wert**, die **Schwelle**, die **Richtung** (steigt/fällt) und den **Verlauf** der letzten 12 Monate, dazu den Gesamtstand **X von 3**.
+
+**3. Die Stufen (Vorschlag; das Gewicht liegt bei dir):**
+
+| Stand | Bedeutung | Vorschlag des Systems |
+|---|---|---|
+| 0–1 von 3 | kein Season-Klima | keine neuen L-Käufe; jeder L-Bestand zeigt seinen **laufenden Preis gegen BTC**; Abbau je Coin entscheidest du |
+| **2 von 3 (heute)** | Klima baut sich auf | L-Kandidatenliste aktuell halten (Fortbestand, bei Bitpanda handelbar, Kosten je Klasse); höchstens eine erste kleine Tranche, wenn du willst |
+| 3 von 3 | Season-Klima | Aufbau in Tranchen auf L-Kandidaten; Mitnahme ×3 je Position aktiv (§31.6) |
+| Ende | eine Bedingung fällt weg **oder** Breite ≥ 75 % | kein Neuaufbau, Mitnahme straffen |
+
+**4. Wo du es siehst:**
+- im **App-Tab** mit Verlauf;
+- **oben in jeder Spot-Mail**;
+- als **Ereignis-Mail, sobald sich der Stand ändert** (z. B. 2 → 3 oder 3 → 2).
+
+So siehst du jede Änderung sofort. Der Takt ist dabei kein Signalgeber (Regel 1), denn die Mail kommt beim Zustandswechsel.
+
+**5. Was gemessen ist und was nicht:**
+- B1–B3 stammen aus **einem** Zyklus (2020/21) und waren seit 2022 nie gleichzeitig erfüllt.
+- Die Schwellen stammen aus der Erzählung und sind nicht optimiert; die Stufen sind ein Vorschlag.
+- Die Ampel ist ein **Fakt** (Regel 4). Die Handlung je Stufe schlägt das System vor, freigeben musst du sie.
+- Jeder Zustandswechsel wird **vorwärts protokolliert**.
+
+**6. Was der Betrieb braucht (Datenabdeckung):**
+- B1 aus den Kursen ist am NB vorhanden.
+- B2 (FRED) und B3 (DefiLlama) brauchen je einen kleinen **Nachlader**, beide frei.
+- Für den Kontext: BTCDOM (Binance, frei).
+
+## 35. Teil C — Ausbruch früh erkennen: Voranalyse und Vorprüfung (08.10.2026)
+
+**Wohin gehört Teil C?**
+- **Rolle K** (Ebene 3, Einzelausbruch, Tage–Wochen): Ohne Erkennung hat K keinen Einstieg.
+- **Nebenbei Rolle L:** Im Season-Klima (3 von 3) ist die Frage *welche Coins* dieselbe Diamanten-Frage.
+
+### 35.1 Frage und Vorgehen
+
+- An welchem Tag zeigt ein Merkmal **je Coin**, dass er in den nächsten 30 T **gegen BTC läuft** (×1,3), und nicht nur, dass er sich **bewegt** (Spiegelprobe: Absturz ≤ 1/1,3)?
+- Gewählt wird auf 2023 (bis 01.12.2023), geurteilt ab 2024; dort vorerst nur Anzahlen.
+- `tc_vorpruefung.py` → `.txt` (mit `--kombi`), Gegenprobe `tc_gegenprobe.py` **4/4**.
+
+### 35.2 Ergebnis der Vorprüfung (nur 2023)
+
+- 2023: 108.529 Coin-Tage; Lauf 12,5 %, Absturz 15,2 %.
+- Ab 2024 (nur Anzahl): 354.693 Coin-Tage, 48.119 Lauf-Ereignisse, 480 Coins.
+
+| Merkmal (oberes Fünftel) | Lift Lauf | Lift Absturz | **Richtung** | Abdeckung 2023 / ab 2024 |
+|---|---|---|---|---|
+| Relativstärke 7 T / 30 T | 1,33 / 1,32 | 1,39 / 1,42 | **0,96 / 0,93** | 100 % |
+| Umsatzschub 7/90 T | 1,31 | 1,38 | **0,95** | 99 % |
+| neues 90-T-Hoch | 1,10 | 1,10 | **1,00** | 99 % |
+| Schwankung 90 T | 1,35 | 1,63 | 0,83 | 99 % |
+| Käuferanteil 7 T · Funding 7 T · OI 30 T | — | — | 0,92 · 0,85 · 0,86 | 15/26 % · 37/66 % · 14/23 % |
+| *unteres Fünftel:* niedrige Schwankung · tief gefallen · wenig Käufer | | | **1,22 · 1,14 · 1,30** | |
+
+⇒ **Kein Kurs-, Umsatz- oder Terminmarktmerkmal zeigt für sich die Richtung.** Läufe und Abstürze kündigen sich gleich an (Bewegung). Richtung gibt es nur **defensiv**, und das ist das Fortbestand-Muster der Watchlist.
+
+**Kombinationen und Klassen (84 Felder, Median der Richtung 0,91, oberes Zehntel ab 1,18 — ausgewählt, kein Nachweis):**
+
+| | Richtung | n | Ende 30 T gegen alle |
+|---|---|---|---|
+| **„Ruhiger Boden“:** tief gefallen UND niedrige Schwankung | **1,90** | 2.720 | +2,3 Pp |
+| „Erwachen vom Boden“: Relativstärke 30 T oben UND tief gefallen | 1,23 (Lauf 1,58 / Absturz 1,29) | 2.978 | **+4,4 Pp** |
+| schwach 30 T UND neues 90-T-Hoch | 2,07 | 628 | +2,1 Pp |
+| **Momentum je Klasse** (oberes Fünftel) | **H:** rs30 1,84 · Umsatzschub 1,96 · 90-T-Hoch 1,74 · **M:** 1,05–1,11 · **S:** 0,83–0,90 | | |
+
+⇒ **Momentum trägt Richtung nur bei großen Coins (H).** Bei Smallcaps ist ein Anstieg eher Pump & Dump.
+
+### 35.3 Fachliche Folgerung
+
+1. **Rolle K in Smallcaps ist mit unseren Daten nicht begründbar.** Es gibt kein Richtungsmerkmal, und die Kosten liegen bei 3,2 % je Seite (§32.1 D). Das betrifft 206 der 303 bei Bitpanda handelbaren Watchlist-Coins.
+2. **Ein K-Kandidat mit Substanz:** **Momentum in Highcaps** (Relativstärke 30 T oder Umsatzschub, oberes Fünftel, Klasse H, eventuell M). Er passt zur Literatur (Momentum ist bei liquiden Werten stabiler), die Kosten sind niedrig (H 0,36 % je Seite), und die Haltedauer kurz (§31.7).
+3. **„Ruhiger Boden“ gehört eher zu L:** Er beschreibt Coins, die tief gefallen und ruhig sind, mit weniger Absturz. Das ist ein Kandidat für die L-Auswahl im Season-Klima.
+4. **Externe Auslöser** (Börsen-Listings bei Binance, Upbit, Coinbase; Nachrichten, O30 K5) sind vermutlich die eigentlichen Treiber von Smallcap-Ausbrüchen. Sie stecken in keinem Kursmerkmal. Datenlage: O29 nur Delisting-Arten; die Listing-Ankündigungen von Binance gibt es über dieselbe freie Schnittstelle. ⇒ Teil C2 als eigene Voranalyse.
+
+### 35.4 Vorschlag Messplan §36 (wird nach Nutzer-Ja vorab festgelegt)
+
+| | |
+|---|---|
+| **K-H1 (Haupt)** | Klasse H (+ M als Auskunft), Relativstärke 30 T oberes Fünftel am Tag → Kauf am Folgetag; **Zeitgrenze 30 T** (Marke X2 nur Auskunft); gegen BTC; Kosten je Klasse; Nullwelt zufällige Coins derselben Klasse am selben Tag; Spiegelprobe; Mindestzahl ≥ 20 an ≥ 6 Monaten; **Urteil ab 2024** (das Merkmal ist auf 2023 gewählt) |
+| Auskunft | Umsatzschub und 90-T-Hoch in H; „Ruhiger Boden“ für L; „Erwachen vom Boden“; je Jahr 2024/2025/2026 |
+| C2 (eigene Voranalyse) | Listings und Ankündigungen als Auslöser (Binance frei; Upbit/Coinbase zu prüfen) |

@@ -1,0 +1,34 @@
+VORPRUEFUNG Teil C (Rolle K, Ebene 3) · Kurse bis 2026-09-20
+
+  WAHL 2023: Coin-Tage 108529 · Lauf (x1,3 gg. BTC in 30 T) 12.5 % · Absturz 15.2 %
+  AB 2024 (nur Anzahlen): Coin-Tage 354693 · Lauf-Ereignisse 48119 · Coins 480
+
+  Merkmal         Abdeckung 2023 / ab 2024 | OBERES Fuenftel: Lift Lauf · Lift Absturz · Richtung (Lauf/Absturz) · Ende 30 T gg. alle | UNTERES Fuenftel: Lift Lauf · Lift Absturz · Richtung
+  rs7               100 % /   100 %          |  1.33 ·  1.39 ·  0.96 ·  +0.2 Pp                               |  1.00 ·  1.12 ·  0.89
+  rs30              100 % /   100 %          |  1.32 ·  1.42 ·  0.93 ·  -0.6 Pp                               |  0.99 ·  1.06 ·  0.93
+  umsatz_schub       99 % /    99 %          |  1.31 ·  1.38 ·  0.95 ·  -0.4 Pp                               |  0.88 ·  0.89 ·  0.98
+  hoch90             99 % /    99 %          |  1.10 ·  1.10 ·  1.00 ·  -0.6 Pp                               |  1.14 ·  1.24 ·  0.92
+  schwankung90       99 % /    99 %          |  1.35 ·  1.63 ·  0.83 ·  -1.0 Pp                               |  0.77 ·  0.63 ·  1.22
+  tiefe             100 % /   100 %          |  1.03 ·  1.31 ·  0.79 ·  -1.3 Pp                               |  1.16 ·  1.01 ·  1.14
+  alter             100 % /   100 %          |  0.77 ·  0.69 ·  1.12 ·  -0.4 Pp                               |  1.02 ·  1.40 ·  0.73
+  kaeufer7           15 % /    26 %          |  1.00 ·  1.08 ·  0.92 ·  +0.5 Pp                               |  1.02 ·  0.79 ·  1.30
+  funding7           37 % /    66 %          |  0.95 ·  1.13 ·  0.85 ·  -1.2 Pp                               |  1.02 ·  1.11 ·  0.92
+  oi30               14 % /    23 %          |  1.12 ·  1.31 ·  0.86 ·  -2.0 Pp                               |  0.84 ·  0.99 ·  0.85
+
+  Lesart: 'Richtung' > 1 heisst, das Merkmal zeigt Laeufe haeufiger an als Abstuerze. Lift Lauf UND Lift Absturz beide > 1 bei Richtung ~1 = nur BEWEGUNG (Spiegelprobe).
+
+  STUFE 1b - PAARE (nur 2023, 84 Felder mit >= 300 Coin-Tagen), die 8 mit der staerksten Richtung:
+    Richtung 2.07 · rs30 unten UND hoch90 oben · n   628 · Lift Lauf 1.19 / Absturz 0.57 · Ende 30 T +2.1 Pp gg. alle
+    Richtung 1.90 · schwankung90 unten UND tiefe unten · n  2720 · Lift Lauf 1.21 / Absturz 0.63 · Ende 30 T +2.3 Pp gg. alle
+    Richtung 1.52 · tiefe unten UND alter oben · n  2384 · Lift Lauf 0.97 / Absturz 0.64 · Ende 30 T +0.5 Pp gg. alle
+    Richtung 1.51 · rs7 unten UND hoch90 oben · n  2049 · Lift Lauf 1.02 / Absturz 0.67 · Ende 30 T -0.3 Pp gg. alle
+    Richtung 1.23 · rs30 oben UND tiefe unten · n  2978 · Lift Lauf 1.58 / Absturz 1.29 · Ende 30 T +4.4 Pp gg. alle
+    Richtung 1.22 · schwankung90 unten UND alter oben · n  5991 · Lift Lauf 0.56 / Absturz 0.46 · Ende 30 T +0.0 Pp gg. alle
+    Richtung 1.21 · umsatz_schub unten UND schwankung90 oben · n  7345 · Lift Lauf 1.23 / Absturz 1.01 · Ende 30 T +1.3 Pp gg. alle
+    Richtung 1.20 · hoch90 oben UND alter oben · n  5529 · Lift Lauf 0.99 / Absturz 0.82 · Ende 30 T -0.4 Pp gg. alle
+  Verteilung der Richtung ueber alle Felder: Median 0.91 · oberes Zehntel ab 1.18
+
+  STUFE 1b - JE KLASSE (oberes Fuenftel, Richtung):
+    H: rs7 1.26 · rs30 1.84 · umsatz_schub 1.96 · hoch90 1.74 · schwankung90 0.06 · tiefe 0.28 · alter 0.90
+    M: rs7 1.11 · rs30 1.05 · umsatz_schub 1.08 · hoch90 1.10 · schwankung90 0.87 · tiefe 0.82 · alter 1.01
+    S: rs7 0.88 · rs30 0.83 · umsatz_schub 0.86 · hoch90 0.90 · schwankung90 0.88 · tiefe 0.90 · alter 1.27

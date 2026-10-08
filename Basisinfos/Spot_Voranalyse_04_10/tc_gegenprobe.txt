@@ -1,0 +1,6 @@
+T1  gleich  Lauf/Absturz an 40 Coin-Tagen, Abweichungen 0
+T2  gleich  rs30 oben: Lift Lauf 1.319 · Absturz 1.419 · Richtung 0.929 · Ausgabe ('1.32', '1.42', '0.93')
+T3  gleich  Klasse H rs30 oben: Richtung 1.838 · Ausgabe 1.84
+T4  gleich  Zeile AB 2024 nur Anzahlen: True · Kombinationsteil ohne 2024: True
+
+4 von 4 gleich
