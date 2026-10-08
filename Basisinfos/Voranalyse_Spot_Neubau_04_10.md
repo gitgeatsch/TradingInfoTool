@@ -3970,3 +3970,51 @@ Gleichgewichtet sind es 11 Episoden (+15 bis +63 %), alle danach ebenfalls im Mi
 | **Test oder Betrieb** | Desktop, nur lesend; Prod nur als Kopie gelesen |
 | **Was folgt** | Messplan §33 Ebene 2 (H-R1–H-R4, Basisrate zuerst), dazu die Kosten-Nutzen-Rechnung von L (F1). Nutzerabstimmung |
 | **Was nicht folgt** | keine Phasen-Regel aus 6 Fällen; kein Bau |
+
+
+## 33. Ebene 2 und 1: Ereignisanalyse mit Markt- und Makro-Einordnung, Kosten-Nutzen der Season-Option — Plan VOR der Rechnung (08.10.2026)
+
+Nutzer 08.10.: *„Damit wir diese Fehlalarme u. U. richtig einordnen, diese auch mit den notwendigen Marktdaten und der Makrolage bewerten – einfach stures Messen ohne Erkenntnisse bringt uns nicht weiter. Z. B. Altseason 2020 und 2021: Corona-Krise, Gelddrucken, dann massiver Anstieg des gesamten Kryptomarkts. Es lässt sich nicht trivial messen, aber u. U. finden wir eine Lösung oder Ansätze in Kombination.“*
+
+**Haltung, vorab:**
+- Makro und Krisen werden **eingeordnet und gewichtet**, nicht zum Auslöser gemacht (Regel *übergeordnete Kräfte nur gewichten*, 01.10.).
+- Black Swans werden ausgewiesen, nicht modelliert.
+- Ergebnis ist **Erkenntnis und eine Hypothese für das Vorwärtsprotokoll**, keine Regel. Dafür sind die Fälle zu wenige.
+
+### 33.1 Teil 1 — Ebene 2: Dominanz-Spitze, Treffer und Fehlalarme mit Einordnung (2023-01 bis 2026-08)
+
+| | Festlegung |
+|---|---|
+| Lage | **BTCDOM-Anstieg in 30 T ≥ Schwelle**; Schwellen 5 / 8,7 / 12 / 15 % (Dosis; 8,7 % ist der kleinste Wert an den 6 Tiefs von §32.1, also aus der Rückschau und offen so benannt) |
+| Signal | erster Tag einer Lage; Tage mit Lage, die weniger als 14 T auseinanderliegen, gehören zu einem Signal |
+| Treffer | ein Rally-Tief (§32.1 B, marktwertgewichtet) liegt zwischen 10 T vor und 45 T nach dem Signal; sonst **Fehlalarm** |
+| Einordnung je Signal (Stand am Signaltag, nur bekannte Werte) | **Markt:** BTC 90 T · BTC unter Hoch · ETH/BTC 30 T · Breite (Top 50, 90 T) · Funding Altcoins (Median 7 T) · OI Altcoins 30 T · Fear & Greed. **Makro:** Netto-Liquidität FED 13 W · Stablecoin-Umlauf 30 T · Leitzins (Richtung 90 T) · Dollar (DXY-Ersatz 30 T) · S&P 500 30 T · 10J-Rendite 30 T |
+| Kombination | Jedes Merkmal am Median aller Signale geteilt; alle **Paare** und ihre 4 Felder; „trennt“ = ein Feld mit allen Treffern und höchstens einem Fehlalarm, oder umgekehrt |
+| **Zufallskontrolle** | dieselbe Suche auf 1.000-mal **vertauschten** Treffer-Kennzeichen. Wie oft findet der Zufall ein ebenso gutes Paar? Nur ein Paar, das seltener als 5 % vom Zufall erreicht wird, gilt als **Ansatz** |
+| Ausgabe | **jedes** Signal mit Einordnung (nicht nur das beste Paar); dazu die Ereignis-Chronik als **Kontext** (Wahl, Zinsschritte, ETF, Zölle; nur gesicherte Daten, gekennzeichnet, nicht gemessen) |
+
+### 33.2 Teil 2 — Ebene 1: Was trug die Seasons 2020/21? (2019 bis 2026, Beschreibung)
+
+- Die 4 Phasen aus S1 (§13.1) und das ganze Jahrzehnt je Quartal werden mit Makro und Markt beschrieben:
+  - Netto-Liquidität und M2-Wachstum (FRED);
+  - Leitzins;
+  - Stablecoin-Wachstum;
+  - BTC-Jahresertrag;
+  - ETH/BTC;
+  - Altindex gegen BTC.
+- Frage: **Gab es eine Kombination, die in den Season-Quartalen vorlag und sonst selten?** Zum Beispiel Liquidität steigt **und** BTC stark **und** Stablecoins wachsen.
+- ⚠️ Das sind nur 2–4 Phasen, alle vor 2024. Ergebnis ist eine **Beschreibung**, die zeigt, worauf man vorwärts achten muss.
+
+### 33.3 Teil 3 — F1: Kosten-Nutzen der Season-Option (Rolle L)
+
+| | Festlegung |
+|---|---|
+| Kosten je Jahr | Korb der L-Kandidaten (oberstes Fünftel) gegen BTC über 365 T, ab 2024; mit und ohne Mitnahme ×3 (§31.6); Kosten je Klasse aus §32.1 D (Kauf + Verkauf) |
+| Nutzen | Vorsprung des L-Korbs gegen BTC **in** den Seasons 2020-04 und 2020-11 bis 2021-03 (E1/E2, Auskunft) |
+| Break-even | Höchstdauer T, bis zu der eine Season mit dem Vorsprung G die laufenden Kosten c ausgleicht: (1 + G) · (1 − c)^T ≥ 1 |
+| Folge | Budget und Höchstdauer für L als **Vorlage**; die Entscheidung bleibt beim Nutzer |
+
+**Was aus allem folgt (vorab):**
+- Trennt ein Paar besser als der Zufall → Hypothese **H-R** für das Vorwärtsprotokoll und als **Fakt mit Einordnung** in die Mail.
+- Trennt keines → die Dominanz-Spitze kommt höchstens als Fakt mit ihrer Fehlalarmquote in die Mail.
+- Teil 2 und 3 liefern die Grundlage für die Entscheidung *Rolle L ja/nein, wie groß, wie lange*.
