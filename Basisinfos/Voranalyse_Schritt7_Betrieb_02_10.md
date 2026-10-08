@@ -2633,3 +2633,50 @@ Nutzer 08.10.: *„Beim Beenden der App dürften immer wieder Prozesse hängen b
 4. Ihn beenden, dann über die Verknüpfung neu starten.
 
 Kontrolle **K-WD-1**: Danach läuft genau ein Watchdog. Nach dem nächsten *„Beenden“* + Neustart ist es immer noch genau einer.
+
+
+### 23.28 P3 — O29 vorgebaut, Schalter AUS (08.10.2026; E-83/E-84)
+
+**Bedingung E-84 erfüllt:** P1 verlangte keine Änderung an dem, was O29 braucht (die Korrektur §23.25 betrifft den Mailversand, nicht die Einbaustelle). P2 (§23.26) ändert den Zuschnitt nicht.
+
+**Gebaut:**
+
+| Teil | Stelle |
+|---|---|
+| Modul | `agent/binance_ankuendigungen.py`: Regeln wie E-1, Abruf (Seite 1–2 beider Kataloge, Details nur neuer relevanter Meldungen), Fenster je Signal, Mailteile, Vorwärtsprotokoll |
+| Schalter | `regel0_betrieb.yaml` `ankuendigung_aktiv: false` (Vorgabe AUS, je Lauf gelesen, kein Neustart nötig) |
+| Job | `scheduler/background.binance_ankuendigungen_job`, stündlich zur Minute 58 (vor Nachlader :05 und Mailversand); nur mit Schalter **und** am Betriebsgerät (`betrieb_erlaubt`, wie der Nachlader) |
+| Mail | `regel0_mail.versende(..., ankuendigung=)`: Zeile *Binance* in der Einschätzung, Titel und Link in der Technik; ein Fehler gibt eine Mail ohne Zeile (P-8) |
+| Ablage | `regel0_signale.db`: `ankuendigung`, `ankuendigung_ereignis`, `ankuendigung_lauf`, `signal_ereignis` |
+| Teilexport | Abschnitt **BINANCE-ANKÜNDIGUNGEN** (Schalter, Läufe, Fehler, Zuordnungen, Vorwärtsprotokoll) |
+
+**Wortlaut (nur Fakt):**
+- *„Binance hat am 03.08. angekündigt, den Handel am 17.08. einzustellen.“*
+- *„Binance führt den Wert seit 24.07. mit Monitoring-Kennzeichen.“*
+- *„Binance stellt den Futures-Kontrakt am … ein (angekündigt am …).“*
+
+**Prüfung:**
+- Prüfstand `o29_pruefstand.py` **10/10** am Seiteneffekt: Schalter AUS ohne Wirkung; Archiv-Antworten AN ergeben die richtigen Sätze; Margin/Paar ohne Zeile; Abruffehler gibt eine Mail ohne Zeile; Vorwärtsprotokoll für alle Signale; Job am Desktop übersprungen; echter Abruf (Live-Probe 100 Meldungen); Standard-DB unberührt.
+- Gegenprobe `e1_betrieb_gegenprobe.py` **3/3**: Art und Kürzel an allen 2.008 Meldungen gleich E-1, Fenster an allen 43.183 Einstiegen gleich.
+- Suite `Regel0Betrieb` 76/76 (3 neue O29-Prüfungen), Mail `pruefe_o25` 11/11.
+
+⚠️ **Dabei gefunden: ein Umsetzungsfehler in E-1.**
+- Das Ende des Monitoring-Kennzeichens („Kennzeichen entfernt“) griff in `e1_messung` **nie**. Die Meldung trägt das Kürzel nur im Titel, gesucht wurde in den Zuordnungen. 67 Einstiege waren so zu viel als Monitoring gezählt.
+- Die Vorabregel bleibt; korrigiert ist ihre Umsetzung. Danach wurde E-1 neu gerechnet (Nachtrag §23.23).
+
+**NB:** Ein Pull ist harmlos, der Schalter ist AUS. **Einschalten in P5** (nach der Freigabe), dann Kontrolle K-ANK-1.
+
+
+**Nachtrag zu §23.23 (08.10.2026) — E-1 korrigiert neu gerechnet** (Monitoring-Ende jetzt über den Titel, wie vorab festgelegt):
+
+| Menge | mit SCHWER | 24 h mit − ohne | Spiegel | Verlust ≥ 10 % | Urteil |
+|---|---|---|---|---|---|
+| bestand | 48 | +1,14 % (ohne PORTAL −0,30 %) | +0,07 | +0,5 Pp | nicht über |
+| unverzerrt_1 | 145 | **−1,33 %** | +0,19 | **+9,9 Pp** | über |
+| unverzerrt_2 | 123 | **−1,74 %** | +0,12 | **+9,5 Pp** | über |
+| unverzerrt_3 | 140 | **−1,16 %** | +0,16 | **+7,5 Pp** | nicht über (p 0,07) |
+
+- ⇒ **SCHWER trägt weiterhin NICHT** (2/4). Die Effekte in den unverzerrten Mengen sind etwas deutlicher als in der ersten Fassung.
+- Monitoring allein: 3/4 über, scheitert aber am Vorzeichen (*bestand*).
+- Die Folgen bleiben dieselben: keine Regel, nur der Fakt in der Mail und das Vorwärtsprotokoll (O29).
+- Erste Fassung als Beleg: siehe Git-Verlauf von `e1_messung.txt`.

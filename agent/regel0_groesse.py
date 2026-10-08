@@ -26,7 +26,9 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                # S-2 (E-57, 04.10.2026): die Testwoche endet NUR mit der Freigabe des Nutzers - nicht still mit dem Datum
                testwoche_freigegeben=False,
                # R-4 (E-51, 03.10.2026): die Rollen-Kette (Spot) anhalten, ohne den alten Weg freizugeben - Vorgabe: sie laeuft
-               spot_kette_angehalten=False)
+               spot_kette_angehalten=False,
+               # O29 (E-83/E-84, 08.10.2026): Binance-Ankuendigung als Fakt in der Signalmail + Vorwaertsprotokoll - Vorgabe AUS
+               ankuendigung_aktiv=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -48,6 +50,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: alter_hebelweg_aus muss true oder false sein")
     if not isinstance(werte["testwoche_freigegeben"], bool):
         raise ValueError("regel0_betrieb.yaml: testwoche_freigegeben muss true oder false sein")
+    if not isinstance(werte["ankuendigung_aktiv"], bool):
+        raise ValueError("regel0_betrieb.yaml: ankuendigung_aktiv muss true oder false sein")
     werte["testwoche_bis"] = str(werte["testwoche_bis"] or "")
     if werte["testwoche_bis"] and len(werte["testwoche_bis"]) != 10:
         raise ValueError("regel0_betrieb.yaml: testwoche_bis als JJJJ-MM-TT oder leer")

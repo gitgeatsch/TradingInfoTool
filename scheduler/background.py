@@ -1564,6 +1564,27 @@ def betriebsreihen_job(conn_factory) -> None:
         logger.exception("Betriebsreihen: Jobmarke nicht geschrieben")
 
 
+def binance_ankuendigungen_job() -> None:
+    """O29 (E-83/E-84, 08.10.2026): Binance-Ankuendigungen (Delisting, Monitoring) holen und jedes REGEL0-Signal protokollieren
+    (agent/binance_ankuendigungen.py, Voranalyse_Schritt7 Par. 23.24/23.28). Eigener Job (Lehre 14.09.: Sammeln nicht im Job eines
+    Verbrauchers), stuendlich VOR dem REGEL0-Lauf; die Signalmail liest nur die Ablage.
+
+    NUR mit Schalter ``ankuendigung_aktiv`` (regel0_betrieb.yaml, je Lauf gelesen) UND nur am BETRIEBSGERAET - dieselbe Bedingung wie
+    der Nachlader (``betrieb_erlaubt``): am Desktop liegt unter regel0_signale.db keine Betriebsablage. Scheitert nie nach aussen."""
+    try:
+        import agent.binance_ankuendigungen as BA
+        import agent.regel0_nachlader as NL
+        if not BA.aktiv():
+            return
+        erlaubt, grund = NL.betrieb_erlaubt(NL.DATEN_VORGABE)
+        if not erlaubt:
+            logger.info("Binance-Ankuendigungen: uebersprungen - %s", grund)
+            return
+        BA.lauf(NL.DATEN_VORGABE, NL.DATEN_VORGABE)
+    except Exception:                                        # noqa: BLE001
+        logger.exception("Binance-Ankuendigungen: Job fehlgeschlagen")
+
+
 def regel0_nachlader_job() -> None:
     """Haelt die REGEL0-Datenbasis stuendlich aktuell (Schritt 7, S7-1b, 02.10.2026).
 
@@ -1663,6 +1684,7 @@ def _regel0_mails() -> None:
         import agent.regel0_nachlader as _NL
         import agent.regel0_chart as _CH
         import agent.regel0_llm as _LLM
+        import agent.binance_ankuendigungen as _BA
         # E-52: der Pruefblock der LLM-Sofortfassung - EIN Umlauf je Stundenlauf (Grenzen gegen Ressourcen- und Abfragestau)
         _kat = _LLM.lade()
         _um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)
@@ -1680,7 +1702,9 @@ def _regel0_mails() -> None:
                          pruefung=_pruef,
                          position=_regel0_positionsstand,   # 04.10.: Ausstiegserinnerung nur bei offener Hebelposition
                          spot=_regel0_spot_hinweis,          # O25 M-f: die alte Spot-Kette mailte zum selben Asset
-                         senden_html=lambda b, t, h, bi: _sende_hinweismail(b, t, bi, h))   # O25 M-d: eigenes HTML
+                         senden_html=lambda b, t, h, bi: _sende_hinweismail(b, t, bi, h),   # O25 M-d: eigenes HTML
+                         # O29 (E-83/E-84): Binance-Ankuendigung als Fakt - nur mit Schalter ankuendigung_aktiv, liest nur die Ablage
+                         ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r))
         if any(z.values()):
             logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d Erinnerung entfallen (keine offene Position), "
                         "%d nicht zugestellt, %d gesperrt (Zuordnung)",
@@ -5452,6 +5476,18 @@ def build_scheduler(
     # Fehlermail; der Nachlader setzt ohnehin an der letzten Stunde je Symbol an.
     # Laeuft ein Lauf laenger als eine Stunde (erster Lauf nach langem Ausfall),
     # ueberspringt APScheduler den naechsten (max_instances=1) - ohne Mail.
+    # O29 (08.10.2026): Binance-Ankuendigungen stuendlich zur Minute 58 - VOR dem Nachlader (:05) und dem Mailversand (~:10); ohne
+    # Schalter ankuendigung_aktiv tut der Job nichts (kein Abruf)
+    scheduler.add_job(
+        binance_ankuendigungen_job,
+        "cron",
+        minute=58,
+        timezone=timezone.utc,
+        id="binance_ankuendigungen",
+        coalesce=True,
+        max_instances=1,
+        misfire_grace_time=1800,
+    )
     scheduler.add_job(
         regel0_nachlader_job,
         "cron",

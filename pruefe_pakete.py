@@ -31454,6 +31454,35 @@ def paket_regel0_betrieb() -> None:
             _s9 = time.time() - _t9
         pruefe(P, "§23.25: der Pruefblock schreibt AUS dem Mailversand seine Zeilen (keine Sperre der Ablage, unter 15 s)",
                len(_r9) >= 2 and not _f9 and _s9 < 15 and len(_g9) == 1, "Zeilen %d · Fehler %s · %.0f s" % (len(_r9), _f9 or "-", _s9))
+        # O29 (08.10.2026, Schritt7 §23.28): Binance-Ankuendigung als Fakt - vorgebaut mit Schalter AUS; am PFAD versende -> Mailzeile
+        import agent.binance_ankuendigungen as _BA
+        import agent.regel0_groesse as _G29
+        import o29_pruefstand as _O29
+        pruefe(P, "O29: Schalter ankuendigung_aktiv steht in regel0_betrieb.yaml AUS (Vorgabe false) - eingeschaltet erst nach der Testwoche",
+               _G29.lade().get("ankuendigung_aktiv") is False and _G29.VORGABE.get("ankuendigung_aktiv") is False)
+        if os.path.exists(_O29.E1):
+            _orig29 = _BA.aktiv
+            try:
+                with _tf.TemporaryDirectory(ignore_cleanup_errors=True) as _d29:
+                    _BA.aktiv = lambda: False
+                    _m_aus = _O29.mail_fuer(_d29, "HFT", "2026-08-20 10:00")
+                    _BA.aktiv = lambda: True
+                    _c29 = _sq.connect("file:%s?mode=ro" % _O29.E1.replace("\\", "/"), uri=True)
+                    _codes = [r[0] for r in _c29.execute("SELECT code FROM meldung WHERE titel LIKE 'Binance Will Delist ACX, HFT%'")]
+                    _c29.close()
+                    _BA.lauf(_d29, os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"), http=_O29.Archiv(_codes))
+                    _m_an = _O29.mail_fuer(_d29, "HFT", "2026-08-21 10:00")
+                    _BA.aktiv = lambda: True
+                    _m_fehl = _O29.mail_fuer(_d29, "ZZZ", "2026-08-21 11:00")
+            finally:
+                _BA.aktiv = _orig29
+            pruefe(P, "O29: am Pfad versende - AUS keine Zeile, AN der Fakt (Ankuendigung + Wirksamkeit + Link), ohne Ereignis keine Zeile",
+                   "Binance hat" not in _m_aus and "einzustellen" in _m_an and "17.08." in _m_an and "announcement/" in _m_an
+                   and "Binance hat" not in _m_fehl and "REGEL0.1" in _m_fehl)
+        _bq29 = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scheduler", "background.py"), encoding="utf-8").read()
+        pruefe(P, "O29: der Abrufer-Job prueft Schalter UND Betriebsgeraet (betrieb_erlaubt), die Mail liest nur die Ablage",
+               "def binance_ankuendigungen_job" in _bq29 and "BA.aktiv()" in _bq29 and "NL.betrieb_erlaubt(NL.DATEN_VORGABE)" in _bq29
+               and "ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r)" in _bq29)
         pruefe(P, "E-80: der N4-Laeufer laedt die EINGEFRORENE 0.1e, nicht den Betriebskatalog",
                'KATALOG_PFAD = os.path.join(os.path.dirname(HIER), "regel0_llm_0_1e_n4.yaml")' in _n4 and "K = L.lade(KATALOG_PFAD)" in _n4
                and "K = L.lade()\n" not in _n4)

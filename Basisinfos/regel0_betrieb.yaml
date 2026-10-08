@@ -30,3 +30,8 @@ spot_kette_angehalten: true    # GESETZT 05.10.2026 (Nutzer: *Schalter A setzen*
                                # unveraendert). Es entstehen keine Spot-Signale, keine Spot-/Bestands-Verkaufsmails, keine Lagebilder; die
                                # REGEL0 (Rechnung, Mails, LLM-Block) und der Ausstiegsjob (Stop-Nachzieh-Sammelmail) laufen weiter.
                                # Wirkt ab dem naechsten Umlauf (15 min) - die Datei wird je Umlauf gelesen, kein Neustart noetig. Par. 20.13
+
+# O29 (E-83/E-84, 08.10.2026): Binance-Ankuendigungen (Delisting, Monitoring) als FAKT in der Signalmail + Vorwaertsprotokoll fuer alle
+# Signale (agent/binance_ankuendigungen.py, Voranalyse_Schritt7 Par. 23.24/23.28). Vorgebaut mit Schalter AUS - EINGESCHALTET wird erst
+# nach der Testwoche (Freigabe). Wird je Lauf gelesen, kein Neustart noetig. Aus = kein Abruf, keine Mailzeile, kein Protokoll.
+ankuendigung_aktiv: false

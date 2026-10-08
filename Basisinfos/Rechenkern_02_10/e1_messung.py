@@ -60,7 +60,17 @@ def schliesse(sym, C) -> pd.Series:
 def flags(E: pd.DataFrame, ev: pd.DataFrame) -> pd.DataFrame:
     """Je Einstieg und Art: gab es eine Ankuendigung in (ende - Fenster, ende], ende = Signalstunde + 1 h? Monitoring endet mit 'monitoring_ende'."""
     out = {a: np.zeros(len(E), dtype=bool) for a in FENSTER}
-    ende_m = ev[ev.art == "monitoring_ende"]
+    # KORREKTUR 08.10.2026 (Gegenprobe O29, e1_betrieb_gegenprobe.py): 'monitoring_ende' hat keine Zuordnung - das Kuerzel steht nur im
+    # TITEL. Die erste Fassung suchte es in den Zuordnungen, das Ende griff NIE (67 Einstiege zu viel als Monitoring). Die Vorabregel
+    # ("endet frueher mit einer monitoring_ende-Meldung") bleibt; korrigiert ist nur ihre Umsetzung - wie im Betrieb ueber den Titel.
+    import re as _re
+    _c = con(os.path.join("_e1", "binance_ankuendigungen.db"))
+    _t = pd.read_sql("SELECT titel, release_ms FROM meldung WHERE art='monitoring_ende'", _c)
+    _c.close()
+    _z = [(pd.to_datetime(ms, unit="ms"), t) for t, ms in zip(_t.titel, _t.release_ms)]
+    _sy = {s for s in E.symbol.unique()}
+    ende_m = pd.DataFrame([(s, z) for z, t in _z for s in _sy if _re.search(r"(?<![A-Z0-9])%s(?![A-Z0-9])" % _re.escape(s), t or "")],
+                          columns=["symbol", "zeit"])
     g = {k: v for k, v in ev.groupby("symbol")}
     for i, (s, t) in enumerate(zip(E.symbol.values, E.zeit.values)):
         if s not in g:

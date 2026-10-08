@@ -384,6 +384,36 @@ def _inhalt() -> int:
             c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Pruefung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # O29 (08.10.2026): Binance-Ankuendigungen - Schalter, letzter Abruf, Fehler, Zuordnungen, Vorwaertsprotokoll (nur lesen; K-ANK-1)
+    print()
+    print("-" * 100)
+    try:
+        import agent.regel0_groesse as _G
+        _an = bool(_G.lade().get("ankuendigung_aktiv"))
+        ab = os.path.join(DATEN, "regel0_signale.db")
+        c = ro(ab) if os.path.exists(ab) else None
+        if c is None or "ankuendigung_lauf" not in tabellen(c):
+            print("BINANCE-ANKUENDIGUNGEN: Schalter %s · noch kein Lauf" % ("AN" if _an else "aus"))
+        else:
+            n_l, n_ok = c.execute("SELECT COUNT(*), SUM(ok) FROM ankuendigung_lauf").fetchone()
+            print("BINANCE-ANKUENDIGUNGEN: Schalter %s · Laeufe %d, davon fehlerfrei %d" % ("AN" if _an else "aus", n_l, n_ok or 0))
+            for r in c.execute("SELECT am, ok, neu, zuordnungen, protokolliert, fehler, sekunden FROM ankuendigung_lauf ORDER BY am DESC LIMIT 4"):
+                print("    Lauf %s · %s · neu %d · Zuordnungen %d · protokolliert %d · %s s%s" % (
+                    r[0], "ok" if r[1] else "FEHLER", r[2], r[3], r[4], r[6], (" · " + str(r[5])[:90]) if r[5] else ""))
+            n_m, n_z = c.execute("SELECT (SELECT COUNT(*) FROM ankuendigung), (SELECT COUNT(*) FROM ankuendigung_ereignis)").fetchone()
+            print("    Meldungen %d · Zuordnungen %d · je Art: %s" % (n_m, n_z, ", ".join(
+                "%s %d" % r for r in c.execute("SELECT art, COUNT(*) FROM ankuendigung_ereignis GROUP BY art ORDER BY 2 DESC"))))
+            if "signal_ereignis" in tabellen(c):
+                n_s, n_e = c.execute("SELECT COUNT(*), SUM(arten != 'keins') FROM signal_ereignis").fetchone()
+                n_o = c.execute("SELECT COUNT(*) FROM signal s LEFT JOIN signal_ereignis e ON e.symbol=s.symbol AND "
+                                "e.signalstunde=s.signalstunde WHERE e.symbol IS NULL").fetchone()[0]
+                print("    Vorwaertsprotokoll: Signale %d · mit Ereignis %d · noch ohne Eintrag %d" % (n_s, n_e or 0, n_o))
+                for r in c.execute("SELECT symbol, signalstunde, arten FROM signal_ereignis WHERE arten != 'keins' ORDER BY signalstunde DESC LIMIT 6"):
+                    print("      %-9s %s %s" % r)
+        if c is not None:
+            c.close()
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Binance-Ankuendigungen nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # S7-5d (03.10.2026): taeglicher Abgleich als Auskunft - Neuaufnahme, gesperrte Mails, Hebel-Schalter-Assets ohne Daten (nur lesen)
     print()
     print("-" * 100)
