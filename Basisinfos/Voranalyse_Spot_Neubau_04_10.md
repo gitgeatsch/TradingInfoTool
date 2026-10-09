@@ -4712,6 +4712,24 @@ Befunde aus der Prüfung:
 
 **B4 Abbau:** keine gemessene Regel. Fakten: L kostet im Klima ≈ −45 %/Jahr gegen BTC (§33.4), ×3 löst nur in 9 % aus (oben), Kosten S 3,2 % je Seite (§32.1).
 
+### 39.6 Block B abgestimmt (09.10.2026; E-91) und Übertragbarkeit B1 vorab
+
+Nutzer 09.10.: *„B1 ja mit Prüfung, B2 ja, B3 ja, B4 ja. Hinweis: Wir bewegen uns wieder auf den NEWSLETTER-Weg zu. Grundsätzlich finde ich zusätzliche Information gut, aber ohne konkrete Ableitung auf eine Handlung finde ich diese nicht sinnvoll. Bei 30+ Assets ist das nur Arbeit.“*
+
+**Übertragbarkeit B1 (vorab, `fb_uebertrag.py`, Desktop, nur lesend):**
+- Regel unverändert aus §31 (Z1 ×3, 50 %, Fenster 365 T, Nullwelt, Urteil, Bootstrap); **keine neue Wahl**.
+- Teil 0: das obere Fünftel muss +5,50 Pp wiedergeben, sonst Abbruch.
+- **Haupt:** alle Watchlist-Coins des Starttags **ohne Kern**, ab 2024, also genau der Kreis, für den B1 im Betrieb gilt.
+- Urteil wie §31.3; Selbsttest (a).
+- Auskunft: nur außerhalb des oberen Fünftels; je Klasse; je Jahr.
+
+| Ergebnis | Folge (vorab) |
+|---|---|
+| trägt | B1 gilt für den ganzen L-Bestand |
+| trägt nicht / nicht entscheidbar | B1 nur für Coins, die am Starttag im oberen Fünftel stehen; für die übrigen keine Mitnahme-Mail |
+| schadet | für die übrigen ausdrücklich keine Mitnahme |
+
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.
