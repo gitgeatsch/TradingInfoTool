@@ -2850,3 +2850,33 @@ Die Hebel-Wallets treffen die offenen Hebelpositionen:
 - BTC 0,02038541 ≈ 1.500 € beim Einstieg;
 - ETH 0,89636371 × 2.220 ≈ 1.990 € (Position 2.000 €);
 - Kredit −2.600 € = 1.000 + 1.600 genau.
+
+### 23.32 K-BP-1 Rohantwort `/portfolio` und Fix-Entwurf Trennung Spot/Hebel (09.10.2026)
+
+Nutzer 09.10.: *„wir brauchen für die Positionsführung von SPOT und HEBEL eine klare Trennung, den Vorschlag von dir kann ich nicht bewerten“* · *„3. ja vorbereiten“*.
+
+**Werkzeug:** `nb_bitpanda_portfolio_roh.py`.
+- Ein einziger GET, ohne Projekt-Import: `api.bitpanda_public._hole` trägt `@track_api_health` und **schreibt** in die Produktions-DB.
+- Keine DB, keine Mail, der Schlüssel nur aus `.env`.
+- Am **Desktop** ausgeführt (dasselbe Bitpanda-Konto) → `nb_bitpanda_portfolio_roh_9900K.txt`. Ein NB-Lauf ist nicht nötig.
+- ⚠️ Vor dem Lauf gefunden: Die EUR-Kennung war falsch eingesetzt und ist auf `api/bitpanda_public.EUR_WAEHRUNG_ID` korrigiert.
+
+**Befund (09.10. ~16:00):** 52 Zeilen für 49 Assets. **BTC, ETH und EURCV je zwei Zeilen**, alle übrigen eine.
+
+| | Zeile 1 | Zeile 2 |
+|---|---|---|
+| BTC | Spot 0,05496596 (verfügbar 0,05496596) | **Hebel 0,02038541** (verfügbar 0) |
+| ETH | **Hebel 0,89636371** (verfügbar 0) | Spot 0,54399256 = frei 0,0569 + gestakt 0,4871 (verfügbar 0,0569) |
+| EURCV | Spot 296,04 | **Kredit −2.600** |
+
+- **Kein Feld kennzeichnet die Zeile** (Felder: asset_id, balance, available_balance, currency_balance, average_buy_price, invested_amount, total_return …).
+- **Die Reihenfolge wechselt**: Bei BTC steht Spot zuerst, bei ETH der Hebel. Das erklärt, warum ETH glatt lief.
+- *„verfügbar = 0“* kennzeichnet den Hebel **nicht**: Ein vollständig gestakter Spot-Wert (SOL, SUI …) hat ebenfalls verfügbar 0.
+- EURCV Spot liegt inzwischen bei 296,04 (12:35 UTC: 696,04).
+
+**Fix-Entwurf (zur Abstimmung, Bau am Desktop, NB nach H15):**
+1. Je Asset werden die Wallets in zwei Gruppen summiert: **Spot = frei + gestakt**, **Hebel = margin-trading + margin-trading-credit**. Das macht `bestand_je_asset` schon.
+2. Die `/portfolio`-Zeilen eines Assets werden **über die Menge zugeordnet**: Die Zeile, die Spot trifft, ist die Spot-Zeile; die Zeile, die Hebel trifft, ist die Hebel-Zeile. Das ist unabhängig von der Reihenfolge, ohne Raten.
+3. **Spot-Kontrolle:** Die Spot-Zeile muss die Spot-Summe treffen → `holdings` (frei, gestakt). Trifft keine Zeile → Warnmail wie heute.
+4. **Hebel-Kontrolle (neu, Hebel-Strang):** Die Hebel-Zeile muss die Hebel-Wallets treffen. Die Hebel-Menge × Einstand gehört zu einer offenen `hebel_positions`-Zeile; der Kredit gehört zur Summe `kreditbetrag_eur` der offenen Positionen. Eine Abweichung bedeutet: Position, die das System nicht kennt → Mail.
+5. Der Hebel-Teil kommt **nie** in `holdings`, wie bisher.
