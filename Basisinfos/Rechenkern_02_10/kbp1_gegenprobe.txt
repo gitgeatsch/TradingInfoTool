@@ -1,0 +1,5 @@
+G1  gleich  Rohantwort {'BTC': [0.05496596, 0.02038541], 'ETH': [0.89636371, 0.54399256], 'EURCV': [296.04291657, -2600.0]} · passt [True, True, True]
+G2  gleich  20.000 Faelle, Abweichungen 0 []
+G3  gleich  alte Logik (letzte Zeile): {'BTC': False, 'ETH': True, 'EURCV': False} - genau die Mails vom 09.10.
+
+3 von 3 gleich

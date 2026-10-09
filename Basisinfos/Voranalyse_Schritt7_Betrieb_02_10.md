@@ -2913,3 +2913,42 @@ Nutzer 09.10.: *„ja H15 pushen, wenn alles geprüft und gegengeprüft wurde“
 | Protokollzeile *„Hebelfuehrung: n offen …“* / kein *„Lauf fehlgeschlagen“* | steht im Log, nicht im Teilexport | ◐ mit dem nächsten Diagnose-Export nachweisen |
 
 Stand 16:00 UTC: **ETH 5x Abstand 11,7 %** (Kurs 2.221,94 €, Liquidation 1.962,90 €) · BTC 3x 27,1 %. Die nächste Stufe (10 %) meldet H15 erneut.
+
+### 23.35 K-BP-1 Importer-Fix gebaut — Trennung Spot/Hebel über die Menge (09.10.2026)
+
+Nutzer 09.10.: *„Ja, Importer-Fix bauen, prüfen und gegenprüfen“*.
+
+**Bau (`importer/bitpanda_bestand.py`):**
+- `abgleich_neu` sammelt **alle** `/portfolio`-Zeilen je Asset. Vorher galt `{asset_id: Zeile}`, also gewann die letzte Zeile.
+- Neue Funktion `spot_zeile(zeilen, b)` bestimmt die Spot-Zeile **über die Menge** der Wallets (Spot = frei + gestakt, Hebel = margin-trading + margin-trading-credit):
+
+| Zeilen | passt, wenn | Spot-Zeile |
+|---|---|---|
+| keine | Wallets zusammen 0 | — |
+| eine | ohne Hebel: trifft Spot · mit Hebel: **nur Hebel** bei Spot 0 (zuerst geprüft) / trifft Spot / trifft Spot + Hebel | die Zeile, bei *nur Hebel* keine |
+| zwei | eine trifft Spot, die andere Hebel — Reihenfolge egal | die Spot-Zeile |
+| mehr als zwei, unbekannte Wallet-Art | nie | — |
+
+- In `holdings` kommen weiter **nur frei und gestakt** (E1). Die Meldung bei Nicht-Passen nennt jetzt Spot, Hebel, alle Zeilen und die Lesart.
+- **Festlegung (fachlich):** Die Spot-Kontrolle prüft **Spot gegen Spot**. Fehlt die Hebel-Zeile, ist das eine Frage der Hebel-Kontrolle (Schritt B unten), nicht des Spot-Bestands.
+
+**Prüfungen:**
+- **Suite-Paket BitpandaBestand 18/18** (vorher 14). Die 4 neuen laufen mit den **echten Zahlen vom 09.10.**: kein Fehlalarm bei BTC/ETH/EURCV; EURCV 311,93 → 296,04, Kredit draußen; LINK mit unpassenden zwei Zeilen bleibt stehen und meldet; `spot_zeile` reihenfolgefrei, *nur Hebel*, > 2 Zeilen, unbekannte Wallet-Art.
+- ⚠️ Gefunden **beim Bau**: Bei Spot 0 und nur der Hebel-Zeile griff zuerst *„mit Hebel-Wallet“*, die Hebel-Zeile wäre als Spot gelesen worden (bei einem Asset ohne Watchlist eine falsche Meldung *„Position ohne Watchlist“*). Behoben, *nur Hebel* wird zuerst geprüft.
+- **Gegenprobe `kbp1_gegenprobe.py` 3/3:**
+  - G1: die **echte Rohantwort** aus der Datei, alle drei passen, die Spot-Zeile trifft die Spot-Menge;
+  - G2: zweite Umsetzung (alle Beschriftungen S/H/SH durchprobiert) gegen `spot_zeile` an **20.000 Zufallsfällen, 0 Abweichungen**. Die erste Fassung verlangte bei einer einzigen Spot-Zeile auch die Hebel-Zeile (968 Fälle), das ist die oben festgelegte Definitionsfrage;
+  - G3: Der alte Fehler ist nachgestellt (*letzte Zeile gewinnt*: BTC und EURCV verworfen, ETH nicht), genau die Mails vom 09.10.
+
+**Wirkung am NB (nach Pull):**
+- Die Mails *„Bestand passt nicht zusammen“* für BTC und EURCV hören auf.
+- EURCV wird auf den Spot-Teil fortgeschrieben.
+- Im Log steht je Hebel-Asset *„Spot- und Hebel-Zeile getrennt (Spot x, Hebel y)“*.
+
+**Schritt B (offen, eigene Abstimmung):** Hebel-Kontrolle — Hebel-Zeile/-Wallets gegen die offenen `hebel_positions` (Menge × Einstand ≈ Positionswert, Kredit = Summe `kreditbetrag_eur`). Sie würde nebenbei den bekannten Importerfehler bei Teilschließungen zeigen (Memory *IMPORTER teilt Hebelpositionen falsch ein*).
+
+**Ganze Suite mit dem Fix:** 3.229 Prüfungen, rot die 5 bekannten **plus der H15-Prüfstand P10**.
+- Ursache: P10 verlangte wörtlich *„13,0 %“*. Der Lauf nimmt aber die **echte Uhrzeit** gegen eine feste Eröffnung, und die Finanzierung schiebt die Liquidation stündlich näher. Nach einigen Stunden waren es 12,9 %.
+- Ein Prüfstandsfehler, kein Betriebsfehler. Er hätte die Suite ab heute Abend dauerhaft rot gemacht.
+- P10 rechnet jetzt den Abstand aus der Liquidation **derselben Mail** nach.
+- Danach: Prüfstand 11/11 · Regel0Betrieb 78/78 · BitpandaBestand 18/18 · Hebelführung 35/35.

@@ -28807,6 +28807,60 @@ def paket_bitpanda_bestand() -> None:
                geworfen and vorher == nachher and _DB.get_bitpanda_holdings_synced_at(c) is None, "")
         c.close()
         zustand["fehler"] = None
+
+        # ---- K-BP-1 (09.10.2026): bei offenem Hebel ZWEI Portfolio-Zeilen je Asset, ohne Kennzeichen, wechselnde Reihenfolge -
+        # die ECHTEN Zahlen vom 09.10. (Rohantwort nb_bitpanda_portfolio_roh_9900K.txt, Wallets aus der Prod-Sicherung 12:35 UTC)
+        kat.update({"a_eurcv": K("a_eurcv", "EURCV", "EUR CoinVertible", "token")})
+        alt_pf, alt_vg = list(portfolio), list(vorgaenge)
+        portfolio[:] = [_pos("a_btc", 0.05496596, 0.05496596, 4059.04), _pos("a_btc", 0.02038541, 0.0, 1505.39),
+                        _pos("a_eth", 0.89636371, 0.0, 1990.31), _pos("a_eth", 0.54399256, 0.05685134, 1207.90),
+                        _pos("a_eurcv", 296.04291657, 296.04291657, 296.04), _pos("a_eurcv", -2600.0, 0.0, -2600.0),
+                        _pos("a_link", 141.9, 141.9, 1339.9), _pos("a_link", 10.0, 0.0, 94.4)]
+        vorgaenge[:] = [
+            _b(21, "buy", "a_btc", "shared-default", 0.05496596, "2026-10-08T15:56:09.371Z"),
+            _b(22, "margin_trading_open_long", "a_btc", "margin-trading", 0.02038541, "2026-10-09T04:38:53.019Z"),
+            _b(23, "buy", "a_eth", "shared-default", 0.05685134, "2026-09-28T14:38:07.436Z"),
+            _b(24, "stake", "a_eth", "staking-service", 0.48714122, "2026-10-06T16:54:35.000Z"),
+            _b(25, "margin_trading_open_long", "a_eth", "margin-trading", 0.89636371, "2026-10-09T08:29:58.380Z"),
+            _b(26, "buy", "a_eurcv", "shared-default", 296.04291657, "2026-10-09T08:29:58.000Z"),
+            _b(27, "margin_trading_open_long", "a_eurcv", "margin-trading-credit", -2600.0, "2026-10-09T08:29:58.380Z"),
+            _b(28, "buy", "a_link", "shared-default", 140.0, "2026-07-10T09:00:00.000Z"),
+            _b(29, "margin_trading_open_long", "a_link", "margin-trading", 10.0, "2026-10-01T09:00:00.000Z")]
+        wl_k = wl + [_wa("EURCV")]
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        for sym, q, st in (("BTC", 0.05496596, 0.0), ("ETH", 0.05685134, 0.48714122), ("EURCV", 311.93291657, 0.0), ("LINK", 99.0, 0.0)):
+            _DB.upsert_holding(c, sym, q, source="bitpanda_sync")
+            _DB.update_holding_staked_quantity(c, sym, st)
+        gem_k = []
+        erg_k = _BB.abgleich_neu(c, "k", watchlist=wl_k, melden=gem_k.append)
+        hk = {x.symbol: x for x in _DB.get_all_holdings(c)}
+        abw = {m.schluessel for m in gem_k if m.schluessel.startswith("bestand_abweichung_")}
+        pruefe(P, "⚠️⚠️ K-BP-1: zwei Zeilen je Asset (BTC Spot zuerst, ETH Hebel zuerst, EURCV Kredit) - KEIN Fehlalarm, Spot gegen Spot",
+               abw == {"bestand_abweichung_a_link"}, str(sorted(abw)))
+        pruefe(P, "⚠️⚠️ K-BP-1: EURCV wird auf den SPOT-Teil fortgeschrieben (311,93 -> 296,04), der Kredit -2.600 bleibt draussen; "
+                  "BTC/ETH-Spot unveraendert, kein Hebel in `holdings`",
+               abs(hk["EURCV"].quantity - 296.04291657) < 1e-9 and abs(hk["BTC"].quantity - 0.05496596) < 1e-9
+               and abs(hk["ETH"].quantity - 0.05685134) < 1e-9 and abs(hk["ETH"].staked_quantity - 0.48714122) < 1e-9,
+               "EURCV %s BTC %s ETH %s/%s" % (hk["EURCV"].quantity, hk["BTC"].quantity, hk["ETH"].quantity, hk["ETH"].staked_quantity))
+        m_link = next((m for m in gem_k if m.schluessel == "bestand_abweichung_a_link"), None)
+        pruefe(P, "K-BP-1: passen zwei Zeilen NICHT zu Spot und Hebel (LINK 141,9 + 10 gegen Spot 140 / Hebel 10), bleibt der alte Stand - "
+                  "die Meldung nennt Spot, Hebel und beide Zeilen",
+               hk["LINK"].quantity == 99.0 and m_link is not None and "Spot 140" in m_link.status and "Hebel 10" in m_link.status
+               and "141,9 + 10" in m_link.status, m_link.status if m_link else "keine Meldung")
+        _Z = lambda m: _ty.SimpleNamespace(menge_gesamt=m)  # noqa: E731
+        _bk = {"frei": 0.05496596, "gestakt": 0.0, "hebel": 0.02038541, "sonst": 0.0}
+        reihen = [_BB.spot_zeile([_Z(0.05496596), _Z(0.02038541)], _bk), _BB.spot_zeile([_Z(0.02038541), _Z(0.05496596)], _bk)]
+        pruefe(P, "K-BP-1 spot_zeile: Reihenfolge egal; nur Hebel bei Spot 0; mehr als zwei Zeilen und unbekannte Wallet-Art passen nie",
+               all(r[1] and abs(r[0].menge_gesamt - 0.05496596) < 1e-12 for r in reihen)
+               and _BB.spot_zeile([_Z(-2600.0)], {"frei": 0.0, "gestakt": 0.0, "hebel": -2600.0, "sonst": 0.0})[:2] == (None, True)
+               and not _BB.spot_zeile([_Z(1.0), _Z(2.0), _Z(3.0)], {"frei": 1.0, "gestakt": 0.0, "hebel": 2.0, "sonst": 0.0})[1]
+               and not _BB.spot_zeile([_Z(1.0)], {"frei": 1.0, "gestakt": 0.0, "hebel": 0.0, "sonst": 0.5})[1],
+               str([(r[1], r[2]) for r in reihen]))
+        c.close()
+        portfolio[:], vorgaenge[:] = alt_pf, alt_vg
+        del erg_k
     finally:
         (_BP.katalog, _BP.hole_portfolio, _BP.hole_fiat, _BP.hole_buchungen_mit_stand,
          _BB._fusion_schluessel) = alt

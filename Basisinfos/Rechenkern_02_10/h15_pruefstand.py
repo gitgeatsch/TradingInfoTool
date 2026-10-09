@@ -116,7 +116,17 @@ def main():
     r = BG._hebelfuehrung_lauf(fabrik)
     x = fabrik(); nach = x.execute("SELECT COUNT(*) FROM job_laeufe WHERE job_id LIKE 'hebelfuehrung:%'").fetchone()[0]; x.close()
     pruefe("P9", not r.get("gelaufen") and vor == nach, "Grund: %s" % r.get("grund"))
-    pruefe("P10", all(s in mail_p2 for s in ("Einstand", "Liquidation", "13,0 %", "Entscheidung liegt bei dir")), "Mailtext P2 geprueft")
+    # P10 rechnet den Abstand aus der Liquidation DERSELBEN Mail nach (Kurs 62.000). Bis 09.10. abends stand hier fest "13,0 %" -
+    # der Lauf nimmt die ECHTE Uhrzeit gegen eine feste Eroeffnung, die Finanzierung schiebt die Liquidation stuendlich naeher,
+    # und die Pruefung wurde nach einigen Stunden rot (Suite 09.10.). Eine Pruefung, die einen Zeitstand verlangt, friert ihn ein.
+    import re as _re
+    m_liq = _re.search(r"Liquidation\s+etwa ([\d.]+),(\d+) EUR - (\d+),(\d) % unter dem Kurs", mail_p2)
+    abst_ok = False
+    if m_liq:
+        liq = float(m_liq.group(1).replace(".", "") + "." + m_liq.group(2))
+        abst_ok = abs(100 * (62000 - liq) / 62000 - float(m_liq.group(3) + "." + m_liq.group(4))) <= 0.051
+    pruefe("P10", abst_ok and all(s in mail_p2 for s in ("Einstand", "Entscheidung liegt bei dir", "Warnschwelle 15 %")),
+           "Mailtext P2: Abstand aus der Liquidation der Mail nachgerechnet (%s)" % (m_liq.group(0) if m_liq else "keine Liquidationszeile"))
     nachher = (os.path.getmtime(STANDARD), os.path.getsize(STANDARD)) if os.path.exists(STANDARD) else None
     pruefe("P11", vorher == nachher, "Standard-DB %s" % ("unveraendert" if vorher == nachher else "VERAENDERT"))
     print("\nMail P2 (Auszug):\n" + "\n".join(mail_p2.splitlines()[:14]))

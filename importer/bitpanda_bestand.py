@@ -207,6 +207,47 @@ def _stimmt(a: float, b: float) -> bool:
     return abs(a - b) <= max(1e-8, 1e-6 * max(abs(a), abs(b)))
 
 
+def spot_zeile(zeilen: list, b: dict):
+    """K-BP-1 (09.10.2026, Schritt7 Par. 23.31/23.32): welche `/portfolio`-Zeile ist die SPOT-Zeile? -> (Zeile oder None, passt, Lesart)
+
+    ⚠️ GEMESSEN am 09.10. an der Rohantwort (`nb_bitpanda_portfolio_roh.py`): bei offenem Hebel fuehrt `/portfolio` je Asset ZWEI
+    Zeilen - Spot (frei + gestakt) und Hebel (margin-trading bzw. der Kredit margin-trading-credit) -, OHNE Kennzeichen und in
+    WECHSELNDER Reihenfolge (BTC Spot zuerst, ETH Hebel zuerst). Vorher baute `abgleich_neu` `{asset_id: Zeile}` und behielt die
+    LETZTE: BTC meldete den Hebelteil, EURCV den Kredit -> Fehlalarm alle 6 h, EURCV blieb veraltet. *"verfuegbar = 0"* kennzeichnet
+    den Hebel NICHT - ein ganz gestakter Spot-Wert sieht genauso aus.
+
+    DIE TRENNUNG laeuft deshalb ueber die MENGE der Wallets (Spot = frei + gestakt, Hebel = Hebel-Wallets), ohne Raten:
+      * keine Zeile      - passt nur, wenn die Wallets zusammen 0 ergeben
+      * eine Zeile       - Spot allein, Spot + Hebel in einer Zeile (beide Lesarten aus E9) oder nur der Hebel bei Spot 0
+      * zwei Zeilen      - eine trifft Spot, die andere Hebel, gleich in welcher Reihenfolge
+      * mehr als zwei    - unbekannt -> passt nicht (Meldung wie bisher)
+    Eine unbekannte Wallet-Art (`sonst`) passt nie. Der Hebel-Teil kommt nie nach `holdings` (E1) - das regelt der Aufrufer."""
+    spot, hebel = b["frei"] + b["gestakt"], b["hebel"]
+    if abs(b.get("sonst", 0.0)) > _EPS:
+        return None, False, "unbekannte Wallet-Art"
+    if not zeilen:
+        return None, abs(spot) <= _EPS and abs(hebel) <= _EPS, "keine Zeile"
+    if len(zeilen) == 1:
+        z = zeilen[0]
+        if abs(hebel) <= _EPS:
+            return z, _stimmt(z.menge_gesamt, spot), "Spot"
+        if abs(spot) <= _EPS and _stimmt(z.menge_gesamt, hebel):
+            return None, True, "nur Hebel"              # VOR "mit Hebel": bei Spot 0 sind beide Mengen gleich, die Zeile ist Hebel
+        if _stimmt(z.menge_gesamt, spot):
+            return z, True, "ohne Hebel-Wallet"
+        if _stimmt(z.menge_gesamt, spot + hebel):
+            return z, True, "mit Hebel-Wallet"
+        return z, False, "eine Zeile passt weder zu Spot noch zu Spot + Hebel"
+    if len(zeilen) == 2:
+        z0, z1 = zeilen
+        if _stimmt(z0.menge_gesamt, spot) and _stimmt(z1.menge_gesamt, hebel):
+            return z0, True, "Spot- und Hebel-Zeile getrennt"
+        if _stimmt(z1.menge_gesamt, spot) and _stimmt(z0.menge_gesamt, hebel):
+            return z1, True, "Spot- und Hebel-Zeile getrennt"
+        return None, False, "zwei Zeilen passen nicht zu Spot und Hebel"
+    return None, False, "%d Zeilen" % len(zeilen)
+
+
 # ------------------------------------------------------------ Zuordnung (E8)
 
 def watchlist_zuordnung(watchlist) -> tuple[set, dict]:
@@ -274,46 +315,43 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
     meldungen: list[Meldung] = []
 
     kat = BP.katalog(conn, api_key)
-    positionen = {p.asset_id: p for p in BP.hole_portfolio(api_key, kat)}
+    zeilen_je: dict = {}
+    for z in BP.hole_portfolio(api_key, kat):
+        zeilen_je.setdefault(z.asset_id, []).append(z)        # K-BP-1: ALLE Zeilen je Asset, nicht nur die letzte
     fiat = BP.hole_fiat(api_key)
     salden, vorgaenge, vollstaendig = aktualisiere_wallet_salden(conn, api_key)
     bestand = bestand_je_asset(salden)
-    antwort_vollstaendig = bool(fiat) and bool(positionen) and vollstaendig
+    antwort_vollstaendig = bool(fiat) and bool(zeilen_je) and vollstaendig
     symbole, isin = watchlist_zuordnung(watchlist)
     alte = {h.symbol: h for h in db.get_all_holdings(conn)}
     gesehen: set = set()
 
-    for aid in sorted(set(positionen) | {a for a, b in bestand.items() if abs(b["gesamt"]) > _EPS}):
-        p = positionen.get(aid)
+    for aid in sorted(set(zeilen_je) | {a for a, b in bestand.items() if abs(b["gesamt"]) > _EPS}):
+        zeilen = zeilen_je.get(aid, [])
         b = bestand.get(aid, {"frei": 0.0, "gestakt": 0.0, "hebel": 0.0, "sonst": 0.0, "gesamt": 0.0})
         eintrag = kat.get(aid)
         name = ("%s (%s)" % (eintrag.name, eintrag.symbol)) if eintrag else "unbekanntes Asset %s" % aid
-        bp_gesamt = p.menge_gesamt if p else 0.0
 
-        # E9 - Gegenprobe je Asset: die Wallet-Summe muss die Portfolio-Menge treffen.
-        # ⚠️ OFFEN GEMESSEN: ob `/portfolio` Hebel-Sicherheiten mitzaehlt, liess
-        # sich am 15./16.09. nicht pruefen - es war keine Hebelposition offen.
-        # Deshalb gelten BEIDE Lesarten; welche zutraf, steht im Log (Kontrolle
-        # beim ersten offenen Hebel, Notebook-Kontrolle K10).
-        mit_hebel = _stimmt(b["gesamt"], bp_gesamt)
-        ohne_hebel = abs(b["hebel"]) > _EPS and _stimmt(b["gesamt"] - b["hebel"], bp_gesamt)
-        if ohne_hebel and not mit_hebel:
-            logger.info("Bitpanda-Bestand (neu): %s - Portfolio-Menge ohne Hebel-Wallet (%s) gezaehlt",
-                        name, _menge(b["hebel"]))
-        elif mit_hebel and abs(b["hebel"]) > _EPS:
-            logger.info("Bitpanda-Bestand (neu): %s - Portfolio-Menge mit Hebel-Wallet (%s) gezaehlt",
-                        name, _menge(b["hebel"]))
-        if not (mit_hebel or ohne_hebel) or abs(b["sonst"]) > _EPS:
-            text = ("%s: Buchungen ergeben %s, Bitpanda meldet %s%s - nicht uebernommen"
-                    % (name, _menge(b["gesamt"]), _menge(bp_gesamt),
+        # E9 - Gegenprobe je Asset: die Wallets muessen die Portfolio-Zeilen treffen - SPOT gegen SPOT, HEBEL gegen HEBEL
+        # (K-BP-1, `spot_zeile`). K10 ist seit 09.10. beantwortet: `/portfolio` fuehrt den Hebel als EIGENE Zeile.
+        p, passt, lesart = spot_zeile(zeilen, b)
+        bp_gesamt = (b["frei"] + b["gestakt"]) if passt else (p.menge_gesamt if p else 0.0)
+        if passt and abs(b["hebel"]) > _EPS:
+            logger.info("Bitpanda-Bestand (neu): %s - %s (Spot %s, Hebel %s)",
+                        name, lesart, _menge(b["frei"] + b["gestakt"]), _menge(b["hebel"]))
+        if not passt:
+            gemeldet = " + ".join(_menge(z.menge_gesamt) for z in zeilen) or "0"
+            text = ("%s: Buchungen ergeben Spot %s / Hebel %s, Bitpanda meldet %s%s - nicht uebernommen"
+                    % (name, _menge(b["frei"] + b["gestakt"]), _menge(b["hebel"]), gemeldet,
                        (", unbekannte Wallet-Art %s" % _menge(b["sonst"])) if abs(b["sonst"]) > _EPS else ""))
             result.warnings.append(text)
             logger.warning("Bitpanda-Bestand (neu): %s", text)
             meldungen.append(Meldung(
                 schluessel="bestand_abweichung_%s" % aid, betreff="Bestand passt nicht zusammen: %s" % name,
-                name=name, wert=_eur(p.wert_eur if p else None),
-                status="Menge NICHT uebernommen - der letzte gute Stand bleibt im System (Buchungen %s, "
-                       "Bitpanda %s)" % (_menge(b["gesamt"]), _menge(bp_gesamt)),
+                name=name, wert=_eur(sum(z.wert_eur or 0.0 for z in zeilen) if zeilen else None),
+                status="Menge NICHT uebernommen - der letzte gute Stand bleibt im System (Buchungen Spot %s / "
+                       "Hebel %s, Bitpanda %s; %s)" % (_menge(b["frei"] + b["gestakt"]), _menge(b["hebel"]),
+                                                      gemeldet, lesart),
                 aktion="Keine sofort noetig. Kommt die Meldung beim naechsten Lauf wieder, bitte einen "
                        "Export ziehen - dann fehlt eine Buchung oder eine neue Wallet-Art.",
                 cooldown_stunden=6.0))
