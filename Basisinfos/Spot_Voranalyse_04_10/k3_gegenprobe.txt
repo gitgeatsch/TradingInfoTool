@@ -1,14 +1,20 @@
-Start 2017-01-01: V3/DCA 0.760 (V3 843.9, DCA 1110.4)
-Start 2018-01-01: V3/DCA 1.009 (V3 569.0, DCA 564.1)
-Start 2021-01-01: V3/DCA 1.010 (V3 142.8, DCA 141.4)
-WORAN - Klima q (BTC) je Jahr, Mittel am Monatsersten, und Kursaenderung im Jahr:
-  2017  q 0.90  Kaufanteil 0.10  Kurs +1296 %
-  2018  q 0.49  Kaufanteil 0.51  Kurs   -73 %
-  2019  q 0.33  Kaufanteil 0.67  Kurs   +88 %
-  2020  q 0.50  Kaufanteil 0.50  Kurs  +305 %
-  2021  q 0.79  Kaufanteil 0.21  Kurs   +58 %
-  2022  q 0.28  Kaufanteil 0.72  Kurs   -65 %
-  2023  q 0.21  Kaufanteil 0.79  Kurs  +154 %
-  2024  q 0.65  Kaufanteil 0.35  Kurs  +112 %
-  2025  q 0.69  Kaufanteil 0.31  Kurs    -7 %
-  2026  q 0.23  Kaufanteil 0.77  Kurs    -2 %
+G1  gleich  H W: eigene 4 · Ablage 4 · nur eigene 0 · nur Ablage 0
+G2  gleich  H W: ueberlappende Haltezeiten 0
+G3  gleich  H W: Bedingung am Signaltag verletzt 0
+G1  gleich  M W: eigene 24 · Ablage 24 · nur eigene 0 · nur Ablage 0
+G2  gleich  M W: ueberlappende Haltezeiten 0
+G3  gleich  M W: Bedingung am Signaltag verletzt 0
+G1  gleich  S W: eigene 106 · Ablage 106 · nur eigene 0 · nur Ablage 0
+G2  gleich  S W: ueberlappende Haltezeiten 0
+G3  gleich  S W: Bedingung am Signaltag verletzt 0
+G1  gleich  H U: eigene 12 · Ablage 12 · nur eigene 0 · nur Ablage 0
+G2  gleich  H U: ueberlappende Haltezeiten 0
+G3  gleich  H U: Bedingung am Signaltag verletzt 0
+G1  gleich  M U: eigene 69 · Ablage 69 · nur eigene 0 · nur Ablage 0
+G2  gleich  M U: ueberlappende Haltezeiten 0
+G3  gleich  M U: Bedingung am Signaltag verletzt 0
+G1  gleich  S U: eigene 413 · Ablage 413 · nur eigene 0 · nur Ablage 0
+G2  gleich  S U: ueberlappende Haltezeiten 0
+G3  gleich  S U: Bedingung am Signaltag verletzt 0
+
+18 von 18 gleich

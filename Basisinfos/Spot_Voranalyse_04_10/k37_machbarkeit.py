@@ -81,3 +81,25 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def einstiege_alle(pct, kl, m, ab, bis, klassen=("H", "M", "S"), halte=30):
+    """KORREKTUR 09.10.2026 (Gegenprobe K-3, Spot §40.1): EINE Sperre je Coin UEBER ALLE KLASSEN. `einstiege` sperrt nur innerhalb
+    einer Klasse - wechselt ein Coin im Monat die Klasse (1INCH M->S, FIL H->M), entstand eine zweite, ueberlappende Position
+    (§37: 11 von 1.555 ab 2024; Wirkung H -1,12 -> -0,89 Pp, M -6,24 -> -6,22 Pp, Urteil unveraendert). Die Klasse gilt am Signaltag.
+    `einstiege` bleibt unveraendert, damit §37 nachrechenbar bleibt."""
+    sig = (pct >= 0.8) & m & kl.isin(list(klassen))
+    out = []
+    for s in sig.columns:
+        x = sig[s]
+        tage = x.index[x.values & (x.index >= ab) & (x.index <= bis)]
+        frei = None
+        for d in tage:
+            i = IDX.get_loc(d)
+            if frei is not None and i <= frei:
+                continue
+            if i + 1 + halte > len(IDX) - 1:
+                break
+            out.append((d, s, kl.at[d, s], i + 1, i + 1 + halte))
+            frei = i + 1 + halte
+    return pd.DataFrame(out, columns=["signal", "sym", "kl", "i_kauf", "i_aus"])

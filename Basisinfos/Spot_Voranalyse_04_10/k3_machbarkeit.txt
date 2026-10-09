@@ -1,0 +1,13 @@
+MACHBARKEIT §40 K-3 Ruhiger Boden · Kurse bis 2026-09-20
+
+M0 TEIL 0 (R-R11) Vorpruefung §35.2 Stufe 1b: n 2720 (Soll 2.720) · Richtung 1.904 (Soll 1,90) · Ende 30 T +2.25 Pp (Soll +2,3) -> BESTANDEN
+
+M1-M3 EINSTIEGE nach Regel §40.2 (nur Anzahlen):
+  ALLE  2023 (Wahl)       Einstiege  134 · Monate 11 · Coins  44
+  ALLE  ab 2024 (Urteil)  Einstiege  494 · Monate 32 · Coins 103
+  H 2023 (Wahl)       Einstiege    4 · Monate  3 · Coins   2 · Nullwelt-Vorrat je Tag min 22 / Median 23 · bei Bitpanda 100 %
+  H ab 2024 (Urteil)  Einstiege   12 · Monate 10 · Coins   2 · Nullwelt-Vorrat je Tag min 18 / Median 20 · bei Bitpanda 100 %
+  M 2023 (Wahl)       Einstiege   24 · Monate  9 · Coins   9 · Nullwelt-Vorrat je Tag min 93 / Median 97 · bei Bitpanda 96 %
+  M ab 2024 (Urteil)  Einstiege   69 · Monate 28 · Coins  16 · Nullwelt-Vorrat je Tag min 72 / Median 84 · bei Bitpanda 100 %
+  S 2023 (Wahl)       Einstiege  106 · Monate 11 · Coins  37 · Nullwelt-Vorrat je Tag min 164 / Median 204 · bei Bitpanda 81 %
+  S ab 2024 (Urteil)  Einstiege  413 · Monate 32 · Coins  93 · Nullwelt-Vorrat je Tag min 221 / Median 248 · bei Bitpanda 78 %

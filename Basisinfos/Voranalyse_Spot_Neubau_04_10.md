@@ -4670,3 +4670,67 @@ Nutzer 09.10.: *„A3 ja so“* · *„Nur zur Default-Frage als deine Expertenm
 | alle übrigen Krypto-Bestände und Neuzugänge | **L** automatisch, Starttag = Tag der Inbetriebnahme bzw. erster Abgleich (A1 a) |
 | Abbau | nur als **Vorschlag** in der Bestandsmail (A2) mit dem **laufenden Preis gegen BTC** (L heute rund −45 %/Jahr); du handelst bei Bitpanda |
 | Rollen-Dialog im Portfolio | **zurückgestellt** bis es eine zweite echte Wahl gibt (K mit Lösung) → Stufe 2 |
+
+
+### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
+
+- `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.
+- Wechselte ein Coin im Monat die Klasse (z. B. FIL H→M, 1INCH M→S), entstand eine zweite, überlappende Position.
+- **Wirkung auf §37** (nachgerechnet aus der Ablage): 11 von 1.555 Einstiegen ab 2024.
+  - H −1,12 → **−0,89 Pp**, M −6,24 → **−6,22 Pp**.
+  - **Das Urteil bleibt** (H trägt nicht, M formal schadet).
+- Neu ist `einstiege_alle` (eine Sperre je Coin über alle Klassen, Klasse am Signaltag). Die alte Funktion bleibt, damit §37 nachrechenbar ist.
+
+## 40. K-3 „Ruhiger Boden“ als Einstieg für Rolle K — Messplan VOR der Messung (09.10.2026)
+
+Nutzer 09.10.: *„K-3 Messplan vorbereiten, prüfen und gegenprüfen“* (Auftrag K-Lösung, §39.3, E-89).
+
+**Die Hypothese (auf 2023 gewählt, §35.2 Stufe 1b):**
+- Ein Coin, der **tief unter seinem Allzeithoch** liegt **und** **ruhig** geworden ist (Schwankung 90 T niedrig), läuft in den nächsten 30 T häufiger gegen BTC, als er abstürzt.
+- 2023: Richtung **1,90**, n 2.720, Ende 30 T +2,3 Pp gegen alle.
+- **Ab 2024 nie geprüft**, also ein sauberer Test.
+
+### 40.1 Prüfung und Gegenprüfung des Plans (`k3_machbarkeit.py` → `.txt`, Gegenprobe `k3_gegenprobe.py` **18/18**)
+
+| | Ergebnis |
+|---|---|
+| **Teil 0 (R-R11)** | Vorprüfung exakt reproduziert: n **2.720** · Richtung **1,904** · Ende **+2,25 Pp** |
+| Einstiege gesamt (nur Anzahlen) | 2023: 134 in 11 Monaten, 44 Coins · **ab 2024: 494 in 32 Monaten, 103 Coins** |
+| je Klasse ab 2024 | H **12** (2 Coins) · M **69** (28 Monate, 16 Coins) · **S 413** (32 Monate, 93 Coins) |
+| Nullwelt-Vorrat | H ≥ 18 · M ≥ 72 · S ≥ 221 Coins je Tag |
+| bei Bitpanda handelbar | H 100 % · M 100 % · **S 78 %** |
+| Gegenprobe | eigene Perzentile je Tag und Tagesschleife: dieselben Einstiege, **keine Überlappung über Klassen**, Bedingung am Signaltag immer erfüllt |
+| ⚠️ gefunden | die Sperre je Klasse (§37.6), korrigiert vor diesem Plan |
+
+⇒ *Ruhiger Boden* ist **fast nur ein Smallcap-Merkmal**. Die Kosten der Klasse S (6,4 % Hin und Rück, §32.1 D) werden entscheidend.
+
+### 40.2 Festlegungen (vorab; Rechnung `k3_messung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Grundgesamtheit | wie §37 (Watchlist-Klassen des Monats, Umlauf Stufe 3, ohne BTC/ETH/SOL), Kurse bis 20.09.2026 |
+| **Signal** | am Tagesschluss d: Schwankung 90 T **und** Tiefe (Schluss / Allzeithoch) je im **unteren Fünftel** des Tagesquerschnitts (≥ 30 Coins mit Wert) |
+| Einstieg / Ausstieg | Kauf zum Schluss d + 1 · **Zeitgrenze 30 T** · **eine Sperre je Coin über alle Klassen** · Klasse am Signaltag |
+| Zielgröße | Ertrag **gegen BTC** über dieselbe Haltedauer, brutto (Regel 2); Kosten getrennt je Klasse |
+| **Haupt-Hypothese** | **alle Klassen gemeinsam** (so wurde sie 2023 gefunden); je Klasse nur Auskunft |
+| Gewichtung | Korb je Monat, dann Mittel über die Monate |
+| Schwelle | **0,975** — die K-Suche prüft mehrere Kandidaten nacheinander (K-1 bis K-4), dazu der Strang (M1) |
+| **Trägt (ab 2024)** | (1) Korb > 0, Block-Bootstrap über Monate (2.000, Blöcke zu 3) ≥ 0,975; (2) **Nullwelt**: je Einstieg ein zufälliger Coin **derselben Klasse ohne Signal am selben Tag**, gleicher Ausstieg (200), Rang ≥ 0,975; (3) **Spiegelprobe**: (Läufe ×1,3 / Abstürze ≤ 1/1,3) der Einstiege gegen dasselbe der Nullwelt > 1; (4) ≥ 20 Einstiege an ≥ 6 Monaten |
+| zweiseitig | Korb < 0 und Bootstrap ≤ 0,025 → **SCHADET** |
+| **Lohnt nach Kosten** | Korb minus mittlere Kosten der Einstiege (nach Klasse) > 0 |
+| Selbsttest | (a) Zufalls-Signal (gleich viele zufällige Coins je Tag und Klasse) 100 Welten → Fehlalarm ≤ 2,5 %; (b) gepflanzt (nur Einstiege mit späterem Vorsprung ≥ +10 %) → muss tragen; besteht (a) nicht → Urteil gilt nicht |
+| Auskunft (nach dem Urteil) | je Klasse H/M/S mit Kosten; Jahre 2024/2025/2026; Zeitgrenze 15 / 60 T; Marke X2; BTC-Lage am Signaltag; Dominanz-Spitze (§33); Weglassprobe ohne die 5 größten Beiträge; nur Bitpanda-handelbare Coins; *Ende gegen alle* wie in der Vorprüfung |
+
+### 40.3 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis | Folge |
+|---|---|
+| **trägt und lohnt nach Kosten** | **Rolle K bekommt einen Einstieg:** Ereignis-Mail *„Ruhiger Boden <Coin>: tief gefallen und ruhig; Ausstieg nach 30 T; gemessen +x Pp gegen BTC, besser als Zufall“*; der Rollen-Dialog (Stufe 2, E-90) wird gebaut; Bau nach Abstimmung |
+| trägt brutto, die Kosten fressen es | kein K-Signal. Je Klasse ausgewiesen: Lohnt es nur in H/M, ist das eine Fassung n+1, nur vorwärts prüfbar. *Ruhiger Boden* bleibt als **Merkmal** für die L-Auswahl im Season-Klima (§35.3) |
+| nicht entscheidbar | Vorwärtsprotokoll |
+| trägt nicht / schadet | weiter mit **K-1 / K-2** (Rally-Einstieg nach Dominanz-Spitze) |
+
+⚠️ **Ehrliche Erwartung, vorab:**
+- 84 % der Einstiege sind Smallcaps; nach Kosten braucht es dort über 6,4 Pp Vorsprung.
+- Die Vorprüfung zeigte +2,3 Pp gegen **alle** Coins (nicht gegen BTC) im Aufwärtsjahr 2023.
+- Am wahrscheinlichsten ist *trägt brutto vielleicht, lohnt nicht nach Kosten*.
