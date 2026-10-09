@@ -28,7 +28,11 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                # R-4 (E-51, 03.10.2026): die Rollen-Kette (Spot) anhalten, ohne den alten Weg freizugeben - Vorgabe: sie laeuft
                spot_kette_angehalten=False,
                # O29 (E-83/E-84, 08.10.2026): Binance-Ankuendigung als Fakt in der Signalmail + Vorwaertsprotokoll - Vorgabe AUS
-               ankuendigung_aktiv=False)
+               ankuendigung_aktiv=False,
+               # H15 (09.10.2026, Nutzer: *"Ja H15 zuerst, Warnung bei 15 % Abstand"*): Fuehrung ECHTER Hebelpositionen im
+               # Abgleich-Lauf (unabhaengig von der Rollen-Kette) und die Warnschwelle Abstand Kurs -> geschaetzte Liquidation
+               hebelfuehrung_aktiv=True,
+               liquidations_warnung_abstand=0.15)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -52,6 +56,11 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: testwoche_freigegeben muss true oder false sein")
     if not isinstance(werte["ankuendigung_aktiv"], bool):
         raise ValueError("regel0_betrieb.yaml: ankuendigung_aktiv muss true oder false sein")
+    if not isinstance(werte["hebelfuehrung_aktiv"], bool):
+        raise ValueError("regel0_betrieb.yaml: hebelfuehrung_aktiv muss true oder false sein")
+    if not (0 < float(werte["liquidations_warnung_abstand"]) < 1):
+        raise ValueError("regel0_betrieb.yaml: liquidations_warnung_abstand als Anteil zwischen 0 und 1 (z. B. 0.15)")
+    werte["liquidations_warnung_abstand"] = float(werte["liquidations_warnung_abstand"])
     werte["testwoche_bis"] = str(werte["testwoche_bis"] or "")
     if werte["testwoche_bis"] and len(werte["testwoche_bis"]) != 10:
         raise ValueError("regel0_betrieb.yaml: testwoche_bis als JJJJ-MM-TT oder leer")

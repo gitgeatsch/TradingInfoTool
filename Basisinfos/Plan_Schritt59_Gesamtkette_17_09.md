@@ -2444,3 +2444,9 @@ Gesamtliste: `Voranalyse_Schritt7_Betrieb_02_10.md` §11 bis §15.
 - (b) gezieltes, gepaartes LLM-Rückspiel nach N5 als Kandidat für Fassung 0.3.
 
 Schritt7 §23.24.
+
+**Nachtrag 09.10.2026 (28) — Betriebsprüfung und H15:**
+- Testwoche bis 09.10. an der Kopie grün außer L1: BEAMX (Sperre, behoben) und BNB (markt 135 s > Zeitgrenze, trader still übersprungen → H14).
+- K-WD-1 ✔, K-F02 ✔.
+- **Lücke:** Die Hebelführung echter Positionen lief seit dem Halt der Rollen-Kette nicht.
+- **H15** gebaut (E-88, Schritt7 §23.29–§23.30): Abgleich-Lauf, Warnung ab 15 % Abstand zur Liquidation, Prüfstand 11/11, Gegenprobe 6/6, Suite 78/78. Wirksam nach der Freigabe, vor O29.

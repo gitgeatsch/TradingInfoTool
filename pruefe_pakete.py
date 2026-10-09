@@ -31483,6 +31483,17 @@ def paket_regel0_betrieb() -> None:
         pruefe(P, "O29: der Abrufer-Job prueft Schalter UND Betriebsgeraet (betrieb_erlaubt), die Mail liest nur die Ablage",
                "def binance_ankuendigungen_job" in _bq29 and "BA.aktiv()" in _bq29 and "NL.betrieb_erlaubt(NL.DATEN_VORGABE)" in _bq29
                and "ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r)" in _bq29)
+        # H15 (09.10.2026, Schritt7 §23.29): Fuehrung ECHTER Hebelpositionen im Abgleich-Lauf - lief seit dem Halt der Rollen-Kette
+        # (05.10.) gar nicht. Am PFAD _hebelfuehrung_lauf an einer Wegwerf-DB (Stufen 15/10/5 %, Tagessperre, Versand gescheitert,
+        # Schalter, Betriebsgeraet, Standard-DB unberuehrt) - und der Aufruf steht VOR dem Halt der Kette.
+        import h15_pruefstand as _H15
+        import contextlib as _cl15
+        with _cl15.redirect_stdout(io.StringIO()):
+            _ok15 = _H15.main()
+        pruefe(P, "H15: Hebelfuehrung im Abgleich-Lauf - Pruefstand am Pfad (11 Faelle, Wegwerf-DB, Standard-DB unberuehrt)", _ok15)
+        pruefe(P, "H15: der Aufruf _hebelfuehrung_lauf steht im Abgleich VOR dem Halt der Rollen-Kette, Schalter an, Schwelle 15 %",
+               _bq29.index("_hebelfuehrung_lauf(conn_factory)\n") < _bq29.index("if _R0G_spot.spot_kette_angehalten():")
+               and _G29.lade().get("hebelfuehrung_aktiv") is True and abs(_G29.lade().get("liquidations_warnung_abstand") - 0.15) < 1e-12)
         pruefe(P, "E-80: der N4-Laeufer laedt die EINGEFRORENE 0.1e, nicht den Betriebskatalog",
                'KATALOG_PFAD = os.path.join(os.path.dirname(HIER), "regel0_llm_0_1e_n4.yaml")' in _n4 and "K = L.lade(KATALOG_PFAD)" in _n4
                and "K = L.lade()\n" not in _n4)

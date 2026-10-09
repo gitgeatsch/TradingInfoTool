@@ -275,6 +275,12 @@ def _inhalt() -> int:
             for r in offen:
                 print("    %-8s %-5s %-10s Hebel %4.1f · Wert %8.0f · Eigenkapital %7.0f · seit %s · Liq. geschaetzt %s" % (
                     r[0], r[1], r[2], r[3] or 0, r[4] or 0, r[5] or 0, str(r[7])[:16], r[8]))
+            # H15 (09.10.2026): was die Hebelfuehrung gemeldet hat (Schluessel hebelfuehrung:<id>:<Empfehlung>:<Stufe>:<Tag>)
+            try:
+                hf = c.execute("SELECT job_id, zuletzt_am FROM job_laeufe WHERE job_id LIKE 'hebelfuehrung:%' ORDER BY zuletzt_am DESC LIMIT 8").fetchall()
+                print("HEBELFUEHRUNG (H15) gemeldet: %d Zustaende%s" % (len(hf), "".join("\n    %s · %s" % (j, str(z)[:16]) for j, z in hf)))
+            except sqlite3.Error as ex:
+                print("  ⛔ Hebelfuehrung nicht lesbar: %s" % ex)
             pw = c.execute("SELECT datum, wert_eur, cash_eur FROM portfolio_wert_historie ORDER BY datum DESC LIMIT 3").fetchall()
             print("PORTFOLIOWERT (letzte 3 Tage): " + " · ".join("%s %.0f EUR (Cash %.0f)" % (d, w or 0, ca or 0) for d, w, ca in pw))
             c.close()

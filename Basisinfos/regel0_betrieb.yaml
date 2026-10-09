@@ -35,3 +35,8 @@ spot_kette_angehalten: true    # GESETZT 05.10.2026 (Nutzer: *Schalter A setzen*
 # Signale (agent/binance_ankuendigungen.py, Voranalyse_Schritt7 Par. 23.24/23.28). Vorgebaut mit Schalter AUS - EINGESCHALTET wird erst
 # nach der Testwoche (Freigabe). Wird je Lauf gelesen, kein Neustart noetig. Aus = kein Abruf, keine Mailzeile, kein Protokoll.
 ankuendigung_aktiv: false
+# H15 (09.10.2026, Nutzer: "Ja H15 zuerst, Warnung bei 15 % Abstand", Schritt7 §23.29): Fuehrung ECHTER Hebelpositionen
+# im Abgleich-Lauf (alle 15 min, unabhaengig von der Rollen-Kette); Mail bei Abstand Kurs -> Liquidation unter der Schwelle,
+# Stufen 15 / 10 / 5 % (jede tiefere sofort, dieselbe hoechstens einmal am Tag). Nur am Betriebsgeraet.
+hebelfuehrung_aktiv: true
+liquidations_warnung_abstand: 0.15

@@ -18,6 +18,13 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 09.10.2026 — die Hebelführung hing an der angehaltenen Kette (H15)
+>
+> | Hier steht | Stand seit 09.10.2026 |
+> |---|---|
+> | Hebelführung echter Positionen (`agent/hebelfuehrung.py`) als Teil des Rollen-Umlaufs (`rollen_lauf.py:981`) | Seit dem Halt der Kette (05.10.) lief sie **nicht**. Jetzt läuft sie im **Abgleich** (`hebel_screening_job` → `_hebelfuehrung_lauf`) nach dem Positionsabgleich und **vor** dem Halt, alle 15 min, Mail nur am Betriebsgerät. Neu: *LIQUIDATION NAHE* ab 15 % Abstand (Stufen 15 / 10 / 5 %). Schritt7 §23.29–§23.30, E-88 |
+> | Nachtrag 05.10.: *„Weiter laufen REGEL0, Stop-Nachzieh 07:15, Bitpanda-Abgleich“* | stimmt, aber die **Hebelführung lief nicht mit**; das war bei der Stilllegung übersehen |
+>
 > ## ⚠️ NACHTRAG 05.10.2026 — Scheduler und Schalter
 >
 > | Hier fehlt | Stand seit 05.10.2026 |

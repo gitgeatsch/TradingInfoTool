@@ -4250,6 +4250,73 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         logger.exception("Multi-Asset-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
+def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
+    """H15 (09.10.2026, Schritt7 §23.29): die Fuehrung ECHTER Hebelpositionen - im Abgleich-Lauf, nicht in der Rollen-Kette.
+
+    WARUM HIER: `agent/hebelfuehrung.py` wurde bis 09.10. nur in `rollen_lauf` aufgerufen; seit dem Halt der Kette (05.10., E-67)
+    lief es nicht - eine offene BTC-Position (3x) hatte keine Fuehrung und keine Warnung. Der Lauf steht jetzt direkt NACH dem
+    Abgleich und den Liquidationspreisen und VOR dem Halt der Kette (`spot_kette_angehalten`).
+
+    WAS: alle offenen Positionen fuehren (`HF.lade`, mit der Warnschwelle `liquidations_warnung_abstand`), die NEUEN Meldungen
+    (`HF.neue_meldungen`: je Position, Empfehlung, Stufe und Tag) als EINE Mail; vermerkt wird NUR bei Zustellung.
+    Doppelte Mails mit einer wieder laufenden Kette verhindert derselbe Schluessel (wer zuerst vermerkt, meldet).
+
+    NUR mit Schalter `hebelfuehrung_aktiv` und NUR am Betriebsgeraet (`betrieb_erlaubt`) - ein laufender Desktop mailt nicht.
+    Scheitert nie nach aussen. `versand` (Pruefstand): Ersatz fuer send_notification_email(betreff, text) -> bool."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.hebelfuehrung as _HF
+        import agent.regel0_groesse as _G
+        import agent.regel0_nachlader as _NL
+        werte = _G.lade()
+        if not werte["hebelfuehrung_aktiv"]:
+            aus["grund"] = "Schalter aus"
+            return aus
+        if versand is None:
+            erlaubt, grund = _NL.betrieb_erlaubt(_NL.DATEN_VORGABE)
+            if not erlaubt:
+                logger.info("Hebelfuehrung: uebersprungen - %s", grund)
+                aus["grund"] = grund
+                return aus
+        conn = conn_factory()
+        try:
+            trades = _HF.lade(conn, nahe_grenze=werte["liquidations_warnung_abstand"])
+            neu = _HF.neue_meldungen(conn, trades)
+            stand = None
+            try:
+                from agent import hebel_abgleich as _HA
+                stand = _HA.positionsstand_zeile(_HA.frische(conn))
+            except Exception:                                        # noqa: BLE001
+                logger.warning("Hebelfuehrung: Stand des Abgleichs nicht lesbar", exc_info=True)
+            mail = _HF.sammel_mail(neu, zeitpunkt=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), positionsstand=stand)
+            zugestellt = None
+            if mail:
+                if versand is not None:
+                    zugestellt = bool(versand("TradingInfoTool: " + mail[0], mail[1]))
+                else:
+                    import config as config_module
+                    from api.email_notify import send_notification_email
+                    email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
+                    empfaenger = email_cfg.get("empfaenger") if email_cfg.get("aktiv", False) else None
+                    zugestellt = bool(empfaenger) and bool(send_notification_email("TradingInfoTool: " + mail[0], mail[1], empfaenger))
+                if zugestellt:
+                    _HF.vermerke(conn, neu)
+                    conn.commit()
+            logger.info("Hebelfuehrung: %d offen%s · gemeldet %d%s", len(trades),
+                        "".join(" · %s %s Abstand %s" % (x["symbol"], x.get("empfehlung"),
+                                                        ("%.1f %%" % (100 * x["abstand_liquidation"])) if x.get("abstand_liquidation") is not None else "?")
+                                for x in trades),
+                        len(neu) if zugestellt else 0, "" if not mail else (" (Mail %s)" % ("zugestellt" if zugestellt else "NICHT zugestellt")))
+            aus.update(gelaufen=True, offen=len(trades), neu=len(neu), mail=mail, zugestellt=zugestellt,
+                       empfehlungen=[(x["symbol"], x.get("empfehlung"), x.get("abstand_liquidation"), x.get("nahe_stufe")) for x in trades])
+        finally:
+            conn.close()
+    except Exception:                                                # noqa: BLE001
+        logger.exception("Hebelfuehrung: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
 def _refresh_hebel_position_liquidation_prices(conn) -> None:
     """Fuer jede aktuell offene Margin-Position den geschaetzten Liquidationspreis
     mit den ECHTEN verstrichenen Tagen neu berechnen (2026-07-14, Phase 3) -
@@ -4418,6 +4485,9 @@ def hebel_screening_job(
             # Grenze 1 Stunde 15.09.). Die Warnung oben steht je Lauf im Log -
             # ein ANHALTENDER Ausfall bekommt eine Mail.
             _pruefe_hebel_abgleich(conn_factory)
+            # H15 (09.10.2026): Fuehrung ECHTER Hebelpositionen - hier, direkt nach Abgleich und Liquidationspreisen und VOR dem
+            # Halt der Rollen-Kette weiter unten; vorher lief sie nur in der Kette und seit deren Halt (05.10.) gar nicht.
+            _hebelfuehrung_lauf(conn_factory)
 
         # 2026-07-26 (Groq-Entfernung): frueher an "groq_client is not None"
         # gegated, weil Groq urspruenglich die einzige zwingende Voraussetzung

@@ -2738,3 +2738,50 @@ Kontrolle **K-WD-1**: Danach läuft genau ein Watchdog. Nach dem nächsten *„B
   - (c) Plan aus dem REGEL0-Signal, wenn es eines gibt; sonst *eigene Position ohne Plan*.
   - Die Grenze für (a) wird als Fakt gesetzt und begründet, nicht optimiert.
   - Bau frühestens nach der Testwoche (10.10.), eine NB-Änderung zur Zeit. Reihenfolge zu O29 legt der Nutzer fest.
+
+### 23.30 H15 gebaut — Hebelführung echter Positionen im Abgleich-Lauf (09.10.2026; E-88)
+
+Nutzer 09.10.: *„Ja H15 zuerst, Warnung bei 15 % Abstand“* · *„wie immer prüfen, gegenprüfen und Doku“*.
+
+**Voranalyse am Code:**
+- `agent/hebelfuehrung.py` ist vollständig und rein (`lade`, `fuehre`, `neue_meldungen`, `vermerke`, `sammel_mail`), war aber **nur** in `rollen_lauf.py:981` verdrahtet.
+- Einer Position **ohne Plan** (eigene Position) meldete es erst bei **erreichter** Liquidation, also zu spät.
+- Der Kurs kommt aus `price_cache` (`positionsfuehrung.kurs_mit_stand`); der Stand des Kurses steht in der Mail.
+- Die Positionen aktualisiert `sync_hebel_positions` im 15-Minuten-Lauf `hebel_screening_job`, danach `_refresh_hebel_position_liquidation_prices`.
+
+**Gebaut (Entscheidungen, die fachlich zu treffen waren, offen ausgewiesen):**
+
+| | |
+|---|---|
+| neue Empfehlung | **LIQUIDATION NAHE**: Abstand Kurs → geschätzte Liquidation unter der Schwelle, **auch ohne Plan**; Dringlichkeit direkt nach *LIQUIDATION ERREICHT* |
+| Schwelle | `liquidations_warnung_abstand: 0.15` in `regel0_betrieb.yaml` (Nutzer), geprüft beim Laden (0 < x < 1) |
+| Warnstufen | 15 / 10 / 5 % (Anteile der Schwelle). Jede **tiefere** Stufe meldet sofort, dieselbe Stufe höchstens **einmal am Tag** (Schlüssel `hebelfuehrung:<id>:<Empfehlung>:stufe<x>:<Tag>`) |
+| wo | `scheduler.background._hebelfuehrung_lauf`, aufgerufen im Abgleich **nach** Abgleich und Liquidationspreisen und **vor** dem Halt der Rollen-Kette, also alle 15 min |
+| wann gemailt | nur mit Schalter `hebelfuehrung_aktiv: true` und nur am **Betriebsgerät** (`regel0_nachlader.betrieb_erlaubt`), damit ein laufender Desktop nicht mailt; vermerkt nur bei **Zustellung** |
+| Doppelmail | läuft die Rollen-Kette wieder, verhindert derselbe Schlüssel die zweite Mail (wer zuerst vermerkt, meldet) |
+| Protokoll | je Lauf eine Zeile *„Hebelfuehrung: n offen · BTC <Empfehlung> Abstand x % · gemeldet m“* |
+| Teilexport | Abschnitt *HEBELFUEHRUNG (H15) gemeldet* (Schlüssel aus `job_laeufe`, nur lesend) |
+
+**Prüfung und Gegenprüfung:**
+- `h15_pruefstand.py` **11/11**, am Pfad `_hebelfuehrung_lauf`, Wegwerf-DB, Ersatz-Versand:
+  - kein Alarm über der Schwelle; Stufe 15 / 10 / 5 % je einmal;
+  - dieselbe Stufe am selben Tag still; gescheiterter Versand → nicht vermerkt, beim nächsten Lauf gemeldet;
+  - Liquidation erreicht; am nächsten Tag wieder meldepflichtig;
+  - Schalter aus → kein Lauf; am Desktop übersprungen ohne Vermerk;
+  - Mailtext mit Einstand, Liquidation, Abstand und *„Entscheidung liegt bei dir“*;
+  - **Standard-DB unverändert** (Zeitstempel und Größe).
+- `h15_gegenprobe.py` **6/6**, eigener Rechenweg:
+  - Einstand 73.582,04 € = 1.500 / 0,02038541; Abstand = (Kurs − Liquidation) / Kurs;
+  - Warnstufen in zweiter Umsetzung über 301 Werte, 0 Abweichungen;
+  - Schlüssel je Stufe und Tag;
+  - der alte Aufruf der Kette passt weiter und warnt mit der Vorgabe 15 %;
+  - falsche Schalterwerte brechen ab;
+  - der Exportabschnitt liest nur.
+- Suite: Paket Regel0Betrieb **78/78** (2 neue Prüfungen H15: Prüfstand am Pfad; Aufruf vor dem Halt, Schalter, Schwelle), Register 15/15, Abbildung 10/10.
+
+**Betrieb:**
+- Wirksam mit dem nächsten Pull und Neustart am NB. Laut Nutzer **vor O29** und erst **nach** der Freigabe der Testwoche (10.10.), eine NB-Änderung zur Zeit.
+- Danach gilt **Kontrolle K-H15-1** (Teilexport nach ~30 min):
+  - im Protokoll je 15 min die Zeile *Hebelfuehrung: … BTC … Abstand …*;
+  - keine Zeile *Hebelfuehrung: Lauf fehlgeschlagen*;
+  - bei Abstand über 15 % keine Mail; der Exportabschnitt vorhanden.

@@ -53,6 +53,17 @@ Hebel bei der Eroeffnung deckelt (Regel 4 betrifft Einstiegssignale; das
 hier ist der Schutz des Stops einer bestehenden Position).
 
 ADVISORY-ONLY (P-7): es rechnet und meldet. Keine Handels-API, kein Auftrag.
+
+H15 (09.10.2026, Nutzer: *"Ja H15 zuerst, Warnung bei 15 % Abstand"*, Schritt7 §23.29):
+    LIQUIDATION NAHE  der Kurs liegt naeher als die Warnschwelle (Vorgabe 15 %,
+                      regel0_betrieb.yaml) an der geschaetzten Liquidation -
+                      auch OHNE Plan (eigene Position). Warnstufen 15 / 10 / 5 %:
+                      jede tiefere Stufe meldet sofort, dieselbe Stufe hoechstens
+                      einmal am Tag (`schluessel`). Ein FAKT zum Schutz der
+                      Position (RM-11), kein Einstiegs- oder Ausstiegssignal.
+    ⚠️ Bis 09.10. wurde dieses Modul NUR in der alten Rollen-Kette aufgerufen; seit
+    deren Halt (05.10., E-67) lief es gar nicht. Der Aufruf steht jetzt im
+    Abgleich-Lauf (`scheduler.background._hebelfuehrung_lauf`), VOR dem Halt.
 """
 from __future__ import annotations
 
@@ -64,16 +75,27 @@ from agent.ausstiegsrechnung import HALTEN, SCHLIESSEN, STOP_NACHZIEHEN
 logger = logging.getLogger(__name__)
 
 LIQUIDIERT = "LIQUIDATION ERREICHT"
+LIQ_NAHE = "LIQUIDATION NAHE"
 HEBEL_SENKEN = "HEBEL SENKEN"
 KURS_FEHLT = "KURS FEHLT"
 
 # Dringlichkeit, nicht Wichtigkeit - dieselbe Ordnung wie in der
 # Ausstiegsrechnung: was die Position beendet, steht vor dem, was sie aendert.
-DRINGLICHKEIT = (LIQUIDIERT, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT,
+DRINGLICHKEIT = (LIQUIDIERT, LIQ_NAHE, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT,
                  STOP_NACHZIEHEN, HALTEN)
 # Was eine Mail ausloest. HALTEN nicht - eine taegliche "nichts zu tun"-Mail
 # erzieht dazu, die Mail nicht mehr zu oeffnen (`ausstiegs_job`).
-MELDEN = (LIQUIDIERT, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT, STOP_NACHZIEHEN)
+MELDEN = (LIQUIDIERT, LIQ_NAHE, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT, STOP_NACHZIEHEN)
+# H15: Warnschwelle (Vorgabe; der Betrieb liest `liquidations_warnung_abstand` aus regel0_betrieb.yaml) und ihre Stufen
+LIQ_NAHE_GRENZE = 0.15
+LIQ_STUFEN = (1.0, 2.0 / 3.0, 1.0 / 3.0)          # Anteile der Schwelle: 15 / 10 / 5 %
+
+
+def nahe_stufe(abstand: float | None, grenze: float) -> float | None:
+    """Die Warnstufe (als Abstand, z. B. 0.10) - die kleinste Stufe, unter der der Abstand liegt; None ueber der Schwelle."""
+    if abstand is None or abstand < 0 or not grenze or abstand >= grenze:
+        return None
+    return min(round(grenze * s, 4) for s in LIQ_STUFEN if abstand < grenze * s)
 
 # WIE WEIT EIN SIGNAL VOR DER EROEFFNUNG LIEGEN DARF, um als ihr Plan zu gelten.
 #
@@ -196,7 +218,7 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
            eigenkapital_eur: float | None, positionsmenge: float | None,
            kurs_eur: float | None, jetzt=None, plan: dict | None = None,
            marge: float | None = None, kurs_stand: str | None = None,
-           position_id=None) -> dict:
+           position_id=None, nahe_grenze: float | None = None) -> dict:
     """Die Fuehrung EINER Position - REIN, ohne DB, Uhr (ausser `jetzt`) oder
     Netz. Alle Betraege in EUR."""
     from agent import ausstiegsrechnung as AR
@@ -278,6 +300,19 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
             "Position ist wahrscheinlich aufgeloest - in der Bitpanda-App "
             "pruefen. Die Schaetzung ist bewusst vorsichtig: sie meldet eher "
             "zu frueh als zu spaet.")
+    else:
+        # H15: LIQUIDATION NAHE - auch ohne Plan, denn die Liquidation braucht keinen
+        grenze = LIQ_NAHE_GRENZE if nahe_grenze is None else float(nahe_grenze)
+        stufe = nahe_stufe(t.get("abstand_liquidation"), grenze)
+        if stufe is not None:
+            t["empfehlung"] = LIQ_NAHE
+            t["nahe_stufe"] = stufe
+            t["gruende"].append(
+                "Der Kurs liegt nur noch %s %% %s der geschaetzten Liquidation (etwa %s EUR) - "
+                "Warnschwelle %s %%, Stufe %s %%. Eigenkapital nachschiessen, Hebel senken oder "
+                "schliessen: die Entscheidung liegt bei dir. Die Schaetzung ist bewusst vorsichtig."
+                % (_de(100.0 * t["abstand_liquidation"], 1), "unter" if ist_short else "ueber",
+                   _de(liq, 0), _de(100.0 * grenze, 0), _de(100.0 * stufe, 0)))
 
     if not plan:
         from agent.hebel_aggregat import STOP_ANGENOMMEN
@@ -324,7 +359,7 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
             t["hebel_sicher_heute"] = lmax
             t["nachschuss_eur"] = max(0.0, pw / lmax - (ek or pw / L))
 
-    if t["empfehlung"] in (LIQUIDIERT, KURS_FEHLT):
+    if t["empfehlung"] in (LIQUIDIERT, LIQ_NAHE, KURS_FEHLT):
         return t
 
     bew_empf = str((bew or {}).get("empfehlung") or "")
@@ -378,7 +413,7 @@ def _rang(t: dict) -> tuple:
     return (stufe, -(t.get("positionswert_eur") or 0.0))
 
 
-def lade(conn, symbole=None, jetzt=None, marge: float | None = None) -> list:
+def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze: float | None = None) -> list:
     """Alle OFFENEN Hebelpositionen, gefuehrt - dringendste zuerst.
 
     ⚠️ `conn` wird uebergeben, nie hier geoeffnet (dieselbe Regel wie
@@ -407,7 +442,7 @@ def lade(conn, symbole=None, jetzt=None, marge: float | None = None) -> list:
             kreditbetrag_eur=p.kreditbetrag_eur,
             eigenkapital_eur=p.eigenkapital_eur,
             positionsmenge=p.positionsmenge, kurs_eur=kurs, kurs_stand=stand,
-            jetzt=jetzt, plan=plan, marge=marge, position_id=p.id))
+            jetzt=jetzt, plan=plan, marge=marge, position_id=p.id, nahe_grenze=nahe_grenze))
     return sorted(aus, key=_rang)
 
 
@@ -495,6 +530,8 @@ def schluessel(t: dict, tag: str) -> str:
     stop_neu = (t.get("bewertung") or {}).get("stop_empfohlen")
     zusatz = ("%.6g" % stop_neu if t.get("empfehlung") == STOP_NACHZIEHEN
               and stop_neu else "")
+    if t.get("empfehlung") == LIQ_NAHE and t.get("nahe_stufe") is not None:
+        zusatz = "stufe%.4g" % t["nahe_stufe"]          # H15: jede tiefere Warnstufe ist eine NEUE Meldung
     return "hebelfuehrung:%s:%s:%s:%s" % (
         t.get("position_id") or t.get("symbol"), t.get("empfehlung"), zusatz,
         tag)

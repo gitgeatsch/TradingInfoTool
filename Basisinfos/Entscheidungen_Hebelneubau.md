@@ -1013,3 +1013,14 @@ Schritt7 §23.24.
 - Die Klasse gilt nur für den **K-Einstieg**: H Hauptprüfung, M eigene Prüfung, S über C2. Führung, Rolle und Preis gelten für **jeden** Bestand.
 - Die 11 Krypto-Bestände außerhalb des Binance-Spot-Universums werden über Prod-Kurse und O26 eingebunden.
 - Reihenfolge §36.2. Der Hebel hat Vorrang (P5 am 10.10.).
+
+
+# E-88 · H15: Hebelführung echter Positionen zuerst, Warnung bei 15 % Abstand zur Liquidation (09.10.2026)
+
+**09.10.2026** · Nutzer: *„Ja H15 zuerst, Warnung bei 15 % Abstand“* (Anlass: die Führung echter Hebelpositionen lief seit dem Halt der Rollen-Kette am 05.10. nicht; offene BTC LONG 3× des Nutzers ohne Führung und Warnung, Schritt7 §23.29).
+
+**Festgelegt:**
+- H15 vor O29.
+- Warnschwelle 15 % Abstand Kurs → geschätzte Liquidation, Stufen 15 / 10 / 5 % (fachlich gesetzt, §23.30).
+- Ein Fakt zum Schutz der Position (RM-11), kein Handelssignal; Entscheidung und Handlung beim Nutzer.
+- Wirksam erst nach der Freigabe der Testwoche, eine NB-Änderung zur Zeit.

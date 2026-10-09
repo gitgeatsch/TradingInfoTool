@@ -1726,6 +1726,12 @@ wäre im schlimmsten Fall selbst mitbetroffen.
   - Am 08.10. 09:06 Ortszeit beendete ein Neustart den laufenden REGEL0-Lauf; die Stunde fehlte im Lauf-Protokoll.
   - Die Stunde geht nicht verloren: Der nächste Lauf rechnet sie als *endgültig*, dazu kommt N-1 (bis 3 h nachholen).
   - Ein Schalter-Signal dieser Stunde käme aber rund eine Stunde später als gemessen.
+- ⚠️ **Hebelführung echter Positionen (H15, 09.10.2026, E-88):**
+  - Seit dem Halt der Rollen-Kette (05.10.) bekamen echte Hebelpositionen **keine** Führung und keine Warnung, weil die Führung nur in der Kette verdrahtet war.
+  - Jetzt prüft der Abgleich-Lauf alle 15 min jede offene Position.
+  - **Bei weniger als 15 % Abstand zwischen Kurs und geschätzter Liquidation kommt eine Mail** (*Hebelfuehrung: LIQUIDATION NAHE …*), bei 10 % und 5 % sofort erneut, dieselbe Stufe höchstens einmal am Tag. Dazu kommt *LIQUIDATION ERREICHT*.
+  - Die Mail nennt Einstand, Kurs mit Stand, Liquidation, Abstand, Finanzierung. Die Entscheidung (nachschießen, Hebel senken, schließen) liegt bei dir; das System handelt nicht.
+  - Schalter `hebelfuehrung_aktiv`, Schwelle `liquidations_warnung_abstand` in `Basisinfos/regel0_betrieb.yaml`.
 - ⚠️ **Korrektur 08.10.2026 – Geister-Watchdogs** (Befund NB: 40 Watchdog-Prozesse seit 20.09.):
   - Ursache: `pystray.Icon.stop()` setzt `icon.visible` **nicht** auf False. Die Überwachungsschleife (`while icon.visible`) lief nach *„Beenden“* endlos weiter und hielt den Prozess am Leben; die PID-Datei war da schon gelöscht, der nächste Start ließ sich durch.
   - Seitdem hängt die Schleife an einem Ende-Ereignis.

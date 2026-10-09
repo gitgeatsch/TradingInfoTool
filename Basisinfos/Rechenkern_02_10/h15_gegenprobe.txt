@@ -1,0 +1,8 @@
+G1  gleich  Einstand 73582.04 · Liquidation 53927 · Abstand 0.1302
+G2  gleich  301 Werte, Abweichungen 0 []
+G3  gleich  hebelfuehrung:7:LIQUIDATION NAHE:stufe0.15:2026-10-09
+G4  gleich  alter Aufruf unveraendert; Empfehlung bei 60.000: LIQUIDATION NAHE
+G5  gleich  falsche Werte ohne Abbruch: 0
+G6  gleich  Exportabschnitt liest nur
+
+6 von 6 gleich
