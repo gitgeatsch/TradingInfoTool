@@ -4610,3 +4610,48 @@ Nutzer 08.10.: *„Ja, Bauumfang Spot vorbereiten, prüfen und gegenprüfen. Hin
 |---|---|
 | **Stufe 1** | A1, A2, B1, B2, B3 (mit D2), C1 (mit D1), C2, D5, D6, D7, D8 — das ist der Teil, der dir **heute** hilft: dein Bestand mit Rolle, Preis, Mitnahme, Verkaufsanlässen und Ampel |
 | Stufe 2 | A3 (Kandidatenliste), A4 (Schatten), C3, D3, D4, A6 |
+
+### 39.1 Abstimmung Block A (09.10.2026; E-89)
+
+Nutzer 09.10.: *„A1 (a) – für K brauchen wir vorher eine Lösung, welche funktioniert. A2 – OK. A3 – wie und wo trage ich die Rolle ein, welche gibt es, u. U. eine Default-Rolle ab Start? A4 – bin ich nicht glücklich, hier sollten wir soweit möglich eine Lösung finden. A5 – JA. A6 ja mit B1.“*
+
+| Punkt | Stand |
+|---|---|
+| **A1** | ✔ **(a)** gemeinsamer Starttag für den Altbestand (Tag der Inbetriebnahme), neue Käufe ab Kauftag. Rollen Kern / L / Abbau. **K erst, wenn eine Lösung funktioniert** (→ A4) |
+| **A2** | ✔ Rollen-Vorschlag je Coin, du entscheidest; monatlich nur Hinweis, nie automatische Änderung |
+| **A3** | ◐ Grundsatz (L nur über die Ampel) nicht widersprochen. **Offen:** wo und wie die Rolle eingetragen wird, welche Rollen es gibt, Default ab Start → Vorschlag §39.2 |
+| **A4** | ⛔ *nur Schatten* reicht nicht. **Auftrag: eine funktionierende K-Lösung suchen**, soweit möglich → §39.3 |
+| **A5** | ✔ nichts zu tun (alte Kette seit 05.10. aus) |
+| **A6** | ✔ O19 für Spot abschalten **gleichzeitig mit B1**, vorher Leser/Schreiber prüfen |
+
+### 39.2 Vorschlag zu A3 — Rollen eintragen, Default ab Start
+
+| | Vorschlag |
+|---|---|
+| **Wo** | App, Tab *Portfolio*: Doppelklick auf die Position öffnet den vorhandenen Dialog (heute manueller Einstand, `ui/portfolio.AvgBuyPriceDialog`), erweitert um **Rolle** und **Starttag** |
+| **Rollen** | **Kern** (BTC, ETH, SOL; Akkumulation) · **L Season-Option** · **Abbau** · **offen** (noch nicht entschieden) · später **K**, sobald es eine Lösung gibt (§39.3). Aktien, ETFs und Stablecoins (EURCV) bekommen keine Spot-Krypto-Rolle |
+| **Default ab Start** | BTC, ETH, SOL automatisch **Kern**. Alle anderen Krypto-Bestände und jeder Neuzugang: **offen**. *Offen* wird **wie L geführt** (Mitnahme ×3, Preis gegen BTC, Verkaufsanlässe, also nur Schutz und Information) und steht in der Bestandsmail **oben** mit dem Rollen-Vorschlag (A2), bis du entscheidest |
+| **Warum nicht der Vorschlag als Default** | Dann entschiede das System still für dich (A2: du entscheidest). *Offen* lässt nichts durchfallen und entscheidet nichts |
+| **Starttag** | Altbestand: der gemeinsame Tag der Inbetriebnahme (A1 a); Neuzugang: der Tag, an dem der Abgleich ihn zuerst sieht; im Dialog änderbar |
+| **Ablage** | eigene Tabelle `spot_rolle` (Symbol, Rolle, Starttag, gesetzt am, Quelle *Vorgabe/Nutzer*), geschrieben **nur** aus dem Dialog und beim ersten Erkennen eines Bestands (*offen*/*Kern*) |
+
+### 39.3 Auftrag K-Lösung (A1/A4) — was noch offen ist und messbar wäre (Vorschlag, noch kein Messplan)
+
+**Bisher gemessen, trägt nicht** (ab 2024): Kursmerkmale (§35), Momentum je Klasse (§37), Ankündigungen (§38), Watchlist-Eintritt (§29).
+
+**Noch nicht geprüft, mit freien Daten messbar:**
+
+| # | Idee | warum sie Aussicht hat | Datenlage | Haken |
+|---|---|---|---|---|
+| **K-1** | **Rally-Einstieg (Ebene 2):** nach einer **Dominanz-Spitze** die stärksten H/M-Coins kaufen, Zeitgrenze 3–6 Wochen | Die Dominanz-Spitze ist der einzige Hinweis über dem Zufall (Lift 1,65, §33); Rallyes dauern 3–9 Wochen (§32); H-Momentum nach Spitze +6,3 Pp (§37) | BTCDOM ab 2023, Kurse ✔ | nur 16 Signale seit 2023 → ein Urteil braucht Vorwärtsdaten; ein Teil ist auf 2024+ gefunden |
+| **K-2** | **Gegenprobe der Rückschau auf 2023:** *H-Momentum nach Dominanz-Spitze* auf dem Jahr prüfen, auf dem es **nicht** gefunden wurde | eine unabhängige Periode, wenn auch klein | ✔ | 2023 ist ein Aufwärtsjahr, nur wenige Signale |
+| **K-3** | **Ruhiger Boden als K:** tief gefallen **und** ruhig (Richtung 1,90 auf 2023, §35) mit Zeitgrenze 30 T, Urteil ab 2024 | auf 2023 gewählt, ab 2024 noch ungeprüft = sauberer Test | ✔ | eher L-artig; kann zu langsam für K sein |
+| K-4 | **Kosten-bewusste Fassung:** nur Klasse H (0,36 % je Seite) | jede K-Regel scheiterte zusätzlich an den Kosten | ✔ | — |
+
+⇒ **Vorschlag Reihenfolge:**
+1. K-3: sauberer Test, schnell.
+2. K-1 + K-2: der Weg mit der meisten Aussicht, aber wenig Fälle.
+3. Wenn eines trägt, wird **K** eine Rolle mit eigener Führung (Zeitgrenze statt Marke, §31.7).
+4. Trägt nichts, bleibt K ruhend, und der Schatten aus A4 läuft vorwärts weiter.
+
+Messplan je Kandidat vorab, Nutzer-Ja.

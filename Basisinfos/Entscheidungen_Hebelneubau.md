@@ -1024,3 +1024,18 @@ Schritt7 §23.24.
 - Warnschwelle 15 % Abstand Kurs → geschätzte Liquidation, Stufen 15 / 10 / 5 % (fachlich gesetzt, §23.30).
 - Ein Fakt zum Schutz der Position (RM-11), kein Handelssignal; Entscheidung und Handlung beim Nutzer.
 - Wirksam erst nach der Freigabe der Testwoche, eine NB-Änderung zur Zeit.
+
+
+# E-89 · Spot §39 Block A abgestimmt (09.10.2026)
+
+**09.10.2026** · Nutzer: *„A1 (a) – für K brauchen wir vorher eine Lösung, welche funktioniert, A2 – OK, A3 – wie und wo trage ich die Rolle ein, welche gibt es u. U. eine Default-Rolle ab Start, A4 – bin ich nicht glücklich, hier sollten wir soweit möglich eine Lösung finden, A5 – JA, A6 ja mit B1.“*
+
+**Festgelegt:**
+- **A1:** gemeinsamer Starttag für den Altbestand; Rollen Kern / L / Abbau; K erst mit funktionierender Lösung.
+- **A2:** Rollen-Vorschlag je Coin, der Nutzer entscheidet.
+- **A5:** erledigt.
+- **A6:** O19 für Spot abschalten gleichzeitig mit B1.
+
+**Offen:**
+- A3 (Eintrag, Rollenliste, Default: Vorschlag §39.2 zur Abstimmung).
+- A4 → **Auftrag K-Lösung** (§39.3, Kandidaten K-1 bis K-4).
