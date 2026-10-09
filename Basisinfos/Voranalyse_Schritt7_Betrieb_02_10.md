@@ -2720,3 +2720,21 @@ Kontrolle **K-WD-1**: Danach läuft genau ein Watchdog. Nach dem nächsten *„B
 - (a) **`trader` zuerst**, `markt` danach (nur Auskunft);
 - (b) jedes Überspringen **mit Zeile** ablegen (`_merke(... "Zeitgrenze erreicht")`), damit L1 und der Export es sehen;
 - (c) die Zeitgrenze **je Rolle** statt gemeinsam.
+
+**Nachtrag 09.10. — K-WD-1 ✔ und eine Lücke in der Hebelführung (H15):**
+- Der Nutzer bestätigt: genau **ein** Watchdog läuft (K-WD-1 ✔), und BTC LONG 3× ist seine eigene Position (nicht aus der REGEL0).
+- **Befund am Code:** `agent/hebelfuehrung.py` (Führung **echter** Positionen: Liquidationsabstand, Finanzierung, Stop, Empfehlung als Mail) wird **nur** in der alten Rollen-Kette aufgerufen (`rollen_lauf.py:981`).
+- Diese Kette kehrt seit 05.10. vorher zurück (`scheduler/background.py:4478–4481`, `spot_kette_angehalten: true`, E-67; im 72-h-Protokoll 291-mal *Rollen-Kette ANGEHALTEN*).
+- ⇒ **Seit 05.10. gibt es für echte Hebelpositionen keine Führung und keine Warnung.**
+- Was weiter läuft:
+  - der Abgleich mit Bitpanda (alle 15 min);
+  - die Schätzung des Liquidationspreises (`_refresh_hebel_position_liquidation_prices`), nur als **Zahl** in der App;
+  - die 24-h-Erinnerung der REGEL0, aber nur für Positionen **aus einem REGEL0-Signal**.
+- BTC heute: Einstand 1.500 € / 0,02038541 = **73.582 €** je BTC, Liquidation geschätzt **53.907 €** (−26,7 %), kein Stop hinterlegt.
+- Bei der Stilllegung am 05.10. wurde *wer liest/schreibt das noch* für die Hebelführung nicht erkannt. Das ist ein Verstoß gegen die Regel *Stilllegung: wer SCHREIBT das noch*.
+- **H15 (Vorschlag zur Abstimmung):** Hebelführung von der alten Kette lösen, als eigener Job nach dem Abgleich.
+  - (a) **Liquidationswächter:** Ereignis-Mail, sobald der Abstand zur Liquidation unter eine Grenze fällt. Ein Fakt zum Schutz der Position (RM-11), kein Einstiegssignal.
+  - (b) Führungszeile je echter Position: Tage, Ergebnis, Finanzierung, Abstand.
+  - (c) Plan aus dem REGEL0-Signal, wenn es eines gibt; sonst *eigene Position ohne Plan*.
+  - Die Grenze für (a) wird als Fakt gesetzt und begründet, nicht optimiert.
+  - Bau frühestens nach der Testwoche (10.10.), eine NB-Änderung zur Zeit. Reihenfolge zu O29 legt der Nutzer fest.
