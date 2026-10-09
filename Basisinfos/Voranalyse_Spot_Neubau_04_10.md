@@ -4672,6 +4672,46 @@ Nutzer 09.10.: *„A3 ja so“* · *„Nur zur Default-Frage als deine Expertenm
 | Rollen-Dialog im Portfolio | **zurückgestellt** bis es eine zweite echte Wahl gibt (K mit Lösung) → Stufe 2 |
 
 
+### 39.5 Block B — Prüfung vor der Abstimmung (09.10.2026, nach K-3)
+
+Nutzer 09.10.: *„Ja, Block B Punkt für Punkt vorlegen“*. Jeder Punkt wurde vorher gegen die Messung und gegen den Code geprüft.
+
+**B1 Mitnahme ×3 — nachgerechnet aus `fb_messung` (ab 2024, Z1 ×3):**
+
+| | |
+|---|---|
+| Reproduktion | Korb **+5,50 Pp** genau wieder |
+| was die Zahl ist | Mittel über **alle** 1.593 L-Positionen (ohne Auslösung d = 0) |
+| ausgelöst | **146 = 9,2 %** (S 85 · M 40 · H 21) |
+| je Auslösung gegen Halten | Mittel **+58,5 Pp** · Median **+89,1 Pp** · in 87 % besser |
+| Verlauf | Verkauf im Median nach 118 T bei ×3,37; Fensterende im Median ×1,62 |
+| gegen BTC (Auslösungen) | mit Regel Median +65,7 % · Halten +1,3 % |
+| Erlös in der Messung | **liegt still** (Dollar, kein Wiedereinstieg). Wohin er geht, ist nicht gemessen (Frage B-6) |
+| Bezug | Kurs in Dollar am **Starttag**, Fenster **365 T**, Tagesschluss, Verkauf am Folgetag |
+
+Befunde aus der Prüfung:
+1. ⚠️ **Grundgesamtheit:** Gemessen wurde auf **L-Kandidaten** (oberstes Fünftel der Watchlist, monatliche Starttage). Gelten soll es für den **ganzen Bestand** (E-90: alles außer Kern ist L).
+   - Nach der stehenden Regel *Betrieb und Messung dieselbe Grundgesamtheit* ist das vor dem Bau nachzuweisen.
+   - Gleiche Regel, keine neue Wahl: eine Prüfung der Übertragbarkeit, keine neue Hypothese.
+2. **Fenster:** Gemessen ist eine Einheit von 365 T ab Starttag. Folgerung für den Betrieb (fachlich, keine Wahl): Läuft das Fenster ohne Auslösung ab, beginnt ein neues mit neuem Startkurs. Nach einer Mitnahme läuft der Rest bis zum Fensterende, dann ebenso ein neues Fenster.
+3. ⚠️ **Lehre H15:** `agent/positionsfuehrung.py` wird heute nur aus `rollen_lauf` (seit 05.10. angehalten) und `hebelfuehrung` aufgerufen. B1 darf **nicht** an der angehaltenen Kette hängen und braucht einen eigenen Lauf.
+4. 11 Bestände außerhalb Binance: Für ×3 genügen Startkurs und heutiger Kurs (`price_cache`). Gemessen sind sie nicht (keine Kurse in der Messbasis).
+
+**B2 Preis gegen BTC:** Fakt. Für Binance-Bestände aus der Betriebskopie (500 T ✔). Für die 11 außerhalb wächst die Reihe ab dem Starttag; ein Nachladen von 365 T über CoinGecko frei (D5) ist möglich.
+
+**B3 Verkaufsanlässe — Quellen wie gemessen (`c2_lade.py`):** Binance-Katalog **48** und die Upbit-Schnittstelle `api-manager.upbit.com/api/v1/announcements`, beide frei. O29 (`binance_ankuendigungen.py`) liest heute nur 161/49 und schreibt nur in die **REGEL0-Mail** (Hebel), nicht für den Spot-Bestand.
+
+| Anlass | gemessen (§38.4) | Stärke als Verkaufsanlass |
+|---|---|---|
+| **Upbit-Listing** | 7 T −10,0 Pp gg. BTC, Bootstrap 0,014, Rang 0,00 → **SCHADET** (n 32) | **belegt**: in den ersten Stunden Median +12 %, danach Abgabe |
+| Futures-Start | 7 T −6,2 Pp, Bootstrap 0,26, Rang 0,00; 30 T −20,1 Pp → **trägt nicht** (n 44) | schwächer: schlechter als Zufall derselben Klasse, aber nicht sicher unter null |
+| Delisting / Monitoring | E-1 nach Vorabregel **nicht** getragen | Fakt |
+
+- Gemessen ist der Zeitpunkt der **Meldung** (Kauf +1 h / +4 h). Der Betrieb muss mindestens stündlich abrufen.
+- ⚠️ Eine Binance-Meldung gilt für **Binance**. Gehalten wird bei **Bitpanda**: Gemessen ist die Kurswirkung, nicht die Handelbarkeit bei Bitpanda.
+
+**B4 Abbau:** keine gemessene Regel. Fakten: L kostet im Klima ≈ −45 %/Jahr gegen BTC (§33.4), ×3 löst nur in 9 % aus (oben), Kosten S 3,2 % je Seite (§32.1).
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.
