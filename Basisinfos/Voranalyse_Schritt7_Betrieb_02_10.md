@@ -2880,3 +2880,23 @@ Nutzer 09.10.: *„wir brauchen für die Positionsführung von SPOT und HEBEL ei
 3. **Spot-Kontrolle:** Die Spot-Zeile muss die Spot-Summe treffen → `holdings` (frei, gestakt). Trifft keine Zeile → Warnmail wie heute.
 4. **Hebel-Kontrolle (neu, Hebel-Strang):** Die Hebel-Zeile muss die Hebel-Wallets treffen. Die Hebel-Menge × Einstand gehört zu einer offenen `hebel_positions`-Zeile; der Kredit gehört zur Summe `kreditbetrag_eur` der offenen Positionen. Eine Abweichung bedeutet: Position, die das System nicht kennt → Mail.
 5. Der Hebel-Teil kommt **nie** in `holdings`, wie bisher.
+
+### 23.33 H15-Korrektur vor dem Push (09.10.2026)
+
+Nutzer 09.10.: *„ja H15 pushen, wenn alles geprüft und gegengeprüft wurde“*.
+
+- ⛔ **Die ganze Suite fand 5 rote Prüfungen im Paket Hebelführung**, alle durch H15. Vor dem Commit c043475 lief nur das Paket Regel0Betrieb (Regel *Suite lesen, bevor committet wird* nicht eingehalten).
+- **Ursache, ein echter Fehler:** `fuehre()` kehrte bei *LIQUIDATION NAHE* früh zurück (`if empfehlung in (LIQUIDIERT, LIQ_NAHE, KURS_FEHLT): return`). Damit **verdrängte die Warnung die konkreten Handlungen aus dem Plan**: *SCHLIESSEN* (Widerlegung erreicht) und *HEBEL SENKEN* (Liquidation vor dem Stop, mit Nachschussbetrag).
+- **Korrektur (E-91: zuerst die Handlung):**
+  - Rangfolge `DRINGLICHKEIT` = LIQUIDATION ERREICHT > SCHLIESSEN > HEBEL SENKEN > **LIQUIDATION NAHE** > KURS FEHLT > STOP NACHZIEHEN > HALTEN.
+  - Der Plan wird auch bei Nähe gerechnet. SCHLIESSEN und HEBEL SENKEN gehen vor; die Warnstufe bleibt in `nahe_stufe` und als Grund in der Mail.
+  - HALTEN und STOP NACHZIEHEN verdrängen die Warnung **nicht**.
+  - Der Schlüssel trägt die Stufe jetzt bei **jeder** Empfehlung mit Warnstufe: Eine tiefere Stufe ist auch unter HEBEL SENKEN eine neue Meldung.
+- **Prüfungen:**
+  - Die drei Plan-Prüfungen auf Tag 0,2 rechnen ausdrücklich mit Schwelle 10 % (ihr Fall liegt bei 12,9 %; geprüft wird die Plan-Logik, nicht H15).
+  - **Neu:** derselbe Fall mit 15 % → LIQUIDATION NAHE; HEBEL SENKEN vor der Warnung (Stufe bleibt); SCHLIESSEN vor der Warnung (Stufe 10 %, eigener Schlüssel).
+- **Nachweis:**
+  - Paket Hebelführung 35/35 · Prüfstand 11/11.
+  - Gegenprobe **7/7**, neu G7: Rangfolge über 3.636 Fälle (Hebel 5/3/2x, drei Haltedauern, mit/ohne Widerlegung, mit/ohne Nachzug, Kurs 80–130), **alle sechs Empfehlungen erreicht, 0 Abweichungen**.
+  - **Ganze Suite 3.225 Prüfungen, nur die 5 bekannten roten** (Datenstand am Desktop: Sperrsymbole, Messreihe je Bestand, Messbasis-Alter, Kernwert ohne Beitrag, Helfer-Symbole).
+- **Erwartung nach Pull und Neustart am NB:** ETH 5x liegt bei rund 12 % Abstand → **sofort eine Mail *LIQUIDATION NAHE* (Stufe 15 %)**, danach je Tag und Stufe höchstens eine; BTC 3x (≈ 27 %) ohne Mail. K-H15-1 wie §23.30.

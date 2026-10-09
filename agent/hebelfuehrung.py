@@ -81,7 +81,10 @@ KURS_FEHLT = "KURS FEHLT"
 
 # Dringlichkeit, nicht Wichtigkeit - dieselbe Ordnung wie in der
 # Ausstiegsrechnung: was die Position beendet, steht vor dem, was sie aendert.
-DRINGLICHKEIT = (LIQUIDIERT, LIQ_NAHE, SCHLIESSEN, HEBEL_SENKEN, KURS_FEHLT,
+# H15-Korrektur 09.10.2026 (Suite: 5 Pruefungen rot): LIQUIDATION NAHE ist eine WARNUNG und steht HINTER den konkreten
+# Handlungen aus dem Plan (SCHLIESSEN, HEBEL SENKEN, E-91: zuerst die Handlung). Die Warnstufe bleibt dann in `nahe_stufe`
+# und im Grund erhalten; HALTEN und STOP NACHZIEHEN verdraengen die Warnung nicht.
+DRINGLICHKEIT = (LIQUIDIERT, SCHLIESSEN, HEBEL_SENKEN, LIQ_NAHE, KURS_FEHLT,
                  STOP_NACHZIEHEN, HALTEN)
 # Was eine Mail ausloest. HALTEN nicht - eine taegliche "nichts zu tun"-Mail
 # erzieht dazu, die Mail nicht mehr zu oeffnen (`ausstiegs_job`).
@@ -359,8 +362,9 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
             t["hebel_sicher_heute"] = lmax
             t["nachschuss_eur"] = max(0.0, pw / lmax - (ek or pw / L))
 
-    if t["empfehlung"] in (LIQUIDIERT, LIQ_NAHE, KURS_FEHLT):
+    if t["empfehlung"] in (LIQUIDIERT, KURS_FEHLT):
         return t
+    nahe = t["empfehlung"] == LIQ_NAHE              # Warnung bleibt, wenn der Plan nur HALTEN/STOP NACHZIEHEN sagt
 
     bew_empf = str((bew or {}).get("empfehlung") or "")
     status = plan.get("outcome_status")
@@ -384,12 +388,13 @@ def fuehre(*, symbol: str, richtung: str, eroeffnet_am, hebel: float | None,
             "Kurs, loest Bitpanda auf, BEVOR der Stop greift. Die "
             "Finanzierung schiebt sie jeden Tag weiter an den Einstieg." % seit)
     elif bew and bew.get("trailing_aktiv"):
-        t["empfehlung"] = STOP_NACHZIEHEN
+        if not nahe:
+            t["empfehlung"] = STOP_NACHZIEHEN
         t["gruende"] += list(bew.get("gruende") or [])
     else:
         if bew:
             t["gruende"] += list(bew.get("gruende") or [])
-            if bew.get("frist_abgelaufen"):
+            if bew.get("frist_abgelaufen") and not nahe:
                 t["empfehlung"] = HALTEN + " · FRIST ABGELAUFEN"
 
     tb = t.get("tage_bis_liquidation_am_stop")
@@ -530,8 +535,8 @@ def schluessel(t: dict, tag: str) -> str:
     stop_neu = (t.get("bewertung") or {}).get("stop_empfohlen")
     zusatz = ("%.6g" % stop_neu if t.get("empfehlung") == STOP_NACHZIEHEN
               and stop_neu else "")
-    if t.get("empfehlung") == LIQ_NAHE and t.get("nahe_stufe") is not None:
-        zusatz = "stufe%.4g" % t["nahe_stufe"]          # H15: jede tiefere Warnstufe ist eine NEUE Meldung
+    if t.get("nahe_stufe") is not None and t.get("empfehlung") != LIQUIDIERT:
+        zusatz = "stufe%.4g" % t["nahe_stufe"]          # H15: jede tiefere Warnstufe ist eine NEUE Meldung - auch unter SCHLIESSEN/HEBEL SENKEN
     return "hebelfuehrung:%s:%s:%s:%s" % (
         t.get("position_id") or t.get("symbol"), t.get("empfehlung"), zusatz,
         tag)

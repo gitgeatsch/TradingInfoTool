@@ -4,5 +4,6 @@ G3  gleich  hebelfuehrung:7:LIQUIDATION NAHE:stufe0.15:2026-10-09
 G4  gleich  alter Aufruf unveraendert; Empfehlung bei 60.000: LIQUIDATION NAHE
 G5  gleich  falsche Werte ohne Abbruch: 0
 G6  gleich  Exportabschnitt liest nur
+G7  gleich  3636 Faelle, Arten ['HALTEN', 'HEBEL SENKEN', 'LIQUIDATION ERREICHT', 'LIQUIDATION NAHE', 'SCHLIESSEN', 'STOP NACHZIEHEN'], Abweichungen 0 []
 
-6 von 6 gleich
+7 von 7 gleich

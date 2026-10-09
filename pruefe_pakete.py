@@ -20288,11 +20288,27 @@ def paket_hebelfuehrung() -> None:
     pruefe(P, "Finanzierung 400 x 0,18 % x 0,5 = 0,36 EUR; Ergebnis +5,00, netto +4,64",
            abs(_a["finanzierung_bisher_eur"] - 0.36) < 1e-9
            and abs(_a["ergebnis_netto_eur"] - 4.64) < 1e-9)
-    _h = _HF.fuehre(**_b, kurs_eur=101.0, jetzt=_auf + _td(days=0.2), plan=_plan)
+    # H15 (E-88): 12,9 % Abstand liegt unter der Warnschwelle 15 %. Diese Faelle pruefen die PLAN-Logik - deshalb hier
+    # ausdruecklich mit Schwelle 10 %; die Warnung selbst pruefen die drei Faelle direkt darunter (Korrektur 09.10.2026).
+    _h = _HF.fuehre(**_b, kurs_eur=101.0, jetzt=_auf + _td(days=0.2), plan=_plan, nahe_grenze=0.10)
     pruefe(P, "Tag 0,2: noch HALTEN - mit dem Tag, ab dem es kippt",
            _h["empfehlung"] == "HALTEN"
            and any("bis etwa Tag 0,4" in x for x in _h["hinweise"]),
            "%r" % _h["hinweise"])
+    _hn = _HF.fuehre(**_b, kurs_eur=101.0, jetzt=_auf + _td(days=0.2), plan=_plan)
+    pruefe(P, "H15: derselbe Fall mit Schwelle 15 %: LIQUIDATION NAHE statt HALTEN, Hinweis zum Kipptag bleibt",
+           _hn["empfehlung"] == _HF.LIQ_NAHE and _hn.get("nahe_stufe") == 0.15
+           and any("bis etwa Tag 0,4" in x for x in _hn["hinweise"]),
+           "%r" % ((_hn["empfehlung"], _hn.get("nahe_stufe")),))
+    pruefe(P, "⚠️ H15: HEBEL SENKEN (Liquidation vor dem Stop) geht VOR die Warnung - Warnstufe und Grund bleiben",
+           _a["empfehlung"] == _HF.HEBEL_SENKEN and _a.get("nahe_stufe") == 0.15
+           and any("Warnschwelle 15 %" in x for x in _a["gruende"]),
+           "%r" % ((_a["empfehlung"], _a.get("nahe_stufe")),))
+    _sn = _HF.fuehre(**_b, kurs_eur=94.0, jetzt=_auf + _td(days=0.5), plan={**_plan, "umgeworfen_preis_eur": 95.0})
+    pruefe(P, "⚠️ H15: SCHLIESSEN (Widerlegung erreicht) geht VOR die Warnung - Stufe 10 % bleibt, eigener Schluessel je Stufe",
+           _sn["empfehlung"] == _HF.SCHLIESSEN and _sn.get("nahe_stufe") == 0.10
+           and "stufe0.1" in _HF.schluessel(_sn, "2026-09-11"),
+           "%r" % ((_sn["empfehlung"], _sn.get("nahe_stufe"), _HF.schluessel(_sn, "2026-09-11")),))
     _t = _HF.fuehre(**_b, kurs_eur=87.0, jetzt=_auf + _td(days=0.5), plan=_plan)
     pruefe(P, "Kurs jenseits der Liquidation: LIQUIDATION ERREICHT",
            _t["empfehlung"] == _HF.LIQUIDIERT, _t["empfehlung"])

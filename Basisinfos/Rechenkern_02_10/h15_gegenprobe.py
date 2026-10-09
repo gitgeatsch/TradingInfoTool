@@ -8,6 +8,9 @@
   G4 alter Aufruf der Rollen-Kette (HF.lade(conn, symbole=...)) passt weiter und warnt mit der Vorgabe 15 %
   G5 Schalter: falsche Werte (1,5 / 'ja') brechen beim Laden ab
   G6 Teilexport: der Abschnitt HEBELFUEHRUNG ist syntaktisch im Exportskript und liest nur job_laeufe
+  G7 (Korrektur 09.10., die Suite fand 5 rote Pruefungen) RANGFOLGE mit Plan ueber ein Kursraster, eigene Regel:
+     Liquidation erreicht > SCHLIESSEN (Plan) > HEBEL SENKEN (Liquidation >= Stop) > LIQUIDATION NAHE (< 15 %) > Plan (STOP NACHZIEHEN/HALTEN);
+     die Warnstufe steht bei jedem nicht liquidierten Fall unter 15 % in `nahe_stufe`
 """
 import io
 import os
@@ -93,4 +96,40 @@ ast.parse(ex)
 teil = ex[ex.index("H15 (09.10.2026)"):ex.index("H15 (09.10.2026)") + 600]
 pruefe("G6", "FROM job_laeufe WHERE job_id LIKE 'hebelfuehrung:%'" in teil and not re.search(r"\b(INSERT|UPDATE|DELETE)\b", teil),
        "Exportabschnitt liest nur")
+
+# ---- G7 Rangfolge mit Plan (eigene Regel, Kursraster) ----
+plan = dict(signal_id=1, erzeugt_am="2026-09-10", einstieg=100.0, stop=88.0, ziel=124.0, ist_short=False, umgeworfen_preis_eur=None,
+            umgeworfen_bis=None, umgeworfen_durch=None, outcome_status="offen", mfe_r=0.2, strategie="einstieg")
+fx, faelle, arten = [], 0, set()
+for hebel, ek in ((5.0, 100.0), (3.0, 166.67), (2.0, 250.0)):
+    for jetzt in ("2026-09-10T16:48:00+00:00", "2026-09-11T00:00:00+00:00", "2026-09-14T12:00:00+00:00"):
+        for um in (None, 95.0):
+            for mfe in (0.2, 1.6):
+                for k10 in range(800, 1301, 5):
+                    kurs = k10 / 10.0
+                    t7 = HF.fuehre(symbol="XYZ", richtung="LONG", eroeffnet_am="2026-09-10T12:00:00+00:00", hebel=hebel, positionswert_eur=500.0,
+                                   kreditbetrag_eur=500.0 - ek, eigenkapital_eur=ek, positionsmenge=5.0, kurs_eur=kurs, jetzt=jetzt,
+                                   plan=dict(plan, umgeworfen_preis_eur=um, mfe_r=mfe), position_id=7)
+                    liq = t7["liquidation_eur"]
+                    abst = (kurs - liq) / kurs
+                    bew = str((t7.get("bewertung") or {}).get("empfehlung") or "")
+                    if kurs <= liq:
+                        soll = HF.LIQUIDIERT
+                    elif bew.startswith(HF.SCHLIESSEN):
+                        soll = HF.SCHLIESSEN
+                    elif liq >= 88.0:
+                        soll = HF.HEBEL_SENKEN
+                    elif abst < 0.15:
+                        soll = HF.LIQ_NAHE
+                    elif (t7.get("bewertung") or {}).get("trailing_aktiv"):
+                        soll = HF.STOP_NACHZIEHEN
+                    else:
+                        soll = "HALTEN"
+                    ist = str(t7["empfehlung"]).split(" · ")[0]
+                    stufe_ok = (t7.get("nahe_stufe") is not None) == (kurs > liq and abst < 0.15)
+                    faelle += 1
+                    arten.add(soll)
+                    if ist != soll or not stufe_ok:
+                        fx.append((hebel, jetzt[:10], um, mfe, kurs, ist, soll, t7.get("nahe_stufe")))
+pruefe("G7", not fx and len(arten) == 6, "%d Faelle, Arten %s, Abweichungen %d %s" % (faelle, sorted(arten), len(fx), fx[:3]))
 print("\n%d von %d gleich" % (ok, n))
