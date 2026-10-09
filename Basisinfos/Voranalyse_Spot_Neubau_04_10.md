@@ -4806,6 +4806,26 @@ Damit gilt: C1–C4 und D1–D8 wie §39.8, Reihenfolge 1–5.
 - **Universum** ab 2024: Anteil der Anker mit F9 bekannt, mit allen vier Merkmalen bekannt.
 
 
+**Ergebnis D4 und Abdeckung** (`d4_wirkung.py` → `.txt`, Gegenprobe `d4_gegenprobe.py` **5/5**: eigene Perzentile je Zelle, eigener Wert und Saldo; Fünftel an allen Ankern gleich):
+
+| | E2 (2021–23) | E3 (ab 2024) |
+|---|---|---|
+| Teil 0 Dosis voller Wert | −6,5 · −4,0 · −0,7 · +0,3 · +10,5 ✔ | −16,3 · −6,7 · +3,2 · +5,5 · +13,6 ✔ |
+| **Dosis ohne F9** | **−7,3** · −3,2 · −0,1 · +1,0 · +9,2 | **−17,2** · −4,7 · +3,0 · +6,0 · +12,1 |
+| anderes Fünftel ohne F9 | 10,0 % (bei Coins mit TVL 40 %) | 17,1 % (bei Coins mit TVL 40 %) |
+| unteres Fünftel: verlassen / neu | 88 / 88 (4,3 %) | 98 / 98 (6,6 %) |
+
+⇒ **D4 darf hinter B4 rücken.** Das untere Fünftel bleibt in beiden Epochen das schlechteste und liegt sogar etwas tiefer. Die B4-Zeile sagt *„vorläufig ohne TVL-Merkmal“*. Am oberen Ende kostet das Weglassen etwas (E3 +12,1 statt +13,6); das betrifft B4 nicht.
+
+**Abdeckungsgrad:**
+- **Universum ab 2024:** F1/F2/F8 bekannt **92 %**, F9 nur **28 %**.
+- **Bestand am Stichtag 01.09.2026, 23 Krypto-Bestände ohne Kern:**
+  - **13 im Universum.** Davon 5 mit allen vier Merkmalen, 8 ohne TVL.
+  - Fünftel heute: **unteres Fünftel KAIA, SUI, TURBO**; 2. Fünftel BEAMX, BIO, INJ, QNT; 3. NEAR; 4. ALGO, AVAX, LINK, W, XLM.
+  - ⚠️ **10 nicht im Universum (43 %):** ASTER, BRETT, CANTON, CT, KAS, MON, MORPHO, PLUME, SUPRA, XDC. B1 läuft dort über Prod-Kurse (D5). Für B4 sind sie **nur eingeordnet, nicht gemessen**.
+- ⇒ **Größte Lücke des Konzepts.** Sie ist bei der Konzeptprüfung *auf Herz und Nieren* zuerst zu klären: *Warum* fehlen sie (kein Binance-Spot, kein Umlauf, zu jung)? Und lässt sich das Universum dafür erweitern, ohne die Grundgesamtheit der Messung zu ändern?
+
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.

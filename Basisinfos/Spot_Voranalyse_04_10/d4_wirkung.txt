@@ -1,0 +1,40 @@
+MESSUNG D4 + ABDECKUNG (§39.9) · Kurse bis 2026-09-20
+
+TEIL 0 Dosis E2 voller Wert:  -6.5  -4.0  -0.7  +0.3 +10.5 (Soll  -6.5  -4.0  -0.7  +0.3 +10.5)
+TEIL 0 Dosis E3 voller Wert: -16.3  -6.7  +3.2  +5.5 +13.6 (Soll -16.3  -6.7  +3.2  +5.5 +13.6)
+-> Teil 0 bestanden
+
+D4 E2: Anker 10460 · anderes Fuenftel ohne F9 10.0 % (nur Coins mit TVL 40.0 %, n 1881) · unteres Fuenftel 2055: verlassen 88 (4.3 %), neu 88
+   Dosis E2 OHNE F9:  -7.3  -3.2  -0.1  +1.0  +9.2 -> unteres Fuenftel schlechtestes und < 0
+D4 E3: Anker 7471 · anderes Fuenftel ohne F9 17.1 % (nur Coins mit TVL 39.6 %, n 2090) · unteres Fuenftel 1474: verlassen 98 (6.6 %), neu 98
+   Dosis E3 OHNE F9: -17.2  -4.7  +3.0  +6.0 +12.1 -> unteres Fuenftel schlechtestes und < 0
+
+=> D4 darf HINTER B4 ruecken (B4 vorlaeufig ohne TVL-Merkmal)
+
+ABDECKUNG Universum ab 2024 (Anker der Messung): F9 bekannt 28 % · alle vier Merkmale bekannt 28 % · F1/F2/F8 bekannt 92 %
+
+ABDECKUNG BESTAND am Stichtag 2026-09-01 (Universum 332 Coins):
+  ALGO    Klasse M · Merkmale F1,F2,F8 · Fuenftel 4 (ohne F9 4) · Kurs B1: Binance
+  ASTER   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  AVAX    Klasse H · Merkmale F1,F2,F8,F9 · Fuenftel 4 (ohne F9 4) · Kurs B1: Binance
+  BEAMX   Klasse S · Merkmale F1,F2,F8 · Fuenftel 2 (ohne F9 2) · Kurs B1: Binance
+  BIO     Klasse S · Merkmale F1,F2,F8,F9 · Fuenftel 2 (ohne F9 2) · Kurs B1: Binance
+  BRETT   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  CANTON  NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  CT      NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  INJ     Klasse M · Merkmale F1,F2,F8,F9 · Fuenftel 2 (ohne F9 3) · Kurs B1: Binance
+  KAIA    Klasse M · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1) · Kurs B1: Binance
+  KAS     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  LINK    Klasse H · Merkmale F1,F2,F8 · Fuenftel 4 (ohne F9 4) · Kurs B1: Binance
+  MON     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  MORPHO  NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  NEAR    Klasse H · Merkmale F1,F2,F8,F9 · Fuenftel 3 (ohne F9 3) · Kurs B1: Binance
+  PLUME   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  QNT     Klasse H · Merkmale F1,F2,F8 · Fuenftel 2 (ohne F9 2) · Kurs B1: Binance
+  SUI     Klasse H · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1) · Kurs B1: Binance
+  SUPRA   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  TURBO   Klasse S · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1) · Kurs B1: Binance
+  W       Klasse S · Merkmale F1,F2,F8,F9 · Fuenftel 4 (ohne F9 3) · Kurs B1: Binance
+  XDC     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  XLM     Klasse H · Merkmale F1,F2,F8 · Fuenftel 4 (ohne F9 4) · Kurs B1: Binance
+  -> 5 von 23 mit allen vier Merkmalen · 8 ohne TVL · 10 nicht im Universum (B4 nur eingeordnet ueber D5)
