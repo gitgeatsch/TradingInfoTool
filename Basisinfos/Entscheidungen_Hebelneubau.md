@@ -1039,3 +1039,12 @@ Schritt7 §23.24.
 **Offen:**
 - A3 (Eintrag, Rollenliste, Default: Vorschlag §39.2 zur Abstimmung).
 - A4 → **Auftrag K-Lösung** (§39.3, Kandidaten K-1 bis K-4).
+
+
+# E-90 · Spot-Rollen: Kern fest, alle übrigen Krypto-Bestände automatisch L, kein Pflichteintrag (09.10.2026)
+
+**09.10.2026** · Nutzer: *„A3 ja so“* und *„… finde ich es aktuell nicht sinnvoll, manuell einzutragen, oder?“*, Expertenmeinung zugestimmt (§39.4).
+- Kern BTC/ETH/SOL fest, alle anderen Krypto-Bestände L (Default).
+- Abbau nur als Vorschlag mit Preis gegen BTC.
+- Der Rollen-Dialog kommt erst mit K (Stufe 2).
+- Ersetzt den Default *offen* aus §39.2.

@@ -4655,3 +4655,18 @@ Nutzer 09.10.: *„A1 (a) – für K brauchen wir vorher eine Lösung, welche fu
 4. Trägt nichts, bleibt K ruhend, und der Schatten aus A4 läuft vorwärts weiter.
 
 Messplan je Kandidat vorab, Nutzer-Ja.
+
+### 39.4 A3 entschieden — Default L, kein Pflichteintrag (09.10.2026; E-90)
+
+Nutzer 09.10.: *„A3 ja so“* · *„Nur zur Default-Frage als deine Expertenmeinung – nachdem wir nur Kern BTC, ETH und SOL führen (starr) und sonst nur L-Rollen haben als Backup, finde ich es aktuell nicht sinnvoll, manuell einzutragen, oder?“*
+
+**Expertenmeinung: zugestimmt.**
+- Echt zu entscheiden ist heute nur *L oder Abbau*.
+- Abbau braucht keinen Eintrag: Der Verkauf bei Bitpanda **ist** die Entscheidung, und die Position verschwindet im Abgleich.
+
+| | gilt ab jetzt (ersetzt §39.2 *Default offen*) |
+|---|---|
+| Kern | BTC, ETH, SOL **fest** |
+| alle übrigen Krypto-Bestände und Neuzugänge | **L** automatisch, Starttag = Tag der Inbetriebnahme bzw. erster Abgleich (A1 a) |
+| Abbau | nur als **Vorschlag** in der Bestandsmail (A2) mit dem **laufenden Preis gegen BTC** (L heute rund −45 %/Jahr); du handelst bei Bitpanda |
+| Rollen-Dialog im Portfolio | **zurückgestellt** bis es eine zweite echte Wahl gibt (K mit Lösung) → Stufe 2 |
