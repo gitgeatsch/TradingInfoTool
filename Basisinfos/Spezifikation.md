@@ -1416,3 +1416,14 @@ mit Zeit zum Auflösen als Datengrundlage.
 **Nachtrag 06.10.2026 — Spot-Altcoins (geplant, nicht gebaut, vorläufig E-73):** monatliche **Watchlist** je Klasse nach Asymmetrie (Alter, Absturz, Dauer seit dem Hoch, TVL gegen Kurs) mit Begründung je Faktor und **Nachlauf-Marke** je Position, als **Auskunft** in der Klima-Ampel-Mail, ohne Kaufsignal, mit Vorwärtsprotokoll. Herleitung: `Voranalyse_Spot_Neubau_04_10.md` §19–§22.
 
 **Nachtrag 07.10.2026 — Altcoin-Watchlist (geplant, O28):** Mail *Altcoins – Fortbestand und Gelegenheit* monatlich: Phase (Fakten), Bestand (alle Krypto-Positionen und Neuzugänge, auch außerhalb Binance), Rangliste H/M/S nach Marktwert mit Sternen, Fortbestand in Sätzen mit Einordnung je Fakt, Nachlauf-Marke, Protokoll, Anhang mit Skalen. Datenbedarf: Voranalyse_Spot §27.3.
+
+**Nachtrag 09.10.2026 — Spot-Bauumfang abgestimmt (Voranalyse_Spot §39, E-89 bis E-91) und Bestandsabgleich (E-93):**
+- **Grundsatz der Mails (E-91):** Eine Mail enthält **nur Handlungen** (welcher Coin, was tun, bis wann, gemessene Begründung mit Belegstufe). Was keine Handlung ableitet, steht nur im App-Tab. Eine Monatsmail ist nur als Option vorgemerkt (Plan O35), wenn sie konkrete Bestandsentwicklung zeigt.
+- **Rollen:** Kern BTC/ETH/SOL fest, alle anderen Krypto-Bestände automatisch L; K ruht, bis ein Einstieg gemessen trägt (§35–§40: bisher keiner).
+- **Spot-Handlungen Stufe 1:**
+  - Mitnahme ×3 je L-Position (*„Hälfte verkaufen“*, trägt auf dem ganzen Bestand);
+  - Upbit-Listing eines gehaltenen Coins (*„in den nächsten Stunden verkaufen“*);
+  - Abbau-Reihenfolge aus dem unteren Watchlist-Fünftel;
+  - Season-Ampel nur beim Wechsel in eine Stufe mit Handlung.
+- **Bestand = frei + gestakt.** Gestakte Werte sind normale Spot-Positionen, nur ETH braucht Tage zum Entstaken. **Spot und Hebel** werden im Bitpanda-Abgleich nach Wallet-Art getrennt; der Hebel gehört nie zum Spot-Bestand.
+

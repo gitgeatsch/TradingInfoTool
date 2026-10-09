@@ -2450,3 +2450,17 @@ Schritt7 §23.24.
 - K-WD-1 ✔, K-F02 ✔.
 - **Lücke:** Die Hebelführung echter Positionen lief seit dem Halt der Rollen-Kette nicht.
 - **H15** gebaut (E-88, Schritt7 §23.29–§23.30): Abgleich-Lauf, Warnung ab 15 % Abstand zur Liquidation, Prüfstand 11/11, Gegenprobe 6/6, Suite 78/78. Wirksam nach der Freigabe, vor O29.
+
+**Nachtrag 09.10.2026 (29, abends) — Betrieb und Spot:**
+- **H15:** Vor dem Push fand die ganze Suite einen Fehler. *LIQUIDATION NAHE* verdrängte SCHLIESSEN und HEBEL SENKEN; jetzt gilt Handlung vor Warnung (E-92). Gepusht `e186281`, am NB gezogen; K-H15-1 ✔ (ETH 5x, Abstand rund 12 %, genau eine Mail).
+- **K-BP-1** (O36, E-93): Bei offenem Hebel liefert Bitpanda je Asset zwei Zeilen ohne Kennzeichen. Der Abgleich ordnet sie jetzt über die Menge zu: Spot gegen Spot, Hebel nie im Bestand. Gepusht `0995cc3`, gezogen; K-BP-2 offen. Schritt B (Hebel-Wallets gegen `hebel_positions`) offen.
+- **Bestand = frei + gestakt** (O37): 10 Assets sind nur gestakt; gestakt heißt normale Spot-Position, nur ETH braucht Tage zum Entstaken.
+- **Testwoche** an der Kopie grün außer L1 (bekannt) → Freigabe 10.10.
+- **Spot:**
+  - K-3 *Ruhiger Boden* schadet gegen BTC (§40), ist nur Schutzmerkmal.
+  - Block B–D abgestimmt (E-91 Handlungsgrundsatz: Mail nur mit Handlung, Monatsmail nur Option O35).
+  - B1 Mitnahme ×3 trägt auf dem ganzen Bestand (+4,9 Pp).
+  - D4 hinter B4.
+  - Abdeckung 16 von 28 Beständen im Universum.
+- M1-Kriterien unverändert.
+

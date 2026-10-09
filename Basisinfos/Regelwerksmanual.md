@@ -1732,6 +1732,14 @@ wäre im schlimmsten Fall selbst mitbetroffen.
   - **Bei weniger als 15 % Abstand zwischen Kurs und geschätzter Liquidation kommt eine Mail** (*Hebelfuehrung: LIQUIDATION NAHE …*), bei 10 % und 5 % sofort erneut, dieselbe Stufe höchstens einmal am Tag. Dazu kommt *LIQUIDATION ERREICHT*.
   - Die Mail nennt Einstand, Kurs mit Stand, Liquidation, Abstand, Finanzierung. Die Entscheidung (nachschießen, Hebel senken, schließen) liegt bei dir; das System handelt nicht.
   - Schalter `hebelfuehrung_aktiv`, Schwelle `liquidations_warnung_abstand` in `Basisinfos/regel0_betrieb.yaml`.
+  - **Handlung vor Warnung** (E-92, ab 09.10. abends): Ist der Widerlegungspreis erreicht (SCHLIESSEN) oder liegt die Liquidation vor dem Stop (HEBEL SENKEN mit Nachschussbetrag), steht **diese** Empfehlung oben. Die Warnstufe bleibt im Grund, und eine tiefere Stufe ist trotzdem eine neue Meldung. HALTEN und STOP NACHZIEHEN verdrängen die Warnung nicht.
+  - Bei 5x liegt die Liquidation schon bei der Eröffnung rund 12 % unter dem Kurs. Eine 5x-Position meldet sich deshalb sofort mit Stufe 15 % (ETH am 09.10.).
+- ⚠️ **Bitpanda-Bestandsabgleich: Spot und Hebel getrennt (09.10.2026, E-93):**
+  - Bei einer offenen Hebelposition führt Bitpanda in der Portfolio-Übersicht für dasselbe Asset **zwei Zeilen** (Spot und Hebel) ohne Kennzeichen. Bis 09.10. las der Abgleich nur eine davon, daher die Mails *„Bestand passt nicht zusammen“* für BTC und EURCV.
+  - Jetzt wird jede Zeile **über die Menge** zugeordnet: Spot = frei + gestakt, Hebel = Hebel-Wallets und Hebel-Kredit (EURCV negativ).
+  - In den Spot-Bestand kommt **nur der Spot-Teil**; der Hebel gehört zu den Hebelpositionen.
+  - Passt keine Zuordnung, bleibt der alte Stand und die Mail nennt Spot, Hebel und alle Zeilen.
+  - **Gestakte Bestände sind normale Spot-Positionen** (im System `staked_quantity`). Nur bei **ETH** dauert das Entstaken einige Tage — eine Verkaufshandlung muss das nennen.
 - ⚠️ **Korrektur 08.10.2026 – Geister-Watchdogs** (Befund NB: 40 Watchdog-Prozesse seit 20.09.):
   - Ursache: `pystray.Icon.stop()` setzt `icon.visible` **nicht** auf False. Die Überwachungsschleife (`while icon.visible`) lief nach *„Beenden“* endlos weiter und hielt den Prozess am Leben; die PID-Datei war da schon gelöscht, der nächste Start ließ sich durch.
   - Seitdem hängt die Schleife an einem Ende-Ereignis.
@@ -5220,6 +5228,16 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Erst verstehen, dann bauen** | 06.10.: *ich kann mir noch immer nicht vorstellen, was das System leistet* (E-73) | W1–W7 vorläufig; vor dem Bau ein Beispiel aus echten Daten |
 | **Zwei Ebenen** | 06.10.: Quant als Prüfstein; *das Strukturprofil werden wir noch besser gruppieren* (E-74) | Fortbestand (Fakten, Nutzer gewichtet) vor Gelegenheit (gemessener Rang); Klassen nach Marktwert; Smallcaps in der Liste |
 | **Datenquellen vor dem Bau** | 07.10.: *ohne Datenquellen und Abdeckungsprüfung bringt das System nichts* (E-75) | Inventar und Abdeckung je Bedarf, Nachweis am NB, vor jedem Bau (Voranalyse_Spot §27) |
+| **LLM-Block und -Stufe** | 07.10. (E-76, E-78 bis E-82) | keine Entscheidung über den Block jetzt; Ziel *besser als die Regel*, Minimum *gleich oder etwas darüber*; weitere Information nur statistisch und vorwärts bewertet; Fassung 0.2 rückblickend (N5); der Entscheider bleibt, braucht eigene Information |
+| **Reihenfolge Hebel vor Spot-Bau** | 07.10. (E-77) | Hebel A1/A2 zuerst, Spot-Bau O28 nach der Testwoche |
+| **Binance-Ankündigung als Fakt** | 07.10. (E-83, E-84) | als Fakt in die Signalmail, kein Auslöser; vorgebaut mit Schalter AUS |
+| **Nur kostenfreie Quellen** | 08.10.: *Kostenpflichtiges gar nicht als Option vorlegen* | Projektregel für alle Daten und Dienste |
+| **Spot: Einstieg UND Führung** | 08.10. (E-85): *„ein Newsletter ohne konkrete Handlungen ist nicht das eigentliche Ziel“* | je Asset ein Einstieg und je Bestand eine Führung; Spot misst mit Wahl 2023, Urteil ab 2024 |
+| **Spot: zwei Rollen** | 08.10. (E-86, E-87) | L Season-Option / K Ausbruch; Altbestand per Vorschlag; Season-Ampel kalibriert |
+| **H15 Warnung bei 15 %** | 09.10. (E-88): *„Ja H15 zuerst, Warnung bei 15 % Abstand“* | Hebelführung echter Positionen im Abgleich-Lauf, Stufen 15/10/5 %; Rangfolge Handlung vor Warnung (E-92, eigene) |
+| **Spot-Rollen und Default** | 09.10. (E-89, E-90): *„A3 ja so“* | Kern BTC/ETH/SOL fest, alle anderen automatisch L, kein Pflichteintrag; K erst mit funktionierender Lösung |
+| **Jede Mail eine Handlung** | 09.10. (E-91): *„ohne konkrete Ableitung auf eine Handlung … bei 30+ Assets ist das nur Arbeit“* | Mail nur mit Coin, Handlung, Frist, gemessener Begründung; der Rest im App-Tab; Monatsmail nur Option (O35) |
+| **Spot und Hebel getrennt, gestakt = Spot** | 09.10. (E-93): *„wir brauchen … eine klare Trennung“* · *„gestaked und wie normale Spot-Positionen zu führen, Ausnahme nur ETH“* | Trennung nach Bitpanda-Wallet-Art, Zuordnung über die Menge; Bestand = frei + gestakt; ETH-Handlungen nennen die Entstake-Dauer |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,

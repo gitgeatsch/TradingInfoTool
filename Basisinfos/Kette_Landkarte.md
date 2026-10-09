@@ -24,6 +24,9 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > |---|---|
 > | Hebelführung echter Positionen (`agent/hebelfuehrung.py`) als Teil des Rollen-Umlaufs (`rollen_lauf.py:981`) | Seit dem Halt der Kette (05.10.) lief sie **nicht**. Jetzt läuft sie im **Abgleich** (`hebel_screening_job` → `_hebelfuehrung_lauf`) nach dem Positionsabgleich und **vor** dem Halt, alle 15 min, Mail nur am Betriebsgerät. Neu: *LIQUIDATION NAHE* ab 15 % Abstand (Stufen 15 / 10 / 5 %). Schritt7 §23.29–§23.30, E-88 |
 > | Nachtrag 05.10.: *„Weiter laufen REGEL0, Stop-Nachzieh 07:15, Bitpanda-Abgleich“* | stimmt, aber die **Hebelführung lief nicht mit**; das war bei der Stilllegung übersehen |
+> | Rangfolge der Hebelführung | **Handlung vor Warnung** (E-92): LIQUIDATION ERREICHT > SCHLIESSEN > HEBEL SENKEN > LIQUIDATION NAHE > KURS FEHLT > STOP NACHZIEHEN > HALTEN; die Warnstufe bleibt im Grund. Am NB seit 09.10. abends (`e186281`) |
+> | Bitpanda-Bestandsabgleich (`importer/bitpanda_bestand.abgleich_neu`) | **Spot und Hebel getrennt über die Menge** (E-93, `spot_zeile`): `/portfolio` liefert bei offenem Hebel zwei Zeilen je Asset; Spot (frei + gestakt) gegen Spot, Hebel-Wallets nie in `holdings`. Am NB seit 09.10. abends (`0995cc3`) |
+> | Bestand | **frei + gestakt** (`quantity` + `staked_quantity`); 10 Assets sind nur gestakt. Leser, die nur `quantity` zählen: O37 |
 >
 > ## ⚠️ NACHTRAG 05.10.2026 — Scheduler und Schalter
 >

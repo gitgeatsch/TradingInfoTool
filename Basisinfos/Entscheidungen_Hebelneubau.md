@@ -1062,3 +1062,29 @@ Schritt7 §23.24.
   - Futures-Start und Delisting bekommen keine eigene Mail.
   - B4 wird zur **Abbau-Reihenfolge** aus dem unteren Watchlist-Fünftel.
 
+
+# E-92 · Hebelführung: Handlung vor Warnung (09.10.2026)
+
+**09.10.2026** · Nutzer: *„ja H15 pushen, wenn alles geprüft und gegengeprüft wurde“*. Die ganze Suite fand vor dem Push 5 rote Prüfungen.
+
+- **Fachliche Entscheidung (eigene, nach E-91 *zuerst die Handlung*):** *LIQUIDATION NAHE* ist eine Warnung und steht **hinter** den konkreten Handlungen aus dem Plan (SCHLIESSEN, HEBEL SENKEN mit Nachschussbetrag). Die Warnstufe bleibt im Grund und im Mailschlüssel.
+- HALTEN und STOP NACHZIEHEN verdrängen die Warnung nicht.
+- Rangfolge: LIQUIDATION ERREICHT > SCHLIESSEN > HEBEL SENKEN > LIQUIDATION NAHE > KURS FEHLT > STOP NACHZIEHEN > HALTEN.
+- Nachweis: Schritt7 §23.33 (Gegenprobe G7, 3.636 Fälle). Am NB seit 09.10. abends (`e186281`).
+
+
+# E-93 · Bitpanda-Abgleich: Spot und Hebel klar getrennt; Bestand = frei + gestakt (09.10.2026)
+
+**09.10.2026** · Nutzer:
+- *„wir brauchen für die Positionsführung von SPOT und HEBEL eine klare Trennung“*
+- *„diese sind gestaked und wie normale Spot-Positionen zu führen, Ausnahme ist nur ETH, dort dauert das Entstaken einige Tage“*
+- *„Ja, Importer-Fix bauen, prüfen und gegenprüfen“* · *„Ja, jetzt pushen“*
+
+- **Trennung nach Bitpanda-Wallet-Art:**
+  - **Spot** = `shared-default` + `staking-service` (+ Börse) → `holdings`.
+  - **Hebel** = `margin-trading` + `margin-trading-credit` → `hebel_positions`, **nie** `holdings`.
+- `/portfolio` liefert bei offenem Hebel zwei Zeilen je Asset ohne Kennzeichen (Rohantwort 09.10.). Die Zuordnung läuft **über die Menge**, ohne Raten (`spot_zeile`).
+- **Festlegung (eigene):** Die Spot-Kontrolle prüft **Spot gegen Spot**. Eine fehlende Hebel-Zeile ist Sache der Hebel-Kontrolle (Schritt B, offen, eigene Abstimmung).
+- **Bestand = frei + gestakt.** Gestakte Werte werden wie Spot geführt; ETH-Handlungen nennen die Entstake-Dauer. Leser, die nur `quantity` zählen: Plan O37.
+- Nachweis: Schritt7 §23.31/§23.32/§23.35. Am NB seit 09.10. abends (`0995cc3`).
+
