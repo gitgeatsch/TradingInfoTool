@@ -1,0 +1,22 @@
+MESSUNG K-3 Ruhiger Boden (§40.2) · Kurse bis 2026-09-20
+
+TEIL 0 (R-R11): Vorpruefung §35.2 reproduziert (n 2.720, Richtung 1.904) - bestanden
+
+K-3 ab 2024 (alle Klassen): Einstiege 494 an 32 Monaten (103 Coins; H 12 · M 69 · S 413) · Korb -3.63 Pp gegen BTC (Median der Monate -4.12) · Bootstrap 0.000 · Rang gegen Nullwelt 0.980 (Nullwelt -5.91 Pp) · Spiegel 1.53 (Lauf 14 % / Absturz 16 %, Nullwelt 15 / 26 %)  ->  SCHADET
+   nach Kosten (Mittel der Einstiege 5.61 % Hin+Rueck): Korb -9.24 Pp -> lohnt nicht
+
+SELBSTTEST:
+  (a) Zufalls-Signal 100 Welten: Fehlalarm 0 % (Soll <= 2,5 %) -> bestanden · (b) gepflanzt (nur Einstiege >= +10 %, n 77): erkannt
+
+AUSKUNFT (nach dem Urteil):
+  Klasse H: n 12 · Korb +14.48 Pp · Rang gegen Nullwelt 0.88 · nach Kosten (0.72 %) +13.76 Pp
+  Klasse M: n 69 · Korb -3.11 Pp · Rang gegen Nullwelt 0.69 · nach Kosten (1.76 %) -4.87 Pp
+  Klasse S: n 413 · Korb -3.59 Pp · Rang gegen Nullwelt 0.97 · nach Kosten (6.40 %) -9.99 Pp
+  je Jahr: 2024 -3.4 Pp (n 192) · 2025 -3.9 Pp (n 182) · 2026 -3.5 Pp (n 120)
+  Zeitgrenze 15 T: n 806 · Korb -1.2 Pp
+  Zeitgrenze 60 T: n 318 · Korb -9.8 Pp
+  Marke X2 (Nachlauf 35 %, hoechstens 30 T): Korb -3.9 Pp
+  BTC 90 T am Signaltag steigt: -4.1 Pp (n 257) · faellt: -2.4 Pp (n 237)
+  nach Dominanz-Spitze: +6.3 Pp (n 109) · sonst -3.2 Pp
+  Weglassprobe ohne FUN,SUN,ICP,ZEN,DGB: -5.5 Pp · nur Bitpanda-handelbar (n 405): -3.5 Pp
+  wie die Vorpruefung (Ende 30 T des Coins gegen ALLE Coins am Tag, nicht gegen BTC): +2.68 Pp

@@ -4734,3 +4734,67 @@ Nutzer 09.10.: *„K-3 Messplan vorbereiten, prüfen und gegenprüfen“* (Auftr
 - 84 % der Einstiege sind Smallcaps; nach Kosten braucht es dort über 6,4 Pp Vorsprung.
 - Die Vorprüfung zeigte +2,3 Pp gegen **alle** Coins (nicht gegen BTC) im Aufwärtsjahr 2023.
 - Am wahrscheinlichsten ist *trägt brutto vielleicht, lohnt nicht nach Kosten*.
+
+### 40.4 Ergebnis (09.10.2026; `k3_messung.py` → `.txt`, Gegenprobe `k3_messung_gegenprobe.py` **8/8**)
+
+Nutzer 09.10.: *„Ja, Messung laufen lassen, prüfen und gegenprüfen“*.
+
+| | Ergebnis |
+|---|---|
+| Teil 0 (R-R11) | Vorprüfung im Messskript erneut reproduziert: n 2.720, Richtung 1,904 — bestanden |
+| Einstiege ab 2024 | **494** an 32 Monaten, 103 Coins (H 12 · M 69 · S 413) |
+| **Korb gegen BTC** | **−3,63 Pp** (Median der Monate −4,12) · Bootstrap **0,000** |
+| Nullwelt (gleiche Klasse, gleicher Tag) | **−5,91 Pp** · Rang **0,980** |
+| Spiegel | **1,53** (Lauf 14 % / Absturz **16 %**; Nullwelt 15 % / **26 %**) |
+| **Urteil nach §40.2** | **SCHADET** (Korb < 0, Bootstrap ≤ 0,025) |
+| nach Kosten (Mittel 5,61 % Hin und Rück) | **−9,24 Pp** → lohnt nicht |
+| Selbsttest | (a) Zufalls-Signal: Fehlalarm **0 %** von 100 → bestanden · (b) gepflanzt (n 77): erkannt → **das Urteil gilt** |
+
+**Gegenprobe 8/8** (eigener Rechenweg):
+- Einstiege gleich der Machbarkeit;
+- Ertrag aus Rohkursen mit eigener Schleife (Abweichung 2·10⁻¹⁶);
+- Korb als eigene Monatsrechnung;
+- Nullwelt **analytisch** −5,888 Pp gegen 200 Ziehungen −5,91 (Standardfehler 0,08);
+- Lauf und Absturz aus eigener Relativreihe (67 / 77);
+- Spiegel 1,534; Kosten; Klassenzahlen.
+
+**Auskunft (nach dem Urteil, kein Befund):**
+
+| | |
+|---|---|
+| Klasse H | n 12 (2 Coins) · **+14,5 Pp** · Rang 0,88 — zu wenige |
+| Klasse M | n 69 · −3,1 Pp · Rang 0,69 |
+| Klasse S | n 413 · −3,6 Pp · Rang 0,97 · nach Kosten −10,0 Pp |
+| je Jahr | 2024 −3,4 · 2025 −3,9 · 2026 −3,5 Pp — **gleichmäßig**, kein Ausreißerjahr |
+| Zeitgrenze | 15 T −1,2 Pp · 30 T −3,6 · **60 T −9,8 Pp** — je länger, desto schlechter |
+| Marke X2 | −3,9 Pp |
+| BTC 90 T steigt / fällt | −4,1 / −2,4 Pp |
+| nach Dominanz-Spitze | +6,3 Pp (n 109, 17 Monate) · sonst −3,2 — ⚠️ **das Mittel trägt ein einziger Monat** (10/2024, 1 Einstieg +105 %); **Median der Monate −1,5 Pp**, 9 von 17 Monaten negativ. Gleichheit mit §37 (+6,3) ist Zufall (6,25 hier, andere Einstiege) |
+| Weglassprobe ohne FUN, SUN, ICP, ZEN, DGB | −5,5 Pp |
+| nur Bitpanda-handelbar (n 405) | −3,5 Pp |
+| **wie die Vorprüfung** (Ende 30 T gegen ALLE Coins) | **+2,68 Pp** — die Vorprüfung reproduziert sich ab 2024 |
+
+### 40.5 Einordnung und Folge (nach §40.3, vorab festgelegt)
+
+**Was die Zahlen sagen — zwei Aussagen, beide gemessen:**
+
+| | |
+|---|---|
+| **absolut (die Frage von K)** | Ein Kauf auf *Ruhigem Boden* verliert **gegen BTC halten** 3,6 Pp in 30 T, vor Kosten. In keinem Jahr anders |
+| **relativ (Ordnung)** | Er verliert **weniger als ein zufälliger Coin derselben Klasse** (−3,6 gegen −5,9; Rang 0,98). Vor allem **stürzt er seltener ab** (16 % gegen 26 %), läuft aber **nicht häufiger** (14 % gegen 15 %) |
+
+⇒ Dasselbe Bild wie in §30 (*„die Watchlist ordnet den Fortbestand, findet aber keine Ausbrüche“*):
+- *Ruhiger Boden* ist ein **Schutzmerkmal**, kein Einstieg.
+- Die +2,3 Pp der Vorprüfung waren echt, aber **relativ zu allen Coins** — und alle Coins verlieren gegen BTC.
+
+**Folge nach §40.3 (Zeile „trägt nicht / schadet“):**
+1. **Kein K-Einstieg aus K-3.** Rolle K ruht weiter (E-90).
+2. **Weiter mit K-1 / K-2** (Rally-Einstieg nach Dominanz-Spitze).
+   - ⚠️ Die Auskunft oben (+6,3 Pp nach Dominanz-Spitze) ist **kein Vorlauf** dafür. Sie hängt an einem Einstieg, und K-1 war vor dieser Messung festgelegt (§39.3).
+   - Der Messplan K-1 wird wie hier vorab geschrieben.
+3. *Ruhiger Boden* als **Ordnungsmerkmal** in der L-Auswahl (weniger Absturz): Das ist eine **neue Hypothese (Fassung n+1, E-63)**.
+   - Auf dieser Menge ist sie nur beschrieben.
+   - Prüfbar ist sie nur vorwärts oder auf neuen Daten.
+   - Sie wird **nicht** in Block B eingebaut, ohne dass das abgestimmt ist.
+
+⚠️ **Die Erwartung vorab (§40.3) lag falsch, und zwar in die ungünstige Richtung:** Erwartet war *„trägt brutto vielleicht“*. Gemessen ist: brutto schon gegen BTC negativ. Die Kosten waren nicht das Problem.

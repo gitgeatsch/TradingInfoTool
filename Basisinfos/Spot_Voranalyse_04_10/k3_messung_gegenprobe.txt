@@ -1,0 +1,10 @@
+G1  gleich  Messung 494 · Machbarkeit 494 Einstiege
+G2  gleich  groesste Abweichung 2.22e-16
+G3  gleich  eigener Korb -3.631 Pp · Messung -3.63 Pp · Monate 32
+G4  gleich  analytisch -5.888 Pp (SE der 200 Ziehungen 0.082) · Messung -5.91 Pp
+G5a gleich  Lauf 67 / Absturz 77 eigene · Ablage 67 / 77
+G5b gleich  eigener Spiegel 1.534 (Nullwelt Lauf 14.7 % / Absturz 26.0 %) · Messung 1.53
+G6  gleich  eigene -9.245 Pp (Kosten 5.614 %) · Messung -9.24 Pp
+G7  gleich  je Klasse {'S': np.int64(413), 'M': np.int64(69), 'H': np.int64(12)}
+
+8 von 8 gleich
