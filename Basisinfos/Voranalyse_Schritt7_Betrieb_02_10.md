@@ -2900,3 +2900,16 @@ Nutzer 09.10.: *„ja H15 pushen, wenn alles geprüft und gegengeprüft wurde“
   - Gegenprobe **7/7**, neu G7: Rangfolge über 3.636 Fälle (Hebel 5/3/2x, drei Haltedauern, mit/ohne Widerlegung, mit/ohne Nachzug, Kurs 80–130), **alle sechs Empfehlungen erreicht, 0 Abweichungen**.
   - **Ganze Suite 3.225 Prüfungen, nur die 5 bekannten roten** (Datenstand am Desktop: Sperrsymbole, Messreihe je Bestand, Messbasis-Alter, Kernwert ohne Beitrag, Helfer-Symbole).
 - **Erwartung nach Pull und Neustart am NB:** ETH 5x liegt bei rund 12 % Abstand → **sofort eine Mail *LIQUIDATION NAHE* (Stufe 15 %)**, danach je Tag und Stufe höchstens eine; BTC 3x (≈ 27 %) ohne Mail. K-H15-1 wie §23.30.
+
+### 23.34 K-H15-1 nach Pull und Neustart (09.10.2026, Teilexport 17:51, Prod-Sicherung 16:00 UTC als Kopie)
+
+| Kontrolle | Befund | |
+|---|---|---|
+| Mail *LIQUIDATION NAHE* ETH | vom Nutzer bestätigt; im Export `hebelfuehrung:2220:LIQUIDATION NAHE:stufe0.15:2026-10-09 · 15:14 UTC` — **genau einmal** | ✔ |
+| BTC 3x ohne Mail | kein Eintrag (Abstand 27,1 %) | ✔ |
+| Lauf alle 15 min | `job_laeufe` hebel_screening 15:59 UTC; nach 15:14 keine Wiederholung (Sperre je Tag und Stufe greift) | ✔ |
+| Exportabschnitt *HEBELFUEHRUNG (H15) gemeldet* | vorhanden. Er zeigt auch alte Schlüssel der Rollen-Kette (Position 1387, *SCHLIESSEN* täglich 25.09.–01.10.) | ✔ |
+| REGEL0 nach dem Neustart | Läufe 13:00/14:00/15:00 UTC, frisch 634/634, 15:00 mit 236 s | ✔ |
+| Protokollzeile *„Hebelfuehrung: n offen …“* / kein *„Lauf fehlgeschlagen“* | steht im Log, nicht im Teilexport | ◐ mit dem nächsten Diagnose-Export nachweisen |
+
+Stand 16:00 UTC: **ETH 5x Abstand 11,7 %** (Kurs 2.221,94 €, Liquidation 1.962,90 €) · BTC 3x 27,1 %. Die nächste Stufe (10 %) meldet H15 erneut.
