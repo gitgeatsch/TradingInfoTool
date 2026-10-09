@@ -2682,3 +2682,41 @@ Kontrolle **K-WD-1**: Danach läuft genau ein Watchdog. Nach dem nächsten *„B
 - Erste Fassung als Beleg: siehe Git-Verlauf von `e1_messung.txt`.
 
 **H13 (neu, 08.10.2026, aus Spot §28.4):** `importer/bitpanda_margin_positions.auto_add_unknown_hebel_symbols` sucht das Bitpanda-Asset über das **Kürzel** (`find_listed_asset(pos.symbol)`). Bei Doppelbelegungen wie **BIO** (im Bitpanda-Katalog Aktie *und* Token) kann eine Hebel-Position dem falschen Asset zugeordnet werden. Heute ohne Folge, denn es gibt keine offene Hebel-Position. ➤ Zusammen mit O26 auf die Asset-ID umstellen; eine gemeinsame Zuordnungsregel für Hebel und Spot.
+
+
+### 23.29 Betriebsprüfung 09.10. (Teilexport 06:46, Diagnose 06:52) — Testwoche bis 09.10. 04:00 an der Kopie, L1 rot aus neuem Grund
+
+**Grundlage:**
+- `nb_betriebsdaten_T440.txt`, Schluss *vollständig*.
+- REGEL0-Kopie SHA-256 `4a19220fe4b64627` (277 Signale, 145 Läufe), lokal in den Scratchpad kopiert.
+- `pruefe_testwoche.py --von "2026-10-03 04:00"`.
+- 72-h-Protokoll aus der Diagnose (7.893 Zeilen).
+
+| Bedingung | Ergebnis |
+|---|---|
+| T1 jede Stunde gerechnet | ✔ 145/145, verloren 0. **Damit ist auch die Neustart-Kontrolle vom 08.10. erledigt** |
+| T2 Frische | ✔ Frischefehler 0 (Abwicklung im 48-h-Fenster: 1000000BOB, PROMPT, PUMPBTC, STG, Auskunft) |
+| T3 Laufzeit | ✔ Median 198 s, höchstens 855 s |
+| F1–F4 Mails | ✔ 9 von 9 gemailt, Median 9 min, Korrektur 0, Ausstieg 1 verschickt / 4 entfallen |
+| **L1 Prüfblock** | ⛔ 8 gemailt, **2 ohne Trader-Zeile**: BEAMX 07.10. (Sperre der Ablage, §23.25, behoben) und **BNB 08.10. 16:00 (neu)** |
+| A1 / A2 | im Rahmen (9 beobachtet, 5,4 erwartet; Korrekturen 0) |
+
+**Befund BNB (Ursache am Code und an den Daten belegt):**
+- `markt` brauchte **135,2 s** (5 Stimmen, Fassung 0.2); die Zeitgrenze des Prüfblocks liegt bei **120 s**.
+- Danach wurde `trader` übersprungen: `regel0_llm.pruefe_signal`, Zeile 710–712 (*Zeitgrenze erreicht*) **ohne `_merke`**, also **ohne Zeile in der Ablage**.
+- Die maßgebliche Rolle fiel damit **still** weg, weil die reine Auskunftsrolle zuerst lief und die Zeit verbrauchte.
+- Sonst läuft `markt` in 8–10 s; BNB ist ein Ausreißer (Antwortzeit des Modells).
+
+**Kein Befund:**
+- NEAR 04.10. und ALGO 09.10. haben nur eine `trader`-Zeile, weil `markt` bei gleichen Fakten **mit Absicht wiederverwendet** wird (Zeile 702–706, keine neue Zeile). L1 zählt nur `trader`.
+- **K-F02 ✔:** Alle `trader`-Zeilen der Fassung 0.2 (TURBO, ALGO, KAIA) enthalten `lage_zur_signalstunde` und den Terminmarkt-Satz. Keine Zeile *keine Eingabe* oder *nicht anonym*; Aufrufe 30 am 08.10. (≤ 150).
+- **K-PRUEF-1:** Die Sperre ist behoben, es gibt keine Fehlerzeile mehr. Das erste gemailte Signal nach dem Pull (BNB) fiel aber aus dem **neuen** Grund; TURBO und KAIA danach sind vollständig.
+- **Signal-Sprung:** 08.10. 22:00 bis 09.10. 03:00 UTC 80 Signale in 6 h (sonst 1–2 je Stunde): ein **marktweiter Rückgang**. Die REGEL0 löst je Asset aus, also viele zugleich; die *endgültigen* Stufen folgen eine Stunde später. Kein Fehler, aber die Signale dieser Nacht sind **gleichlaufend** (dasselbe Ereignis).
+- **Offene Hebelposition BTC LONG 3×** seit 04:38 UTC (Eigenkapital 500 €, Kredit 1.000 €, Liquidation geschätzt 53.907): **kein** REGEL0-Signal zu BTC in der Ablage; Nutzerbestätigung erbeten.
+- Protokoll: Fehler nur `yfinance … possibly delisted` für Aktien/ETFs im Bestand (VST, VVMX, IS0C, CEBS, X136, DBPK, EXH3, PLTR, BW, G2X, ROL, ^IXIC), nicht im Hebel-Pfad. Die Prüfblock-Zeilen stehen im Protokoll des eigenen REGEL0-Prozesses, nicht im Hauptprotokoll; Nachweis über die Tabelle `pruefung` (0 Fehlerzeilen).
+- **K-WD-1:** Am Export **nicht prüfbar** (keine Prozessliste); Nutzerblick in den Task-Manager nötig.
+
+**H14 (neu): Zeitgrenze im Prüfblock**, Vorschlag zur Abstimmung (Bau erst nach der Testwoche, eine NB-Änderung zur Zeit):
+- (a) **`trader` zuerst**, `markt` danach (nur Auskunft);
+- (b) jedes Überspringen **mit Zeile** ablegen (`_merke(... "Zeitgrenze erreicht")`), damit L1 und der Export es sehen;
+- (c) die Zeitgrenze **je Rolle** statt gemeinsam.
