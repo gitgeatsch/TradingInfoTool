@@ -2822,3 +2822,31 @@ Nutzer 09.10.: *„Ja H15 zuerst, Warnung bei 15 % Abstand“* · *„wie immer 
   - Nutzer am 09.10. informiert.
 
 **Bestand:** Seit 07:45 UTC sind ALGO, AVAX, NEAR, SOL, SUI und CT auf 0 (Verkäufe), CAT ist neu. Für die Spot-Abdeckung (§39.9) gilt damit eine kleinere Liste.
+
+**KORREKTUR zu „Bestand: ALGO, AVAX … auf 0 (Verkäufe)“** (Nutzer 09.10.: *„diese sind gestaked und wie normale Spot-Positionen zu führen, Ausnahme ist nur ETH, dort dauert das Entstaken einige Tage“*):
+- **Falsch gelesen.** Um 07:30 UTC wurde der freie Teil ins Staking umgebucht (Log *„Umbuchung frei/gestakt“*). `holdings.quantity` = frei = 0, `staked_quantity` = alles. Der Importer bucht **richtig**.
+- Meine Quelle war die Zeile *BESTAND (Menge > 0)* des Teilexports (`nb_teilexport_betriebsdaten.py:234`). Sie zählt nur `quantity` und **verschweigt vollständig gestakte Werte**.
+- **Ganzer Bestand (Kopie 12:35 UTC):**
+  - **10 nur gestakt:** ALGO, AVAX, BNB, HYPE, NEAR, SEI, SOL, SUI, TAO, VSN.
+  - ETH frei 0,0569 + gestakt 0,4871 (+ Hebel 0,8964).
+  - Alle übrigen nur frei.
+  - Dieselbe Lage war am 11.09. schon bekannt (P-3, `portfolio_historie` Portfoliowert zählt das Gestakte seither mit).
+- **Leser, die heute noch nur `quantity` nehmen:**
+  - Teilexport-Zeile 234;
+  - `portfolio_historie` Rekonstruktion (Z. 467/483) und Hedge (Z. 1315, dort unkritisch);
+  - `absicherung_fakten`, `krypto/analyst`, `krypto/risk_gate` (Rollen-Kette, seit 05.10. angehalten).
+  - ⇒ Für den **Spot-Neubau** gilt: Bestand = **frei + gestakt**.
+- **Folge für §39.9 (Abdeckung):** Die Bestandsliste stammte aus derselben Zeile. Es fehlten **BNB, HYPE, SEI, TAO, VSN** (CT ist inzwischen verkauft, CAT neu) → Abdeckung neu rechnen.
+- **ETH:** Entstaken dauert Tage. Eine Verkaufshandlung muss das nennen (ETH ist Kern, betrifft B1 nicht; wichtig für jede künftige ETH-Handlung).
+
+**Trennung Spot / Hebel — was die Wallets hergeben (Kopie 12:35 UTC):**
+
+| Bitpanda-Wallet | gehört zu | Ablage im System |
+|---|---|---|
+| `shared-default` (frei), `staking-service` (gestakt) | **SPOT** | `holdings` (frei + gestakt) |
+| `margin-trading` (Hebel-Menge), `margin-trading-credit` (Hebel-Kredit, EURCV) | **HEBEL** | `hebel_positions`, **nie** `holdings` |
+
+Die Hebel-Wallets treffen die offenen Hebelpositionen:
+- BTC 0,02038541 ≈ 1.500 € beim Einstieg;
+- ETH 0,89636371 × 2.220 ≈ 1.990 € (Position 2.000 €);
+- Kredit −2.600 € = 1.000 + 1.600 genau.
