@@ -1048,3 +1048,17 @@ Schritt7 §23.24.
 - Abbau nur als Vorschlag mit Preis gegen BTC.
 - Der Rollen-Dialog kommt erst mit K (Stufe 2).
 - Ersetzt den Default *offen* aus §39.2.
+
+
+# E-91 · Spot Block B abgestimmt + Handlungsgrundsatz: jede Mail eine Handlung (09.10.2026)
+
+**09.10.2026** · Nutzer: *„B1 ja mit Prüfung, B2 ja, B3 ja, B4 ja. Hinweis: Wir bewegen uns wieder auf den NEWSLETTER-Weg zu … ohne konkrete Ableitung auf eine Handlung finde ich diese nicht sinnvoll. Bei 30+ Assets ist das nur Arbeit.“*
+
+- **B1** Mitnahme ×3: Übertragbarkeit auf den ganzen Bestand gemessen (Spot §39.6): **trägt** (+4,87 Pp, Rang 1,00, Gegenprobe 4/4) → gilt für den ganzen L-Bestand.
+- **B2 bis B4 ja.**
+- **Grundsatz:** Mail nur mit Handlung (Coin, Handlung, Frist, gemessene Begründung mit Belegstufe); der Rest im App-Tab.
+- **Vorschlag zur Bestätigung** (§39.7):
+  - C2 Monatsmail entfällt.
+  - Futures-Start und Delisting bekommen keine eigene Mail.
+  - B4 wird zur **Abbau-Reihenfolge** aus dem unteren Watchlist-Fünftel.
+

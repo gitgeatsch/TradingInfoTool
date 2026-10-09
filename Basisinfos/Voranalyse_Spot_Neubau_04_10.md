@@ -4730,6 +4730,44 @@ Nutzer 09.10.: *„B1 ja mit Prüfung, B2 ja, B3 ja, B4 ja. Hinweis: Wir bewegen
 | schadet | für die übrigen ausdrücklich keine Mitnahme |
 
 
+**Ergebnis Übertragbarkeit B1** (`fb_uebertrag.py` → `.txt`, Gegenprobe `fb_uebertrag_gegenprobe.py` **4/4**: eigene Schleife je Position aus Rohkursen, Auslösung und d an allen 7.819 Positionen gleich):
+
+| ab 2024, Z1 ×3 | Positionen | ausgelöst | Korb gg. Halten | Bootstrap / Rang | je Auslösung Median | Urteil |
+|---|---|---|---|---|---|---|
+| Teil 0 oberes Fünftel (§31) | 1.593 | 9,2 % | +5,50 Pp | 1,00 / 1,00 | +89 Pp | reproduziert |
+| **ALLE ohne Kern (Betrieb)** | **7.819** | **7,1 %** | **+4,87 Pp** | **1,00 / 1,00** | **+97 Pp** (besser in 89 %) | **TRÄGT** |
+| Auskunft: nur außerhalb des Fünftels | 6.226 | 6,6 % | +4,71 Pp | 1,00 / 1,00 | +99 Pp | trägt |
+
+- Selbsttest (a): Fehlalarm **0 %**.
+- Je Klasse: H +5,4 · M +1,2 · S +6,0 Pp. Je Jahr: 2024 +6,1 · 2025 +3,3 Pp (schwächer, wie in §31).
+
+⇒ **Folge (vorab): B1 gilt für den ganzen L-Bestand.**
+
+### 39.7 Neusortierung nach dem Handlungsgrundsatz (E-91)
+
+**Grundsatz** (Nutzer 09.10.; zweites Mal nach E-85):
+- Eine **Mail** enthält nur **Handlungen**: *welcher Coin · was tun · bis wann · warum (gemessen, mit Belegstufe)*.
+- Alles ohne Handlung steht **nur im App-Tab** zum Nachschlagen oder als Kontext **innerhalb** einer Handlungszeile.
+- Ohne Handlung gibt es **keine** Mail, auch nicht monatlich.
+
+| Punkt | Handlung | Belegstufe | wohin |
+|---|---|---|---|
+| **B1 Mitnahme ×3** | *„Hälfte von X verkaufen, heute“* | **trägt** auf dem ganzen Bestand (+4,9 Pp, je Auslösung Median +97 Pp) | **Ereignis-Mail** (Tagesschluss) |
+| **B3 Upbit-Listing** eines gehaltenen Coins | *„X in den nächsten Stunden verkaufen“* | **Halten schadet** (−10 Pp gg. BTC in 7 T, Rang 0,00; erste Stunden +12 %) | **Ereignis-Mail sofort** (stündlicher Abruf) |
+| B3 Futures-Start | keine eigene; gehört zum Abbau (unten) | trägt nicht (Bootstrap 0,26), schlechter als Zufall der Klasse | Zusatz in der Abbau-Zeile + App; Vorwärtsprotokoll |
+| B3 Delisting / Monitoring | keine eigene | E-1 nicht getragen | Zusatz in der Abbau-Zeile + App |
+| **B4 Abbau** → **Abbau-Reihenfolge** | *„Wenn du abbaust: zuerst X, Y, Z“* | **abgeleitet aus der getragenen Ordnung der Watchlist** (§25.6): Der Saldo (*verdoppelt* minus *−70 % oder eingestellt*, 12 Monate) ist **gegen die Klasse** gemessen, die Fünftel summieren sich um null, die Dosis ist in **beiden** Epochen monoton → das untere Fünftel liegt darunter: **E2 −6,5 Pp · E3 −16,3 Pp**. ⚠️ Das Fünftel 1 ist **nicht eigens** gegen eine Nullwelt geprüft | **Ereignis-Mail**, wenn ein gehaltener Coin am Monatsstichtag ins untere Fünftel fällt; einmalig eine **Erstliste** bei Inbetriebnahme |
+| B2 Preis gegen BTC | keine | Fakt | App + Kontext in jeder Handlungszeile |
+| C1 Season-Ampel | nur beim Wechsel in *Vorlauf / Season-Klima*: *„L aufbauen: Kandidaten …“* (A3, Stufe 2) | kalibriert (§36) | App; Mail **nur** beim Wechsel in eine Stufe mit Handlung (heute: keine) |
+| **C2 Monatliche Bestandsmail** | — | Newsletter | **entfällt**, ersetzt durch den App-Tab *Spot-Bestand* |
+| C3 Dominanz-Spitze | — | Fakt | App (Kontext der Ampel) |
+
+**Wirkung auf die Menge** (Schätzung aus der Messung, kein Versprechen):
+- B1 löst je Coin und Jahr in rund 7 % aus. Bei 30 L-Coins sind das etwa **2 Mails im Jahr**.
+- Upbit-Listings gehaltener Coins: einige wenige im Jahr.
+- Abbau: Wechsel ins untere Fünftel monatlich, meist 0 bis 2 Coins.
+
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.

@@ -1,0 +1,13 @@
+UEBERTRAGBARKEIT B1 Mitnahme Z1 x3 (§39.6) · Kurse bis 2026-09-20 · ab 2024
+
+  Teil 0 oberes Fuenftel (§31) Positionen  1593 · ausgeloest  146 (9.2 %) · Korb +5.50 Pp · Bootstrap 1.00 · Rang 1.00 -> TRAEGT · je Ausloesung Median +89.1 Pp, besser in 87 %
+  -> Teil 0 bestanden (+5,50 Pp)
+
+HAUPT:
+  ALLE ohne Kern (Betrieb)     Positionen  7819 · ausgeloest  556 (7.1 %) · Korb +4.87 Pp · Bootstrap 1.00 · Rang 1.00 -> TRAEGT · je Ausloesung Median +97.4 Pp, besser in 89 %
+  SELBSTTEST (a) Zufalls-Kriterium 100 Welten: Fehlalarm 0 % -> bestanden
+
+AUSKUNFT:
+  nur AUSSERHALB oberes Fuenftel Positionen  6226 · ausgeloest  410 (6.6 %) · Korb +4.71 Pp · Bootstrap 1.00 · Rang 1.00 -> TRAEGT · je Ausloesung Median +99.2 Pp, besser in 90 %
+  je Klasse: H +5.4 Pp (ausgeloest 57) · M +1.2 Pp (ausgeloest 116) · S +6.0 Pp (ausgeloest 383)
+  je Jahr: 2024 +6.1 Pp · 2025 +3.3 Pp

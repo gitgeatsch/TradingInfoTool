@@ -1,0 +1,6 @@
+G1  gleich  Positionen 7819 · Starttage 21
+G2  gleich  Ausloesungen eigene 552 · Ablage 556 · abweichend 0
+G3  gleich  d abweichend an 0 Positionen
+G4  gleich  eigener Korb +4.870 Pp · Ausgabe +4.87 Pp
+
+4 von 4 gleich
