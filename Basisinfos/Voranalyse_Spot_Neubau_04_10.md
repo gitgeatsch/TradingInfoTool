@@ -4768,6 +4768,23 @@ Nutzer 09.10.: *„B1 ja mit Prüfung, B2 ja, B3 ja, B4 ja. Hinweis: Wir bewegen
 - Abbau: Wechsel ins untere Fünftel monatlich, meist 0 bis 2 Coins.
 
 
+### 39.8 Neusortierung bestätigt · Block C/D geprüft (09.10.2026)
+
+Nutzer 09.10.: *„Ja, Neusortierung bestätigt – weiter mit Block C/D. Hinweis: Die Monatsmail wäre interessant, wenn diese eine laufende Entwicklung mit Informationen zum Bestand enthält, konkrete Informationen. Nur als Option vormerken.“* → Plan **O35** (Option, nicht im Bauumfang).
+
+**Prüfung gegen Code und NB-Datenlage (§27.3/§27.5):**
+
+| Befund | Wirkung |
+|---|---|
+| Die Abbau-Reihenfolge (B4) braucht den Watchlist-Wert = **F1 Tiefe, F2 Dauer seit Hoch, F8 Alter, F9 TVL gegen Kurs** (`wl_messung.WAHL`) | F1/F2/F8 brauchen die volle Kursgeschichte → **D3 Stammdatei ist Pflicht** (vorher Stufe 2). F9 → **D4 TVL-Verlauf** ist Pflicht, sonst rangiert der Betrieb anders als gemessen (37 % der Coins haben TVL) |
+| Ampel B2 M2: Messung `fredgraph.csv?id=M2SL` mit Verzug 35 T; der Betrieb hat `api/macro.py` (FRED mit Schlüssel, M2SL) | D1: M2-Verlauf aus derselben Reihe, Verzug 35 T wie gemessen |
+| Ampel B3 Stablecoins: Messung DefiLlama `stablecoincharts/all` mit Verzug 1 T; am NB schreibt `externe_reihen_job` nur den Tageswert `stablecoin_angebot_usd` | D1: Nachlader mit dem ganzen Verlauf aus **derselben** Quelle |
+| BTCDOM: am NB nicht vorhanden (`richtung_historie.db` fehlt mit Absicht) | wird nur für C3 (App) und K-1 gebraucht → **Stufe 2** |
+| Ampel-Mail *„L aufbauen“* braucht die Kandidatenliste A3 (bisher Stufe 2) | **A3 zieht mit C1 nach vorn**, sonst hat die Mail keine konkrete Handlung |
+| Bestände außerhalb Binance (KAS, MORPHO, BRETT, SUPRA, MON, CANTON, ASTER, XDC, PLUME) | B1 über Prod-Kurse (D5). Für B4 nur **eingeordnet** in die Binance-Zellen, nicht gemessen → in der Zeile so benannt |
+| Ablage | eigene Datei `data/spot_betrieb.db` (wie `regel0_signale.db`), **nicht** die Produktion; `holdings` nur lesend |
+
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.
