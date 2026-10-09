@@ -4785,6 +4785,27 @@ Nutzer 09.10.: *„Ja, Neusortierung bestätigt – weiter mit Block C/D. Hinwei
 | Ablage | eigene Datei `data/spot_betrieb.db` (wie `regel0_signale.db`), **nicht** die Produktion; `holdings` nur lesend |
 
 
+### 39.9 Block C/D abgestimmt · Messung D4 und Abdeckungsgrad vorab (09.10.2026)
+
+Nutzer 09.10.: *„1. ja 2. ja messen, prüfen und gegenprüfen 3. ja – Abdeckungsgrad wäre jedenfalls wichtig. Das Konzept hört sich nicht schlecht an; bitte nach den Messungen und deiner fachlichen Bewertung das Konzept noch einmal mit mir auf Herz und Nieren prüfen.“*
+
+Damit gilt: C1–C4 und D1–D8 wie §39.8, Reihenfolge 1–5.
+
+**Messung D4 (`d4_wirkung.py`, Desktop, nur lesend, Grundlage `mk_messung` §25):**
+
+| | Festlegung |
+|---|---|
+| Teil 0 (R-R11) | Dosis §25.6 mit vollem Wert (F1, F2, F8, F9) wiedergeben: E2 −6,5 · −4,0 · −0,7 · +0,3 · +10,5 / E3 −16,3 · −6,7 · +3,2 · +5,5 · +13,6 (± 0,15 Pp), sonst Abbruch |
+| Wirkung | Wert **ohne F9** (F1, F2, F8). Je Epoche: Anteil der Anker mit anderem Fünftel (alle / nur Coins mit TVL); unteres Fünftel: wie viele verlassen es, wie viele kommen hinzu |
+| **entscheidet** | Dosis ohne F9: Ist das **untere Fünftel in E2 und E3 das schlechteste der fünf und < 0**, trägt B4 auch ohne F9 → **D4 darf hinter B4 rücken**; die B4-Zeile sagt dann *„vorläufig ohne TVL-Merkmal“*. Sonst bleibt D4 Pflicht vor B4 |
+| Auskunft | Dosis ohne F9 vollständig; Wechselanteile |
+
+**Abdeckungsgrad (gleiches Skript):**
+- **Bestand:** 23 Krypto-Bestände ohne Kern laut NB-Teilexport 09.10. 06:47 (ALGO, ASTER, AVAX, BEAMX, BIO, BRETT, CANTON, CT, INJ, KAIA, KAS, LINK, MON, MORPHO, NEAR, PLUME, QNT, SUI, SUPRA, TURBO, W, XDC, XLM).
+- Je Coin am letzten Monatsstichtag: im Watchlist-Universum (Binance-Spot, Marktwert-Klasse)? Welche der vier Merkmale bekannt? Fünftel mit und ohne F9. Kurs für B1 aus Binance oder nur aus Prod (D5)?
+- **Universum** ab 2024: Anteil der Anker mit F9 bekannt, mit allen vier Merkmalen bekannt.
+
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.
