@@ -1,0 +1,33 @@
+ABDECKUNG BESTAND (frei + gestakt) am Stichtag 2026-09-01 · Universum 332 Coins · 28 Bestaende ohne Kern
+
+  ALGO    Klasse M · Merkmale F1,F2,F8 · Fuenftel 4 (ohne F9 4) (gestakt)
+  ASTER   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  AVAX    Klasse H · Merkmale F1,F2,F8,F9 · Fuenftel 4 (ohne F9 4) (gestakt)
+  BEAMX   Klasse S · Merkmale F1,F2,F8 · Fuenftel 2 (ohne F9 2)
+  BIO     Klasse S · Merkmale F1,F2,F8,F9 · Fuenftel 2 (ohne F9 2)
+  BNB     Klasse H · Merkmale F1,F2,F8,F9 · Fuenftel 2 (ohne F9 2) (gestakt)
+  BRETT   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  CANTON  NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  CAT     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  HYPE    NICHT im Watchlist-Universum (gestakt) · Kurs B1: nur Prod (D5)
+  INJ     Klasse M · Merkmale F1,F2,F8,F9 · Fuenftel 2 (ohne F9 3)
+  KAIA    Klasse M · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1)
+  KAS     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  LINK    Klasse H · Merkmale F1,F2,F8 · Fuenftel 4 (ohne F9 4)
+  MON     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  MORPHO  NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  NEAR    Klasse H · Merkmale F1,F2,F8,F9 · Fuenftel 3 (ohne F9 3) (gestakt)
+  PLUME   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  QNT     Klasse H · Merkmale F1,F2,F8 · Fuenftel 2 (ohne F9 2)
+  SEI     Klasse M · Merkmale F1,F2,F8 · Fuenftel 2 (ohne F9 2) (gestakt)
+  SUI     Klasse H · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1) (gestakt)
+  SUPRA   NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  TAO     Klasse H · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1) (gestakt)
+  TURBO   Klasse S · Merkmale F1,F2,F8 · Fuenftel 1 (ohne F9 1)
+  VSN     NICHT im Watchlist-Universum (gestakt) · Kurs B1: nur Prod (D5)
+  W       Klasse S · Merkmale F1,F2,F8,F9 · Fuenftel 4 (ohne F9 3)
+  XDC     NICHT im Watchlist-Universum · Kurs B1: nur Prod (D5)
+  XLM     Klasse H · Merkmale F1,F2,F8 · Fuenftel 4 (ohne F9 4)
+
+-> im Universum 16 von 28 (alle vier Merkmale 6, ohne TVL 10) · NICHT im Universum 12: ASTER, BRETT, CANTON, CAT, HYPE, KAS, MON, MORPHO, PLUME, SUPRA, VSN, XDC
+-> unteres Fuenftel (ohne F9, wie B4 vorlaeufig): KAIA, SUI, TAO, TURBO

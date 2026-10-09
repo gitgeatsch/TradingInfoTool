@@ -4826,6 +4826,20 @@ Damit gilt: C1–C4 und D1–D8 wie §39.8, Reihenfolge 1–5.
 - ⇒ **Größte Lücke des Konzepts.** Sie ist bei der Konzeptprüfung *auf Herz und Nieren* zuerst zu klären: *Warum* fehlen sie (kein Binance-Spot, kein Umlauf, zu jung)? Und lässt sich das Universum dafür erweitern, ohne die Grundgesamtheit der Messung zu ändern?
 
 
+**⚠️ KORREKTUR Abdeckung Bestand** (09.10. abends; `d4_abdeckung_bestand.py` → `.txt`):
+- Die Liste oben stammte aus der Teilexport-Zeile *BESTAND (Menge > 0)*. Sie zählt nur die freie Menge, deshalb fehlten **vollständig gestakte** Werte (Schritt7 §23.31).
+- Neu mit **frei + gestakt** (Prod-Sicherung 09.10. 12:35 UTC): **28 Krypto-Bestände** ohne Kern und Cash; CT ist verkauft, CAT neu.
+
+| | |
+|---|---|
+| im Watchlist-Universum | **16 von 28** (alle vier Merkmale 6, ohne TVL 10) |
+| **nicht** im Universum | **12:** ASTER, BRETT, CANTON, CAT, HYPE, KAS, MON, MORPHO, PLUME, SUPRA, VSN, XDC |
+| unteres Fünftel (ohne F9, wie B4 vorläufig) | **KAIA, SUI, TAO, TURBO** |
+
+- Erster Hinweis zur Ursache: **CAT** heißt bei Binance `1000CAT` (`symbol_zuordnung.csv`, Faktor 1000). Es fehlt also nur wegen des Namens.
+- Die übrigen 11 werden in der Konzeptprüfung geklärt (kein Binance-Spot? kein Umlauf? zu jung?).
+
+
 ### 37.6 Korrektur der Einstiegsregel (09.10.2026, gefunden von der Gegenprobe zu K-3)
 
 - `k37_machbarkeit.einstiege` sperrte *eine offene Position je Coin* nur **innerhalb einer Klasse**.
