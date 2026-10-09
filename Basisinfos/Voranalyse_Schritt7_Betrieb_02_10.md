@@ -2785,3 +2785,40 @@ Nutzer 09.10.: *„Ja H15 zuerst, Warnung bei 15 % Abstand“* · *„wie immer 
   - im Protokoll je 15 min die Zeile *Hebelfuehrung: … BTC … Abstand …*;
   - keine Zeile *Hebelfuehrung: Lauf fehlgeschlagen*;
   - bei Abstand über 15 % keine Mail; der Exportabschnitt vorhanden.
+
+### 23.31 NB-Prüfung 09.10.2026 nachmittags (Teilexport 14:15, Diagnose 14:36, Prod-Sicherung 12:35 UTC als Kopie)
+
+**Testwoche** (`pruefe_testwoche.py` an der Kopie `regel0_signale.db` 12:15 UTC):
+- T1–T3 und F1–F4 ✔.
+  - 153/153 Laufstunden.
+  - 17 Signale mit Schalter an, alle gemailt, im Median 10 min.
+  - 0 Korrekturen; Ausstieg 1 verschickt / 4 entfallen.
+- ⛔ **L1:** 2 gemailte Signale ohne Trader-Zeile, beide **bekannt**: BEAMX 07.10. (Sperre der Ablage, behoben) und BNB 08.10. 16:00 (Zeitgrenze, H14/O32 offen). Seit 08.10. **kein neuer Fall** (9 Signale am 09.10., alle mit Trader-Zeile).
+- A1 im Rahmen (17 gegen 10,5 erwartet).
+- ⇒ Die Freigabe ist **Nutzerentscheidung** (P5, ≥ 10.10.).
+
+**K-BP-1 — Ursache gefunden:** *„Bestand passt nicht zusammen“* BTC und EURCV seit 06:45 UTC.
+
+| | Spot-Wallet | Hebel-Wallet | Buchungen gesamt | `/portfolio` „meldet“ |
+|---|---|---|---|---|
+| BTC | 0,05496596 (shared-default) | 0,02038541 (margin-trading) | 0,07535137 | **0,02038541** = genau der Hebelteil |
+| EURCV | +696,04291657 (shared-default) | −2.600 (margin-trading-credit = Hebel-Kredit BTC 1.000 + ETH 1.600) | −1.903,9571 | **−2.600** = genau der Kredit |
+| ETH | 0,05685134 + Staking 0,48714122 | 0,89636371 (margin-trading) | — | Spot-Teil → Log *„ohne Hebel-Wallet gezählt“* ✔ |
+
+- **Ursache:** `/portfolio` führt den Hebelteil als **eigene Zeile mit derselben Asset-ID**. `abgleich_neu` baut `positionen = {p.asset_id: p …}` und behält **nur die letzte Zeile**. Bei ETH war es zufällig die Spot-Zeile, bei BTC und EURCV die Hebel-Zeile.
+- Die Werte stimmen auf 8 Nachkommastellen, eine Rohantwort von `/portfolio` liegt aber nicht vor ⇒ **Befund, am Code zu bestätigen**.
+- **Wirkung:**
+  - `holdings` BTC 0,05497 ist richtig: Es ist der letzte gute Stand, und der Spot hat sich nicht geändert.
+  - EURCV steht veraltet bei 311,93 statt 696,04.
+  - Die Warnmail wiederholt sich alle 6 h, solange ein Hebel offen ist.
+  - Für den Betrieb unschädlich: kein Schreiben falscher Mengen.
+- **K10** (*zählt `/portfolio` Hebel-Sicherheiten mit?*) ist damit beantwortet: **als eigene Zeile**.
+- **Fix-Vorschlag (Desktop, Prüfstand, Nutzer-Ja, NB-Änderung erst nach H15):** Die Portfolio-Zeilen je Asset-ID **summieren**. Dann trifft die Summe die Buchungen gesamt (BTC 0,07535 / EURCV −1.903,96) und die bestehende E9-Prüfung *mit Hebel* greift. In `holdings` bleibt nur der Spot-Teil (Hebel-Wallets bleiben draußen, Modul-Kopf).
+
+**Hebel offen (Kopie 12:30 UTC):**
+- BTC 3x: Kurs 74.137 € · Liquidation geschätzt 53.954 € · **Abstand 27,2 %**.
+- **ETH 5x:** Kurs 2.232,08 € · Liquidation geschätzt 1.962,26 € · **Abstand 12,1 %**.
+  - Das liegt unter der H15-Schwelle 15 %. H15 hätte *LIQUIDATION NAHE* gemeldet; es ist am NB noch nicht aktiv (Push ausstehend).
+  - Nutzer am 09.10. informiert.
+
+**Bestand:** Seit 07:45 UTC sind ALGO, AVAX, NEAR, SOL, SUI und CT auf 0 (Verkäufe), CAT ist neu. Für die Spot-Abdeckung (§39.9) gilt damit eine kleinere Liste.
