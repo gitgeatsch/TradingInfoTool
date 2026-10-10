@@ -55,14 +55,16 @@ kontrollen:
     faellig_bis: ""
     status: offen
   - id: K-LLM-1
-    titel: "REGEL0-Signalmail traegt den Block PRUEFUNG (Fassung, Trader-Urteil) sichtbar"
+    titel: "REGEL0-Signalmail zeigt die Rollen sichtbar: Abschnitt 3 Einschaetzung (Trader-Zeile) und 4 Begruendung der Rollen (Fassung, Hinweise) - seit O25 (04.10.) statt des frueheren Blocks PRUEFUNG"
     seit: "2026-10-03"
     paket: E-52
     commit: 952f9e5
     art: rueckfrage
     nachweis: "Nutzer: steht in einer REGEL0-Signalmail der Block PRUEFUNG? (aus dem Log nicht belegbar)"
     faellig_bis: "2026-10-13"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-10"
+    beleg: "Nutzer 10.10. mit Bildschirmfoto einer REGEL0-Mail: Abschnitt 4 Begruendung der Rollen mit Trader (spricht dagegen, 4 von 5, Gegengrund) und Umfeld (nur Beschreibung), Hinweiszeilen Fassung 0.2-sofort/Entscheider ausgesetzt/Messstand; Trader-Zeile in Abschnitt 3. Daten: jedes gemailte Signal mit Trader-Urteil (NB-Kopie 10.10.)"
   - id: K-ALT-1
     titel: "Altbestand September ohne auffindbaren Beleg: K15 (nur Pull, nichts sichtbar), K16 (Kaufmail-Abschnitt 'Umfeld', Rollen-Kette), K21 (terminmarkt-Zeile in zellen_lauf, Rollen-Kette)"
     seit: "2026-10-10"
