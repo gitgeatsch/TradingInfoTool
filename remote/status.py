@@ -177,8 +177,9 @@ def _gecacht_frist(sekunden: float):
 _LIVE_GETTER = frozenset({
     # Der Nutzer beobachtet diese Zahl waehrend eines laufenden Signal-Laufs -
     # ein bis zu 15 Minuten alter Wert waere hier eine Falschaussage.
+    # (P9b, 10.10.2026: `_get_rollen_budget` ist hier heraus und traegt 60 s - die Rollen-Kette ist seit 05.10. angehalten,
+    # und ihre Zaehlung durchsuchte `signals` zweimal ohne passenden Index, 0,07 s je Abruf.)
     "_get_budget_heute",
-    "_get_rollen_budget",
     # Wird direkt nach einem von Hand angestossenen Marktscan gelesen.
     "_get_marktscan_last",
     # Ampel ueber die Erreichbarkeit der Datenquellen. Ein zwischengespeicherter
@@ -1114,6 +1115,7 @@ def _get_parameter_overview() -> list[dict]:
     return build_parameter_overview(config_module.load_config())
 
 
+@_gecacht_frist(60)
 def _get_rollen_budget(conn: sqlite3.Connection) -> dict:
     """Was die Rollen-Kette heute wirklich verbraucht - und wovon (14.08.2026).
 
@@ -1235,17 +1237,23 @@ def _get_budget_heute(conn: sqlite3.Connection) -> dict:
 
 
 def _get_marktscan_last(conn: sqlite3.Connection) -> dict | None:
-    candidates = db.get_marktscan_candidates(conn, limit=500)
-    if not candidates:
+    """Juengster Marktscan-Lauf: Zeitpunkt, Kandidaten, Treffer. LIVE (wird direkt nach einem angestossenen Scan gelesen).
+
+    ⚠️ GEZIELT STATT 500 OBJEKTE (P9b, 10.10.2026). Bis hierher lud die Karte die juengsten 500 Kandidaten und wandelte jede
+    Zeile in ein Objekt, nur um den juengsten Lauf zu zaehlen - 0,10 s je Abruf, alle 5 s. Jetzt zwei Abfragen auf den
+    juengsten Lauf. Gleiches Ergebnis wie vorher (Gegenprobe p9b_gegenprobe.py), solange ein Lauf unter 500 Kandidaten hat;
+    darueber zaehlte die alte Fassung abgeschnitten, die neue vollstaendig."""
+    kopf = conn.execute("SELECT scan_run_id, discovered_at FROM marktscan_candidates "
+                        "ORDER BY discovered_at DESC LIMIT 1").fetchone()
+    if kopf is None:
         return None
-    latest_run_id = candidates[0].scan_run_id  # bereits DESC nach discovered_at sortiert
-    latest_run = [c for c in candidates if c.scan_run_id == latest_run_id]
-    treffer = [c for c in latest_run if c.einstufung in _TREFFER_EINSTUFUNGEN]
-    return {
-        "discovered_at": latest_run[0].discovered_at,
-        "kandidaten": len(latest_run),
-        "treffer": len(treffer),
-    }
+    lauf = kopf[0]
+    platz = ",".join("?" * len(_TREFFER_EINSTUFUNGEN))
+    n, treffer = conn.execute(
+        "SELECT COUNT(*), SUM(einstufung IN (%s)) FROM marktscan_candidates WHERE scan_run_id = ?" % platz,
+        (*sorted(_TREFFER_EINSTUFUNGEN), lauf)).fetchone()
+    # `discovered_at` wie vorher: der juengste Eintrag des Laufs - und das IST die Kopfzeile (sie ist der juengste ueberhaupt)
+    return {"discovered_at": kopf[1], "kandidaten": int(n or 0), "treffer": int(treffer or 0)}
 
 
 # ══ P9 (10.10.2026): die Betriebslage des neuen Systems ════════════════════════════════════════════════════════════════════

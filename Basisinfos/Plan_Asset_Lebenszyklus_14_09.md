@@ -700,3 +700,22 @@ Nutzer 10.10.: *„Pull am NB erledigt – P9 Statusseite starten“*. Umgesetzt
 - Handyansicht 375 px ohne Querlauf (Bildschirmfotos). Paket GuiKette 36/36, Kontrollen 12/12, H15 11/11 + 7/7, Sofortliste 9/9 + 5/5, `teste_status_cache.py` grün.
 
 **Am NB offen:** **K-ST-1** — du siehst die Seite über VPN, alle Karten gefüllt, nichts fehlt; Teilexport mit NB-KONTROLLEN.
+
+
+### G-Q P9b — Laufzeit der Statusseite (10.10.2026)
+
+Nutzer 10.10.: *„Alle Karten gefüllt, nichts fehlt – Folgeschritt Laufzeit vorlegen“*, dann *„Ja, P9b bauen, prüfen und gegenprüfen“*. **K-ST-1 erfüllt.**
+
+**Anlass:** Seit dem Neustart mit P9 (16:36) meldete das NB 192-mal *„Statusaufbau dauerte > 1 s“* (Median 1,12 s). Gemessen an der Prod-Kopie (713 MB): die warme Zeit lag zu fast 100 % in drei **alten** Live-Abfragen, nicht in den neuen Karten.
+
+| Abfrage | vorher | Ursache | jetzt |
+|---|---|---|---|
+| `db.get_latest_prices` (Grundfunktion, 17 Aufrufer) | 0,084 s | `GROUP BY symbol` über alle 428.505 Zeilen von `price_cache` | Sprung über den Primärschlüssel (rekursiv, je Symbol das jüngste): **0,0003 s**, **bitgleich** |
+| Marktscan-Karte `_get_marktscan_last` | 0,118 s | lud 500 Kandidaten als Objekte | zwei gezielte Abfragen auf den jüngsten Lauf: 0,015 s; bleibt live |
+| Rollen-Kontingent `_get_rollen_budget` | 0,07 s | `signals` zweimal ohne passenden Index | Frist **60 s** statt live (Kette seit 05.10. angehalten) |
+
+**Warmer Aufbau am Desktop: 0,29 → 0,02 s** (am NB erwartet ≈ 0,1 s). Kein Index, keine Frist auf die Preise (bleiben live, auch nach *„Preise aktualisieren“*).
+
+**Nachweis:** `p9b_gegenprobe.py` **7/7** (Preise alt = neu auf der Kopie und an Randfällen; Marktscan alt = neu, ein Lauf > 500 Kandidaten wird jetzt vollständig gezählt statt abgeschnitten; Laufzeit; Frist; Prüfsumme der Kopie gleich). ⚠️ B6 (Rollen-Kontingent) prüft nur 0 = 0 — die Kette urteilt heute nicht. Dauerhafte Wache in Paket GuiKette (Preise **bitgleich** zur alten Abfrage auf der Desktop-DB). p9_pruefstand 6/6, p9_gegenprobe 10/10, H15 11/11 + 7/7, Sofortliste 9/9 + 5/5, `teste_status_cache.py` grün.
+
+**Am NB:** Pull + Neustart → **K-ST-2** (Diagnose: höchstens die erste Warnung nach dem Start, danach keine; Hebelführung-Logzeile wie vorher).

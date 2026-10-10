@@ -22146,6 +22146,27 @@ def paket_guikette() -> None:
         _wal_nach9 = dict((q, g) for q, _m, g in _nach9).get(_db9 + "-wal", 0)
         pruefe(P, "⚠️⚠️ und die Datenbank ist danach unveraendert (Hauptdatei gleich, Journal ohne neue Daten)",
                _stand9[0] == _nach9[0] and _wal_nach9 <= _wal_vor9, "%s -> %s" % (_stand9, _nach9))
+    # P9b (10.10.2026): die letzten Preise ueber den Index statt GROUP BY - eine GRUNDFUNKTION (17 Aufrufer). Die Wache verlangt
+    # BITGLEICHHEIT mit der alten Abfrage auf der Desktop-DB (nur lesend), nicht nur Tempo.
+    if _os_s.path.exists(_db9):
+        _alt9b = ("SELECT p.symbol, p.coingecko_id, p.price_usd, p.price_eur, p.market_cap_usd, p.volume_24h_usd, p.change_24h_pct, "
+                  "p.fetched_at FROM price_cache p INNER JOIN (SELECT symbol, MAX(fetched_at) AS m FROM price_cache GROUP BY symbol) l "
+                  "ON p.symbol = l.symbol AND p.fetched_at = l.m")
+        import database.db as _db9b
+        _c9c = _ro9()
+        try:
+            _cur9b = _c9c.execute(_alt9b)
+            _nm9b = [x[0] for x in _cur9b.description]
+            _a9b = {r[0]: _db9b.PriceSnapshot(**dict(zip(_nm9b, tuple(r)))) for r in _cur9b.fetchall()}
+            _n9b = _db9b.get_latest_prices(_c9c)
+            _ms9b = _RS9._get_marktscan_last(_c9c)
+        finally:
+            _c9c.close()
+        pruefe(P, "⚠️⚠️ P9b: die letzten Preise sind BITGLEICH zur alten Abfrage (Grundfunktion, 17 Aufrufer)",
+               _a9b == _n9b, "%d alt / %d neu, Unterschied %s" % (len(_a9b), len(_n9b), sorted(set(_a9b) ^ set(_n9b))[:5]))
+        pruefe(P, "P9b: die Marktscan-Karte liefert Lauf, Kandidaten, Treffer", _ms9b is None or {"discovered_at", "kandidaten", "treffer"} <= set(_ms9b))
+    pruefe(P, "P9b: das Rollen-Kontingent traegt eine Frist und steht nicht mehr in _LIVE_GETTER",
+           getattr(_RS9._get_rollen_budget, "_frist_sekunden", None) and "_get_rollen_budget" not in _RS9._LIVE_GETTER)
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
     pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
            not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))

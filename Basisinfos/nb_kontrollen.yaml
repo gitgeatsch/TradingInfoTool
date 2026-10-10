@@ -51,6 +51,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-10"
     beleg: "Nutzer 10.10.: Seite Betrieb & Lage, alle Karten gefuellt, nichts fehlt; Teilexport NB 20:42 mit NB-KONTROLLEN, keine Fehlerzeile; Log seit Neustart 16:36 ohne ERROR (nur Laufzeitwarnungen, Folgeschritt P9b)"
+  - id: K-ST-2
+    titel: "P9b Laufzeit: Statusaufbau am NB unter 1 s (keine Warnung 'Statusaufbau dauerte' ausser der ersten nach dem Start); letzte Preise unveraendert"
+    seit: "2026-10-10"
+    paket: P9b
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach Pull + Neustart: hoechstens 1-2 Warnungen direkt nach dem Start, danach keine; Hebelfuehrung-Logzeile mit Kurs/Abstand wie vorher; Teilexport ohne Fehlerzeile"
+    faellig_bis: "2026-10-13"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

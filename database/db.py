@@ -3796,18 +3796,32 @@ def get_latest_prices(conn: sqlite3.Connection) -> dict[str, PriceSnapshot]:
     Die Spaltennamen kommen jetzt aus `cursor.description`. Damit ist die
     Funktion von der Einstellung des Aufrufers unabhaengig - und der Fehler
     kann nicht wiederkehren, wenn irgendwo eine Verbindung ohne `row_factory`
-    entsteht."""
+    entsteht.
+
+    ⚠️ SPRUNG UEBER DEN INDEX STATT GROUP BY (P9b, 10.10.2026). Bis hierher las
+    ``GROUP BY symbol`` den ganzen Index von ``price_cache`` - 428.505 Zeilen fuer
+    62 Symbole, 0,07 s am Desktop, am Notebook rund viermal so viel. Die
+    Statusseite rief das bei jedem Abruf (alle 5 s) und riss damit die
+    Warnschwelle von 1 s 192-mal in zwei Stunden. Jetzt springt eine rekursive
+    Abfrage ueber den Primaerschluessel (symbol, fetched_at) von Symbol zu
+    Symbol und holt je Symbol nur das juengste Element: 0,001 s, Ergebnis
+    BITGLEICH (Gegenprobe ``Basisinfos/Rechenkern_02_10/p9b_gegenprobe.py``,
+    auch an Randfaellen). Symbol NULL oder fetched_at NULL fallen wie vorher
+    heraus (Gleichheit mit NULL ist nie wahr)."""
     cur = conn.execute(
         """
+        WITH RECURSIVE s(sym) AS (
+            SELECT MIN(symbol) FROM price_cache
+            UNION ALL
+            SELECT (SELECT MIN(symbol) FROM price_cache WHERE symbol > s.sym)
+            FROM s WHERE s.sym IS NOT NULL
+        )
         SELECT p.symbol, p.coingecko_id, p.price_usd, p.price_eur, p.market_cap_usd,
                p.volume_24h_usd, p.change_24h_pct, p.fetched_at
-        FROM price_cache p
-        INNER JOIN (
-            SELECT symbol, MAX(fetched_at) AS max_fetched_at
-            FROM price_cache
-            GROUP BY symbol
-        ) latest
-        ON p.symbol = latest.symbol AND p.fetched_at = latest.max_fetched_at
+        FROM s
+        JOIN price_cache p
+          ON p.symbol = s.sym
+         AND p.fetched_at = (SELECT MAX(fetched_at) FROM price_cache WHERE symbol = s.sym)
         """
     )
     namen = [s[0] for s in cur.description]

@@ -3056,3 +3056,8 @@ Nutzer 10.10.: *„Pull am NB erledigt – P9 Statusseite starten“*. Ausführl
 - **Kontrollen-Datei** `Basisinfos/nb_kontrollen.yaml` + Suite-Paket *Kontrollen* (Frist rot, Datei nicht älter als der jüngste Betriebs-Commit).
 - Nachweis auf der NB-Kopie: Prüfstand 6/6, Gegenprobe 10/10, GuiKette 36/36, Kontrollen 12/12.
 - **K-ST-1** (nach Pull + Neustart): Seite über VPN, alle Karten gefüllt, nichts fehlt; Teilexport mit NB-KONTROLLEN; kein ERROR zum Statusaufbau im Log.
+
+### 23.41 P9b: Laufzeit der Statusseite (10.10.2026)
+
+K-ST-1 erfüllt (Nutzer: *„Alle Karten gefüllt, nichts fehlt“*); K-ANK-1, K-BP-3 automatisch erfüllt (Teilexport 20:42), K-LLM-1 erfüllt (Bildschirmfoto). Am NB 192 Warnungen *„Statusaufbau > 1 s“* — Ursache drei **alte** Live-Abfragen. `db.get_latest_prices` über den Index statt `GROUP BY` (bitgleich, 0,084 → 0,0003 s), Marktscan-Karte gezielt (0,118 → 0,015 s), Rollen-Kontingent mit 60 s. Warm 0,29 → 0,02 s am Desktop. Gegenprobe 7/7, Wache im Paket GuiKette. Ausführlich: Plan Schritt 53 **G-Q**. Am NB: **K-ST-2**.
+
