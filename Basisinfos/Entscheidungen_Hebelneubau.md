@@ -1088,3 +1088,14 @@ Schritt7 §23.24.
 - **Bestand = frei + gestakt.** Gestakte Werte werden wie Spot geführt; ETH-Handlungen nennen die Entstake-Dauer. Leser, die nur `quantity` zählen: Plan O37.
 - Nachweis: Schritt7 §23.31/§23.32/§23.35. Am NB seit 09.10. abends (`0995cc3`).
 
+
+# E-94 · Testwoche der REGEL0 freigegeben (10.10.2026)
+
+**10.10.2026** · Nutzer, nach der Lebenszyklus- und Fachprüfung (Schritt7 §23.36/§23.37):
+- *„haben wir alles im Detail geprüft – Aufnahme neuer Assets, Änderung, Wegfall, Staking, Unstaking …?“*
+- dann *„emails sind am handy sehr gut zu lesen“* und *„Ja, Freigabe jetzt setzen und pushen“*.
+
+- `testwoche_freigegeben: true`. Der Vermerk TESTWOCHE entfällt, Signale und Stufen bleiben.
+- **Ausdrücklich mit:** Die REGEL0 ist technisch geprüft, nach Kosten nicht als gewinnbringend belegt. Einsätze klein; das Vorwärtsprotokoll entscheidet.
+- Offen bleiben: L1/H14 (Prüfblock), O36 Schritt B (Hebel-Importer), O38 (tokenisierte Aktien im Zusatzuniversum), Unstaking nicht live beobachtet.
+

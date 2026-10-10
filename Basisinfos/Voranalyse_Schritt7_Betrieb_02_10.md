@@ -3019,3 +3019,15 @@ Nutzer 10.10.: *„1. haben wir alles im Detail geprüft – ist die Aufnahme ne
 - Zweite Zeitabhängigkeit nach P10: P7 fragte fest nach dem 09.10./10.10., der Lauf vermerkt aber mit dem echten UTC-Tag. Am Folgetag wurde die Prüfung rot.
 - Jetzt leitet P7 heute/morgen vom echten UTC-Tag ab, wie `neue_meldungen` selbst.
 - Danach: Prüfstand 11/11 · Regel0Betrieb 78/78 · BitpandaBestand 21/21 · Hebelführung 35/35.
+
+### 23.38 Testwoche freigegeben (10.10.2026, E-94)
+
+Nutzer 10.10.:
+- *„ja emails sind am handy sehr gut zu lesen“* → **K-MAIL-2 ✔**
+- *„Ja, Freigabe jetzt setzen und pushen, Pull mache ich“*
+
+- `Basisinfos/regel0_betrieb.yaml`: `testwoche_freigegeben: true`. Wird je Lauf gelesen (`regel0_mail.py:331`), **kein Neustart nötig**.
+- Wirkung am Code geprüft: Der Vermerk *[TESTWOCHE]* in Betreff und Kopf der Signal-, Korrektur- und Erinnerungsmail entfällt. Signal, Stufe und LLM-Block bleiben unverändert. Regel0Betrieb 78/78.
+- Grundlage: §23.36 (alle REGEL0-Bedingungen grün, L1 nur die bekannten Fälle) und §23.37 (Lebenszyklus, Fachstand).
+- ⚠️ **Was die Freigabe NICHT heißt:** Die REGEL0 ist technisch geprüft, nach Kosten aber **nicht** als gewinnbringend belegt (Vorteil +0,29..+0,31 % je Handel gegen 0,48 % Kosten; Konto 2025–26 nach Kosten in 3 von 4 Mengen negativ). Einsätze bleiben klein (300/500/750 €); das Vorwärtsprotokoll entscheidet. S3 bleibt die Kernfrage.
+- Nächster Schritt: **O29** einschalten (eigene Änderung), dann K-ANK-1.
