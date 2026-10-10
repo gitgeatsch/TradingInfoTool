@@ -274,3 +274,125 @@ zu schnell"*).
 | **A Verkaufen/Reduzieren** | ✔ Einig: beide gehören **gemessen und sauber ins Konzept übernommen**, sonst ergeben sie keinen Sinn. Befund-Grundlage: die Ausstiegsseite läuft an der ganzen Bewertung vorbei (2.392); VERKAUFEN des Modells schlägt den Zufall als Hinweis (2.403, H10 78,8 % gegen 50 %, n = 80), REDUZIEREN nicht. **Offen:** die erforderlichen Bewertungen und Urteile — mit dem Nutzer zu **dimensionieren**, wie beim Einstieg |
 | **B Hebel** | in Diskussion — Takt (3,5 h stammt aus der alten Kette, Nutzer möchte 1 h, realistisch) und Führung nach Marktsituation |
 | **C Kern / Akkumulation** | ✔ **vorerst keine Verkaufsaktionen.** Nachgelagert in den Plan: *„bei längerem Greed u. U. sinnvoll — Fear macht keinen Sinn"*. Expertenmeinung und Prüfung der Vorgaben folgen als eigenes Thema |
+
+
+---
+
+## Fortsetzung 10.10.2026 — Voranalyse GUI-Bereinigung im 3. Umbau (Hebel REGEL0 / Spot-Neubau)
+
+**Auftrag (Nutzer 10.10.):** *„Ich würde gerne die GUI bereinigen und optimieren – u. U. sind auch ganze TABs zusammenzuführen, da einige Schalter und Funktionen u. U. nicht mehr relevant sind.“*
+
+- **Nutzung:** *„GUI nur für Wartungen und manuelle Aufgaben, nur wenn erforderlich – primär Signalmails und die Übersichtsseite“*.
+  - Die Übersichtsseite ist *„über VPN eine Statusseite mit den wichtigsten Systeminformationen“* (`remote/status.py` + `remote/server.py`).
+- **Gerät:** *„Am Desktop läuft die Anwendung nicht, ich greife nur remote auf das NB zu.“*
+- **Ziel:** *„Die GUI ist historisch gewachsen … Die neue HEBEL- und SPOT-Funktionalität soll integriert und wenn möglich fachlich und technisch sauber gruppiert werden.“*
+- ⚠️ **Vorgabe:** *„wir sind im 3. großen Umbau – es dürfen keine Grundfunktionen brechen“*.
+  - Dazu: *„alte Funktionen können durch neue ersetzt werden oder nicht mehr benötigt sein – z. B. die automatische Asset-Aufnahme bei Spot und Hebel gegenüber der manuellen“*.
+
+**Grundlage:**
+- Zwei Inventare aus dem Code (Watchlist/Portfolio/Signale/Marktscan/Menüs; Screener/Hebel/Regime/Schwerpunkte/Statusseite).
+- Die schweren Aussagen sind **am Code nachgeprüft**: `portfolio.py:286`, `bitpanda_avg_cost.py:212-227`, `rollen_job.py:104-108`, `excel_import.py:118-123`, H15/REGEL0 nicht in `ui/`/`remote/`, Marge 0,09 doppelt.
+- ⚠️ Die lokale `data/tradinginfotool.db` am Desktop steht im Juli. Die Datenfrische am NB ist aus Code und Schaltern abgeleitet, nicht gemessen.
+
+### G-A Grundfunktionen — bleiben erhalten (jede mit Nachweis vorher/nachher)
+
+| # | Grundfunktion | heute |
+|---|---|---|
+| GF1 | **Statusseite** über VPN: Betrieb, Kontingente, Knöpfe Preise / Marktscan / Not-Reset / Neustart, letzte Fehler | `remote/` |
+| GF2 | **Hebel-Schalter je Asset** (REGEL0 mailt nur mit Schalter) | Watchlist *Hebel-Prüfung umschalten* → `asset_hebel_settings` |
+| GF3 | **Bitpanda-Abgleich von Hand** | Datei › Von Bitpanda abgleichen |
+| GF4 | **Einstand von Hand** (Doppelklick Portfolio) | `AvgBuyPriceDialog` |
+| GF5 | **Asset hinzufügen / bearbeiten** (auch Aktien, ETF, Rohstoffe) | Watchlist |
+| GF6 | **Bitpanda-Override** (gelistet ja/nein) | Watchlist |
+| GF7 | **Bestand ansehen** (Menge frei/gestakt, Wert, G/V) | Portfolio |
+| GF8 | **Offene Hebelpositionen** mit Liquidationspreis | Hebel |
+| GF9 | **REGEL0-Signale** mit Mailtext und Prüfblock | Hebel |
+| GF10 | Charts (Doppelklick), Dark Mode, Thesen/Schwerpunkte pflegen | Watchlist, Ansicht, Schwerpunkte |
+| GF11 | **Alles, was Jobs und Mails aus `ui/` nutzen** (z. B. `ui/trade_chart.py` in `rollen_lauf`, `ui/liquidity_chart.py`) | vor jedem Entfernen Leser suchen |
+
+### G-B Befund je Tab (A = aktuell · W = Wartung · X = alt, Schreiber steht)
+
+| Tab | A | W | X (alt) | Fehler / irreführend |
+|---|---|---|---|---|
+| **Watchlist** | Preise, Status *Gehalten* (frei + gestakt), Chart, **Hebel-Prüfung** (REGEL0) | Hinzufügen/Bearbeiten, Bitpanda-Override, Schwerpunkt, Zusammensetzung | Akkumulation (Leser steht), Zeilen-Tooltip *Letztes Signal* (Stand ≤ 05.10., REGEL0 fehlt), Rollen *core/taktisch* (≠ E-90) | Der Tooltip *Hebel-Prüfung* spricht von der Rollen-Kette; die Meldung nach *Hinzufügen* verspricht Signale *„beim nächsten Takt“* |
+| **Portfolio** | Bestand, Gesamtwert, Diversifikation | Einstand-Dialog | *Letzte Bewertung anzeigen* (alte Kette) | ⛔ **Wert = 0 bei voll gestakt** (`portfolio.py:286`, O37); G/V „-“ bei q = 0; Fiat-Feld *„manuell“*, wird aber vom Cash-Abgleich überschrieben; der Zusatz *„im Regelwerk nicht berücksichtigt“* meint die alte Kette |
+| **Signale** | — | Rückmeldung (alt) | **ganzer Tab**: nur `signals` der Rollen-Kette, Stand ≤ 05.10., ohne Veraltet-Hinweis, *neuestes zuerst*; Knöpfe gesperrt | ⛔ wirkt aktuell, ist es nicht. Der Sperrtext *„läuft über die Rollen-Kette (automatisch im Takt)“* ist falsch (Kette angehalten). Die Rückmeldung schreibt nur `quantity` |
+| **Marktscan** | Kandidatenliste, *Jetzt scannen*, Erfolg | Übernehmen, Verwerfen | P-5-Texte, P-5-Knopf (Allocator aus) | Tooltip *„wartet auf Budget-Allocator“*; *Übernehmen* sagt *„Neustart nötig“*, *Hinzufügen* sagt das Gegenteil |
+| **Screener** | — | Scan (yfinance), Übernehmen | — | verspricht Bewertung *„über die normale Signal-Pipeline“*; für Aktien/ETF läuft keine |
+| **Hebel** | **REGEL0-Zeilen + Detail**, **offene Positionen + Liq.-Preis**, Spalte REGEL0 | Filter, Schalter | alte `hebel_signals`, Rollen-Hebelsignale, Kandidaten (`hebel_triggers`), *Jetzt analysieren*, *Signal-Historie* (nur alte Kette) | **kein Abstand in %, keine H15-Empfehlung, kein aktueller Kurs**; nur das jüngste REGEL0-Signal je Asset, keine REGEL0-Historie; Tooltip *„Führung kommt später (O13)“* veraltet; Text *„nächster Budget-Allocator-Lauf“*; Liq.-Marge 0,09 an zwei Stellen gepflegt (`config.yaml:506` und `entscheidungsrechnung.GRENZEN`) |
+| **Regime** | — | Override (wirkungslos) | **ganzer Tab** (liest `signals.regime`, Parameter alter Regelwerke) | *„Wirkt ab dem nächsten Pipeline-Lauf“* — es läuft keine |
+| **Schwerpunkte** | — | Thesen pflegen, Vorschläge übernehmen | Tages-Synthese (läuft weiter, **verbraucht Gemini**) | REGEL0 liest keine Thesen; Wirkung nur auf die Markierungen in Screener/Watchlist |
+| **Menüs** | Datei › Von Bitpanda abgleichen | Dark Mode | Benachrichtigungen › *nur Bitpanda-gelistet* (nur alte Mails), Hebel › *Long+Short/Nur Long* (nur alter Mailfilter), Marktsuche › *nur handelbar* (nur Screener) | ⛔ **Datei › Einstandspreise berechnen überschreibt `staked_quantity` mit der alten Rekonstruktion** (das Verfahren, das früher verdoppelte; der Job korrigiert in 30 min); Datei › Export/Import nur `quantity` (voll gestakt = 0); die Schalter-Meldungen *„Commit + Push (Desktop) und Pull“* passen nicht zum NB-Betrieb |
+
+### G-C Statusseite (Hauptwerkzeug neben den Mails)
+
+| | |
+|---|---|
+| aktuell | Portfolio (frei + gestakt + Fiat), veraltete Preise, letzter Marktscan, CoinGecko-/Gemini-Kontingent, API-Status, Knöpfe, letzte Fehler |
+| alt / irreführend | *LLM-Kontingent Rollen-Kette*: Urteile heute dauerhaft 0, ohne Hinweis · der REGEL0-Prüfblock (`gemini-3.5-flash-lite`) erscheint vermutlich als *„Gemini 3.5 (Rückfall)“* der Kette · Abschnitt A *„Ausgeführte Empfehlungen“* enthält nur die Marktscan-Quote · Abschnitt B *„Z.ai“* ist leer · Abschnitt C *„Veto-Schatten“* enthält *Stop nachziehen* · Regime, Parameter, Themenfelder alt · Rollennamen *Kette 1/2/3* |
+| berechnet, nicht gezeigt | `offene_signale`, `provider_sendezaehler`, `cash_reserve_synced_at`, `staked_value_eur` |
+| **fehlt ganz** | **REGEL0** (letzter Stundenlauf, Signale heute, Mailstand, Prüfblock) · **Hebelpositionen mit Abstand und H15-Empfehlung**, letzter H15-Lauf · Frische Hebel-Abgleich (`hebel_abgleich.frische` vorhanden) · Zeitpunkt Bitpanda-Bestandsabgleich · **Schalterstand** (`testwoche_freigegeben`, `spot_kette_angehalten`, `alter_hebelweg_aus`, `ankuendigung_aktiv`) · letzter Stop-Nachzieh-Lauf · offene NB-Kontrollen · Hebel-Eigenkapital im Wert |
+
+### G-D Asset-Aufnahme — automatisch gegen manuell
+
+| Weg heute | Art | Bewertung |
+|---|---|---|
+| REGEL0-Datenbasis (täglich, alle Binance-Assets) | automatisch | bleibt; Lücke O38 (tokenisierte Aktien) per Regel schließen |
+| Hebelposition auf unbekanntem Symbol → Watchlist (`bitpanda_margin_positions.py:413`) | automatisch | bleibt (sonst keine Führung) |
+| **REGEL0-Mail nur mit Hebel-Schalter** je Watchlist-Asset | **manuell (Opt-in)** | **bewusst manuell lassen**: Das ist deine Freigabe, auf welchem Wert Hebel überhaupt in Frage kommt. Der Schalter gehört aber in den **Hebel-Bereich**, nicht in die Watchlist |
+| Neuer Spot-Bestand bei Bitpanda → nur Mail | manuell | → **automatisch (O26)** über die Asset-ID mit Preisabgleich und Sperren (`symbol_zuordnung.csv`); E-90 macht jeden neuen Krypto-Bestand automatisch L |
+| Krypto-Watchlist *beobachtung* (FLOKI, GRIFFAIN, IMX …) | manuell | Der Spot-Neubau rechnet auf dem **ganzen Binance-Universum**. Für die Krypto-Beobachtung wird eine Hand-Watchlist **dafür nicht mehr gebraucht** (offen: Nutzt sie noch etwas außer Hebel-Schalter und Anzeige?) |
+| Aktien, ETF, Rohstoffe (OD7L, EXH3, PLTR …) | manuell | **bleibt manuell** (keine automatische Quelle; der Spot-Neubau ist Krypto) |
+| Screener / Marktscan *Übernehmen* | manuell | nur sinnvoll, wenn die Entdeckung weiter gewünscht ist (Abstimmung) |
+
+### G-E Sofortliste — Fehler, die unabhängig vom Umbau zu beheben sind (klein)
+
+| # | Fehler | Wirkung |
+|---|---|---|
+| S-1 | Portfolio-Wert und G/V nur aus `quantity` | Wert 0 bei 10 voll gestakten Werten (O37) |
+| S-2 | **Einstandspreise berechnen überschreibt `staked_quantity`** | bis zum nächsten Job (30 min) falscher Staking-Bestand |
+| S-3 | Export/Import Excel nur `quantity` | Gestakte fehlen im Export; der Import kollidiert mit dem Abgleich |
+| S-4 | Signale-Tab ohne Veraltet-Hinweis | wirkt wie aktuelle Empfehlungen |
+| S-5 | falsche Hinweistexte (Sperrtext, Tooltip Hebel-Prüfung, Regime-Override, Allocator, O13, Fiat *manuell*) | Fehlbedienung |
+
+### G-F Zielbild (Vorschlag zur Abstimmung)
+
+**Statusseite = Lagebild** (zuerst, weil Hauptwerkzeug):
+1. **Betrieb:** Jobs mit letztem Lauf, Frische, Kontingente, Fehler.
+2. **Hebel:** REGEL0 heute; offene Positionen mit Kurs, Liquidation, **Abstand %** und **H15-Empfehlung**; Schalterstand.
+3. **Spot:** Bestand frei + gestakt; später Ampel und offene Handlungen.
+4. **Kontrollen und Warnungen.**
+
+Alte Karten entfallen.
+
+**GUI = Wartung**, von 8 auf 5 Tabs:
+
+| neu | Inhalt | aus heute |
+|---|---|---|
+| **Bestand** | Spot (frei + gestakt richtig bewertet, Einstand, Cash) und Hebelpositionen **getrennt** | Portfolio + untere Hebel-Tabelle |
+| **Hebel** | REGEL0-Liste **mit Historie**, Detail, Positionen mit Abstand/H15, **Hebel-Schalter je Asset** | Hebel (ohne Altlisten) + Schalter aus der Watchlist |
+| **Spot** | vorerst Watchlist-Fünftel und Bestandsrollen (Kern/L) als Anzeige; Ampel und Handlungen mit dem Spot-Bau (Stufe 1) | neu |
+| **Assets** | Stammdaten: hinzufügen, bearbeiten, Bitpanda-Override, Zuordnung/Sperren, Chart; Aktien/ETF/Rohstoffe | Watchlist (ohne Akkumulation) |
+| **Archiv (nur lesen)** oder entfernen | alte Signale, Regime, Marktscan/Screener, Schwerpunkte — je nach Abstimmung | Signale, Regime, Marktscan, Screener, Schwerpunkte |
+
+### G-G Vorgehen, damit keine Grundfunktion bricht
+
+1. **Stufe 0 (Sofortliste S-1 bis S-5):** klein, eigener Push, Prüfstand je View gegen eine Kopie (nie `main.py` am Desktop).
+2. **Stufe 1 Statusseite:** neue Karten Hebel/REGEL0/H15/Schalter, alte Karten raus.
+3. **Stufe 2 GUI-Tabs** in der Reihenfolge Hebel → Bestand → Assets → Spot.
+4. **Archivieren oder Entfernen** erst nach der Leser/Schreiber-Prüfung je Funktion (Lehre H15: *Wer liest/schreibt das noch?*).
+5. **Je Stufe:**
+   - Liste GF1–GF11 vorher/nachher;
+   - Paket `GuiKette` erweitert, ganze Suite;
+   - eine NB-Änderung, Pull + Neustart, Kontrolle.
+
+### G-H Fragen zur Abstimmung (Punkt für Punkt)
+
+| # | Frage |
+|---|---|
+| G1 | Sofortliste S-1 bis S-5 zuerst (unabhängig vom Umbau)? |
+| G2 | Zielbild: Statusseite = Lagebild, GUI = Wartung mit 5 Tabs — so? |
+| G3 | Alte Tabs (Signale, Regime): **Archiv (nur lesen)** oder **entfernen**? |
+| G4 | Marktscan, Screener, Schwerpunkte: Werden die Entdeckung neuer Werte und die Thesenpflege noch gebraucht? (Die Tages-Synthese verbraucht weiter Gemini.) |
+| G5 | Asset-Aufnahme: Spot-Bestand automatisch (O26), Hebel-Schalter bewusst manuell im Hebel-Tab, Krypto-Hand-Watchlist entfällt, Aktien/ETF/Rohstoffe bleiben manuell — so? |
+| G6 | Akkumulation (DCA-Schalter): entfällt sie, oder kommt sie mit dem Akkumulations-Strang neu? |
