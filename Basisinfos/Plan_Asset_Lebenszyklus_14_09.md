@@ -446,3 +446,73 @@ Nutzer 10.10.:
 | O41 | **Spot-Bereich** (GUI-Tab + Mail nach E-91): Bestand führen (Kern/L, Mitnahme ×3, Verkaufsanlässe, Abbau-Reihenfolge) und Einstiegs-Kandidaten (oberes Fünftel, nur bei Ampel Vorlauf/Season-Klima); Diamanten-Teil erst nach K-1/K-2 | mit dem Spot-Bau Stufe 1 (§39, Reihenfolge 1–5) |
 | O39 | **Multi-Asset-Bestand** automatisch übernehmen (Rohstoffe, ETF, Aktien) | nach dem Krypto-Spot-Bau |
 
+
+### G-K Abstimmung 10.10.2026 (2) — Regime, G2 im Detail, G3/G4, G6 Akkumulation
+
+Nutzer 10.10.:
+- *„was machen wir mit dem Regime-TAB – war dieser nur für Krypto? – denke einen solchen Bereich sollten wir sauber für Krypto umbauen (brauchen wir für unsere Krypto-Strategien und Regeln, Markt) und dann später für Multiassets“*
+- *„G2 – ja, ist mir aber zu wenig detailliert für eine Entscheidung“*
+- *„G3 – Archiv ja als vorläufiger Bereich, bis alles läuft“*
+- *„G4 – ja Krypto zusammenfassen – die Aktien-, ETF- und Rohstoff-Bereiche inkl. der Thesen brauchen wir später wieder beim Multiasset-Umbau“*
+- *„G6 – prüfe und gib mir konkrete Info, da ich nicht mehr unterscheiden kann, wie Akkumulation jetzt im System funktioniert (NEU) – wir haben Core-Assets BTC, ETH und SOL, taktische Assets – wie grenzen sich diese von einer noch nicht gebauten Akkumulation ab?“*
+
+**Entschieden:**
+- **G3:** Archiv (nur lesen) als vorläufiger Bereich, bis alles läuft.
+- **G4:** Krypto zusammenfassen; Aktien/ETF/Rohstoffe und Thesen bleiben für den Multi-Asset-Umbau erhalten.
+
+#### Regime-Tab — Befund am Code
+
+- **Nur Krypto:** `agent/krypto/regime.py` rechnet einen Score aus **BTC gegen EMA50/EMA200 und Fear & Greed**, dazu Dominanz und M2-Liquidität aus `macro_snapshot`.
+- **Leser:** nur die **alte** Rollen-Kette bzw. Pipeline. Die REGEL0 liest kein Regime; der Override wirkt heute auf nichts.
+- **Gemessen seit dem Neubau:**
+  - *Der Marktzustand ist nicht vorab erkennbar* (`btc_trend` 1,09 gegen eine Zufallsreihe 1,04; 2.599).
+  - Dafür **trägt die Season-Ampel** (B1 BTC 91 T, B2 M2, B3 Stablecoins; Spot §36) für den Spot-Einstieg L.
+  - Die **Dominanz-Spitze** ist ein Fakt mit Lift 1,65 (§33).
+  - Das **BTC-Klima** (Überhitzung) ist für den Teilverkauf der Akkumulation offen (§10).
+- ⇒ **Vorschlag:** Aus *Regime* wird **„Markt (Krypto)“**. Er zeigt die gemessenen Marktfakten, die die Krypto-Strategien wirklich nutzen, und keinen Score, der nichts steuert. Für Multi-Asset folgt später ein eigener Markt-Teil (O39).
+
+#### G6 — wie Akkumulation heute funktioniert (am Code und in der Doku geprüft)
+
+| | Stand |
+|---|---|
+| **Rollen *core/taktisch*** | Feld `rolle` in der Watchlist; gelesen **nur von den Analysten der alten Kette** (`agent/krypto/analyst.py:99`, Aktien analog) als Textregel im Prompt. Seit dem Halt (05.10.) wirkt es auf **nichts** |
+| **„Akkumulation umschalten“** | Schalter `asset_dca_settings.dca_erlaubt` → `handelsauftrag.strategie_fuer` gibt der **alten Kette** die Strategie *akkumulation* (Tranchen zu 250 €). Läuft seit 05.10. **nicht**. Schon vorher: Die Akkumulationszelle fiel **immer** an `lage_gesperrt`, **null Kaufsignale** (Spot §10.2, 2.540) |
+| **`agent/akkumulationslage.py`** | rechnet nur eine Lage (Abstand zum 200-Schnitt), sperrt nichts. ⚠️ Gemessen **trägt der Befund für BTC/ETH/SOL nicht** (Rang −0,025/−0,031/−0,029) |
+| **Spot-Neubau E-90** | **Kern = BTC, ETH, SOL fest**: keine Mitnahme ×3, keine Abbau-Reihenfolge. Das ist nur eine **Ausnahme vom Spot**, noch keine Akkumulation |
+| **gemessen für eine künftige Akkumulation** | Kaufseite: **regelmäßiges Kaufen** schlägt jede Klima-Regel nicht (F2/F3, §8.9/§8.11) → die Grundlage. **Verkaufsseite (Teilverkauf über Zyklen): ungemessen**. Gewichtung der Kernwerte, eigener Topf, deine Rolle: offen (D1–D6, §10.5) |
+
+⇒ **Klarstellung:**
+- Eine Akkumulation **gibt es im neuen System heute nicht**.
+- *core/taktisch* sind **Altlast** der Rollen-Kette.
+- Die Kernwerte BTC/ETH/SOL sind im Spot nur **ausgenommen**.
+- Die Akkumulation ist ein eigener, **noch nicht gebauter** Strang (Richtungsentscheid: 1. Hebel, 2. Akkumulation, 3. Spot). Er startet mit den offenen Punkten D1–D6.
+
+#### G2 im Detail — das Zielbild je Bereich
+
+**Statusseite (über VPN, Hauptwerkzeug neben den Mails)**
+
+| Karte | Inhalt | Quelle | heute |
+|---|---|---|---|
+| Betrieb | jeder Job mit letztem Lauf und Ergebnis (REGEL0-Stundenlauf, Nachlader, Bitpanda-Bestand, Hebel-Abgleich, H15, Stop-Nachzieh, Preise, Marktscan, Ankündigungen); Watchdog; letzte Fehler | `job_laeufe`, `regel0_signale.db/lauf`, Log | nur 3 Jobs |
+| Hebel | offene Positionen: Kurs, Liquidation, **Abstand %**, **H15-Empfehlung**, Eigenkapital, seit; REGEL0 heute: Signale, gemailt, Prüfblock | `hebel_positions`, `hebelfuehrung.lade`, Ablage | fehlt |
+| Schalter | `testwoche_freigegeben`, `spot_kette_angehalten`, `alter_hebelweg_aus`, `ankuendigung_aktiv`, `hebelfuehrung_aktiv` | `regel0_betrieb.yaml` | fehlt |
+| Bestand | Gesamtwert (frei + gestakt + Fiat + Hebel-Eigenkapital), Zeitpunkt des letzten Abgleichs, Abweichungsmeldungen | holdings, meta | Teil vorhanden |
+| Kontingente | CoinGecko, Gemini **je Nutzer** (REGEL0-Prüfblock, N5, Thesen-Synthese) | Zähler | falsch benannt |
+| Kontrollen | offene NB-Kontrollen (K-…) als Liste | neu (Datei/Tabelle) | fehlt |
+| entfällt | Rollen-Kette-Kontingent, Z.ai, *Veto-Schatten*, Regime-Karte, Parameter, Themenfelder | — | — |
+
+**GUI (Wartung), 6 Tabs + Archiv**
+
+| Tab | Zweck | Inhalt (Spalten / Abschnitte) | Knöpfe (Grundfunktion) | kommt aus | Bau |
+|---|---|---|---|---|---|
+| **1 Bestand** | was du hältst, richtig bewertet | **Spot**: Symbol, Klasse, frei, gestakt, Preis, Wert, Einstand, G/V, Rolle (Kern/L). **Hebel**: getrennte Tabelle der offenen Positionen (Verweis auf Tab 2). Summenzeile, Diversifikation, Fiat | Einstand (GF4), Bitpanda-Abgleich (GF3), Fiat-Ausnahme | Portfolio | Stufe 2 |
+| **2 Hebel** | REGEL0 und Führung | **Signale**: alle REGEL0-Signale mit Filter (heute / 7 T / alle), Stufe, gemailt, Prüfblock, Ausstieg; Detail mit Mailtext. **Positionen**: Kurs, Liquidation, Abstand %, H15-Empfehlung, Finanzierung. **Freigabe je Asset**: Liste aller Krypto-Assets mit Hebel-Schalter | Hebel-Schalter (GF2, aus der Watchlist hierher), Detail | Hebel (ohne die 3 Altlisten) | Stufe 2, zuerst |
+| **3 Spot** | Krypto-Spot nach E-89–E-91 | **Bestand führen**: je Coin Abstand zu ×3, Fünftel (Abbau-Reihenfolge), offene Verkaufsanlässe. **Einstiegs-Kandidaten** L: oberes Fünftel je Klasse, Bitpanda-handelbar, aktiv nur bei Ampel. **Diamanten** (K): Platzhalter bis K-1/K-2 | (keine Pflicht-Knöpfe; Handlungen kommen per Mail) | neu (ersetzt Krypto-Marktscan) | mit dem Spot-Bau Stufe 1 |
+| **4 Markt (Krypto)** | Marktfakten für die Krypto-Strategien | Season-Ampel B1–B3 mit Wert, Schwelle, Stufe, Verlauf 12 Monate; Breite; Dominanz-Spitze; BTC-Klima; Fear & Greed; Liquidität und Stablecoins (alles als **Fakt**, kein Override) | — | Regime (umgebaut) | mit Spot C1 + D1 (Nachlader) |
+| **5 Meine Assets** | Stammdaten und Beobachtung | alle Assets aus allen Klassen mit Kennzeichen *Bestand* (auto), *Hebel freigegeben*, *beobachtet* (manuell); Preisquelle, Bitpanda-Name, Klasse, Schwerpunkt; Chart | Hinzufügen/Bearbeiten (GF5), Bitpanda-Override (GF6), Chart (GF10) | Watchlist (ohne Akkumulation, ohne core/taktisch) | Stufe 2 (O40) |
+| **6 Multi-Asset (ruht)** | für den späteren Umbau erhalten | Screener Aktien/ETF/Rohstoffe, Thesen/Schwerpunkte (Pflege bleibt) | Screener-Scan, Thesen pflegen (GF10) | Screener, Schwerpunkte | nur umgehängt |
+| **Archiv** (vorläufig, nur lesen) | Nachschlagen bis alles läuft | alte Signale (Rollen-Kette), alter Regime-Stand, Krypto-Marktscan, alte Hebel-Listen | keine Analyse-Knöpfe | Signale, Regime-Alt, Marktscan, Hebel-Altlisten | Stufe 2 |
+
+**Offene Einzelfragen zu G2:**
+- (a) Soll die **Thesen-Synthese** (täglich 06:15, Gemini) bis zum Multi-Asset-Umbau **pausieren**? Sie verbraucht Kontingent, und REGEL0 und Spot lesen sie nicht.
+- (b) Soll der **Marktscan-Job** (04/16 Uhr, CoinGecko) weiterlaufen, bis der Spot-Tab steht, und dann entfallen?
