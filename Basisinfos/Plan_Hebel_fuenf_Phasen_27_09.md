@@ -179,6 +179,50 @@ Umsatzdaten, die am Notebook **live** kommen. Das ist dort also eher leichter al
 | **P7** | nach P5 | **Messrunde aus O30**: Kandidaten einzeln, Desktop, vorab festgelegt | Hebel | neue Beiträge oder begründetes Nein |
 | selbsttätig | 08.–~15.10. | N4 Rest R_v → **N5** (Blick 250 ~10.10., Ende ~15.10.); danach O29 (b) LLM-Rückspiel 0.3 und Voranalyse *Information für den Entscheider* | Hebel | Urteil über Fassung 0.2 |
 
+### Paketplan ab 10.10.2026 (Fortschreibung nach Freigabe der Testwoche, E-94)
+
+Nutzer 10.10.: *„3. ja, mit Statusseite starten – prüfe vorher, ob der Bau in unserem Gesamtplan passt und welche Reihenfolge wir machen sollten, alles in unsere Dokumentation übernehmen und sauber in den Gesamtplan einordnen – dann starten wir. Immer prüfen und gegenprüfen.“*
+
+**Regeln** (unverändert):
+- ein aktives Paket;
+- **eine NB-Änderung zur Zeit**, je mit Pull + Neustart + Kontrolle;
+- der Hebel hat Vorrang (T-1);
+- Desktop-Vorarbeit ohne Betriebswirkung füllt die Wartezeit.
+
+**Neu dazu** (Nutzer 10.10.): Bei jedem Umbauschritt wird geprüft, ob etwas fehlt; vor dem Entfernen erst Rücksprache (Memory *Umbau: prüfen, was fehlt*).
+
+**Prüfung, ob der GUI-Bau passt:**
+- Er dient dem **Betrieb**: M1-Kriterium *technisch stabil*. Die Statusseite ist dein Hauptwerkzeug und zeigt heute **nichts** zu REGEL0, H15, Schaltern und Kontrollen (Schritt 53 G-C/G-L).
+- Der GUI-Bau verdrängt **keinen** Messschritt: K-1/K-2 und O38 laufen am Desktop parallel, N5 läuft selbsttätig.
+- Er berührt die REGEL0-Rechnung und die Mails **nicht**. Die Statusseite liest nur.
+- ⇒ Er passt. Er kommt **nach** O29, weil O29 schon gebaut ist und nur einen Schalter braucht, und **vor** den Hebel-Bauten. Denn mit der Statusseite wird jede folgende NB-Änderung **sichtbar** kontrollierbar.
+
+**Reihenfolge der NB-Änderungen:**
+
+| # | Paket | Strang | Inhalt | Kontrolle | Begründung der Stelle |
+|---|---|---|---|---|---|
+| 0 | — | Betrieb | **K-BP-3** bestätigen (keine Änderung) | nächster Export/Sicherung | Abschluss des EURCV-Fixes |
+| 1 | **P8** | Hebel | **O29 einschalten** (`ankuendigung_aktiv: true`, per Commit + Pull) | K-ANK-1 | gebaut und geprüft seit 08.10., wartete nur auf die Freigabe |
+| 2 | **P9** | Betrieb | **GUI-1 Statusseite**: Überwachung je Bereich (G-L), Parameter-Karte nur lesend, O44 (eine Liquidationsmarge); dieselben Funktionen wie der Teilexport | K-ST-1 (Seite über VPN, alle Karten, nichts fehlt) | Hauptwerkzeug, macht alle folgenden Schritte sichtbar |
+| 3 | P10 | Betrieb | **O42 Thesen-Synthese pausieren** (Schalter) | Kontingent sinkt, Statusseite zeigt *pausiert* | klein; spart Gemini für den Prüfblock; Wiedereinschalten bei O39 |
+| 4 | **P11** | Hebel | **Schritt B** (O36): Hebel-Wallets gegen `hebel_positions` | K-BP-4 | Hebel-Vorrang; deckt den Importerfehler bei Teilschließungen auf |
+| 5 | P12 | Hebel/Betrieb | **GUI-2 Hebel-Tab**: alle REGEL0-Signale, Abstand/H15, Hebel-Schalter hierher | K-GUI-2 | baut auf Schritt B auf |
+| 6 | P13 | Hebel | **H14** Zeitgrenze Prüfblock, **nach dem N5-Ergebnis** (~15.10.) und der LLM-Entscheidung (E-83) | L1 | N5 kann die Fassung ändern; erst danach bauen |
+| 7 | P14 | Spot | **Spot B1** Mitnahme ×3 (+ D6, D7, A6 alte Stop-Mail für Spot aus) | K-SP-1 | Spot-Bau Stufe 1, erster Schritt (§39) |
+| 8 | P15 | Betrieb | **GUI-3 Bestand-Tab** (Spot/Hebel getrennt, Rolle Kern/L) | K-GUI-3 | zeigt B1 |
+| 9 | P16 | Spot | **Spot B3** Upbit-Verkaufsanlass (+ D2) | K-SP-2 | §39 Reihenfolge |
+| 10 | P17 | Hebel | **O38** Zusatzuniversum per Regel (nach der Messung am Desktop) | Signale in der Ablage | Rauschen, keine Mailwirkung, daher nicht dringend |
+| 11 | P18 | Spot/Betrieb | **Spot B4** Abbau-Reihenfolge (+ D3, D5) und **GUI-4 Meine Assets** (O40, Stammdaten in die DB) | K-SP-3, K-GUI-4 | B4 braucht die Stammdaten |
+| 12 | P19 | Spot | **Spot C1** Season-Ampel (+ D1, A3) mit **Tab Markt (Krypto)** und **Tab Spot** (O41); dann **O43 Marktscan aus** | K-SP-4 | Ampel und Spot-Tab gehören zusammen |
+| 13 | P20 | Betrieb | **GUI-5 Archiv + Multi-Asset (ruht)**: alte Tabs nur lesend, Rücksprache vor jedem Entfernen | K-GUI-5 | zuletzt: erst, wenn alles Neue läuft (G3) |
+| später | — | Multi-Asset | **O39** (Bestand automatisch, Markt für den Aktienmarkt, Synthese wieder an) | — | nach dem Krypto-Bau |
+
+**Parallel am Desktop (keine NB-Änderung):**
+- K-1/K-2-Messplan und -Messung (Spot, Diamanten);
+- O38-Messung (welche Regel trifft die tokenisierten Werte);
+- Code für die nächsten Pakete vorbereiten;
+- N5 läuft selbsttätig bis ~15.10.
+
 
 ---
 

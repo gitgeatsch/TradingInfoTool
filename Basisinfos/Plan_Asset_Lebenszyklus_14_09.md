@@ -571,3 +571,12 @@ Nutzer 10.10.:
 - **Geändert wird nur über die Datei** (Commit + Pull): *deine Wahl* jederzeit, *gemessen* nur nach einer neuen Messung.
 - Ein Änderungsknopf in der GUI würde gemessene Werte zur Stellschraube machen. Dazu kommt die Pull-Kollision am NB.
 - ⚠️ **Nebenbefund:** Die Liquidationsmarge 0,09 steht doppelt (`config.yaml:506` und `entscheidungsrechnung.GRENZEN`). Sie wird auf **eine** Quelle zusammengeführt (Plan O44).
+
+### G-M Entschieden 10.10.2026 (4) und Einordnung in den Gesamtplan
+
+Nutzer 10.10.: *„1. ja 2. passt 3. ja, mit Statusseite starten – prüfe vorher, ob der Bau in unserem Gesamtplan passt …“*
+
+- **Parameter-Karte nur lesend**; geändert wird nur über die Datei, gemessene Werte nur nach einer Messung (G-L).
+- **Überwachungsliste G-L passt.**
+- **Reihenfolge:** GUI-1 Statusseite → GUI-2 Hebel-Tab → GUI-3 Bestand → GUI-4 Meine Assets → GUI-5 Archiv/Multi-Asset. Verschränkt mit Hebel und Spot im **Paketplan ab 10.10.** (Plan_Hebel_fuenf_Phasen_27_09.md, P8–P20): O29 zuerst, dann die Statusseite.
+

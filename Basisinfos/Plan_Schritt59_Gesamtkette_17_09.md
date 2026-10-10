@@ -2464,3 +2464,10 @@ Schritt7 §23.24.
   - Abdeckung 16 von 28 Beständen im Universum.
 - M1-Kriterien unverändert.
 
+**Nachtrag 10.10.2026 (30) — Freigabe und Gesamt-Reihenfolge:**
+- **Testwoche freigegeben (E-94).** K-BP-3 EURCV-Fix und H15 am NB.
+- **GUI-Bereinigung** (Schritt 53, Plan_Asset_Lebenszyklus G-A bis G-M): Statusseite als Lagebild, GUI als Wartung mit 6 Tabs + Archiv; Sofortliste S-1 bis S-5 am NB.
+- **Paketplan ab 10.10.** (Plan_Hebel P8–P20): O29 → **Statusseite** → O42 → Hebel Schritt B → Hebel-Tab → H14 (nach N5) → Spot B1 → Bestand-Tab → Spot B3 → O38 → Spot B4 + Meine Assets → Spot C1 + Markt/Spot-Tab + O43 → Archiv/Multi-Asset; Multi-Asset (O39) danach.
+- Parallel am Desktop: K-1/K-2, O38-Messung; N5 bis ~15.10.
+- M1: Kriterium 2 (Hebel) mit der Freigabe bestätigt; Kriterium 4 (LLM gemessen) offen bis N5.
+
