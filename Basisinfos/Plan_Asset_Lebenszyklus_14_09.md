@@ -516,3 +516,58 @@ Nutzer 10.10.:
 **Offene Einzelfragen zu G2:**
 - (a) Soll die **Thesen-Synthese** (täglich 06:15, Gemini) bis zum Multi-Asset-Umbau **pausieren**? Sie verbraucht Kontingent, und REGEL0 und Spot lesen sie nicht.
 - (b) Soll der **Marktscan-Job** (04/16 Uhr, CoinGecko) weiterlaufen, bis der Spot-Tab steht, und dann entfallen?
+
+
+### G-L Abstimmung 10.10.2026 (3) — Überwachung je Bereich, zentrale Parameter, Entscheidungen
+
+Nutzer 10.10.:
+- *„Bei G2 – haben wir alles, was gemonitored werden soll je Bereich? Was ist mit zentralen Parametern und Kalibrierungseinstellungen, hatten wir besprochen?“*
+- *„GUI JA – wichtig: wenn wir umbauen, prüfen, ob etwas fehlt, und Rücksprache mit mir“*
+- *„2. Regime ja, vorerst Krypto – werden wir aber auch später für den Aktienmarkt benötigen“*
+- *„3. ja, können wir pausieren, aber nicht vergessen und einplanen“*
+- *„4. JA – ebenfalls nicht vergessen“*
+
+**Entschieden:**
+- **G2 GUI ja**, mit der stehenden Regel: Bei jedem Umbauschritt wird geprüft, **ob etwas fehlt**, mit **Rücksprache vor dem Entfernen**.
+- **Markt (Krypto)** statt Regime, später auch für den **Aktienmarkt** (zu O39).
+- **Thesen-Synthese pausieren** (Plan O42) und **Marktscan bis zum Spot-Tab** (Plan O43), beide eingeplant.
+
+**Parameter — bisher besprochen?** Nur für die **alte** Kette: Parameter-Übersicht 17.07. (`agent/krypto/regelwerk_parameter.py`, Kap.-15-Kalibrierung, Regime-Tab und Remote-Karte). Für das **neue** System (REGEL0, H15, Prüfblock, Spot) **nicht** — das ist eine Lücke im Zielbild.
+
+#### Überwachung je Bereich — Soll-Liste (was die Statusseite zeigen muss)
+
+| Bereich | überwachen | Quelle heute | auf der Statusseite heute |
+|---|---|---|---|
+| **Hebel / REGEL0** | Stundenlauf (letzter, Laufzeit, frisch/veraltet, nicht im Handel), Signale heute (gemailt, gesperrt, verpasst, Korrektur), Erinnerungen fällig/entfallen | `regel0_signale.db` (lauf, signal) | ✘ |
+| | Nachlader je Datei (Stand, Rückstand, Fehler), Neuaufnahme (neu, Fehler) | `_nachlader`, `_neuaufnahme` | ✘ |
+| | LLM-Prüfblock: Aufrufe/Tag gegen das Limit 150, Fehler, **Zeitgrenze überschritten** (H14), Urteilsverteilung | `pruefung`, Log | ✘ |
+| | Hebelpositionen + H15: Abstand %, Empfehlung, letzte Meldung; Hebel-Abgleich-Frische | `hebel_positions`, `job_laeufe hebelfuehrung:`, `hebel_abgleich.frische` | ✘ |
+| | Ankündigungen O29: letzter Lauf, neue Meldungen | `ankuendigung_lauf` | ✘ |
+| **Bestand** | letzter Bitpanda-Abgleich, Abweichungsmeldungen, Wallet-Salden-Fassung, Cash-Abgleich | meta, Log | teils |
+| **Spot** (mit dem Bau) | Ampel-Stand und -Wechsel, Datenfrische D1 (Stablecoins, M2, BTCDOM), Umlauf, Betriebsreihen, monatlicher Rang-Lauf, ausgelöste Handlungen | neu | — |
+| **Daten** | Frische je Quelle (Preise, Kerzen, Makro, Umlauf, Terminmarkt) | `agent/datenfrische.pruefe` (vorhanden) | teils |
+| **Kontingente** | CoinGecko, Gemini **je Verbraucher** (Prüfblock, N5, Synthese) | Zähler | falsch benannt |
+| **System** | Watchdog, letzte Fehler, Speicher, **Neustart ausstehend** (A1 aus Schritt 53) | vorhanden / A1 | teils |
+| **Kontrollen** | offene NB-Kontrollen (K-…) | Memory/Doku → neu als Datei | ✘ |
+
+⚠️ **Technischer Hinweis:** Fast alle Zahlen rechnet der **Teilexport** (`nb_teilexport_betriebsdaten.py`) heute schon. Die Statusseite soll **dieselben Funktionen** nutzen, nicht nachbauen (eine Quelle, sonst laufen beide auseinander).
+
+#### Zentrale Parameter und Kalibrierung — Vorschlag
+
+| Gruppe | Parameter | steht in | Art |
+|---|---|---|---|
+| REGEL0 Modell | Modellmonat, Prüfsumme, Trainingszeitpunkt, nächstes Training | `data/regel0_modelle/` | gemessen (Training) |
+| REGEL0 Regel | Schwelle 0,035, Ruhe 48 h, Halten 72 h, Erstes Ereignis ±5 %, Regelversion REGEL0.1 | `agent/regel0_rechnung.py` (Code-Konstanten) | **gemessen**: nur per Messung ändern (Regel *Schwelle ist Messung*) |
+| REGEL0 Größe | Positionswert 1.500 €, Einsatz 300–800 €, Richtwert 4 gleichzeitig, Sperre ab Richtwert | `regel0_betrieb.yaml` | **deine Wahl** |
+| Schalter | alter Hebelweg aus, Testwoche, Kette angehalten, Ankündigungen, Hebelführung | `regel0_betrieb.yaml` | **deine Wahl** |
+| H15 | Warnschwelle 15 %, Stufen 15/10/5, Liquidationsmarge 0,09 (⚠️ an **zwei** Stellen gepflegt) | yaml / Code / `config.yaml` | Wahl / Schätzung |
+| LLM-Prüfblock | Fassung 0.2, Modell, 5 Stimmen, Zeitgrenze 120 s, Tageslimit 150, Rollen an/aus | `regel0_llm.yaml` | Wahl, gemessen in N4/N5 |
+| Spot (mit dem Bau) | Kosten je Klasse, Ampel-Schwellen B1–B3, Mitnahme ×3, Fenster 365 T, Fünftel | künftig eine Datei | gemessen (§31, §36) |
+| Messstandard | Nullpunkt, Trennschärfe, Leiter | `messnorm.standardzeile()` | gemessen (08.09.) |
+
+**Vorschlag:**
+- Eine **Parameter-Karte** auf der Statusseite und ein **Teil im GUI-Tab „Betrieb/Parameter“**, beide **nur lesend**.
+- Je Parameter: Wert, Datei, **Art** (*deine Wahl* / *gemessen* / *Schätzung*), *gemessen am*, Befund.
+- **Geändert wird nur über die Datei** (Commit + Pull): *deine Wahl* jederzeit, *gemessen* nur nach einer neuen Messung.
+- Ein Änderungsknopf in der GUI würde gemessene Werte zur Stellschraube machen. Dazu kommt die Pull-Kollision am NB.
+- ⚠️ **Nebenbefund:** Die Liquidationsmarge 0,09 steht doppelt (`config.yaml:506` und `entscheidungsrechnung.GRENZEN`). Sie wird auf **eine** Quelle zusammengeführt (Plan O44).
