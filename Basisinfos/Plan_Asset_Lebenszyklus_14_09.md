@@ -580,3 +580,43 @@ Nutzer 10.10.: *„1. ja 2. passt 3. ja, mit Statusseite starten – prüfe vorh
 - **Überwachungsliste G-L passt.**
 - **Reihenfolge:** GUI-1 Statusseite → GUI-2 Hebel-Tab → GUI-3 Bestand → GUI-4 Meine Assets → GUI-5 Archiv/Multi-Asset. Verschränkt mit Hebel und Spot im **Paketplan ab 10.10.** (Plan_Hebel_fuenf_Phasen_27_09.md, P8–P20): O29 zuerst, dann die Statusseite.
 
+
+### G-N Voranalyse P9 — GUI-1 Statusseite (10.10.2026)
+
+**Ist am Code:**
+- `remote/status.py` (1.220 Z.) baut `RemoteStatus` aus rund 40 Gettern, zwischengespeichert 900 s (`_gecacht`). Warnung, wenn der Aufbau > 1,0 s dauert.
+- `remote/server.py` (1.114 Z.): Flask, eine HTML-Seite mit JS, Abruf `/api/status` alle **5 s**, Knöpfe über `/api/*` mit Zugangs-Token.
+- Der Teilexport `nb_teilexport_betriebsdaten.py` rechnet alles **inline** in `_inhalt()` (≈ 330 Zeilen mit `print`). Es gibt **keine** Funktionen zum Mitnutzen.
+- `hebelfuehrung.lade(conn)` ist rein lesend (Positionen + `price_cache`) und für die Seite geeignet.
+- Liquidationsmarge: `entscheidungsrechnung.GRENZEN["liquidations_marge"]` = 0,09 (H15, Rollen-Kette) **und** `config.yaml risiko.hebel.liquidations_sicherheitsmarge_relativ` = 0,09 (`hebel_risk_gate`, Liq.-Preis-Tabelle). Heute gleich, aber doppelt gepflegt.
+
+**Bauweise (Vorschlag):**
+
+| Teil | Inhalt | Schutz |
+|---|---|---|
+| neu `agent/betriebslage.py` | **eine** Quelle für die Lage: `regel0()`, `hebel()`, `schalter()`, `jobs()`, `bestand()`, `kontrollen()`, `parameter()`, `daten()` (ruft `datenfrische.pruefe`); andere Dateien nur `mode=ro` | nur lesend; Prüfstand auf einer Kopie der Prod-Sicherung |
+| `remote/status.py` | neue Felder je Karte, Getter mit `_gecacht` (Laufzeit < 1 s bleibt) | Wache `build_status` vorhanden |
+| `remote/server.py` | neue Karten: Betrieb, Hebel, Schalter, Bestand, Kontingente je Verbraucher, Kontrollen, Parameter | Flask-Testclient |
+| Teilexport | ruft `betriebslage` statt inline | **Ausgabe vorher/nachher zeilengleich** auf derselben Kopie (der Teilexport ist dein Instrument und darf sich nicht still ändern) |
+| O44 | `GRENZEN["liquidations_marge"]` liest den Wert aus `config.yaml` (eine Quelle) | Wert bleibt 0,09; H15-Prüfstand und Gegenprobe unverändert grün |
+| Kontrollen | neue Datei `Basisinfos/nb_kontrollen.yaml` (offene K-…, Stand, Nachweis), gepflegt von mir mit jedem Befund; die Seite liest sie | heute stehen sie nur im Memory/Doku |
+
+**Karten, die entfallen oder umziehen** (⚠️ **Rücksprache vor dem Entfernen**):
+
+| heute | Vorschlag |
+|---|---|
+| LLM-Kontingent *Rollen-Kette* (Urteile heute = 0) | **ersetzen** durch *Kontingente je Verbraucher* |
+| *Alte Kette* (Budget heute) | entfällt (Kette angehalten) |
+| A *„Ausgeführte Empfehlungen“* (nur Marktscan-Quote) | Marktscan-Quote in *Betrieb*; Überschrift entfällt |
+| B *„Z.ai“* (leer) | entfällt |
+| C *„Veto-Schatten“* (enthält *Stop nachziehen*) | *Stop nachziehen* in *Betrieb* (letzter Lauf, Anzahl); Überschrift entfällt |
+| Regime-Karte, Parameter (alt) | entfällt; ersetzt durch *Parameter* (neu) bzw. später *Markt (Krypto)* |
+| Themenfelder, wartende Themen, Absicherung | in einen eingeklappten Abschnitt *Multi-Asset (ruht)* |
+| Z-3 | **unklar**, wer es heute schreibt → vor dem Bau prüfen, dann Rücksprache |
+| Portfolio, Preise, CoinGecko, Gemini, API-Status, Knöpfe, Fehler | **bleiben** (GF1) |
+
+**Nachweis (vorab):**
+- Prüfstand auf einer Kopie der neuesten Prod-Sicherung: jede Karte gefüllt, Werte gegen eigenes SQL (Gegenprobe), Aufbau < 1 s, Standard-DB per Prüfsumme unberührt.
+- Teilexport zeilengleich vorher/nachher.
+- Paket `GuiKette` erweitert, ganze Suite.
+- Am NB: Pull + Neustart, **K-ST-1** = du siehst alle Karten über VPN, nichts fehlt.
