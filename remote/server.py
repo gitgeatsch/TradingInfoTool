@@ -55,11 +55,6 @@ _INDEX_HTML = """<!doctype html>
   .stale { color: #e0a030; }
   .ok { color: #4caf50; }
   .err { color: #e0605a; }
-  .regime-krise_extrem { color: #e0605a; }
-  .regime-baer { color: #e0a030; }
-  .regime-seitwaerts { color: #999; }
-  .regime-bulle { color: #4caf50; }
-  .regime-euphorie_extrem { color: #7a6ee0; }
   .muted-text { color: #999; font-size: 0.82rem; }
   .kategorie-header { color: #7a8290; font-size: 0.78rem; text-transform: uppercase; margin-top: 8px; }
 
@@ -78,15 +73,14 @@ _INDEX_HTML = """<!doctype html>
   .section-system { border-bottom-color: #5b8fd6; }
   .section-system .section-badge { background: #5b8fd6; }
   .group-system { border-left-color: #5b8fd6; }
-  .section-a { border-bottom-color: #4caf50; }
-  .section-a .section-badge { background: #4caf50; }
-  .group-a { border-left-color: #4caf50; }
-  .section-b { border-bottom-color: #b18cf0; }
-  .section-b .section-badge { background: #b18cf0; }
-  .group-b { border-left-color: #b18cf0; }
-  .section-c { border-bottom-color: #e0a030; }
-  .section-c .section-badge { background: #e0a030; }
-  .group-c { border-left-color: #e0a030; }
+  /* P9 (10.10.2026): die Gruppen A/B/C der alten Kette sind entfallen (G-N); ruhende Bereiche eingeklappt. */
+  details.ruht { background: #161b21; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
+  details.ruht summary { cursor: pointer; color: #8a93a0; font-size: 0.9rem; }
+  details.ruht .card { background: #1b2128; margin-top: 10px; }
+  .unter { padding-left: 10px; font-size: 0.82rem; color: #b8bec6; }
+  table.parameter { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
+  table.parameter { table-layout: fixed; }
+  table.parameter td { padding: 3px 4px 3px 0; vertical-align: top; overflow-wrap: anywhere; }
   button { width: 100%; padding: 14px; margin-top: 8px; font-size: 1rem; border: none;
            border-radius: 8px; background: #2e5fa3; color: white; }
   button:disabled { background: #3a4048; color: #888; }
@@ -98,10 +92,14 @@ _INDEX_HTML = """<!doctype html>
 <body>
 <h1>TradingInfoTool - Fernsteuerung</h1>
 
+<!-- P9 (10.10.2026, Plan_Asset_Lebenszyklus_14_09.md G-N): die Betriebslage des NEUEN Systems steht oben - eine Quelle mit
+     dem Teilexport (agent/betriebslage.py). Entfallen (abgestimmt): Karte ALTE KETTE, Ueberschriften A/B/C, Regime-Karte,
+     Parameter der alten Kette. Umgehaengt: Marktscan-Quote und Stop nachziehen in *Betrieb*, Themen/Absicherung in den
+     eingeklappten Abschnitt *Multi-Asset (ruht)*. Die Getter bleiben im Code. -->
 <div class="section-header section-system">
   <span class="section-badge">System</span>
-  <span class="section-title">Status &amp; Budget</span>
-  <span class="section-sub">Portfolio, LLM-Kontingente, CoinGecko-Quote</span>
+  <span class="section-title">Betrieb &amp; Lage</span>
+  <span class="section-sub">Kontrollen, Hebel, REGEL0, Jobs, Schalter, Bestand, Kontingente</span>
 </div>
 <div class="section-group group-system">
 
@@ -111,21 +109,60 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><span>Letzter Marktscan</span><span id="marktscan-info">-</span></div>
 </div>
 
-<div class="card">
-  <div class="row"><span><b>LLM-Kontingent heute (Rollen-Kette)</b></span><span id="rollen-rest">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;Gemini 3.1 (erster Topf)</span><span id="topf-gemini31">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;Gemini 3.5 (Rückfall)</span><span id="topf-gemini35">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;OpenRouter</span><span id="topf-openrouter">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;Groq (Token-Grenze, nicht Anfragen)</span><span id="topf-groq">-</span></div>
-  <div class="row"><span>Urteile der Rollen-Kette heute</span><span id="rollen-signale">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;davon Hebel / mit Handlung</span><span id="rollen-aufteilung">-</span></div>
-  <div class="row"><span>Z.ai-Gegenprüfung heute (kein Tagesdeckel)</span><span id="budget-zai-gegenpruefung">-</span></div>
+<div class="card" id="z3-card" style="display:none">
+  <div class="row"><strong>Drawdown-Notbremse Z-3</strong></div>
+  <div id="z3-body"></div>
 </div>
 
 <div class="card">
-  <div class="row"><span>ALTE KETTE (seit dem Schnitt ohne Aufrufer)</span><span id="budget-total">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;Hebel / Marktscan / Spot-Rotation</span><span id="budget-alt-drei">-</span></div>
-  <div class="row"><span>&nbsp;&nbsp;Multi-Asset</span><span id="budget-multi-asset">-</span></div>
+  <div class="row"><strong>Offene NB-Kontrollen</strong><span id="kontrollen-kopf">-</span></div>
+  <div id="kontrollen-body"></div>
+  <div class="row"><span class="muted-text">Eine Liste: Basisinfos/nb_kontrollen.yaml (auch im Teilexport, Abschnitt
+  NB-KONTROLLEN). Automatische Kontrollen prüft das System selbst; rot = über der Frist.</span></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Hebel - offene Positionen (H15)</strong><span id="hebel-kopf">-</span></div>
+  <div id="hebel-body"></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>REGEL0 heute (UTC)</strong><span id="regel0-kopf">-</span></div>
+  <div id="regel0-body"></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Betrieb - Jobs und Datenbasis</strong><span id="betrieb-kopf">-</span></div>
+  <div id="betrieb-auffaellig"></div>
+  <details><summary class="muted-text">alle Jobs (letzter erfolgreicher Lauf)</summary><div id="betrieb-jobs"></div></details>
+  <div class="row"><span class="muted-text">gelb: älter als 26 h (bei einem Tagesjob ein Ausfall, bei einem Wochenjob normal)</span></div>
+  <div id="betrieb-body"></div>
+  <div class="row" style="margin-top:8px"><strong>Marktscan-Erfolgsquote (Kaufkandidaten/"heiße" Watchlist)</strong></div>
+  <div class="row"><span class="muted-text">Anteil der abgeschlossenen Erfolgsmessungen (CRV-Mindestziel
+  erreicht, siehe Regelwerksmanual "Marktscan-Erfolgsmessung"), die tatsaechlich erfolgreich waren. "Offen"
+  laufende Messungen zaehlen nicht mit. Ø Tage bis Erfolg nur bei ausreichender Stichprobe (n≥15) empirisch
+  belastbar.</span></div>
+  <div id="marktscan-erfolgsquote"></div>
+  <div class="row" style="margin-top:8px"><strong>Stop nachziehen &mdash; offene Signale mit ungesichertem Gewinn</strong><span id="ausstieg-kopf">-</span></div>
+  <details><summary class="muted-text">Liste und Grundlage</summary>
+  <div class="row"><span class="muted-text">Advisory-only: gerechnet und gemeldet, nicht ausgef&uuml;hrt. Grundlage (2026-08-04): 50&nbsp;% der Signale standen einmal bei +1R, nur 17,6&nbsp;% kamen am Ziel an &ndash; Positionen geben Gewinne zur&uuml;ck. Ein Trailing-Stop ab +1R hob den Erwartungswert von &minus;0,176 auf &minus;0,084&nbsp;R (495 echte Signale, symbolgeblocktes Intervall [+0,051; +0,131], h&auml;lt im Split-Sample und &uuml;ber alle drei Marktphasen). Das ist <b>kein</b> Breakeven-Lock &ndash; der wurde am 01.08. gemessen und verworfen, er kostet 63&nbsp;% der Gewinner.</span></div>
+  <div id="ausstieg-empfehlungen"></div>
+  </details>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Schalter</strong><span class="muted-text">Basisinfos/regel0_betrieb.yaml</span></div>
+  <div id="schalter-body"></div>
+  <div class="row" style="margin-top:8px"><strong>Bestand (Bitpanda-Abgleich)</strong></div>
+  <div id="bestand-body"></div>
+</div>
+
+<div class="card">
+  <div class="row"><strong>Kontingente je Verbraucher</strong></div>
+  <div id="kontingente-body"></div>
+  <div class="row"><span>Rollen-Kette: nächster Topf</span><span id="rollen-rest">-</span></div>
+  <div class="row"><span>Urteile der Rollen-Kette heute</span><span id="rollen-signale">-</span></div>
+  <div class="row"><span>&nbsp;&nbsp;davon Hebel / mit Handlung</span><span id="rollen-aufteilung">-</span></div>
 </div>
 
 <div class="card">
@@ -150,70 +187,6 @@ _INDEX_HTML = """<!doctype html>
 
 </div>
 
-<div class="section-header section-a">
-  <span class="section-badge">A</span>
-  <span class="section-title">Ausgeführte Empfehlungen</span>
-  <span class="section-sub">real, im Handel/Portfolio wirksam</span>
-</div>
-<div class="section-group group-a">
-
-
-
-
-
-
-
-<div class="card">
-  <div class="row"><strong>Marktscan-Erfolgsquote (Kaufkandidaten/"heiße" Watchlist)</strong></div>
-  <div class="row"><span class="muted-text">Anteil der abgeschlossenen Erfolgsmessungen (CRV-Mindestziel
-  erreicht, siehe Regelwerksmanual "Marktscan-Erfolgsmessung"), die tatsaechlich erfolgreich waren. "Offen"
-  laufende Messungen zaehlen nicht mit. Ø Tage bis Erfolg nur bei ausreichender Stichprobe (n≥15) empirisch
-  belastbar.</span></div>
-  <div id="marktscan-erfolgsquote"></div>
-</div>
-
-</div>
-
-<div class="section-header section-b">
-  <span class="section-badge">B</span>
-  <span class="section-title">Unabhängige Zweitmeinung</span>
-  <span class="section-sub">Z.ai-Gegenprüfung</span>
-</div>
-<div class="section-group group-b">
-
-
-
-</div>
-
-<div class="section-header section-c">
-  <span class="section-badge">C</span>
-  <span class="section-title">Veto-Schatten</span>
-  <span class="section-sub">hypothetisch, nie ausgeführt + Gesamt</span>
-</div>
-<div class="section-group group-c">
-
-
-
-
-
-
-
-<div class="card">
-  <h2>Stop nachziehen &mdash; offene Signale mit ungesichertem Gewinn</h2>
-  <div class="row"><span class="muted-text">Advisory-only: gerechnet und gemeldet, nicht ausgef&uuml;hrt. Grundlage (2026-08-04): 50&nbsp;% der Signale standen einmal bei +1R, nur 17,6&nbsp;% kamen am Ziel an &ndash; Positionen geben Gewinne zur&uuml;ck. Ein Trailing-Stop ab +1R hob den Erwartungswert von &minus;0,176 auf &minus;0,084&nbsp;R (495 echte Signale, symbolgeblocktes Intervall [+0,051; +0,131], h&auml;lt im Split-Sample und &uuml;ber alle drei Marktphasen). Das ist <b>kein</b> Breakeven-Lock &ndash; der wurde am 01.08. gemessen und verworfen, er kostet 63&nbsp;% der Gewinner.</span></div>
-  <div id="ausstieg-empfehlungen"></div>
-</div>
-
-
-
-
-
-
-
-
-
-</div>
-
 <div class="card">
   <div class="row"><strong>API-Status: LLM-Anbieter</strong></div>
   <div id="api-health-llm"></div>
@@ -223,7 +196,15 @@ _INDEX_HTML = """<!doctype html>
   <div id="api-health-makro"></div>
 </div>
 
+<div class="card">
+  <div class="row"><strong>Parameter (neues System, nur lesend)</strong></div>
+  <div class="row"><span class="muted-text">Geändert wird nur über die Datei (Commit + Pull). Art: <b>wahl</b> =
+  Festlegung, <b>gemessen</b> = aus einer Messung, <b>schaetzung</b> = ohne Messgrundlage. Antippen zeigt Datei und Beleg.</span></div>
+  <div id="parameter-neu-body"></div>
+</div>
 
+<details class="ruht">
+  <summary>Multi-Asset (ruht) - Themenfelder, Themen in Beobachtung, Absicherung</summary>
 
 <div class="card" id="themenfeld-erfolg-card" style="display:none">
   <div class="row"><strong>Themenfelder — traf die Richtung?</strong></div>
@@ -258,20 +239,7 @@ _INDEX_HTML = """<!doctype html>
   <div id="hedge-body"></div>
 </div>
 
-<div class="card" id="z3-card" style="display:none">
-  <div class="row"><strong>Drawdown-Notbremse Z-3</strong></div>
-  <div id="z3-body"></div>
-</div>
-
-<div class="card" id="regime-status-card" style="display:none">
-  <div class="row"><strong>Regime-Status</strong></div>
-  <div id="regime-status-body"></div>
-</div>
-
-<div class="card" id="parameter-overview-card" style="display:none">
-  <div class="row"><strong>Parameter-Übersicht</strong></div>
-  <div id="parameter-overview-body"></div>
-</div>
+</details>
 
 <div class="card">
   <button id="btn-prices" onclick="triggerAction('refresh-prices')">Preise aktualisieren</button>
@@ -690,82 +658,189 @@ function renderZ3(z) {
   return h;
 }
 
-function renderRegimeStatus(r) {
-  const label = REGIME_LABELS[r.regime] || r.regime;
-  const cls = "regime-" + r.regime;
-  let html = '<div class="row"><span>Stand</span><span>' + fmtDateTime(r.created_at) + '</span></div>';
-  // Schritt 32 (2.448-uebersicht): die Herkunft steht VOR dem Wert.
-  if (r.herkunft_hinweis) {
-    html += '<div class="row"><span class="muted-text">⚠ ' + r.herkunft_hinweis + '</span></div>';
-  }
-  html += '<div class="row"><span>Regime</span><span class="' + cls + '"><strong>' + label + '</strong></span></div>';
-  if (r.regime_reason) {
-    const praefix = r.regime_source === "manuell" ? "⚠ " : "";
-    html += '<div class="row"><span class="muted-text">' + praefix + r.regime_reason + '</span></div>';
-  } else if (r.regime_source === "manuell") {
-    html += '<div class="row"><span class="muted-text">⚠ manuell überschrieben</span></div>';
-  }
-  if (r.regime_persistenz_tage) {
-    html += '<div class="row"><span class="muted-text">Regime seit ' + r.regime_persistenz_tage
-      + ' Tag(en) regelbasiert bestätigt.</span></div>';
-  }
-  // REGIME-GLAETTUNG (2026-08-06). Bis heute zeigte diese Karte nur das harte
-  // Label ("baer"/"bulle") - waehrend die Mindestkonfidenz seit der Glaettung am
-  // STETIGEN Score haengt. Die Anzeige beschrieb damit ein Verfahren, das so
-  // nicht mehr laeuft. Genau der Fall, den der Nutzer am 06.08. vermutet hat:
-  // "hier haben wir jetzt ein anderes Konzept im Einsatz".
-  if (r.regime_score_stetig !== null && r.regime_score_stetig !== undefined) {
-    html += '<div class="row"><span>Regime-Score (stetig, 0 = klar bärisch)</span><span><strong>' +
-      r.regime_score_stetig.toFixed(2) + "</strong></span></div>";
-  }
-  if (r.regime_min_konfidenz_stetig !== null && r.regime_min_konfidenz_stetig !== undefined) {
-    html += '<div class="row"><span>daraus Mindestkonfidenz</span><span><strong>' +
-      r.regime_min_konfidenz_stetig.toFixed(1) + " %</strong></span></div>";
-  }
-  if (r.btc_abstand_ema50_prozent !== null && r.btc_abstand_ema50_prozent !== undefined) {
-    html += '<div class="row"><span>BTC zur EMA50</span><span>' +
-      (r.btc_abstand_ema50_prozent >= 0 ? "+" : "") +
-      r.btc_abstand_ema50_prozent.toFixed(2) + " %" +
-      (r.btc_ema50_einordnung ? " (" + r.btc_ema50_einordnung + ")" : "") + "</span></div>";
-  }
-
-  const zeilen = [
-    ["BTC-Trend", r.btc_trend_label],
-    ["Fear &amp; Greed", r.fear_greed_label ? r.fear_greed_label + " (" + r.fear_greed_value + ")" : null],
-    ["BTC-Dominanz-Trend", r.dominance_trend_label],
-    ["Zyklus-Risiko", r.zyklus_risiko !== null && r.zyklus_risiko !== undefined
-      ? r.zyklus_risiko.toFixed(2) + (r.zyklus_risiko_begruendung ? " - " + r.zyklus_risiko_begruendung : "") : null],
-    ["Liquiditätsregime", r.liquiditaets_regime
-      ? r.liquiditaets_regime + (r.liquiditaets_regime_begruendung ? " - " + r.liquiditaets_regime_begruendung : "") : null],
-  ];
-  for (const [titel, wert] of zeilen) {
-    if (wert === null || wert === undefined) continue;
-    html += '<div class="row"><span>' + titel + '</span><span>' + wert + '</span></div>';
-  }
-  if (r.regime_konflikt_gesamt) {
-    html += '<div class="row"><span>Regime-Konflikt-Übersicht</span><span>' + r.regime_konflikt_anzahl
-      + ' von ' + r.regime_konflikt_gesamt + ' aktiven Kandidaten</span></div>';
-  }
-  return html;
+// ══ P9 (10.10.2026): Karten der Betriebslage (Daten aus agent/betriebslage.py) ═══════════════════════════════════════════
+function esc(x) {
+  return String(x === null || x === undefined ? "-" : x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+}
+function zeile(links, rechts, cls) {
+  return '<div class="row"><span>' + links + '</span><span' + (cls ? ' class="' + cls + '"' : '') + '>' + rechts + '</span></div>';
+}
+function fmtZahl(v, n) {
+  if (v === null || v === undefined) return "-";
+  return Number(v).toLocaleString("de-AT", {minimumFractionDigits: n, maximumFractionDigits: n});
+}
+function fmtAlter(min) {
+  if (min === null || min === undefined) return "?";
+  if (min < 90) return "vor " + Math.round(min) + " min";
+  if (min < 48 * 60) return "vor " + (min / 60).toFixed(1).replace(".", ",") + " h";
+  return "vor " + Math.round(min / 1440) + " Tagen";
+}
+function fmtStempel(iso) {
+  if (!iso) return "-";
+  const d = new Date(String(iso).replace(" ", "T") + (String(iso).length <= 16 ? ":00Z" : ""));
+  return isNaN(d) ? esc(iso) : d.toLocaleString("de-AT", { dateStyle: "short", timeStyle: "short" });
 }
 
-function renderParameterOverview(rows) {
-  if (!rows || rows.length === 0) return "";
-  let html = '<table style="width:100%; border-collapse: collapse; font-size: 0.85rem;">';
-  let letzteKategorie = null;
-  for (const p of rows) {
-    if (p.kategorie !== letzteKategorie) {
-      html += '<tr><td colspan="2" class="kategorie-header">' + p.kategorie + '</td></tr>';
-      letzteKategorie = p.kategorie;
-    }
-    const tooltip = (p.begruendung || "") +
-      " (zuletzt geändert: " + (p.geaendert_am || "kein Datum vermerkt") + ")";
-    html += '<tr title="' + tooltip.replace(/"/g, "&quot;") + '">' +
-      '<td style="padding:3px 4px 3px 0">' + p.bezeichnung + '</td>' +
-      '<td style="padding:3px 0; text-align:right">' + p.wert + '</td></tr>';
+function renderKontrollen(k) {
+  if (k.fehlt) return zeile("Basisinfos/nb_kontrollen.yaml", "FEHLT", "err");
+  const liste = k.eintraege || [];
+  if (!liste.length) return '<div class="row"><span class="muted-text">keine offene Kontrolle</span></div>';
+  return liste.map(function (e) {
+    let rechts, cls;
+    if (e.status_live) { rechts = "erfüllt (automatisch)"; cls = "ok"; }
+    else if (e.ueberfaellig) { rechts = "ÜBERFÄLLIG (bis " + esc(e.faellig_bis) + ")"; cls = "err"; }
+    else { rechts = (e.faellig_bis ? "bis " + esc(e.faellig_bis) : "bei Ereignis") + " · " + esc(e.art); cls = "stale"; }
+    let h = zeile("<b>" + esc(e.id) + "</b> " + esc(e.titel), rechts, cls);
+    if (e.auto_beleg) h += '<div class="unter">automatisch: ' + esc(e.auto_beleg) + '</div>';
+    else if (e.nachweis) h += '<div class="unter">Nachweis: ' + esc(e.nachweis) + '</div>';
+    return h;
+  }).join("");
+}
+
+function renderHebel(h) {
+  const pos = h.positionen || [];
+  let x = "";
+  if (!pos.length) x += '<div class="row"><span class="muted-text">keine offene Hebelposition</span></div>';
+  pos.forEach(function (p) {
+    const cls = p.empfehlung === "HALTEN" ? "ok" : (p.empfehlung === "LIQUIDIERT" || p.empfehlung === "SCHLIESSEN" ? "err" : "stale");
+    x += zeile("<b>" + esc(p.symbol) + "</b> " + esc(p.richtung) + " " + fmtZahl(p.hebel, 1) + "x · EK " + fmtZahl(p.eigenkapital_eur, 0) + " €",
+               esc(p.empfehlung) + (p.stufe ? " (Stufe " + Math.round(p.stufe * 100) + " %)" : ""), cls);
+    x += '<div class="unter">Kurs ' + fmtZahl(p.kurs_eur, 2) + " € · Liq. " + fmtZahl(p.liquidation_eur, 2) + " € · Abstand " +
+         (p.abstand === null || p.abstand === undefined ? "-" : fmtZahl(p.abstand * 100, 1) + " %") + " · seit " + fmtStempel(p.eroeffnet_am) + "</div>";
+    if (p.grund && p.empfehlung !== "HALTEN") x += '<div class="unter">' + esc(p.grund) + "</div>";
+  });
+  if (h.gemeldet === null) x += '<div class="unter">H15-Meldungen: job_laeufe fehlt - unbekannt</div>';
+  const g = h.gemeldet || [];
+  if (g.length) {
+    x += '<div class="row" style="margin-top:6px"><span class="muted-text">zuletzt gemeldet (H15)</span></div>';
+    x += g.map(function (r) {
+      // Schluessel hebelfuehrung:<id>:<Empfehlung>:<Stufe>:<Tag> - die Stufe als Prozent, leere Teile weg
+      const teil = String(r[0]).split(":").slice(2).filter(t => t !== "").map(function (t) {
+        return t.indexOf("stufe") === 0 ? "Stufe " + Math.round(parseFloat(t.slice(5)) * 100) + " %" : t;
+      });
+      return '<div class="unter">' + fmtStempel(r[1]) + " · " + esc(teil.join(" · ")) + "</div>";
+    }).join("");
   }
-  html += "</table>";
-  return html;
+  return x;
+}
+
+function renderRegel0(r) {
+  const h = r.heute || {};
+  if (!h.ablage) return zeile("regel0_signale.db", "fehlt - noch kein Lauf", "err");
+  let x = zeile("Signale heute (Hebel-Schalter an)", (h.signale_heute || 0) + " (" + (h.schalter_an_heute || 0) + ")");
+  x += zeile("gemailt / Korrektur / Erinnerung", (h.gemailt_heute ?? "-") + " / " + (h.korrektur_heute ?? "-") + " / " + (h.erinnerung_heute ?? "-"));
+  x += zeile("nicht gemailt: gesperrt / verpasst / Erinnerung entfallen",
+             (h.gesperrt_heute ?? "-") + " / " + (h.verpasst_heute ?? "-") + " / " + (h.entfallen_heute ?? "-"),
+             (h.gesperrt_heute || 0) > 0 ? "stale" : "");
+  const l = h.letzter_lauf;
+  if (l) {
+    x += '<div class="unter">letzter Lauf ' + fmtStempel(l[0]) + " · " + fmtZahl(l[1], 0) + " s · aktiv " + l[2] + " · frisch " + l[3] +
+         " · veraltet " + l[4] + " · nicht im Handel " + l[5] + (l[6] ? " · " + esc(l[6]) : "") + "</div>";
+  }
+  (h.liste_heute || []).forEach(function (s) {
+    x += '<div class="unter">' + esc(s[0]) + " · " + fmtStempel(s[1]) + " · Stufe " + esc(s[3] || s[2]) + (s.length > 5 ? " · Mail " + (s[5] ? fmtStempel(s[5]) : "-") : "") + "</div>";
+  });
+  const pb = r.pruefblock || {};
+  x += '<div class="row" style="margin-top:6px"><strong>Prüfblock (LLM)</strong><span></span></div>';
+  if (!pb.lauf) x += '<div class="unter">noch kein Lauf</div>';
+  else {
+    (pb.je_tag || []).forEach(function (t) { x += '<div class="unter">' + esc(t[0]) + " (Pazifik) · Aufrufe " + t[1] + " · Rollen gefragt " + t[2] + "</div>"; });
+    const ur = {};
+    (pb.urteile || []).forEach(function (u) { (ur[u[0]] = ur[u[0]] || []).push(esc(u[1]) + " " + u[2]); });
+    Object.keys(ur).forEach(function (k) { x += '<div class="unter">' + esc(k) + ": " + ur[k].join(", ") + "</div>"; });
+    (pb.fehler || []).forEach(function (f) { x += '<div class="unter stale">⚠ ' + esc(String(f[0]).slice(0, 90)) + " · " + f[1] + "</div>"; });
+  }
+  const a = r.ankuendigung || {};
+  x += '<div class="row" style="margin-top:6px"><strong>Binance-Ankündigungen (O29)</strong><span class="' + (a.an ? "ok" : "") + '">' + (a.an ? "AN" : "aus") + "</span></div>";
+  if (!a.lauf) x += '<div class="unter">noch kein Lauf</div>';
+  else {
+    x += '<div class="unter">Läufe ' + a.laeufe + " · fehlerfrei " + a.fehlerfrei + " · Meldungen " + a.meldungen + " · Zuordnungen " + a.zuordnungen + "</div>";
+    if (a.letzter) x += '<div class="unter' + (a.letzter[1] ? "" : " err") + '">letzter Abruf ' + fmtStempel(a.letzter[0]) + " · " + (a.letzter[1] ? "ok" : "FEHLER " + esc(a.letzter[5])) + "</div>";
+    (a.mit_ereignis || []).forEach(function (m) { x += '<div class="unter">' + esc(m[0]) + " · " + fmtStempel(m[1]) + " · " + esc(m[2]) + "</div>"; });
+  }
+  return x;
+}
+
+// Ein Tagesjob, der laenger als 26 h nicht lief, ist ausgefallen; stuendliche Jobs fallen schon frueher auf (Kopfzeile).
+const JOB_ALT_MIN = 26 * 60;
+// Am Handy sind 26 Zeilen zu viel: offen stehen nur die auffaelligen, die ganze Liste ist eingeklappt. Der Klappabschnitt steht
+// FEST im HTML - im erzeugten Teil klappte er bei jedem Abruf (5 s) wieder zu.
+function jobAlt(j) { return j.alter_min !== null && j.alter_min > JOB_ALT_MIN; }
+function renderJobs(jobs, nurAlte) {
+  return jobs.filter(j => !nurAlte || jobAlt(j)).map(j => zeile(esc(j.job), fmtAlter(j.alter_min), jobAlt(j) ? "stale" : "")).join("");
+}
+function renderBetrieb(b) {
+  let x = "";
+  if (b.job_tabelle_fehlt) x += zeile("Tabelle job_laeufe", "FEHLT - kein Joblauf verzeichnet (App laeuft hier nicht?)", "err");
+  const n = b.nachlader || {};
+  x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Nachlader</strong><span class="' + (n.schreibt ? "ok" : "stale") + '">' +
+       (n.schreibt ? "schreibt" : "schreibt NICHT") + "</span></div>";
+  if (!n.schreibt && n.grund) x += '<div class="unter">' + esc(n.grund) + "</div>";
+  (n.dateien || []).forEach(function (d) {
+    if (d.fehlt) { x += '<div class="unter err">' + esc(d.datei) + " FEHLT</div>"; return; }
+    const l = d.letzter_lauf;
+    x += '<div class="unter' + (l && l[4] ? " stale" : "") + '">' + esc(d.datei) + " · " +
+         (l ? "Lauf " + fmtStempel(l[0]) + " · neu " + l[1] + " · ersetzt " + l[2] + " · nicht im Handel " + l[3] + " · Fehler " + l[4] : "noch kein Lauf") + "</div>";
+  });
+  const na = b.neuaufnahme;
+  x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Neuaufnahme</strong><span>' + (na ? fmtStempel(na[0]) : "noch kein Lauf") + "</span></div>";
+  if (na) x += '<div class="unter">Regel ' + na[1] + " · Datei " + na[2] + " · neu: " + esc(na[3] || "-") + (na[4] ? " · ⚠ " + esc(na[4]) : "") + "</div>";
+  if (b.ohne_daten) x += '<div class="unter' + (b.ohne_daten.length ? " stale" : "") + '">Hebel-Schalter an ohne REGEL0-Daten: ' +
+       b.ohne_daten.length + (b.ohne_daten.length ? " - " + esc(b.ohne_daten.join(", ")) : "") + "</div>";
+  if (b.gesperrt) x += '<div class="unter stale">Signale nicht gemailt wegen Zuordnung (zuletzt 10): ' + b.gesperrt + "</div>";
+  return x;
+}
+
+// Je Schalter: Beschriftung, Text bei true, Text bei false. Der ZUSTAND steht rechts, nicht der Rohwert - "alter Hebelweg aus:
+// an" las sich als das Gegenteil dessen, was gilt.
+const SCHALTER_TEXT = {
+  testwoche_freigegeben: ["REGEL0-Testwoche (E-94)", "freigegeben", "nicht freigegeben"],
+  alter_hebelweg_aus: ["Alter Hebelweg (Rollen-Kette)", "aus", "AN"],
+  spot_kette_angehalten: ["Rollen-Kette (Spot, alle Gruppen)", "angehalten", "läuft"],
+  ankuendigung_aktiv: ["Binance-Ankündigungen (O29)", "an", "aus"],
+  hebelfuehrung_aktiv: ["Hebelführung H15", "an", "aus"],
+};
+function renderSchalter(sch) {
+  return Object.keys(sch).map(function (k) {
+    const v = sch[k];
+    const t = SCHALTER_TEXT[k] || [k, "true", "false"];
+    return zeile(esc(t[0]), v === true ? t[1] : (v === false ? t[2] : esc(v))) +
+      '<div class="unter muted-text">' + esc(k) + "</div>";
+  }).join("");
+}
+function renderBestand(b) {
+  let x = zeile("Bestände mit Menge (frei + gestakt) / davon gestakt", (b.mit_menge ?? "-") + " / " + (b.davon_gestakt ?? "-"));
+  x += zeile("Spot-Abgleich", fmtStempel(b.bestand_synced_at));
+  x += zeile("Hebel-Abgleich", fmtStempel(b.hebel_synced_at));
+  x += zeile("Buchungen bis", fmtStempel(b.buchungen_stand));
+  x += zeile("Wallet-Salden-Fassung", esc(b.salden_fassung), b.salden_fassung === "2" ? "ok" : "stale");
+  return x;
+}
+function renderKontingente(k) {
+  let x = "";
+  const r = k.regel0_pruefblock;
+  if (r) x += zeile("REGEL0-Prüfblock (Gemini) " + esc(r.tag || "") + " (Pazifik)", (r.aufrufe ?? 0) + (k.pruefblock_limit ? " / " + k.pruefblock_limit : ""));
+  const q = k.je_quelle_heute;
+  if (q && q.length) {
+    x += '<div class="row"><span class="muted-text">Aufrufe je Quelle, jüngster Tag</span></div>';
+    q.forEach(function (e) { x += '<div class="unter">' + esc(e[0]) + " · " + e[1] + "</div>"; });
+  }
+  return x;
+}
+function renderParameterNeu(rows) {
+  // Zwei Spalten statt drei: am Handy (375 px) lief die Art-Spalte ueber den Kartenrand. Die Art steht klein unter dem Namen.
+  let html = '<table class="parameter">';
+  let gruppe = null;
+  rows.forEach(function (p) {
+    if (p.gruppe !== gruppe) {
+      gruppe = p.gruppe;
+      html += '<tr><td colspan="2" class="kategorie-header">' + esc(gruppe) + "</td></tr>";
+    }
+    html += '<tr title="' + esc(p.datei + (p.beleg ? " · " + p.beleg : "")) + '"><td>' + esc(p.name) +
+            '<div class="muted-text">' + esc(p.art) + (p.beleg ? " · " + esc(p.beleg) : "") + '</div></td>' +
+            '<td style="text-align:right; word-break:break-word">' + esc(p.wert) + "</td></tr>";
+  });
+  return html + "</table>";
 }
 
 async function refreshStatus() {
@@ -793,26 +868,12 @@ async function refreshStatus() {
       data.marktscan_last.kandidaten + " Kandidaten, " + data.marktscan_last.treffer + " Treffer";
   }
 
-  if (data.budget_heute) {
-    const b = data.budget_heute;
-    // DIE ALTE KARTE ZAEHLTE UEBER `groq_raw_response IS NOT NULL` - eine
-    // Spalte, die nur die alte Kette schrieb. Seit dem Schnitt stand dort 0,
-    // waehrend die Kette lief; auf derselben Karte meldete Z.ai zehn Aufrufe.
-    // Zwei Zahlen, die einander widersprachen.
-    const rb = data.rollen_budget || {};
-    const toepfe = rb.toepfe || [];
-    const zeig = (id, i) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const t = toepfe[i];
-      el.textContent = t ? (t.verbraucht + " / " + t.grenze) : "-";
-    };
-    zeig("topf-gemini31", 0); zeig("topf-gemini35", 1);
-    zeig("topf-openrouter", 2); zeig("topf-groq", 3);
-    // DER ERSTE TOPF MIT REST IST DIE GRENZE, nicht die Summe (15.08.2026).
-    // Hier stand `rest_gesamt` als "N Aufrufe frei" - 1.874 ueber alle vier
-    // Toepfe. Arithmetisch richtig, als Aussage falsch: die Toepfe sind eine
-    // Rueckfallkette, und hinter jedem steht ein anderes Modell.
+  // P9 (10.10.2026): die Karte *Rollen-Kette* ist durch *Kontingente je Verbraucher* ersetzt, die ALTE KETTE ist entfallen
+  // (G-N, abgestimmt). Die Rollen-Kette bleibt als ein Verbraucher sichtbar.
+  if (data.rollen_budget) {
+    // DER ERSTE TOPF MIT REST IST DIE GRENZE, nicht die Summe (15.08.2026). Die Toepfe sind eine Rueckfallkette, und hinter
+    // jedem steht ein anderes Modell.
+    const rb = data.rollen_budget;
     document.getElementById("rollen-rest").textContent =
       (rb.rest_aktiv === undefined ? "-"
        : rb.rest_aktiv + " frei in " + (rb.topf_aktiv || "?")
@@ -820,14 +881,44 @@ async function refreshStatus() {
     document.getElementById("rollen-signale").textContent = rb.signale_heute ?? "-";
     document.getElementById("rollen-aufteilung").textContent =
       (rb.davon_hebel ?? 0) + " / " + (rb.davon_handlung ?? 0);
-    // Die alte Kette bleibt sichtbar, aber als das, was sie ist: ohne
-    // Aufrufer. Sie wegzulassen hiesse, eine Zahl verschwinden zu lassen,
-    // ohne dass jemand sieht, dass sie verschwunden ist.
-    document.getElementById("budget-total").textContent = b.verbraucht_gesamt + " / " + b.gesamt;
-    document.getElementById("budget-alt-drei").textContent =
-      b.hebel + " / " + b.marktscan + " / " + b.spot;
-    document.getElementById("budget-multi-asset").textContent = b.multi_asset_heute;
-    document.getElementById("budget-zai-gegenpruefung").textContent = b.zai_gegenpruefung_heute;
+  }
+
+  if (data.kontrollen) {
+    const k = data.kontrollen;
+    const kopf = document.getElementById("kontrollen-kopf");
+    kopf.textContent = (k.offen ?? 0) + " offen" + (k.ueberfaellig ? " · " + k.ueberfaellig + " überfällig" : "") + " · Stand " + (k.stand || "?");
+    kopf.className = k.ueberfaellig ? "err" : (k.offen ? "stale" : "ok");
+    document.getElementById("kontrollen-body").innerHTML = renderKontrollen(k);
+  }
+  if (data.hebel_lage) {
+    const h = data.hebel_lage;
+    const n = (h.positionen || []).length;
+    const warn = (h.positionen || []).some(p => p.empfehlung !== "HALTEN");
+    const kopf = document.getElementById("hebel-kopf");
+    kopf.textContent = n + " offen · Abgleich " + fmtStempel(h.hebel_synced_at);
+    kopf.className = warn ? "stale" : "ok";
+    document.getElementById("hebel-body").innerHTML = renderHebel(h);
+  }
+  if (data.regel0_lage) {
+    const l = (data.regel0_lage.heute || {}).letzter_lauf;
+    document.getElementById("regel0-kopf").textContent = l ? "Lauf " + fmtStempel(l[0]) : "-";
+    document.getElementById("regel0-body").innerHTML = renderRegel0(data.regel0_lage);
+  }
+  if (data.betrieb) {
+    const jobs = data.betrieb.jobs || [];
+    const alt = jobs.filter(jobAlt).length;
+    document.getElementById("betrieb-auffaellig").innerHTML = renderJobs(jobs, true);
+    document.getElementById("betrieb-jobs").innerHTML = renderJobs(jobs, false);
+    const kopf = document.getElementById("betrieb-kopf");
+    kopf.textContent = jobs.length + " Jobs" + (alt ? " · " + alt + " älter als 26 h" : "");
+    kopf.className = alt ? "stale" : "ok";
+    document.getElementById("betrieb-body").innerHTML = renderBetrieb(data.betrieb);
+  }
+  if (data.schalter) document.getElementById("schalter-body").innerHTML = renderSchalter(data.schalter);
+  if (data.bestand_lage) document.getElementById("bestand-body").innerHTML = renderBestand(data.bestand_lage);
+  if (data.kontingente) document.getElementById("kontingente-body").innerHTML = renderKontingente(data.kontingente);
+  if (data.parameter_neu && data.parameter_neu.length > 0) {
+    document.getElementById("parameter-neu-body").innerHTML = renderParameterNeu(data.parameter_neu);
   }
 
   if (data.coingecko_quota) {
@@ -856,15 +947,6 @@ async function refreshStatus() {
     renderMarktscanErfolgsquote(data.marktscan_erfolgsquote);
 
 
-  // Gruppe C: Veto-Schatten + Gesamt (2026-07-28) - gleiche Render-Funktionen
-  // wie Gruppe A/B, nur gegen die veto_schatten_*/gesamt_signalqualitaet-Felder.
-
-  // R-5.10-Konfidenzschwellen-Nachtrag (2026-07-30) - gleiche Render-Funktionen
-  // wie oben, nur gegen die nach Veto-Grund statt Provider gruppierten Daten.
-
-  // Selbst-gewaehltes-HALTEN-Schatten-Tracking (2026-07-31) - Gegenfall zum
-  // Veto-Schatten oben: kein Gate/Veto, das LLM hat sich selbst gegen einen
-  // Trade entschieden. Gleiche Render-Funktionen, identisches Datenformat.
   if (data.ausstiegs_empfehlungen) {
     var ae = data.ausstiegs_empfehlungen;
     var liste = ae.empfehlungen || [];
@@ -896,6 +978,11 @@ async function refreshStatus() {
             + ae.parameter.abstand_r.toFixed(1) + " R Abstand)</span></div>";
     }
     document.getElementById("ausstieg-empfehlungen").innerHTML = html;
+    // P9: die Kopfzeile in *Betrieb* - Anzahl und letzter Lauf des Ausstiegsjobs (Sammelmail 07:15)
+    const jobA = ((data.betrieb || {}).jobs || []).find(j => j.job === "ausstiegs_empfehlungen");
+    document.getElementById("ausstieg-kopf").textContent =
+      (!ae.parameter || ae.parameter.aktiv === false) ? "abgeschaltet"
+      : liste.length + " von " + (ae.geprueft || 0) + (jobA ? " · Lauf " + fmtAlter(jobA.alter_min) : "");
   }
 
 
@@ -927,16 +1014,6 @@ async function refreshStatus() {
   if (data.z3_und_bewertung) {
     document.getElementById("z3-card").style.display = "block";
     document.getElementById("z3-body").innerHTML = renderZ3(data.z3_und_bewertung);
-  }
-
-  if (data.regime_status) {
-    document.getElementById("regime-status-card").style.display = "block";
-    document.getElementById("regime-status-body").innerHTML = renderRegimeStatus(data.regime_status);
-  }
-
-  if (data.parameter_overview && data.parameter_overview.length > 0) {
-    document.getElementById("parameter-overview-card").style.display = "block";
-    document.getElementById("parameter-overview-body").innerHTML = renderParameterOverview(data.parameter_overview);
   }
 
   for (const [action, jobs] of Object.entries(ACTION_JOBS)) {

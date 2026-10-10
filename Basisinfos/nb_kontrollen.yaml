@@ -1,0 +1,99 @@
+# NB-KONTROLLEN - die EINE Liste (P9, 10.10.2026; Plan_Asset_Lebenszyklus_14_09.md G-O; Nutzer: "so aufsetzen, dass es nie veraltet").
+#
+# Gelesen von agent/betriebslage.kontrollen() -> Statusseite (Karte "Kontrollen") und Teilexport (Abschnitt NB-KONTROLLEN).
+# Gepflegt von Claude mit JEDEM Betriebs-Push und jedem Befund. Erledigte bleiben als Historie stehen (status: erfuellt).
+#
+# Felder: id, titel, seit, paket, commit, art (automatisch | manuell | ereignis | rueckfrage), pruefung (nur automatisch: Name in
+# betriebslage.KONTROLLEN), nachweis (was zu sehen sein muss), faellig_bis, status (offen | erfuellt | entfallen | abgeloest),
+# erfuellt_am, beleg.
+#
+# VIER SICHERUNGEN GEGEN DAS VERALTEN:
+#   1. automatisch -> das System prueft sich live selbst (Statusseite zeigt "erfuellt (automatisch)").
+#   2. faellig_bis ueberschritten -> rot auf der Statusseite UND rot in der Suite (Paket Kontrollen).
+#   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
+#      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
+#   4. eine Quelle: das Memory verweist nur noch hierher.
+stand: "2026-10-10"
+kontrollen:
+  # ---- offen ------------------------------------------------------------------------------------------------------------
+  - id: K-ANK-1
+    titel: "O29 Binance-Ankuendigungen: Abrufe laufen fehlerfrei (automatisch); die Mailzeile bei passender Meldung ist erst beim Ereignis pruefbar"
+    seit: "2026-10-10"
+    paket: P8
+    commit: 9152f7d
+    art: automatisch
+    pruefung: k_ank_1
+    nachweis: "ankuendigung_lauf mit Laeufen, alle fehlerfrei (Teilexport BINANCE-ANKUENDIGUNGEN)"
+    faellig_bis: "2026-10-12"
+    status: offen
+  - id: K-BP-3
+    titel: "EURCV-Fix: Wallet-Salden Fassung 2 gesetzt, keine Mail 'Bestand passt nicht zusammen' mehr, EURCV = Spot-Teil"
+    seit: "2026-10-10"
+    paket: K-BP-3
+    commit: 476f49f
+    art: automatisch
+    pruefung: k_bp_3
+    nachweis: "meta bitpanda_wallet_salden_fassung = 2; Log 'Wallet-Salden Fassung 2'; keine EURCV-Abweichungsmail"
+    faellig_bis: "2026-10-11"
+    status: offen
+  - id: K-ST-1
+    titel: "P9 Statusseite: alle neuen Karten ueber VPN sichtbar und gefuellt (Betrieb, Hebel, Schalter, Bestand, Kontingente, Kontrollen, Parameter), nichts fehlt"
+    seit: "2026-10-10"
+    paket: P9
+    commit: ""
+    art: manuell
+    nachweis: "Nutzer sieht die Seite ueber VPN; Teilexport-Abschnitt NB-KONTROLLEN vorhanden; kein ERROR im Log zum Statusaufbau; Parameter-Karte zeigt Liquidationsmarge 0.09 (O44); H15-Logzeile je Lauf unveraendert"
+    faellig_bis: "2026-10-13"
+    status: offen
+  - id: K-ALARM-2
+    titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
+    seit: "2026-10-02"
+    paket: S7
+    commit: 9e022bd
+    art: ereignis
+    nachweis: "beim naechsten echten Halt > 45 min: Mail '... STUNDEN STILLSTAND' (bis heute kein Halt - nicht pruefbar)"
+    faellig_bis: ""
+    status: offen
+  - id: K-LLM-1
+    titel: "REGEL0-Signalmail traegt den Block PRUEFUNG (Fassung, Trader-Urteil) sichtbar"
+    seit: "2026-10-03"
+    paket: E-52
+    commit: 952f9e5
+    art: rueckfrage
+    nachweis: "Nutzer: steht in einer REGEL0-Signalmail der Block PRUEFUNG? (aus dem Log nicht belegbar)"
+    faellig_bis: "2026-10-13"
+    status: offen
+  - id: K-ALT-1
+    titel: "Altbestand September ohne auffindbaren Beleg: K15 (nur Pull, nichts sichtbar), K16 (Kaufmail-Abschnitt 'Umfeld', Rollen-Kette), K21 (terminmarkt-Zeile in zellen_lauf, Rollen-Kette)"
+    seit: "2026-10-10"
+    paket: P9
+    commit: ""
+    art: rueckfrage
+    nachweis: "Vorschlag: ENTFALLEN - K16/K21 haengen an der Rollen-Kette, die seit 05.10. angehalten ist (E-67); K15 hatte nichts Sichtbares. K21: zellen_lauf traegt bis 10.10. keine terminmarkt-Zeile (laut Vorgabe zulaessig, aber nicht belegbar). Nutzer entscheidet"
+    faellig_bis: "2026-10-13"
+    status: offen
+  # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
+  - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
+  - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}
+  - {id: K19, titel: "Tabelle fuehrung_lauf entsteht, Empfehlungen und gepruefte Positionen", seit: "2026-09-18", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Prod-Sicherung 10.10. 05:14: fuehrung_lauf 4.098 Zeilen, 19.09. bis 09.10."}
+  - {id: K20, titel: "Ausstiegsfelder gefuellt (ausstieg_outcome_status gemessen)", seit: "2026-09-18", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Prod-Sicherung 10.10. 05:14: 643 Signale 'gemessen', 427 'offen'"}
+  - {id: K25, titel: "Stillstandsmail beim echten Ausfall > 45 min", seit: "2026-09-20", art: ereignis, status: abgeloest, erfuellt_am: "2026-10-02", beleg: "nie erfuellbar (Fehler in _melde_laufzeitluecke, 02.10. repariert) - abgeloest durch K-ALARM-2"}
+  - {id: K26, titel: "schlanke Diagnose ~8 MB statt 295 MB, Feld diagnose_umfang, Platzhalter __ausgelassen__", seit: "2026-09-20", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "notebook_diagnose.json 10.10. 07:15: 8,6 MB, diagnose_umfang vorhanden, 6x __ausgelassen__"}
+  - {id: K-S7-1, titel: "Nachlader schreibt, Stand je Datei aktuell", seit: "2026-10-02", art: manuell, status: erfuellt, erfuellt_am: "2026-10-02", beleg: "Export 02.10. 12:42"}
+  - {id: K-S7-2, titel: "NB-Export nach dem ersten Nachladerlauf ohne Fehler", seit: "2026-10-02", art: manuell, status: erfuellt, erfuellt_am: "2026-10-02", beleg: "Export 02.10. 12:42"}
+  - {id: K-ALARM-1, titel: "keine Zeile 'NICHT zugestellt'", seit: "2026-10-02", art: manuell, status: erfuellt, erfuellt_am: "2026-10-02", beleg: "Export 02.10. 18:38"}
+  - {id: K-S7-3, titel: "REGEL0-Rechnung: Paket mit Pruefsumme, Laeufe frisch", seit: "2026-10-03", art: manuell, status: erfuellt, erfuellt_am: "2026-10-03", beleg: "Teilexport 03.10. 07:16"}
+  - {id: K-S7-4, titel: "erste REGEL0-Signalmail bei Hebel-Schalter an", seit: "2026-10-03", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Testwoche F1 17/17 gemailt (Schritt7 Par. 23.36)"}
+  - {id: K-S7-5, titel: "Neuaufnahme laeuft taeglich, Fehler leer", seit: "2026-10-03", art: manuell, status: erfuellt, erfuellt_am: "2026-10-03", beleg: "Teilexport 03.10. 23:04"}
+  - {id: K-SN-2, titel: "Sammelmail Stop-Nachzieh genau einmal 07:15", seit: "2026-10-04", art: manuell, status: erfuellt, erfuellt_am: "2026-10-04", beleg: "Export 04.10. 16:30"}
+  - {id: K-N1, titel: "Nachgeholt (N-1): 0 ohne Ausfall", seit: "2026-10-04", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Testwoche T1 170/170, nachgeholt 0; Fall 'nach Halt' haengt an K-ALARM-2"}
+  - {id: K-MISFIRE-2, titel: "keine Misfire-Mail bei Sekundenverzug", seit: "2026-10-05", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Diagnose 10.10. 07:15: keine Misfire-/'zu spaet'-Zeile im Log"}
+  - {id: K-XDC, titel: "XDC nicht in der Hebel-Liste, 'Schalter an ohne Daten' 0", seit: "2026-10-07", art: manuell, status: erfuellt, erfuellt_am: "2026-10-08", beleg: "Teilexport 08.10. 05:54"}
+  - {id: K-PRUEF-1, titel: "Pruefblock schreibt aus dem Mailversand seine Zeilen (keine Sperre)", seit: "2026-10-08", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Testwoche L1: seit 08.10. jedes gemailte Signal mit Trader-Zeile; Rest BNB = H14 (O32)"}
+  - {id: K-F02, titel: "trader 0.2 mit Lage zur Signalstunde und Terminmarkt-Satz", seit: "2026-10-08", art: manuell, status: erfuellt, erfuellt_am: "2026-10-09", beleg: "Teilexport 09.10. 06:46"}
+  - {id: K-WD-1, titel: "genau ein Watchdog-Prozess", seit: "2026-10-08", art: manuell, status: erfuellt, erfuellt_am: "2026-10-09", beleg: "Nutzer 09.10."}
+  - {id: K-H15-1, titel: "H15: Logzeile je Lauf, ETH-Mail genau einmal, kein Fehlerlauf", seit: "2026-10-09", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Diagnose 10.10. 07:15 (Schritt7 Par. 23.36)"}
+  - {id: K-MAIL-1, titel: "REGEL0-Mail am Handy lesbar (erste Fassung)", seit: "2026-10-04", art: manuell, status: abgeloest, erfuellt_am: "2026-10-10", beleg: "durch K-MAIL-2"}
+  - {id: K-MAIL-2, titel: "REGEL0-Mail am Handy lesbar", seit: "2026-10-07", art: manuell, status: erfuellt, erfuellt_am: "2026-10-10", beleg: "Nutzer 10.10.: 'emails sind am handy sehr gut zu lesen'"}
+  - {id: K-BP-1, titel: "Importer-Fix Spot/Hebel getrennt am NB", seit: "2026-10-09", art: manuell, status: abgeloest, erfuellt_am: "2026-10-10", beleg: "durch K-BP-2/K-BP-3"}
+  - {id: K-BP-2, titel: "keine Mismatch-Mail BTC/EURCV", seit: "2026-10-09", art: manuell, status: abgeloest, erfuellt_am: "2026-10-10", beleg: "BTC/ETH erfuellt (Diagnose 10.10.); EURCV -> K-BP-3"}

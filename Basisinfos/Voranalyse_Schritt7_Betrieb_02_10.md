@@ -3044,3 +3044,15 @@ Nutzer 10.10.: *„1. ja O29 einschalten“*.
   - `ankuendigung_lauf` ohne Fehler;
   - bei einer passenden Meldung die Mailzeile in der REGEL0-Signalmail.
 - **Zur Kontrollen-Datei (P9)**, Nutzer: *„3. ja – so aufsetzen, dass es nie veraltet“* → Entwurf in Plan Schritt 53 G-O.
+
+### 23.40 P9: Statusseite mit der Betriebslage (10.10.2026)
+
+Nutzer 10.10.: *„Pull am NB erledigt – P9 Statusseite starten“*. Ausführlich: **Plan_Asset_Lebenszyklus_14_09.md G-P**.
+
+- **Eine Quelle** `agent/betriebslage.py` für Statusseite und Teilexport (nur lesend). Teilexport zeilengleich, neu Abschnitt **NB-KONTROLLEN**.
+- **Neue Karten:** Kontrollen · Hebel (H15 je Position) · REGEL0 heute (Signale, Mails, Prüfblock, Ankündigungen) · Betrieb (Jobs, Nachlader, Neuaufnahme, Marktscan-Quote, Stop nachziehen) · Schalter + Bestand · Kontingente je Verbraucher · Parameter (neu). Eigene Cache-Frist je Karte (60–900 s), warm 0,27 s.
+- **Entfallen** (abgestimmt): ALTE KETTE, A/B/C, Regime, Parameter alt. **Multi-Asset (ruht)** eingeklappt. **Z-3 bleibt** (lebt: Job `portfolio_wert` täglich).
+- **O44:** die Liquidationsmarge kommt aus `config.yaml` (0,09 unverändert).
+- **Kontrollen-Datei** `Basisinfos/nb_kontrollen.yaml` + Suite-Paket *Kontrollen* (Frist rot, Datei nicht älter als der jüngste Betriebs-Commit).
+- Nachweis auf der NB-Kopie: Prüfstand 6/6, Gegenprobe 10/10, GuiKette 36/36, Kontrollen 12/12.
+- **K-ST-1** (nach Pull + Neustart): Seite über VPN, alle Karten gefüllt, nichts fehlt; Teilexport mit NB-KONTROLLEN; kein ERROR zum Statusaufbau im Log.

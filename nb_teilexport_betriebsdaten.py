@@ -259,29 +259,30 @@ def _inhalt() -> int:
             print("    %-55s %s" % (k, v))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Deckel nicht lesbar: %s" % ex.__class__.__name__)
-    # Schritt 7, O15 Positionsgroesse (E-43 Punkt 3): Altbestand der Hebelpositionen und Kontowert - nur lesen
+    # Schritt 7, O15 Positionsgroesse (E-43 Punkt 3): Altbestand der Hebelpositionen und Kontowert - nur lesen.
+    # P9 (10.10.2026): die ABFRAGEN stehen in agent/betriebslage.py (eine Quelle mit der Statusseite); hier nur die Ausgabe -
+    # zeilengleich zur Fassung davor nachgewiesen (Basisinfos/Rechenkern_02_10/p9_teilexport_vergleich.py).
+    import agent.betriebslage as BL
     if os.path.exists(prod):
         print()
         print("-" * 100)
         try:
             c = ro(prod)
-            st = c.execute("SELECT status, COUNT(*) FROM hebel_positions GROUP BY status ORDER BY 2 DESC").fetchall()
-            print("HEBEL-POSITIONEN je Status: " + " · ".join("%s %d" % (s, n) for s, n in st))
-            offen = c.execute("SELECT symbol, richtung, status, hebel_effektiv, positionswert_eur, eigenkapital_eur, kreditbetrag_eur, "
-                              "eroeffnet_am, liquidationspreis_geschaetzt_eur FROM hebel_positions WHERE geschlossen_am IS NULL "
-                              "ORDER BY eroeffnet_am").fetchall()
+            hp = BL.hebel_positionen(c)
+            print("HEBEL-POSITIONEN je Status: " + " · ".join("%s %d" % (s, n) for s, n in hp["je_status"]))
+            offen = hp["offen"]
             print("OFFEN (geschlossen_am leer): %d · Positionswert %.0f EUR · Eigenkapital %.0f EUR · Kredit %.0f EUR" % (
-                len(offen), sum(r[4] or 0 for r in offen), sum(r[5] or 0 for r in offen), sum(r[6] or 0 for r in offen)))
+                len(offen), hp["summe_wert"], hp["summe_ek"], hp["summe_kredit"]))
             for r in offen:
                 print("    %-8s %-5s %-10s Hebel %4.1f · Wert %8.0f · Eigenkapital %7.0f · seit %s · Liq. geschaetzt %s" % (
                     r[0], r[1], r[2], r[3] or 0, r[4] or 0, r[5] or 0, str(r[7])[:16], r[8]))
             # H15 (09.10.2026): was die Hebelfuehrung gemeldet hat (Schluessel hebelfuehrung:<id>:<Empfehlung>:<Stufe>:<Tag>)
             try:
-                hf = c.execute("SELECT job_id, zuletzt_am FROM job_laeufe WHERE job_id LIKE 'hebelfuehrung:%' ORDER BY zuletzt_am DESC LIMIT 8").fetchall()
+                hf = BL.hebelfuehrung_gemeldet(c, 8)
                 print("HEBELFUEHRUNG (H15) gemeldet: %d Zustaende%s" % (len(hf), "".join("\n    %s · %s" % (j, str(z)[:16]) for j, z in hf)))
             except sqlite3.Error as ex:
                 print("  ⛔ Hebelfuehrung nicht lesbar: %s" % ex)
-            pw = c.execute("SELECT datum, wert_eur, cash_eur FROM portfolio_wert_historie ORDER BY datum DESC LIMIT 3").fetchall()
+            pw = BL.portfoliowert(c, 3)
             print("PORTFOLIOWERT (letzte 3 Tage): " + " · ".join("%s %.0f EUR (Cash %.0f)" % (d, w or 0, ca or 0) for d, w, ca in pw))
             c.close()
         except sqlite3.Error as ex:
@@ -290,176 +291,141 @@ def _inhalt() -> int:
     print()
     print("-" * 100)
     try:
-        import agent.regel0_nachlader as NL
-        ok, grund = NL.betrieb_erlaubt(DATEN)
-        print("REGEL0-DATENBASIS (Stundenjob regel0_nachlader): %s - %s" % ("schreibt" if ok else "schreibt NICHT", grund))
-        for d in NL.DATEIEN:
-            p = os.path.join(DATEN, d)
-            if not os.path.exists(p):
-                print("    %-24s FEHLT" % d)
+        nl = BL.nachlader(DATEN)
+        print("REGEL0-DATENBASIS (Stundenjob regel0_nachlader): %s - %s" % ("schreibt" if nl["schreibt"] else "schreibt NICHT", nl["grund"]))
+        for e in nl["dateien"]:
+            if e["fehlt"]:
+                print("    %-24s FEHLT" % e["datei"])
                 continue
-            c = ro(p)
-            tab = "markpreis" if d.startswith("markpreis") else "stundenkurse"
-            je = [m for (m,) in c.execute("SELECT MAX(stunde) FROM %s GROUP BY symbol" % tab)]
-            hoch = max(je) if je else None
-            aktuell = sum(1 for m in je if hoch and NL._ms(m) >= NL._ms(hoch) - 2 * NL.H_MS)
             print("    %-24s Stand %s · %d von %d Symbolen auf Stand (der Rest: nicht mehr im Handel oder Rueckstand)" % (
-                d, hoch, aktuell, len(je)))
-            if "_nachlader" in tabellen(c):
-                for r in c.execute("SELECT * FROM _nachlader ORDER BY rowid DESC LIMIT 3"):
+                e["datei"], e["stand"], e["aktuell"], e["gesamt"]))
+            if e["laeufe"] is not None:
+                for r in e["laeufe"]:
                     print("        Lauf %s · neu %d · ersetzt %d · nicht im Handel %d · Fehler %d" % r)
             else:
                 print("        noch kein Lauf des Nachladers")
-            c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Datenbasis nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # Schritt 7, S7-2b: der Rechenkern im Betrieb - Modelldateien, letzte Laeufe, Signale (nur lesen)
     print()
     print("-" * 100)
     try:
-        md = os.path.join(DATEN, "regel0_modelle")
-        pk = sorted(f for f in os.listdir(md) if f.endswith(".pkl")) if os.path.isdir(md) else []
-        print("REGEL0-RECHNUNG: Modelldateien %d - %s" % (len(pk), ", ".join(
-            "%s (%s)" % (f.replace("regel0_modell_", "").replace(".pkl", ""),
-                         open(os.path.join(md, f + ".sha256"), encoding="utf-8").read().strip()[:12] if os.path.exists(os.path.join(md, f + ".sha256")) else "ohne Pruefsumme")
-            for f in pk) or "-"))
-        ab = os.path.join(DATEN, "regel0_signale.db")
-        if not os.path.exists(ab):
+        rr = BL.regel0_rechnung(DATEN)
+        print("REGEL0-RECHNUNG: Modelldateien %d - %s" % (len(rr["modelle"]), ", ".join(
+            "%s (%s)" % (n_, sha or "ohne Pruefsumme") for n_, sha in rr["modelle"]) or "-"))
+        if not rr["ablage"]:
             print("    regel0_signale.db fehlt - noch kein Lauf")
         else:
-            c = ro(ab)
-            for r in c.execute("SELECT jetzt, sekunden, pakete, aktiv, frisch, veraltet, nicht_im_handel, neu, endgueltig, meldung FROM lauf ORDER BY jetzt DESC LIMIT 6"):
+            for r in rr["laeufe"]:
                 print("    Lauf %s · %.0f s · Pakete %s · frisch %d/%d · veraltet %d · nicht im Handel %d · neu %d · endgueltig %d%s" % (
                     r[0], r[1] or 0, r[2], r[4], r[3], r[5], r[6], r[7], r[8], (" · ⚠️ " + r[9]) if r[9] else ""))
-            n_ = c.execute("SELECT COUNT(*), SUM(hebel_schalter=1) FROM signal").fetchone()
-            print("    Signale gesamt %d, davon Hebel-Schalter an %d" % (n_[0], n_[1] or 0))
-            sp_ = {r[1] for r in c.execute("PRAGMA table_info(signal)")}
-            mail_ = "mail_signal_am" in sp_
+            print("    Signale gesamt %d, davon Hebel-Schalter an %d" % (rr["signale_gesamt"], rr["schalter_an"]))
+            mail_ = rr["mail_spalten"]
             if mail_:
-                m_ = c.execute("SELECT COUNT(mail_signal_am), COUNT(mail_korrektur_am), COUNT(mail_erinnerung_am) FROM signal").fetchone()
-                print("    Mails (S7-4): Signal %d · Korrektur %d · Erinnerung %d" % m_)
-                if "mail_verpasst_am" in sp_:
+                print("    Mails (S7-4): Signal %d · Korrektur %d · Erinnerung %d" % rr["mails"])
+                if "verpasst" in rr:
                     # N-1 (E-57): nach einem Ausfall nachgerechnet, Einstieg schon vorbei - keine Signalmail
-                    v_ = c.execute("SELECT COUNT(*) FROM signal WHERE mail_verpasst_am IS NOT NULL").fetchone()[0]
-                    nh_ = c.execute("SELECT COUNT(*), GROUP_CONCAT(signalstunde, ', ') FROM (SELECT signalstunde FROM nachgeholt "
-                                    "ORDER BY signalstunde DESC LIMIT 12)").fetchone() if "nachgeholt" in tabellen(c) else (0, "")
+                    nh_ = rr["nachgeholt"]
                     print("    Nachgeholt (N-1): %d Signalstunden%s · verpasste Signale (keine Mail): %d" % (
-                        nh_[0] or 0, (" - " + nh_[1]) if nh_[1] else "", v_))
-                if "erinnerung_entfallen_am" in sp_:
+                        nh_[0] or 0, (" - " + nh_[1]) if nh_[1] else "", rr["verpasst"]))
+                for e_ in rr.get("entfallen") or []:
                     # 04.10.2026: Ausstiegserinnerung nur bei offener Hebelposition - die entfallenen mit Grund
-                    for e_ in c.execute("SELECT bitpanda, symbol, ausstieg, erinnerung_entfallen_am, erinnerung_grund FROM signal "
-                                        "WHERE erinnerung_entfallen_am IS NOT NULL ORDER BY erinnerung_entfallen_am DESC LIMIT 8"):
-                        print("      Erinnerung entfallen: %s (Ausstieg %s) am %s - %s" % (e_[0] or e_[1], e_[2], e_[3], e_[4]))
-            for r in c.execute("SELECT symbol, bitpanda, signalstunde, einstieg, vh, stufe_vorlaeufig, stufe, p5, hebel_schalter%s FROM signal "
-                               "ORDER BY signalstunde DESC LIMIT 15" % (", mail_signal_am, mail_korrektur_am, mail_erinnerung_am" if mail_ else "")):
+                    print("      Erinnerung entfallen: %s (Ausstieg %s) am %s - %s" % (e_[0] or e_[1], e_[2], e_[3], e_[4]))
+            for r in rr["juengste"]:
                 print("      %-9s (%s) Signal %s · Einstieg %s · v %.4f · Stufe vorl. %s / endg. %s · p5 %s · Schalter %s%s" % (
                     r[0], r[1], r[2], r[3], r[4] or 0, r[5], r[6], "%.4f" % r[7] if r[7] is not None else "-",
                     {1: "an", 0: "aus"}.get(r[8], "?"),
                     (" · Mail %s%s%s" % (r[9] or "-", " · Korr. %s" % r[10] if r[10] else "", " · Erinn. %s" % r[11] if r[11] else "")) if mail_ else ""))
-            c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Rechnung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # E-52 (03.10.2026): die LLM-Sofortfassung - Aufrufe je Tag, Urteile je Rolle, Ausfaelle, Laufzeit (nur lesen)
     print()
     print("-" * 100)
     try:
-        ab = os.path.join(DATEN, "regel0_signale.db")
-        c = ro(ab) if os.path.exists(ab) else None
-        if c is None or "pruefung" not in tabellen(c):
+        pb = BL.pruefblock(DATEN)
+        if not pb["lauf"]:
             print("REGEL0-PRUEFUNG (LLM): noch kein Lauf")
         else:
             # die Kopfzeile IMMER - ein leerer Abschnitt sah am 03.10. aus wie ein fehlender (Tabelle da, noch kein Signal geprueft)
-            n_p = c.execute("SELECT COUNT(*) FROM pruefung").fetchone()[0]
+            n_p = pb["zeilen"]
             print("REGEL0-PRUEFUNG (LLM): %d Zeilen%s" % (n_p, " - noch kein Signal geprueft (Schatten wartet auf ein Signal mit Hebel-Schalter an)"
                                                          if not n_p else ""))
             # ⚠️ 04.10.: bis dahin zaehlte diese Zeile ZEILEN statt Aufrufe (5 statt 25 bei 5 Stimmen) - jetzt die Spalte `aufrufe`
-            _auf = "aufrufe" in {x[1] for x in c.execute("PRAGMA table_info(pruefung)")}
-            for r in c.execute("SELECT tag_pazifik, %s, COUNT(*) FROM pruefung WHERE gefragt=1 GROUP BY tag_pazifik "
-                               "ORDER BY tag_pazifik DESC LIMIT 5" % ("SUM(COALESCE(aufrufe, 1))" if _auf else "COUNT(*)")):
+            for r in pb["je_tag"]:
                 print("REGEL0-PRUEFUNG (LLM) %s · Aufrufe %d · gefragte Rollen %d" % r)
-            for r in c.execute("SELECT rolle, fassung, COUNT(*), SUM(urteil IS NOT NULL), SUM(fehler IS NOT NULL), ROUND(AVG(CASE WHEN gefragt=1 "
-                               "THEN sekunden END), 1) FROM pruefung GROUP BY rolle, fassung ORDER BY rolle"):
+            for r in pb["je_rolle"]:
                 print("    %-11s Fassung %s · Zeilen %d · mit Urteil %d · ohne (Fehler/Sperre) %d · Laufzeit im Mittel %s s" % r)
-            for r in c.execute("SELECT rolle, urteil, COUNT(*) FROM pruefung WHERE urteil IS NOT NULL GROUP BY rolle, urteil ORDER BY rolle, 3 DESC"):
+            for r in pb["urteile"]:
                 print("      %-11s %-16s %d" % r)
-            for r in c.execute("SELECT fehler, COUNT(*) FROM pruefung WHERE fehler IS NOT NULL GROUP BY fehler ORDER BY 2 DESC LIMIT 6"):
+            for r in pb["fehler"]:
                 print("      ⚠️ %s · %d" % (str(r[0])[:90], r[1]))
-            for r in c.execute("SELECT symbol, signalstunde, rolle, urteil, fehler FROM pruefung ORDER BY am DESC LIMIT 9"):
+            for r in pb["juengste"]:
                 print("      %-9s %s %-11s %s" % (r[0], r[1], r[2], r[3] or ("(%s)" % str(r[4])[:60])))
-        if c is not None:
-            c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Pruefung nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # O29 (08.10.2026): Binance-Ankuendigungen - Schalter, letzter Abruf, Fehler, Zuordnungen, Vorwaertsprotokoll (nur lesen; K-ANK-1)
     print()
     print("-" * 100)
     try:
-        import agent.regel0_groesse as _G
-        _an = bool(_G.lade().get("ankuendigung_aktiv"))
-        ab = os.path.join(DATEN, "regel0_signale.db")
-        c = ro(ab) if os.path.exists(ab) else None
-        if c is None or "ankuendigung_lauf" not in tabellen(c):
-            print("BINANCE-ANKUENDIGUNGEN: Schalter %s · noch kein Lauf" % ("AN" if _an else "aus"))
+        an = BL.ankuendigungen(DATEN)
+        if not an["lauf"]:
+            print("BINANCE-ANKUENDIGUNGEN: Schalter %s · noch kein Lauf" % ("AN" if an["an"] else "aus"))
         else:
-            n_l, n_ok = c.execute("SELECT COUNT(*), SUM(ok) FROM ankuendigung_lauf").fetchone()
-            print("BINANCE-ANKUENDIGUNGEN: Schalter %s · Laeufe %d, davon fehlerfrei %d" % ("AN" if _an else "aus", n_l, n_ok or 0))
-            for r in c.execute("SELECT am, ok, neu, zuordnungen, protokolliert, fehler, sekunden FROM ankuendigung_lauf ORDER BY am DESC LIMIT 4"):
+            print("BINANCE-ANKUENDIGUNGEN: Schalter %s · Laeufe %d, davon fehlerfrei %d" % ("AN" if an["an"] else "aus", an["laeufe"], an["fehlerfrei"]))
+            for r in an["letzte"]:
                 print("    Lauf %s · %s · neu %d · Zuordnungen %d · protokolliert %d · %s s%s" % (
                     r[0], "ok" if r[1] else "FEHLER", r[2], r[3], r[4], r[6], (" · " + str(r[5])[:90]) if r[5] else ""))
-            n_m, n_z = c.execute("SELECT (SELECT COUNT(*) FROM ankuendigung), (SELECT COUNT(*) FROM ankuendigung_ereignis)").fetchone()
-            print("    Meldungen %d · Zuordnungen %d · je Art: %s" % (n_m, n_z, ", ".join(
-                "%s %d" % r for r in c.execute("SELECT art, COUNT(*) FROM ankuendigung_ereignis GROUP BY art ORDER BY 2 DESC"))))
-            if "signal_ereignis" in tabellen(c):
-                n_s, n_e = c.execute("SELECT COUNT(*), SUM(arten != 'keins') FROM signal_ereignis").fetchone()
-                n_o = c.execute("SELECT COUNT(*) FROM signal s LEFT JOIN signal_ereignis e ON e.symbol=s.symbol AND "
-                                "e.signalstunde=s.signalstunde WHERE e.symbol IS NULL").fetchone()[0]
-                print("    Vorwaertsprotokoll: Signale %d · mit Ereignis %d · noch ohne Eintrag %d" % (n_s, n_e or 0, n_o))
-                for r in c.execute("SELECT symbol, signalstunde, arten FROM signal_ereignis WHERE arten != 'keins' ORDER BY signalstunde DESC LIMIT 6"):
+            print("    Meldungen %d · Zuordnungen %d · je Art: %s" % (an["meldungen"], an["zuordnungen"], ", ".join("%s %d" % r for r in an["je_art"])))
+            if "protokoll" in an:
+                print("    Vorwaertsprotokoll: Signale %d · mit Ereignis %d · noch ohne Eintrag %d" % an["protokoll"])
+                for r in an["mit_ereignis"]:
                     print("      %-9s %s %s" % r)
-        if c is not None:
-            c.close()
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Binance-Ankuendigungen nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # S7-5d (03.10.2026): taeglicher Abgleich als Auskunft - Neuaufnahme, gesperrte Mails, Hebel-Schalter-Assets ohne Daten (nur lesen)
     print()
     print("-" * 100)
     try:
-        pa = os.path.join(DATEN, "stundenkurse_alle.db")
-        if os.path.exists(pa):
-            c = ro(pa)
-            if "_neuaufnahme" in tabellen(c):
-                for r in c.execute("SELECT * FROM _neuaufnahme ORDER BY lauf_am DESC LIMIT 3"):
+        na = BL.neuaufnahme_und_abgleich(DATEN, prod)
+        if na["neuaufnahme"] is not None:
+            if na["neuaufnahme"]:
+                for r in na["neuaufnahme"]:
                     print("REGEL0-NEUAUFNAHME %s · Regel %d · Datei %d · neu: %s%s" % (r[0], r[1], r[2], r[3] or "-", (" · ⚠️ " + r[4]) if r[4] else ""))
             else:
                 print("REGEL0-NEUAUFNAHME: noch kein Lauf")
-            daten = {x for (x,) in c.execute("SELECT symbol FROM _quelle")}
-            c.close()
-        else:
-            daten = set()
-        pm = os.path.join(DATEN, "stundenkurse.db")
-        if os.path.exists(pm):
-            c = ro(pm); daten |= {x for (x,) in c.execute("SELECT DISTINCT symbol FROM stundenkurse")}; c.close()
-        ab = os.path.join(DATEN, "regel0_signale.db")
-        if os.path.exists(ab):
-            c = ro(ab)
-            if "mail_gesperrt_am" in {r[1] for r in c.execute("PRAGMA table_info(signal)")}:
-                g = c.execute("SELECT symbol, bitpanda, signalstunde, abgleich FROM signal WHERE mail_gesperrt_am IS NOT NULL ORDER BY signalstunde DESC LIMIT 10").fetchall()
-                print("REGEL0 Signale NICHT gemailt wegen Zuordnung: %d%s" % (len(g), "".join(chr(10) + "    %s (%s) %s · %s" % x for x in g)))
-            c.close()
-        if os.path.exists(prod):
-            import csv as _csv
-            zu = {}
-            pz = os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv")
-            if os.path.exists(pz):
-                for r in _csv.DictReader(open(pz, encoding="utf-8"), delimiter=";"):
-                    zu[r["bitpanda"]] = None if r["markt"] == "gesperrt" else r["binance"]
-            c = ro(prod)
-            an = [r[0] for r in c.execute("SELECT symbol FROM asset_hebel_settings WHERE hebel_pruefung_erlaubt=1 ORDER BY symbol")]
-            c.close()
-            ohne = [s_ for s_ in an if zu.get(s_, s_) not in daten]
+        if na["gesperrt"] is not None:
+            g = na["gesperrt"]
+            print("REGEL0 Signale NICHT gemailt wegen Zuordnung: %d%s" % (len(g), "".join(chr(10) + "    %s (%s) %s · %s" % x for x in g)))
+        if na["ohne_daten"] is not None:
+            ohne = na["ohne_daten"]
             print("Hebel-Schalter AN, aber OHNE REGEL0-Daten (kein Signal moeglich): %d - %s" % (len(ohne), ", ".join(ohne) or "-"))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Abgleich nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # P9 (10.10.2026, G-O): die NB-Kontrollen aus Basisinfos/nb_kontrollen.yaml - automatische live ausgewertet, dieselbe Quelle wie
+    # die Statusseite (Karte "Offene NB-Kontrollen"). Nur die offenen; die Historie steht in der Datei.
+    print()
+    print("-" * 100)
+    try:
+        c = ro(prod) if os.path.exists(prod) else None
+        try:
+            ko = BL.kontrollen(c, DATEN)
+        finally:
+            if c is not None:
+                c.close()
+        if ko.get("fehlt"):
+            print("NB-KONTROLLEN: Basisinfos/nb_kontrollen.yaml FEHLT")
+        else:
+            print("NB-KONTROLLEN (Stand %s): offen %d · ueberfaellig %d" % (ko.get("stand"), ko["offen"], ko["ueberfaellig"]))
+            for e in ko["eintraege"]:
+                if e.get("status") != "offen":
+                    continue
+                zustand = e.get("status_live") or ("UEBERFAELLIG" if e["ueberfaellig"] else "offen")
+                print("    %-10s %-24s %-11s bis %-10s %s" % (e.get("id"), zustand, e.get("art"), e.get("faellig_bis") or "-",
+                                                         str(e.get("titel"))[:90]))
+                if e.get("auto_beleg"):
+                    print("        automatisch: %s" % e["auto_beleg"])
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ NB-Kontrollen nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     print()
     print("SCHLUSS: vollstaendig")
     return 0

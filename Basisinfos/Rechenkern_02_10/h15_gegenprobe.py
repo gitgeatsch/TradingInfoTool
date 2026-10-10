@@ -94,8 +94,12 @@ ex = io.open("nb_teilexport_betriebsdaten.py", encoding="utf-8").read()
 import ast  # noqa: E402
 ast.parse(ex)
 teil = ex[ex.index("H15 (09.10.2026)"):ex.index("H15 (09.10.2026)") + 600]
-pruefe("G6", "FROM job_laeufe WHERE job_id LIKE 'hebelfuehrung:%'" in teil and not re.search(r"\b(INSERT|UPDATE|DELETE)\b", teil),
-       "Exportabschnitt liest nur")
+# P9 (10.10.2026): die Abfrage steht seit dem Umbau in agent/betriebslage.py (eine Quelle mit der Statusseite) - der Abschnitt ruft
+# sie auf. Geprueft wird die REGEL (Abschnitt ruft die Quelle, die Quelle liest nur), nicht der Ort der SQL-Zeile.
+bl = io.open("agent/betriebslage.py", encoding="utf-8").read()
+fn = bl[bl.index("def hebelfuehrung_gemeldet"):bl.index("def portfoliowert")]
+pruefe("G6", "BL.hebelfuehrung_gemeldet(" in teil and "FROM job_laeufe WHERE job_id LIKE 'hebelfuehrung:%'" in fn
+       and not re.search(r"\b(INSERT|UPDATE|DELETE)\b", teil + fn), "Exportabschnitt ruft betriebslage, beide lesen nur")
 
 # ---- G7 Rangfolge mit Plan (eigene Regel, Kursraster) ----
 plan = dict(signal_id=1, erzeugt_am="2026-09-10", einstieg=100.0, stop=88.0, ziel=124.0, ist_short=False, umgeworfen_preis_eur=None,

@@ -138,6 +138,26 @@ def _gecacht(fn):
     return huelle
 
 
+def _gecacht_frist(sekunden: float):
+    """Wie ``_gecacht``, aber mit EIGENER Frist (P9, 10.10.2026).
+
+    Die Karten der neuen Betriebslage (REGEL0, Hebel, Schalter, Kontrollen) aendern sich im Takt ihrer Jobs - stuendlich bzw. mit
+    jedem Hebel-Screening -, nicht im 15-Minuten-Takt des Preis-Refreshs. 900 s waeren fuer die Hebelkarte zu alt (der Nutzer
+    sieht nach einer H15-Mail nach), live bei 5-s-Abruf zu teuer (eigene Dateien, ``hebelfuehrung.lade`` je Position). Die Frist
+    steht deshalb AN DER FUNKTION und ist dort begruendet; die Marke ``_ist_gecacht`` gilt fuer den Waechter genauso."""
+    import functools
+
+    def deko(fn):
+        @functools.wraps(fn)
+        def huelle(*args, **kwargs):
+            return _zwischengespeichert(fn.__name__, lambda: fn(*args, **kwargs), sekunden)
+
+        huelle._ist_gecacht = True
+        huelle._frist_sekunden = sekunden
+        return huelle
+    return deko
+
+
 # Getter, die BEWUSST live bleiben. Der Waechter in teste_status_cache.py
 # verlangt, dass jeder `_get_*` entweder @_gecacht traegt ODER hier steht - ein
 # neuer Getter kann damit nicht mehr unbemerkt ungecacht in die Seite geraten.
@@ -299,6 +319,16 @@ class RemoteStatus:
     # Traf die Richtung der These? (2026-08-07, G-2) - bewusst NICHT die
     # Systemguete je Hauptgruppe, siehe agent/themenfeld_erfolg.py.
     themenfeld_erfolg: dict | None = None
+    # P9 (10.10.2026, Plan_Asset_Lebenszyklus_14_09.md G-N): die Betriebslage des NEUEN Systems - eine Quelle mit dem
+    # Teilexport (agent/betriebslage.py). Vorher stand auf der Seite nichts zu REGEL0, H15, Schaltern und Kontrollen.
+    betrieb: dict | None = None
+    hebel_lage: dict | None = None
+    regel0_lage: dict | None = None
+    schalter: dict | None = None
+    bestand_lage: dict | None = None
+    kontingente: dict | None = None
+    kontrollen: dict | None = None
+    parameter_neu: list[dict] | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -327,6 +357,14 @@ class RemoteStatus:
             "llm_kontingent": self.llm_kontingent,
             "wartende_themen": self.wartende_themen,
             "themenfeld_erfolg": self.themenfeld_erfolg,
+            "betrieb": self.betrieb,
+            "hebel_lage": self.hebel_lage,
+            "regel0_lage": self.regel0_lage,
+            "schalter": self.schalter,
+            "bestand_lage": self.bestand_lage,
+            "kontingente": self.kontingente,
+            "kontrollen": self.kontrollen,
+            "parameter_neu": self.parameter_neu,
         }
 
 
@@ -428,14 +466,14 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         recent_errors=_tail_log_errors(log_path, error_tail_lines),
         jobs_running=jobs_running,
         jobs_running_seit_minuten=jobs_running_seit_minuten,
-        budget_heute=_safe(_get_budget_heute, conn),
+        # ⚠️ P9 (10.10.2026, G-N abgestimmt): `budget_heute` (ALTE KETTE, ohne Aufrufer), `regime_status` (steht seit 14.08.)
+        # und `parameter_overview` (Kap.-15-Parameter der alten Kette) werden NICHT mehr gerechnet - ihre Karten sind entfallen.
+        # Die Getter bleiben im Code (Diagnose, Multi-Asset-Umbau); die Felder bleiben deklariert und stehen auf None.
         rollen_budget=_safe(_get_rollen_budget, conn),
         offene_signale=_safe(_get_offene_signale_uebersicht, conn, watchlist),
         api_health=_safe(_get_api_health, conn),
-        regime_status=_safe(_get_regime_status, conn),
         z3_und_bewertung=_safe(_get_z3_und_bewertung, conn, portfolio_value_eur),
         hedge_wirksamkeit=_safe(_get_hedge_wirksamkeit, conn, watchlist),
-        parameter_overview=_safe(_get_parameter_overview),
         provider_sendezaehler=_safe(_get_provider_sendezaehler, conn, watchlist),
         ausstiegs_empfehlungen=_safe(_get_ausstiegs_empfehlungen, conn, watchlist),
         selbst_gewaehltes_halten_performance_nach_grund=_safe(
@@ -446,6 +484,14 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         llm_kontingent=_safe(_get_llm_kontingent, conn),
         wartende_themen=_safe(_get_wartende_themen, conn),
         themenfeld_erfolg=_safe(_get_themenfeld_erfolg, conn),
+        betrieb=_safe(_get_betrieb, conn),
+        hebel_lage=_safe(_get_hebel_lage, conn),
+        regel0_lage=_safe(_get_regel0_lage),
+        schalter=_safe(_get_schalter),
+        bestand_lage=_safe(_get_bestand_lage, conn),
+        kontingente=_safe(_get_kontingente, conn),
+        kontrollen=_safe(_get_kontrollen, conn),
+        parameter_neu=_safe(_get_parameter_neu),
     )
 
 
@@ -1200,6 +1246,147 @@ def _get_marktscan_last(conn: sqlite3.Connection) -> dict | None:
         "kandidaten": len(latest_run),
         "treffer": len(treffer),
     }
+
+
+# ══ P9 (10.10.2026): die Betriebslage des neuen Systems ════════════════════════════════════════════════════════════════════
+# Alle Abfragen stehen in agent/betriebslage.py (eine Quelle mit dem Teilexport, zeilengleich nachgewiesen). Hier nur der Aufruf
+# und die Frist. Fremde Dateien liest betriebslage ausschliesslich ``mode=ro``; die Produktions-DB ueber ``conn`` der Seite.
+def _daten_ordner() -> str:
+    from agent import betriebslage as BL
+
+    return BL.DATEN
+
+
+@_gecacht_frist(60)
+def _get_betrieb(conn: sqlite3.Connection) -> dict:
+    """Jobs (letzter erfolgreicher Lauf), Nachlader je Datei (nur der letzte Lauf). 60 s: die Jobs laufen stuendlich oder
+    seltener; eine Minute Verzug sagt nichts Falsches, 12 Abrufe je Minute waeren reine Last."""
+    from agent import betriebslage as BL
+
+    jetzt = datetime.now(timezone.utc)
+    jobs = []
+    # ⚠️ `job_laeufe` gibt es nur dort, wo die App laeuft (am NB immer; am Desktop nicht - gefunden 10.10. in der Suite). Fehlt sie,
+    # sagt die Karte das, statt auszufallen - und ohne eine leere Liste als "0 Jobs" auszugeben.
+    if "job_laeufe" not in BL.tabellen(conn):
+        return {"jobs": [], "job_tabelle_fehlt": True, "nachlader": BL.nachlader_kurz(_daten_ordner()), **_get_neuaufnahme()}
+    for job_id, zuletzt in BL.jobs(conn):
+        try:
+            alter_min = (jetzt - datetime.fromisoformat(str(zuletzt).replace("Z", "+00:00"))).total_seconds() / 60.0
+        except (TypeError, ValueError):
+            alter_min = None
+        jobs.append({"job": job_id, "zuletzt_am": zuletzt, "alter_min": alter_min})
+    return {"jobs": jobs, "nachlader": BL.nachlader_kurz(_daten_ordner()), **_get_neuaufnahme()}
+
+
+@_gecacht_frist(900)
+def _get_neuaufnahme() -> dict:
+    """Neuaufnahme (letzter Lauf), gesperrte Mails, Hebel-Schalter ohne REGEL0-Daten. EIGENE Frist 900 s: die Neuaufnahme laeuft
+    taeglich, und ``SELECT DISTINCT symbol`` ueber stundenkurse.db (346 MB) kostet 0,19 s am Desktop - im 60-s-Takt der
+    Betriebskarte waere das die teuerste Zeile der Seite."""
+    from agent import betriebslage as BL
+
+    na = BL.neuaufnahme_und_abgleich(_daten_ordner())
+    return {"neuaufnahme": (na.get("neuaufnahme") or [None])[0], "ohne_daten": na.get("ohne_daten"),
+            "gesperrt": len(na.get("gesperrt") or [])}
+
+
+@_gecacht_frist(60)
+def _get_hebel_lage(conn: sqlite3.Connection) -> dict:
+    """Je offener Hebelposition die H15-Sicht JETZT (Kurs, Liquidation, Abstand, Empfehlung, Warnstufe) und was H15 zuletzt
+    gemeldet hat. 60 s: das Hebel-Screening laeuft stuendlich, der Kurs kommt aus ``price_cache`` (15-Minuten-Refresh)."""
+    from agent import betriebslage as BL
+
+    # `job_laeufe` fehlt, wo die App nie lief (Desktop) - dann ist "gemeldet" unbekannt (None), nicht leer.
+    gemeldet = BL.hebelfuehrung_gemeldet(conn, 5) if "job_laeufe" in BL.tabellen(conn) else None
+    return {"positionen": BL.hebel_fuehrung_jetzt(conn), "gemeldet": gemeldet,
+            "hebel_synced_at": BL.bestand_meta(conn).get("hebel_synced_at")}
+
+
+@_gecacht_frist(120)
+def _get_regel0_lage() -> dict:
+    """REGEL0 heute (Signale, Mails, letzter Lauf), Pruefblock (Aufrufe des Tages, Urteile), Ankuendigungen (O29). 120 s: der
+    Rechenkern laeuft stuendlich; alles liegt in regel0_signale.db (``mode=ro``)."""
+    from agent import betriebslage as BL
+
+    d = _daten_ordner()
+    pb = BL.pruefblock(d)
+    an = BL.ankuendigungen(d)
+    return {"heute": BL.regel0_heute(d),
+            "pruefblock": {"lauf": pb.get("lauf"), "je_tag": (pb.get("je_tag") or [])[:2], "urteile": pb.get("urteile") or [],
+                           "fehler": (pb.get("fehler") or [])[:3]},
+            "ankuendigung": {"an": an.get("an"), "lauf": an.get("lauf"), "laeufe": an.get("laeufe"),
+                             "fehlerfrei": an.get("fehlerfrei"), "letzter": (an.get("letzte") or [None])[0],
+                             "meldungen": an.get("meldungen"), "zuordnungen": an.get("zuordnungen"),
+                             "mit_ereignis": (an.get("mit_ereignis") or [])[:3]}}
+
+
+@_gecacht_frist(60)
+def _get_schalter() -> dict:
+    """Die Betriebsschalter aus Basisinfos/regel0_betrieb.yaml (je Lauf gelesen, kein Neustart). 60 s: geaendert wird per
+    Commit + Pull - eine Minute nach dem Pull steht der neue Stand hier."""
+    from agent import betriebslage as BL
+
+    return BL.schalter()
+
+
+@_gecacht_frist(120)
+def _get_bestand_lage(conn: sqlite3.Connection) -> dict:
+    """Zeitpunkte und Marken des Bitpanda-Abgleichs. Bestand = frei + gestakt (Nutzerregel 10.10.)."""
+    from agent import betriebslage as BL
+
+    m = BL.bestand_meta(conn)
+    r = conn.execute("SELECT COUNT(*), SUM(COALESCE(quantity,0) + COALESCE(staked_quantity,0) > 0), "
+                     "SUM(COALESCE(staked_quantity,0) > 0) FROM holdings").fetchone()
+    m.update({"bestaende": r[0] or 0, "mit_menge": r[1] or 0, "davon_gestakt": r[2] or 0})
+    return m
+
+
+@_gecacht_frist(60)
+def _get_kontingente(conn: sqlite3.Connection) -> dict:
+    """LLM- und Datenkontingente je VERBRAUCHER (ersetzt die Karte *Rollen-Kette*, G-N): REGEL0-Pruefblock aus der Ablage,
+    der Rest je Quelle aus ``api_call_kontingent_taeglich``."""
+    from agent import betriebslage as BL
+
+    k = BL.gemini_je_verbraucher(_daten_ordner(), conn)
+    try:
+        import os as _os
+        import yaml
+
+        llm = yaml.safe_load(open(_os.path.join(BL.HIER, "Basisinfos", "regel0_llm.yaml"), encoding="utf-8")) or {}
+        k["pruefblock_limit"] = llm.get("tageslimit_aufrufe")
+    except Exception:                                                      # noqa: BLE001 - nur die Anzeige des Deckels
+        k["pruefblock_limit"] = None
+    return k
+
+
+@_gecacht_frist(300)
+def _get_kontrollen(conn: sqlite3.Connection) -> dict:
+    """Basisinfos/nb_kontrollen.yaml - automatische Kontrollen live ausgewertet, ueberfaellige rot (G-O). 300 s: die Datei
+    aendert sich nur mit einem Pull; die automatischen Pruefungen lesen Tabellen, die stuendlich oder seltener wachsen."""
+    from agent import betriebslage as BL
+
+    k = BL.kontrollen(conn, _daten_ordner())
+    k["eintraege"] = [e for e in k.get("eintraege") or [] if e.get("status") == "offen"]
+    return k
+
+
+@_gecacht_frist(900)
+def _get_parameter_neu() -> list[dict]:
+    """Die zentralen Parameter des NEUEN Systems, nur lesend, mit Datei und Art (wahl / gemessen / schaetzung). Ersetzt die
+    Kap.-15-Tabelle der alten Kette. 900 s: geaendert wird nur ueber die Datei (Commit + Pull)."""
+    from agent import betriebslage as BL
+
+    def text(v):
+        if isinstance(v, bool):
+            return "ja" if v else "nein"
+        if isinstance(v, float):
+            return "%.4g" % v
+        if isinstance(v, (list, tuple)):
+            return ", ".join(text(x) for x in v)
+        return str(v)
+
+    # Die Schalter stehen in ihrer eigenen Karte - hier nicht ein zweites Mal.
+    return [dict(e, wert=text(e.get("wert"))) for e in BL.parameter(_daten_ordner()) if e.get("gruppe") != "Schalter"]
 
 
 def _tail_log_errors(log_path: Path, max_lines: int, max_read_bytes: int = 200_000) -> list[str]:

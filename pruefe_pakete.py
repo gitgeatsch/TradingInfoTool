@@ -8684,9 +8684,12 @@ def paket_15() -> None:
            "schlimmer als keiner - er trainiert das Auge, Fehlerzeilen zu "
            "ueberlesen")
 
-    pruefe(P, "die alte Kette bleibt sichtbar, aber benannt",
-           "ALTE KETTE (seit dem Schnitt ohne Aufrufer)" in _quelltext(
-               "remote/server.py"),
+    # P9 (10.10.2026, Plan G-N, mit dem Nutzer abgestimmt): die Budgetkarte der alten Kette ist entfallen. Die Regel dahinter
+    # bleibt - nichts verschwindet, ohne dass man es sieht: ihr ZUSTAND (aus / angehalten) steht in der Schalter-Karte.
+    _sv_p9 = _quelltext("remote/server.py")
+    pruefe(P, "die alte Kette bleibt sichtbar - als ZUSTAND in der Schalter-Karte",
+           "alter_hebelweg_aus" in _sv_p9 and "spot_kette_angehalten" in _sv_p9
+           and "data.schalter" in _sv_p9,
            "sie wegzulassen hiesse, eine Zahl verschwinden zu lassen, ohne "
            "dass jemand sieht, dass sie verschwunden ist")
 
@@ -22055,9 +22058,12 @@ def paket_guikette() -> None:
            and "Wirkt nur auf die ALTE Kette" in _quelltext("ui/regime_view.py"),
            "die Rollen-Kette liest weder Regime noch Override")
     import remote.status as _RS
-    pruefe(P, "⚠️ Uebersichtsseite: die Regime-Karte traegt ihre Herkunft",
+    # P9 (10.10.2026, G-N abgestimmt): die Regime-Karte ist von der Seite entfallen (spaeter *Markt (Krypto)*, O39). Die Regel:
+    # WO sie steht, traegt sie ihre Herkunft - der Getter liefert den Hinweis weiter mit.
+    _sv_rg = _quelltext("remote/server.py")
+    pruefe(P, "⚠️ Uebersichtsseite: die Regime-Karte traegt ihre Herkunft, wo sie steht",
            "herkunft_hinweis" in _quelltext("remote/status.py")
-           and "r.herkunft_hinweis" in _quelltext("remote/server.py")
+           and ("r.herkunft_hinweis" in _sv_rg or "data.regime_status" not in _sv_rg)
            and "ALTEN Kette" in _RS.REGIME_HERKUNFT_HINWEIS)
     _rl = _nur_code("agent/rollen_lauf.py")
     pruefe(P, "und die Kennzeichnung stimmt noch: die Rollen-Kette liest kein Regime",
@@ -22075,6 +22081,154 @@ def paket_guikette() -> None:
               "Excel mit Gestakt/Gesamt und Schutz der Abgleich-Bestaende, Hinweis NICHT AKTUELL im Signale-Tab, keine falschen Texte",
            "9 von 9 bestanden" in (_ps.stdout or ""),
            " | ".join(z for z in _zl if " FEHLER " in z) or (_ps.stderr or "")[-300:])
+
+    # ---- Statusseite P9 (10.10.2026, Plan G-N): die Betriebslage des neuen Systems ---------------------------------------
+    # Die Felder werden aus der Klasse ABGELEITET (alles ab `betrieb`), nicht aufgezaehlt - eine neue Karte faellt so von selbst
+    # unter die Pruefung (Regel 4 der Pruefungen gegen das andere Geraet).
+    import dataclasses as _dc9
+    import sqlite3
+    import time as _t9
+    from pathlib import Path as _P9
+    import remote.status as _RS9
+    _fl = [f.name for f in _dc9.fields(_RS9.RemoteStatus)]
+    _neu9 = _fl[_fl.index("betrieb"):]
+    _sv9 = _quelltext("remote/server.py")
+    pruefe(P, "⚠️⚠️ Statusseite: jedes Feld der Betriebslage wird auf der Seite gezeigt",
+           len(_neu9) >= 8 and all("data." + f in _sv9 for f in _neu9),
+           "ohne Anzeige: %s" % [f for f in _neu9 if "data." + f not in _sv9])
+    _rs9 = _quelltext("remote/status.py")
+    _bau9 = _rs9[_rs9.index("def _build_status_roh"):_rs9.index("def _get_api_health")]
+    pruefe(P, "und jedes wird im Aufbau gerechnet", all(f + "=_safe(" in _bau9 for f in _neu9),
+           "nicht gerechnet: %s" % [f for f in _neu9 if f + "=_safe(" not in _bau9])
+    # Waechter teste_status_cache.py, hier in der Suite: jeder Getter traegt eine Frist ODER ist begruendet live.
+    _ohne9 = [n for n in dir(_RS9) if n.startswith("_get_") and callable(getattr(_RS9, n))
+              and not getattr(getattr(_RS9, n), "_ist_gecacht", False) and n not in _RS9._LIVE_GETTER]
+    pruefe(P, "⚠️ jeder Getter der Seite hat eine Frist oder steht begruendet in _LIVE_GETTER", not _ohne9, "%s" % _ohne9)
+    # Aufbau und Abruf gegen die Desktop-DB NUR LESEND (mode=ro) - Seiteneffekt am Datei-Stand nachgewiesen.
+    _db9 = _os_s.path.join("data", "tradinginfotool.db")
+    if _os_s.path.exists(_db9):
+        import config as _C9
+        _stand9 = [(q, _os_s.stat(q).st_mtime_ns, _os_s.stat(q).st_size) for q in (_db9, _db9 + "-wal") if _os_s.path.exists(q)]
+
+        def _ro9():
+            _c = sqlite3.connect("file:%s?mode=ro" % _db9.replace("\\", "/"), uri=True, check_same_thread=False)
+            _c.row_factory = sqlite3.Row
+            return _c
+
+        _RS9.leere_aggregat_cache()
+        _c9b = _ro9()
+        try:
+            _RS9.build_status(_c9b, _C9.get_watchlist(), _P9("logs/keins.log"))
+            _a9 = _t9.monotonic()
+            _st9 = _RS9.build_status(_c9b, _C9.get_watchlist(), _P9("logs/keins.log")).to_dict()
+            _warm9 = _t9.monotonic() - _a9
+        finally:
+            _c9b.close()
+        pruefe(P, "⚠️ Statusaufbau: keine Karte der Betriebslage faellt aus",
+               all(_st9.get(f) is not None for f in _neu9), "leer: %s" % [f for f in _neu9 if _st9.get(f) is None])
+        pruefe(P, "und der warme Aufbau bleibt unter der Warnschwelle", _warm9 < _RS9._BUILD_STATUS_WARNSCHWELLE_SEKUNDEN,
+               "%.2f s (Schwelle %.1f s, Abruf alle 5 s)" % (_warm9, _RS9._BUILD_STATUS_WARNSCHWELLE_SEKUNDEN))
+        from remote.server import create_app as _ca9
+        _app9 = _ca9(coingecko_client=None, kraken_client=None, groq_client=None, conn_factory=_ro9,
+                     watchlist_provider=_C9.get_watchlist, fred_api_key=None, access_token="suite", log_path=_P9("logs/keins.log"))
+        _cl9 = _app9.test_client()
+        _r9a = _cl9.get("/?token=suite")
+        _r9b = _cl9.get("/api/status", headers={"X-Access-Token": "suite"})
+        _r9c = _cl9.get("/api/status")
+        pruefe(P, "⚠️ Flask: Seite und /api/status antworten, ohne Token 401",
+               _r9a.status_code == 200 and _r9b.status_code == 200 and _r9c.status_code == 401
+               and all(f in (_r9b.get_json() or {}) for f in _neu9),
+               "%s / %s / %s" % (_r9a.status_code, _r9b.status_code, _r9c.status_code))
+        _nach9 = [(q, _os_s.stat(q).st_mtime_ns, _os_s.stat(q).st_size) for q in (_db9, _db9 + "-wal") if _os_s.path.exists(q)]
+        # Die HAUPTDATEI muss gleich sein, und ein Journal darf keine Daten tragen. Ein leeres `-wal` (0 Byte) samt `-shm` legt SQLite
+        # schon beim LESEN einer WAL-Datenbank an - das ist kein Schreibzugriff (gefunden 10.10. am ersten Lauf dieser Pruefung).
+        _wal_vor9 = dict((q, g) for q, _m, g in _stand9).get(_db9 + "-wal", 0)
+        _wal_nach9 = dict((q, g) for q, _m, g in _nach9).get(_db9 + "-wal", 0)
+        pruefe(P, "⚠️⚠️ und die Datenbank ist danach unveraendert (Hauptdatei gleich, Journal ohne neue Daten)",
+               _stand9[0] == _nach9[0] and _wal_nach9 <= _wal_vor9, "%s -> %s" % (_stand9, _nach9))
+    _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
+    pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
+           not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))
+    _tx9 = _quelltext("nb_teilexport_betriebsdaten.py")
+    pruefe(P, "⚠️ EINE Quelle: Teilexport und Statusseite rufen dieselben Abfragen",
+           all(("BL." + f + "(") in _tx9 for f in ("hebel_positionen", "nachlader", "regel0_rechnung", "pruefblock", "ankuendigungen",
+                                                   "neuaufnahme_und_abgleich", "kontrollen"))
+           and all(("BL." + f + "(") in _rs9 for f in ("hebel_fuehrung_jetzt", "nachlader_kurz", "regel0_heute", "pruefblock",
+                                                       "ankuendigungen", "kontrollen", "parameter")))
+
+
+def paket_kontrollen() -> None:
+    """DIE NB-KONTROLLEN VERALTEN NICHT (P9, 10.10.2026, Plan_Asset_Lebenszyklus_14_09.md G-O; Nutzer: *"so aufsetzen, dass es nie
+    veraltet"*).
+
+    Vorher stand die Liste im Memory und wuchs nur nach unten - welche Kontrolle offen war, stand an keiner Stelle. Jetzt eine Datei,
+    ``Basisinfos/nb_kontrollen.yaml``, gelesen von Statusseite und Teilexport. Dieses Paket haelt die Sicherungen 2 und 3:
+    eine offene Kontrolle ueber ihrer Frist ist ROT, und kein Commit an Betriebscode, ohne dass die Datei mitgezogen wurde."""
+    P = "Kontrollen"
+    import os
+    import subprocess as _sp
+    import yaml as _y
+    from datetime import date as _d
+    from agent import betriebslage as _BL
+
+    pfad = _BL.KONTROLLEN_DATEI
+    pruefe(P, "die Datei ist da", os.path.exists(pfad), pfad)
+    if not os.path.exists(pfad):
+        return
+    roh = _y.safe_load(open(pfad, encoding="utf-8")) or {}
+    ein = roh.get("kontrollen") or []
+    ids = [e.get("id") for e in ein]
+    pruefe(P, "jede Kontrolle hat id, titel, seit, art, status - und jede id nur einmal",
+           all(e.get("id") and e.get("titel") and e.get("seit") and e.get("art") and e.get("status") for e in ein)
+           and len(ids) == len(set(ids)), "doppelt: %s" % sorted({i for i in ids if ids.count(i) > 1}))
+    pruefe(P, "status und art nur aus den festgelegten Werten",
+           all(e["status"] in ("offen", "erfuellt", "entfallen", "abgeloest") for e in ein)
+           and all(e["art"] in ("automatisch", "manuell", "ereignis", "rueckfrage") for e in ein),
+           "%s" % [(e.get("id"), e.get("status"), e.get("art")) for e in ein
+                   if e.get("status") not in ("offen", "erfuellt", "entfallen", "abgeloest")
+                   or e.get("art") not in ("automatisch", "manuell", "ereignis", "rueckfrage")])
+    pruefe(P, "jede automatische Kontrolle hat ihre Pruefung in betriebslage.KONTROLLEN",
+           all(e.get("pruefung") in _BL.KONTROLLEN for e in ein if e["art"] == "automatisch" and e["status"] == "offen"),
+           "%s" % [e["id"] for e in ein if e["art"] == "automatisch" and e.get("pruefung") not in _BL.KONTROLLEN])
+    pruefe(P, "jede erledigte traegt Datum und Beleg (nichts wird still abgehakt)",
+           all(e.get("erfuellt_am") and e.get("beleg") for e in ein if e["status"] in ("erfuellt", "abgeloest", "entfallen")),
+           "%s" % [e["id"] for e in ein if e["status"] != "offen" and not (e.get("erfuellt_am") and e.get("beleg"))])
+    pruefe(P, "jede offene (ausser Ereignis) hat eine Frist und einen Nachweis",
+           all(e.get("faellig_bis") and e.get("nachweis") for e in ein if e["status"] == "offen" and e["art"] != "ereignis"),
+           "%s" % [e["id"] for e in ein if e["status"] == "offen" and e["art"] != "ereignis"
+                   and not (e.get("faellig_bis") and e.get("nachweis"))])
+    # SICHERUNG 2: ueber der Frist ist ROT - auch eine automatische, denn am Desktop ist der NB-Stand nicht pruefbar; die Datei
+    # wird nach dem Export nachgezogen (erfuellt + Beleg).
+    heute = _d.today().isoformat()
+    ueber = [(e["id"], str(e["faellig_bis"])) for e in ein if e["status"] == "offen" and e.get("faellig_bis")
+             and str(e["faellig_bis"]) < heute]
+    pruefe(P, "⚠️⚠️ keine offene Kontrolle ueber ihrer Frist", not ueber,
+           "ueberfaellig: %s - nachweisen (erfuellt + Beleg) oder mit Begruendung neu befristen" % ueber)
+
+    # SICHERUNG 3: die Datei ist nicht aelter als der juengste Commit an Betriebscode
+    def _ct(*pfade):
+        r = _sp.run(["git", "log", "-1", "--format=%ct", "--"] + list(pfade), capture_output=True, text=True)
+        return int(r.stdout.strip()) if r.stdout.strip() else None
+
+    betrieb = ["agent", "scheduler", "importer", "remote", "ui", "database", "Basisinfos/regel0_betrieb.yaml",
+               "Basisinfos/regel0_llm.yaml"]
+    rel = os.path.relpath(pfad).replace("\\", "/")
+    t_b, t_k = _ct(*betrieb), _ct(rel)
+    offen_aenderung = bool(_sp.run(["git", "status", "--porcelain", "--", rel], capture_output=True, text=True).stdout.strip())
+    pruefe(P, "⚠️⚠️ kein Betriebs-Commit ohne die Kontrollen-Datei (sie ist nicht aelter als der juengste)",
+           offen_aenderung or (t_k is not None and t_b is not None and t_k >= t_b),
+           "Datei %s · Betriebscode %s%s" % (t_k, t_b, " · Datei mit offener Aenderung (wird mit dem Commit frisch)" if offen_aenderung else ""))
+    pruefe(P, "jeder genannte Commit existiert",
+           all(_sp.run(["git", "cat-file", "-e", str(e["commit"]) + "^{commit}"], capture_output=True).returncode == 0
+               for e in ein if e.get("commit")),
+           "%s" % [e["id"] for e in ein if e.get("commit") and _sp.run(
+               ["git", "cat-file", "-e", str(e["commit"]) + "^{commit}"], capture_output=True).returncode != 0])
+    # SICHERUNG 4: eine Quelle - Statusseite und Teilexport lesen dieselbe Funktion
+    pruefe(P, "Statusseite und Teilexport lesen dieselbe Funktion",
+           "BL.kontrollen(" in _quelltext("remote/status.py") and "BL.kontrollen(" in _quelltext("nb_teilexport_betriebsdaten.py"))
+    # die automatischen Pruefungen laufen fehlerfrei (ihr Ergebnis haengt am Geraet, ihr Lauf nicht)
+    k = _BL.kontrollen(None, _BL.DATEN)
+    pruefe(P, "die Auswertung laeuft ohne Fehler", not k.get("fehlt") and len(k["eintraege"]) == len(ein), "%s" % k.get("offen"))
 
 
 def paket_standard_db() -> None:
@@ -31955,6 +32109,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Mailrichtung": paket_mailrichtung,
           "Mailstraffung": paket_mailstraffung,
           "GuiKette": paket_guikette,
+          "Kontrollen": paket_kontrollen,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -47,6 +47,24 @@ from agent.schreibweise import de
 
 # ---------------------------------------------------------------------------
 # DIE GRENZEN. Jede mit Quelle - wer eine aendert, muss die Quelle mitaendern.
+def _liquidations_marge() -> float:
+    """O44 (10.10.2026, Plan G-N): EINE Quelle fuer die Liquidationsmarge - ``config.yaml risiko.hebel.
+    liquidations_sicherheitsmarge_relativ`` (RM-11). Bis hierher stand der Wert ZWEIMAL: hier als 0,09 fuer H15 und die
+    Rollen-Kette, dort als 0,09 fuer ``hebel_risk_gate`` und die Liq.-Preis-Tabelle - gleich, aber doppelt gepflegt.
+
+    Gelesen beim Import (wie zuvor die Konstante): eine Aenderung wirkt nach dem Neustart. Fehlt der Eintrag, steht der alte
+    Wert 0,09 - mit einer WARNUNG im Log, nicht still."""
+    try:
+        import config as _config
+
+        return float(_config.load_config()["risiko"]["hebel"]["liquidations_sicherheitsmarge_relativ"])
+    except Exception as ex:                                               # noqa: BLE001
+        import logging
+
+        logging.getLogger(__name__).warning("Liquidationsmarge nicht aus config.yaml lesbar (%s) - 0,09 (RM-11) gilt", ex)
+        return 0.09
+
+
 GRENZEN = {
     # STOP. Der Zielwert 2,5 x ATR liegt zwischen den beiden Praxisstandards
     # (Chandelier 3 x ATR, Elder 2 x ATR) und trifft bei BTC rund 7,5 % - genau
@@ -290,7 +308,7 @@ GRENZEN = {
     "crv_voll_ab": 3.0,
 
     "hebel_max": 10.0,              # Bitpanda Margin: 2x-10x
-    "liquidations_marge": 0.09,     # RM-11, config risiko.hebel.*_sicherheitsmarge_relativ
+    "liquidations_marge": _liquidations_marge(),  # RM-11 - EINE Quelle: config risiko.hebel.liquidations_sicherheitsmarge_relativ (O44)
 
     # BETRAG. Die Untergrenze ist keine Vorsicht, sondern Arithmetik: bei
     # Boersengeschaeften kostet 1 EUR fix je Seite, auf 100 EUR sind das 2 %

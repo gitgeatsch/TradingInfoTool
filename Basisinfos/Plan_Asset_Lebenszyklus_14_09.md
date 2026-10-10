@@ -658,3 +658,45 @@ Nutzer 10.10.: *„3. ja – so aufsetzen, dass es nie veraltet“*.
 **Übernahme des Altbestands:**
 - Jede Kennung aus dem Memory bekommt einen Status mit Beleg.
 - Was sich nicht mehr belegen lässt, kommt als Liste zur **Rücksprache**; nichts wird still abgehakt.
+
+
+### G-P P9 gebaut — Statusseite mit der Betriebslage (10.10.2026)
+
+Nutzer 10.10.: *„Pull am NB erledigt – P9 Statusseite starten“*. Umgesetzt nach G-N/G-O; Abweichungen vom Vorschlag stehen unten und sind begründet.
+
+**Was gebaut ist:**
+
+| Teil | Inhalt |
+|---|---|
+| `agent/betriebslage.py` | **eine** Quelle für Statusseite und Teilexport, nur lesend (`mode=ro`). Neu dazu `nachlader_kurz()` (nur der letzte Lauf je Datei, ohne `GROUP BY symbol` über die Kursreihe) |
+| `remote/status.py` | acht neue Felder (`betrieb`, `hebel_lage`, `regel0_lage`, `schalter`, `bestand_lage`, `kontingente`, `kontrollen`, `parameter_neu`); Dekorator `_gecacht_frist(s)` mit **eigener Frist an der Funktion**: 60 s Jobs/Hebel/Schalter/Kontingente, 120 s REGEL0/Bestand, 300 s Kontrollen, 900 s Parameter und Neuaufnahme |
+| `remote/server.py` | neue Karten: Offene NB-Kontrollen · Hebel (H15 je Position: Kurs, Liq., Abstand, Empfehlung, Warnstufe, Grund; zuletzt gemeldet) · REGEL0 heute (Signale, Mails, letzter Lauf, Prüfblock, Ankündigungen) · Betrieb (auffällige Jobs offen, alle eingeklappt; Nachlader je Datei; Neuaufnahme; Marktscan-Quote; Stop nachziehen) · Schalter + Bestand · Kontingente je Verbraucher · Parameter (neu) |
+| Teilexport | ruft `betriebslage` (zeilengleich nachgewiesen), neu der Abschnitt **NB-KONTROLLEN** |
+| O44 | `GRENZEN["liquidations_marge"]` liest `config.yaml risiko.hebel.liquidations_sicherheitsmarge_relativ`; fehlt der Eintrag: 0,09 **mit Warnung** im Log |
+| Kontrollen | `Basisinfos/nb_kontrollen.yaml` + Suite-Paket **Kontrollen** (Frist, Datei nicht älter als der jüngste Betriebs-Commit, Felder, Commits, eine Quelle) |
+
+**Entfallen / umgehängt** (wie abgestimmt): Karte *ALTE KETTE* · Überschriften A/B/C · Regime-Karte · Parameter (alte Kette). Marktscan-Quote und Stop nachziehen → *Betrieb*. Themenfelder, wartende Themen, Absicherung → eingeklappter Abschnitt **Multi-Asset (ruht)**. Die Getter bleiben im Code; `budget_heute`, `regime_status`, `parameter_overview` werden nicht mehr gerechnet (Felder bleiben deklariert, `None`).
+
+**Z-3 geprüft, bleibt:** geschrieben vom Job `portfolio_wert` täglich 04:30 (zuletzt 10.10.), mailt bei Rückschlag ≥ `ziele.max_drawdown_prozent`, unabhängig von jeder Kette ⇒ Grundfunktion, **keine** Entfernung, daher keine Rücksprache nötig. Neu direkt unter dem Portfolio-Wert (dieselbe Gegenprobe Kursreihe ↔ Snapshot).
+
+**Abweichungen vom Vorschlag (begründet):**
+- *Rollen-Kontingent ersetzen:* die Rollen-Kette bleibt als **ein Verbraucher** in *Kontingente je Verbraucher* (nächster Topf, Urteile heute) — sie ist angehalten, aber ihr Topf ist dieselbe Gemini-Grenze. Die vier Topf-Zeilen sind entfallen (stehen je Modell in der Gemini-Karte).
+- *Z.ai-Gegenprüfung heute* entfällt mit der Alte-Kette-Karte (kam aus `budget_heute`).
+- *Stop nachziehen in Betrieb (letzter Lauf, Anzahl):* Kopfzeile *„N von M · Lauf vor X“*, die 50-Zeilen-Liste eingeklappt.
+- *Jobs:* am Handy 26 Zeilen → nur die über 26 h offen, die ganze Liste eingeklappt. Klappabschnitte stehen **fest im HTML** — im erzeugten Teil klappten sie bei jedem Abruf (5 s) wieder zu.
+- *Schalter:* rechts der **Zustand** (*„alter Hebelweg: aus“*), nicht der Rohwert — *„alter_hebelweg_aus: an“* las sich als das Gegenteil.
+
+**Befunde beim Bau:**
+- `job_laeufe` gibt es nur, wo die App läuft (NB ja, Desktop nein). Die Karte meldet das jetzt, statt auszufallen (gefunden von der neuen Suite-Prüfung).
+- SQLite legt beim **Lesen** einer WAL-Datenbank ein leeres `-wal` (0 Byte) und `-shm` an. Kein Schreibzugriff; die Suite prüft jetzt *Hauptdatei gleich, Journal ohne neue Daten*.
+- `h15_gegenprobe.py` G6 fror den **Ort** der SQL-Zeile ein (Teilexport) — prüft jetzt die Regel (Abschnitt ruft die Quelle, beide lesen nur).
+- Kalter Aufbau 1,9 s am Desktop = Erst-Importe (`regel0_rechnung` 0,73 s; am NB lädt sie der stündliche REGEL0-Job ohnehin, neu nur `messnorm` ≈ 0,1 s). Warm **0,27 s**.
+
+**Nachweis (auf der NB-Kopie vom 10.10. 05:14, nie an der Produktion):**
+- `p9_pruefstand.py` **6/6** (alle 8 Karten gefüllt, warm 0,28 s, Flask 200/200/401/401, Entfallenes weg, Prüfsumme Kopie **und** Desktop-DB gleich, Grundfunktionen da).
+- `p9_gegenprobe.py` **10/10** (jede Zahl mit eigenem SQL).
+- Automatische Kontrollen an einer Wegwerfkopie: beide Bedingungen hergestellt → *erfüllt (automatisch)*; ein Fehlerlauf → K-ANK-1 wieder offen.
+- Teilexport zeilengleich (NB-Kopie 253 → +10 Zeilen NB-KONTROLLEN, Desktop 356 → +10).
+- Handyansicht 375 px ohne Querlauf (Bildschirmfotos). Paket GuiKette 36/36, Kontrollen 12/12, H15 11/11 + 7/7, Sofortliste 9/9 + 5/5, `teste_status_cache.py` grün.
+
+**Am NB offen:** **K-ST-1** — du siehst die Seite über VPN, alle Karten gefüllt, nichts fehlt; Teilexport mit NB-KONTROLLEN.
