@@ -25,7 +25,9 @@ kontrollen:
     pruefung: k_ank_1
     nachweis: "ankuendigung_lauf mit Laeufen, alle fehlerfrei (Teilexport BINANCE-ANKUENDIGUNGEN)"
     faellig_bis: "2026-10-12"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-10"
+    beleg: "Teilexport 10.10. 20:42 (NB, P9-Code): automatisch erfuellt - 6 Laeufe, fehlerfrei 6; Meldungen 200, Zuordnungen 404. Mailzeile bei passender Meldung bleibt Ereignis (kein Signal mit Ereignis bis 20:42)"
   - id: K-BP-3
     titel: "EURCV-Fix: Wallet-Salden Fassung 2 gesetzt, keine Mail 'Bestand passt nicht zusammen' mehr, EURCV = Spot-Teil"
     seit: "2026-10-10"
@@ -35,7 +37,9 @@ kontrollen:
     pruefung: k_bp_3
     nachweis: "meta bitpanda_wallet_salden_fassung = 2; Log 'Wallet-Salden Fassung 2'; keine EURCV-Abweichungsmail"
     faellig_bis: "2026-10-11"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-10"
+    beleg: "Teilexport 10.10. 20:42 (NB, P9-Code): automatisch erfuellt - Wallet-Salden-Fassung 2; seit dem Fix keine Abweichungsmail gemeldet"
   - id: K-ST-1
     titel: "P9 Statusseite: alle neuen Karten ueber VPN sichtbar und gefuellt (Betrieb, Hebel, Schalter, Bestand, Kontingente, Kontrollen, Parameter), nichts fehlt"
     seit: "2026-10-10"
