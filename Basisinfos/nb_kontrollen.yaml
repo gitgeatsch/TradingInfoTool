@@ -48,7 +48,9 @@ kontrollen:
     art: manuell
     nachweis: "Nutzer sieht die Seite ueber VPN; Teilexport-Abschnitt NB-KONTROLLEN vorhanden; kein ERROR im Log zum Statusaufbau; Parameter-Karte zeigt Liquidationsmarge 0.09 (O44); H15-Logzeile je Lauf unveraendert"
     faellig_bis: "2026-10-13"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-10"
+    beleg: "Nutzer 10.10.: Seite Betrieb & Lage, alle Karten gefuellt, nichts fehlt; Teilexport NB 20:42 mit NB-KONTROLLEN, keine Fehlerzeile; Log seit Neustart 16:36 ohne ERROR (nur Laufzeitwarnungen, Folgeschritt P9b)"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
