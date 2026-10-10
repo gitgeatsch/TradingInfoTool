@@ -40,7 +40,7 @@ kontrollen:
     titel: "P9 Statusseite: alle neuen Karten ueber VPN sichtbar und gefuellt (Betrieb, Hebel, Schalter, Bestand, Kontingente, Kontrollen, Parameter), nichts fehlt"
     seit: "2026-10-10"
     paket: P9
-    commit: ""
+    commit: 09b4228
     art: manuell
     nachweis: "Nutzer sieht die Seite ueber VPN; Teilexport-Abschnitt NB-KONTROLLEN vorhanden; kein ERROR im Log zum Statusaufbau; Parameter-Karte zeigt Liquidationsmarge 0.09 (O44); H15-Logzeile je Lauf unveraendert"
     faellig_bis: "2026-10-13"
@@ -71,7 +71,9 @@ kontrollen:
     art: rueckfrage
     nachweis: "Vorschlag: ENTFALLEN - K16/K21 haengen an der Rollen-Kette, die seit 05.10. angehalten ist (E-67); K15 hatte nichts Sichtbares. K21: zellen_lauf traegt bis 10.10. keine terminmarkt-Zeile (laut Vorgabe zulaessig, aber nicht belegbar). Nutzer entscheidet"
     faellig_bis: "2026-10-13"
-    status: offen
+    status: entfallen
+    erfuellt_am: "2026-10-10"
+    beleg: "Nutzer 10.10.: 'K-ALT-1 entfallen' (K16/K21 an der angehaltenen Rollen-Kette, K15 ohne sichtbaren Nachweis)"
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}
