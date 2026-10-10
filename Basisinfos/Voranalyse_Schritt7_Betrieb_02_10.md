@@ -2982,3 +2982,40 @@ Nutzer 09.10.: *„Ja, Importer-Fix bauen, prüfen und gegenprüfen“*.
 - **Fix-Entwurf:**
   1. Zeitpunkte als Zeit vergleichen (`_zeit`), bei Gleichstand die höhere `order_id` desselben Vorgangs.
   2. **Einmalige volle Neuberechnung der Wallet-Salden** beim ersten Lauf der neuen Fassung (Marke in `meta`), denn der inkrementelle Lauf holt die Buchung vom 09.10. nicht noch einmal. Der Lauf ist selbst gesteuert im Betrieb; **kein Skript schreibt in die Produktion**.
+
+### 23.37 K-BP-3 EURCV-Fix gebaut (10.10.2026) und Lebenszyklus-Prüfung vor der Freigabe
+
+Nutzer 10.10.: *„1. haben wir alles im Detail geprüft – ist die Aufnahme neuer Assets, Änderung, Wegfall, Staking, Unstaking etc. Wie ist die Konklusio zur REGEL0 aktuell sowie mit den LLM-Messungen? 2. ja“* (2 = EURCV-Fix bauen).
+
+**Fix (`importer/bitpanda_bestand.py`, `database/db.py`):**
+- `zeit_einheitlich`: `credited_at` immer als UTC mit Millisekunden. Damit stimmt auch der **zweite** Textvergleich in `speichere_bitpanda_wallet_salden` (`excluded.zeitpunkt >= …`, SQL). Er hätte sonst selbst eine Neuberechnung abgewiesen; gefunden beim Bau.
+- Innerhalb des Abrufs wird nach (Zeit, `order_id`) verglichen.
+- **Einmal** (Marke `meta.bitpanda_wallet_salden_fassung` ≠ 2): gespeicherte Zeitpunkte vereinheitlichen (`vereinheitliche_bitpanda_wallet_zeitpunkte`), dann alle Buchungen neu lesen (`seit=None`).
+  - Die Marke wird erst nach vollständigem Abruf gesetzt.
+  - Die volle Historie brauchte am 16.09. rund 40 s bei einer Frist von 300 s.
+  - Der Betrieb steuert das selbst, **kein Skript schreibt in die Produktion**.
+- **Nachweis:**
+  - Paket BitpandaBestand **21/21** (3 neu, mit den echten Rohbuchungen vom 09.10.: Endstand 296,04; Betrieb nachgestellt mit falschem gespeichertem Stand → erster Lauf `seit=None`, korrigiert, Marke gesetzt, zweiter Lauf wieder inkrementell; Schreibweise).
+  - Gegenprobe `kbp3_gegenprobe.py` **3/3**: Rohdatei mit eigener Sortierung; 20.000 Zeitpaare, Textordnung = Zeitordnung; alte Logik ergibt 696,04.
+
+**Lebenszyklus der Assets — was belegt ist, was nicht:**
+
+| | Stand | Beleg |
+|---|---|---|
+| **Neuaufnahme REGEL0** (täglich 02:05, Regel `hole_stundenkurse_alle.universum`) | ✔ läuft (07.–09.10.); ganze Historie, erst ab 500 h bewertet; **Mail nur für Assets mit Hebel-Schalter** (Opt-in, 26) | Teilexport *REGEL0-NEUAUFNAHME*; `regel0_rechnung` (500 Zeilen) |
+| ⚠️ **was aufgenommen wird** | Die Ausschlussliste `OHNE` ist eine **Aufzählung** (16 Stablecoins/Fiat/Gold). Binance führt **tokenisierte Aktien und ETFs** als USDT-Paare (AAPLB, NVDAB, TSLAB, SPYB, QQQB, TQQQB, SQQQB … rund 80), dazu Wrapped/Staked (WBTC, WBETH, BNSOL) und Stablecoin-Varianten (FRAX, USDEB). Sie stehen in `stundenkurse_alle.db` und werden bewertet. Die Handelsgruppen unterscheiden sie nicht | Binance `exchangeInfo` 10.10.; Desktop-Kopie `stundenkurse_alle.db` |
+| Wirkung | **keine Mail** (kein Hebel-Schalter), kein Training (Modell nur auf der Messbasis), die Bewertung ist absolut je Asset (keine Rangwirkung auf andere). Signale in der Ablage sind Rauschen | — |
+| **Änderung** (Umbenennung, 1000er-Faktor, Kollision) | Faktor und Sperren über `symbol_zuordnung.csv` und Markpreis-Sperre (E-40). Eine Umbenennung wird zu neuer Aufnahme plus Wegfall; das neue Symbol braucht 500 h bis zum ersten Signal | beschrieben, **an keinem echten Fall seit 01.10. beobachtet** |
+| **Wegfall** (nicht mehr im Handel) | ✔ 4 Abwicklungen in der Testwoche (T2, 48-h-Fenster); Delisting-**Ankündigung** O29 gebaut, Schalter aus | Testwoche T2 |
+| **Bestand: Neuzugang** | ✔ Mail *„Position ohne Watchlist-Eintrag“* (CT, 08.10.); automatische Aufnahme O26 nicht gebaut | Log 08.10. |
+| **Bestand: Wegfall** | ✔ *„Position auf 0 gesetzt: CT“* (09.10.) | Log 09.10. |
+| **Staking** | ✔ *„Umbuchung frei/gestakt“* (09.10.); Staking-Korrektur bestätigt kein Signal (E10, Suite) | Log, Suite |
+| **Unstaking** (ETH: Tage) | ⚠️ **nicht live beobachtet**. Liegt die Menge währenddessen in einer neuen Wallet-Art, wird sie *unbekannt* gemeldet und nicht übernommen (sicher, aber laut) | `bestand_je_asset` *sonst* |
+| **Hebel: Eröffnung** | ✔ BTC 04:38, ETH 08:29 erkannt; H15 führt | `hebel_positions`, §23.34 |
+| **Hebel: Teilschließung, Liquidation** | ⚠️ bekannter Importerfehler (2.679), offen → Schritt B (O36) | Memory |
+| **Hebel-Wallets gegen Spot** | ✔ getrennt (K-BP-1); EURCV-Saldo K-BP-3 (dieser Fix) | §23.35, oben |
+
+**Ganze Suite mit dem Fix:** 3.232 Prüfungen, rot die 5 bekannten **plus H15-Prüfstand P7**.
+- Zweite Zeitabhängigkeit nach P10: P7 fragte fest nach dem 09.10./10.10., der Lauf vermerkt aber mit dem echten UTC-Tag. Am Folgetag wurde die Prüfung rot.
+- Jetzt leitet P7 heute/morgen vom echten UTC-Tag ab, wie `neue_meldungen` selbst.
+- Danach: Prüfstand 11/11 · Regel0Betrieb 78/78 · BitpandaBestand 21/21 · Hebelführung 35/35.

@@ -1,4 +1,4 @@
-P1   ok  Abstand [('BTC', 'HALTEN', 0.2287782049992809, None)]
+P1   ok  Abstand [('BTC', 'HALTEN', 0.22770740297204176, None)]
 P2   ok  Hebelfuehrung: LIQUIDATION NAHE BTC
 P3   ok  Stufe 0.15
 P4   ok  Stufe 0.1
@@ -7,23 +7,23 @@ P6   ok  Hebelfuehrung: LIQUIDATION ERREICHT BTC
 P7   ok  heute 0 · morgen 1
 P8   ok  Schalter aus
 P9   ok  Grund: volle Messbasis (Desktop) - dort schreiben nur die hole_*.py von Hand
-P10  ok  Mailtext P2: Abstand aus der Liquidation der Mail nachgerechnet (Liquidation  etwa 53.985,53 EUR - 12,9 % unter dem Kurs)
+P10  ok  Mailtext P2: Abstand aus der Liquidation der Mail nachgerechnet (Liquidation  etwa 54.060,48 EUR - 12,8 % unter dem Kurs)
 P11  ok  Standard-DB unveraendert
 
 Mail P2 (Auszug):
 HEBELFUEHRUNG - 1 offene Position mit Handlungsbedarf
-2026-10-09 17:43 UTC
+2026-10-10 06:04 UTC
 
 Ausfuehrung manuell ueber die Bitpanda-App - dieses System handelt nicht.
 Die Liquidation ist eine vorsichtige Schaetzung (Bitpanda veroeffentlicht keine Formel).
 
-BTC - Hebel 3,0x LONG, seit 0,5 Tagen · LIQUIDATION NAHE
+BTC - Hebel 3,0x LONG, seit 1,1 Tagen · LIQUIDATION NAHE
    Position     1.500,00 EUR · Eigenkapital 500,00 EUR · Kredit 1.000,00 EUR
    Einstand     73.582,04 EUR · Kurs 62.000,00 EUR (Stand 2026-10-09 08:02)
-   Ergebnis     -236,10 EUR vor Finanzierung · netto -237,08 EUR
-   Finanzierung bisher 0,98 EUR · heute 1,80 EUR je Tag (Information, kein Ausloeser)
-   Liquidation  etwa 53.985,53 EUR - 12,9 % unter dem Kurs
+   Ergebnis     -236,10 EUR vor Finanzierung · netto -238,01 EUR
+   Finanzierung bisher 1,91 EUR · heute 1,80 EUR je Tag (Information, kein Ausloeser)
+   Liquidation  etwa 54.060,48 EUR - 12,8 % unter dem Kurs
    Im Deckel    175,50 EUR - ohne bekannten Stop - angenommen 11,7 % ab Einstand
-   Grund: Der Kurs liegt nur noch 12,9 % ueber der geschaetzten Liquidation (etwa 53.986 EUR) - Warnschwelle 15 %, Stufe 15 %. Eigenkapital nachschiessen, Hebel senken oder schliessen: die Entscheidung liegt bei dir. Die Schaetzung ist bewusst vorsichtig.
+   Grund: Der Kurs liegt nur noch 12,8 % ueber der geschaetzten Liquidation (etwa 54.060 EUR) - Warnschwelle 15 %, Stufe 15 %. Eigenkapital nachschiessen, Hebel senken oder schliessen: die Entscheidung liegt bei dir. Die Schaetzung ist bewusst vorsichtig.
 
 11 von 11 bestanden

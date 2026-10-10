@@ -2430,6 +2430,21 @@ def speichere_bitpanda_wallet_salden(conn: sqlite3.Connection, salden: dict) -> 
     return n
 
 
+def vereinheitliche_bitpanda_wallet_zeitpunkte(conn: sqlite3.Connection, umschreiben) -> int:
+    """K-BP-3 (10.10.2026): die gespeicherten Zeitpunkte in EINE Schreibweise bringen (`umschreiben(text) -> text`), damit der
+    Textvergleich in `speichere_bitpanda_wallet_salden` (`excluded.zeitpunkt >= ...`) wieder stimmt. Gibt die Zahl der Zeilen zurueck."""
+    _migrate_bitpanda_wallet_saldo(conn)
+    n = 0
+    for r in conn.execute("SELECT asset_id, wallet_owner, wallet_id, zeitpunkt FROM bitpanda_wallet_saldo").fetchall():
+        neu = umschreiben(r[3])
+        if neu and neu != r[3]:
+            conn.execute("UPDATE bitpanda_wallet_saldo SET zeitpunkt = ? WHERE asset_id = ? AND wallet_owner = ? AND wallet_id = ?",
+                         (neu, r[0], r[1], r[2]))
+            n += 1
+    conn.commit()
+    return n
+
+
 def get_meta_wert(conn: sqlite3.Connection, schluessel: str) -> str | None:
     row = conn.execute("SELECT value FROM meta WHERE key = ?", (schluessel,)).fetchone()
     return row["value"] if row else None

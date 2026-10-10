@@ -101,8 +101,12 @@ def main():
     x.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, price_eur, fetched_at) VALUES ('BTC','bitcoin',1,62000,'2026-10-10T08:00:00+00:00')")
     x.commit()
     t13 = HF.lade(x, nahe_grenze=0.15, jetzt="2026-10-10T08:00:00+00:00")
-    heute = HF.neue_meldungen(x, t13, tag="2026-10-09")
-    morgen = HF.neue_meldungen(x, t13, tag="2026-10-10")
+    # P7 leitet heute/morgen vom ECHTEN UTC-Tag ab - so vermerkt der Lauf oben (`_hebelfuehrung_lauf` ohne `tag`). Bis 10.10. stand
+    # hier fest "2026-10-09"/"2026-10-10"; am Folgetag wurde die Pruefung rot (Suite 10.10., zweite Zeitabhaengigkeit nach P10).
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    _h = _dt.now(_tz.utc).date()
+    heute = HF.neue_meldungen(x, t13, tag=_h.isoformat())
+    morgen = HF.neue_meldungen(x, t13, tag=(_h + _td(days=1)).isoformat())
     x.close()
     pruefe("P7", not heute and len(morgen) == 1, "heute %d · morgen %d" % (len(heute), len(morgen)))
     alt = G.lade

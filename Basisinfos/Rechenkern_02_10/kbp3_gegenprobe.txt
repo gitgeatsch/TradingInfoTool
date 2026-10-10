@@ -1,0 +1,5 @@
+G1  gleich  8 Zeilen gelesen · Spot EURCV 296.04291657 · Kredit -2600 · ETH-Hebel 0.89636371
+G2  gleich  20.000 Paare, Abweichungen 0
+G3  gleich  alte Logik (Text) ergibt 696.04291657 - der Befund
+
+3 von 3 gleich

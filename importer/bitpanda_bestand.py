@@ -91,6 +91,13 @@ SYMBOL_ALIAS = {"CC": "CANTON", "VST-US": "VST", "IS0C": "ISOC"}
 # (`credited_at` in der Vergangenheit) werden so noch erfasst.
 UEBERLAPPUNG = timedelta(hours=1)
 META_BUCHUNGEN_STAND = "bitpanda_buchungen_stand"
+# K-BP-3 (10.10.2026, Schritt7 Par. 23.36/23.37): Bitpanda schreibt `credited_at` mal MIT, mal OHNE Millisekunden
+# (`...08:29:58Z` beim Kauf, `...08:29:58.380Z` bei der Hebel-Eroeffnung 380 ms spaeter). Als TEXT verglichen ist `58Z` GROESSER
+# als `58.380Z` (`Z` > `.`) - der aeltere Zwischenstand gewann (EURCV 696,04 statt 296,04). Seit Fassung 2 werden Zeitpunkte
+# einheitlich mit Millisekunden abgelegt, im Abruf als Zeit verglichen (Gleichstand: hoehere `order_id`), und EINMAL werden die
+# gespeicherten Zeitpunkte vereinheitlicht und alle Buchungen neu gelesen (der inkrementelle Lauf holte den 09.10. nie wieder).
+META_SALDEN_FASSUNG = "bitpanda_wallet_salden_fassung"
+SALDEN_FASSUNG = "2"
 
 # Positionen unter diesem Wert heissen ,Staub' (Belohnungsreste wie SPACE mit
 # 0,03 EUR) - sie stehen im Log, bekommen aber keine Mail.
@@ -142,6 +149,24 @@ def _zeit(text: str | None) -> datetime | None:
     return z if z.tzinfo else z.replace(tzinfo=timezone.utc)
 
 
+def zeit_einheitlich(text: str | None) -> str | None:
+    """`credited_at` in EINER Schreibweise (UTC, Millisekunden, `Z`) - damit auch der Textvergleich in SQL stimmt (K-BP-3)."""
+    z = _zeit(text)
+    if z is None:
+        return None
+    z = z.astimezone(timezone.utc)
+    return z.strftime("%Y-%m-%dT%H:%M:%S.") + "%03dZ" % (z.microsecond // 1000)
+
+
+def _reihenfolge(t: dict, zeit: str) -> tuple:
+    """Sortierschluessel einer Buchung: die Zeit, bei Gleichstand die `order_id` (innerhalb eines Vorgangs fortlaufend 1, 2, ...)."""
+    try:
+        nr = int(t.get("order_id") or 0)
+    except (TypeError, ValueError):
+        nr = 0
+    return (zeit, nr)
+
+
 def _asset_der_buchung(t: dict) -> str | None:
     return (t.get("asset_amount") or {}).get("asset_id") or t.get("asset_id")
 
@@ -155,16 +180,23 @@ def aktualisiere_wallet_salden(conn, api_key: str) -> tuple[dict, list[dict], bo
     Der Stand fuer den naechsten Lauf rueckt nur vor, wenn der Abruf vollstaendig
     war."""
     stand = db.get_meta_wert(conn, META_BUCHUNGEN_STAND)
+    neu_lesen = db.get_meta_wert(conn, META_SALDEN_FASSUNG) != SALDEN_FASSUNG
     seit = None
-    if stand and _zeit(stand):
+    if neu_lesen:
+        # K-BP-3: EINMAL alle Buchungen, und vorher die gespeicherten Zeitpunkte in die einheitliche Schreibweise
+        n = db.vereinheitliche_bitpanda_wallet_zeitpunkte(conn, zeit_einheitlich)
+        logger.info("Bitpanda-Bestand (neu): Wallet-Salden Fassung %s - %d Zeitpunkte vereinheitlicht, alle Buchungen werden neu gelesen",
+                    SALDEN_FASSUNG, n)
+    elif stand and _zeit(stand):
         seit = (_zeit(stand) - UEBERLAPPUNG).isoformat().replace("+00:00", "Z")
     vorgaenge, vollstaendig = BP.hole_buchungen_mit_stand(api_key, seit=seit)
     neu: dict = {}
-    juengster = stand
+    rang: dict = {}
+    juengster = zeit_einheitlich(stand) if stand else None
     for o in vorgaenge:
         for t in o.get("transactions") or []:
             aid = _asset_der_buchung(t)
-            zeit = t.get("credited_at")
+            zeit = zeit_einheitlich(t.get("credited_at"))
             nach = t.get("asset_balance_after")
             if not aid or not zeit or nach is None:
                 continue
@@ -173,13 +205,17 @@ def aktualisiere_wallet_salden(conn, api_key: str) -> tuple[dict, list[dict], bo
             except (TypeError, ValueError):
                 continue
             key = (aid, t.get("wallet_owner") or "", t.get("wallet_id") or "")
-            if key not in neu or zeit >= neu[key][1]:
+            r = _reihenfolge(t, zeit)
+            if key not in neu or r >= rang[key]:
                 neu[key] = (saldo, zeit)
+                rang[key] = r
             if not juengster or zeit > juengster:
                 juengster = zeit
     db.speichere_bitpanda_wallet_salden(conn, neu)
     if vollstaendig and juengster:
         db.set_meta_wert(conn, META_BUCHUNGEN_STAND, juengster)
+    if vollstaendig and neu_lesen:
+        db.set_meta_wert(conn, META_SALDEN_FASSUNG, SALDEN_FASSUNG)
     return db.lade_bitpanda_wallet_salden(conn), vorgaenge, vollstaendig
 
 

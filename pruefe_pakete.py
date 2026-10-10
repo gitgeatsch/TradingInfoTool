@@ -28859,6 +28859,58 @@ def paket_bitpanda_bestand() -> None:
                and not _BB.spot_zeile([_Z(1.0)], {"frei": 1.0, "gestakt": 0.0, "hebel": 0.0, "sonst": 0.5})[1],
                str([(r[1], r[2]) for r in reihen]))
         c.close()
+
+        # ---- K-BP-3 (10.10.2026): die ECHTEN Rohbuchungen vom 09.10. 08:29:58 (nb_bitpanda_buchungen_roh_9900K.txt) - der Kauf
+        # traegt `...58Z` OHNE Millisekunden, die Hebel-Eroeffnung `...58.380Z`; als Text war `58Z` groesser -> Zwischenstand 696,04
+        def _t(aid, wallet, saldo, zeit, nr):
+            return {"asset_amount": {"asset_id": aid, "value": "1"}, "asset_balance_after": {"value": str(saldo)}, "credited_at": zeit,
+                    "flow": "INCOMING", "wallet_owner": wallet, "wallet_id": "w-" + wallet, "order_id": str(nr)}
+        roh = [{"operation_id": "op-hebel", "operation_type": "margin_trading_open_long", "transactions": [
+                   _t("a_eurcv", "shared-default", 2296.04291657, "2026-10-09T08:29:58.380Z", 1),
+                   _t("a_eurcv", "margin-trading-credit", -2600.0, "2026-10-09T08:29:58.380Z", 2),
+                   _t("a_eurcv", "shared-default", 296.04291657, "2026-10-09T08:29:58.380Z", 4),
+                   _t("a_eth", "margin-trading", 0.89636371, "2026-10-09T08:29:58.380Z", 6)]},
+               {"operation_id": "op-kauf", "operation_type": "buy", "transactions": [
+                   _t("a_eurcv", "shared-default", 696.04291657, "2026-10-09T08:29:58Z", 2)]}]
+        vorgaenge[:] = list(roh)
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        _BB.aktualisiere_wallet_salden(c, "k")
+        frisch = {(r["wallet_owner"]): (r["saldo"], r["zeitpunkt"]) for r in c.execute(
+            "SELECT * FROM bitpanda_wallet_saldo WHERE asset_id = 'a_eurcv'")}
+        c.close()
+        pruefe(P, "⚠️⚠️ K-BP-3: echte Buchungen 09.10. - der Spot-Saldo EURCV ist der ENDSTAND 296,04 (nicht der 380 ms aeltere Kauf "
+                  "696,04), Zeitpunkt einheitlich mit Millisekunden",
+               abs(frisch["shared-default"][0] - 296.04291657) < 1e-9 and frisch["shared-default"][1] == "2026-10-09T08:29:58.380Z"
+               and abs(frisch["margin-trading-credit"][0] + 2600.0) < 1e-9, str(frisch))
+        # Betrieb nachgestellt: gespeichert steht der FALSCHE Stand (696,04, `...58Z`), der inkrementelle Stand liegt dahinter
+        c = _sq.connect(":memory:")
+        c.row_factory = _sq.Row
+        _DB.init_db(c)
+        _DB.speichere_bitpanda_wallet_salden(c, {("a_eurcv", "shared-default", "w-shared-default"): (696.04291657, "2026-10-09T08:29:58Z"),
+                                                 ("a_eurcv", "margin-trading-credit", "w-margin-trading-credit"): (-2600.0, "2026-10-09T08:29:58.380Z")})
+        _DB.set_meta_wert(c, _BB.META_BUCHUNGEN_STAND, "2026-10-10T05:00:00Z")
+        zustand["seit"].clear()
+        _BB.aktualisiere_wallet_salden(c, "k")
+        erster_seit = list(zustand["seit"])
+        nach = c.execute("SELECT saldo, zeitpunkt FROM bitpanda_wallet_saldo WHERE asset_id='a_eurcv' AND wallet_owner='shared-default'").fetchone()
+        fassung = _DB.get_meta_wert(c, _BB.META_SALDEN_FASSUNG)
+        zustand["seit"].clear()
+        _BB.aktualisiere_wallet_salden(c, "k")
+        zweiter_seit = list(zustand["seit"])
+        c.close()
+        pruefe(P, "⚠️⚠️ K-BP-3 im Betrieb: der erste Lauf der Fassung 2 liest ALLE Buchungen (seit=None), korrigiert 696,04 -> 296,04, "
+                  "setzt die Marke; der zweite Lauf ist wieder inkrementell",
+               erster_seit == [None] and abs(nach["saldo"] - 296.04291657) < 1e-9 and fassung == _BB.SALDEN_FASSUNG
+               and zweiter_seit == ["2026-10-10T04:00:00Z"],
+               "erster Lauf seit %s · Saldo %s · Marke %s · zweiter Lauf seit %s" % (erster_seit, nach["saldo"], fassung, zweiter_seit))
+        pruefe(P, "K-BP-3: zeit_einheitlich - mit/ohne Millisekunden, Offset, Mikrosekunden; Text ordnet danach wie die Zeit",
+               _BB.zeit_einheitlich("2026-10-09T08:29:58Z") == "2026-10-09T08:29:58.000Z"
+               and _BB.zeit_einheitlich("2026-10-09T10:29:58.38+02:00") == "2026-10-09T08:29:58.380Z"
+               and _BB.zeit_einheitlich("2026-10-09T08:29:58.380999Z") == "2026-10-09T08:29:58.380Z"
+               and _BB.zeit_einheitlich("2026-10-09T08:29:58Z") < _BB.zeit_einheitlich("2026-10-09T08:29:58.380Z")
+               and _BB.zeit_einheitlich(None) is None, "")
         portfolio[:], vorgaenge[:] = alt_pf, alt_vg
         del erg_k
     finally:
