@@ -2952,3 +2952,33 @@ Nutzer 09.10.: *„Ja, Importer-Fix bauen, prüfen und gegenprüfen“*.
 - Ein Prüfstandsfehler, kein Betriebsfehler. Er hätte die Suite ab heute Abend dauerhaft rot gemacht.
 - P10 rechnet jetzt den Abstand aus der Liquidation **derselben Mail** nach.
 - Danach: Prüfstand 11/11 · Regel0Betrieb 78/78 · BitpandaBestand 18/18 · Hebelführung 35/35.
+
+### 23.36 Prüfung 10.10.2026 früh (Teilexport 07:10, Diagnose 07:15, Kopie `regel0_signale.db` 05:10 UTC)
+
+**Testwoche (03.10. 04:00 bis 10.10. 05:00 UTC, `pruefe_testwoche.py` an der Kopie):**
+- **T1** 170/170 Laufstunden, nichts verloren · **T2** kein Frischefehler · **T3** Median 195 s, höchstens 855 s.
+- **F1** 17/17 gemailt · **F2** Median 10 min, keine über 75 min · **F3** 0 Korrekturen · **F4** 8 fällig: 1 verschickt, 7 entfallen, nie beides oder keins.
+- ⛔ **L1:** unverändert die zwei bekannten Fälle (BEAMX 07.10., behoben; BNB 08.10. = H14); **seit 08.10. kein neuer**.
+- A1 17 gegen 11,7 erwartet (im Rahmen) · A2 0 Korrekturen.
+- ⇒ Alle REGEL0-Bedingungen grün; L1 betrifft den LLM-Prüfblock, die Ursache ist bekannt. **Freigabe: Nutzerentscheidung.**
+
+**K-H15-1 Teil 2 ✔ (Diagnose):**
+- Je Lauf eine Zeile *„Hebelfuehrung: 2 offen · ETH LIQUIDATION NAHE Abstand 11,6–11,8 % · BTC HALTEN Abstand 26,7–27,2 % · gemeldet 0“*.
+- Genau **eine** Zustellung (09.10.).
+- Kein *„Lauf fehlgeschlagen“*.
+
+**K-BP-2 — BTC ✔, EURCV ⛔ (neuer Befund):**
+- Log *„Spot- und Hebel-Zeile getrennt“* für BTC (Spot 0,05496596 / Hebel 0,02038541) und ETH (Spot 0,54399256 / Hebel 0,89636371) → die Trennung wirkt.
+- EURCV: *„Buchungen ergeben Spot 696,04292 / Hebel −2600, Bitpanda meldet 296,04292 + −2600 – nicht übernommen“*. Die Zuordnung ist richtig; **falsch ist der Wallet-Saldo aus den Buchungen**.
+- **Rohbuchungen** (`nb_bitpanda_buchungen_roh.py`, Desktop, ohne Seiteneffekt → `nb_bitpanda_buchungen_roh_9900K.txt`):
+  - `buy` 400 EURCV `2026-10-09T08:29:58Z` → Spot 696,04;
+  - `margin_trading_open_long` `2026-10-09T08:29:58.380Z`: Kredit 1.600 herein → 2.296,04, dann 2.000 in ETH → **296,04** (order_id 1 → 4).
+- **Ursache:** `aktualisiere_wallet_salden` vergleicht `credited_at` **als Text** (`zeit >= neu[key][1]`). `"…58Z"` ist textlich **größer** als `"…58.380Z"` (`Z` > `.`). Gewonnen hat der 380 ms **ältere** Kauf.
+- Dazu kommt: Bei gleichem Zeitstempel entscheidet die Listenreihenfolge, nicht die `order_id`.
+- **Wirkung:**
+  - Der Spot-Saldo einer Wallet kann auf einem Zwischenstand stehen bleiben, sobald zwei Buchungen in derselben Sekunde mit und ohne Millisekunden kommen.
+  - Der Abgleich übernimmt dann nichts (letzter guter Stand bleibt; EURCV `holdings` weiter 311,93) und meldet alle 6 h.
+  - Für BTC/ETH-Spot ohne Wirkung.
+- **Fix-Entwurf:**
+  1. Zeitpunkte als Zeit vergleichen (`_zeit`), bei Gleichstand die höhere `order_id` desselben Vorgangs.
+  2. **Einmalige volle Neuberechnung der Wallet-Salden** beim ersten Lauf der neuen Fassung (Marke in `meta`), denn der inkrementelle Lauf holt die Buchung vom 09.10. nicht noch einmal. Der Lauf ist selbst gesteuert im Betrieb; **kein Skript schreibt in die Produktion**.
