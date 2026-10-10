@@ -419,3 +419,30 @@ Alte Karten entfallen.
 - Paket `GuiKette` **27/27** (Prüfstand als Wache eingehängt) · **ganze Suite 3.233, nur die 5 bekannten roten**.
 - Grundfunktionen GF1–GF11: keine entfernt. Die Sperrlogik der alten Knöpfe ist unverändert, nur ihr Text.
 
+### G-J Watchlist und Spot-Bereich — Abstimmung 10.10.2026
+
+Nutzer 10.10.:
+- *„wir sind noch nicht bei Multiassets wie Rohstoffen, aber diese sollten wenn möglich wie bei Krypto automatisch in den Bestand übernommen werden – aber dort sind wir noch nicht im Plan“*
+- *„Beobachtungen der gewünschten Assets mache ich manuell“*
+- *„1. ja Meine Assets – wäre der gesamte Bestand“*
+- *„2. reden wir nur von Krypto? Spot und Hebel oder getrennt? Das wäre eine Kombination aus Screener-Einstieg und Bestand? Eine Bevorzugung des Bestandes benötigen wir nur – nach alter Kette – wenn der Cooldown und Prüftakt es erfordern; wenn nicht, dann können diese gleichwertig behandelt werden“*
+- *„3. JA, alles was noch nicht fertig ist oder noch gebaut werden muss, entsprechend in den Plan einordnen und Schritt für Schritt umsetzen“*
+
+**Festgehalten:**
+
+| | |
+|---|---|
+| **Meine Assets** | = der **gesamte Bestand** (automatisch) + **deine Beobachtung** (manuell), aus allen Bereichen. Ersetzt die Rolle der Watchlist als Interessenliste; die Stammdaten (Preisquelle, IDs, Klasse, Schwerpunkt) bleiben daran |
+| **Multi-Asset-Bestand** (Rohstoffe, ETF, Aktien) | automatische Übernahme wie bei Krypto — **noch nicht im Plan**, jetzt eingeordnet als Plan **O39** (nach dem Krypto-Spot-Bau) |
+| **Spot und Hebel** | **getrennt** (zwei Stränge, T-1..T-6). Spot-Bereich = **Einstieg (Kandidaten aus dem ganzen Binance-Universum, Rolle L) + Bestand führen**, also die Kombination aus *Screener-Einstieg* und *Bestand*, die du beschreibst. Hebel-Bereich = **REGEL0 (Einstieg) + Hebelpositionen (Führung, H15)** |
+| **Gleichwertigkeit** | Der Bestand wird **nicht bevorzugt**. In der alten Kette war das nur wegen Cooldown, Prüftakt und LLM-Budget nötig. Der neue Spot rechnet täglich bzw. monatlich ohne LLM über das ganze Universum, also alle **gleichwertig** |
+| **Diamanten (K)** | erst, wenn K-1/K-2 einen tragenden Einstieg liefern |
+
+**Was daraus in den Plan kommt** (Plan Hebel O39–O41; Reihenfolge Schritt für Schritt):
+
+| # | Punkt | wann |
+|---|---|---|
+| O40 | **Meine Assets**: Watchlist → Stammdaten + Kennzeichen *Bestand / Hebel freigegeben / beobachtet*; Bestand automatisch (Krypto: O26); **Speicherort** der Stammdaten in die Datenbank statt `config.yaml` (eine GUI-Änderung am NB kollidiert sonst mit dem nächsten Pull) | mit GUI Stufe 2 (Tab *Assets*) |
+| O41 | **Spot-Bereich** (GUI-Tab + Mail nach E-91): Bestand führen (Kern/L, Mitnahme ×3, Verkaufsanlässe, Abbau-Reihenfolge) und Einstiegs-Kandidaten (oberes Fünftel, nur bei Ampel Vorlauf/Season-Klima); Diamanten-Teil erst nach K-1/K-2 | mit dem Spot-Bau Stufe 1 (§39, Reihenfolge 1–5) |
+| O39 | **Multi-Asset-Bestand** automatisch übernehmen (Rohstoffe, ETF, Aktien) | nach dem Krypto-Spot-Bau |
+
