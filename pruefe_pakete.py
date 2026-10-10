@@ -22065,6 +22065,17 @@ def paket_guikette() -> None:
            and "determine_regime" not in _rl,
            "liest sie es eines Tages, ist der Hinweis falsch und muss weg")
 
+    # ---- Sofortliste S-1 bis S-5 (10.10.2026, Plan Schritt 53 G-E) - Views EINZELN gegen eine Wegwerf-DB ----------------
+    import os as _os_s
+    import subprocess as _sp_s
+    _ps = _sp_s.run([sys.executable, "-X", "utf8", _os_s.path.join("Basisinfos", "Rechenkern_02_10", "sofortliste_pruefstand.py")],
+                    capture_output=True, text=True, encoding="utf-8", timeout=300)
+    _zl = [z for z in (_ps.stdout or "").splitlines() if z[:2] in ("S1", "S2", "S3", "S4", "S5", "S6")]
+    pruefe(P, "⚠️⚠️ Sofortliste: Portfolio-Wert frei + gestakt, Einstandsmenue schreibt kein staked_quantity (neuer Abgleich), "
+              "Excel mit Gestakt/Gesamt und Schutz der Abgleich-Bestaende, Hinweis NICHT AKTUELL im Signale-Tab, keine falschen Texte",
+           "9 von 9 bestanden" in (_ps.stdout or ""),
+           " | ".join(z for z in _zl if " FEHLER " in z) or (_ps.stderr or "")[-300:])
+
 
 def paket_standard_db() -> None:
     """Der Waechter gegen Schreibzugriffe auf die Standard-DB - selbst geprueft.

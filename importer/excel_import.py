@@ -103,6 +103,15 @@ def import_holdings(
                 f"{existing.quantity} gesetzt (am {when}) und wird jetzt durch den Excel-Import auf "
                 f"{quantity} überschrieben."
             )
+        # S-3 (10.10.2026, Plan Schritt 53 G-E): Bestaende, die der automatische Bitpanda-Abgleich fuehrt (alle 30 min, frei
+        # UND gestakt), ueberschreibt der Datei-Import nicht mehr - sonst spielte er die Datei gegen den Abgleich aus, und der
+        # naechste Lauf setzte sie wieder zurueck. Sie stehen sichtbar in der Warnliste.
+        if existing is not None and existing.source == "bitpanda_sync" and config.bitpanda_bestand_quelle() != "alt":
+            if existing.quantity != quantity:
+                warnings.append(
+                    f"Symbol '{symbol}': NICHT übernommen - der Bestand wird vom Bitpanda-Abgleich geführt "
+                    f"(frei {existing.quantity:g}, gestakt {existing.staked_quantity or 0:g}); die Datei nennt {quantity:g}.")
+            continue
         db.upsert_holding(conn, symbol, quantity, source=source)
 
     missing_in_xlsx = watchlist_symbols - set(holdings.keys())
@@ -115,12 +124,15 @@ def import_holdings(
 
 
 def _write_sheet(sheet, assets, holdings_by_symbol) -> None:
-    sheet.append(["Coin Name", "Kurzzeichen", "Anzahl Coins", "Quelle"])
+    # S-3 (10.10.2026): "Anzahl Coins" bleibt der FREIE Bestand (der Import liest diese Spalte -> Rundweg ohne Doppelzaehlung);
+    # neu "Gestakt" und "Gesamt", sonst fehlten voll gestakte Werte im Export ganz (Menge 0)
+    sheet.append(["Coin Name", "Kurzzeichen", "Anzahl Coins", "Quelle", "Gestakt", "Gesamt"])
     for asset in assets:
         holding = holdings_by_symbol.get(asset.symbol)
         quantity = holding.quantity if holding else 0.0
+        gestakt = (holding.staked_quantity or 0.0) if holding else 0.0
         quelle = holding.source if holding else "-"
-        sheet.append([asset.name, asset.symbol, quantity, quelle])
+        sheet.append([asset.name, asset.symbol, quantity, quelle, gestakt, quantity + gestakt])
 
 
 def export_holdings(conn: sqlite3.Connection, path: Path = EXPORT_XLSX_PATH) -> int:

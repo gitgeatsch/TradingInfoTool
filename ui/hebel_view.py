@@ -73,7 +73,7 @@ _POSITIONS_COLUMN_DESCRIPTIONS = {
     "eroeffnet": "Datum, an dem die Position eröffnet wurde.",
     "liquidationspreis": "Zuletzt geschätzter Liquidationspreis (EUR, konservative Schätzung).",
     "regel0": "Kam in den 24 h vor der Eröffnung ein REGEL0-Signal für das Asset, steht hier sein Ausstieg (24 h nach dem Einstieg). "
-              "Die Führung offener Positionen kommt später (O13).",
+              "Die Führung offener Positionen (Liquidationsabstand, Warnung ab 15 %) läuft seit 09.10. im Abgleich alle 15 min (H15) und meldet per Mail.",
 }
 
 
@@ -579,9 +579,8 @@ class HebelView(ttk.Frame):
         )
         lines = [
             "NOCH NICHT ANALYSIERT",
-            "Wird automatisch im nächsten Budget-Allocator-Lauf (15-Min-Takt) "
-            "verarbeitet, sofern das Tagesbudget das zulässt - oder jetzt manuell "
-            "auslösen (Button oben).",
+            "Kandidat des alten Hebel-Screenings (stillgelegt) - er wird nicht mehr "
+            "automatisch verarbeitet. Hebel-Signale kommen aus der REGEL0.",
             "",
             "TRIGGER-DETAILS",
             f"  Zweig: {trig.trigger_zweig or '-'}",

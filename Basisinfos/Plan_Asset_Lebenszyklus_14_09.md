@@ -396,3 +396,26 @@ Alte Karten entfallen.
 | G4 | Marktscan, Screener, Schwerpunkte: Werden die Entdeckung neuer Werte und die Thesenpflege noch gebraucht? (Die Tages-Synthese verbraucht weiter Gemini.) |
 | G5 | Asset-Aufnahme: Spot-Bestand automatisch (O26), Hebel-Schalter bewusst manuell im Hebel-Tab, Krypto-Hand-Watchlist entfällt, Aktien/ETF/Rohstoffe bleiben manuell — so? |
 | G6 | Akkumulation (DCA-Schalter): entfällt sie, oder kommt sie mit dem Akkumulations-Strang neu? |
+
+### G-I Stufe 0 gebaut — Sofortliste S-1 bis S-5 (10.10.2026, Nutzer: *„G1 ja, Sofortliste zuerst bauen, prüfen und gegenprüfen“*)
+
+| # | Bau | Datei |
+|---|---|---|
+| S-1 | Zeile *Wert* = (frei + gestakt) × Preis; G/V über frei + gestakt. `compute_cost_basis_view` bekommt ein **optionales** `menge`; nur das Portfolio übergibt es, die fünf Analysten rechnen unverändert. Summen unten unverändert (sie waren schon richtig). Einstand-Dialog *„nur x von y bepreist“* auf frei + gestakt | `importer/bitpanda_avg_cost.py`, `ui/portfolio.py` |
+| S-2 | *Einstandspreise berechnen* schreibt `staked_quantity` nur noch im **alten** Abgleich (`bitpanda.bestand_quelle: alt`); beim neuen gehört das Gestakte allein den Wallet-Salden | `importer/bitpanda_avg_cost.py` |
+| S-3 | Export: Spalten **Gestakt** und **Gesamt** (*Anzahl Coins* bleibt frei → Rundweg ohne Doppelzählung). Import: ein vom Bitpanda-Abgleich geführter Bestand wird **nicht** überschrieben, sondern gemeldet | `importer/excel_import.py` |
+| S-4 | Signale-Tab: Hinweis **„⚠ NICHT AKTUELL … Rollen-Kette seit 05.10.2026 angehalten …“**, solange `spot_kette_angehalten`; ebenso im Watchlist-Zeilentipp *Letztes Signal* | `ui/signals_view.py`, `ui/app.py`, `scheduler/rollen_job.kette_angehalten_hinweis` |
+| S-5 | Texte: Sperrtext nennt den Halt; Tooltip *Hebel-Prüfung* = REGEL0-Opt-in + H15; Meldung nach *Hinzufügen*; zwei Menü-Schaltertexte (*wirkt nur auf alte Mails*); Regime-Override (*derzeit ohne Wirkung*); Hebel-Tipp O13 → H15; Kandidat *„nächster Budget-Allocator-Lauf“*; Screener; Fiat *„vom Bitpanda-Abgleich“*; Zusatz *„im Regelwerk nicht berücksichtigt“* entfernt. Der Allocator-Satz im Marktscan stand nur im **Kommentar**, nicht in der Anzeige — unverändert | `ui/*.py`, `scheduler/rollen_job.py` |
+
+**Nachweis:**
+- Prüfstand `sofortliste_pruefstand.py` **9/9**: Views einzeln gegen eine Wegwerf-DB, Standard-DB per Prüfsumme unverändert.
+  - ⚠️ Ein eigener Prüffehler wurde behoben: Der S2-Lauf im alten Weg setzt gestakte Mengen zurück (wie vorgesehen); S3 lief zuerst auf diesem Stand.
+- Gegenprobe `sofortliste_gegenprobe.py` **5/5**:
+  - 4.000 Einstandsrechnungen gegen eine eigene Formel;
+  - Aufrufer aus dem Quelltext abgeleitet (nur das Portfolio übergibt `menge`);
+  - 25 Zufallszeilen und Gesamtwert;
+  - echte config mit `bestand_quelle = neu` (am NB belegt durch das Log *„Bitpanda-Bestand (neu)“*);
+  - Excel-Rundweg exakt, Abgleich-Bestand geschützt.
+- Paket `GuiKette` **27/27** (Prüfstand als Wache eingehängt) · **ganze Suite 3.233, nur die 5 bekannten roten**.
+- Grundfunktionen GF1–GF11: keine entfernt. Die Sperrlogik der alten Knöpfe ist unverändert, nur ihr Text.
+

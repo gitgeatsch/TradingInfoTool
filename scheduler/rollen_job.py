@@ -104,9 +104,25 @@ def alte_analyse_hinweis(assetklasse: str = "krypto",
         bedient = bedient_neue_kette(klasse, config)
     if not bedient:
         return None
+    halt = kette_angehalten_hinweis()
+    if halt:                                   # S-5 (10.10.2026): der alte Text sagte "laeuft ... automatisch im Takt"
+        return ("Stillgelegt: %s. Dieser Knopf wuerde die ALTE Pipeline starten und ein Signal der alten Kette schreiben. "
+                "Aktuelle Hebel-Signale kommen aus der REGEL0 (Tab Hebel)." % halt)
     return ("Stillgelegt: %s laeuft ueber die Rollen-Kette (automatisch im "
             "Takt). Dieser Knopf wuerde die ALTE Pipeline starten und ein "
             "Signal der alten Kette schreiben." % (assetklasse or "?"))
+
+
+def kette_angehalten_hinweis() -> str:
+    """S-4/S-5 (10.10.2026, Plan Schritt 53 G-E): "" oder der Satz fuer die Oberflaeche, dass die Rollen-Kette angehalten ist
+    (Schalter `spot_kette_angehalten`, E-67, seit 05.10.2026). Im Zweifel "" - wie `regel0_groesse.spot_kette_angehalten`."""
+    try:
+        from agent import regel0_groesse as _G
+        if _G.spot_kette_angehalten():
+            return "die Rollen-Kette ist seit 05.10.2026 angehalten (Schalter spot_kette_angehalten)"
+    except Exception:                                                     # noqa: BLE001
+        pass
+    return ""
 
 
 # WAS DER ALTE WEG NICHT KANN (28.08.2026) - die Liste ist die Abkapselung.

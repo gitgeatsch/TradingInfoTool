@@ -1,0 +1,8 @@
+G1  gleich  4.000 Rechnungen (2.000 Bestaende x mit/ohne menge), Abweichungen 0
+G2  gleich  mit menge: ['ui/portfolio.py'] · ohne (unveraendert): ['agent/aktien/analyst.py', 'agent/hedge/analyst.py', 'agent/krypto/analyst.py', 'agent/rohstoff/analyst.py', 'agent/themen_etf/analyst.py']
+G3  gleich  25 Zeilen geprueft, Abweichungen 0 · Gesamt 30342.88 gegen eigen 30342.88
+G4  gleich  echte config: bestand_quelle = 'neu' · Schreiber von staked_quantity: ['database/db.py', 'importer/bitpanda_avg_cost.py', 'importer/bitpanda_bestand.py', 'importer/bitpanda_sync.py']
+G5  gleich  24 Import-Bestaende exakt zurueck (Abweichungen 0) · Abgleich-Bestand EURCV unberuehrt
+Standard-DB unveraendert
+
+5 von 5 gleich

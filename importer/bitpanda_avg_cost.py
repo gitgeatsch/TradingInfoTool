@@ -216,15 +216,20 @@ def sync_avg_buy_prices(
     }
     staked = compute_staked_quantities(mapped_transactions, existing=existing_staked)
     result.staked_quantities = staked
-    for symbol, qty in staked.items():
-        if symbol in existing_holdings:
-            db.update_holding_staked_quantity(conn, symbol, qty)
-    # Symbole, die frueher gestakt waren, jetzt aber vollstaendig zurueckgeholt sind
-    # (qty auf 0 gefallen, daher von compute_staked_quantities() bereits herausgefiltert) -
-    # muessen explizit auf 0 zurueckgesetzt werden, sonst bliebe der alte Wert stehen.
-    for symbol in existing_staked:
-        if symbol not in staked and symbol in existing_holdings:
-            db.update_holding_staked_quantity(conn, symbol, 0.0)
+    # S-2 (10.10.2026, Plan Schritt 53 G-E): beim NEUEN Bestandsabgleich (Vorgabe) gehoert das Gestakte allein den
+    # Wallet-Salden (importer/bitpanda_bestand.py). Diese Rekonstruktion aus Transfer-Markierungen hat ab 16.07. die gestakten
+    # Mengen verdoppelt (2.455-bestand-gestakt) - geschrieben wird sie nur noch im ALTEN Weg (`bitpanda.bestand_quelle: alt`).
+    import config as _cfg
+    if _cfg.bitpanda_bestand_quelle() == "alt":
+        for symbol, qty in staked.items():
+            if symbol in existing_holdings:
+                db.update_holding_staked_quantity(conn, symbol, qty)
+        # Symbole, die frueher gestakt waren, jetzt aber vollstaendig zurueckgeholt sind
+        # (qty auf 0 gefallen, daher von compute_staked_quantities() bereits herausgefiltert) -
+        # muessen explizit auf 0 zurueckgesetzt werden, sonst bliebe der alte Wert stehen.
+        for symbol in existing_staked:
+            if symbol not in staked and symbol in existing_holdings:
+                db.update_holding_staked_quantity(conn, symbol, 0.0)
 
     max_unix = last_synced or 0
     for t in transactions:
@@ -254,12 +259,18 @@ class CostBasisView:
     pl_pct: float | None
 
 
-def compute_cost_basis_view(holding: Holding, current_price_eur: float | None) -> CostBasisView:
+def compute_cost_basis_view(holding: Holding, current_price_eur: float | None,
+                            menge: float | None = None) -> CostBasisView:
     """Einziger Berechnungsort fuer bekannte/unbekannte Menge + G/V - von
     ui/portfolio.py UND agent/krypto/analyst.py genutzt, keine doppelte Logik.
     known_quantity = min(holding.quantity, tracked_quantity) - siehe Modul-Docstring
-    (P-10: unbepreiste Zugaenge werden nie stillschweigend mitgepreist)."""
+    (P-10: unbepreiste Zugaenge werden nie stillschweigend mitgepreist).
+
+    ``menge`` (S-1, 10.10.2026, Plan Schritt 53 G-E): der Bestand, fuer den gerechnet wird. Vorgabe ``holding.quantity`` (frei) -
+    so rechnen die Analysten weiter wie bisher. Das Portfolio uebergibt frei + gestakt: ein voll gestakter Wert hatte sonst
+    Wert 0 und kein G/V (10 Werte am 10.10.). ``tracked_quantity`` zaehlt gekaufte Einheiten, Staking verschiebt sie nur."""
     effective_price = holding.effective_avg_buy_price_eur
+    bestand = holding.quantity if menge is None else float(menge)
     if holding.avg_buy_price_manual_eur is not None:
         source = "manuell"
     elif holding.avg_buy_price_eur is not None:
@@ -269,19 +280,19 @@ def compute_cost_basis_view(holding: Holding, current_price_eur: float | None) -
 
     if effective_price is None:
         known_quantity = 0.0
-        unknown_quantity = holding.quantity
+        unknown_quantity = bestand
     elif source == "manuell":
         # Ein manueller Override gilt fuer den gesamten Bestand (der Nutzer kennt
         # seinen tatsaechlichen Einstand besser als die automatische Teil-Menge).
-        known_quantity = holding.quantity
+        known_quantity = bestand
         unknown_quantity = 0.0
     else:
         tracked = holding.avg_buy_price_tracked_qty or 0.0
-        known_quantity = min(holding.quantity, tracked)
-        unknown_quantity = max(0.0, holding.quantity - known_quantity)
+        known_quantity = min(bestand, tracked)
+        unknown_quantity = max(0.0, bestand - known_quantity)
 
     cost_basis_eur = known_quantity * effective_price if effective_price is not None and known_quantity > 0 else None
-    current_value_eur = holding.quantity * current_price_eur if current_price_eur is not None else None
+    current_value_eur = bestand * current_price_eur if current_price_eur is not None else None
 
     pl_pct = None
     if cost_basis_eur and known_quantity > 0 and current_price_eur is not None:

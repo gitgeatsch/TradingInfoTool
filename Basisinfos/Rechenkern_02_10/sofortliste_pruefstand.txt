@@ -1,0 +1,11 @@
+S1a  ok  ohne menge: bekannt 10.0, Wert 30.0, G/V 50.0
+S1b  ok  mit menge: ETH bekannt 12.0/unbekannt 3.0, Wert 45.0 · ALGO voll gestakt Wert 0.0 -> 10.0, G/V None -> -50.0
+S1c  ok  ALGO Zeile 278.30 (Soll 278.30) · ETH 1,211.05 (Soll 1211.05) · Gesamtwert: 5,547.54 EUR (davon 1,362.79 EUR gestakt)
+S2   ok  staked ETH nach dem Menue: neuer Abgleich 0.48714122 (unberuehrt) · alter Abgleich 0.9711 (geschrieben)
+S3a  ok  Kopf ['Coin Name', 'Kurzzeichen', 'Anzahl Coins', 'Quelle', 'Gestakt', 'Gesamt'] · ALGO frei 0 gestakt 2694.66 · Rundweg liest frei: ALGO 0.0, ETH 0.05685134
+S3b  ok  BTC (Abgleich) bleibt 0.05496596, ETH (Import) wird 7.0 · Warnung: ["Symbol 'BTC': NICHT übernommen - der Bestand wird vom Bitpanda-Abgleich geführt (frei 0.054966, gestakt 0); die Datei nennt 9."]
+S4   ok  Hinweis bei Halt: ['⚠ NICHT AKTUELL: Diese Liste zeigt Signale der alten Rollen-Kette - die Rollen-Kette ist seit 05.10.2026 angehalten (Schalter spot_kette_angehalten). Aktuelle Hebel-Signale: Tab Hebel (REGEL0) und die Signalmails.'] · ohne Halt: 0
+S5   ok  Sperrtext bei Halt: 'Stillgelegt: die Rollen-Kette ist seit 05.10.2026 angehalten (Schalter spot_kette_angehalt' · alte Saetze noch da: []
+S6   ok  data/tradinginfotool.db unveraendert
+
+9 von 9 bestanden

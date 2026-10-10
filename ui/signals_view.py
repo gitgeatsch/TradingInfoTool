@@ -148,6 +148,14 @@ class SignalsView(ttk.Frame):
         self._refresh_list()
 
     def _build_layout(self) -> None:
+        # S-4 (10.10.2026, Plan Schritt 53 G-E): diese Liste zeigt nur Signale der Rollen-Kette - ist sie angehalten, sind die
+        # Eintraege alt. Vorher stand das nirgends, und die Liste wirkte wie aktuelle Empfehlungen.
+        from scheduler.rollen_job import kette_angehalten_hinweis
+        _halt = kette_angehalten_hinweis()
+        if _halt:
+            ttk.Label(self, text=("⚠ NICHT AKTUELL: Diese Liste zeigt Signale der alten Rollen-Kette - %s. "
+                                  "Aktuelle Hebel-Signale: Tab Hebel (REGEL0) und die Signalmails." % _halt),
+                      foreground=theme.warn_color(), wraplength=1400, justify="left").pack(fill="x", padx=8, pady=(8, 0))
         paned = ttk.Panedwindow(self, orient="horizontal")
         paned.pack(fill="both", expand=True, padx=8, pady=8)
 

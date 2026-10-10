@@ -191,8 +191,8 @@ class RegimeView(ttk.Frame):
         if geaendert:
             messagebox.showinfo(
                 "Manueller Override",
-                f"Override gesetzt auf '{selected_label}'. Wirkt ab dem nächsten Pipeline-Lauf "
-                "(kein Neustart nötig).",
+                f"Override gesetzt auf '{selected_label}'. Hinweis: wirkt nur auf die alte "
+                "Rollen-Kette - sie ist angehalten, derzeit also ohne Wirkung (REGEL0 liest das Regime nicht).",
             )
         self.refresh()
 
@@ -210,7 +210,7 @@ class RegimeView(ttk.Frame):
                 "Score-Override",
                 ("Score-Override abgeschaltet." if wert is None else
                  f"Regime-Score auf {float(wert):.2f} gesetzt.")
-                + " Wirkt ab dem nächsten Pipeline-Lauf (kein Neustart nötig).")
+                + " Hinweis: wirkt nur auf die alte Rollen-Kette - sie ist angehalten, derzeit also ohne Wirkung.")
         self.refresh()
 
     def _render_regime_status(self, status: dict | None) -> None:

@@ -135,8 +135,8 @@ class ScreenerView(ttk.Frame):
         add_widget_tooltip(
             self.watchlist_button,
             "Uebernimmt den ausgewaehlten Kandidaten in Basisinfos/config.yaml (mit "
-            "Sicherheits-Nachfrage). Bewertet ihn NICHT automatisch - das passiert erst "
-            "danach ganz regulaer ueber die normale Signal-Pipeline, nach einem App-Neustart.",
+            "Sicherheits-Nachfrage). Bewertet ihn NICHT: fuer Aktien/ETF laeuft derzeit keine "
+            "Signal-Pipeline (die Rollen-Kette ist angehalten); Krypto-Hebel-Signale kommen aus der REGEL0.",
         )
 
         self.status_label = ttk.Label(self, text=(

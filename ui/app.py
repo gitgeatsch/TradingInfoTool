@@ -79,10 +79,10 @@ _WATCHLIST_COLUMN_DESCRIPTIONS = {
     # ALTEN Kette, stillgelegt seit 12.09. Der Schalter wirkt weiter - in der
     # Rollen-Kette (`asset_schalter`, `rollen_lauf`: Hebel abgeschaltet -> Spot).
     "hebel_pruefung": (
-        "An = die Rollen-Kette darf für dieses Asset ein Hebelgeschäft rechnen. Aus = "
-        "kein Hebel für dieses Asset: ergäbe die Rechnung einen Hebel, wird es als Spot "
-        "geführt. (Das frühere 15-Min-Hebel-Screening ist stillgelegt.) Bereits "
-        "offene Hebel-Positionen bleiben davon unberührt und weiterhin risikoüberwacht. "
+        "An = die REGEL0 mailt Hebel-Signale für dieses Asset (Opt-in, E-45). Aus = keine "
+        "REGEL0-Mail - das Signal wird trotzdem gerechnet und abgelegt (Tab Hebel). Bereits "
+        "offene Hebel-Positionen bleiben davon unberührt und werden weiter geführt (H15: "
+        "Liquidationsabstand, Warnung ab 15 %). "
         "Nur für Krypto-Assets relevant. ⚠ = liefert seit mehreren Läufen in Folge von "
         "keiner der drei Börsen (Binance/Bybit/OKX) Open-Interest-Daten (siehe E-Mail-"
         "Warnung) - Hebel-Prüfung läuft technisch weiter, aber ohne OI-/Long-Short-"
@@ -365,8 +365,8 @@ class TradingInfoToolApp(tk.Tk):
             return
         messagebox.showinfo(
             "Gespeichert",
-            "Einstellung in config.yaml gespeichert. Wirkt nach Commit+Push (Desktop) "
-            "und Pull (Notebook) beim naechsten Lauf.",
+            "Einstellung in config.yaml dieses Geräts gespeichert. Hinweis: sie wirkt nur auf "
+            "Mails der alten Rollen-Kette (angehalten); die REGEL0 liest sie nicht.",
         )
 
     def _toggle_hebel_richtung(self) -> None:
@@ -386,8 +386,8 @@ class TradingInfoToolApp(tk.Tk):
             return
         messagebox.showinfo(
             "Gespeichert",
-            "Einstellung in config.yaml gespeichert. Wirkt nach Commit+Push (Desktop) "
-            "und Pull (Notebook) beim naechsten Lauf.",
+            "Einstellung in config.yaml dieses Geräts gespeichert. Hinweis: sie wirkt nur auf "
+            "Mails der alten Rollen-Kette (angehalten); die REGEL0 liest sie nicht.",
         )
 
     def _build_watchlist_tab(self, parent) -> ttk.Frame:
@@ -766,6 +766,10 @@ class TradingInfoToolApp(tk.Tk):
         else:
             conf = f"{signal.confidence_pct:.0f}%" if signal.confidence_pct is not None else "-"
             text += f"Letztes Signal: {signal.action} ({when}, Konfidenz {conf}, alte Kette)"
+        from scheduler.rollen_job import kette_angehalten_hinweis      # S-4 (10.10.2026)
+        _halt = kette_angehalten_hinweis()
+        if _halt:
+            text += "\n⚠ NICHT AKTUELL - %s; Hebel-Signale kommen aus der REGEL0 (Tab Hebel)." % _halt
         if signal.short_reasoning:
             text += f"\n{signal.short_reasoning}"
         return text
@@ -841,11 +845,11 @@ class TradingInfoToolApp(tk.Tk):
         15 Min, max. 24 Std. bei den taeglichen Jobs)."""
         messagebox.showinfo(
             "Watchlist geändert",
-            "Änderung gespeichert. Die Anzeige aktualisiert sich automatisch "
-            "innerhalb weniger Sekunden. Signale/Facts/Cooldown-Einstufung "
-            "berücksichtigen die Änderung spätestens beim nächsten regulären "
-            "Job-Takt (meist 15 Min, bei einigen täglichen Jobs bis zu 24 Std.) "
-            "- ein Neustart der App ist dafür nicht mehr nötig.",
+            "Änderung gespeichert (config.yaml dieses Geräts). Die Anzeige aktualisiert sich "
+            "innerhalb weniger Sekunden; die Jobs lesen die Watchlist bei ihrem nächsten Lauf. "
+            "Hinweis: Die alte Rollen-Kette ist angehalten - aus der Watchlist entstehen derzeit "
+            "keine Spot-Signale. Die Tabs Signale, Marktscan und Portfolio lesen sie erst nach "
+            "einem Neustart neu.",
         )
 
     def _poll_prices(self) -> None:

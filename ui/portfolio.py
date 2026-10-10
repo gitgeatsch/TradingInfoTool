@@ -143,7 +143,8 @@ class PortfolioView(ttk.Frame):
         # daher manuell gepflegt, analog zu den Bestaenden selbst.
         cash_frame = ttk.Frame(self)
         cash_frame.pack(anchor="e", padx=8, pady=(0, 8))
-        ttk.Label(cash_frame, text="Fiat-Guthaben auf Börse (EUR, manuell):").pack(side="left", padx=(0, 6))
+        # S-5 (10.10.2026): der Wert kommt seit Stufe 1.3 aus dem Bitpanda-Cash-Abgleich (cash_abgleich), nicht mehr von Hand
+        ttk.Label(cash_frame, text="Fiat-Guthaben auf Börse (EUR, vom Bitpanda-Abgleich; Speichern nur als Ausnahme):").pack(side="left", padx=(0, 6))
         self.cash_reserve_var = tk.StringVar()
         cash_entry = ttk.Entry(cash_frame, textvariable=self.cash_reserve_var, width=10, justify="right")
         cash_entry.pack(side="left")
@@ -284,6 +285,8 @@ class PortfolioView(ttk.Frame):
             price_snapshot = latest_prices.get(holding.symbol)
             price_eur = price_snapshot.price_eur if price_snapshot else None
             value_eur = (holding.quantity * price_eur) if price_eur is not None else None
+            # S-1 (10.10.2026): die ZEILE zeigt frei + gestakt (voll gestakt war Wert 0); die Summen unten bleiben getrennt
+            zeilen_wert_eur = ((holding.quantity + (holding.staked_quantity or 0.0)) * price_eur) if price_eur is not None else None
             if value_eur is not None:
                 total_value_eur += value_eur
                 hauptgruppe_name = config_module.get_hauptgruppe_name(asset.hauptgruppe) if asset else None
@@ -315,7 +318,8 @@ class PortfolioView(ttk.Frame):
             if stale and price_eur_text != "-":
                 price_eur_text = f"⚠ {price_eur_text}"
 
-            cost_basis = compute_cost_basis_view(holding, price_eur)
+            cost_basis = compute_cost_basis_view(holding, price_eur,
+                                                 menge=holding.quantity + (holding.staked_quantity or 0.0))
             self._cost_basis_by_symbol[holding.symbol] = cost_basis
             if cost_basis.source == "unbekannt":
                 avg_price_text = "unbekannt"
@@ -343,7 +347,7 @@ class PortfolioView(ttk.Frame):
                     assetklasse,
                     quantity_text,
                     price_eur_text,
-                    format_money(value_eur),
+                    format_money(zeilen_wert_eur),
                     avg_price_text,
                     pl_text,
                 ),
@@ -375,7 +379,7 @@ class PortfolioView(ttk.Frame):
             notes.append(f"{fiat_cash_eur:,.2f} EUR Fiat-Cash")
             schwerpunkt_totals["Cash/Sonstiges"] = schwerpunkt_totals.get("Cash/Sonstiges", 0.0) + fiat_cash_eur
         if staked_value_eur > 0:
-            notes.append(f"{staked_value_eur:,.2f} EUR gestakt (im Regelwerk noch nicht berücksichtigt)")
+            notes.append(f"{staked_value_eur:,.2f} EUR gestakt")      # S-5: der Zusatz meinte die angehaltene Rollen-Kette
         note_text = f" (davon {', '.join(notes)})" if notes else ""
         self.total_label.config(text=f"Gesamtwert: {total_value_eur:,.2f} EUR{note_text}")
 
@@ -478,8 +482,9 @@ class AvgBuyPriceDialog(tk.Toplevel):
             else "unbekannt (noch nicht berechnet)"
         )
         tracked = holding.avg_buy_price_tracked_qty or 0.0
-        if holding.avg_buy_price_eur is not None and tracked < holding.quantity:
-            auto_text += f" (nur {tracked:g} von {holding.quantity:g} bepreist)"
+        _gesamt = holding.quantity + (holding.staked_quantity or 0.0)          # S-1: frei + gestakt
+        if holding.avg_buy_price_eur is not None and tracked < _gesamt:
+            auto_text += f" (nur {tracked:g} von {_gesamt:g} bepreist)"
         ttk.Label(frame, text="Automatisch berechnet (aus Bitpanda-Trades):").grid(
             row=1, column=0, columnspan=2, sticky="w"
         )
