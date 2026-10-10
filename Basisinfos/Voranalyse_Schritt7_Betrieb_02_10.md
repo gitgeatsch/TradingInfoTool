@@ -3031,3 +3031,16 @@ Nutzer 10.10.:
 - Grundlage: §23.36 (alle REGEL0-Bedingungen grün, L1 nur die bekannten Fälle) und §23.37 (Lebenszyklus, Fachstand).
 - ⚠️ **Was die Freigabe NICHT heißt:** Die REGEL0 ist technisch geprüft, nach Kosten aber **nicht** als gewinnbringend belegt (Vorteil +0,29..+0,31 % je Handel gegen 0,48 % Kosten; Konto 2025–26 nach Kosten in 3 von 4 Mengen negativ). Einsätze bleiben klein (300/500/750 €); das Vorwärtsprotokoll entscheidet. S3 bleibt die Kernfrage.
 - Nächster Schritt: **O29** einschalten (eigene Änderung), dann K-ANK-1.
+
+### 23.39 P8: O29 eingeschaltet (10.10.2026)
+
+Nutzer 10.10.: *„1. ja O29 einschalten“*.
+
+- `Basisinfos/regel0_betrieb.yaml`: `ankuendigung_aktiv: true`. Wird **je Lauf gelesen**, kein Neustart nötig, nur ein Pull. Der Job läuft nur am Betriebsgerät (`betrieb_erlaubt`).
+- **Vorher geprüft:** `o29_pruefstand.py` **10/10**.
+- Die Suite-Prüfung *„Schalter steht AUS“* verlangte einen **Stand** und hätte das Einschalten rot gemacht. Sie prüft jetzt die **Regel** (E-84): Vorgabe im Code aus, eingeschaltet nur mit freigegebener Testwoche. Regel0Betrieb 78/78.
+- **K-ANK-1** (nächster Teilexport):
+  - Abschnitt *BINANCE-ANKÜNDIGUNGEN* zeigt Läufe statt *„Schalter aus · noch kein Lauf“*;
+  - `ankuendigung_lauf` ohne Fehler;
+  - bei einer passenden Meldung die Mailzeile in der REGEL0-Signalmail.
+- **Zur Kontrollen-Datei (P9)**, Nutzer: *„3. ja – so aufsetzen, dass es nie veraltet“* → Entwurf in Plan Schritt 53 G-O.

@@ -31591,8 +31591,14 @@ def paket_regel0_betrieb() -> None:
         import agent.binance_ankuendigungen as _BA
         import agent.regel0_groesse as _G29
         import o29_pruefstand as _O29
-        pruefe(P, "O29: Schalter ankuendigung_aktiv steht in regel0_betrieb.yaml AUS (Vorgabe false) - eingeschaltet erst nach der Testwoche",
-               _G29.lade().get("ankuendigung_aktiv") is False and _G29.VORGABE.get("ankuendigung_aktiv") is False)
+        # Bis 10.10. verlangte diese Pruefung den STAND "aus" und haette das Einschalten (P8, Nutzer 10.10.) rot gemacht - eine
+        # Pruefung, die einen Stand verlangt, friert ihn ein. Geprueft wird jetzt die REGEL dahinter (E-84): die Vorgabe im Code ist
+        # aus, und eingeschaltet sein darf O29 nur, wenn die Testwoche freigegeben ist.
+        _w29 = _G29.lade()
+        pruefe(P, "O29: Vorgabe im Code AUS; eingeschaltet nur mit freigegebener Testwoche (E-84)",
+               _G29.VORGABE.get("ankuendigung_aktiv") is False
+               and (not _w29.get("ankuendigung_aktiv") or _w29.get("testwoche_freigegeben") is True),
+               "ankuendigung_aktiv %s · testwoche_freigegeben %s" % (_w29.get("ankuendigung_aktiv"), _w29.get("testwoche_freigegeben")))
         if os.path.exists(_O29.E1):
             _orig29 = _BA.aktiv
             try:

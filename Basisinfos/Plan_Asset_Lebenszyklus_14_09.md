@@ -620,3 +620,41 @@ Nutzer 10.10.: *„1. ja 2. passt 3. ja, mit Statusseite starten – prüfe vorh
 - Teilexport zeilengleich vorher/nachher.
 - Paket `GuiKette` erweitert, ganze Suite.
 - Am NB: Pull + Neustart, **K-ST-1** = du siehst alle Karten über VPN, nichts fehlt.
+
+
+### G-O Kontrollen-Datei, die nie veraltet (10.10.2026; Teil von P9)
+
+Nutzer 10.10.: *„3. ja – so aufsetzen, dass es nie veraltet“*.
+
+**Befund heute:**
+- Die NB-Kontrollen stehen im Memory `project_ausstehende_nb_kontrollen.md`, einer Liste, die **nur nach unten wächst**: rund 20 Kennungen seit 15.09. (K1–K8, K-ALARM-2, K-S7-3/4/5, K-SN-2, K-LLM-1, K-MISFIRE-2, K-PRUEF-1, K-BP-1/2/3, K-ANK-1 …).
+- Welche noch offen ist, steht nirgends an **einer** Stelle. Der Index nennt *„OFFEN K-S7-3, K-S7-4, K-ALARM-2“*, die Einträge darunter sind teils neuer.
+- ⇒ Das ist genau die Art, wie eine Liste veraltet.
+
+**Aufbau `Basisinfos/nb_kontrollen.yaml`** (eine Zeile je Kontrolle):
+
+| Feld | Inhalt |
+|---|---|
+| `id`, `titel` | z. B. `K-ANK-1`, *„O29: Abrufe laufen, Mailzeile bei Meldung“* |
+| `seit`, `paket`, `commit` | woher sie kommt (P8, `3a133e8` …) |
+| `art` | **automatisch** (das System prüft selbst) oder **manuell** (Nachweis im Export) |
+| `pruefung` | bei *automatisch*: Name einer Prüffunktion in `agent/betriebslage.KONTROLLEN` |
+| `nachweis` | bei *manuell*: was im Export zu sehen sein muss |
+| `faellig_bis` | Datum, bis wann sie erledigt sein muss |
+| `status`, `erfuellt_am`, `beleg` | *offen* / *erfüllt* / *entfallen*, mit Fundstelle |
+
+**Vier Sicherungen gegen das Veralten:**
+1. **Automatische Kontrollen prüfen sich selbst:** Am NB wertet `betriebslage.kontrollen()` sie live aus. Beispiele:
+   - K-ANK-1 = `ankuendigung_lauf` mit Läufen ohne Fehler;
+   - K-BP-3 = Marke *Wallet-Salden Fassung 2* gesetzt und seither keine Mismatch-Meldung.
+   - Die Statusseite zeigt *„erfüllt (automatisch, Zeitpunkt)“*, ohne dass jemand die Datei anfasst.
+2. **Fälligkeit:** Eine manuelle Kontrolle über `faellig_bis` steht **rot** auf der Statusseite **und** macht die Suite rot. Sie zwingt mich zur Pflege.
+3. **Kein Betriebs-Push ohne Kontrolle:** Eine Suite-Prüfung verlangt, dass der jüngste Commit, der Betriebscode ändert (`agent/`, `scheduler/`, `importer/`, `remote/`, `ui/`, `database/`, `Basisinfos/regel0_*.yaml`), in einer Kontrolle steht.
+4. **Eine Quelle:**
+   - Das Memory verweist nur noch auf die Datei, statt die Liste zu führen.
+   - Teilexport und Statusseite zeigen denselben Abschnitt.
+   - Erledigte bleiben als Historie (*erfüllt*) und werden nicht gelöscht.
+
+**Übernahme des Altbestands:**
+- Jede Kennung aus dem Memory bekommt einen Status mit Beleg.
+- Was sich nicht mehr belegen lässt, kommt als Liste zur **Rücksprache**; nichts wird still abgehakt.
