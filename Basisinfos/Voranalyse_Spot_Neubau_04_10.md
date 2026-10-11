@@ -5385,3 +5385,69 @@ Nutzer 11.10.: *„K-1/K-2 messen, prüfen und gegenprüfen“*.
 | Signal | **kein K-Einstieg** |
 | K-1 | **Vorwärtsprotokoll** (A4-Schatten), wie vorab festgelegt. Voraussetzung am NB: BTCDOM-Nachlader (D1, Stufe 2). ⚠️ Nach 44.6 Punkt 4 ist dort **in absehbarer Zeit kein Urteil** zu erwarten. Es bleibt eine Beobachtung, kein Weg zum Signal |
 | **Ziel E-85 (Einstieg je Asset)** | Mit freien Daten ab 2023 **in absehbarer Zeit nicht belegbar**: K-3 schadet, §35/§37/§38 tragen nicht, H-DM ist nicht entscheidbar. Der Spot-**Kauf** bleibt eine **Marktlage**-Entscheidung (Ampel C1) mit geordneter Kandidatenliste (A3); die **Führung** (B1, B3, B4) trägt |
+
+
+## 45. Prüfung der UNGEMESSENEN Indikatoren für einen Einstieg je Asset (11.10.2026)
+
+Nutzer 11.10.: *„Ok, mach noch eine Prüfung der ungemessenen Indikatoren – merke dir, wo wir stehen, und alles in Doku und Plan.“*
+
+**Anlass:** Nach §44.7 ist ein Einstieg je Asset mit dem bisher Gemessenen nicht belegbar.
+
+**Vorgehen:**
+- Die Quelleninventare §27.2 (Spot) und Schritt7 §23.22/§23.26 (Hebel, O30) dienen als Grundlage; es wurde kein neues Schema angelegt.
+- Für jede **ungemessene** freie Quelle prüft eine Probe drei Dinge: Ist sie erreichbar? Reicht die Historie zurück? Wie viel des Universums deckt sie ab?
+- **Skripte:** `kp_quellenprobe.py` → `.txt` (Universum 398 Coins am Stichtag 01.09.2025, davon 330 mit CoinGecko-ID), Nachlauf Q2/Q3 `kp_quellenprobe_q23.txt`.
+- ⚠️ Im ersten Lauf ergaben Q2 und Q3 „0 Zuordnungen“: Ich hatte das Feld `gecko_id` am falschen Endpunkt gesucht. Korrigiert über `/v2/chains` und `/protocols`, danach erneut gelaufen.
+
+### 45.1 Was schon GEMESSEN ist (Einstieg je Asset, Spot) — damit es nicht wieder vorgeschlagen wird
+
+| Gruppe | Merkmale | wo | Ergebnis |
+|---|---|---|---|
+| Kurs | Relativstärke 7/30 T, Umsatzschub, neues 90-T-Hoch, Schwankung, Tiefe, Dauer seit Hoch, Basisbildung, Abstand zum Tief, Stärke in der Klasse, Umsatzverlauf, Alter | §19, §35 | Bewegung statt Richtung; Richtung nur **defensiv** (Fortbestand) |
+| Terminmarkt | Käuferanteil 7 T, Funding 7/30 T, OI 30/90 T | §19 F11/F12, §35 | Richtung 0,85–0,92, trägt nicht |
+| On-chain / Fundament | aktive Adressen (F10), TVL gegen Kurs (F9) | §19 | F9 ordnet den Fortbestand (Watchlist), kein Einstieg |
+| Regeln | Momentum je Klasse (§37), Ruhiger Boden (§40), Dominanz-Spitze H-DM (§44), Watchlist-Eintritt (§29), antizyklisch/Momentum Fassungen 1–4 (§15, §17) | | nichts trägt ab 2024 |
+| Ereignisse | Binance-Listing, Futures-Start, Upbit-Listing (§38), Delisting/Monitoring (E-1) | | Verkaufsanlässe, kein Einstieg |
+| Markt (kein Beitrag je Asset) | Liquidität, Stablecoins gesamt, MACD monatlich, Dominanz | §16, §20, §33 | nur Ampel/Kontext |
+| Struktur | Höchstmenge, FDV, Kategorien, Gebühren-**Niveau** | §25.3 | Auskunft |
+| nicht messbar | Verwässerung (CoinMetrics sieht Freigaben nicht) | §16.4 | — |
+
+### 45.2 Was UNGEMESSEN ist — Quellenprobe (alle frei)
+
+| # | Indikator (je Asset) | Gedanke | Quelle · Probe | Abdeckung Universum | Historie | Einordnung |
+|---|---|---|---|---|---|---|
+| **U1** | **Stablecoin-Zufluss je Kette** (90 T, gegen den Kurs des Kettentokens) | Kapital fließt in die Kette, **bevor** der Token nachzieht; je Asset verschieden (Regel *Beitrag je Asset* ✔). ⚠️ Marktweit war die Stablecoin-Faustregel **umgekehrt** (§16.4); je Kette ist ungeprüft | DefiLlama `stablecoincharts/{Kette}` ✔ | **64** Kettentoken (ADA, ALGO, APT, ARB, AVAX, BNB, NEAR, INJ, KAIA, OP …) | ab ≈ 2022 | ⭐ **Kandidat** |
+| **U2** | **Gebühren-Wachstum gegen Kurs** (90/180 T) | wie F9 (TVL gegen Kurs), aber mit **Nutzung statt Kapital**: Die Nutzung zieht an, der Kurs noch nicht | **schon am Desktop** `gebuehren.db` (DefiLlama) | **121** (Ketten 73, Protokolle 48) | täglich ab 2018 | ⭐ **Kandidat**, Daten liegen vor |
+| **U3** | **Halter-Einnahmen** (Rückkauf/Verbrennen/Ausschüttung) Niveau und Wachstum | Der Token ist ein Anteil statt nur ein Stimmrecht | schon am Desktop `gebuehren.db` | **88** | ab 2018 | Kandidat, kleiner Kreis |
+| **U4** | **MVRV je Altcoin** (Kurs gegen den Durchschnittseinstand der Halter) | Bewertung je Asset; bisher nur BTC/ETH gemessen | CoinMetrics Community ✔ (CC BY-NC) | **43** (H/M, ältere Coins) · dazu Transaktionen 45 | lang | Kandidat, nur große Coins |
+| **U5** | **Beta / Korrelation zu BTC** (90 T) | Eigenständige Coins im fallenden Altmarkt; aus Kursen, kein Abruf | Messbasis ✔ | **100 %** | ab 2019 | Kandidat, billig |
+| U6 | Top-Trader-Long/Short, Taker-Verhältnis (täglich) | Positionierung | Binance-Archiv `futures/um/daily/metrics` ✔ (LINK, INJ 2023 vorhanden) | Futures-Coins | ab 12/2021 | ⚠️ niedrige Erwartung: Long/Short trug im Hebel nicht (N-f 0/4), Terminmarkt zeigt Bewegung statt Richtung (§35) |
+| U7 | **Nachrichtenaufkommen** je Asset gegen den eigenen Schnitt | Aufmerksamkeit führt eher zu **Fortsetzung** (Literatur O30) und würde damit zu K-Momentum passen | Free Crypto News ✔ erreichbar · Archiv, Abdeckung, Lizenz **ungeprüft** (Datenprobe K5 aus P2 nie gemacht) | ? | ab 2017 (laut Anbieter) | erst **Datenprobe** |
+| U8 | Wikipedia-Seitenaufrufe | Aufmerksamkeit | Wikimedia ✔ | **≈ 8 %** (5 von 60) | ab 2015 | ✘ entfällt (Abdeckung) |
+| U9 | GitHub-Aktivität | Entwicklung | Repo-Verweis bei CoinGecko 4 von 12; GitHub ohne Schlüssel 60 Abrufe/h | ≈ ⅓ | über Commit-Listen, aufwendig | zurückgestellt |
+| U10 | DEX-Umsatz je Protokoll | Nutzung | DefiLlama ✔ | **8** | teils erst ab 2026 | ✘ entfällt |
+| — | Token-Freigaben, Liquidationen (Historie), Börsenbestände, Social (X/Reddit), Google Trends | | kostenpflichtig oder ohne freie Schnittstelle | | | ✘ Projektregel *nur kostenfrei* (Liquidationen nur vorwärts) |
+
+### 45.3 Einordnung (fachlich)
+
+- **Neu ist eine Familie, die nie gemessen wurde: Nutzung und Kapitalfluss *je Kette/Protokoll* gegen den Kurs** (U1, U2, U3), dazu Bewertung je Coin (U4) und Eigenständigkeit (U5).
+  - Kurs, Umsatz und Terminmarkt sind ausgeschöpft.
+  - Die Fundamentaldaten wurden bisher nur als **Niveau** (Struktur) oder als **TVL** (F9) genutzt.
+- ⚠️ **Ehrliche Erwartung:** Die bisherigen Fundamental-Merkmale ordneten den **Fortbestand** (defensiv), nicht den Ausbruch (§30). Möglich ist, dass auch U1 bis U4 nur defensiv wirken; dann taugen sie für L/B4, nicht für einen Einstieg.
+- **Prüfregeln, die gelten:**
+  - Wahl auf **2023**, Urteil **ab 2024**;
+  - Spiegelprobe (Richtung statt Bewegung);
+  - zweiseitig;
+  - je Asset gegen die Klasse;
+  - Selbsttest mit 1.000 Ziehungen und der Grenze aus der Stufung (§43.5).
+
+### 45.4 Vorschlag (zur Abstimmung)
+
+| Schritt | Inhalt | Aufwand |
+|---|---|---|
+| **1 · Stufe-1-Vorprüfung** U1, U2, U3, U4, U5 in **einem** Lauf wie §35 (`tc_vorpruefung`): Richtung (Lift Lauf ×1,3 gegen Absturz ÷1,3 in 30 T, oberes und unteres Fünftel je Klasse) **nur auf 2023**, ab 2024 nur Anzahlen | Desktop, nur lesend; Ladung U1 (64 Abrufe DefiLlama) und U4 (43 Abrufe CoinMetrics) nach `data/_spot/` | klein |
+| 2 · Datenprobe U7 (Nachrichten) | Archivtiefe, Abdeckung unserer Coins 2023–2026, Lizenz | klein |
+| 3 · Messplan je Kandidat mit Richtung ≥ 1,2 auf 2023 | vorab, wie §37/§44, Urteil ab 2024 | je Kandidat |
+| — | U6 nur, wenn Schritt 1 etwas findet (niedrige Erwartung); U8, U10 entfallen; U9 zurückgestellt | |
+
+Trägt nichts aus Schritt 1, gilt §44.7 ohne Vorbehalt: Ein Einstieg je Asset ist mit freien Daten nicht belegbar, und der Spot-Kauf bleibt eine Marktlage-Entscheidung.

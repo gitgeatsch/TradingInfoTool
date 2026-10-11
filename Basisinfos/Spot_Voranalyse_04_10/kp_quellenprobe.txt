@@ -1,0 +1,22 @@
+QUELLENPROBE ungemessene Indikatoren · Universum 398 Coins (Stichtag 2025-09-01), mit CoinGecko-ID 330
+
+Q1 Wikipedia: CoinGecko-Namensliste ok · Artikel mit Aufrufen 01/2023 fuer 5 von 60 (8 %) · z. B. PEOPLE, SAGA, INJ, ERA, XVG
+   ⚠️ Treffer ueber den Namen koennen falsch sein (Begriff statt Coin) - Zuordnung waere von Hand zu pruefen
+
+Q2 Stablecoins je Kette: 0 Ketten mit gecko_id · davon im Universum 0: 
+
+Q3 DEX-Umsatz: 0 Protokolle mit gecko_id · Token im Universum 0: 
+
+Q4 CoinMetrics AdrActCnt  frei fuer  44 Universum-Coins: 1INCH, AAVE, ADA, ALGO, BAT, BCH, BNB, COMP, CRV, CVC, DASH, DCR, DGB, DOGE, DOT, ETC, FTT, FUN, GAS, GNO, ICP, KNC, LDO, LINK, LPT
+Q4 CoinMetrics TxCnt      frei fuer  45 Universum-Coins: 1INCH, AAVE, ADA, ALGO, BAT, BCH, BNB, COMP, CRV, CVC, DASH, DCR, DGB, DOGE, DOT, ETC, FLOW, FTT, FUN, GAS, GNO, ICP, KNC, LDO, LINK
+Q4 CoinMetrics FeeTotNtv  frei fuer  16 Universum-Coins: ADA, ALGO, BCH, DASH, DCR, DGB, DOGE, ETC, FLOW, ICP, LTC, XLM, XRP, XTZ, XVG, ZEC
+Q4 CoinMetrics CapMVRVCur frei fuer  43 Universum-Coins: 1INCH, AAVE, ADA, ALGO, BAT, BCH, BNB, COMP, CRV, CVC, DASH, DCR, DGB, DOGE, DOT, ETC, FTT, FUN, GAS, GNO, ICP, KNC, LDO, LINK, LPT
+Q4 CoinMetrics NVTAdj     frei fuer   0 Universum-Coins: 
+
+Q5 GitHub: Repo-Verweis bei CoinGecko fuer 4 von 12 · GitHub-API ohne Schluessel erreichbar (Grenze 60/h)
+
+Q6 Free Crypto News https://cryptocurrency.cv/api/news?limit=1 -> 200 {'articles': [{'title': '⛽ ETH Gas: 🐢 0.381893942 | 🚶 0.381993942 | 🚀 0.485366498 Gwei', 'link': 'https://etherscan.io/g
+Q6 Free Crypto News https://cryptocurrency.cv/ -> 200 <!DOCTYPE html><html lang="en" dir="ltr" class="inter_c15e96cb-module__0bjUvq__variable source_serif_4_880bd459-module__
+
+Q7 Binance-Archiv metrics LINKUSDT 2023-06-01 -> 200
+Q7 Binance-Archiv metrics INJUSDT 2023-06-01 -> 200

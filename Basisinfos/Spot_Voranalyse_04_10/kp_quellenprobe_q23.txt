@@ -1,0 +1,6 @@
+Q2 Stablecoins je Kette: 158 Ketten mit gecko_id · davon im Universum 64: A, ADA, ALGO, APE, APT, ARB, ASTR, AVAX, BERA, BNB, BTTC, CELO, CFX, EDU, EGLD, ETC, FIL, FLOW, G, GLMR, GNO, HBAR, ICP, IMX, INJ, IOTA, IOTX, KAIA, KAVA, LSK, LUNC, MANTA, METIS, MOVE, MOVR, NEAR, NEO, ONE, ONT, OP
+   Historie Beispiel A (Vaulta): 1614 Tage ab 2022-05-12
+
+Q3 DEX-Umsatz: 278 Protokolle mit gecko_id · Token im Universum 8: BANANA, BLUR, OSMO, QUICK, RUNE, SUSHI, THE, VIRTUAL
+   Historie Beispiel BANANA: 126 Tage ab 2026-06-07
+
