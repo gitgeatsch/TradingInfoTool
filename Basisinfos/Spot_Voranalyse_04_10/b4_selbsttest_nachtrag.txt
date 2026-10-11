@@ -1,0 +1,9 @@
+B4-VORMESSUNG · NACHTRAG SELBSTTEST (Auskunft) · E3
+
+N1 200 Ziehungen: Fehlalarm zweiseitig 10 von 100 (Soll um 5)
+N2  40 Ziehungen: SCHLECHTER 5 · BESSER 6 von 100 (Soll je Seite um 4,9 - zusammen 9,8)
+
+N3 gepflanzt s 0.3: Abstand Mittel -5.4 Pp · SCHLECHTER gefunden 2 von 10
+N3 gepflanzt s 1.0: Abstand Mittel -13.1 Pp · SCHLECHTER gefunden 10 von 10
+N3 gepflanzt s 2.0: Abstand Mittel -22.6 Pp · SCHLECHTER gefunden 10 von 10
+N3 gepflanzt s 4.0: Abstand Mittel -30.8 Pp · SCHLECHTER gefunden 10 von 10

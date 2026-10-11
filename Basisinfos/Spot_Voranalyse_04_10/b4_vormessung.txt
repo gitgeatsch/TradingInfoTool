@@ -1,0 +1,25 @@
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\Basisinfos\Spot_Voranalyse_04_10\wl_messung.py:41: RuntimeWarning: Mean of empty slice
+  return np.where(np.isnan(P).all(axis=0), np.nan, np.nanmean(P, axis=0))
+B4-VORMESSUNG (§43) · Kurse bis 2026-09-20 · Anker 19681
+
+TEIL 0 Dosis E2 ohne F9:  -7.3  -3.2  -0.1  +1.0  +9.2 (Soll  -7.3  -3.2  -0.1  +1.0  +9.2)
+TEIL 0 Dosis E3 ohne F9: -17.2  -4.7  +3.0  +6.0 +12.1 (Soll -17.2  -4.7  +3.0  +6.0 +12.1)
+-> Teil 0 bestanden
+
+SELBSTTEST (a) Fehlalarm 11 von 100 bestaendigen Zufallswerten (Soll <= 5) · (b) gepflanzt: Abstand -2.4 Pp -> nicht entscheidbar  =>  NICHT bestanden - das Urteil gilt NICHT
+
+HAUPT E3: Stichtage 20 (2024-02-01 bis 2025-09-01) · Anker unteres Fuenftel 1474
+   Abstand Dollar-Ertrag 12 M unteres Fuenftel - Zelle: -12.51 Pp · bestaendige Nullwelt Mittel +0.54, 2,5./97,5. Perz. -6.51 / +10.76 · Rang 0.000  ->  SCHLECHTER
+   einfache Nullwelt (je Monat, Vergleich): 2,5./97,5. Perz. -3.53 / +4.57 · Rang 0.000
+   Auskunft: absolut unteres Fuenftel -60.9 % / Zelle -48.4 % · gegen BTC Abstand -9.62 Pp · Median-Abstand -10.40 Pp · eingestellt = -100 %: -9.79 Pp
+   je Klasse (Pp): H -33.9 · M -16.8 · S -9.4 · je Jahr (Pp): 2024 -17.0 · 2025 -7.0 · Saldo unteres Fuenftel -17.2 Pp
+
+AUSKUNFT E2: Stichtage 37 (2021-01-01 bis 2024-01-01) · Anker unteres Fuenftel 2055
+   Abstand Dollar-Ertrag 12 M unteres Fuenftel - Zelle: -11.32 Pp · bestaendige Nullwelt Mittel +1.39, 2,5./97,5. Perz. -29.52 / +39.80 · Rang 0.225  ->  nicht entscheidbar (nur Auskunft)
+   einfache Nullwelt (je Monat, Vergleich): 2,5./97,5. Perz. -20.24 / +25.56 · Rang 0.200
+   Auskunft: absolut unteres Fuenftel +19.9 % / Zelle +31.2 % · gegen BTC Abstand -7.76 Pp · Median-Abstand -9.39 Pp · eingestellt = -100 %: -8.76 Pp
+   je Klasse (Pp): H -14.8 · M +4.0 · S -23.7 · je Jahr (Pp): 2021 -8.6 · 2022 -7.2 · 2023 -18.4 · 2024 -8.2 · Saldo unteres Fuenftel -7.3 Pp
+
+TEIL G (Auskunft) Universum OHNE die 10 uebernommenen Reihen, E3: Anker 7370 · anderes Fuenftel 2.7 % · unteres Fuenftel 1384: verlassen 1, neu 72

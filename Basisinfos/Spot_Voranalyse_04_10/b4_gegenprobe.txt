@@ -1,0 +1,6 @@
+G1  gleich     Ertrag aus Rohkursen an 19681 Ankern, groesste relative Abweichung 1.3e-14
+G2  gleich     unteres Fuenftel E3: 1474 Anker (Messung 1.474)
+G3  gleich     Abstand E3 -12.51 Pp (Messung -12,51)
+G4  gleich     bestaendige Nullwelt eigen: Rang 0.000 (Messung 0,000) · 2,5./97,5. Perz. -6.57 / +9.62 (Messung -6,51 / +10,76)
+
+4 von 4 gleich

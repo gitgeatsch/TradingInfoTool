@@ -1,0 +1,4 @@
+B4 SELBSTTEST GROSS (Auskunft) · E3 · 200 Zufallswerte x 1.000 Ziehungen
+  Rang <= 0,025: 3 (1.5 %) · Rang >= 0,975: 6 (3.0 %) · zusammen 4.5 % (erwartet 2,6 / 2,6 / 5,2 %)
+  Rang <= 0,005 (Strenge des echten Befunds): 1 (0.5 %, erwartet 0,6 %)
+  Gleichverteilung des Rangs: KS p = 0.188

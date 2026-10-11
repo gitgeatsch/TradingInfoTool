@@ -5216,3 +5216,114 @@ Belegt ist bisher nur eine **Ordnung** über einen Saldo aus Ereignissen. Gefrag
 | **SCHLECHTER** | B4 wird gebaut wie §39.7. Die Mail nennt die Belegstufe in Dollar (*„Coins im unteren Fünftel lagen nach 12 Monaten im Mittel x Pp unter einem zufälligen Coin ihrer Klasse“*) |
 | **nicht entscheidbar** | **keine Mail** (E-91: eine Handlung braucht einen Beleg). Die Reihenfolge steht nur im App-Tab, als Ordnung gekennzeichnet; Vorwärtsprotokoll |
 | **BESSER** | B4 entfällt ganz; die Saldo-Ordnung bleibt Auskunft |
+
+### 43.4 Ergebnis (11.10.2026; `b4_vormessung.py` → `.txt`, Gegenprobe `b4_gegenprobe.py` **4/4**)
+
+**Teil 0** bestanden: Dosis ohne F9 genau wiedergegeben (E2 −7,3 · −3,2 · −0,1 · +1,0 · +9,2 / E3 −17,2 · −4,7 · +3,0 · +6,0 · +12,1).
+
+| ab 2024 (E3, 20 Stichtage 02/2024–09/2025, 1.474 Anker im unteren Fünftel) | |
+|---|---|
+| **Abstand Dollar-Ertrag 12 M** (unteres Fünftel − Zelle) | **−12,51 Pp** |
+| beständige Nullwelt (200) | Mittel +0,54 · 2,5./97,5. Perzentil **−6,51 / +10,76** · **Rang 0,000** |
+| einfache Nullwelt (Vergleich) | −3,53 / +4,57 · Rang 0,000. ⚠️ **Fast halb so breit**: Eine Ziehung je Monat wäre zu eng gewesen (§43.2 bestätigt) |
+| **Urteil nach §43.2** | **SCHLECHTER** |
+| absolut | unteres Fünftel **−60,9 %** in 12 M, Zelle −48,4 % |
+| Auskunft | gegen BTC −9,62 Pp · Median-Abstand −10,40 Pp · eingestellt = −100 %: −9,79 Pp |
+| je Klasse | H **−33,9** · M −16,8 · S −9,4 Pp: in jeder Klasse schlechter |
+| je Jahr | 2024 −17,0 · 2025 −7,0 Pp: in beiden Jahren schlechter |
+| Saldo (§39.9) | −17,2 Pp |
+| E2 (Auskunft) | −11,32 Pp, aber Nullwelt −29,5 / +39,8 → Rang 0,225, nicht entscheidbar (2021 war ein Season-Jahr, Streuung riesig) |
+| **Teil G** (ohne die 10 Übernahmen) | 2,7 % der Anker mit anderem Fünftel; unteres Fünftel: 1 verlässt, 72 kommen neu (die Übernahmen lagen selbst oft unten) |
+
+**Gegenprobe 4/4:**
+- Ertrag aus Rohkursen an 19.681 Ankern (Abweichung 10⁻¹⁴);
+- 1.474 Anker im unteren Fünftel;
+- Abstand −12,51 Pp;
+- beständige Nullwelt mit eigenem Zufall: Rang 0,000, Perzentile −6,57 / +9,62.
+
+### 43.5 Der Selbsttest — nach der Vorabregel nicht bestanden, Ursache gemessen
+
+| | vorab (§43.2) | gemessen |
+|---|---|---|
+| (a) Fehlalarm, 100 Zufallswerte × **40** Ziehungen | ≤ 5 % zweiseitig | **11 von 100** → nicht bestanden |
+| (b) gepflanzt 0,3 × Perzentil + N(0,1) | SCHLECHTER | −2,4 Pp → nicht entscheidbar → nicht bestanden |
+
+⚠️ **Das war ein Fehler in MEINEM Plan, und er ist gemessen, nicht behauptet:**
+
+| Nachtrag (Auskunft) | Ergebnis |
+|---|---|
+| Stufung bei 40 Ziehungen: Eine Seite schlägt an, wenn höchstens 1 von 40 Ziehungen darunter liegt, mit 2/41 = **4,9 % je Seite, zusammen 9,8 %**. Die Grenze 5 % war mit 40 Ziehungen gar nicht erreichbar | 40 Ziehungen, je Seite gezählt: **5 und 6** von 100 (erwartet 4,9 / 4,9) |
+| 200 Ziehungen, 100 Zufallswerte | 10 von 100 (erwartet ≈ 6; p ≈ 0,08) — offen, darum der große Lauf |
+| **groß: 200 Zufallswerte × 1.000 Ziehungen** (`b4_selbsttest_gross.py`) | **4,5 %** zweiseitig (1,5 / 3,0 %, erwartet 2,6 / 2,6) · Rang gleichverteilt, **KS p = 0,19** · bei der Strenge des echten Befunds (Rang ≤ 0,005) **0,5 %** (erwartet 0,6 %) |
+| Auflösung (b): gepflanzt s = 0,3 / 1 / 2 / 4, je 10 × 200 Ziehungen | −5,4 Pp in **2/10** · **−13,1 Pp in 10/10** · −22,6 in 10/10 · −30,8 in 10/10 |
+
+⇒ **Fachlich:**
+- Die beständige Nullwelt ist **richtig geeicht**: Fehlalarm 4,5 %, Rang gleichverteilt.
+- Die Anlage findet einen Effekt von **der Größe des echten Befunds** sicher (−13 Pp in 10/10).
+- Die vorab gewählte Pflanzung (−2,4 Pp) lag unter der Auflösung; die Grenze 5 % war bei 40 Ziehungen rechnerisch unerreichbar.
+- Der echte Befund liegt bei Rang 0 von 200. Bei der Nullwelt geschieht das mit **0,5 %** (gemessen).
+
+⇒ **Formal:** Nach der Vorabregel *„besteht (a) nicht → das Urteil gilt nicht“* gilt das Urteil **nicht**, bis der Nutzer entscheidet. Die Vorabfestlegung wird nicht still geändert (Regel *lange Läufe*, R-R11).
+
+**Lehre für jeden künftigen Selbsttest** (gilt ab §44):
+- mindestens **1.000** Ziehungen;
+- das Soll **aus der Stufung gerechnet** (je Seite (k+1)/(n+1));
+- die Pflanzung auf die **Größe des erwarteten Effekts** gelegt und als Auflösungskurve gemessen, nicht als eine Stärke.
+
+
+## 44. K-1/K-2 — Einstieg je Asset nach Dominanz-Spitze: Messplan VOR der Messung (11.10.2026, zur Abstimmung)
+
+Nutzer 11.10.: *„… dann K-1/K-2 Messplan vorlegen – prüfen und gegenprüfen“*. Grundlage: Auftrag K-Lösung §39.3 (E-89), Hinweis §37.4, Lage §42.5. Es ist die **letzte offene Spur** zu einem Einstieg je Asset.
+
+### 44.1 Die Hypothese H-DM (Fassung n+1, E-63) — und wo sie herkommt
+
+> **Ein H-Momentum-Einstieg (Regel §37.2 unverändert) an einem Tag, an dem die BTC-Dominanz in 30 T um ≥ 8,7 % gestiegen ist, schlägt BTC und einen zufälligen Highcap desselben Tages.**
+
+| | |
+|---|---|
+| gefunden | auf **2024+** als Auskunft nach dem Urteil (§37.4): +6,3 Pp gegen BTC (n 71) gegen −0,8 Pp an den übrigen Tagen |
+| ⚠️ daraus folgt | **2024+ ist die Wahlmenge.** Dort ist H-DM nur **Beschreibung**, kein Test (E-63, R-R11) |
+| ⚠️ zweite Verunreinigung | Das **Momentum** selbst wurde auf **2023** gewählt (§35, Richtung 1,84). Ein Test auf 2023 bevorzugt daher Momentum allgemein |
+| ⚠️ dritte | Die Schwelle 8,7 % ist der kleinste Dominanz-Anstieg an den Rally-Tiefs 2023–2026 (§33.1), also auch aus der Rückschau |
+
+⇒ **Der Test isoliert deshalb das, was NICHT auf 2023 gewählt wurde: die Bedingung Dominanz-Spitze.**
+- Verglichen werden H-Momentum-Einstiege **an** Spitzen-Tagen mit H-Momentum-Einstiegen **an** den übrigen Tagen desselben Jahres.
+- Die Bevorzugung von Momentum auf 2023 trifft beide Arme gleich und hebt sich auf.
+- Die Schwelle läuft als **Dosis** mit (5 / 8,7 / 12 / 15 %), damit ein Ergebnis nicht an der Rückschau-Schwelle hängt.
+
+### 44.2 Machbarkeit (gezählt, vor dem Plan; `k37_*`-Ablagen, `richtung_historie.db`; Gegenprobe `k44_machbarkeit_gegenprobe.py` **3/3**, darin Teil 0 vorab wiedergegeben: +6,28 Pp / n 71 / −0,80 Pp)
+
+| | Einstiege H | davon an Spitzen-Tagen | Monate | Coins |
+|---|---|---|---|---|
+| **2023 (Urteil, K-2)** | 114 | **29** | **6** | 21 |
+| 2024+ (Wahl, nur Beschreibung) | 344 | 71 | 15 | 25 |
+| Auskunft M 2023 / 2024+ | 512 / 1.211 | 123 / 245 | 7 / 18 | 94 / 113 |
+
+- BTCDOM liegt ab **2023-01** vor (Desktop `richtung_historie.db`; am NB fehlt es mit Absicht). Spitzen-Tage 2023: 75 in 8 Monaten.
+- ⇒ Die Mindestzahl (≥ 20 an ≥ 6 Monaten) ist **knapp** erfüllt. Die Trennschärfe wird schwach sein. Ob die Anlage einen Effekt der Größe von 2024+ auf 29 Fällen **überhaupt finden kann**, misst der Selbsttest (b), bevor ein Urteil gilt.
+
+### 44.3 Festlegungen (vorab; Rechnung `k44_messung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Einstiege | genau §37.2 (`k37_*`-Ablagen, Klasse H, Kauf d + 1, Zeitgrenze 30 T, Sperre je Coin), Zielgröße gegen BTC brutto |
+| Spitzen-Tag | BTCDOM-Tagesschluss / Schluss 30 T vorher − 1 ≥ 8,7 % am Signaltag d (am Tag bekannt) |
+| **Teil 0 (R-R11)** | auf 2024+ +6,3 Pp (n 71) / −0,8 Pp wiedergeben (± 0,1), sonst Abbruch |
+| **A Bedingung (Haupt)** | 2023: Korb(Spitze) − Korb(übrige Tage), je Monat der Korb wie §37.2. **Nullwelt Zeitverschiebung:** die Spitzen-Reihe 2023 kreisförmig um 1.000 zufällige Versätze von 30–335 T verschoben (erhält Zahl und Länge der Episoden), Rang = Anteil < echt |
+| **B absolut** | 2023: Korb(Spitze) gegen BTC > 0, und gegen **zufällige Highcaps desselben Tages** ohne Signal (gleicher Ausstieg, **1.000** Ziehungen), Rang |
+| **Urteil 2023** | **TRÄGT**: A Rang ≥ 0,975 **und** B Korb > 0 mit Rang ≥ 0,975 **und** ≥ 20 Einstiege an ≥ 6 Monaten. **SCHADET**: A Rang ≤ 0,025. Sonst **nicht entscheidbar** |
+| Lohnt | Korb(Spitze) − 0,72 % (H, Hin und Rück) > 0 |
+| ⚠️ **Selbsttest** (Lehre §43.5: 1.000 Ziehungen, Soll mit der Stufung gerechnet, Auflösung als Kurve) | (a) 200 Placebo-Spitzenreihen (zufällige Episoden mit derselben Zahl und Länge wie 2023), je 1.000 Ziehungen: Fehlalarm zweiseitig ≤ **8 %** (erwartet 5,2 % + 2 Standardfehler). (b) **Auflösung:** auf die Spitzen-Einstiege 2023 +x Pp gepflanzt, x = 3 / 7 / 15, je 50 Wiederholungen: Wird **x = 7** (die Größe von 2024+) in < 80 % gefunden, lautet das Urteil **„nicht entscheidbar – Auflösung reicht nicht“**, gleich was A und B zeigen |
+| Auskunft | Dosis 5 / 12 / 15 %; Zeitgrenze 21 / 42 T (K-1: *3–6 Wochen*); Median der Monate und Weglassprobe ohne den stärksten Monat (Lehre §40.4: ein Monat trug das Mittel); M an Spitzen-Tagen; 2024+ als Beschreibung mit denselben Kennzahlen |
+| Gegenprobe | `k44_gegenprobe.py`: Spitzen-Tage aus SQL, Einstiege gegen die Ablage, Korb als eigene Monatsrechnung, Zeitverschiebung mit eigenem Zufall (Rang ± 0,03), Ertrag aus Rohkursen |
+
+### 44.4 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis 2023 | Folge |
+|---|---|
+| **TRÄGT und lohnt** | **K-Einstieg H-DM** als Kandidat: Ereignis-Mail *„Einstieg <Coin> (Highcap, Momentum nach Dominanz-Spitze): Ausstieg nach 30 T; gemessen 2023 + 2024“*, kleine Größe. Voraussetzung am NB: BTCDOM-Nachlader (D1). Bau erst nach Abstimmung (T-2) |
+| trägt, frisst Kosten | kein Signal; Fakt in der App |
+| **nicht entscheidbar** (auch: Auflösung reicht nicht) | kein Signal. **K-1 = Vorwärtsprotokoll** (A4-Schatten) mit BTCDOM-Nachlader am NB; Urteil nach ≥ 20 neuen Spitzen-Einstiegen |
+| trägt nicht / schadet | H-DM verworfen. ⇒ **Ein Einzelcoin-Einstieg ist mit freien Daten ab 2023 nicht belegt** (§42.5); K bleibt leer, Spot-Kauf = Marktlage (Ampel) mit geordneter Kandidatenliste |
+
+⚠️ **Ehrliche Erwartung, vorab:** Mit 29 Fällen in 6 Monaten ist **„nicht entscheidbar“** am wahrscheinlichsten. Der Wert der Messung liegt darin, das **sauber** festzustellen (Auflösung gemessen), statt die Spur offen liegen zu lassen. Ein Urteil kann nur der Vorwärtsweg bringen.
