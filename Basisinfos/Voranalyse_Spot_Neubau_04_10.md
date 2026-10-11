@@ -5451,3 +5451,22 @@ Nutzer 11.10.: *„Ok, mach noch eine Prüfung der ungemessenen Indikatoren – 
 | — | U6 nur, wenn Schritt 1 etwas findet (niedrige Erwartung); U8, U10 entfallen; U9 zurückgestellt | |
 
 Trägt nichts aus Schritt 1, gilt §44.7 ohne Vorbehalt: Ein Einstieg je Asset ist mit freien Daten nicht belegbar, und der Spot-Kauf bleibt eine Marktlage-Entscheidung.
+
+### 45.5 Stufe-1-Vorprüfung U1–U5 — Festlegung VOR dem Lauf (11.10.2026)
+
+Nutzer 11.10.: *„Ja, Vorprüfung U1–U5 laufen lassen, prüfen und gegenprüfen“*.
+
+| | Festlegung |
+|---|---|
+| Rechnung | genau `tc_vorpruefung.py` (§35): Ziele *Lauf* (Coin/BTC ≥ ×1,3 binnen 30 T) und *Absturz* (≤ 1/1,3), Grundgesamtheit Watchlist-Klassen des Monats ohne BTC/ETH/SOL, Querschnitt je Tag |
+| **Wahl** | **2023** (Signale bis 01.12.2023, damit kein Fenster in 2024 reicht). **Ab 2024 nur Abdeckung und Anzahlen**, keine Kennzahl |
+| Laden (`kp46_lade.py`, frei, ohne Schlüssel) | U1: DefiLlama `stablecoincharts/{Kette}` für die 64 Kettentoken → `data/_spot/stablecoins_kette.db` · U4: CoinMetrics Community `CapMVRVCur` für die 43 Altcoins → `data/_spot/coinmetrics_alt.db`. U2/U3 liegen in `gebuehren.db`, U5 rechnet aus Kursen |
+| **U1** `stab90` | log(Stablecoin-Bestand der Kette **d − 1** / d − 91) − log(Kurs d / d − 90) |
+| **U2** `gebuehr90` | log(30-T-Mittel der Gebühren **d − 1** / dasselbe d − 91) − log(Kurs d / d − 90) · Auskunft `gebuehr180` |
+| **U3** `halter90` | wie U2 mit den Halter-Einnahmen |
+| **U4** `mvrv` | CapMVRVCur am Tag **d − 1** (Niveau) |
+| **U5** `korr90` | Korrelation der Tagesrenditen mit BTC über 90 T · Auskunft `beta90` |
+| Querschnitt | ≥ 30 Coins mit Merkmal (wie §35). Erreicht ein Merkmal das an weniger als der Hälfte der Tage 2023, wird es **zusätzlich** mit ≥ 15 ausgewiesen und als *kleiner Querschnitt* gekennzeichnet |
+| Ausgabe je Merkmal | oberes **und** unteres Fünftel (zweiseitig): Lift Lauf, Lift Absturz, **Richtung** = Lift Lauf / Lift Absturz, Ende 30 T gegen alle, Coin-Tage im Fünftel; Richtung je Klasse H/M/S als Auskunft |
+| **Kandidat für einen Messplan** | Richtung **≥ 1,2** auf einer Seite (das obere Zehntel der 84 Felder in §35 begann bei 1,18) **und** ≥ 300 Coin-Tage im Fünftel. ⚠️ Das ist eine **Auswahl**, kein Nachweis: 5 Merkmale × 2 Seiten = 10 Felder; das Urteil fällt erst in einem vorab festgelegten Plan ab 2024 |
+| Gegenprobe (`kp46_gegenprobe.py`) | Merkmalswerte an je 25 zufälligen Coin-Tagen aus den **Rohquellen** mit eigener Rechnung; Richtung für zwei Merkmale mit eigener Schleife; Abdeckung aus eigenem SQL |
