@@ -1133,3 +1133,15 @@ Schritt7 §23.24.
   - Umrechnung in EUR über `eur_je_usd`;
   - Meldung erst nach zwei Läufen (Zeitversatz 15/30 min), Sperre 6 h.
 - Nachweis: Plan G-T/G-U, Schritt7 §23.44.
+
+# E-99 · Neuer Hebel-Tab (P12, 11.10.2026)
+
+**11.10.2026** · Nutzer: *„1. bis GUI-4 doppelt lassen 2. aus der GUI entfernen“*.
+- Der Hebel-Schalter steht bis GUI-4 im Hebel-Tab **und** in der Watchlist, über denselben Schreibweg.
+- Der alte Hebel-Tab (Altlisten, gesperrte Analyse, Signal-Historie der alten Kette) ist aus der GUI genommen; der Code bleibt.
+- **Eigene Festlegungen (fachlich, berichtet):**
+  - neuer Tab als eigene Datei (die Prüfungen auf die alte bleiben gültig);
+  - Filter *nur Schalter an* über den Schalter **zum Signalzeitpunkt**;
+  - H15 nur bei sichtbarem Unterreiter, höchstens alle 60 s;
+  - Vorgabe-Filter *7 Tage + nur Schalter an*.
+- Nachweis: Plan G-V/G-W, Schritt7 §23.45.

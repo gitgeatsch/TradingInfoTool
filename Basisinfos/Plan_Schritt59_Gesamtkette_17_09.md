@@ -2481,3 +2481,7 @@ Schritt7 §23.24.
 - **P11:** O36 Schritt B als lesende Wache – die Bitpanda-Hebel-Wallets werden gegen die gespeicherten Positionen geprüft. Der Importer-Fix P11b kommt getrennt.
 - **O45:** Wochen- und Tageschart mit RSI/MACD in den Signalmails (REGEL0, H15).
 - **M1-Kriterium 2 (Hebel):** Die Positionsführung wird jetzt gegen Bitpanda geprüft. Der bekannte Importerfehler wird damit sichtbar, sobald er greift.
+
+**Nachtrag 11.10.2026 (33) — P12 Hebel-Tab (E-99):**
+- Die GUI zeigt den Hebel des neuen Systems: alle REGEL0-Signale mit Mailtext, die Positionen mit H15 und Bitpanda-Abgleich, die Freigabe je Asset.
+- Der alte Tab ist aus der GUI. Der Watchlist-Schalter bleibt bis GUI-4.

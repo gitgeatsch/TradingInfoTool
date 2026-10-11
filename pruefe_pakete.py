@@ -2036,7 +2036,7 @@ def paket_14() -> None:
            "um die zwei zu finden, die zaehlen")
     import re as _re
     pruefe(P, "keine ZAHL wird in R angegeben",
-           not _re.search(r"[\d,]\s*R", _text),
+           not _re.search(r"[\d,]\s*R\b", _text),
            "die erste Fassung dieser Pruefung suchte schlicht ' R' und traf "
            "damit ' REICHWEITE' und ' Ruecklauf' - ein Textfund ist noch "
            "keine Aussage")
@@ -22167,6 +22167,31 @@ def paket_guikette() -> None:
         pruefe(P, "P9b: die Marktscan-Karte liefert Lauf, Kandidaten, Treffer", _ms9b is None or {"discovered_at", "kandidaten", "treffer"} <= set(_ms9b))
     pruefe(P, "P9b: das Rollen-Kontingent traegt eine Frist und steht nicht mehr in _LIVE_GETTER",
            getattr(_RS9._get_rollen_budget, "_frist_sekunden", None) and "_get_rollen_budget" not in _RS9._LIVE_GETTER)
+    # ---- P12 / GUI-2 Hebel-Tab (11.10.2026, Plan G-V; Nutzer: *"1. bis GUI-4 doppelt lassen 2. aus der GUI entfernen"*) ------------
+    _app12 = _quelltext("ui/app.py")
+    _ht12 = _quelltext("ui/hebel_tab.py")
+    pruefe(P, "⚠️ P12: Tab 'Hebel' ist der neue HebelTab, der alte HebelView ist nicht mehr eingebunden (Code bleibt)",
+           "HebelTab(notebook" in _app12 and "from ui.hebel_view import" not in _app12 and _os_s.path.exists("ui/hebel_view.py"))
+    pruefe(P, "⚠️⚠️ P12/GF2: der Hebel-Schalter steht bis GUI-4 DOPPELT - Watchlist-Knopf und Hebel-Tab, derselbe Schreibweg",
+           "Hebel-Prüfung umschalten" in _app12 and "_toggle_hebel_pruefung_erlaubt" in _app12
+           and "db.set_hebel_pruefung_erlaubt" in _ht12 and "db.set_hebel_pruefung_erlaubt" in _app12)
+    # _nur_code: ohne Strings und Kommentare - die Docstrings nennen den Schreibweg, schreiben aber nicht
+    _sch12 = [z for z in _nur_code("ui/hebel_tab.py").splitlines() if re.search(r"db\s*\.\s*set_|\bINSERT\b|\bUPDATE\b|\bDELETE\b", z)]
+    pruefe(P, "P12: der Hebel-Tab schreibt NUR beim Umschalten (eine Stelle)", len(_sch12) == 1 and "set_hebel_pruefung_erlaubt" in _sch12[0],
+           "%s" % _sch12)
+    import ui.hebel_tab as _HT12
+    from datetime import datetime as _dt12, timedelta as _td12, timezone as _tz12
+    _j12 = _dt12(2026, 10, 11, 12, tzinfo=_tz12.utc)
+    _rows12 = [dict(symbol=s_, bitpanda=s_, signalstunde=(_j12 - _td12(days=d_)).strftime("%Y-%m-%d %H:00"),
+                    einstieg=(_j12 - _td12(days=d_) + _td12(hours=1)).strftime("%Y-%m-%d %H:00"),
+                    ausstieg=(_j12 - _td12(days=d_) + _td12(hours=25)).strftime("%Y-%m-%d %H:00"), stufe=3, stufe_vorlaeufig=3,
+                    hebel_schalter=h_, mail_signal_am=None) for s_, d_, h_ in (("A", 0.1, 1), ("B", 3, 0), ("C", 10, 1))]
+    _z12 = {(z_, n_): len(_HT12.signal_zeilen(_rows12, _j12, z_, n_)) for z_ in _HT12.FILTER_ZEIT for n_ in (False, True)}
+    pruefe(P, "P12: Filter heute / 7 Tage / alle und 'nur Schalter an' zaehlen richtig (gestellte Zeilen)",
+           _z12 == {("heute", False): 1, ("heute", True): 1, ("7_tage", False): 2, ("7_tage", True): 1, ("alle", False): 3, ("alle", True): 2},
+           "%s" % _z12)
+    pruefe(P, "P12: H15 und Bitpanda-Abgleich nicht im 3-s-Takt - nur sichtbar und hoechstens alle 60 s",
+           _HT12.LANGSAM_S >= 60 and "self._sichtbar(1)" in _ht12 and "if stand == self._signal_stand" in _ht12)
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
     pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
            not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))
@@ -32090,7 +32115,7 @@ def paket_regel0_betrieb() -> None:
                _hs.index("_pruefe_hebel_abgleich(conn_factory)") < _hs.index("_hebel_wallet_lauf(conn_factory)") <
                _hs.index("_hebelfuehrung_lauf(conn_factory)"))
         pruefe(P, "P11: nur lesend - pruefe() schreibt nicht",
-               not re.search(r"(INSERT|UPDATE|DELETE)", _quelltext("agent/hebel_wallet_abgleich.py").split("def zeile")[0]
+               not re.search(r"\b(INSERT|UPDATE|DELETE)\b", _quelltext("agent/hebel_wallet_abgleich.py").split("def zeile")[0]
                              .split("def pruefe")[1]))
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "P11/O45: Wache lief durch", False, repr(ex))

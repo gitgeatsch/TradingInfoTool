@@ -3081,3 +3081,10 @@ Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `k
   - Kontext, kein Auslöser.
 - Prüfstand 10/10, Gegenprobe 4/4, Regel0Betrieb 85/85.
 - Ausführlich: Plan Schritt 53 **G-U**. Am NB: **K-HW-1**, **K-WC-1**.
+
+### 23.45 P12: neuer Hebel-Tab (11.10.2026)
+
+- `ui/hebel_tab.py` mit drei Unterreitern: REGEL0-Signale mit Filtern und Mailtext, Positionen mit H15 und Bitpanda-Abgleich, Freigabe je Asset mit Schalter.
+- Der alte Tab ist aus der GUI genommen, der Code bleibt. Der Watchlist-Schalter bleibt bis GUI-4.
+- Drei wirkungslose Prüfmuster (Backspace statt `\b`) bereinigt.
+- Prüfstand 8/8, Gegenprobe 4/4. Ausführlich: Plan Schritt 53 **G-W**. Am NB: **K-GUI-2**.

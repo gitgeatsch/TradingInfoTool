@@ -19,7 +19,7 @@ from api.bitpanda import is_listed as bitpanda_is_listed
 from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_holdings
 from ui.formatting import format_money, format_price_age, format_zeitpunkt_lokal, is_price_stale
 from ui.heading_tooltip import add_heading_tooltips
-from ui.hebel_view import HebelView
+from ui.hebel_tab import HebelTab
 from ui.marktscan_view import MarktscanView
 from ui.portfolio import PortfolioView
 from ui.regime_view import RegimeView
@@ -183,11 +183,10 @@ class TradingInfoToolApp(tk.Tk):
         self._screener_view = ScreenerView(notebook, db_conn_factory, watchlist)
         notebook.add(self._screener_view, text="Screener")
 
-        self._hebel_view = HebelView(
-            notebook, db_conn_factory, watchlist, groq_client, coingecko_client,
-            kraken_client, fred_api_key=fred_api_key, gemini_client=gemini_client,
-            mistral_client=mistral_client, zai_client=zai_client,
-        )
+        # P12 / GUI-2 (11.10.2026, Nutzer: *"2. aus der GUI entfernen"*): der Hebel-Tab des NEUEN Systems - REGEL0-Signale,
+        # Positionen mit H15 und Bitpanda-Abgleich, Freigabe je Asset. Der alte Tab (ui/hebel_view.py: Altlisten der alten Kette und
+        # der Rollen-Kette, gesperrte Analyse, Signal-Historie hebel_signals) ist aus der GUI genommen; sein Code bleibt.
+        self._hebel_view = HebelTab(notebook, db_conn_factory, watchlist)
         notebook.add(self._hebel_view, text="Hebel")
 
         self._regime_view = RegimeView(notebook, db_conn_factory)

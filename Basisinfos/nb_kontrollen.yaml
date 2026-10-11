@@ -98,6 +98,15 @@ kontrollen:
     nachweis: "naechste REGEL0-Signalmail: unter '2 · Chart' drei Bilder (Signal, Wochenchart, Tageschart); H15-Mail mit zwei Bildern je Position; Log 'Charts n'; kein 'Wochen-/Tageschart gescheitert'"
     faellig_bis: ""
     status: offen
+  - id: K-GUI-2
+    titel: "P12 Hebel-Tab: drei Bereiche (Signale REGEL0, Positionen H15 mit Bitpanda-Abgleich, Freigabe je Asset), Schalter auch weiter in der Watchlist"
+    seit: "2026-10-11"
+    paket: P12
+    commit: ""
+    art: manuell
+    nachweis: "Nutzer oeffnet die GUI am NB: Tab Hebel mit drei Unterreitern gefuellt, Filter wirken, Detail mit Mailtext; Watchlist-Knopf Hebel-Pruefung umschalten noch da; Diagnose ohne ERROR 'Hebel-Tab'"
+    faellig_bis: "2026-10-14"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

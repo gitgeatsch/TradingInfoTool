@@ -800,6 +800,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **NB-Kontrollen** stehen in `Basisinfos/nb_kontrollen.yaml` und veralten nicht: automatische werten sich live aus, Frist rot auf Seite und in der Suite.
 - **Hebel-Wallet-Abgleich** (P11): Die gespeicherten Hebelpositionen werden alle 15 min gegen die Bitpanda-Hebel-Wallets geprüft. Bei einer Abweichung kommt eine Mail (nach zwei Läufen, Sperre 6 h), und die Statusseite zeigt sie.
 - **Signalmails** (REGEL0, H15) tragen Wochen- und Tageschart mit RSI 14 und MACD 12/26/9 als Kontext (O45, E-98).
+- **GUI-Hebel-Tab** (P12): REGEL0-Signale mit Filtern (heute / 7 Tage / alle, nur Schalter an), Detail mit Mailtext; Positionen mit H15-Empfehlung, Abstand, Finanzierung und Bitpanda-Abgleich; Freigabe je Asset mit Hebel-Schalter (E-99).
 - **Ruhend:** Thesen-Abgleich/-Synthese (`thesen_pausiert`, E-96) bis zum Multi-Asset-Umbau (O39); die Rollen-Kette (`spot_kette_angehalten`).
 
 ## 11. Roadmap & Erweiterbarkeit

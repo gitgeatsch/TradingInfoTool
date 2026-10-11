@@ -946,3 +946,40 @@ Nutzer 11.10.: *„Pull und Neustart am NB erledigt, Export kommt später“* �
 - **Suite:** GuiKette erweitert, ganze Suite. Am NB: Pull + Neustart → **K-GUI-2**.
 - **Bündel (E-97):** reine GUI, kein Job, keine Mail → bündelbar (z. B. mit P13 H14 nach N5).
 
+### G-W P12 gebaut — neuer Hebel-Tab (11.10.2026)
+
+Nutzer 11.10.: *„1. bis GUI-4 doppelt lassen 2. aus der GUI entfernen“*.
+
+**Gebaut:** `ui/hebel_tab.py` (`HebelTab`), in `ui/app.py` als Tab *Hebel*. `ui/hebel_view.py` ist aus der GUI genommen, der Code bleibt; die sieben Suite-Textprüfungen darauf und `pruefe_h17` bleiben gültig. Drei Unterreiter:
+- **Signale (REGEL0):**
+  - alle Signale; Filter *heute / 7 Tage / alle* und *nur Hebel-Schalter an* (Spalte `hebel_schalter` der Ablage, derselbe Wert, der das Mailen erlaubt);
+  - Spalten: Asset, Signal, Stufe, Status, gemailt, Trader-Urteil, Ausstieg;
+  - Detail = `regel0_ansicht.detail` (Mailtext + Prüfblock + Mailstand), Signalchart, Knöpfe *Wochenchart* / *Tageschart* (O45).
+- **Positionen (H15):**
+  - Kurs, Liquidation, Abstand %, H15-Empfehlung mit Warnstufe, Finanzierung bisher/je Tag, Ergebnis netto, REGEL0-Vermerk;
+  - Zeile *Abgleich mit Bitpanda (Wallets): stimmt / WEICHT AB* (P11);
+  - Detail = `hebelfuehrung.zeilen`.
+- **Freigabe je Asset:**
+  - alle Krypto-Assets der Watchlist (ohne Stablecoins) und jedes Asset mit Schalterzeile; Schalter AN/aus, REGEL0-Daten da/FEHLEN, letztes Signal;
+  - Knopf *Schalter umschalten* (dieselbe `db.set_hebel_pruefung_erlaubt` wie die Watchlist, GF2). Der Watchlist-Knopf bleibt bis GUI-4.
+
+**Laufzeit:** Der 3-s-Takt der App liest nur die Ablage. Unveränderte Daten zeichnen nichts neu, Sortierung und Auswahl bleiben stehen, das Detail wird nicht neu gezeichnet. H15 und der Abgleich laufen nur bei sichtbarem Unterreiter, höchstens alle 60 s (Knopf *Aktualisieren*).
+
+**Gefunden beim Bau:**
+- **Steuerzeichen:** Drei Prüfmuster in `pruefe_pakete.py` enthielten ein Backspace statt `\b` – zwei aus meinen Patches (P11 *nur lesend*, P12) und eines älter (Paket 14, `R\b`). Die Prüfungen waren damit **wirkungslos**. Jetzt sind sie bereinigt, mit Gegentests (erkennen INSERT, `db.set_`, *0,12 R*), und Paket 14, Regel0Betrieb und GuiKette sind grün. In `simuliere_kette.py` steht ein Backspace nur in einem Kommentar.
+- **Signalchart im Prüfstand:** Es braucht Stunden im Signalfenster. Die Kopie hat nur Stellvertreter, also wurde der GUI-Weg mit einem echten Ersatzbild geprüft; die Erzeugung prüft Regel0Betrieb.
+
+**Nachweis:**
+- `p12_pruefstand.py` **8/8** (View einzeln, unsichtbar, gegen eine Wegwerfkopie der NB-Sicherung):
+  - 424 Signale, 2 Positionen mit H15, Abgleich *stimmt*, 44 Freigaben (26 an);
+  - Detail beginnt mit der Mail;
+  - Filter monoton;
+  - 3-s-Takt ohne Neuzeichnen;
+  - H15 nur sichtbar bzw. erzwungen;
+  - GF2 an der Wegwerfkopie, die Watchlist sieht denselben Wert;
+  - Lesen schreibt nichts (Prüfsumme);
+  - Einbindung.
+- `p12_gegenprobe.py` **4/4**: eigenes SQL je Filter (424/17/353/15), gemailt 17, Abstand selbst gerechnet, AN 26.
+- GuiKette 44/44 mit P12-Wachen.
+
+**Am NB:** Pull + Neustart → **K-GUI-2** (Nutzer öffnet die GUI).

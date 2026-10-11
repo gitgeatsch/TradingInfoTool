@@ -18,6 +18,12 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 11.10.2026 (3) — GUI-Hebel-Tab
+>
+> | Hier fehlt | Stand seit 11.10.2026 |
+> |---|---|
+> | Hebel in der GUI | `ui/hebel_tab.py`: REGEL0-Signale, Positionen (H15 + Abgleich), Freigabe je Asset; `ui/hebel_view.py` nicht mehr eingebunden (E-99) |
+>
 > ## ⚠️ NACHTRAG 11.10.2026 (2) — Hebel-Wallet-Abgleich und Charts in den Mails
 >
 > | Hier fehlt | Stand seit 11.10.2026 |

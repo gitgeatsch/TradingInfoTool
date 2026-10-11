@@ -207,7 +207,7 @@ Nutzer 10.10.: *„3. ja, mit Statusseite starten – prüfe vorher, ob der Bau 
 | 2 | **P9** | Betrieb | **GUI-1 Statusseite**: Überwachung je Bereich (G-L), Parameter-Karte nur lesend, O44 (eine Liquidationsmarge); dieselben Funktionen wie der Teilexport | K-ST-1 (Seite über VPN, alle Karten, nichts fehlt) · ✔ **gebaut 10.10.** (Plan Schritt 53 G-P), K-ST-1 am NB offen | Hauptwerkzeug, macht alle folgenden Schritte sichtbar |
 | 3 | P10 | Betrieb | **O42 Thesen-Synthese pausieren** (Schalter) | Kontingent sinkt, Statusseite zeigt *pausiert* · ✔ **gebaut 11.10.** (G-S), K-TH-1 am NB | klein; spart Gemini für den Prüfblock; Wiedereinschalten bei O39 |
 | 4 | **P11** | Hebel | **Schritt B** (O36): Hebel-Wallets gegen `hebel_positions` | K-HW-1 · ✔ **gebaut 11.10.** im Bündel mit O45 (G-U, E-98); Importer-Fix = **P11b** (allein, Schreiber) | Hebel-Vorrang; deckt den Importerfehler bei Teilschließungen auf |
-| 5 | P12 | Hebel/Betrieb | **GUI-2 Hebel-Tab**: alle REGEL0-Signale, Abstand/H15, Hebel-Schalter hierher | K-GUI-2 | baut auf Schritt B auf |
+| 5 | P12 | Hebel/Betrieb | **GUI-2 Hebel-Tab**: alle REGEL0-Signale, Abstand/H15, Hebel-Schalter hierher | K-GUI-2 · ✔ **gebaut 11.10.** (G-W, E-99): Watchlist-Schalter bis GUI-4 doppelt, alter Tab aus der GUI | baut auf Schritt B auf |
 | 6 | P13 | Hebel | **H14** Zeitgrenze Prüfblock, **nach dem N5-Ergebnis** (~15.10.) und der LLM-Entscheidung (E-83) | L1 | N5 kann die Fassung ändern; erst danach bauen |
 | 7 | P14 | Spot | **Spot B1** Mitnahme ×3 (+ D6, D7, A6 alte Stop-Mail für Spot aus) | K-SP-1 | Spot-Bau Stufe 1, erster Schritt (§39) |
 | 8 | P15 | Betrieb | **GUI-3 Bestand-Tab** (Spot/Hebel getrennt, Rolle Kern/L) | K-GUI-3 | zeigt B1 |
