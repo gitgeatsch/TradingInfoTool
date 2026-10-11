@@ -894,3 +894,55 @@ Nutzer 11.10.: *„ja Bündelung ist ok – nur Hinweis zu RSI und MACD – das 
 - Suite Regel0Betrieb 85/85 mit neuen Wachen. Alle Prüfstände P9, P10, H15, O29 und Sofortliste grün.
 
 **Am NB:** Pull + Neustart → **K-HW-1** (Diagnose), **K-WC-1** (nächste Signal- bzw. H15-Mail).
+
+
+### G-V Voranalyse P12 — GUI-2 Hebel-Tab (11.10.2026)
+
+Nutzer 11.10.: *„Pull und Neustart am NB erledigt, Export kommt später“* → Voranalyse P12 laut Paketplan. Code-Bericht, von mir am Code und an der Prod-Kopie gegengeprüft.
+
+**Ist `ui/hebel_view.py` (1.197 Zeilen):**
+- **Ein** Treeview mischt vier Quellen:
+  - A `hebel_signals` (alte Kette, letztes 10.08.);
+  - B Hebel-Urteile der Rollen-Kette (letztes 27.09., seit E-46 aus);
+  - C Kandidaten `hebel_triggers` (Screening aus);
+  - REGEL0 (`agent/regel0_ansicht.py`), **nur das jüngste Signal je Asset**, Filter nur *2 Tage / alle*.
+- Darunter die offenen Positionen: Hebel, Eigenkapital, Eröffnung, geschätzte Liquidation, REGEL0-Vermerk.
+  - **Ohne** Kurs, Abstand, H15-Empfehlung, Finanzierung und Wallet-Abgleich.
+- Die Knöpfe *Jetzt analysieren* (alte Pipeline, gesperrt) und *Signal-Historie* (`hebel_signals`) gehören zur alten Kette.
+- Der Tab wird **alle 3 s** neu gelesen (`app._poll_prices`).
+- Der **Hebel-Schalter** liegt in der Watchlist (`ui/app.py:405`, `_toggle_hebel_pruefung_erlaubt` :960 → `db.set_hebel_pruefung_erlaubt`).
+  - REGEL0 schreibt ihn je Signal in die Ablage (`regel0_stundenlauf._hebel_schalter`).
+  - Gemailt wird nur mit `hebel_schalter=1`.
+  - Stand: 26 von 44 an.
+- **Kein Job und kein Mailweg importiert `ui/hebel_view.py`** (GF11). Einziger fremder Nutzer ist `pruefe_h17.py`.
+- Sieben Suite-Prüfungen lesen Textstellen in `hebel_view.py` (Pakete 15, Dimension, Altbestand, GuiKette, Regel0Betrieb).
+
+**Vorschlag: neuer Tab `ui/hebel_tab.py`; `hebel_view.py` bleibt unverändert** (Suite-Textprüfungen und `pruefe_h17` bleiben gültig).
+
+| Bereich | Inhalt | Quelle |
+|---|---|---|
+| **Signale (REGEL0)** | **alle** Signale; Filter *heute / 7 Tage / alle* und *nur Schalter an / alle*. Spalten: Asset, Signalstunde (Ortszeit), Stufe (vorläufig/endgültig), Status, gemailt, Trader-Urteil, Ausstieg. Detail = Mailtext + Prüfblock + Mailstand (`regel0_ansicht.detail`, eine Quelle mit der Mail). Signalchart wie heute, dazu Knöpfe *Wochenchart* / *Tageschart* (O45-Bilder) | `regel0_signale.db` (nur lesend) |
+| **Positionen (H15)** | Asset, Richtung, Hebel, Eigenkapital, Kurs, Liquidation, **Abstand %**, **H15-Empfehlung**, **Finanzierung bisher / je Tag**, Ergebnis netto, REGEL0-Vermerk; Zeile **Abgleich mit Bitpanda: stimmt / WEICHT AB** (P11) | `hebelfuehrung.lade`, `betriebslage.hebel_wallet_abgleich` |
+| **Freigabe je Asset** | alle Krypto-Assets der Watchlist (ohne Cash) mit Hebel-Schalter An/Aus, *REGEL0-Daten vorhanden*, letztes Signal; Knopf *Schalter umschalten* (dieselbe `db.set_hebel_pruefung_erlaubt`, GF2) | `asset_hebel_settings`, `betriebslage.neuaufnahme_und_abgleich` |
+
+**Weitere Punkte:**
+- **Laufzeit:** Die Signale lesen die kleine Ablage (≈ 1 MB). Positionen und Abgleich (H15 rechnet ≈ 0,1 s am Desktop, am NB etwa 0,4 s) werden nur gelesen, **wenn der Tab sichtbar ist**, höchstens alle 60 s; dazu ein Knopf *Aktualisieren*. Der 3-s-Takt blockiert sonst die GUI.
+- **Entfällt im Hebel-Tab:** die Altlisten A/B/C, *Jetzt analysieren*, *Signal-Historie*. Der Code bleibt (`hebel_view.py`).
+
+⚠️ **Zur Rücksprache (Regel *Umbau: prüfen, was fehlt*):**
+1. **Hebel-Schalter in der Watchlist:** jetzt entfernen, oder bis GUI-4 (*Meine Assets*) doppelt lassen?
+2. **Alter Hebel-Tab:** bis GUI-5 (Archiv) als letzter Tab *„Hebel (alt)“* erreichbar lassen, oder jetzt ganz aus der GUI nehmen (Code bleibt)?
+
+**Nachweis vorab:**
+- **Prüfstand:** die View einzeln gegen eine Kopie der NB-Sicherung (Tk unsichtbar, Muster `sofortliste_pruefstand`/`pruefe_h17`).
+  - Jede Spalte gefüllt.
+  - Filterzahlen gegen eigenes SQL.
+  - Detail beginnt mit dem Signalmail-Text.
+  - Positionen gleich `hebelfuehrung.lade`.
+  - Schalter umschalten **an einer Wegwerf-DB**: genau eine Zeile in `asset_hebel_settings`, und die Watchlist sieht dieselbe.
+  - Lesen ohne Schreibzugriff (Prüfsumme).
+  - Laufzeit des Lesens.
+- **Gegenprobe:** eigene Zählung der Signale je Filter, eigene Abstandsrechnung.
+- **Suite:** GuiKette erweitert, ganze Suite. Am NB: Pull + Neustart → **K-GUI-2**.
+- **Bündel (E-97):** reine GUI, kein Job, keine Mail → bündelbar (z. B. mit P13 H14 nach N5).
+
