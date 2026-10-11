@@ -1,0 +1,8 @@
+G1  gleich     U2: Einstiege Tag fuer Tag 765 · Ablage 765 · gleich True
+G2  gleich     U2: Coins mit ueberlappender Haltezeit 0
+G3  gleich     U2: Vorrat mit Merkmal an 30 Einstiegen min 6 / Median 23
+G1  gleich     U1: Einstiege Tag fuer Tag 433 · Ablage 433 · gleich True
+G2  gleich     U1: Coins mit ueberlappender Haltezeit 0
+G3  gleich     U1: Vorrat mit Merkmal an 30 Einstiegen min 5 / Median 12
+
+6 von 6 gleich

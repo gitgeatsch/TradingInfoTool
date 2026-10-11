@@ -1,0 +1,19 @@
+MACHBARKEIT Messplan U2/U1 (§46) · Kurse bis 2026-09-20
+
+M0 Teil 0 U2 gebuehr90 oben: Richtung 1.249 (Soll 1.25) -> gleich
+M0 Teil 0 U1 stab90 unten: Richtung 1.289 (Soll 1.29) -> gleich
+
+M1 U2 2023 (Wahl)       Einstiege   78 · Monate  9 · Coins  34 · je Klasse H 20 · M 43 · S 15
+M2    Nullwelt-Vorrat je Tag und Klasse: mit Merkmal min 4 / Median 10 · alle der Klasse min 19 / Median 94
+M3    bei Bitpanda handelbar 96 %
+M1 U2 ab 2024 (Urteil)  Einstiege  765 · Monate 32 · Coins 114 · je Klasse H 117 · M 312 · S 336
+M2    Nullwelt-Vorrat je Tag und Klasse: mit Merkmal min 3 / Median 25 · alle der Klasse min 13 / Median 86
+M3    bei Bitpanda handelbar 95 %
+
+M1 U1 2023 (Wahl)       Einstiege   55 · Monate  7 · Coins  21 · je Klasse H 15 · M 27 · S 13
+M2    Nullwelt-Vorrat je Tag und Klasse: mit Merkmal min 2 / Median 7 · alle der Klasse min 19 / Median 99
+M3    bei Bitpanda handelbar 100 %
+M1 U1 ab 2024 (Urteil)  Einstiege  433 · Monate 29 · Coins  57 · je Klasse H 114 · M 197 · S 122
+M2    Nullwelt-Vorrat je Tag und Klasse: mit Merkmal min 4 / Median 15 · alle der Klasse min 14 / Median 76
+M3    bei Bitpanda handelbar 96 %
+

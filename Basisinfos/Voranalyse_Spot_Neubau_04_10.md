@@ -5513,3 +5513,62 @@ Nutzer 11.10.: *„Ja, Vorprüfung U1–U5 laufen lassen, prüfen und gegenprüf
 | **Vorschlag** | **ein** Messplan mit **U2 `gebuehr90` oben als Haupt** und U1 unten als zweite Hypothese. Bonferroni über 2, Urteil **ab 2024**, Zielgröße 30 T gegen BTC wie §37, Nullwelt gleiche Klasse am selben Tag. Dazu die Lehren §43.5: 1.000 Ziehungen, Grenze aus der Stufung, Auflösung als Kurve; Kosten getrennt |
 | ehrliche Erwartung | eher *trägt nicht*: Der Treffer liegt im Bereich der Auswahl, und ein Teil ist Bewegung |
 | erledigt | U4 MVRV, U5 Korrelation/Beta (keine Richtung), U3 (2023 nicht prüfbar; ab 2024 60 Coins, aber ohne Wahlmenge nur als Beschreibung) |
+
+
+## 46. Messplan U2/U1 — Einstieg je Asset aus Gebühren-Wachstum und Stablecoin-Zufluss je Kette, VOR der Messung (11.10.2026, zur Abstimmung)
+
+Nutzer 11.10.: *„Ja, Messplan U2/U1 vorbereiten, prüfen und gegenprüfen“*. Grundlage: Stufe 1 §45.6–45.8 (Wahl 2023).
+
+**Fragen:**
+- **U2 (Haupt):** Bringt ein Kauf von Coins, deren **Gebühren in 90 T stärker gewachsen sind als ihr Kurs** (oberes Fünftel), in den folgenden 30 T mehr als BTC **und** mehr als ein zufälliger Coin derselben Klasse, der ebenfalls Gebühren hat?
+- **U1:** Dasselbe für Kettentoken, deren **Stablecoin-Bestand schwächer gewachsen ist als ihr Kurs** (unteres Fünftel). Diese Seite steht **gegen** die ursprüngliche Vermutung und kommt allein aus der Zweiseitigkeit.
+
+### 46.1 Prüfung und Gegenprüfung des Plans (`k47_machbarkeit.py` → `.txt`, Gegenprobe `k47_machbarkeit_gegenprobe.py` **6/6**)
+
+| | U2 `gebuehr90` oben | U1 `stab90` unten |
+|---|---|---|
+| **Teil 0 (R-R11)** | Stufe 1 wiedergegeben: 1,249 | 1,289 |
+| Einstiege 2023 (Wahl) | 78 · 9 Monate · 34 Coins | 55 · 7 Monate · 21 Coins |
+| **Einstiege ab 2024 (Urteil)** | **765** · 32 Monate · **114 Coins** (H 117 · M 312 · S 336) | **433** · 29 Monate · 57 Coins (H 114 · M 197 · S 122) |
+| Nullwelt-Vorrat je Tag und Klasse, **mit Merkmal**, ohne Signal | min 3 / Median 25 | min 4 / Median 15 |
+| dasselbe, alle Coins der Klasse (Auskunft) | min 13 / Median 86 | min 14 / Median 76 |
+| bei Bitpanda handelbar | 95 % | 96 % |
+
+**Gegenprobe 6/6:**
+- zweite Umsetzung Tag für Tag mit eigener Sperre und eigenem Perzentil: dieselben 765 / 433 Einstiege;
+- keine überlappenden Haltezeiten;
+- Vorrat selbst gezählt (min 6 bzw. 5 an 30 Stichproben).
+
+⇒ Die Mindestzahl (≥ 20 an ≥ 6 Monaten) ist weit erfüllt.
+
+### 46.2 Festlegungen (vorab; Rechnung `k47_messung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Grundgesamtheit | Watchlist-Klassen des Monats ohne BTC/ETH/SOL (wie §35/§37), Kurse bis 20.09.2026 |
+| **Signal** | am Tagesschluss d: Merkmal im **oberen** (U2) bzw. **unteren** (U1) Fünftel des Tagesquerschnitts (≥ 30 Coins mit Merkmal); externe Werte bis d − 1 |
+| Einstieg / Ausstieg | Kauf zum Schluss d + 1, **Zeitgrenze 30 T**; eingestellt → letzter Kurs; **eine Sperre je Coin über alle Klassen** (§37.6) |
+| Zielgröße | Ertrag **gegen BTC** über dieselbe Haltedauer, brutto (Regel 2) |
+| Gewichtung | je Monat der Korb, dann Mittel über die Monate |
+| Mehrfachtesten | zwei Hypothesen → jede Schwelle 0,975 (Bonferroni) |
+| ⚠️ **Nullwelt (Haupt)** | an denselben Einstiegstagen gleich viele **zufällige Coins derselben Klasse MIT Merkmal und ohne Signal**, gleicher Ausstieg, **1.000** Ziehungen (mit Zurücklegen, wenn der Vorrat kleiner ist; der Anteil wird ausgewiesen). **Warum mit Merkmal:** Sonst misst der Vergleich *„Coins mit Gebühren gegen den Rest“* statt das **Wachstum**. Auskunft: Nullwelt aus allen Coins der Klasse |
+| **TRÄGT (ab 2024), je Hypothese** | (1) Korb > 0, Block-Bootstrap über Monate (2.000, Blöcke zu 3) ≥ 0,975 · (2) Rang gegen die Nullwelt ≥ 0,975 · (3) Spiegelprobe: Richtung (Lauf ×1,3 / Absturz ÷1,3 in 30 T) der Einstiege gegen dieselbe der Nullwelt > 1 · (4) ≥ 20 Einstiege an ≥ 6 Monaten |
+| zweiseitig | Korb < 0 und Bootstrap ≤ 0,025 → **SCHADET** |
+| **Lohnt** | zusätzlich: Korb − Kosten der Klasse > 0 (Hin und Rück H 0,72 · M 1,76 · S 6,4 %), je Klasse ausgewiesen |
+| **Selbsttest** (Lehre §43.5) | (a) 200 Zufalls-Signale: je Tag gleich viele zufällige Coins **mit Merkmal** derselben Klasse als „Signal“, je 1.000 Ziehungen → Fehlalarm *TRÄGT* ≤ **5 %** (erwartet ≤ 2,5 % aus der Stufung + 2 Standardfehler). (b) **Auflösung:** Die Erträge der echten Einstiege werden durch eine Stichprobe der Nullwelt-Erträge desselben Tages und derselben Klasse **+ x Pp** ersetzt, x = 2 / 5 / 10, je 50 Wiederholungen. Findet die Anlage **x = 5 Pp** (etwa die Kosten von Midcaps und Smallcaps) in < 80 %, lautet das Urteil *„nicht entscheidbar – Auflösung reicht nicht“* |
+| Auskunft (nach dem Urteil) | Nullwelt aus allen Coins der Klasse; je Klasse; je Jahr; Zeitgrenze 15 / 60 T; Median der Monate und ohne den stärksten Monat; Weglassprobe ohne die 5 Coins mit dem größten Beitrag; nur Bitpanda-handelbar; Anteil der Einstiege mit Vorrat < 5 |
+| Gegenprobe | `k47_messung_gegenprobe.py`: Ertrag aus Rohkursen, Korb als eigene Monatsrechnung, Nullwelt **analytisch** (Mittel des Vorrats je Tag) gegen gezogen, Spiegelprobe aus eigener Relativreihe |
+
+### 46.3 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis je Hypothese | Folge |
+|---|---|
+| **TRÄGT und lohnt** (in einer Klasse) | **K-Einstieg** für diese Klasse als Kandidat: Ereignis-Mail *„Einstieg <Coin>: Gebühren +x % in 90 T bei Kurs +y %; Ausstieg nach 30 T; gemessen ab 2024 besser als Zufall“*, kleine Größe, Vorwärtsprotokoll. **Voraussetzung am NB:** Gebühren-Nachlader (DefiLlama, frei; fehlt heute am NB, §27.3) bzw. Stablecoins je Kette. Bau erst nach Abstimmung (T-2) |
+| trägt, die Kosten fressen es | kein Signal; Fakt im App-Tab |
+| nicht entscheidbar (auch: Auflösung) | Vorwärtsprotokoll |
+| trägt nicht / schadet | verworfen. ⇒ §44.7 gilt **ohne Vorbehalt**: Ein Einstieg je Asset ist mit freien Daten nicht belegbar |
+
+⚠️ **Ehrliche Erwartung, vorab:** eher *trägt nicht*.
+- Der Treffer in Stufe 1 liegt im Bereich der Auswahl (2 von 10 Feldern über 1,2).
+- Lift Absturz 1,18 heißt: Ein Teil ist Bewegung.
+- Die Kosten bei den Smallcaps (6,4 %) stellen einen hohen Anspruch.
