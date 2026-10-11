@@ -123,7 +123,9 @@ kontrollen:
     art: manuell
     nachweis: "nach Pull + Neustart: in der Freigabe stehen APT, ASTER, BRETT, CANTON, IMX mit 'da' (vorher '-'); Spaltenkoepfe nicht abgeschnitten"
     faellig_bis: "2026-10-14"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-11"
+    beleg: "Nutzer 11.10. nach Pull + Neustart (acf4978): 'Freigabe passt'"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
