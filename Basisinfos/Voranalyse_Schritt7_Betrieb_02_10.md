@@ -3088,3 +3088,5 @@ Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `k
 - Der alte Tab ist aus der GUI genommen, der Code bleibt. Der Watchlist-Schalter bleibt bis GUI-4.
 - Drei wirkungslose Prüfmuster (Backspace statt `\b`) bereinigt.
 - Prüfstand 8/8, Gegenprobe 4/4. Ausführlich: Plan Schritt 53 **G-W**. Am NB: **K-GUI-2**.
+
+- **23.45 Nachtrag:** Die Spalte *REGEL0-Daten* im Freigabe-Reiter wurde für ausgeschaltete Assets nicht geprüft (Nutzerbild). Sie wird jetzt für alle Assets geprüft (`betriebslage.mit_regel0_daten`). Gegenprobe 5/5. Nach Pull + Neustart: K-GUI-2.

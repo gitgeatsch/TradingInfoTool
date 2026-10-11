@@ -258,21 +258,15 @@ def ankuendigungen(daten: str = DATEN) -> dict:
     return erg
 
 
-def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dict:
-    """Neuaufnahme (3 Laeufe), Datenbestand, gesperrte Mails, Hebel-Schalter ohne Daten (Teilexport REGEL0-NEUAUFNAHME)."""
-    import csv as _csv
-
-    erg = {"neuaufnahme": None, "gesperrt": None, "ohne_daten": None}
-    pa = os.path.join(daten, "stundenkurse_alle.db")
+def regel0_datensymbole(daten: str = DATEN) -> set:
+    """Die Binance-Symbole, fuer die die REGEL0 Stundenkurse hat (``stundenkurse_alle.db._quelle`` und ``stundenkurse.db``)."""
     bestand = set()
+    pa = os.path.join(daten, "stundenkurse_alle.db")
     if os.path.exists(pa):
         c = ro(pa)
         try:
-            if "_neuaufnahme" in tabellen(c):
-                erg["neuaufnahme"] = [tuple(r) for r in c.execute("SELECT * FROM _neuaufnahme ORDER BY lauf_am DESC LIMIT 3")]
-            else:
-                erg["neuaufnahme"] = []
-            bestand = {x for (x,) in c.execute("SELECT symbol FROM _quelle")}
+            if "_quelle" in tabellen(c):
+                bestand = {x for (x,) in c.execute("SELECT symbol FROM _quelle")}
         finally:
             c.close()
     pm = os.path.join(daten, "stundenkurse.db")
@@ -282,6 +276,44 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
             bestand |= {x for (x,) in c.execute("SELECT DISTINCT symbol FROM stundenkurse")}
         finally:
             c.close()
+    return bestand
+
+
+def zuordnung_bitpanda() -> dict:
+    """Bitpanda-Symbol -> Binance-Symbol (None = gesperrt); ohne Eintrag gilt dasselbe Kuerzel (Basisinfos/symbol_zuordnung.csv)."""
+    import csv as _csv
+
+    zu = {}
+    pz = os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv")
+    if os.path.exists(pz):
+        for r in _csv.DictReader(open(pz, encoding="utf-8"), delimiter=";"):
+            zu[r["bitpanda"]] = None if r["markt"] == "gesperrt" else r["binance"]
+    return zu
+
+
+def mit_regel0_daten(namen, daten: str = DATEN) -> set:
+    """P12 (11.10.2026): welche dieser BITPANDA-Namen REGEL0-Kurse haben - fuer ALLE Assets, nicht nur die mit Schalter an
+    (Nutzerbild 11.10.: in der Freigabe stand bei ausgeschalteten Assets '-', obwohl die Datenlage nie geprueft war)."""
+    bestand = regel0_datensymbole(daten)
+    zu = zuordnung_bitpanda()
+    return {n for n in namen if zu.get(n, n) in bestand}
+
+
+def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dict:
+    """Neuaufnahme (3 Laeufe), Datenbestand, gesperrte Mails, Hebel-Schalter ohne Daten (Teilexport REGEL0-NEUAUFNAHME)."""
+    erg = {"neuaufnahme": None, "gesperrt": None, "ohne_daten": None}
+    pa = os.path.join(daten, "stundenkurse_alle.db")
+    if os.path.exists(pa):
+        c = ro(pa)
+        try:
+            if "_neuaufnahme" in tabellen(c):
+                erg["neuaufnahme"] = [tuple(r) for r in c.execute("SELECT * FROM _neuaufnahme ORDER BY lauf_am DESC LIMIT 3")]
+            else:
+                erg["neuaufnahme"] = []
+        finally:
+            c.close()
+    # P12 (11.10.2026): Datenbestand und Zuordnung aus EINER Stelle (dieselben Helfer wie die Freigabe im Hebel-Tab)
+    bestand = regel0_datensymbole(daten)
     ab = os.path.join(daten, "regel0_signale.db")
     if os.path.exists(ab):
         c = ro(ab)
@@ -294,11 +326,7 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
             c.close()
     prod = prod or os.path.join(daten, "tradinginfotool.db")
     if os.path.exists(prod):
-        zu = {}
-        pz = os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv")
-        if os.path.exists(pz):
-            for r in _csv.DictReader(open(pz, encoding="utf-8"), delimiter=";"):
-                zu[r["bitpanda"]] = None if r["markt"] == "gesperrt" else r["binance"]
+        zu = zuordnung_bitpanda()
         c = ro(prod)
         try:
             an = [r[0] for r in c.execute("SELECT symbol FROM asset_hebel_settings WHERE hebel_pruefung_erlaubt=1 ORDER BY symbol")]

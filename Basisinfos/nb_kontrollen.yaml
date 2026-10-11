@@ -104,7 +104,7 @@ kontrollen:
     paket: P12
     commit: ""
     art: manuell
-    nachweis: "Nutzer oeffnet die GUI am NB: Tab Hebel mit drei Unterreitern gefuellt, Filter wirken, Detail mit Mailtext; Watchlist-Knopf Hebel-Pruefung umschalten noch da; Diagnose ohne ERROR 'Hebel-Tab'"
+    nachweis: "Nutzer oeffnet die GUI am NB: Tab Hebel mit drei Unterreitern gefuellt, Filter wirken, Detail mit Mailtext; Watchlist-Knopf Hebel-Pruefung umschalten noch da; Diagnose ohne ERROR 'Hebel-Tab'. Zwischenstand 11.10.: Tab da, Freigabe gefuellt (Bild) - Datenspalte fuer ausgeschaltete Assets war falsch, korrigiert; nach Pull erneut ansehen"
     faellig_bis: "2026-10-14"
     status: offen
   - id: K-ALARM-2

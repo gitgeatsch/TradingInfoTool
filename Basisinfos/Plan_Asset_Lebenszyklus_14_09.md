@@ -983,3 +983,12 @@ Nutzer 11.10.: *„1. bis GUI-4 doppelt lassen 2. aus der GUI entfernen“*.
 - GuiKette 44/44 mit P12-Wachen.
 
 **Am NB:** Pull + Neustart → **K-GUI-2** (Nutzer öffnet die GUI).
+
+**Nachtrag G-W, 11.10.2026 abends — Bildprüfung durch den Nutzer:**
+- Am NB ist der Tab da. Das Bild des Reiters *Freigabe je Asset* zeigte einen **Fehler von mir**: Bei ausgeschalteten Assets stand in *REGEL0-Daten* „-“, sofern es noch kein Signal gab – die Datenlage war für sie **nie geprüft**.
+  - Betroffen waren 12 Assets mit Kursdaten, darunter APT, ASTER, BRETT, CANTON (über CC-Futures), IMX, QNT, S.
+  - Gerade vor dem **Einschalten** ist das die entscheidende Frage.
+- **Korrektur:** `betriebslage.mit_regel0_daten(namen)` prüft die Datenlage für **alle** Assets: *da*, *keine*, bei Schalter an ohne Kurse *FEHLEN*.
+  - Datenbestand und Zuordnung stehen in einer Stelle (`regel0_datensymbole`, `zuordnung_bitpanda`); `neuaufnahme_und_abgleich` nutzt dieselben Helfer.
+  - Der Teilexport ist für die Zeilen REGEL0-NEUAUFNAHME und *ohne REGEL0-Daten* unverändert.
+- Gegenprobe G5 (eigene Lesung der Kursdateien und der Zuordnung, 40/40) – jetzt **5/5**. Prüfstand 8/8, p9-Gegenprobe 10/10, GuiKette 44/44, Regel0Betrieb 85/85.

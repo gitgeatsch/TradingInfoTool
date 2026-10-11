@@ -68,7 +68,7 @@ FREI_SPALTEN = ("asset", "schalter", "daten", "letztes")
 FREI_KOPF = {"asset": "Asset", "schalter": "Hebel-Schalter", "daten": "REGEL0-Daten", "letztes": "letztes REGEL0-Signal"}
 FREI_TIPP = {
     "schalter": "Nur mit Schalter AN wird ein REGEL0-Signal gemailt (Opt-in). Offene Positionen werden unabhaengig davon gefuehrt (H15).",
-    "daten": "Hat die REGEL0 Stundenkurse fuer dieses Asset? Ohne Daten kein Signal - auch mit Schalter an.",
+    "daten": "Hat die REGEL0 Stundenkurse fuer dieses Asset (da / keine)? FEHLEN = Schalter an, aber keine Kurse - dann kommt kein Signal.",
 }
 
 
@@ -153,9 +153,10 @@ def positions_zeilen(trades: list, regel0_rows: list) -> list:
     return aus
 
 
-def freigabe_zeilen(watchlist: list, schalter: dict, ohne_daten: list | None, regel0_rows: list) -> list:
-    """Alle Krypto-Assets der Watchlist (ohne Stablecoins) plus jedes Asset mit eigener Schalterzeile. ``ohne_daten``: Schalter-an-
-    Assets ohne REGEL0-Kurse (``betriebslage.neuaufnahme_und_abgleich``); None = nicht pruefbar."""
+def freigabe_zeilen(watchlist: list, schalter: dict, mit_daten: set | None, regel0_rows: list) -> list:
+    """Alle Krypto-Assets der Watchlist (ohne Stablecoins) plus jedes Asset mit eigener Schalterzeile. ``mit_daten``: die Namen MIT
+    REGEL0-Kursen (``betriebslage.mit_regel0_daten``) - fuer ALLE Assets geprueft, nicht nur die mit Schalter an; None = nicht pruefbar.
+    Spalte: da / keine, bei Schalter AN ohne Daten FEHLEN (dann kann kein Signal kommen)."""
     from agent import regel0_ansicht as R0A
 
     namen = {a.symbol for a in watchlist if getattr(a, "assetklasse", None) == "krypto" and not getattr(a, "ist_cash_aequivalent", False)}
@@ -168,12 +169,12 @@ def freigabe_zeilen(watchlist: list, schalter: dict, ohne_daten: list | None, re
     aus = []
     for n in sorted(namen):
         an = schalter.get(n, False)
-        if ohne_daten is None:
+        if mit_daten is None:
             daten = "?"
-        elif an:
-            daten = "FEHLEN" if n in ohne_daten else "da"
+        elif n in mit_daten:
+            daten = "da"
         else:
-            daten = "da" if n in letztes else "-"
+            daten = "FEHLEN" if an else "keine"
         aus.append({"asset": n, "an": an, "werte": (n, "AN" if an else "aus", daten, _lokal(_ende(letztes.get(n))) if n in letztes else "-")})
     return aus
 
@@ -379,11 +380,12 @@ class HebelTab(ttk.Frame):
         from agent import betriebslage as BL
 
         schalter = self._schalter()
+        namen = {a.symbol for a in self._watchlist} | set(schalter)
         try:
-            ohne = BL.neuaufnahme_und_abgleich(self._ordner).get("ohne_daten")
+            mit = BL.mit_regel0_daten(namen, self._ordner)
         except Exception:                                   # noqa: BLE001
-            ohne = None
-        zeilen = freigabe_zeilen(self._watchlist, schalter, ohne, self._regel0_rows)
+            mit = None
+        zeilen = freigabe_zeilen(self._watchlist, schalter, mit, self._regel0_rows)
         stand = tuple(z["werte"] for z in zeilen)
         if stand == self._frei_stand:
             return

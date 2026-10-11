@@ -6,6 +6,8 @@
   G2 gemailt-Spalte: Zahl der Zeilen mit Mailzeit = COUNT(mail_signal_am) der Ablage (je Filter "alle")
   G3 Positionen: Abstand = (Kurs - Liquidation) / Kurs aus den Rohwerten, eigene Rechnung, gegen die Spalte "Abstand"
   G4 Freigabe: Zahl AN = COUNT(*) WHERE hebel_pruefung_erlaubt = 1 (eigenes SQL) gegen freigabe_zeilen
+  G5 Freigabe-Spalte REGEL0-Daten fuer ALLE Assets: eigenes SQL auf die Kursdateien (DISTINCT symbol / _quelle) mit eigener
+     Zuordnungslesung gegen betriebslage.mit_regel0_daten (Nutzerbild 11.10.: ausgeschaltete Assets standen auf '-')
 """
 import os
 import sqlite3
@@ -59,7 +61,25 @@ pruefe("G3", trades and not abw, "%d Positionen, Abweichungen %s" % (len(trades)
 an = c.execute("SELECT COUNT(*) FROM asset_hebel_settings WHERE hebel_pruefung_erlaubt=1").fetchone()[0]
 schalter = {r["symbol"]: bool(r["hebel_pruefung_erlaubt"]) for r in c.execute("SELECT * FROM asset_hebel_settings")}
 c.close()
-fz = HT.freigabe_zeilen(C.get_watchlist(), schalter, [], rows)
+fz = HT.freigabe_zeilen(C.get_watchlist(), schalter, set(), rows)
 pruefe("G4", sum(1 for x in fz if x["an"]) == an, "AN eigen %d · Tab %d · Zeilen %d" % (an, sum(1 for x in fz if x["an"]), len(fz)))
+
+# G5 - an den DESKTOP-Kursdateien (voll; die Kopie traegt nur Stellvertreter), eigene Lesung
+import csv  # noqa: E402
+import agent.betriebslage as BL  # noqa: E402
+datsym = set()
+for f, q in (("data/stundenkurse.db", "SELECT DISTINCT symbol FROM stundenkurse"), ("data/stundenkurse_alle.db", "SELECT symbol FROM _quelle")):
+    if os.path.exists(f):
+        k = sqlite3.connect("file:%s?mode=ro" % f, uri=True)
+        datsym |= {x for (x,) in k.execute(q)}
+        k.close()
+zu = {r["bitpanda"]: (None if r["markt"] == "gesperrt" else r["binance"])
+      for r in csv.DictReader(open("Basisinfos/symbol_zuordnung.csv", encoding="utf-8"), delimiter=";")}
+namen = {a.symbol for a in C.get_watchlist()} | set(schalter)
+eigen5 = {n for n in namen if zu.get(n, n) in datsym}
+fn5 = BL.mit_regel0_daten(namen, "data")
+aus_mit = sorted(n for n in eigen5 if not schalter.get(n))
+pruefe("G5", eigen5 == fn5 and len(datsym) > 100, "mit Daten eigen %d / Funktion %d · davon Schalter aus (vorher faelschlich '-'): %s" % (
+    len(eigen5), len(fn5), aus_mit[:12]))
 print()
 print("%d von %d gleich" % (sum(ERG), len(ERG)))
