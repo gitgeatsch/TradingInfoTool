@@ -186,7 +186,7 @@ Nutzer 10.10.: *„3. ja, mit Statusseite starten – prüfe vorher, ob der Bau 
 
 **Regeln** (unverändert):
 - ein aktives Paket;
-- **eine NB-Änderung zur Zeit**, je mit Pull + Neustart + Kontrolle;
+- ~~eine NB-Änderung zur Zeit~~ → **seit 11.10. BÜNDELN** (Nutzer: *„mehr Punkte gleichzeitig am NB pullen, sonst dauert die Wartezeit zur Prüfung immer eine Stunde“*): alles fertig Geprüfte in **einem** Pull + Neustart, je Änderung eine eigene Kontrolle mit eigenem Merkmal in `nb_kontrollen.yaml`, **eine** Diagnose für alle; **allein** bleiben nur Änderungen, die die Produktions-DB umschreiben oder Signale/Hebelhöhe/Mails eines laufenden Handels verändern;
 - der Hebel hat Vorrang (T-1);
 - Desktop-Vorarbeit ohne Betriebswirkung füllt die Wartezeit.
 
