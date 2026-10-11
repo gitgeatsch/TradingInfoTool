@@ -798,6 +798,8 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 
 - **Statusseite (Remote, über Tailscale)** ist das Lagebild des neuen Systems: Kontrollen, Hebel (H15), REGEL0 heute, Betrieb, Schalter, Bestand (frei + gestakt), Kontingente je Verbraucher, Parameter (nur lesend). Quelle `agent/betriebslage.py`, dieselbe wie der NB-Teilexport (E-95).
 - **NB-Kontrollen** stehen in `Basisinfos/nb_kontrollen.yaml` und veralten nicht: automatische werten sich live aus, Frist rot auf Seite und in der Suite.
+- **Hebel-Wallet-Abgleich** (P11): Die gespeicherten Hebelpositionen werden alle 15 min gegen die Bitpanda-Hebel-Wallets geprüft. Bei einer Abweichung kommt eine Mail (nach zwei Läufen, Sperre 6 h), und die Statusseite zeigt sie.
+- **Signalmails** (REGEL0, H15) tragen Wochen- und Tageschart mit RSI 14 und MACD 12/26/9 als Kontext (O45, E-98).
 - **Ruhend:** Thesen-Abgleich/-Synthese (`thesen_pausiert`, E-96) bis zum Multi-Asset-Umbau (O39); die Rollen-Kette (`spot_kette_angehalten`).
 
 ## 11. Roadmap & Erweiterbarkeit

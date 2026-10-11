@@ -843,3 +843,54 @@ Nutzer 11.10.: *„Ja, beide Voranalysen parallel vorbereiten und vorlegen“*. 
 **Bündel (E-97):**
 - P11 ist nur lesend, mit eigener Logzeile und Mail → bündelbar.
 - ⚠️ O45 verändert den Inhalt der Signalmail und ist nach E-97 ein **Grenzfall**. Additiv und fehlertolerant, eigene Kennzeile → Bündel vorgeschlagen, **Entscheidung beim Nutzer**.
+
+### G-U Bündel P11 + O45 gebaut (11.10.2026)
+
+Nutzer 11.10.: *„ja Bündelung ist ok – nur Hinweis zu RSI und MACD – das sollen schon Charts sein und nicht nur … Durchschnittswerte“*, Auswahl **Woche + Tag**; *„ja wie immer prüfen und gegenprüfen“*.
+
+**P11 – Hebel-Wallet-Abgleich (O36 Schritt B), nur lesend:**
+- `agent/hebel_wallet_abgleich.py` (`pruefe`, `zeile`, `bestaetigt`, `mail`).
+  - Je Symbol wird `margin-trading` mit der Summe der offenen `positionsmenge` verglichen, der Kredit `margin-trading-credit` mit der Summe `kreditbetrag_eur`.
+  - Fälle: *Menge weicht ab*, *Wallet ohne Position*, *Position ohne Wallet*, *positionsmenge fehlt*.
+- `_hebel_wallet_lauf` im Hebel-Job, nach `_pruefe_hebel_abgleich` und vor H15.
+  - Je Lauf eine Logzeile.
+  - Mail erst nach **zwei Läufen in Folge**, Sperre 6 h je Abweichung (meta `hebel_wallet:*`), nur am Betriebsgerät.
+- Statusseite und Teilexport lesen über `betriebslage.hebel_wallet_abgleich`:
+  - Hebelkarte: *„Abgleich mit Bitpanda: stimmt / WEICHT AB“*;
+  - Teilexport: Zeile *HEBEL-WALLET-ABGLEICH (P11)*.
+- Der Importer-Fix bleibt **P11b** (Schreiber, allein).
+
+**O45 – Wochen- und Tageschart mit RSI 14 und MACD 12/26/9:**
+- `agent/indikator_chart.py` baut Kerzen aus den REGEL0-Stundenkursen.
+  - **Nur abgeschlossene Kerzen**, nach der Uhr und mit mindestens 90 % der Stunden.
+  - Die Woche beginnt Mo 00:00 UTC (`W-MON`, closed=left).
+  - Gezeigt werden 104 Wochen bzw. 180 Tage; gerechnet wird über die ganze Reihe.
+- Umrechnung in EUR:
+  - REGEL0 über `eur_je_usd`, H15 über H15-Kurs ÷ Binance-Schluss. Damit ist der Faktor bei 1000CAT erfasst.
+  - Ist die Reihe zu kurz, steht im Bild *„zu kurz“*.
+- **REGEL0-Signalmail:** zwei weitere Bilder unter *2 · Chart* (`versende(zusatzbilder=…)`).
+  - Der Text bleibt unverändert.
+  - Ein Fehler lässt die Mail mit dem Signalbild durch (P-8).
+- **H15-Mail:** zwei Bilder je gemeldeter Position, Logzeile *Charts n*. Die Prüfstände mit `(betreff, text)` bleiben gültig.
+- Die Charts sind Kontext, **kein Auslöser** (Regel 4, E-91).
+- **Gefunden in der Gegenprobe:** Das pauschale Weglassen der letzten Kerze verlor bei vorzeitig endender Reihe eine volle Woche. Jetzt entscheidet die Uhr.
+
+**Nachweis:**
+- `p11_o45_pruefstand.py` **10/10**:
+  - Kopie stimmt;
+  - fünf gestellte Abweichungen;
+  - Zeitversatz;
+  - Job-Lauf mit Sperre;
+  - Mailtext;
+  - Signalmail mit 3 Bildern, Text gleich;
+  - P-8;
+  - H15-Mail mit Bildern an einer Wegwerfkopie;
+  - alte Signatur;
+  - Prüfsumme.
+- `p11_o45_gegenprobe.py` **4/4**:
+  - eigenes SQL;
+  - Kerzen von Hand über ISO-Woche bzw. UTC-Datum: 249 Wochen und 1.750 Tage gleich;
+  - RSI und MACD in reinem Python.
+- Suite Regel0Betrieb 85/85 mit neuen Wachen. Alle Prüfstände P9, P10, H15, O29 und Sofortliste grün.
+
+**Am NB:** Pull + Neustart → **K-HW-1** (Diagnose), **K-WC-1** (nächste Signal- bzw. H15-Mail).

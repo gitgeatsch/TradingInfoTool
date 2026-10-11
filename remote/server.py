@@ -709,6 +709,14 @@ function renderHebel(h) {
          (p.abstand === null || p.abstand === undefined ? "-" : fmtZahl(p.abstand * 100, 1) + " %") + " · seit " + fmtStempel(p.eroeffnet_am) + "</div>";
     if (p.grund && p.empfehlung !== "HALTEN") x += '<div class="unter">' + esc(p.grund) + "</div>";
   });
+  // P11 (11.10.2026): stimmen die gespeicherten Positionen mit den Bitpanda-Hebel-Wallets? (Teilschliessung, Befund 2.679)
+  const wa = h.wallet_abgleich;
+  if (wa) {
+    const okw = wa.ok === true;
+    x += '<div class="row" style="margin-top:6px"><span>Abgleich mit Bitpanda (Wallets)</span><span class="' + (okw ? "ok" : (wa.fehlt ? "stale" : "err")) + '">' +
+         (wa.fehlt ? "nicht prüfbar" : (okw ? "stimmt" : "WEICHT AB")) + "</span></div>";
+    if (!okw) x += '<div class="unter">' + esc(wa.zeile) + "</div>";
+  }
   if (h.gemeldet === null) x += '<div class="unter">H15-Meldungen: job_laeufe fehlt - unbekannt</div>';
   const g = h.gemeldet || [];
   if (g.length) {

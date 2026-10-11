@@ -1312,7 +1312,9 @@ def _get_hebel_lage(conn: sqlite3.Connection) -> dict:
     # `job_laeufe` fehlt, wo die App nie lief (Desktop) - dann ist "gemeldet" unbekannt (None), nicht leer.
     gemeldet = BL.hebelfuehrung_gemeldet(conn, 5) if "job_laeufe" in BL.tabellen(conn) else None
     return {"positionen": BL.hebel_fuehrung_jetzt(conn), "gemeldet": gemeldet,
-            "hebel_synced_at": BL.bestand_meta(conn).get("hebel_synced_at")}
+            "hebel_synced_at": BL.bestand_meta(conn).get("hebel_synced_at"),
+            # P11 (11.10.2026): Bitpanda-Hebel-Wallets gegen die offenen Positionen - dieselbe Rechnung wie Job und Teilexport
+            "wallet_abgleich": BL.hebel_wallet_abgleich(conn)}
 
 
 @_gecacht_frist(120)

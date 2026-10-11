@@ -1685,6 +1685,7 @@ def _regel0_mails() -> None:
         import agent.regel0_chart as _CH
         import agent.regel0_llm as _LLM
         import agent.binance_ankuendigungen as _BA
+        import agent.indikator_chart as _IC
         # E-52: der Pruefblock der LLM-Sofortfassung - EIN Umlauf je Stundenlauf (Grenzen gegen Ressourcen- und Abfragestau)
         _kat = _LLM.lade()
         _um = _LLM.Umlauf(_kat, _regel0_llm_client_ref, _NL.DATEN_VORGABE)
@@ -1704,7 +1705,10 @@ def _regel0_mails() -> None:
                          spot=_regel0_spot_hinweis,          # O25 M-f: die alte Spot-Kette mailte zum selben Asset
                          senden_html=lambda b, t, h, bi: _sende_hinweismail(b, t, bi, h),   # O25 M-d: eigenes HTML
                          # O29 (E-83/E-84): Binance-Ankuendigung als Fakt - nur mit Schalter ankuendigung_aktiv, liest nur die Ablage
-                         ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r))
+                         ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r),
+                         # O45 (11.10.2026): Wochen- und Tageschart mit RSI/MACD als weitere Bilder in "2 · Chart" (Kontext, kein Ausloeser)
+                         zusatzbilder=lambda r: _IC.bilder(_NL.DATEN_VORGABE, r["symbol"], r.get("bitpanda") or r["symbol"],
+                                                           r.get("eur_je_usd"), praefix="regel0"))
         if any(z.values()):
             logger.info("REGEL0-Mails: %d Signal, %d Korrektur, %d Erinnerung, %d Erinnerung entfallen (keine offene Position), "
                         "%d nicht zugestellt, %d gesperrt (Zuordnung)",
@@ -4265,6 +4269,55 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         logger.exception("Multi-Asset-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
+HEBEL_WALLET_SPERRE_STUNDEN = 6.0
+
+
+def _hebel_wallet_lauf(conn_factory, versand=None, jetzt: datetime | None = None) -> dict:
+    """P11 (11.10.2026, O36 Schritt B, Plan Schritt 53 G-T): Bitpanda-Hebel-Wallets gegen die offenen ``hebel_positions``.
+
+    NUR LESEND bis auf den Sperrfrist-Vermerk in ``meta`` (``hebel_wallet:<schluessel>``, dasselbe Muster wie die Spot-Meldung
+    ``bitpanda_meldung:*``). Logzeile JE LAUF (Kennzeile K-HW-1). Mail nur am Betriebsgeraet, nur fuer Abweichungen, die zwei Laeufe
+    in Folge bestehen (Zeitversatz der beiden Quellen), je Abweichung hoechstens alle 6 h. Scheitert nie nach aussen.
+    ``versand`` (Pruefstand): Ersatz fuer _sende_hinweismail(betreff, text) -> bool."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.hebel_wallet_abgleich as _HW
+        import agent.regel0_nachlader as _NL
+
+        jetzt = jetzt or datetime.now(timezone.utc)
+        conn = conn_factory()
+        try:
+            erg = _HW.pruefe(conn)
+            logger.info(_HW.zeile(erg))
+            neu = _HW.bestaetigt(erg)
+            faellig = []
+            for k in neu:
+                wert = db.get_meta_wert(conn, "hebel_wallet:%s" % k)
+                if not wert or (jetzt - datetime.fromisoformat(wert)).total_seconds() >= HEBEL_WALLET_SPERRE_STUNDEN * 3600:
+                    faellig.append(k)
+            zugestellt = None
+            if faellig:
+                if versand is None:
+                    erlaubt, grund = _NL.betrieb_erlaubt(_NL.DATEN_VORGABE)
+                    if not erlaubt:
+                        logger.info("Hebel-Wallet-Abgleich: keine Mail - %s", grund)
+                        faellig = []
+                if faellig:
+                    b, t = _HW.mail(erg, faellig)
+                    zugestellt = bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t))
+                    if zugestellt:
+                        for k in faellig:
+                            db.set_meta_wert(conn, "hebel_wallet:%s" % k, jetzt.isoformat())
+            aus.update(gelaufen=True, ok=erg.get("ok"), abweichungen=erg.get("abweichungen"), bestaetigt=neu, gemeldet=faellig,
+                       zugestellt=zugestellt)
+        finally:
+            conn.close()
+    except Exception:                                                # noqa: BLE001
+        logger.exception("Hebel-Wallet-Abgleich: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
 def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
     """H15 (09.10.2026, Schritt7 §23.29): die Fuehrung ECHTER Hebelpositionen - im Abgleich-Lauf, nicht in der Rollen-Kette.
 
@@ -4305,15 +4358,29 @@ def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
                 logger.warning("Hebelfuehrung: Stand des Abgleichs nicht lesbar", exc_info=True)
             mail = _HF.sammel_mail(neu, zeitpunkt=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), positionsstand=stand)
             zugestellt = None
+            bilder = []
             if mail:
+                # O45 (11.10.2026): je gemeldeter Position Wochen- und Tageschart mit RSI/MACD - KONTEXT, scheitert nie nach aussen
+                try:
+                    import agent.indikator_chart as _IC
+                    for _sym in dict.fromkeys(x["symbol"] for x in neu):
+                        _k = next((x.get("kurs_eur") for x in neu if x["symbol"] == _sym), None)
+                        bilder += _IC.bilder_hebel(_NL.DATEN_VORGABE, _sym, _k)
+                except Exception as exc:                                 # noqa: BLE001
+                    logger.warning("Hebelfuehrung: Wochen-/Tageschart gescheitert: %s: %s", type(exc).__name__, exc)
+                    bilder = []
                 if versand is not None:
-                    zugestellt = bool(versand("TradingInfoTool: " + mail[0], mail[1]))
+                    import inspect as _insp
+                    _mit = len(_insp.signature(versand).parameters) >= 3      # Pruefstaende mit (betreff, text) bleiben gueltig
+                    zugestellt = bool(versand("TradingInfoTool: " + mail[0], mail[1], bilder) if _mit
+                                      else versand("TradingInfoTool: " + mail[0], mail[1]))
                 else:
                     import config as config_module
                     from api.email_notify import send_notification_email
                     email_cfg = config_module.load_config().get("benachrichtigung", {}).get("email", {})
                     empfaenger = email_cfg.get("empfaenger") if email_cfg.get("aktiv", False) else None
-                    zugestellt = bool(empfaenger) and bool(send_notification_email("TradingInfoTool: " + mail[0], mail[1], empfaenger))
+                    zugestellt = bool(empfaenger) and bool(send_notification_email("TradingInfoTool: " + mail[0], mail[1], empfaenger,
+                                                                                   inline_images=bilder or None))
                 if zugestellt:
                     _HF.vermerke(conn, neu)
                     conn.commit()
@@ -4321,7 +4388,8 @@ def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
                         "".join(" · %s %s Abstand %s" % (x["symbol"], x.get("empfehlung"),
                                                         ("%.1f %%" % (100 * x["abstand_liquidation"])) if x.get("abstand_liquidation") is not None else "?")
                                 for x in trades),
-                        len(neu) if zugestellt else 0, "" if not mail else (" (Mail %s)" % ("zugestellt" if zugestellt else "NICHT zugestellt")))
+                        len(neu) if zugestellt else 0, "" if not mail else (" (Mail %s, Charts %d)" % ("zugestellt" if zugestellt else "NICHT zugestellt",
+                                                                                         len(bilder))))
             aus.update(gelaufen=True, offen=len(trades), neu=len(neu), mail=mail, zugestellt=zugestellt,
                        empfehlungen=[(x["symbol"], x.get("empfehlung"), x.get("abstand_liquidation"), x.get("nahe_stufe")) for x in trades])
         finally:
@@ -4500,6 +4568,8 @@ def hebel_screening_job(
             # Grenze 1 Stunde 15.09.). Die Warnung oben steht je Lauf im Log -
             # ein ANHALTENDER Ausfall bekommt eine Mail.
             _pruefe_hebel_abgleich(conn_factory)
+            # P11 (11.10.2026, O36 Schritt B): Bitpanda-Hebel-Wallets gegen hebel_positions - nur lesend, meldet nach 2 Laeufen
+            _hebel_wallet_lauf(conn_factory)
             # H15 (09.10.2026): Fuehrung ECHTER Hebelpositionen - hier, direkt nach Abgleich und Liquidationspreisen und VOR dem
             # Halt der Rollen-Kette weiter unten; vorher lief sie nur in der Kette und seit deren Halt (05.10.) gar nicht.
             _hebelfuehrung_lauf(conn_factory)

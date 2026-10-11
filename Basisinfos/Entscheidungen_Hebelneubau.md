@@ -1119,3 +1119,17 @@ Schritt7 §23.24.
 - Ersetzt *„eine NB-Änderung zur Zeit“*. Fertig Geprüftes geht in **einen** Pull + Neustart; jede Änderung behält eine eigene Kontrolle mit eindeutigem Merkmal; **eine** Diagnose für alle.
 - **Allein** bleibt, was die Produktions-DB umschreibt oder Signale/Hebelhöhe/Mails eines laufenden Handels verändert.
 - Eingetragen: Plan_Hebel (Paketplan, Regeln), Memory `feedback_nb_aenderungen_buendeln`.
+
+# E-98 · Bündel P11 + O45: Wallet-Abgleich und Charts (11.10.2026)
+
+**11.10.2026** · Nutzer: *„ja Bündelung ist ok – nur Hinweis zu RSI und MACD – das sollen schon Charts sein“*, Auswahl **Woche + Tag**.
+- **P11:** lesende Wache, Bitpanda-Hebel-Wallets gegen `hebel_positions` (O36 Schritt B). Der Importer-Fix kommt als P11b getrennt (Schreiber).
+- **O45:** Wochen- und Tageschart (Kerzen, RSI 14, MACD 12/26/9) als Bilder in der REGEL0-Signalmail und der H15-Mail. Die Spot-Mails folgen mit ihrem Bau.
+- **Eigene Festlegungen (fachlich, berichtet):**
+  - O45 im Bündel trotz Mailänderung, weil additiv, mit P-8 und eigener Kennung – vom Nutzer bestätigt;
+  - Woche Mo–So UTC wie Binance;
+  - nur abgeschlossene Kerzen, nach der Uhr;
+  - gezeigt werden 104 Wochen bzw. 180 Tage;
+  - Umrechnung in EUR über `eur_je_usd`;
+  - Meldung erst nach zwei Läufen (Zeitversatz 15/30 min), Sperre 6 h.
+- Nachweis: Plan G-T/G-U, Schritt7 §23.44.

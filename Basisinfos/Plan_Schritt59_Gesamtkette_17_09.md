@@ -2476,3 +2476,8 @@ Schritt7 §23.24.
 - **P10 Thesen pausiert** (E-96, O42); Wiedereinschalten mit O39 nach Kandidatenprüfung.
 - **Arbeitsweise:** NB-Änderungen bündeln (E-97); Kontrollen nur noch in `Basisinfos/nb_kontrollen.yaml` (Suite-Paket *Kontrollen*).
 - M1-Kriterien unverändert (Kriterium *technisch stabil*: Statusseite zeigt jetzt jeden Betriebsteil des neuen Systems).
+
+**Nachtrag 11.10.2026 (32) — Bündel P11 + O45 (E-98):**
+- **P11:** O36 Schritt B als lesende Wache – die Bitpanda-Hebel-Wallets werden gegen die gespeicherten Positionen geprüft. Der Importer-Fix P11b kommt getrennt.
+- **O45:** Wochen- und Tageschart mit RSI/MACD in den Signalmails (REGEL0, H15).
+- **M1-Kriterium 2 (Hebel):** Die Positionsführung wird jetzt gegen Bitpanda geprüft. Der bekannte Importerfehler wird damit sichtbar, sobald er greift.

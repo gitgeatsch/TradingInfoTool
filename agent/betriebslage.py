@@ -51,6 +51,15 @@ def hebelfuehrung_gemeldet(c, n: int = 8) -> list:
                                         "ORDER BY zuletzt_am DESC LIMIT ?", (n,)).fetchall()]
 
 
+def hebel_wallet_abgleich(c) -> dict:
+    """P11 (O36 Schritt B): Bitpanda-Hebel-Wallets gegen die offenen Positionen - Ergebnis + Kennzeile (agent/hebel_wallet_abgleich)."""
+    from agent import hebel_wallet_abgleich as HW
+
+    erg = HW.pruefe(c)
+    erg["zeile"] = HW.zeile(erg)
+    return erg
+
+
 def portfoliowert(c, n: int = 3) -> list:
     return [tuple(r) for r in c.execute("SELECT datum, wert_eur, cash_eur FROM portfolio_wert_historie ORDER BY datum DESC LIMIT ?",
                                         (n,)).fetchall()]

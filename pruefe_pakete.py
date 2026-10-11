@@ -32031,6 +32031,70 @@ def paket_regel0_betrieb() -> None:
     except Exception as ex:                                   # noqa: BLE001
         pruefe(P, "E-52: Wache lief durch", False, repr(ex))
 
+    # ---- Buendel P11 + O45 (11.10.2026, Plan Schritt 53 G-T) - ohne NB-Kopie, an gestellten Daten ------------------------------
+    try:
+        import sqlite3 as _sq45
+        import tempfile as _tf45
+        from datetime import datetime as _dt45, timedelta as _td45, timezone as _tz45
+        import agent.indikator_chart as _IC45
+        import agent.hebel_wallet_abgleich as _HW45
+        import agent.regel0_ablage as _AB45
+        import agent.regel0_groesse as _G45
+        import agent.regel0_mail as _RM45
+        # O45-1: Wochengrenze Montag 00:00 UTC, laufende Woche/Tag NICHT, Sonntagsstunden in IHRER Woche (W-SUN-Falle)
+        _st = _dt45(2026, 9, 7, tzinfo=_tz45.utc)                       # ein Montag
+        _roh = [((_st + _td45(hours=i)).strftime("%Y-%m-%d %H:%M"), 100.0 + i, 101.0 + i, 99.0 + i, 100.5 + i) for i in range(24 * 17)]
+        _jetzt45 = _st + _td45(days=17, hours=-1)                      # Mi der dritten Woche, 23:00 -> zwei Wochen voll
+        _w = _IC45.kerzen(_roh, "W", _jetzt45)
+        _so = [r for r in _roh if r[0] == "2026-09-13 23:00"][0]       # Sonntag 23:00 der ersten Woche
+        pruefe(P, "O45: Wochen beginnen Montag 00:00 UTC, nur abgeschlossene, der Sonntag gehoert zu SEINER Woche",
+               len(_w) == 2 and _w.index[0].strftime("%Y-%m-%d %H:%M") == "2026-09-07 00:00" and float(_w["c"].iloc[0]) == _so[4]
+               and int(_w["n"].iloc[0]) == 168, "%d Wochen, erste %s" % (len(_w), _w.index[0] if len(_w) else None))
+        # O45-2: Charts scheitern -> die Signalmail geht trotzdem, mit dem Signalbild (P-8); Charts da -> Bild 2 und 3
+        _d45 = _tf45.mkdtemp(prefix="o45_")
+        _k45 = _AB45.oeffne(_d45)
+        _k45.execute("INSERT INTO signal (symbol, signalstunde, einstieg, ausstieg, vh, stufe_vorlaeufig, p2, p3, p5, hebel_schalter, bitpanda, "
+                     "kurs, kurs_markt, paar, faktor) VALUES ('ETH','2026-09-25 10:00','2026-09-25 11:00','2026-09-26 11:00',0.0415,5,0.001,"
+                     "0.001,0.013,1,'ETH',2500.0,'spot','ETHUSDT',1.0)")
+        _k45.commit(); _k45.close()
+        _post45 = []
+
+        def _kaputt45(r):
+            raise RuntimeError("Wache")
+        _z45 = _RM45.versende(_d45, lambda *a: True, jetzt=_dt45(2026, 9, 25, 11, 9, tzinfo=_tz45.utc), werte=_G45.lade(),
+                              kurse=lambda: ({"ETH": 2501.0}, {"ETHUSDT": 2500.0}, {"ETH": 2150.0}), bild=lambda r: b"PNG",
+                              senden_html=lambda b_, t_, h_, bi: _post45.append(bi) or True, zusatzbilder=_kaputt45)
+        pruefe(P, "⚠️ O45: scheitern die Charts, geht die Signalmail trotzdem - mit dem Signalbild (P-8)",
+               _z45["signal"] == 1 and _post45 and len(_post45[0]) == 1, "%s" % _z45)
+        _bq45 = _quelltext("scheduler/background.py")
+        pruefe(P, "O45: Stundenjob gibt Woche + Tag als Zusatzbilder, die H15-Mail ebenso (mit Bildern versandt)",
+               "zusatzbilder=lambda r: _IC.bilder(" in _bq45 and "_IC.bilder_hebel(" in _bq45 and "inline_images=bilder or None" in _bq45)
+        # P11-1: gleich -> ok; Teilschliessung -> Abweichung; erst der zweite Lauf in Folge zaehlt
+        _c11 = _sq45.connect(":memory:")
+        _c11.executescript(
+            "CREATE TABLE bitpanda_katalog (asset_id TEXT, symbol TEXT, name TEXT, gruppe TEXT, isin TEXT, geholt_am TEXT);"
+            "CREATE TABLE bitpanda_wallet_saldo (asset_id TEXT, wallet_owner TEXT, wallet_id TEXT, saldo REAL, zeitpunkt TEXT, geaendert_am TEXT);"
+            "CREATE TABLE hebel_positions (symbol TEXT, positionsmenge REAL, kreditbetrag_eur REAL, geschlossen_am TEXT);"
+            "INSERT INTO bitpanda_katalog VALUES ('a1','ETH','Ethereum','krypto',NULL,NULL),('e1','EURCV','EURCV','krypto',NULL,NULL);"
+            "INSERT INTO bitpanda_wallet_saldo VALUES ('a1','margin-trading','w1',0.9,'z','z'),('e1','margin-trading-credit','w2',-1600,'z','z');"
+            "INSERT INTO hebel_positions VALUES ('ETH',0.9,1600,NULL),('ETH',0.4,500,'2026-01-01');")
+        _e1 = _HW45.pruefe(_c11)
+        _c11.execute("UPDATE bitpanda_wallet_saldo SET saldo=0.5 WHERE asset_id='a1'")
+        _e2 = _HW45.pruefe(_c11)
+        pruefe(P, "⚠️ P11: Wallet = Position -> stimmt (geschlossene zaehlen nicht); Teilschliessung bei Bitpanda -> Abweichung",
+               _e1["ok"] is True and _e2["abweichungen"] == ["menge:ETH"], "%s / %s" % (_HW45.zeile(_e1), _HW45.zeile(_e2)))
+        pruefe(P, "P11: gemeldet erst im zweiten Lauf in Folge (Zeitversatz 15/30 min der Quellen)",
+               _HW45.bestaetigt(_e2, set()) == [] and _HW45.bestaetigt(_e2, {"menge:ETH"}) == ["menge:ETH"])
+        _hs = _bq45[_bq45.index("def hebel_screening_job"):]
+        pruefe(P, "P11: der Abgleich laeuft im Hebel-Job nach dem Bitpanda-Abgleich und VOR der Hebelfuehrung (H15)",
+               _hs.index("_pruefe_hebel_abgleich(conn_factory)") < _hs.index("_hebel_wallet_lauf(conn_factory)") <
+               _hs.index("_hebelfuehrung_lauf(conn_factory)"))
+        pruefe(P, "P11: nur lesend - pruefe() schreibt nicht",
+               not re.search(r"(INSERT|UPDATE|DELETE)", _quelltext("agent/hebel_wallet_abgleich.py").split("def zeile")[0]
+                             .split("def pruefe")[1]))
+    except Exception as ex:                                   # noqa: BLE001
+        pruefe(P, "P11/O45: Wache lief durch", False, repr(ex))
+
 
 def paket_alarmmail(B=None) -> None:
     """Die beiden Alarmmails kommen beim EMPFAENGER an (Reparatur 02.10.2026).

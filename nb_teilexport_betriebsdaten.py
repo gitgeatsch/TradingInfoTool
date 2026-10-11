@@ -282,6 +282,11 @@ def _inhalt() -> int:
                 print("HEBELFUEHRUNG (H15) gemeldet: %d Zustaende%s" % (len(hf), "".join("\n    %s · %s" % (j, str(z)[:16]) for j, z in hf)))
             except sqlite3.Error as ex:
                 print("  ⛔ Hebelfuehrung nicht lesbar: %s" % ex)
+            # P11 (11.10.2026): Bitpanda-Hebel-Wallets gegen die offenen Positionen (O36 Schritt B, K-HW-1)
+            try:
+                print(BL.hebel_wallet_abgleich(c)["zeile"].replace("Hebel-Wallet-Abgleich:", "HEBEL-WALLET-ABGLEICH (P11):", 1))
+            except sqlite3.Error as ex:
+                print("  ⛔ Hebel-Wallet-Abgleich nicht lesbar: %s" % ex)
             pw = BL.portfoliowert(c, 3)
             print("PORTFOLIOWERT (letzte 3 Tage): " + " · ".join("%s %.0f EUR (Cash %.0f)" % (d, w or 0, ca or 0) for d, w, ca in pw))
             c.close()

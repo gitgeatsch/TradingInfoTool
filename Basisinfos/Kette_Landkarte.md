@@ -18,6 +18,13 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 11.10.2026 (2) — Hebel-Wallet-Abgleich und Charts in den Mails
+>
+> | Hier fehlt | Stand seit 11.10.2026 |
+> |---|---|
+> | Prüfung der gespeicherten Hebelpositionen | `_hebel_wallet_lauf` im Hebel-Job, nach dem Bitpanda-Abgleich und vor H15: Wallets gegen `hebel_positions`, nur lesend (P11, E-98) |
+> | Charts der Signalmail | REGEL0 unter *2 · Chart*: Signalbild + Wochen- + Tageschart (RSI/MACD). H15-Mail: Wochen- und Tageschart je Position (O45) |
+>
 > ## ⚠️ NACHTRAG 11.10.2026 — Thesen pausiert, Statusseite, Preisabfrage
 >
 > | Hier fehlt | Stand seit 10./11.10.2026 |

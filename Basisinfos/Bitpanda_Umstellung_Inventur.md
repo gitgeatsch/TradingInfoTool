@@ -82,6 +82,7 @@ Muster (Stand 15.09.2026, 57 Dateien):
 |---|---|---|---|
 | `agent/ausstiegsrechnung.py` | **hebel_positions:** sammel_mail | Sammelmail liest Hebelpositionen | Stufe 3 gegenpruefen |
 | `agent/betriebslage.py` | **hebel_positions:** hebel_positions · **Stempel:** bestand_meta | Betriebslage fuer Statusseite und Teilexport (P9, 10.10.), NUR LESEND (`mode=ro` bzw. Verbindung der Seite) | kein Schreiber, keine Umstellung noetig |
+| `agent/hebel_wallet_abgleich.py` | **hebel_positions:** pruefe | P11 (11.10.): Bitpanda-Hebel-Wallets gegen die offenen Positionen, NUR LESEND | kein Schreiber; meldet den Importerfehler (P11b) |
 | `agent/hebel_aggregat.py` | **hebel_positions:** Modulebene | Hebelpositionen aggregiert | Stufe 3 gegenpruefen |
 | `agent/hebelfuehrung.py` | **hebel_positions:** Modulebene, lade | Hebelfuehrung laedt offene Positionen | Stufe 3 gegenpruefen |
 | `agent/krypto/hebel_analyst.py` | **hebel_positions:** Modulebene, _build_position_aktuell_facts, _validate_hebel, build_hebel_facts | Positionsfakten Hebel | Stufe 3 gegenpruefen |

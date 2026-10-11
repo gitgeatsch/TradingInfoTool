@@ -311,7 +311,7 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
 
 
 def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
-             bild=None, pruefung=None, position=None, spot=None, senden_html=None, ankuendigung=None) -> dict:
+             bild=None, pruefung=None, position=None, spot=None, senden_html=None, ankuendigung=None, zusatzbilder=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
@@ -422,6 +422,15 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                 if _png:
                     bilder = [{"png": _png, "alt": "REGEL0 %s" % (r.get("bitpanda") or r["symbol"]),
                                "filename": "regel0_%s_%s.png" % (r["symbol"], r["signalstunde"][:13].replace(" ", "_").replace(":", ""))}]
+            if zusatzbilder is not None:                     # O45 (11.10.2026): Wochen- und Tageschart mit RSI/MACD - KONTEXT,
+                try:                                         # scheitert nie nach aussen (P-8): ohne Bilder geht die Mail trotzdem
+                    _zb = list(zusatzbilder(r) or [])
+                except Exception as exc:                        # noqa: BLE001
+                    __import__("logging").getLogger(__name__).warning("REGEL0-Wochen-/Tageschart %s gescheitert: %s: %s",
+                                                                      r.get("symbol"), type(exc).__name__, exc)
+                    _zb = []
+                if _zb:
+                    bilder = (bilder or []) + _zb
             if senden_html is not None:
                 try:
                     _h = signal_html(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, len(bilder or []), _an)

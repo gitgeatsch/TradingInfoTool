@@ -80,6 +80,24 @@ kontrollen:
     nachweis: "Diagnose: Logzeilen 'Thesen pausiert (O42' beim Start und um 06:15/06:30; keine Zeile 'Kategorie-Synthese: 19 Kategorien'; Zaehler gemini:gemini-3.1-flash-lite ohne Synthese-Aufrufe; Schalterkarte 'Thesen (Multi-Asset, O42): pausiert'"
     faellig_bis: "2026-10-13"
     status: offen
+  - id: K-HW-1
+    titel: "P11 Hebel-Wallet-Abgleich (O36 Schritt B): Logzeile je Hebel-Lauf, BTC/ETH/Kredit stimmen, Hebelkarte 'Abgleich mit Bitpanda: stimmt'"
+    seit: "2026-10-11"
+    paket: P11
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose: alle 15 min 'Hebel-Wallet-Abgleich: BTC ok · ETH ok · Kredit ok'; keine Mail 'Hebelposition passt nicht'; Teilexport-Zeile HEBEL-WALLET-ABGLEICH (P11); Statusseite Hebelkarte 'stimmt'"
+    faellig_bis: "2026-10-14"
+    status: offen
+  - id: K-WC-1
+    titel: "O45 Wochen- und Tageschart (RSI/MACD) in der naechsten REGEL0-Signalmail und H15-Mail"
+    seit: "2026-10-11"
+    paket: O45
+    commit: ""
+    art: ereignis
+    nachweis: "naechste REGEL0-Signalmail: unter '2 · Chart' drei Bilder (Signal, Wochenchart, Tageschart); H15-Mail mit zwei Bildern je Position; Log 'Charts n'; kein 'Wochen-/Tageschart gescheitert'"
+    faellig_bis: ""
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

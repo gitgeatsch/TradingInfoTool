@@ -3069,3 +3069,15 @@ K-ST-2: 9 Warnungen in 34 min statt 194 in 3 h — drei davon im Minutentakt aus
 
 Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `kategorie_vorschlaege` ruhen (auch beim Start), kein LLM, kein Netz, keine Auto-Thesen; Statusseite zeigt *pausiert*. Synthese nutzt Gemini 3.1, nicht den Prüfblock-Topf 3.5 (Planannahme korrigiert). ⚠️ Für O39: vor dem Wiedereinschalten Kandidaten prüfen. Prüfstand 6/6. Ausführlich: Plan Schritt 53 **G-S**. Am NB: nur Pull → **K-TH-1**.
 
+### 23.44 Bündel P11 + O45 (11.10.2026)
+
+- **P11 Hebel-Wallet-Abgleich** (O36 Schritt B, nur lesend):
+  - Die Bitpanda-Wallets `margin-trading` und `-credit` werden mit den offenen `hebel_positions` verglichen, im Hebel-Job vor H15.
+  - Mail nach zwei Läufen, Sperre 6 h; Anzeige auf der Statusseite und im Teilexport.
+  - Der Importer-Fix ist P11b (allein).
+- **O45 Wochen- und Tageschart** mit RSI/MACD:
+  - als Bilder in der REGEL0-Signalmail (unter *2 · Chart*) und in der H15-Mail;
+  - nur abgeschlossene Kerzen nach der Uhr;
+  - Kontext, kein Auslöser.
+- Prüfstand 10/10, Gegenprobe 4/4, Regel0Betrieb 85/85.
+- Ausführlich: Plan Schritt 53 **G-U**. Am NB: **K-HW-1**, **K-WC-1**.
