@@ -3090,3 +3090,10 @@ Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `k
 - Prüfstand 8/8, Gegenprobe 4/4. Ausführlich: Plan Schritt 53 **G-W**. Am NB: **K-GUI-2**.
 
 - **23.45 Nachtrag:** Die Spalte *REGEL0-Daten* im Freigabe-Reiter wurde für ausgeschaltete Assets nicht geprüft (Nutzerbild). Sie wird jetzt für alle Assets geprüft (`betriebslage.mit_regel0_daten`). Gegenprobe 5/5. Nach Pull + Neustart: K-GUI-2.
+
+### 23.46 P14 Spot B1 Mitnahme ×3 (11.10.2026)
+
+- Eigener Job 07:10, Schalter aus zuerst, Ablage `data/spot_betrieb.db`.
+- A6: Die Spot-Zeilen der alten Stop-Mail fallen mit dem Schalter weg.
+- Teil 0 bitgleich (7.819 Positionen), Prüfstand 10/10, Gegenprobe 3/3.
+- Ausführlich: Spot §41.8. Am NB: **K-SP-1**, danach **K-SP-2** nach deinem Ja.

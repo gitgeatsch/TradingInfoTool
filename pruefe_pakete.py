@@ -22203,6 +22203,39 @@ def paket_guikette() -> None:
                                                        "ankuendigungen", "kontrollen", "parameter")))
 
 
+def paket_spot_mitnahme() -> None:
+    """SPOT B1 MITNAHME x3 (P14, 11.10.2026, Spot §41) - die Regel ist die der Messung, der Job haengt nicht an der Rollen-Kette.
+
+    Gemessen (§39.6): auf dem ganzen Bestandskreis TRAEGT die Mitnahme (+4,87 Pp, je Ausloesung Median +97 Pp). Die Wachen halten fest,
+    dass der Betrieb genau das rechnet: dieselbe Regelfunktion (Teil 0 bitgleich in p14_teil0.py), der Kreis abgeleitet, der Schalter
+    standardmaessig aus, und die alte Stop-Mail fuer Spot geht nur mit dem Schalter aus (A6)."""
+    P = "SpotMitnahme"
+    import os
+    import subprocess as _sp
+    import agent.spot_mitnahme as _SM
+    import agent.regel0_groesse as _G
+
+    pruefe(P, "die Regel wie gemessen: erster Schluss >= 3 x, Verkauf am Folgetag; Treffer am letzten Fenstertag -> keine Mitnahme",
+           _SM.verkaufstag([1, 2, 3, 1]) == 3 and _SM.verkaufstag([1, 2, 2.99]) is None and _SM.verkaufstag([1, 3]) is None
+           and _SM.verkaufstag([float("nan"), 3.1, 1]) == 2 and _SM.FAKTOR == 3.0 and _SM.FENSTER_T == 365)
+    pruefe(P, "⚠️ Kern BTC/ETH/SOL nie im Kreis (E-90)", set(_SM.KERN) == {"BTC", "ETH", "SOL"})
+    pruefe(P, "⚠️⚠️ der Schalter ist im CODE standardmaessig AUS (Mail nur nach Nutzer-Ja)", _G.VORGABE.get("spot_mitnahme_aktiv") is False)
+    _bq = _quelltext("scheduler/background.py")
+    pruefe(P, "der Job laeuft 07:10, eigenstaendig - nicht aus der angehaltenen Rollen-Kette (Lehre H15)",
+           'id="spot_mitnahme"' in _bq and "minute=10," in _bq.split('id="spot_mitnahme"')[0][-400:]
+           and "spot_mitnahme" not in _quelltext("agent/rollen_lauf.py"))
+    pruefe(P, "⚠️ A6: die Spot-Zeilen der Stop-Mail fallen NUR mit eingeschalteter Mitnahme weg, Hebel-Zeilen bleiben",
+           "_G6.spot_mitnahme_aktiv()" in _bq and 'e.get("tier") == _TH' in _bq)
+    pruefe(P, "nur echte Kurse: rekonstruierte Zeilen loesen nichts aus",
+           "!= 'rekonstruiert'" in _quelltext("agent/spot_mitnahme.py"))
+    pruefe(P, "die Ablage ist eine eigene Datei, nicht die Produktion", _SM.ABLAGE == "spot_betrieb.db"
+           and "tradinginfotool" not in _quelltext("agent/spot_mitnahme.py").split("def kreis")[0])
+    _r = _sp.run([sys.executable, "-X", "utf8", os.path.join("Basisinfos", "Rechenkern_02_10", "p14_pruefstand.py")],
+                 capture_output=True, text=True, encoding="utf-8", timeout=900)
+    pruefe(P, "⚠️⚠️ Pruefstand am Seiteneffekt: Kreis, x3, Fenster, Sprung, verpasst, Schalter, A6, Produktion unberuehrt",
+           "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_kontrollen() -> None:
     """DIE NB-KONTROLLEN VERALTEN NICHT (P9, 10.10.2026, Plan_Asset_Lebenszyklus_14_09.md G-O; Nutzer: *"so aufsetzen, dass es nie
     veraltet"*).
@@ -32220,6 +32253,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Mailstraffung": paket_mailstraffung,
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
+          "SpotMitnahme": paket_spot_mitnahme,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

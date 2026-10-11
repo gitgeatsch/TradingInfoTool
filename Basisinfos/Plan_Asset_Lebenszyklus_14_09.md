@@ -992,3 +992,11 @@ Nutzer 11.10.: *„1. bis GUI-4 doppelt lassen 2. aus der GUI entfernen“*.
   - Datenbestand und Zuordnung stehen in einer Stelle (`regel0_datensymbole`, `zuordnung_bitpanda`); `neuaufnahme_und_abgleich` nutzt dieselben Helfer.
   - Der Teilexport ist für die Zeilen REGEL0-NEUAUFNAHME und *ohne REGEL0-Daten* unverändert.
 - Gegenprobe G5 (eigene Lesung der Kursdateien und der Zuordnung, 40/40) – jetzt **5/5**. Prüfstand 8/8, p9-Gegenprobe 10/10, GuiKette 44/44, Regel0Betrieb 85/85.
+
+### G-X P14 Spot B1 gebaut (11.10.2026)
+
+- Spot B1 Mitnahme ×3: eigener Job 07:10, Schalter `spot_mitnahme_aktiv` (aus), Ablage `data/spot_betrieb.db`, A6 mit dem Schalter. Ausführlich: Spot §41.8, E-100.
+- **Sichtbar:**
+  - Statusseite: Karte *Betrieb* mit Zeile *Spot-Mitnahme ×3 (B1)*; Schalterkarte *Spot-Mitnahme ×3 (B1) – Mail*;
+  - Teilexport *SPOT-MITNAHME (B1)*.
+- Der App-Tab *Spot-Bestand* kommt mit GUI-3 (P15).

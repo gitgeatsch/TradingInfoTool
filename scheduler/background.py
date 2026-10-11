@@ -936,6 +936,20 @@ def ausstiegs_job(conn_factory, watchlist_provider) -> None:
 
     empfehlungen = (ergebnis or {}).get("empfehlungen") or []
     geprueft = (ergebnis or {}).get("geprueft")
+    # ⚠️ A6 (P14 Spot B1, 11.10.2026, Nutzer: *"A6 ja mit B1"*): mit eingeschalteter Spot-Mitnahme fuehrt B1 den Spot-Bestand - die
+    # Stop-Nachzieh-Zeilen fuer SPOT-Signale gehen nicht mehr in die Mail (Befund 11.10.: 50 von 50 Zeilen waren alte Spot-Signale
+    # der angehaltenen Rollen-Kette). Hebel-Zeilen bleiben. Protokoll und Ausstiegs-Verfolgung oben laufen unveraendert (K19/K20).
+    try:
+        from agent import regel0_groesse as _G6
+        if _G6.spot_mitnahme_aktiv():
+            from agent.krypto.backward_tracking import TIER_HEBEL as _TH
+            _n0 = len(empfehlungen)
+            empfehlungen = [e for e in empfehlungen if e.get("tier") == _TH]
+            if _n0 != len(empfehlungen):
+                logger.info("Stop-Nachzieh-Mail: %d Spot-Zeilen nicht gemailt (A6 - der Spot-Bestand wird von B1 Mitnahme x3 gefuehrt)",
+                            _n0 - len(empfehlungen))
+    except Exception:                                        # noqa: BLE001
+        logger.exception("A6-Filter nicht anwendbar - Mail unveraendert")
     if not empfehlungen:
         logger.info("Ausstiegsregel: keine Empfehlung offen (%s Signale geprueft)", geprueft)
         return
@@ -4269,6 +4283,62 @@ def _notify_multi_asset_signal(signal, watchlist: list, bitpanda_assets: list | 
         logger.exception("Multi-Asset-Empfehlungs-E-Mail für %s fehlgeschlagen", signal.symbol)
 
 
+def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None, ordner=None) -> dict:
+    """P14 Spot B1 (11.10.2026, Spot §41): Mitnahme x3 je L-Bestand - taeglich 07:10 und beim Start (idempotent).
+
+    Schreibt NUR ``data/spot_betrieb.db`` (Fenster + Vorwaertsprotokoll D7); liest ``holdings`` und ``price_history_ohlc`` nur.
+    MAIL nur mit Schalter ``spot_mitnahme_aktiv`` und nur am Betriebsgeraet; je Ausloesung genau einmal (vermerkt nur bei Zustellung),
+    mit Wochen-/Tageschart (O45). Haengt NICHT an der angehaltenen Rollen-Kette (Lehre H15). Scheitert nie nach aussen.
+    ``versand`` (Pruefstand): Ersatz fuer _sende_hinweismail(betreff, text, bilder) -> bool."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.regel0_groesse as _G
+        import agent.regel0_nachlader as _NL
+        import agent.spot_mitnahme as _SM
+
+        ordner = ordner or _NL.DATEN_VORGABE
+        if versand is None:
+            erlaubt, grund = _NL.betrieb_erlaubt(ordner)
+            if not erlaubt:
+                logger.info("Spot-Mitnahme: uebersprungen - %s", grund)
+                aus["grund"] = grund
+                return aus
+        conn = conn_factory()
+        try:
+            erg = _SM.lauf(conn, ordner, watchlist_provider(), heute)
+            an = _G.spot_mitnahme_aktiv()
+            gemailt = []
+            if an and erg["faellig"]:
+                from agent import betriebslage as _BL
+                import agent.indikator_chart as _IC
+                btc = dict(_SM.schluesse(conn, "BTC"))
+                mit_binance = _BL.mit_regel0_daten({f["symbol"] for f in erg["faellig"]}, ordner)
+                preise = db.get_latest_prices(conn)
+                for f in erg["faellig"]:
+                    bf = (btc.get(f["ausloese_tag"]) / btc.get(f["start"])) if btc.get(f["ausloese_tag"]) and btc.get(f["start"]) else None
+                    st = conn.execute("SELECT staked_quantity FROM holdings WHERE symbol=?", (f["symbol"],)).fetchone()
+                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None)
+                    try:
+                        _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
+                        bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
+                    except Exception:                                # noqa: BLE001
+                        bilder = []
+                    ok = bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, bilder or None))
+                    if ok:
+                        _SM.vermerke_mail(ordner, f["symbol"], f["start"])
+                        gemailt.append(f["symbol"])
+            logger.info("Spot-Mitnahme: %d L-Bestaende · Fenster neu %d · ausgeloest %d · faellig %d · gemailt %d%s", erg["kreis"],
+                        len(erg["angelegt"]) + len(erg["neu_fenster"]), len(erg["ausgeloest"]), len(erg["faellig"]), len(gemailt),
+                        "" if an else " (Schalter aus - nur Protokoll)")
+            aus.update(gelaufen=True, schalter=an, gemailt=gemailt, **{k: erg[k] for k in ("kreis", "angelegt", "ausgeloest", "faellig")})
+        finally:
+            conn.close()
+    except Exception:                                                # noqa: BLE001
+        logger.exception("Spot-Mitnahme: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
 HEBEL_WALLET_SPERRE_STUNDEN = 6.0
 
 
@@ -5505,6 +5575,17 @@ def build_scheduler(
     # ist noetig, nicht kosmetisch: die Regel rechnet auf
     # outcome_max_realisiertes_crv, und genau das schreibt das Backward-
     # Tracking fort. Vorher gestartet arbeitete sie auf dem Stand von gestern.
+    # P14 Spot B1 (11.10.2026): Mitnahme x3 - 07:10, NACH refresh_ohlc (Tagesschluss liegt vor) und VOR der alten Stop-Mail 07:15
+    # (A6 filtert dort die Spot-Zeilen, sobald die Mitnahme-Mail an ist). Idempotent; verpasst -> beim Start nachgeholt.
+    scheduler.add_job(
+        spot_mitnahme_job,
+        "cron",
+        hour=7,
+        minute=10,
+        args=[db_conn_factory, watchlist_provider],
+        id="spot_mitnahme",
+        **_nachholen("spot_mitnahme", 230, stunde=7, minute=10),
+    )
     scheduler.add_job(
         ausstiegs_job,
         "cron",

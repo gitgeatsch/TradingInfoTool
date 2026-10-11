@@ -1145,3 +1145,17 @@ Schritt7 §23.24.
   - H15 nur bei sichtbarem Unterreiter, höchstens alle 60 s;
   - Vorgabe-Filter *7 Tage + nur Schalter an*.
 - Nachweis: Plan G-V/G-W, Schritt7 §23.45.
+
+# E-100 · Spot B1 Mitnahme ×3 gebaut (P14, 11.10.2026)
+
+**11.10.2026** · Nutzer: *„Ja, B1 jetzt bauen, prüfen und gegenprüfen“*. Die Konzeptprüfung *„auf Herz und Nieren“* findet **vor** B3/B4/C1 statt (Vorschlag §41.7, mit dem Bauauftrag angenommen).
+- Regel wie gemessen (§31, Übertragbarkeit §39.6: trägt auf dem ganzen Bestand). Kreis = alle Krypto-Bestände ohne Kern/Stablecoins (E-90), Starttag Altbestand = Inbetriebnahme (A1 a).
+- **Eigene Festlegungen (fachlich, berichtet):**
+  - eine Kursquelle für alle Bestände (`price_history_ohlc`, Dollar, ohne rekonstruierte Zeilen);
+  - Sprung ≥ 2 × → *zu prüfen*;
+  - Auslösung älter als 3 T → *verpasst*;
+  - Treffer am letzten Fenstertag → keine Mitnahme (wie die Messung);
+  - Job 07:10;
+  - Schalter aus, bis du einschaltest;
+  - Kosten D6 nur als Information, ohne Klassen-Schätzung.
+- Nachweis: Spot §41.8, Schritt7 §23.46.

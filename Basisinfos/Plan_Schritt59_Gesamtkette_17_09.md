@@ -2485,3 +2485,8 @@ Schritt7 §23.24.
 **Nachtrag 11.10.2026 (33) — P12 Hebel-Tab (E-99):**
 - Die GUI zeigt den Hebel des neuen Systems: alle REGEL0-Signale mit Mailtext, die Positionen mit H15 und Bitpanda-Abgleich, die Freigabe je Asset.
 - Der alte Tab ist aus der GUI. Der Watchlist-Schalter bleibt bis GUI-4.
+
+**Nachtrag 11.10.2026 (34) — Spot B1 (E-100):**
+- Erster Spot-Bau der Stufe 1: Die Mitnahme ×3 je L-Bestand ist eingebaut, gemessen und bitgleich zur Messung, mit Schalter aus.
+- Mit dem Einschalten fällt die alte Stop-Nachzieh-Mail für Spot weg (A6).
+- Konzeptprüfung *auf Herz und Nieren* vor B3/B4/C1.

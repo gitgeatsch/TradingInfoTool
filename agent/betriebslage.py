@@ -51,6 +51,13 @@ def hebelfuehrung_gemeldet(c, n: int = 8) -> list:
                                         "ORDER BY zuletzt_am DESC LIMIT ?", (n,)).fetchall()]
 
 
+def spot_mitnahme(daten: str = DATEN) -> dict:
+    """P14 Spot B1: Stand der Mitnahme-Fenster (data/spot_betrieb.db, nur lesend)."""
+    from agent import spot_mitnahme as SM
+
+    return SM.stand(daten)
+
+
 def hebel_wallet_abgleich(c) -> dict:
     """P11 (O36 Schritt B): Bitpanda-Hebel-Wallets gegen die offenen Positionen - Ergebnis + Kennzeile (agent/hebel_wallet_abgleich)."""
     from agent import hebel_wallet_abgleich as HW
@@ -338,7 +345,7 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
 
 # ══ Schalter, Jobs, Bestand, Kontingent ════════════════════════════════════════════════════════════════════════════════════
 SCHALTER = ("testwoche_freigegeben", "alter_hebelweg_aus", "spot_kette_angehalten", "ankuendigung_aktiv", "hebelfuehrung_aktiv",
-            "thesen_pausiert")
+            "thesen_pausiert", "spot_mitnahme_aktiv")
 
 
 def schalter() -> dict:

@@ -18,6 +18,12 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 11.10.2026 (4) — Spot B1 Mitnahme ×3
+>
+> | Hier fehlt | Stand seit 11.10.2026 |
+> |---|---|
+> | Spot-Führung des Bestands | `spot_mitnahme_job` 07:10 (eigenständig, nicht Rollen-Kette): Fenster 365 T je L-Bestand, ×3 → Mail *Hälfte verkaufen* (Schalter `spot_mitnahme_aktiv`); A6 nimmt die Spot-Zeilen aus der alten Stop-Mail (E-100) |
+>
 > ## ⚠️ NACHTRAG 11.10.2026 (3) — GUI-Hebel-Tab
 >
 > | Hier fehlt | Stand seit 11.10.2026 |

@@ -790,6 +790,12 @@ function renderBetrieb(b) {
     x += '<div class="unter' + (l && l[4] ? " stale" : "") + '">' + esc(d.datei) + " · " +
          (l ? "Lauf " + fmtStempel(l[0]) + " · neu " + l[1] + " · ersetzt " + l[2] + " · nicht im Handel " + l[3] + " · Fehler " + l[4] : "noch kein Lauf") + "</div>";
   });
+  const sm = b.spot_mitnahme;
+  if (sm) {
+    x += '<div class="row" style="margin-top:6px"><strong>Spot-Mitnahme ×3 (B1)</strong><span>' +
+         (sm.ablage ? (sm.offen + " Fenster offen · " + sm.ausgeloest_offen + " ausgelöst") : "noch kein Lauf") + "</span></div>";
+    (sm.letzte || []).slice(0, 3).forEach(function (p) { x += '<div class="unter">' + esc(p[0]) + " · " + esc(p[1]) + " · " + esc(p[2]) + "</div>"; });
+  }
   const na = b.neuaufnahme;
   x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Neuaufnahme</strong><span>' + (na ? fmtStempel(na[0]) : "noch kein Lauf") + "</span></div>";
   if (na) x += '<div class="unter">Regel ' + na[1] + " · Datei " + na[2] + " · neu: " + esc(na[3] || "-") + (na[4] ? " · ⚠ " + esc(na[4]) : "") + "</div>";
@@ -808,6 +814,7 @@ const SCHALTER_TEXT = {
   ankuendigung_aktiv: ["Binance-Ankündigungen (O29)", "an", "aus"],
   hebelfuehrung_aktiv: ["Hebelführung H15", "an", "aus"],
   thesen_pausiert: ["Thesen (Multi-Asset, O42)", "pausiert", "laufen"],
+  spot_mitnahme_aktiv: ["Spot-Mitnahme ×3 (B1) – Mail", "an", "aus (nur Protokoll)"],
 };
 function renderSchalter(sch) {
   return Object.keys(sch).map(function (k) {

@@ -5048,3 +5048,47 @@ Nutzer 11.10.: *„Ja, Voranalyse Spot B1 vorbereiten und vorlegen“*. Grundlag
    - Oder die Konzeptprüfung zuerst?
 2. Alles Übrige ist fachlich aus §31/§39 festgelegt und oben begründet.
 
+### 41.8 P14 gebaut (11.10.2026)
+
+Nutzer 11.10.: *„Ja, B1 jetzt bauen, prüfen und gegenprüfen“*.
+
+**Gebaut:**
+- `agent/spot_mitnahme.py`:
+  - `verkaufstag` – **die** Regel, dieselbe wie `fb_messung.l_regel` *Z1 ×3*;
+  - `kreis` – abgeleitet aus `holdings` und Watchlist, frei + gestakt, ohne Kern und Stablecoins;
+  - `lauf` – Fenster anlegen, fortschreiben, schließen;
+  - `mail`, `stand`.
+- Ablage `data/spot_betrieb.db` (Fenster + Protokoll D7).
+- Job `spot_mitnahme_job` täglich **07:10**, mit Nachholen beim Start, eigenständig, nur am Betriebsgerät.
+- Schalter `spot_mitnahme_aktiv` (Vorgabe **aus**) in `regel0_betrieb.yaml`.
+- **A6:** Mit eingeschaltetem Schalter fallen in der Stop-Nachzieh-Mail die Spot-Zeilen weg; Hebel-Zeilen, Protokoll und Verfolgung bleiben.
+- Sichtbar im Teilexport (*SPOT-MITNAHME (B1)*), auf der Statusseite (Karte Betrieb, Schalterkarte) und in der Parameterliste.
+
+**Festlegungen beim Bau (fachlich):**
+- Kurse nur **echte** Dollar-Schlüsse; *rekonstruierte* Zeilen sind ausgeschlossen (heute nur OD7-Produkte).
+- Sprung ≥ 2 × zum Vortag am Auslösetag → *zu prüfen*, keine Mail (Token-Umstellung).
+- Auslösung älter als 3 T (Ausfall) → *verpasst*, keine Mail.
+- *kein Kurs* wird nur beim Wechsel protokolliert.
+- Mail E-91: was tun · bis wann · warum mit Belegstufe; Kontext: Preis gegen BTC, Kosten je Klasse (D6, nur Information), Erlös nicht gemessen; Wochen- und Tageschart (O45), wo Binance-Kurse vorliegen.
+
+**Nachweis:**
+- **Teil 0 (R-R11)** `p14_teil0.py`: Die Betriebsfunktion trifft auf der Messbasis an **allen 7.819 Positionen** denselben Verkaufstag (0 Abweichungen); 7,11 % ausgelöst, Korb +4,870 Pp, bitgleich.
+- `p14_pruefstand.py` **10/10** (gestellte Reihen):
+  - Kreis;
+  - ×3 genau einmal (Hälfte von frei + gestakt);
+  - ×2,9 nie;
+  - Fensterende → neues Fenster mit neuem Startkurs, nach Mitnahme ebenso;
+  - Treffer am letzten Fenstertag → keine Mitnahme;
+  - Bestand weg → Fenster zu;
+  - kein Kurs einmal protokolliert;
+  - Sprung → zu prüfen; Ausfall → verpasst;
+  - Schalter aus/an → Mail kommt nach;
+  - A6 an/aus;
+  - Produktion unverändert (Prüfsumme).
+- `p14_gegenprobe.py` **3/3**:
+  - Kreis an der NB-Kopie (27 L-Bestände) gegen eigenes SQL;
+  - 27 Startkurse gegen eigenes SQL;
+  - unabhängige Schleife: 40 Zufallsreihen × 800 Tage, 120 Fenster, 49 Auslösungen, 0 Abweichungen.
+- Suite-Paket **SpotMitnahme** 9/9, Regel0Betrieb 85/85, GuiKette 44/44.
+
+**Am NB:** Pull + Neustart → **K-SP-1** (Schalter aus: Fenster für alle L-Bestände, keine Mail). Danach dein Ja zum Einschalten → **K-SP-2**.

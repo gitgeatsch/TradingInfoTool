@@ -406,6 +406,23 @@ def _inhalt() -> int:
             print("Hebel-Schalter AN, aber OHNE REGEL0-Daten (kein Signal moeglich): %d - %s" % (len(ohne), ", ".join(ohne) or "-"))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Abgleich nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # P14 Spot B1 (11.10.2026): Mitnahme x3 - Fenster, Ausloesungen, letzte Protokollzeilen (data/spot_betrieb.db, nur lesend; K-SP-1)
+    print()
+    print("-" * 100)
+    try:
+        sm = BL.spot_mitnahme(DATEN)
+        import agent.regel0_groesse as _G14
+        if not sm.get("ablage"):
+            print("SPOT-MITNAHME (B1): Schalter %s · noch kein Lauf" % ("AN" if _G14.spot_mitnahme_aktiv() else "aus"))
+        else:
+            print("SPOT-MITNAHME (B1): Schalter %s · Fenster offen %d · davon ausgeloest %d · je Status: %s" % (
+                "AN" if _G14.spot_mitnahme_aktiv() else "aus", sm["offen"], sm["ausgeloest_offen"], ", ".join("%s %d" % r for r in sm["je_status"])))
+            for r in sm["letzte"]:
+                print("    %s · %-8s %-13s %s" % (r[0], r[1], r[2], str(r[3])[:90]))
+            for r in sm["naechste_enden"]:
+                print("    naechstes Fensterende: %-8s %s bis %s" % r)
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Spot-Mitnahme nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P9 (10.10.2026, G-O): die NB-Kontrollen aus Basisinfos/nb_kontrollen.yaml - automatische live ausgewertet, dieselbe Quelle wie
     # die Statusseite (Karte "Offene NB-Kontrollen"). Nur die offenen; die Historie steht in der Datei.
     print()

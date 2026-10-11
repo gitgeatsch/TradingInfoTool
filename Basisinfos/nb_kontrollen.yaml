@@ -126,6 +126,24 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-11"
     beleg: "Nutzer 11.10. nach Pull + Neustart (acf4978): 'Freigabe passt'"
+  - id: K-SP-1
+    titel: "P14 Spot B1 mit Schalter AUS: Job 07:10 legt je L-Bestand ein Fenster an (Startkurs = Dollar-Schluss), keine Mail; Teilexport SPOT-MITNAHME"
+    seit: "2026-10-11"
+    paket: P14
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose/Teilexport nach Pull + Neustart: Logzeile 'Spot-Mitnahme: N L-Bestaende ... (Schalter aus - nur Protokoll)'; SPOT-MITNAHME (B1) mit ~27 offenen Fenstern; keine Mail 'Spot: Haelfte'; Stop-Mail 07:15 unveraendert"
+    faellig_bis: "2026-10-14"
+    status: offen
+  - id: K-SP-2
+    titel: "P14 Spot B1 eingeschaltet (nach Nutzer-Ja): Stop-Mail ohne Spot-Zeilen (A6), Mitnahme-Mail bei Ausloesung mit Wochen-/Tageschart"
+    seit: "2026-10-11"
+    paket: P14
+    commit: ""
+    art: ereignis
+    nachweis: "nach dem Einschalten: Log 'Stop-Nachzieh-Mail: N Spot-Zeilen nicht gemailt (A6'; keine 07:15-Mail mehr mit alten Spot-Signalen; bei der ersten Ausloesung Mail 'Spot: Haelfte von X verkaufen'"
+    faellig_bis: ""
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

@@ -35,7 +35,10 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                liquidations_warnung_abstand=0.15,
                # O42/P10 (11.10.2026, Nutzer: *"pausieren, aber nicht vergessen"*): Thesen-Abgleich und -Synthese der alten
                # Kette (Multi-Asset) ruhen - Vorgabe: sie laufen wie bisher. Wieder einschalten mit O39, vorher die Kandidaten pruefen
-               thesen_pausiert=False)
+               thesen_pausiert=False,
+               # P14 Spot B1 (11.10.2026): Mitnahme x3 - MAIL nur mit Schalter (das Protokoll laeuft immer); mit ihm geht die alte
+               # Stop-Nachzieh-Mail fuer Spot aus (A6). Vorgabe AUS: eingeschaltet nach der Pruefung mit Nutzer-Ja (Muster O29)
+               spot_mitnahme_aktiv=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -63,6 +66,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: hebelfuehrung_aktiv muss true oder false sein")
     if not isinstance(werte["thesen_pausiert"], bool):
         raise ValueError("regel0_betrieb.yaml: thesen_pausiert muss true oder false sein")
+    if not isinstance(werte["spot_mitnahme_aktiv"], bool):
+        raise ValueError("regel0_betrieb.yaml: spot_mitnahme_aktiv muss true oder false sein")
     if not (0 < float(werte["liquidations_warnung_abstand"]) < 1):
         raise ValueError("regel0_betrieb.yaml: liquidations_warnung_abstand als Anteil zwischen 0 und 1 (z. B. 0.15)")
     werte["liquidations_warnung_abstand"] = float(werte["liquidations_warnung_abstand"])
@@ -77,6 +82,15 @@ def thesen_pausiert(werte: dict | None = None) -> bool:
     Ein stiller Halt waere hier harmlos, aber er waere unsichtbar - die Vorgabe ist das bisherige Verhalten."""
     try:
         return bool((werte if werte is not None else lade())["thesen_pausiert"])
+    except Exception:                                          # noqa: BLE001
+        return False
+
+
+def spot_mitnahme_aktiv(werte: dict | None = None) -> bool:
+    """Spot B1 Mitnahme-Mail an? (P14) - im Zweifel (Datei unlesbar) NEIN: dann bleibt alles wie vor B1 (keine Mitnahme-Mail,
+    die alte Stop-Nachzieh-Mail laeuft weiter)."""
+    try:
+        return bool((werte if werte is not None else lade())["spot_mitnahme_aktiv"])
     except Exception:                                          # noqa: BLE001
         return False
 
