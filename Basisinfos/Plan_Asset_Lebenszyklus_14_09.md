@@ -786,3 +786,60 @@ Nutzer 11.10.: *„Ja, P10 mit beiden Jobs bauen, prüfen und gegenprüfen – w
 - Weiter: p9-Prüfstand und -Gegenprobe, H15, Pakete Regel0Betrieb, GuiKette, Kontrollen und Hebelführung, die ganze Suite.
 
 **Am NB:** nur Pull (je Lauf gelesen). **K-TH-1.**
+
+
+### G-T Voranalyse P11 (Hebel Schritt B, O36) und O45 (Wochen-MACD/RSI), 11.10.2026
+
+Nutzer 11.10.: *„Ja, beide Voranalysen parallel vorbereiten und vorlegen“*. Je ein Code-Bericht, dazu von mir an den Daten gegengeprüft.
+
+**P11 – Ist:**
+- Kein Code vergleicht heute die Bitpanda-Hebel-Wallets mit `hebel_positions`.
+- Die Daten liegen aber vor, offline:
+  - `bitpanda_wallet_saldo` (`margin-trading` je Asset, `margin-trading-credit` auf EURCV) aus dem Bestands-Job, alle 30 min;
+  - `hebel_positions.positionsmenge` und `kreditbetrag_eur` aus dem Hebel-Sync, alle 15 min, alte API;
+  - `bitpanda_katalog` (ID → Symbol).
+- **Gegengeprüft an der Prod-Kopie 10.10.:** BTC 0,02038541 = 0,02038541 · ETH 0,89636371 = 0,89636371 · Kredit −2.600 = 1.000 + 1.600. Heute stimmig, weil keine Teilschließung.
+- Der Importer-Fehler (2.679) sitzt in `importer/bitpanda_margin_positions.py:226–253`:
+  - Vollschluss-Bedingungen, darunter `sell_value >= 99,5 % Kredit`;
+  - Teilschluss kürzt Wert und Kredit anteilig, die Menge nur um `sell_qty`;
+  - nach einem falschen Vollschluss gehen Restmenge und Restkredit verloren.
+  - Er **schreibt** in die Produktion (`upsert_hebel_position`).
+- Richtiges Buch je Symbol: `messe_k7_abgleich.abschnitte()`.
+
+**P11 – Vorschlag (nur lesend, bündelbar):**
+- Wache `agent/hebel_wallet_abgleich.py` im Hebel-Screening-Job nach dem Sync:
+  - je Symbol Wallet-Menge gegen die Summe der offenen `positionsmenge`;
+  - Kredit-Wallet gegen die Summe `kreditbetrag_eur`;
+  - erfasst auch *Wallet > 0 ohne Position* und *Position ohne Wallet*.
+- **Zeitversatz:** Gemeldet wird erst, wenn die Abweichung **zwei Läufe hintereinander** besteht (≥ 30 min).
+- **Ausgabe:**
+  - Logzeile je Lauf;
+  - Mail *„Hebelposition passt nicht zu Bitpanda: …“* mit 6 h Sperrfrist (Muster der Spot-Meldung);
+  - Zeile in der Hebelkarte der Statusseite und im Teilexport.
+- **Der Importer-Fix** ist ein Schreiber in die Produktion → eigenes Paket **P11b**, allein, erst wenn die Wache einen echten Fall zeigt oder du teilweise schließt.
+
+**O45 – Ist:**
+- Heute geht nur **eine** Signalmail raus: REGEL0 (`agent/regel0_mail.py`).
+- Dazu die H15-Führungsmail. Spot-Mails der Rollen-Kette sind angehalten.
+- `indicators/calculations.py` hat `macd` (mind. 35 Werte) und `rsi` (mind. 15); eine Wochenaggregation fehlt noch.
+- Einhängen wie O29: als Zutat `f(r)` in `versende(...)`, scheitert ohne die Mail aufzuhalten (P-8).
+- **Gegengeprüft (Desktop-Daten 01.10.):**
+  - Alle **26** Assets mit Hebel-Schalter an haben ≥ 48 volle Wochen in `stundenkurse(_alle).db` (Median ≈ 150).
+  - MACD und RSI sind für alle rechenbar, 0,03 s je Asset.
+  - 93 der 537 Assets im Zusatzuniversum haben < 15 Wochen (meist tokenisierte Aktien „…B“, O38) → *„zu kurz“*.
+
+**O45 – Vorschlag:**
+- Woche Mo 00:00 bis So 24:00 UTC (wie Binance), **nur abgeschlossene Wochen**.
+- Anzeige als **Zustand statt Rohzahl**: *„Wochenchart: MACD über Signal seit 2 Wochen, Abstand wächst · RSI 58,7 (neutral)“*.
+  - Die MACD-Rohwerte hängen an der Preisskala, z. B. 1000CAT mit Faktor 1000; der Zustand ist skalenfrei.
+- **Ort:** Abschnitt 3 *Einschätzung*, eine Zeile; die Zahlen dazu in Abschnitt 5 *Technik*.
+- **Mails:**
+  - jetzt die REGEL0-Signalmail und die H15-Führungsmail (Bitpanda-Symbol über `symbol_zuordnung.csv` zurückübersetzt);
+  - Spot-Mails mit ihrem Bau (P14 ff.);
+  - Korrektur und Erinnerung nicht (sie verweisen auf die Signalmail).
+- **Kein Auslöser** (Regel 4, E-91): Die Zeile ändert weder Signal noch Stufe noch Versand.
+- Suite: Regel0Betrieb (Mailtext, Tab-Detail = Mailanfang), `pruefe_o25.py`; Mail-Prüfstand mit echter `config.yaml`, LONG/Text/HTML.
+
+**Bündel (E-97):**
+- P11 ist nur lesend, mit eigener Logzeile und Mail → bündelbar.
+- ⚠️ O45 verändert den Inhalt der Signalmail und ist nach E-97 ein **Grenzfall**. Additiv und fehlertolerant, eigene Kennzeile → Bündel vorgeschlagen, **Entscheidung beim Nutzer**.
