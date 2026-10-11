@@ -1,0 +1,31 @@
+KONZEPTPRUEFUNG SPOT · Punkt 1: Ursache der Abdeckungsluecke (12 Bestaende nicht im Watchlist-Universum, Stichtag 2026-09-01)
+
+  ASTER   Binance ASTER    Spot ASTERUSDT:TRADING,ASTERUSDC:TRADING Futures ASTERUSDT:TRADING          erster Spot-Tag 2025-10-06 · messdaten None..None (0) · Stunden spot/ASTERUSDT · Prod ab 2025-10-06
+          -> D Spot alt genug (ab 2025-10-06), in messdaten 0 T vor Stichtag
+  BRETT   Binance BRETT    Spot -                      Futures BRETTUSDT:TRADING          erster Spot-Tag -          · messdaten 2024-04-18..2026-08-19 (854) · Stunden futures/BRETTUSDT · Prod ab 2024-04-18
+          -> A kein Binance-Spot
+  CANTON  Binance CC       Spot -                      Futures CCUSDT:TRADING             erster Spot-Tag -          · messdaten None..None (0) · Stunden futures/CCUSDT · Prod ab None
+          -> A kein Binance-Spot
+  CAT     Binance 1000CAT  Spot 1000CATUSDT:TRADING,1000CATFDUSD:BREAK,1000CATUSDC:TRADING Futures 1000CATUSDT:TRADING        erster Spot-Tag 2024-12-17 · messdaten 2024-12-17..2026-09-20 (1098) · Stunden - · Prod ab 2025-05-22
+          -> ? in messdaten 1078 T vor Stichtag - anderer Grund
+  HYPE    Binance HYPE     Spot HYPEUSDC:TRADING,HYPEUSDT:TRADING Futures HYPEUSDT:TRADING           erster Spot-Tag 2026-09-24 · messdaten 2025-07-11..2026-08-19 (405) · Stunden futures/HYPEUSDT · Prod ab 2025-07-11
+          -> C jung (Spot ab 2026-09-24)
+  KAS     Binance KAS      Spot -                      Futures KASUSDT:TRADING            erster Spot-Tag -          · messdaten 2023-09-07..2026-08-19 (1078) · Stunden futures/KASUSDT · Prod ab 2023-09-07
+          -> A kein Binance-Spot
+  MON     Binance MON      Spot -                      Futures MONUSDT:TRADING            erster Spot-Tag -          · messdaten None..None (0) · Stunden futures/MONUSDT · Prod ab 2025-11-24
+          -> A kein Binance-Spot
+  MORPHO  Binance MORPHO   Spot MORPHOUSDT:TRADING,MORPHOUSDC:TRADING,MORPHOFDUSD:BREAK Futures MORPHOUSDT:TRADING         erster Spot-Tag 2025-10-03 · messdaten 2024-11-21..2026-08-19 (637) · Stunden - · Prod ab 2024-11-21
+          -> ? in messdaten 637 T vor Stichtag - anderer Grund
+  PLUME   Binance PLUME    Spot PLUMEUSDT:TRADING,PLUMEUSDC:TRADING,PLUMEFDUSD:BREAK Futures PLUMEUSDT:TRADING          erster Spot-Tag 2025-08-18 · messdaten 2025-04-23..2026-08-19 (484) · Stunden futures/PLUMEUSDT · Prod ab 2025-04-23
+          -> ? in messdaten 484 T vor Stichtag - anderer Grund
+  SUPRA   Binance SUPRA    Spot -                      Futures -                          erster Spot-Tag -          · messdaten 2024-11-27..2026-08-19 (631) · Stunden - · Prod ab 2024-11-27
+          -> A kein Binance-Spot
+  VSN     Binance VSN      Spot -                      Futures -                          erster Spot-Tag -          · messdaten None..None (0) · Stunden - · Prod ab None
+          -> A kein Binance-Spot
+  XDC     Binance XDC      Spot -                      Futures -                          erster Spot-Tag -          · messdaten None..None (0) · Stunden - · Prod ab None
+          -> A kein Binance-Spot
+
+  A: 7 · BRETT, CANTON, KAS, MON, SUPRA, VSN, XDC
+  C: 1 · HYPE
+  D: 1 · ASTER
+  ?: 3 · CAT, MORPHO, PLUME

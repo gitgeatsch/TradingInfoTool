@@ -5092,3 +5092,92 @@ Nutzer 11.10.: *„Ja, B1 jetzt bauen, prüfen und gegenprüfen“*.
 - Suite-Paket **SpotMitnahme** 9/9, Regel0Betrieb 85/85, GuiKette 44/44.
 
 **Am NB:** Pull + Neustart → **K-SP-1** (Schalter aus: Fenster für alle L-Bestände, keine Mail). Danach dein Ja zum Einschalten → **K-SP-2**.
+
+
+## 42. Konzeptprüfung Spot „auf Herz und Nieren“ (11.10.2026, vor B3/B4/C1)
+
+Nutzer 09.10.: *„nach den Messungen und deiner fachlichen Bewertung das Konzept noch einmal mit mir auf Herz und Nieren prüfen“*. Nutzer 11.10.: *„Ja, Konzeptprüfung Spot vorbereiten und vorlegen“*.
+
+Geprüft wurde jeder Baustein gegen das Ziel E-85 (*Einstieg je Asset **und** Führung je Bestand*), gegen die Datenlage am NB und gegen die stehenden Regeln (Grundgesamtheit, Messfokus ab 2024, Fakt oder Bewertung, jede Mail eine Handlung).
+
+**Skripte** (Desktop, nur lesend):
+- `kp_abdeckung_ursache.py` und `kp_abdeckung_stichtag.py` (Stichtag 01.08. und 01.09.);
+- `kp_b3_upbit.py`;
+- Gegenprobe `kp_gegenprobe.py` **4/4** (eigenes SQL, NB-Sicherung 11.10. 11:49).
+
+### 42.1 Die Abdeckungslücke (§39.9) hat DREI Ursachen, nicht eine
+
+| Gruppe | Coins | Ursache | Wirkung |
+|---|---|---|---|
+| **Zählfehler** | CAT | Binance führt das Bündel `1000CAT`. Es **ist** im Universum (Klasse S); das Abdeckungsskript suchte nur „CAT“ | keine Lücke |
+| **eingefrorene Übernahmen** | BRETT, KAS, SUPRA, HYPE, MORPHO, PLUME | Die Messbasis führt sie als **übernommene** Reihen (`uebernehme_messreihen`, Handlauf 08.09.). Die Reihen enden am **19.08.** und veralten still (so im Docstring benannt). Am Stichtag 01.09. haben sie keinen Kurs und fallen heraus | Am **01.08.** sind **alle sechs im Universum**, und das untere Fünftel enthält **7** Bestände statt 4: **HYPE, MORPHO, PLUME** zusätzlich zu KAIA, SUI, TAO, TURBO. ⚠️ B4 hätte am NB drei Abbau-Kandidaten **still** übersehen |
+| **echt außerhalb** | ASTER, MON, CANTON, VSN, XDC | Keine Binance-Spot-Reihe ≥ 400 Kerzen. ASTER: Spot seit 06.10.2025, **370 T** (ab ≈ Nov. 2026 lang genug). MON (321 T) und CANTON (91 T): nur Futures. VSN (91 T): keine Binance-Reihe. **XDC: 1.011 T** in der Produktion, aber nach dem 08.09. in den Bestand gekommen | B1 läuft für alle (Produktionskurse). Für B4 ist **XDC** nach der Übernahmeregel aufnehmbar; die anderen vier sind **zu jung** für die Merkmale |
+
+⚠️ **Nebenbefund (Datenfehler, Grundgesamtheit):** CAT stand bis 19.08. **doppelt** in der Messbasis, als übernommene Reihe `CAT` und als Binance-Reihe `1000CAT` (Kursverhältnis genau 1.000 an 455 Tagen). Es ist ein Coin unter rund 340 und betrifft nur die Zellenperzentile. Benannt wird er trotzdem, damit die nächste B4-Messung ihn kennt.
+
+**Lösung, aus dem bestehenden Schema abgeleitet (keine neue Wahl):**
+- B4 bildet am NB das Universum aus der Betriebskopie (Binance-Spot, beide Zustände) **plus** den Produktionsreihen der gehaltenen Coins.
+- Dabei gilt **dieselbe Regel**, mit der die Messbasis ihre zehn Übernahmen gebildet hat: Tagesabstand 1, ≥ 400 Kerzen, plausibel, eine Zeile je Tag.
+- Damit stimmen Betrieb und Messung überein, und nichts friert ein: Die Reihen kommen täglich aus der Produktion statt aus einem Handlauf.
+- ⚠️ Die **Messbasis** wird dafür **nicht** geändert (O11: *Messbasis nie erweitern*). Die Wirkung auf die Fünftel wird in der B4-Voranalyse **gemessen** (Muster `messe_grundgesamtheit`), nicht angenommen.
+- Coins unter 400 Kerzen bekommen in der App die Zeile *„nicht eingeordnet – zu jung (n T)“*, und keine Mail.
+
+### 42.2 B3 Upbit-Verkaufsanlass — seltener und schwächer als in §39.7 dargestellt
+
+| | gemessen |
+|---|---|
+| **Wer kann überhaupt auslösen?** | **16 von 28** Beständen führt Upbit schon in KRW (ALGO, AVAX, BIO, CANTON, INJ, KAIA, LINK, MON, MORPHO, NEAR, PLUME, SEI, SUI, TAO, W, XLM): Für sie kann B3 **nie** mehr auslösen. Möglich bleibt es für **12** (ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN, XDC) |
+| **Wie oft?** | Unter den 32 Fällen ab 2024 trafen **3** einen heutigen Bestand (BIO 10/2025, TAO 02/2026, CC 04/2026), also rund **1 im Jahr**. Alle drei sind inzwischen gelistet |
+| **Halter-Sicht in Dollar** (§38.4 maß gegen BTC, aus Käufersicht) | dieselben 32 Fälle, +4 h, 7 T: Coin **−8,51 %** in Dollar, fällt in **25 von 32**, Median −9,5 %. BTC +1,3 %. Bootstrap (Korb > 0) **0,043** |
+| Belegstufe | gegen BTC **schadet** (0,014). In Dollar **deutlich, aber knapp über der vorab strengen Schwelle 0,025** (Bonferroni). Je Jahr: 2024 +17,4 % (n 4), 2025 −15,5 % (n 14), 2026 −13,3 % (n 14) |
+
+⇒ **Fachlich:**
+- B3 bleibt eine **richtige** Handlung: Ein gehaltener Coin fiel nach dem Listing meist, auch in Dollar.
+- Die Mail muss die Belegstufe **genau** nennen: *„gegen BTC gemessen: Halten schadet; in Dollar fiel der Coin in 25 von 32 Fällen, im Mittel −8,5 % in 7 T“*.
+- Der Nutzen ist **klein**: etwa ein Fall im Jahr, und der Kreis schrumpft mit jedem Listing.
+- Der Aufwand ist mittel: Upbit-Abruf stündlich und Mail binnen 4 h.
+
+### 42.3 B4 Abbau-Reihenfolge — zwei Lücken vor dem Bau
+
+1. **Die Zielgröße ist ein Saldo aus Ereignissen** (*verdoppelt* minus *−70 % oder eingestellt* in 12 Monaten, gegen die Klasse), **kein Ertrag**.
+   - Für eine Verkaufs-Handlung zählt, was der Halter **in Dollar** verliert, wenn er hält (wie bei B1 und §42.2).
+2. **Das untere Fünftel ist nicht eigens gegen eine Nullwelt geprüft** (§39.7, ⚠️ schon vermerkt).
+   - Die Dosis ist monoton, aber das ist eine Ordnung, kein Urteil über das Ende.
+
+⇒ **Vor dem Bau eine Vormessung** (Desktop, auf der bestehenden Messbasis §25/§39.9, vorab festgelegt):
+- unteres Fünftel gegen Zufall derselben Klasse und desselben Stichtags;
+- Zielgröße **Ertrag in Dollar über 12 Monate** (Auskunft: gegen BTC, Saldo wie bisher);
+- ab 2024 urteilt, E2 nur Auskunft;
+- Teil 0 reproduziert die Dosis §39.9 ohne F9.
+
+Das ist keine neue Hypothese, sondern die Prüfung, die §39.7 offen ließ (sechs Prüfungen vor jeder Meldung). Dazu kommt die Grundgesamtheit am NB (§42.1).
+
+### 42.4 Wohin der Erlös geht (B-6) — offen, aber kein Hindernis
+
+- B1, B3 und B4 sagen *verkaufen*, nicht *wohin*. In allen Messungen liegt der Erlös **in Dollar still**.
+- Fakt dazu: L verliert im Klima ≈ −45 %/Jahr gegen BTC (§33.4).
+- Ob ein Umschichten in den Kern **besser** ist, ist nicht gemessen. Die Mails sagen deshalb nichts darüber (Fakt oder Bewertung: keine Empfehlung ohne Messung).
+- Messbar wäre es auf denselben Positionen (Erlös in Dollar gegen Erlös in BTC). **Vorschlag: zurückgestellt**, bis B4 steht.
+
+### 42.5 Das Ziel E-85 ist zur HÄLFTE erfüllt — der Einstieg je Asset fehlt
+
+| | Stand |
+|---|---|
+| **Führung je Bestand** | B1 ✔ trägt (gebaut) · B3 ◐ trägt, selten · B4 ◐ ordnet, Vormessung offen · B2 Fakt |
+| **Einstieg je Asset** | **keiner belegt.** L nur über die **Ampel** (C1): Das ist eine **Markt**lage, keine Asset-Aussage; die Kandidatenliste (A3) ordnet nur. K: §35, §37, §38 tragen nicht, K-3 **schadet** (§40). Offen sind nur **K-1/K-2** (Rally-Einstieg nach Dominanz-Spitze; 16 Signale seit 2023) |
+| **Ampel (C1)** | trägt über **einen** Zyklus (Leave-one-out bricht). In E3 (ab 2024) gab es **keine** Season. ⚠️ Sie ist deshalb das einzige Element, das sich **grundsätzlich nicht** am Messfokus ab 2024 prüfen lässt. Das ist kein Fehler der Messung, sondern die Datenlage; sie gehört so benannt. Heute (20.09.): *ungewohnt*, also keine Handlung |
+
+⇒ **Ehrliche Zusammenfassung:**
+- Das Spot-Konzept liefert heute **Führung** (Mitnahme, Verkaufsanlässe, Abbau-Reihenfolge), aber **keinen** Kauf je Asset.
+- Für den Kauf bleibt die Ampel als Marktlage und, wenn sie trägt, K-1/K-2.
+- Trägt K-1/K-2 nicht, ist das gemessene Ergebnis: **Ein Einzelcoin-Einstieg ist mit freien Daten ab 2024 nicht belegbar.** Dann bleibt der Spot-Kauf eine Marktlage-Entscheidung (Ampel) mit geordneter Kandidatenliste.
+
+### 42.6 Was sich am Plan ändert (Vorschlag)
+
+| # | | Art |
+|---|---|---|
+| 1 | **B4-Vormessung** (§42.3) **vor** dem B4-Bau, mit Lösung der Grundgesamtheit (§42.1) | fachlich (sechs Prüfungen), Desktop, kein NB-Eingriff |
+| 2 | **B3:** Belegstufe in der Mail wie §42.2; Nutzen ≈ 1 Fall im Jahr | Reihenfolge P16 (B3) vor P18 (B4) **zur Abstimmung** |
+| 3 | **K-1/K-2 Messplan** (Einstieg je Asset, die letzte offene Spur) | zur Abstimmung |
+| 4 | Abdeckungsskript: CAT als `1000CAT` über `symbol_zuordnung.csv`; Übernahmen mit Enddatum ausweisen | erledigt in `kp_abdeckung_stichtag.py` |
+| 5 | Erlös B-6: zurückgestellt bis nach B4 | Vorschlag |

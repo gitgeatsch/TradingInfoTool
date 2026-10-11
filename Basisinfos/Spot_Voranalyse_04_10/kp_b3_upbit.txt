@@ -1,0 +1,13 @@
+KONZEPTPRUEFUNG SPOT · B3 Upbit-Verkaufsanlass
+
+U1 Upbit fuehrt 294 Coins in KRW. Bestand ohne Kern: 28
+   schon in KRW (B3 kann NICHT mehr ausloesen): 16 · ALGO, AVAX, BIO, CANTON, INJ, KAIA, LINK, MON, MORPHO, NEAR, PLUME, SEI, SUI, TAO, W, XLM
+   noch nicht in KRW (B3 moeglich): 12 · ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN, XDC (davon nur BTC/USDT-Markt: BRETT)
+
+U2 dieselben 32 Upbit-Listings ab 2024 (20 Monate), Kauf/Bezug +4 h, 7 T:
+   gegen BTC (wie §38.4, Kontrolle): Korb -9.97 Pp
+   Coin in DOLLAR (Halter: Halten statt Verkaufen): Korb -8.51 % · Median der Ereignisse -9.50 % · steigt in 7 von 32 · Bootstrap(>0) 0.043
+   BTC in Dollar ueber dieselben Stunden: Korb +1.28 %
+   je Jahr (Dollar): 2024 +17.4 % (n 4) · 2025 -15.5 % (n 14) · 2026 -13.3 % (n 14)
+
+   Ereignisse: 24-05 ZETA +7%/+1% · 24-07 JUP -0%/-1% · 24-08 PENDLE -5%/-11% · 24-09 CKB +68%/+54% · 25-01 VTHO -13%/-13% · 25-02 COW -40%/-36% · 25-03 ORCA -39%/-40% · 25-05 TIA +7%/+4% · 25-05 IO +3%/+0% · 25-05 PENGU -12%/-12% · 25-07 MOODENG -4%/-6% · 25-07 ENA +12%/+11% · 25-07 OP -19%/-16% · 25-08 AERO -12%/-11% · 25-09 WLD -17%/-19% · 25-09 SUPER -28%/-35% · 25-10 DOOD -34%/-27% · 25-10 BIO -21%/-25% · 26-01 ZK -6%/-4% · 26-02 TAO -8%/-4% · 26-03 ICP -2%/-8% · 26-04 CC -5%/-7% · 26-04 PIEVERSE -29%/-31% · 26-04 MEGA -35%/-40% · 26-05 WIF +1%/+2% · 26-05 VVV -14%/-9% · 26-05 IRYS -53%/-51% · 26-06 SPX -5%/+0% · 26-06 AI -11%/-16% · 26-07 CFX -4%/-6% · 26-08 HOME +2%/+1% · 26-08 BSB -19%/-18%

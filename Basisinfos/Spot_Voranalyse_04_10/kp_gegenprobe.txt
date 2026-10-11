@@ -1,0 +1,6 @@
+G1  gleich     32 Ereignisse, Dollar-Korb -8.51 % (Skript -8,51 %), steigt 7 (Skript 7)
+G2  gleich     uebernommen 10, letztes Datum: ['2026-07-13', '2026-08-19']
+G3  gleich     1000CAT/CAT an 455 gemeinsamen Tagen, Median 1000
+G4  gleich     Messbasis/NB-Tage: {'ASTER': (0, 370), 'CANTON': (0, 91), 'MON': (0, 321), 'VSN': (0, 91), 'XDC': (0, 1011)}
+
+4 von 4 gleich
