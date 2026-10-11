@@ -4966,3 +4966,85 @@ Nutzer 09.10.: *„Ja, Messung laufen lassen, prüfen und gegenprüfen“*.
    - Sie wird **nicht** in Block B eingebaut, ohne dass das abgestimmt ist.
 
 ⚠️ **Die Erwartung vorab (§40.3) lag falsch, und zwar in die ungünstige Richtung:** Erwartet war *„trägt brutto vielleicht“*. Gemessen ist: brutto schon gegen BTC negativ. Die Kosten waren nicht das Problem.
+
+
+## 41. Voranalyse P14 — Spot B1 Mitnahme ×3 (+ D6, D7, A6), 11.10.2026
+
+Nutzer 11.10.: *„Ja, Voranalyse Spot B1 vorbereiten und vorlegen“*. Grundlage: §31 (Regel), §39.5–§39.7 (abgestimmt, E-91), Übertragbarkeit §39.6 (**trägt auf dem ganzen Bestand**, +4,87 Pp, je Auslösung Median +97 Pp, Gegenprobe 4/4). Zusätzlich gegengeprüft an der Prod-Kopie 10.10.
+
+### 41.1 Die Regel – wie gemessen, nichts neu gewählt
+
+| | gemessen (§31, §39.6) | Betrieb |
+|---|---|---|
+| Kreis | alle Watchlist-Coins ohne Kern, ab 2024 | **jeder Krypto-Bestand** (frei + gestakt > 0) außer **Kern BTC, ETH, SOL** und Stablecoins (E-90); heute rund 28 |
+| Startkurs | Dollar-Tagesschluss am Starttag | dasselbe; Starttag: Altbestand = **Tag der Inbetriebnahme** (A1 a), Neuzugang = erster Abgleich |
+| Auslösung | Tagesschluss ≥ **3 ×** Startkurs innerhalb **365 T** | dasselbe, einmal je Fenster |
+| Handlung | Hälfte verkaufen am **Folgetag** | Mail am Morgen nach dem Tagesschluss: *„Hälfte von X verkaufen – heute“* |
+| Fensterende | Einheit 365 T | ohne Auslösung: neues Fenster mit neuem Startkurs; nach der Mitnahme läuft der Rest bis zum Fensterende, dann ebenso (§39.5 Punkt 2) |
+
+### 41.2 Datenlage am NB (gegengeprüft)
+
+- **Kurse:** `price_history_ohlc` (Produktion, nur lesend), Dollar-Tagesschluss, täglich vom Job `refresh_ohlc` (Kraken, Rückfall Binance/Bybit).
+  - Vorhanden für **alle** gehaltenen Coins, auch die 12 außerhalb des Binance-Universums (ASTER, BRETT, CANTON, CAT, HYPE, KAS, MON, MORPHO, PLUME, SUPRA, VSN, XDC).
+  - Stand der Kopie: bis 10.10.
+  - ⇒ **eine Quelle** für alle, keine Mischung aus Stundenkursen und `price_cache`.
+- **Bestand:** `holdings` (frei + gestakt, E-93/Nutzerregel), nur lesend.
+- **Ablage:** eigene Datei `data/spot_betrieb.db` (§39.8), **nicht** die Produktion. Inhalt:
+  - je Coin das laufende Fenster (Start, Startkurs, Ende, Auslösung, Mail);
+  - das Vorwärtsprotokoll (D7).
+
+### 41.3 Bauweise (Vorschlag)
+
+| Teil | Inhalt |
+|---|---|
+| `agent/spot_mitnahme.py` | reine Rechnung: Kreis aus `holdings` + Watchlist, Fenster anlegen/fortschreiben, Auslösung prüfen, Mailtext. Liest Produktion nur `mode=ro`, schreibt nur `spot_betrieb.db` |
+| Job `spot_mitnahme_job` | **eigener** Job, täglich **07:10** Ortszeit (nach `refresh_ohlc`, vor der alten Stop-Mail 07:15). Er hängt **nicht** an der angehaltenen Rollen-Kette (Lehre H15). Nur am Betriebsgerät (`betrieb_erlaubt`) |
+| Schalter | `spot_mitnahme_aktiv` in `regel0_betrieb.yaml`, Vorgabe **aus**. Gebaut und geprüft wird mit Schalter aus (das Protokoll läuft schon); eingeschaltet wird nach deinem Ja (Muster O29) |
+| Mail (E-91) | Betreff *„Spot: Hälfte von X verkaufen“*. Zeilen: **was tun** (Menge = Hälfte von frei + gestakt) · **bis wann** (heute) · **warum** (Kurs ×3,1 seit Starttag; gemessen: Mitnahme schlägt Halten, je Auslösung Median +97 Pp, in 89 % besser; Belegstufe; bei Coins außerhalb Binance *„Regel auf Watchlist-Coins gemessen, dieser Coin liegt außerhalb“*) · **Kontext** (Preis gegen BTC seit Starttag, Kosten der Klasse D6, Wochen- und Tageschart O45) |
+| **D6** | Kosten je Klasse als Konstanten (H 0,36 / M 0,88 / S 3,20 % je Seite). Nur Information in der Mail, **nicht** in der Auslösung (Regel 2) |
+| **D7** | Vorwärtsprotokoll: Fenster angelegt, Auslösung, Mail, Fensterende, Bestand verschwunden (verkauft) |
+| **A6** | Die Stop-Nachzieh-**Mail** für Spot aus, mit dem Einschalten von B1 (Nutzer: *„A6 ja mit B1“*). **Befund 11.10.:** Die tägliche Mail 07:15 besteht zu **100 %** aus alten Spot-Signalen der angehaltenen Rollen-Kette (50 von 70 offenen, Signale 23.08.–29.09., kein Hebel). Der Rest des Jobs (*Ausstiege verfolgt*, *Führung protokolliert* – K19/K20) **bleibt** |
+| Sichtbarkeit | Teilexport-Abschnitt *SPOT-MITNAHME*, Betrieb-Karte der Statusseite (Job, Fenster, Auslösungen). Der App-Tab *Spot-Bestand* kommt mit GUI-3 (P15) |
+
+### 41.4 Was B1 NICHT ist
+
+- Kein Einstieg.
+- Keine Bewertung des Coins.
+- Kein Abbau (B4).
+- Keine Umschichtung des Erlöses: In der Messung liegt er still (Frage B-6, nicht gemessen).
+- Keine Mail ohne Handlung: An Tagen ohne Auslösung gibt es keine Mail.
+- **Menge:** Laut Messung je Coin und Jahr ≈ 7 % Auslösung, bei rund 28 Coins also **etwa 2 Mails im Jahr**.
+
+### 41.5 Risiken und Prüfpunkte
+
+| | |
+|---|---|
+| Startkurs falsch (Lücke am Starttag) | Fehlt der Tagesschluss am Starttag, nimmt das System den nächsten vorhandenen Tag und **sagt es** im Protokoll. Ist seit 3 T kein Kurs da, wird nicht ausgelöst (Datenfrische) |
+| Token-Umstellung / Kurssprung (Memory *Token-Umstellungen*) | Ein ×3 binnen eines Tages ohne Bewegung am Vortag wird als *zu prüfen* gekennzeichnet und **nicht** gemailt, nur protokolliert (Plausibilität, keine neue Regel) |
+| Gestakt | Hälfte von frei + gestakt. Gestakte Coins sind bei Bitpanda wie Spot zu führen; ETH ist Kern und daher nicht betroffen |
+| Coins außerhalb Binance | Regel angewandt, nicht auf ihnen gemessen → in der Mail so benannt |
+| Grundgesamtheit | Gleich der Übertragbarkeitsmessung (alle ohne Kern); der Kreis wird **abgeleitet**, nicht aufgezählt |
+
+### 41.6 Nachweis vorab
+
+- **Prüfstand** an einer Wegwerf-Ablage + Kopie der NB-Sicherung, Versand abgefangen, echte `config.yaml`:
+  - gestellte Kursreihen: ×3 am Tag 200 → Mail; ×2,9 → keine; Fensterende ohne Auslösung → neues Fenster mit neuem Startkurs;
+  - Mitnahme + Rest bis zum Fensterende; Bestand verschwindet → Fenster zu;
+  - Kurslücke am Starttag; Kurssprung ohne Vortag;
+  - Kern und Stablecoin nie im Kreis; Schalter aus → Protokoll ja, Mail nein;
+  - die Produktion unberührt (Prüfsumme).
+- **Gegenprobe:**
+  - **Teil 0 (R-R11):** Die Betriebsrechnung muss auf der Messbasis am Desktop die Übertragbarkeit **reproduzieren** (7.819 Positionen, 7,1 % Auslösung, +4,87 Pp); sonst Abbruch.
+  - eigene Schleife je Coin aus Rohkursen gegen `spot_mitnahme`;
+  - Kreis gegen eigenes SQL (frei + gestakt, ohne Kern/Stablecoin).
+- **A6:** Leser/Schreiber der Mail geprüft; Mail weg, Messteile unverändert (K19/K20-Zähler laufen).
+- Suite (neues Paket *SpotMitnahme*), ganze Suite, Zentraldokumente.
+- **Am NB:** Pull + Neustart mit Schalter aus → **K-SP-1** (Protokoll legt Fenster für alle L-Bestände an, keine Mail). Danach dein Ja zum Einschalten → **K-SP-2**.
+
+### 41.7 Zur Abstimmung
+
+1. **Reihenfolge:** Die Konzeptprüfung *„auf Herz und Nieren“* (§39.9, Nutzer 09.10.) steht noch aus. Ihr größter Punkt ist die Abdeckungslücke (12 Bestände außerhalb des Universums); die betrifft vor allem **B4** (Abbau-Reihenfolge), kaum B1.
+   - **Vorschlag:** B1 jetzt bauen (gemessen und abgestimmt), die Konzeptprüfung **vor** B3/B4/C1.
+   - Oder die Konzeptprüfung zuerst?
+2. Alles Übrige ist fachlich aus §31/§39 festgelegt und oben begründet.
+

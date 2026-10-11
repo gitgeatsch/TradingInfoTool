@@ -209,7 +209,7 @@ Nutzer 10.10.: *„3. ja, mit Statusseite starten – prüfe vorher, ob der Bau 
 | 4 | **P11** | Hebel | **Schritt B** (O36): Hebel-Wallets gegen `hebel_positions` | K-HW-1 · ✔ **gebaut 11.10.** im Bündel mit O45 (G-U, E-98); Importer-Fix = **P11b** (allein, Schreiber) | Hebel-Vorrang; deckt den Importerfehler bei Teilschließungen auf |
 | 5 | P12 | Hebel/Betrieb | **GUI-2 Hebel-Tab**: alle REGEL0-Signale, Abstand/H15, Hebel-Schalter hierher | K-GUI-2 · ✔ **gebaut 11.10.** (G-W, E-99): Watchlist-Schalter bis GUI-4 doppelt, alter Tab aus der GUI | baut auf Schritt B auf |
 | 6 | P13 | Hebel | **H14** Zeitgrenze Prüfblock, **nach dem N5-Ergebnis** (~15.10.) und der LLM-Entscheidung (E-83) | L1 | N5 kann die Fassung ändern; erst danach bauen |
-| 7 | P14 | Spot | **Spot B1** Mitnahme ×3 (+ D6, D7, A6 alte Stop-Mail für Spot aus) | K-SP-1 | Spot-Bau Stufe 1, erster Schritt (§39) |
+| 7 | P14 | Spot | **Spot B1** Mitnahme ×3 (+ D6, D7, A6 alte Stop-Mail für Spot aus) | K-SP-1 · ◐ **Voranalyse 11.10.** (Spot §41): eine Kursquelle für alle Bestände, eigener Job 07:10, Schalter aus zuerst; A6-Befund: Stop-Mail = 100 % alte Spot-Signale | Spot-Bau Stufe 1, erster Schritt (§39) |
 | 8 | P15 | Betrieb | **GUI-3 Bestand-Tab** (Spot/Hebel getrennt, Rolle Kern/L) | K-GUI-3 | zeigt B1 |
 | 9 | P16 | Spot | **Spot B3** Upbit-Verkaufsanlass (+ D2) | K-SP-2 | §39 Reihenfolge |
 | 10 | P17 | Hebel | **O38** Zusatzuniversum per Regel (nach der Messung am Desktop) | Signale in der Ablage | Rauschen, keine Mailwirkung, daher nicht dringend |
