@@ -2096,6 +2096,14 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
   `optionsmarkt.py` → `api/deribit.py`, inkl. `main.py`/`scheduler/
   background.py`/`budget_allocator.py`).
 
+### 13.x Stand 10./11.10.2026 — Lagebild des neuen Systems (P9/P9b/P9c)
+
+⚠️ **Die Beschreibung oben ist der Stand Juli/August** (LLM-Tagesbudget der alten Kette, Gruppen A/B/C). Seit P9 gilt:
+- **Karten:** Portfolio + Z-3 · **Offene NB-Kontrollen** (`Basisinfos/nb_kontrollen.yaml`, automatische live, überfällige rot) · **Hebel** (H15 je Position: Kurs, Liquidation, Abstand, Empfehlung, Warnstufe, zuletzt gemeldet) · **REGEL0 heute** (Signale, Mails, letzter Lauf, Prüfblock, Binance-Ankündigungen) · **Betrieb** (auffällige Jobs, Nachlader, Neuaufnahme, Marktscan-Quote, Stop nachziehen) · **Schalter + Bestand** · **Kontingente je Verbraucher** · CoinGecko · Gemini je Modell · API-Status · **Parameter (neu, nur lesend)** · *Multi-Asset (ruht)* eingeklappt · Knöpfe · Fehler.
+- **Entfallen:** ALTE KETTE, Überschriften A/B/C, Regime-Karte (später *Markt (Krypto)*), Parameter der alten Kette. Die Getter bleiben im Code.
+- **Eine Quelle:** `agent/betriebslage.py` für Seite und Teilexport (nur lesend). **Fristen je Karte** nach der Datenänderung (60/120/300/900 s, Dekorator `_gecacht_frist`); Wächter: jeder Getter hat eine Frist oder steht begründet in `_LIVE_GETTER`.
+- **Laufzeit:** warm 0,02 s am Desktop; Warnungen am NB nur noch beim Start und zu den Job-Zeitpunkten (CPU-Konkurrenz). Ausführlich: Plan_Asset_Lebenszyklus G-N bis G-R, E-95.
+
 ---
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading

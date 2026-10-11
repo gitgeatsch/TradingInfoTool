@@ -2471,3 +2471,8 @@ Schritt7 §23.24.
 - Parallel am Desktop: K-1/K-2, O38-Messung; N5 bis ~15.10.
 - M1: Kriterium 2 (Hebel) mit der Freigabe bestätigt; Kriterium 4 (LLM gemessen) offen bis N5.
 
+**Nachtrag 11.10.2026 (31) — Betrieb sichtbar und schlanker:**
+- **P9 Statusseite** (E-95): Kontrollen, Hebel/H15, REGEL0 heute, Betrieb, Schalter, Bestand, Kontingente, Parameter; alte Karten entfallen; eine Quelle mit dem Teilexport. P9b/P9c: Laufzeit unter die Schwelle (Preisabfrage bitgleich über den Index, Fristen nach Datenänderung).
+- **P10 Thesen pausiert** (E-96, O42); Wiedereinschalten mit O39 nach Kandidatenprüfung.
+- **Arbeitsweise:** NB-Änderungen bündeln (E-97); Kontrollen nur noch in `Basisinfos/nb_kontrollen.yaml` (Suite-Paket *Kontrollen*).
+- M1-Kriterien unverändert (Kriterium *technisch stabil*: Statusseite zeigt jetzt jeden Betriebsteil des neuen Systems).

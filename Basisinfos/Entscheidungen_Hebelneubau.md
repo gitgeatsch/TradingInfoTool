@@ -1099,3 +1099,23 @@ Schritt7 §23.24.
 - **Ausdrücklich mit:** Die REGEL0 ist technisch geprüft, nach Kosten nicht als gewinnbringend belegt. Einsätze klein; das Vorwärtsprotokoll entscheidet.
 - Offen bleiben: L1/H14 (Prüfblock), O36 Schritt B (Hebel-Importer), O38 (tokenisierte Aktien im Zusatzuniversum), Unstaking nicht live beobachtet.
 
+# E-95 · Statusseite als Lagebild des neuen Systems (P9/P9b/P9c, 10./11.10.2026)
+
+**10.10.2026** · Nutzer: *„P9 Statusseite starten“*, *„1. ja O29 einschalten 2. ja 3. ja – so aufsetzen, dass es nie veraltet“*, nach dem Bau *„Alle Karten gefüllt, nichts fehlt“*.
+- **Abgestimmt:** neue Karten Kontrollen, Hebel (H15), REGEL0 heute, Betrieb, Schalter + Bestand, Kontingente je Verbraucher, Parameter (neu); entfallen ALTE KETTE, A/B/C, Regime, Parameter alt; Multi-Asset eingeklappt. Eine Quelle mit dem Teilexport (`agent/betriebslage.py`).
+- **Eigene Festlegungen (fachlich, berichtet):** Z-3 bleibt (Job `portfolio_wert` lebt, Grundfunktion) · Kontrollen-Datei `nb_kontrollen.yaml` mit vier Sicherungen · Fristen je Karte nach der Datenänderung (P9c: Hebel/Kontingente/Rollen 300 s, Betrieb/Schalter 60 s) · `db.get_latest_prices` über den Index, **bitgleich** (P9b) · O44 Liquidationsmarge aus `config.yaml`.
+- Nachweis: Plan_Asset_Lebenszyklus G-P/G-Q/G-R; Schritt7 §23.40–§23.42. K-ST-1 ✔, K-ST-3 offen.
+
+# E-96 · Thesen pausiert (P10/O42, 11.10.2026)
+
+**11.10.2026** · Nutzer: *„Ja, P10 mit beiden Jobs bauen, prüfen und gegenprüfen – wichtig beim Umbau der jeweiligen Bereiche dies berücksichtigen“*.
+- Schalter `thesen_pausiert` (regel0_betrieb.yaml): `kategorie_synthese` **und** `kategorie_vorschlaege` ruhen (kein LLM, kein Netz, keine Auto-Thesen). Daten bleiben.
+- **Regel für O39:** beim Umbau jedes Multi-Asset-Bereichs den Schalter mitbedenken; vor dem Wiedereinschalten die Kandidaten prüfen (Beobachtungstage laufen weiter).
+- Korrigierte Planannahme: Synthese nutzt Gemini 3.1, nicht den Prüfblock-Topf 3.5. Nachweis: Plan G-S, Schritt7 §23.43. K-TH-1 offen.
+
+# E-97 · NB-Änderungen bündeln (11.10.2026)
+
+**11.10.2026** · Nutzer: *„wir sollten mehr Punkte gleichzeitig am NB pullen, sonst dauert die Wartezeit zur Prüfung immer eine Stunde“*.
+- Ersetzt *„eine NB-Änderung zur Zeit“*. Fertig Geprüftes geht in **einen** Pull + Neustart; jede Änderung behält eine eigene Kontrolle mit eindeutigem Merkmal; **eine** Diagnose für alle.
+- **Allein** bleibt, was die Produktions-DB umschreibt oder Signale/Hebelhöhe/Mails eines laufenden Handels verändert.
+- Eingetragen: Plan_Hebel (Paketplan, Regeln), Memory `feedback_nb_aenderungen_buendeln`.

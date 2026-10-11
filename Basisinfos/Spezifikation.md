@@ -794,6 +794,12 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   Regime-Verlauf und alle Overrides (Quelle, Grund, Zeitpunkt, Dauer — Kap. 14) sowie
   antizyklische Kaufpläne/Tranchen-Status (Kap. 15) — für Nachvollziehbarkeit (Z-4).
 
+### Stand 11.10.2026 — Statusseite und ruhende Bereiche
+
+- **Statusseite (Remote, über Tailscale)** ist das Lagebild des neuen Systems: Kontrollen, Hebel (H15), REGEL0 heute, Betrieb, Schalter, Bestand (frei + gestakt), Kontingente je Verbraucher, Parameter (nur lesend). Quelle `agent/betriebslage.py`, dieselbe wie der NB-Teilexport (E-95).
+- **NB-Kontrollen** stehen in `Basisinfos/nb_kontrollen.yaml` und veralten nicht: automatische werten sich live aus, Frist rot auf Seite und in der Suite.
+- **Ruhend:** Thesen-Abgleich/-Synthese (`thesen_pausiert`, E-96) bis zum Multi-Asset-Umbau (O39); die Rollen-Kette (`spot_kette_angehalten`).
+
 ## 11. Roadmap & Erweiterbarkeit
 
 1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist,

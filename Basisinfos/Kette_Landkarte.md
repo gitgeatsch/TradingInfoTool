@@ -18,6 +18,14 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 11.10.2026 — Thesen pausiert, Statusseite, Preisabfrage
+>
+> | Hier fehlt | Stand seit 10./11.10.2026 |
+> |---|---|
+> | Thesen-Abgleich und -Synthese (`kategorie_vorschlaege`, `kategorie_synthese`) | **ruhen** mit `thesen_pausiert` (regel0_betrieb.yaml, E-96) - kein LLM, kein Netz, keine Auto-Thesen; Wiedereinschalten mit O39 nach Kandidatenprüfung |
+> | Sicht auf den Betrieb | Statusseite = Lagebild des neuen Systems aus `agent/betriebslage.py` (eine Quelle mit dem Teilexport, E-95) |
+> | `db.get_latest_prices` | über den Primärschlüssel statt `GROUP BY` - Ergebnis bitgleich, 0,084 → 0,0003 s (P9b) |
+>
 > ## ⚠️ NACHTRAG 09.10.2026 — die Hebelführung hing an der angehaltenen Kette (H15)
 >
 > | Hier steht | Stand seit 09.10.2026 |
