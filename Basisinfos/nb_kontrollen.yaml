@@ -55,10 +55,21 @@ kontrollen:
     titel: "P9b Laufzeit: Statusaufbau am NB unter 1 s (keine Warnung 'Statusaufbau dauerte' ausser der ersten nach dem Start); letzte Preise unveraendert"
     seit: "2026-10-10"
     paket: P9b
-    commit: ""
+    commit: 117c4c8
     art: manuell
     nachweis: "Diagnose nach Pull + Neustart: hoechstens 1-2 Warnungen direkt nach dem Start, danach keine; Hebelfuehrung-Logzeile mit Kurs/Abstand wie vorher; Teilexport ohne Fehlerzeile"
     faellig_bis: "2026-10-13"
+    status: abgeloest
+    erfuellt_am: "2026-10-11"
+    beleg: "Diagnose 11.10. 06:06 (Neustart 05:32): 9 Warnungen in 34 min statt 194 in 3 h / 398 in 10 h vorher; 3 Stueck 05:33-05:36 (1,2-1,4 s) = 60-s-Fristen meiner Karten -> P9c; 5 Stueck an Job-Zeitpunkten (Preis-Refresh :47/:02, Nachlader :04) = CPU-Konkurrenz (Befund 14.08.); 1 Start. Betrieb ohne ERROR, H15-Logzeile wie vorher. Abgeloest durch K-ST-3"
+  - id: K-ST-3
+    titel: "P9c Fristen nach Datenaenderung: keine Laufzeitwarnung im Minutentakt; uebrig nur der Start und die Job-Zeitpunkte (Preis-Refresh :02/:17/:32/:47, REGEL0 :05-:11)"
+    seit: "2026-10-11"
+    paket: P9c
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach Pull + Neustart: Warnungen 'Statusaufbau dauerte' nur direkt nach dem Start und zu den Job-Zeitpunkten; Hebelkarte weiter gefuellt"
+    faellig_bis: "2026-10-14"
     status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"

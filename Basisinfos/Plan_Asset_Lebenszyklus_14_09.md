@@ -719,3 +719,36 @@ Nutzer 10.10.: *„Alle Karten gefüllt, nichts fehlt – Folgeschritt Laufzeit 
 **Nachweis:** `p9b_gegenprobe.py` **7/7** (Preise alt = neu auf der Kopie und an Randfällen; Marktscan alt = neu, ein Lauf > 500 Kandidaten wird jetzt vollständig gezählt statt abgeschnitten; Laufzeit; Frist; Prüfsumme der Kopie gleich). ⚠️ B6 (Rollen-Kontingent) prüft nur 0 = 0 — die Kette urteilt heute nicht. Dauerhafte Wache in Paket GuiKette (Preise **bitgleich** zur alten Abfrage auf der Desktop-DB). p9_pruefstand 6/6, p9_gegenprobe 10/10, H15 11/11 + 7/7, Sofortliste 9/9 + 5/5, `teste_status_cache.py` grün.
 
 **Am NB:** Pull + Neustart → **K-ST-2** (Diagnose: höchstens die erste Warnung nach dem Start, danach keine; Hebelführung-Logzeile wie vorher).
+
+
+### G-R P9c — Fristen nach der Datenänderung (11.10.2026)
+
+Nutzer 11.10.: *„Ja, P9c bauen, prüfen und gegenprüfen“*.
+
+**Befund K-ST-2** (Diagnose 11.10. 06:06, Neustart 05:32 mit P9b): **9 Warnungen in 34 min** statt 194 in 3 h bzw. 398 in 10 h vorher. Sie fallen in drei Gruppen:
+- 1 beim Start;
+- 5 an Job-Zeitpunkten (Preis-Refresh :47/:02, Nachlader :04; 3,8–5,9 s, CPU-Konkurrenz wie am 14.08.);
+- **3 im Minutentakt** (05:33–05:36, 1,2–1,4 s), verursacht durch **meine** 60-s-Fristen.
+
+Betrieb ohne ERROR, H15 unverändert. K-ST-2 ist abgelöst durch K-ST-3.
+
+**Änderung:** Die Frist richtet sich nach der Änderung der Daten.
+
+| Karte | vorher | jetzt | Begründung |
+|---|---|---|---|
+| Hebel (H15 je Position) | 60 s | **300 s** | Kurs und H15 ändern sich nur alle 15 min (Preis-Refresh, Hebel-Screening) |
+| Kontingente je Verbraucher | 60 s | **300 s** | Prüfblock-Aufrufe nur mit einem Signal; der Live-Zähler je Gemini-Modell bleibt in seiner Karte |
+| Rollen-Kontingent | 60 s | **300 s** | Kette angehalten |
+| Betrieb (Jobs), Schalter | 60 s | 60 s | billig (0,005 s) |
+
+**Preis:** Die Hebelkarte liegt höchstens 5 min hinter dem neuesten Kurs. Die Aufzinsung der Liquidation in 5 min beträgt ETH 0,02 €, BTC 0,54 €. Die H15-Mail kommt unverändert sofort.
+
+**Nachweis** (`p9c_gegenprobe.py` **4/4**):
+- Fristen wie festgelegt;
+- Werte aus dem Speicher = frisch gerechnet. ⚠️ Die Hebelkarte ist zeitabhängig (Aufzinsung, 9. Nachkommastelle), deshalb ist sie gleich bis auf diese Aufzinsung, und die ist beziffert;
+- Neuberechnung je Minute 0,143 → **0,005 s** (Desktop);
+- nach 301 s wird wieder neu gerechnet.
+
+Dazu: p9_pruefstand 6/6, p9_gegenprobe 10/10, p9b_gegenprobe 7/7, GuiKette 39/39, Kontrollen 12/12, Hebelführung 35/35, `teste_status_cache.py` grün.
+
+**Am NB:** Pull + Neustart → **K-ST-3**. Warnungen nur noch beim Start und zu den Job-Zeitpunkten.

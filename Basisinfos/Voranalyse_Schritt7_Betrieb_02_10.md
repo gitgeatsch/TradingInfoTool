@@ -3061,3 +3061,7 @@ Nutzer 10.10.: *„Pull am NB erledigt – P9 Statusseite starten“*. Ausführl
 
 K-ST-1 erfüllt (Nutzer: *„Alle Karten gefüllt, nichts fehlt“*); K-ANK-1, K-BP-3 automatisch erfüllt (Teilexport 20:42), K-LLM-1 erfüllt (Bildschirmfoto). Am NB 192 Warnungen *„Statusaufbau > 1 s“* — Ursache drei **alte** Live-Abfragen. `db.get_latest_prices` über den Index statt `GROUP BY` (bitgleich, 0,084 → 0,0003 s), Marktscan-Karte gezielt (0,118 → 0,015 s), Rollen-Kontingent mit 60 s. Warm 0,29 → 0,02 s am Desktop. Gegenprobe 7/7, Wache im Paket GuiKette. Ausführlich: Plan Schritt 53 **G-Q**. Am NB: **K-ST-2**.
 
+### 23.42 P9c: Fristen nach der Datenänderung (11.10.2026)
+
+K-ST-2: 9 Warnungen in 34 min statt 194 in 3 h — drei davon im Minutentakt aus den 60-s-Fristen der neuen Karten. Hebel, Kontingente und Rollen-Kontingent tragen jetzt 300 s, Betrieb und Schalter bleiben bei 60 s. Neuberechnung je Minute 0,143 → 0,005 s; Preis: Hebelkarte ≤ 5 min hinter dem Kurs (Liquidation ETH 0,02 €, BTC 0,54 € Aufzinsung). Gegenprobe 4/4. Ausführlich: Plan Schritt 53 **G-R**. Am NB: **K-ST-3**.
+

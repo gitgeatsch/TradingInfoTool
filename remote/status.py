@@ -177,7 +177,7 @@ def _gecacht_frist(sekunden: float):
 _LIVE_GETTER = frozenset({
     # Der Nutzer beobachtet diese Zahl waehrend eines laufenden Signal-Laufs -
     # ein bis zu 15 Minuten alter Wert waere hier eine Falschaussage.
-    # (P9b, 10.10.2026: `_get_rollen_budget` ist hier heraus und traegt 60 s - die Rollen-Kette ist seit 05.10. angehalten,
+    # (P9b, 10.10.2026: `_get_rollen_budget` ist hier heraus und traegt eine Frist (P9c: 300 s) - die Kette ist seit 05.10. angehalten,
     # und ihre Zaehlung durchsuchte `signals` zweimal ohne passenden Index, 0,07 s je Abruf.)
     "_get_budget_heute",
     # Wird direkt nach einem von Hand angestossenen Marktscan gelesen.
@@ -1115,7 +1115,7 @@ def _get_parameter_overview() -> list[dict]:
     return build_parameter_overview(config_module.load_config())
 
 
-@_gecacht_frist(60)
+@_gecacht_frist(300)  # P9c (11.10.): Kette angehalten - 300 s statt 60 s
 def _get_rollen_budget(conn: sqlite3.Connection) -> dict:
     """Was die Rollen-Kette heute wirklich verbraucht - und wovon (14.08.2026).
 
@@ -1298,10 +1298,15 @@ def _get_neuaufnahme() -> dict:
             "gesperrt": len(na.get("gesperrt") or [])}
 
 
-@_gecacht_frist(60)
+@_gecacht_frist(300)
 def _get_hebel_lage(conn: sqlite3.Connection) -> dict:
     """Je offener Hebelposition die H15-Sicht JETZT (Kurs, Liquidation, Abstand, Empfehlung, Warnstufe) und was H15 zuletzt
-    gemeldet hat. 60 s: das Hebel-Screening laeuft stuendlich, der Kurs kommt aus ``price_cache`` (15-Minuten-Refresh)."""
+    gemeldet hat.
+
+    300 s (P9c, 11.10.2026; vorher 60 s): die Eingaben aendern sich nur alle 15 Minuten - Kurs aus ``price_cache``
+    (Preis-Refresh) und H15 im Hebel-Screening. Mit 60 s rechnete die Karte jede Minute neu und riss am NB die Schwelle
+    (05:33-05:36: 1,2-1,4 s). Preis: die Karte liegt hoechstens 5 Minuten hinter dem neuesten Kurs; die H15-Mail kommt
+    unveraendert sofort."""
     from agent import betriebslage as BL
 
     # `job_laeufe` fehlt, wo die App nie lief (Desktop) - dann ist "gemeldet" unbekannt (None), nicht leer.
@@ -1349,10 +1354,11 @@ def _get_bestand_lage(conn: sqlite3.Connection) -> dict:
     return m
 
 
-@_gecacht_frist(60)
+@_gecacht_frist(300)
 def _get_kontingente(conn: sqlite3.Connection) -> dict:
     """LLM- und Datenkontingente je VERBRAUCHER (ersetzt die Karte *Rollen-Kette*, G-N): REGEL0-Pruefblock aus der Ablage,
-    der Rest je Quelle aus ``api_call_kontingent_taeglich``."""
+    der Rest je Quelle aus ``api_call_kontingent_taeglich``. 300 s (P9c): Pruefblock-Aufrufe entstehen nur mit einem Signal;
+    der LIVE-Zaehler je Gemini-Modell steht weiter in der eigenen Karte (``_get_llm_kontingent``)."""
     from agent import betriebslage as BL
 
     k = BL.gemini_je_verbraucher(_daten_ordner(), conn)

@@ -142,7 +142,7 @@ pruefe("B5", t_pn < t_pa / 5 and t_mn < t_ma and t_b < 0.1,
        "Preise %.4f -> %.4f s · Marktscan %.4f -> %.4f s · warmer Aufbau %.3f s (Ziel < 0,1 s am Desktop)" % (t_pa, t_pn, t_ma, t_mn, t_b))
 
 # B6
-ist_frist = getattr(RS._get_rollen_budget, "_frist_sekunden", None) == 60 and "_get_rollen_budget" not in RS._LIVE_GETTER
+ist_frist = (getattr(RS._get_rollen_budget, "_frist_sekunden", None) or 0) >= 60 and "_get_rollen_budget" not in RS._LIVE_GETTER
 RS.leere_aggregat_cache()
 rb = RS._get_rollen_budget(c)
 z = db.zaehle_rollen_urteile_heute(c)
