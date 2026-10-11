@@ -70,7 +70,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach Pull + Neustart: Warnungen 'Statusaufbau dauerte' nur direkt nach dem Start und zu den Job-Zeitpunkten; Hebelkarte weiter gefuellt"
     faellig_bis: "2026-10-14"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-11"
+    beleg: "Diagnose 11.10. 13:49 (Neustart 12:49): 6 Warnungen - 1 Start, 5 an Job-Zeitpunkten (13:05 Nachlader/Preise, 13:20, 13:35 Preise/Hebel-Job; Preis-Refresh-Raster ab Start :04/:19/:34/:49); keine im Minutentakt"
   - id: K-TH-1
     titel: "P10/O42 Thesen pausiert: kategorie_synthese und kategorie_vorschlaege ruhen (06:15/06:30 und beim Start), Statusseite zeigt pausiert"
     seit: "2026-10-11"
@@ -79,7 +81,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose: Logzeilen 'Thesen pausiert (O42' beim Start und um 06:15/06:30; keine Zeile 'Kategorie-Synthese: 19 Kategorien'; Zaehler gemini:gemini-3.1-flash-lite ohne Synthese-Aufrufe; Schalterkarte 'Thesen (Multi-Asset, O42): pausiert'"
     faellig_bis: "2026-10-13"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-11"
+    beleg: "Diagnose 11.10. 13:49: alle drei Starts nach P10 (08:35, 11:28, 12:49) mit 'Thesen pausiert (O42' fuer Vorschlaege und Synthese; letzte echte Synthese 07:24 (vor P10); der Cron 06:15/06:30 ruft dieselbe Funktion"
   - id: K-HW-1
     titel: "P11 Hebel-Wallet-Abgleich (O36 Schritt B): Logzeile je Hebel-Lauf, BTC/ETH/Kredit stimmen, Hebelkarte 'Abgleich mit Bitpanda: stimmt'"
     seit: "2026-10-11"
@@ -88,7 +92,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose: alle 15 min 'Hebel-Wallet-Abgleich: BTC ok · ETH ok · Kredit ok'; keine Mail 'Hebelposition passt nicht'; Teilexport-Zeile HEBEL-WALLET-ABGLEICH (P11); Statusseite Hebelkarte 'stimmt'"
     faellig_bis: "2026-10-14"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-11"
+    beleg: "Diagnose 11.10. 13:49: 4/4 Laeufe 'Hebel-Wallet-Abgleich: BTC ok · ETH ok · Kredit ok', keine Abweichungsmail; GUI-Bild 11.10.: 'Abgleich mit Bitpanda (Wallets): stimmt'"
   - id: K-WC-1
     titel: "O45 Wochen- und Tageschart (RSI/MACD) in der naechsten REGEL0-Signalmail und H15-Mail"
     seit: "2026-10-11"
@@ -105,6 +111,17 @@ kontrollen:
     commit: ""
     art: manuell
     nachweis: "Nutzer oeffnet die GUI am NB: Tab Hebel mit drei Unterreitern gefuellt, Filter wirken, Detail mit Mailtext; Watchlist-Knopf Hebel-Pruefung umschalten noch da; Diagnose ohne ERROR 'Hebel-Tab'. Zwischenstand 11.10.: Tab da, Freigabe gefuellt (Bild) - Datenspalte fuer ausgeschaltete Assets war falsch, korrigiert; nach Pull erneut ansehen"
+    faellig_bis: "2026-10-14"
+    status: erfuellt
+    erfuellt_am: "2026-10-11"
+    beleg: "Nutzerbilder 11.10.: Signale (18 in 7 T, Filter, Trader), Positionen (ETH 11,7 % LIQ NAHE, BTC 26,8 % HALTEN, Finanzierung, Ergebnis, Abgleich stimmt), Freigabe (44, Schalter); Diagnose ohne ERROR. Datenspalte der Freigabe korrigiert -> K-GUI-2b"
+  - id: K-GUI-2b
+    titel: "P12 Korrektur: Freigabe-Spalte REGEL0-Daten fuer ALLE Assets (da / keine / FEHLEN), Spaltenbreiten Signal, Ausstieg, Ergebnis"
+    seit: "2026-10-11"
+    paket: P12
+    commit: bffedf5
+    art: manuell
+    nachweis: "nach Pull + Neustart: in der Freigabe stehen APT, ASTER, BRETT, CANTON, IMX mit 'da' (vorher '-'); Spaltenkoepfe nicht abgeschnitten"
     faellig_bis: "2026-10-14"
     status: offen
   - id: K-ALARM-2

@@ -225,7 +225,9 @@ class HebelTab(ttk.Frame):
         self.signal_tree = ttk.Treeview(links, columns=SIGNAL_SPALTEN, show="headings", height=18)
         for c in SIGNAL_SPALTEN:
             self.signal_tree.heading(c, text=SIGNAL_KOPF[c])
-            self.signal_tree.column(c, width=150 if c == "status" else 105, anchor="w" if c in ("asset", "status") else "center")
+            # Breiten nach dem Nutzerbild 11.10. (Kopf "Signal (Ortszeit)" und "Ausstieg" waren abgeschnitten)
+            self.signal_tree.column(c, width={"status": 160, "signal": 125, "ausstieg": 110, "trader": 115}.get(c, 95),
+                                    anchor="w" if c in ("asset", "status") else "center")
         self._sig_sort = make_sortable(self.signal_tree)
         add_heading_tooltips(self.signal_tree, SIGNAL_TIPP)
         self.signal_tree.pack(fill="both", expand=True)
@@ -257,7 +259,7 @@ class HebelTab(ttk.Frame):
         self.pos_tree = ttk.Treeview(pos, columns=POS_SPALTEN, show="headings", height=8)
         for c in POS_SPALTEN:
             self.pos_tree.heading(c, text=POS_KOPF[c])
-            self.pos_tree.column(c, width=200 if c in ("empfehlung", "fin", "regel0") else 95,
+            self.pos_tree.column(c, width=200 if c in ("empfehlung", "fin", "regel0") else (115 if c == "ergebnis" else 95),
                                  anchor="w" if c in ("asset", "empfehlung", "regel0") else "center")
         add_heading_tooltips(self.pos_tree, POS_TIPP)
         self.pos_tree.pack(fill="x")
