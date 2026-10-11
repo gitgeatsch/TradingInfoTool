@@ -1,0 +1,40 @@
+  jk[k] = (uw[selk].stack().mean() / uw[bk].stack().mean()) / (dw[selk].stack().mean() / dw[bk].stack().mean())
+  jk[k] = (uw[selk].stack().mean() / uw[bk].stack().mean()) / (dw[selk].stack().mean() / dw[bk].stack().mean())
+STUFE-1-VORPRUEFUNG U1-U5 (§45.5) · Kurse bis 2026-09-20 · WAHL 2023 (335 Tage), ab 2024 nur Anzahlen
+
+stab90      Abdeckung 2023  9.0 % (33 Coins) / ab 2024 12.5 % (61 Coins) · Tage mit >= 30 Coins: 172
+   oben  Lift Lauf 0.62 · Lift Absturz 1.10 · RICHTUNG 0.57 · Ende 30 T +0.2 Pp gg. alle · 1204 Coin-Tage, 29 Coins · je Klasse H 0.09 M 0.76
+   unten Lift Lauf 1.27 · Lift Absturz 0.99 · RICHTUNG 1.29 · Ende 30 T +0.8 Pp gg. alle · 1032 Coin-Tage, 21 Coins · je Klasse H 0.61 M 0.84 S 2.08   <- KANDIDAT
+
+gebuehr90   Abdeckung 2023  9.7 % (41 Coins) / ab 2024 20.9 % (117 Coins) · Tage mit >= 30 Coins: 202
+   oben  Lift Lauf 1.47 · Lift Absturz 1.18 · RICHTUNG 1.25 · Ende 30 T +2.0 Pp gg. alle · 1582 Coin-Tage, 34 Coins · je Klasse H 0.00 M 1.29 S 2.55   <- KANDIDAT
+   unten Lift Lauf 0.73 · Lift Absturz 0.82 · RICHTUNG 0.89 · Ende 30 T -3.2 Pp gg. alle · 1380 Coin-Tage, 29 Coins · je Klasse H 0.29 M 1.31 S 0.92
+
+halter90    Abdeckung 2023  2.7 % (12 Coins) / ab 2024  9.3 % (60 Coins) · Tage mit >= 30 Coins: 0
+   oben  Lift Lauf nan · Lift Absturz nan · RICHTUNG nan · Ende 30 T +nan Pp gg. alle · 0 Coin-Tage, 0 Coins · je Klasse -
+   unten Lift Lauf nan · Lift Absturz nan · RICHTUNG nan · Ende 30 T +nan Pp gg. alle · 0 Coin-Tage, 0 Coins · je Klasse -
+halter90    Abdeckung 2023  2.7 % (12 Coins) / ab 2024  9.3 % (60 Coins) · Tage mit >= 15 Coins: 0 (kleiner Querschnitt)
+   oben  Lift Lauf nan · Lift Absturz nan · RICHTUNG nan · Ende 30 T +nan Pp gg. alle · 0 Coin-Tage, 0 Coins · je Klasse -
+   unten Lift Lauf nan · Lift Absturz nan · RICHTUNG nan · Ende 30 T +nan Pp gg. alle · 0 Coin-Tage, 0 Coins · je Klasse -
+
+mvrv        Abdeckung 2023 14.4 % (49 Coins) / ab 2024 11.2 % (48 Coins) · Tage mit >= 30 Coins: 335
+   oben  Lift Lauf 0.91 · Lift Absturz 0.97 · RICHTUNG 0.94 · Ende 30 T -0.7 Pp gg. alle · 3350 Coin-Tage, 24 Coins · je Klasse H 0.77 M 1.27 S 0.81
+   unten Lift Lauf 1.07 · Lift Absturz 1.22 · RICHTUNG 0.88 · Ende 30 T +1.1 Pp gg. alle · 3015 Coin-Tage, 18 Coins · je Klasse H 3.96 M 1.28 S 0.69
+
+korr90      Abdeckung 2023 99.3 % (349 Coins) / ab 2024 99.4 % (480 Coins) · Tage mit >= 30 Coins: 335
+   oben  Lift Lauf 0.79 · Lift Absturz 0.75 · RICHTUNG 1.06 · Ende 30 T +0.0 Pp gg. alle · 21754 Coin-Tage, 257 Coins · je Klasse H 0.75 M 0.96 S 1.31
+   unten Lift Lauf 1.20 · Lift Absturz 1.41 · RICHTUNG 0.85 · Ende 30 T -1.5 Pp gg. alle · 21419 Coin-Tage, 242 Coins · je Klasse H 0.29 M 0.98 S 0.80
+
+gebuehr180  Abdeckung 2023  8.4 % (38 Coins) / ab 2024 19.0 % (117 Coins) · Tage mit >= 30 Coins: 105
+   oben  Lift Lauf 0.94 · Lift Absturz 0.45 · RICHTUNG 2.10 · Ende 30 T +0.8 Pp gg. alle · 775 Coin-Tage, 19 Coins · je Klasse H 0.00 M 2.34 S inf   <- KANDIDAT
+   unten Lift Lauf 1.40 · Lift Absturz 0.96 · RICHTUNG 1.46 · Ende 30 T +3.3 Pp gg. alle · 670 Coin-Tage, 21 Coins · je Klasse M 5.66 S 0.68   <- KANDIDAT
+gebuehr180  Abdeckung 2023  8.4 % (38 Coins) / ab 2024 19.0 % (117 Coins) · Tage mit >= 15 Coins: 335 (kleiner Querschnitt)
+   oben  Lift Lauf 1.17 · Lift Absturz 0.99 · RICHTUNG 1.18 · Ende 30 T +0.4 Pp gg. alle · 2028 Coin-Tage, 24 Coins · je Klasse H 0.06 M 1.83 S 0.74
+   unten Lift Lauf 1.42 · Lift Absturz 1.04 · RICHTUNG 1.37 · Ende 30 T +0.7 Pp gg. alle · 1693 Coin-Tage, 23 Coins · je Klasse H inf M 1.58 S 0.85   <- KANDIDAT
+
+beta90      Abdeckung 2023 99.3 % (349 Coins) / ab 2024 99.4 % (480 Coins) · Tage mit >= 30 Coins: 335
+   oben  Lift Lauf 1.17 · Lift Absturz 1.25 · RICHTUNG 0.94 · Ende 30 T +0.4 Pp gg. alle · 21754 Coin-Tage, 226 Coins · je Klasse H 0.55 M 0.84 S 1.18
+   unten Lift Lauf 0.91 · Lift Absturz 0.99 · RICHTUNG 0.91 · Ende 30 T -1.0 Pp gg. alle · 21419 Coin-Tage, 205 Coins · je Klasse H 1.95 M 0.98 S 0.81
+
+=> Kandidaten (Haupt, Querschnitt 30): stab90 unten 1.29, gebuehr90 oben 1.25
+   Vergleich §35: 84 Felder, Median der Richtung 0,91, oberes Zehntel ab 1,18 · 10 Haupt-Felder hier (5 Merkmale x 2 Seiten)

@@ -1,0 +1,6 @@
+G1  gleich     Merkmalswerte aus Rohquellen an 100 Coin-Tagen, Abweichungen 0 []
+G2  gleich     Lauf/Absturz aus Rohkursen an 100 Coin-Tagen, Abweichungen 0
+G3  gleich     gebuehr90 oben: Richtung eigene Tagesschleife 1.249 (Vorpruefung 1.25), 1582 Coin-Tage
+G3  gleich     stab90 unten: Richtung eigene Tagesschleife 1.289 (Vorpruefung 1.29), 1032 Coin-Tage
+
+4 von 4 gleich

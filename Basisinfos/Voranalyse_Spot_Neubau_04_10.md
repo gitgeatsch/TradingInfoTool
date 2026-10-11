@@ -5470,3 +5470,46 @@ Nutzer 11.10.: *„Ja, Vorprüfung U1–U5 laufen lassen, prüfen und gegenprüf
 | Ausgabe je Merkmal | oberes **und** unteres Fünftel (zweiseitig): Lift Lauf, Lift Absturz, **Richtung** = Lift Lauf / Lift Absturz, Ende 30 T gegen alle, Coin-Tage im Fünftel; Richtung je Klasse H/M/S als Auskunft |
 | **Kandidat für einen Messplan** | Richtung **≥ 1,2** auf einer Seite (das obere Zehntel der 84 Felder in §35 begann bei 1,18) **und** ≥ 300 Coin-Tage im Fünftel. ⚠️ Das ist eine **Auswahl**, kein Nachweis: 5 Merkmale × 2 Seiten = 10 Felder; das Urteil fällt erst in einem vorab festgelegten Plan ab 2024 |
 | Gegenprobe (`kp46_gegenprobe.py`) | Merkmalswerte an je 25 zufälligen Coin-Tagen aus den **Rohquellen** mit eigener Rechnung; Richtung für zwei Merkmale mit eigener Schleife; Abdeckung aus eigenem SQL |
+
+### 45.6 Ergebnis Stufe 1 (11.10.2026; `kp46_vorpruefung.py` → `.txt`, Gegenprobe `kp46_gegenprobe.py` **4/4**)
+
+**Geladen** (`kp46_lade.py`, frei): Stablecoins für 64 Kettentoken (78.469 Tageswerte), MVRV für 60 Altcoins (109.709 Tageswerte), beide nach `data/_spot/`.
+
+| Merkmal (Wahl 2023) | Abdeckung 2023 / ab 2024 | oberes Fünftel: Richtung (Lift Lauf / Absturz) | unteres Fünftel: Richtung | je Klasse (Kandidatenseite) | Urteil Stufe 1 |
+|---|---|---|---|---|---|
+| **U2 `gebuehr90`** Gebühren-Wachstum gegen Kurs | 41 / **117** Coins | **1,25** (1,47 / 1,18) · Ende +2,0 Pp · 1.582 Coin-Tage, 34 Coins | 0,89 · Ende −3,2 Pp | M 1,29 · S 2,55 · H zu wenige | ⭐ **Kandidat**, Richtung wie vermutet |
+| **U1 `stab90`** Stablecoins je Kette gegen Kurs | 33 / 61 | 0,57 | **1,29** (1,27 / 0,99) · Ende +0,8 Pp · 1.032 Coin-Tage, 21 Coins | **S 2,08** · M 0,84 · H 0,61 | Kandidat **formal**: Richtung **gegen** die Vermutung, nur in S |
+| U3 `halter90` | **12** / 60 | — | — | — | **2023 nicht prüfbar** (nie ≥ 15 Coins am Tag) |
+| U4 `mvrv` | 49 / 48 | 0,94 | 0,88 | — | trägt keine Richtung |
+| U5 `korr90` | 349 / 480 | 1,06 | 0,85 | — | trägt keine Richtung |
+| Auskunft `beta90` | 349 / 480 | 0,94 | 0,91 | | — |
+| Auskunft `gebuehr180` | 38 / 117 | 2,10 (nur 105 Tage) · bei 15 Coins 1,18 | 1,46 · bei 15 Coins 1,37 | | ⚠️ **beide** Enden > 1: nicht monoton, eher Rauschen |
+
+**Gegenprobe 4/4:**
+- Merkmalswerte an 100 zufälligen Coin-Tagen aus den Rohquellen mit eigener Rechnung, 0 Abweichungen;
+- Lauf und Absturz aus Rohkursen, 0 Abweichungen;
+- Richtung beider Kandidaten aus eigener Tagesschleife: 1,249 und 1,289.
+- ⚠️ Im ersten Lauf der Gegenprobe zeigte G1 76 Abweichungen. Der Fehler lag in der **Gegenprobe**: Sie zog Coin-Tage ohne Merkmal, weil `stack()` in dieser pandas-Version leere Werte behält. Korrigiert; die Messung war nicht betroffen (G3 stimmte schon).
+
+### 45.7 Einordnung (fachlich)
+
+1. **U2 Gebühren-Wachstum gegen Kurs ist die einzige Spur mit Substanz.**
+   - Die Richtung ist die vermutete: Die Nutzung zieht an, der Kurs noch nicht → Läufe häufiger.
+   - Sie stimmt in M und S überein, und ab 2024 sind **117 Coins** abgedeckt; ein Test wäre also möglich.
+   - ⚠️ Lift Absturz 1,18 zeigt: Ein Teil ist **Bewegung**.
+2. **U1 Stablecoins je Kette** zeigt das **Gegenteil** der Vermutung (wenig Zufluss → mehr Läufe), und nur bei Smallcaps.
+   - Das passt zu §16.4: Marktweit war die Stablecoin-Faustregel umgekehrt.
+   - Formal ein Kandidat, fachlich schwach.
+3. **Mehrfachtesten:** 2 von 10 Haupt-Feldern liegen über 1,2. In §35 lag das obere Zehntel aller 84 Felder ab 1,18.
+   - 2 von 10 ist also **nicht weit über dem, was der Zufall liefert**.
+   - ⇒ Das ist eine Auswahl, kein Hinweis auf einen Effekt; erst der Test ab 2024 entscheidet.
+4. **MVRV je Altcoin und Beta/Korrelation zu BTC tragen keine Richtung** (0,85–1,06). Damit sind sie für den Einstieg erledigt.
+
+### 45.8 Folge (vorab §45.5) und Vorschlag
+
+| | |
+|---|---|
+| nach der Regel | **U2 oben** und **U1 unten** sind Kandidaten für einen Messplan |
+| **Vorschlag** | **ein** Messplan mit **U2 `gebuehr90` oben als Haupt** und U1 unten als zweite Hypothese. Bonferroni über 2, Urteil **ab 2024**, Zielgröße 30 T gegen BTC wie §37, Nullwelt gleiche Klasse am selben Tag. Dazu die Lehren §43.5: 1.000 Ziehungen, Grenze aus der Stufung, Auflösung als Kurve; Kosten getrennt |
+| ehrliche Erwartung | eher *trägt nicht*: Der Treffer liegt im Bereich der Auswahl, und ein Teil ist Bewegung |
+| erledigt | U4 MVRV, U5 Korrelation/Beta (keine Richtung), U3 (2023 nicht prüfbar; ab 2024 60 Coins, aber ohne Wahlmenge nur als Beschreibung) |
