@@ -123,7 +123,7 @@ eig = sorted((r[0], r[1]) for r in c.execute("SELECT source, anzahl FROM api_cal
 pruefe("G8", sorted(tuple(x) for x in st["kontingente"]["je_quelle_heute"]) == eig, "Tag %s · %s" % (mt, eig))
 
 # G9
-pruefe("G9", all(st["schalter"][k] == yb.get(k) for k in st["schalter"]) and len(st["schalter"]) == 5,
+pruefe("G9", all(st["schalter"][k] == yb.get(k) for k in st["schalter"]) and len(st["schalter"]) == len(BL.SCHALTER),
        "%s" % {k: (st["schalter"][k], yb.get(k)) for k in st["schalter"]})
 
 # G10 - eigene Regel: k_bp_3 = meta-Fassung '2'; k_ank_1 = Schalter an, Laeufe > 0, alle ok

@@ -204,7 +204,7 @@ _INDEX_HTML = """<!doctype html>
 </div>
 
 <details class="ruht">
-  <summary>Multi-Asset (ruht) - Themenfelder, Themen in Beobachtung, Absicherung</summary>
+  <summary>Multi-Asset (ruht) - Themenfelder, Themen in Beobachtung, Absicherung <span id="thesen-hinweis"></span></summary>
 
 <div class="card" id="themenfeld-erfolg-card" style="display:none">
   <div class="row"><strong>Themenfelder — traf die Richtung?</strong></div>
@@ -799,6 +799,7 @@ const SCHALTER_TEXT = {
   spot_kette_angehalten: ["Rollen-Kette (Spot, alle Gruppen)", "angehalten", "läuft"],
   ankuendigung_aktiv: ["Binance-Ankündigungen (O29)", "an", "aus"],
   hebelfuehrung_aktiv: ["Hebelführung H15", "an", "aus"],
+  thesen_pausiert: ["Thesen (Multi-Asset, O42)", "pausiert", "laufen"],
 };
 function renderSchalter(sch) {
   return Object.keys(sch).map(function (k) {
@@ -914,7 +915,12 @@ async function refreshStatus() {
     kopf.className = alt ? "stale" : "ok";
     document.getElementById("betrieb-body").innerHTML = renderBetrieb(data.betrieb);
   }
-  if (data.schalter) document.getElementById("schalter-body").innerHTML = renderSchalter(data.schalter);
+  if (data.schalter) {
+    document.getElementById("schalter-body").innerHTML = renderSchalter(data.schalter);
+    // O42/P10: der ruhende Abschnitt sagt, dass seine Daten nicht mehr fortgeschrieben werden
+    document.getElementById("thesen-hinweis").textContent =
+      data.schalter.thesen_pausiert === true ? "· Thesen pausiert (O42): Stand eingefroren" : "";
+  }
   if (data.bestand_lage) document.getElementById("bestand-body").innerHTML = renderBestand(data.bestand_lage);
   if (data.kontingente) document.getElementById("kontingente-body").innerHTML = renderKontingente(data.kontingente);
   if (data.parameter_neu && data.parameter_neu.length > 0) {

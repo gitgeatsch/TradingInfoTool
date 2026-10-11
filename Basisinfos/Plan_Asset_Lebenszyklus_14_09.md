@@ -752,3 +752,37 @@ Betrieb ohne ERROR, H15 unverändert. K-ST-2 ist abgelöst durch K-ST-3.
 Dazu: p9_pruefstand 6/6, p9_gegenprobe 10/10, p9b_gegenprobe 7/7, GuiKette 39/39, Kontrollen 12/12, Hebelführung 35/35, `teste_status_cache.py` grün.
 
 **Am NB:** Pull + Neustart → **K-ST-3**. Warnungen nur noch beim Start und zu den Job-Zeitpunkten.
+
+
+### G-S P10 — Thesen pausiert (O42, 11.10.2026)
+
+Nutzer 11.10.: *„Ja, P10 mit beiden Jobs bauen, prüfen und gegenprüfen – wichtig beim Umbau der jeweiligen Bereiche dies berücksichtigen“*.
+
+**Ist (Code und NB-Daten):**
+- `kategorie_synthese` (Gemini 3.1, 1 Aufruf je Lauf) und `kategorie_vorschlaege` (ohne Sprachmodell; legt nach 7/14/30 Tagen selbst Thesen an) laufen um 06:15 und 06:30 **und bei jedem Start**. Am 10.10. waren das 6 Läufe zu je 3–4 min.
+- Jeder Lauf holt Daten aus FRED, CFTC, yfinance, EIA, Finnhub, SEC und FINRA.
+- REGEL0, H15 und die Spot-/Rollen-Kette lesen davon **nichts**.
+- Bisher 6 Thesen automatisch angelegt (zuletzt 23.08.), 5 Kandidaten in Beobachtung.
+- ⚠️ **Korrektur zum Plan:** Die Synthese zieht **nicht** am Topf des Prüfblocks (Gemini 3.5); gemeinsam sind nur Schlüssel und Minutendrossel.
+
+**Gebaut:**
+- Schalter `thesen_pausiert: true` in `Basisinfos/regel0_betrieb.yaml`, je Lauf gelesen. Vorgabe im Code: läuft wie bisher.
+- **Beide** Jobs prüfen ihn vor jeder Verbindung und jedem Client und enden mit der Logzeile *„Thesen pausiert (O42 …)“*.
+- Statusseite: Schalterkarte *„Thesen (Multi-Asset, O42): pausiert“*, Abschnitt *Multi-Asset (ruht)* mit *„Stand eingefroren“*.
+- Thesen, Vorschläge und Ergebnisse bleiben stehen; der Tab Schwerpunkte zeigt den letzten Stand; die manuelle Pflege bleibt.
+
+**⚠️ Für O39 – beim Umbau JEDES Multi-Asset-Bereichs** (Nutzervorgabe 11.10.):
+- Den Schalter mitbedenken.
+- **Vor dem Wiedereinschalten die Kandidaten prüfen.** Die Beobachtungstage sind Datumsdifferenzen und laufen in der Pause weiter. Der erste Lauf danach könnte sofort Thesen anlegen (Fall A) oder Vorschläge auf *offen* heben (Fall B).
+- Die Karte *Themen in Beobachtung* zählt die Tage auch während der Pause herunter.
+
+**Nachweis:**
+- `p10_pruefstand.py` **6/6**, ohne Netz, LLM und Datenbank:
+  - Schalter an → 0 Verbindungen, 0 Abgleiche, 0 LLM;
+  - aus und fehlend → wie vor P10;
+  - falscher Typ → läuft weiter, `lade()` bricht laut ab;
+  - echte Datei: alle Leser laufen;
+  - Wache auf die Gemini-Zeile unverändert.
+- Weiter: p9-Prüfstand und -Gegenprobe, H15, Pakete Regel0Betrieb, GuiKette, Kontrollen und Hebelführung, die ganze Suite.
+
+**Am NB:** nur Pull (je Lauf gelesen). **K-TH-1.**

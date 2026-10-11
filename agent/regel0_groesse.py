@@ -32,7 +32,10 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                # H15 (09.10.2026, Nutzer: *"Ja H15 zuerst, Warnung bei 15 % Abstand"*): Fuehrung ECHTER Hebelpositionen im
                # Abgleich-Lauf (unabhaengig von der Rollen-Kette) und die Warnschwelle Abstand Kurs -> geschaetzte Liquidation
                hebelfuehrung_aktiv=True,
-               liquidations_warnung_abstand=0.15)
+               liquidations_warnung_abstand=0.15,
+               # O42/P10 (11.10.2026, Nutzer: *"pausieren, aber nicht vergessen"*): Thesen-Abgleich und -Synthese der alten
+               # Kette (Multi-Asset) ruhen - Vorgabe: sie laufen wie bisher. Wieder einschalten mit O39, vorher die Kandidaten pruefen
+               thesen_pausiert=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -58,6 +61,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: ankuendigung_aktiv muss true oder false sein")
     if not isinstance(werte["hebelfuehrung_aktiv"], bool):
         raise ValueError("regel0_betrieb.yaml: hebelfuehrung_aktiv muss true oder false sein")
+    if not isinstance(werte["thesen_pausiert"], bool):
+        raise ValueError("regel0_betrieb.yaml: thesen_pausiert muss true oder false sein")
     if not (0 < float(werte["liquidations_warnung_abstand"]) < 1):
         raise ValueError("regel0_betrieb.yaml: liquidations_warnung_abstand als Anteil zwischen 0 und 1 (z. B. 0.15)")
     werte["liquidations_warnung_abstand"] = float(werte["liquidations_warnung_abstand"])
@@ -65,6 +70,15 @@ def lade(pfad: str | None = None) -> dict:
     if werte["testwoche_bis"] and len(werte["testwoche_bis"]) != 10:
         raise ValueError("regel0_betrieb.yaml: testwoche_bis als JJJJ-MM-TT oder leer")
     return werte
+
+
+def thesen_pausiert(werte: dict | None = None) -> bool:
+    """Ruhen Thesen-Abgleich und -Synthese (O42/P10)? - im Zweifel (Datei unlesbar) NEIN: dann laufen beide wie vor P10.
+    Ein stiller Halt waere hier harmlos, aber er waere unsichtbar - die Vorgabe ist das bisherige Verhalten."""
+    try:
+        return bool((werte if werte is not None else lade())["thesen_pausiert"])
+    except Exception:                                          # noqa: BLE001
+        return False
 
 
 def spot_kette_angehalten(werte: dict | None = None) -> bool:

@@ -71,6 +71,15 @@ kontrollen:
     nachweis: "Diagnose nach Pull + Neustart: Warnungen 'Statusaufbau dauerte' nur direkt nach dem Start und zu den Job-Zeitpunkten; Hebelkarte weiter gefuellt"
     faellig_bis: "2026-10-14"
     status: offen
+  - id: K-TH-1
+    titel: "P10/O42 Thesen pausiert: kategorie_synthese und kategorie_vorschlaege ruhen (06:15/06:30 und beim Start), Statusseite zeigt pausiert"
+    seit: "2026-10-11"
+    paket: P10
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose: Logzeilen 'Thesen pausiert (O42' beim Start und um 06:15/06:30; keine Zeile 'Kategorie-Synthese: 19 Kategorien'; Zaehler gemini:gemini-3.1-flash-lite ohne Synthese-Aufrufe; Schalterkarte 'Thesen (Multi-Asset, O42): pausiert'"
+    faellig_bis: "2026-10-13"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

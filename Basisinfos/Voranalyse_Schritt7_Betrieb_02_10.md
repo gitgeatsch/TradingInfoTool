@@ -3065,3 +3065,7 @@ K-ST-1 erfüllt (Nutzer: *„Alle Karten gefüllt, nichts fehlt“*); K-ANK-1, K
 
 K-ST-2: 9 Warnungen in 34 min statt 194 in 3 h — drei davon im Minutentakt aus den 60-s-Fristen der neuen Karten. Hebel, Kontingente und Rollen-Kontingent tragen jetzt 300 s, Betrieb und Schalter bleiben bei 60 s. Neuberechnung je Minute 0,143 → 0,005 s; Preis: Hebelkarte ≤ 5 min hinter dem Kurs (Liquidation ETH 0,02 €, BTC 0,54 € Aufzinsung). Gegenprobe 4/4. Ausführlich: Plan Schritt 53 **G-R**. Am NB: **K-ST-3**.
 
+### 23.43 P10: Thesen pausiert (O42, 11.10.2026)
+
+Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `kategorie_vorschlaege` ruhen (auch beim Start), kein LLM, kein Netz, keine Auto-Thesen; Statusseite zeigt *pausiert*. Synthese nutzt Gemini 3.1, nicht den Prüfblock-Topf 3.5 (Planannahme korrigiert). ⚠️ Für O39: vor dem Wiedereinschalten Kandidaten prüfen. Prüfstand 6/6. Ausführlich: Plan Schritt 53 **G-S**. Am NB: nur Pull → **K-TH-1**.
+

@@ -2295,9 +2295,18 @@ def kategorie_vorschlaege_job(conn_factory) -> None:
     Hauptgruppe/Unterkategorie-Schluessel aus config.PRUEF_MECHANISMUS_MAPPING,
     legt bei anhaltendem Signal automatisch neue Thesen an (Fall A) oder hebt
     Aenderungsaufforderungen gegen bestehende Thesen auf 'offen' (Fall B).
-    Rein deterministisch, kein LLM-Call (Schicht 2 - ein taeglicher LLM-
-    Synthese-Call ueber alle Kategorien - ist noch nicht gebaut, siehe Punkt 2
-    der #333-Statustabelle in Kategorie_Basisinformationen_Release2.md)."""
+    Rein deterministisch, kein LLM-Call (die Synthese, Schicht 2, ist der
+    eigene Job `kategorie_synthese_job`).
+
+    ⚠️ O42/P10 (11.10.2026): ruht, solange `thesen_pausiert` in
+    Basisinfos/regel0_betrieb.yaml gesetzt ist - kein Abgleich, kein Netzabruf,
+    keine neuen Thesen. Je Lauf gelesen, auch beim Start-Nachholen."""
+    from agent import regel0_groesse as _G
+
+    if _G.thesen_pausiert():
+        logger.info("Thesen pausiert (O42, regel0_betrieb.yaml thesen_pausiert) - Kategorie-Vorschlaege: kein Abgleich, "
+                    "keine neuen Thesen.")
+        return
     conn = conn_factory()
     try:
         from agent.kategorie_vorschlaege import run_kategorie_vorschlaege_job
@@ -2339,6 +2348,12 @@ def kategorie_synthese_job(conn_factory, mistral_client=None, groq_client=None, 
     # DER PARAMETER BLEIBT in der Signatur - der Scheduler uebergibt ihn, und
     # ihn dort zu entfernen waere eine Aenderung an sechs Aufrufstellen fuer
     # nichts. Wer Mistral wieder bezahlt, traegt ihn hier wieder ein.
+    # ⚠️ O42/P10 (11.10.2026): ruht mit `thesen_pausiert` - VOR jedem Client und jeder Verbindung, also ohne LLM und Netz.
+    from agent import regel0_groesse as _G
+
+    if _G.thesen_pausiert():
+        logger.info("Thesen pausiert (O42, regel0_betrieb.yaml thesen_pausiert) - Kategorie-Synthese: kein LLM-Aufruf.")
+        return
     llm_clients = [("gemini", gemini_client)]
     if not any(client is not None for _, client in llm_clients):
         logger.info("Kategorie-Synthese: kein LLM-Client konfiguriert, uebersprungen.")
