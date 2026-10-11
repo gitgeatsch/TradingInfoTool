@@ -5181,3 +5181,38 @@ Das ist keine neue Hypothese, sondern die Prüfung, die §39.7 offen ließ (sech
 | 3 | **K-1/K-2 Messplan** (Einstieg je Asset, die letzte offene Spur) | zur Abstimmung |
 | 4 | Abdeckungsskript: CAT als `1000CAT` über `symbol_zuordnung.csv`; Übernahmen mit Enddatum ausweisen | erledigt in `kp_abdeckung_stichtag.py` |
 | 5 | Erlös B-6: zurückgestellt bis nach B4 | Vorschlag |
+
+
+## 43. B4-Vormessung — unteres Fünftel gegen Zufall, Ertrag in Dollar: Messplan VOR der Messung (11.10.2026)
+
+Nutzer 11.10.: *„Ja, zuerst B4-Vormessung, dann K-1/K-2 Messplan vorlegen – prüfen und gegenprüfen“*. Grundlage: §42.3. Das ist keine neue Hypothese; geprüft wird, was §39.7 offen ließ.
+
+### 43.1 Die Frage
+
+B4 sagt: *„Wenn du abbaust: zuerst X“*, sobald ein gehaltener Coin am Monatsstichtag ins **untere Fünftel** des Watchlist-Werts (ohne F9) seiner Klasse fällt.
+
+Belegt ist bisher nur eine **Ordnung** über einen Saldo aus Ereignissen. Gefragt ist jetzt: **Verliert ein Halter mit einem Coin des unteren Fünftels in Dollar mehr als mit einem zufälligen Coin derselben Klasse am selben Stichtag?**
+
+### 43.2 Festlegungen (vorab; Rechnung `b4_vormessung.py`, Desktop, nur lesend)
+
+| | Festlegung |
+|---|---|
+| Basis | genau §39.9 (D4): `mk_messung.paare_mw(365)`, Zellen = Stichtag × Klasse (≥ 10 Coins mit Wert), Wert **ohne F9** (F1, F2, F8), Fünftel über das Perzentil in der Zelle (unten ≤ 0,2) |
+| **Teil 0 (R-R11)** | Dosis ohne F9 wiedergeben: E2 −7,3 · −3,2 · −0,1 · +1,0 · +9,2 / E3 −17,2 · −4,7 · +3,0 · +6,0 · +12,1 (± 0,15 Pp), sonst Abbruch |
+| **Zielgröße** | **Dollar-Ertrag des Halters über 12 Monate** ab dem Folgetag: Kurs am Fensterende ÷ Kurs am Folgetag − 1. Bei eingestellten Coins der letzte Kurs (wie `as_messung.ziel`) |
+| **Abstand** | je Zelle: Mittel unteres Fünftel − Mittel aller Coins der Zelle mit Wert; Stichtag = nach Coinzahl gewichtetes Mittel seiner Zellen; Epoche = Mittel über die Stichtage (wie `bewerte`) |
+| ⚠️ **Nullwelt (beständig)** | Die Fenster überlappen sich, und das untere Fünftel besteht Monat für Monat großteils aus denselben Coins. Eine Ziehung je Monat wäre deshalb **zu eng**. **Festgelegt:** je Ziehung bekommt **jeder Coin eine Zufallszahl, die über alle Stichtage gleich bleibt**; das untere Fünftel dieser Zahl je Zelle ist die Nullauswahl. 200 Ziehungen. Rang = Anteil der Ziehungen mit **kleinerem** Abstand als echt |
+| **Urteil (E3, ab 2024-02)** | **SCHLECHTER** (B4 trägt), wenn Abstand < 0 **und** Rang ≤ 0,025. **BESSER**, wenn Abstand > 0 und Rang ≥ 0,975. Sonst **nicht entscheidbar** (zweiseitig) |
+| E2 | nur Auskunft (Messfokus ab 2024) |
+| **Selbsttest** | (a) 100 beständige Zufallswerte als „Merkmal“, jeder gegen die beständige Nullwelt (je 40 Ziehungen): Fehlalarm (SCHLECHTER oder BESSER) ≤ 5 %, sonst gilt das Urteil nicht. (b) gepflanzt: Wert = Perzentil des eigenen Dollar-Ertrags in der Zelle × 0,3 + Rauschen N(0,1), muss SCHLECHTER ergeben |
+| **Auskunft** | absoluter Dollar-Ertrag unteres Fünftel / Zelle; gegen BTC; Median statt Mittel; eingestellte Coins als −100 %; je Klasse; je Jahr; Saldo wie §39.9; einfache Nullwelt (je Monat) zum Vergleich |
+| **Teil G (Auskunft, §42.1)** | Universum **ohne** die 10 übernommenen Reihen (so sähe der NB ohne Lösung aus): Anteil der Anker ab 2024, die das Fünftel wechseln, gesamt und für die unteren Fünftel |
+| Gegenprobe | `b4_gegenprobe.py`: Fünftel aus eigenen Perzentilen, Dollar-Ertrag aus Rohkursen (eigene Schleife), Abstand als eigene Rechnung, beständige Nullwelt mit eigenem Zufall (Rang auf ± 0,02) |
+
+### 43.3 Was aus jedem Ergebnis folgt (vorab)
+
+| Ergebnis (E3) | Folge |
+|---|---|
+| **SCHLECHTER** | B4 wird gebaut wie §39.7. Die Mail nennt die Belegstufe in Dollar (*„Coins im unteren Fünftel lagen nach 12 Monaten im Mittel x Pp unter einem zufälligen Coin ihrer Klasse“*) |
+| **nicht entscheidbar** | **keine Mail** (E-91: eine Handlung braucht einen Beleg). Die Reihenfolge steht nur im App-Tab, als Ordnung gekennzeichnet; Vorwärtsprotokoll |
+| **BESSER** | B4 entfällt ganz; die Saldo-Ordnung bleibt Auskunft |
