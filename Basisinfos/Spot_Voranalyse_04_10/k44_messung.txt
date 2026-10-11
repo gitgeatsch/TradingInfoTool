@@ -1,0 +1,22 @@
+MESSUNG K-1/K-2 H-DM (§44) · Kurse bis 2026-09-20
+
+TEIL 0 2024+: Spitze +6.28 Pp (n 71) / sonst -0.80 Pp (Soll +6,3 / 71 / -0,8)
+-> Teil 0 bestanden
+
+2023 (URTEIL): Einstiege H 114 · an Spitzen-Tagen 29 an 6 Monaten (Mindestzahl erfuellt) · Spitzen-Tage 73 in 7 Episoden (Laengen [2, 20, 7, 26, 1, 4, 13])
+  A Bedingung: Korb Spitze +4.09 Pp · uebrige -1.15 Pp · Abstand +5.24 Pp · Zeitverschiebung 2,5./97,5. Perz. -16.85 / +11.34 · Rang 0.792
+  B absolut: Korb Spitze gegen BTC +4.09 Pp · Zufall gleicher Tag Mittel +2.64 Pp · Rang 0.711 · nach Kosten +3.37 Pp
+  SELBSTTEST (a) Fehlalarm 19 von 200 Placebos (9.5 %, Soll <= 8 %) -> NICHT bestanden
+  SELBSTTEST (b) Aufloesung: +3 Pp 0 % · +7 Pp 6 % · +15 Pp 40 % gefunden (Bedingung +7 Pp >= 80 %) -> reicht NICHT
+  => URTEIL (vor Selbsttest) nicht entscheidbar  =>  GILT: nicht entscheidbar - Aufloesung reicht nicht
+
+AUSKUNFT (nach dem Urteil, kein Test):
+  Schwelle  5.0 %: Spitze n 42 · Korb +0.45 / uebrige -3.04 Pp
+  Schwelle 12.0 %: Spitze n 22 · Korb +5.77 / uebrige -1.52 Pp
+  Schwelle 15.0 %: Spitze n 8 · Korb +0.72 / uebrige -1.07 Pp
+  Monate Spitze: 2023-03 -4.4 · 2023-04 -6.4 · 2023-06 +19.3 · 2023-07 -7.9 · 2023-10 +7.3 · 2023-11 +16.7 · Median der Monate +1.42 Pp · ohne den staerksten Monat (2023-06) +1.04 Pp
+  Zeitgrenze 21 T: Spitze n 34 · +2.27 / uebrige -5.23 Pp
+  Zeitgrenze 42 T: Spitze n 29 · -0.26 / uebrige -6.12 Pp
+  M 2023: Spitze n 123 · -3.69 / uebrige -5.28 Pp
+  M 2024+: Spitze n 245 · -4.57 / uebrige -5.20 Pp
+  2024+ (Beschreibung, Wahlmenge): Spitze +6.28 / uebrige -0.80 Pp · Abstand +7.07 Pp

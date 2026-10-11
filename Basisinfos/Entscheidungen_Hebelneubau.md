@@ -1159,3 +1159,10 @@ Schritt7 §23.24.
   - Schalter aus, bis du einschaltest;
   - Kosten D6 nur als Information, ohne Klassen-Schätzung.
 - Nachweis: Spot §41.8, Schritt7 §23.46.
+
+# E-101 · Spot B4 Abbau-Reihenfolge trägt in Dollar — Bau freigegeben (11.10.2026)
+
+**11.10.2026** · Nutzer: *„B4 ja“*.
+- B4-Vormessung (Spot §43): unteres Fünftel −12,5 Pp Dollar in 12 M gegen Zufall der Klasse (beständige Nullwelt, Rang 0,000), in jeder Klasse und jedem Jahr negativ; Gegenprobe 4/4.
+- Der Selbsttest scheiterte zuerst an **meinem** Planparameter (40 Ziehungen: 5 % rechnerisch unerreichbar). Korrigiert wiederholt (200 × 1.000): **4,5 %**, bestanden.
+- Bau nach §39.7 mit Belegstufe in Dollar. Vorher B4-Voranalyse mit Universum NB (§42.1) und D3.

@@ -5270,6 +5270,15 @@ Belegt ist bisher nur eine **Ordnung** über einen Saldo aus Ereignissen. Gefrag
 - das Soll **aus der Stufung gerechnet** (je Seite (k+1)/(n+1));
 - die Pflanzung auf die **Größe des erwarteten Effekts** gelegt und als Auflösungskurve gemessen, nicht als eine Stärke.
 
+### 43.6 Entschieden (11.10.2026; E-101)
+
+Nutzer 11.10.: *„B4 ja … was meinst du mit durchgefallen, wenn das durch falsche Parameter oder fachlich begründet ist, dann verstehe ich die Frage nicht – wurde der Test mit Korrekturen wiederholt?“*
+
+- **Ja, wiederholt und bestanden** (§43.5): 200 × 1.000 Ziehungen, Fehlalarm 4,5 %, Rang gleichverteilt; Auflösung −13 Pp in 10/10.
+- ⇒ **Urteil SCHLECHTER gilt. B4 wird gebaut wie §39.7**, mit Mail *„Wenn du abbaust: zuerst X“* und der Belegstufe in Dollar (§43.3).
+- **Vor dem Bau** (B4-Voranalyse, P18) bleibt: Universum am NB nach §42.1 (Betriebskopie + Produktionsreihen der Bestände nach der Übernahmeregel), Wirkung auf die Fünftel gemessen; D3-Stammdatei.
+- **Lehre** (Memory): Scheitert ein Selbsttest an **meinen** Parametern, wird er korrigiert wiederholt und das Ergebnis **berichtet**, nicht als Frage vorgelegt.
+
 
 ## 44. K-1/K-2 — Einstieg je Asset nach Dominanz-Spitze: Messplan VOR der Messung (11.10.2026, zur Abstimmung)
 
@@ -5327,3 +5336,52 @@ Nutzer 11.10.: *„… dann K-1/K-2 Messplan vorlegen – prüfen und gegenprüf
 | trägt nicht / schadet | H-DM verworfen. ⇒ **Ein Einzelcoin-Einstieg ist mit freien Daten ab 2023 nicht belegt** (§42.5); K bleibt leer, Spot-Kauf = Marktlage (Ampel) mit geordneter Kandidatenliste |
 
 ⚠️ **Ehrliche Erwartung, vorab:** Mit 29 Fällen in 6 Monaten ist **„nicht entscheidbar“** am wahrscheinlichsten. Der Wert der Messung liegt darin, das **sauber** festzustellen (Auflösung gemessen), statt die Spur offen liegen zu lassen. Ein Urteil kann nur der Vorwärtsweg bringen.
+
+### 44.5 Ergebnis (11.10.2026; `k44_messung.py` → `.txt`, Gegenprobe `k44_gegenprobe.py` **5/5**)
+
+Nutzer 11.10.: *„K-1/K-2 messen, prüfen und gegenprüfen“*.
+
+**Teil 0** bestanden: 2024+ Spitze +6,28 Pp (n 71) / sonst −0,80 Pp.
+
+| 2023 (Urteil) | |
+|---|---|
+| Einstiege H | 114, davon **29 an Spitzen-Tagen** in 6 Monaten (Spitzen-Tage 73 in 7 Episoden) |
+| **A Bedingung** | Spitze **+4,09 Pp** · übrige −1,15 Pp · **Abstand +5,24 Pp** (2024+: +7,07) · Zeitverschiebung −16,85 / +11,34 · **Rang 0,792** |
+| B absolut | gegen BTC +4,09 Pp · Zufall gleicher Tag +2,64 Pp · Rang 0,711 · nach Kosten +3,37 Pp |
+| Selbsttest (a) | Fehlalarm 19 von 200 (9,5 %, Soll ≤ 8 %) → nicht bestanden |
+| **Selbsttest (b) Auflösung** | +3 Pp **0 %** · +7 Pp **6 %** · +15 Pp **40 %** gefunden → **reicht nicht** (Bedingung: +7 Pp in ≥ 80 %) |
+| **Urteil nach §44.3** | **nicht entscheidbar – Auflösung reicht nicht** |
+
+**Gegenprobe 5/5:**
+- Spitzen-Tage aus eigenem SQL (73 / 7);
+- Einstiege gleich der Ablage;
+- Ertrag aus Rohkursen (Abweichung 10⁻¹⁶);
+- Korb +4,09 / −1,15;
+- Zeitverschiebung **vollständig** über alle 276 Versätze: Rang **0,812** (Messung 0,792).
+
+**Auskunft (kein Test):**
+
+| | |
+|---|---|
+| Dosis | 5 % +0,45 / −3,04 · 12 % +5,77 / −1,52 · 15 % +0,72 / −1,07 Pp (n 8) — keine saubere Dosis |
+| Monate (Spitze) | 03 −4,4 · 04 −6,4 · **06 +19,3** · 07 −7,9 · 10 +7,3 · **11 +16,7** · Median +1,42 Pp · ohne 06/2023 +1,04 Pp |
+| Zeitgrenze | 21 T +2,27 / −5,23 · 42 T −0,26 / −6,12 Pp |
+| M | 2023 −3,69 / −5,28 · 2024+ −4,57 / −5,20 Pp |
+
+### 44.6 Einordnung (fachlich)
+
+1. **Die Richtung wiederholt sich auf 2023** (Abstand +5,2 Pp, 2024+: +7,1). Das ist ein Hinweis, kein Nachweis: Die Zeitverschiebung streut von −17 bis +11 Pp, und zwei von sechs Monaten tragen das Mittel (Median der Monate +1,4 Pp).
+2. **Die Anlage kann diese Frage auf 2023 nicht beantworten.** Selbst ein doppelt so großer Effekt (+15 Pp) wird nur in 40 % gefunden. Der Grund ist die **Zahl der Spitzen-Monate** (6), nicht die Rechnung.
+3. **Selbsttest (a)** (9,5 % statt ≤ 8 %) betrifft dieses Urteil nicht, denn ein *nicht entscheidbar* kann nicht falsch-positiv sein. ⚠️ Für einen späteren Vorwärtstest ist die Nullwelt neu zu eichen: Die kreisförmige Verschiebung erhält die **Abstände** der Episoden, die Placebos nicht. Vorschlag: die Nullwelt **aus Placebo-Episoden** statt aus Verschiebungen.
+4. ⚠️ **Auch vorwärts gibt es in nützlicher Zeit kein Urteil** (Rechnung, keine Wahl):
+   - Die Streuung der Nullwelt bei 6 Spitzen-Monaten entspricht einem Standardfehler von ≈ 7,2 Pp.
+   - Um +7 Pp mit 80 % zu finden, braucht es ≈ 2,5 Pp, also ≈ **8-mal so viele Spitzen-Monate (≈ 50)**.
+   - Bei ≈ 6 Spitzen-Monaten je Jahr (2023 und 2024+ gleich) sind das **≈ 8 Jahre**.
+
+### 44.7 Folge (vorab §44.4: *nicht entscheidbar*)
+
+| | |
+|---|---|
+| Signal | **kein K-Einstieg** |
+| K-1 | **Vorwärtsprotokoll** (A4-Schatten), wie vorab festgelegt. Voraussetzung am NB: BTCDOM-Nachlader (D1, Stufe 2). ⚠️ Nach 44.6 Punkt 4 ist dort **in absehbarer Zeit kein Urteil** zu erwarten. Es bleibt eine Beobachtung, kein Weg zum Signal |
+| **Ziel E-85 (Einstieg je Asset)** | Mit freien Daten ab 2023 **in absehbarer Zeit nicht belegbar**: K-3 schadet, §35/§37/§38 tragen nicht, H-DM ist nicht entscheidbar. Der Spot-**Kauf** bleibt eine **Marktlage**-Entscheidung (Ampel C1) mit geordneter Kandidatenliste (A3); die **Führung** (B1, B3, B4) trägt |
