@@ -138,13 +138,13 @@ kontrollen:
     erfuellt_am: "2026-10-12"
     beleg: "Diagnose 12.10. 07:25: Neustart 11.10. 16:15, Nachholen 16:19 'Spot-Mitnahme: 28 L-Bestaende - Fenster neu 28 - gemailt 0 (Schalter aus - nur Protokoll)'; 12.10. 07:10 '28 L-Bestaende - Fenster neu 0 - ausgeloest 0 - gemailt 0'; keine Mail 'Spot: Haelfte'; 07:15 Stop-Mail '50 Stop-Nachzieh-Empfehlung(en)' wie 10./11.10., kein A6-Hinweis; keine Fehler"
   - id: K-SP-2
-    titel: "P14 Spot B1 eingeschaltet (nach Nutzer-Ja): Stop-Mail ohne Spot-Zeilen (A6), Mitnahme-Mail bei Ausloesung mit Wochen-/Tageschart"
+    titel: "P14 Spot B1 eingeschaltet (Nutzer-Ja 12.10.): Stop-Mail ohne Spot-Zeilen (A6), Mitnahme-Mail bei Ausloesung mit Wochen-/Tageschart"
     seit: "2026-10-11"
     paket: P14
     commit: ""
     art: ereignis
     nachweis: "nach dem Einschalten: Log 'Stop-Nachzieh-Mail: N Spot-Zeilen nicht gemailt (A6'; keine 07:15-Mail mehr mit alten Spot-Signalen; bei der ersten Ausloesung Mail 'Spot: Haelfte von X verkaufen'"
-    faellig_bis: ""
+    faellig_bis: "2026-10-14"
     status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
