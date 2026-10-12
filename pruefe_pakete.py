@@ -22218,6 +22218,15 @@ def paket_guikette() -> None:
            and _BT15.upbit_wert("BEAMX", ["BEAMX"]) == "nein" and _BT15.upbit_wert("LINK", ["BEAMX"]) == "ja" and _BT15.upbit_wert("LINK", None) == "?")
     pruefe(P, "P15: B1, Upbit und Hebel nicht im 3-s-Takt - nur sichtbar und hoechstens alle 60 s; unveraendert -> nichts neu",
            _BT15.LANGSAM_S >= 60 and "self.winfo_ismapped()" in _bt15 and "if stand != self._stand" in _bt15)
+    # P15b (12.10.2026, Nutzer: *"ueberall ein Mouseover mit der genauen Bedeutung der Spalten"*) - abgeleitet aus den Spaltenlisten
+    _ohne15b = {n_: [c_ for c_ in sp_ if not (tp_.get(c_) or "").strip()] for n_, sp_, tp_ in (
+        ("Bestand Spot", _BT15.SPALTEN, _BT15.TIPP), ("Bestand Hebel", _BT15.HEBEL_SPALTEN, _BT15.HEBEL_TIPP),
+        ("Bestand Diversifikation", ("schwerpunkt", "wert_eur", "anteil_pct"), _BT15.DIV_TIPP),
+        ("Hebel Signale", _HT12.SIGNAL_SPALTEN, _HT12.SIGNAL_TIPP), ("Hebel Positionen", _HT12.POS_SPALTEN, _HT12.POS_TIPP),
+        ("Hebel Freigabe", _HT12.FREI_SPALTEN, _HT12.FREI_TIPP))}
+    pruefe(P, "⚠️ P15b: JEDE Spalte in Bestand- und Hebel-Tab hat eine Erklaerung im Mouseover - und jede Tabelle ruft add_heading_tooltips",
+           not any(_ohne15b.values()) and _bt15.count("add_heading_tooltips(") >= 3 and _ht12.count("add_heading_tooltips(") >= 3,
+           "%s" % {k_: v_ for k_, v_ in _ohne15b.items() if v_})
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
     pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
            not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))

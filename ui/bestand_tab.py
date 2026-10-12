@@ -42,18 +42,42 @@ SPALTEN = ("symbol", "name", "assetklasse", "rolle", "frei", "gestakt", "price_e
 KOPF = {"symbol": "Symbol", "name": "Name", "assetklasse": "Assetklasse", "rolle": "Rolle", "frei": "frei", "gestakt": "gestakt",
         "price_eur": "Preis (EUR)", "value_eur": "Wert (EUR)", "avg_buy_price_eur": "Einstand (EUR)", "pl_pct": "G/V %",
         "b1_x": "× Start (B1)", "b1_bis": "Fenster bis", "b1_status": "B1", "upbit": "Upbit KRW"}
+# P15b (12.10.2026, Nutzer: *"bitte ueberall ein Mouseover mit der genauen Bedeutung der Spalten"*): JEDE Spalte jeder Tabelle erklaert
+# (Suite GuiKette prueft die Vollstaendigkeit gegen die Spaltenliste)
 TIPP = {
+    "symbol": "Kurzzeichen des Assets, wie bei Bitpanda geführt.",
+    "name": "Vollständiger Name des Assets (aus der Watchlist; ohne Eintrag dort steht das Kurzzeichen).",
+    "assetklasse": "krypto, aktien, etf oder rohstoffe - aus der Watchlist.",
+    "price_eur": "Letzter Kurs in Euro aus dem Preis-Abruf (Krypto: CoinGecko, Wertpapiere: yfinance). ⚠ = veraltet, kein aktueller Abruf.",
+    "avg_buy_price_eur": "Durchschnittlicher Einstandspreis je Stück in Euro - aus deinen Bitpanda-Käufen berechnet, '(manuell)' = per "
+                         "Doppelklick überschrieben, '⚠ n unbepreist' = n Stück ohne bekannten Kaufpreis (z. B. Staking-Gutschrift).",
+    "pl_pct": "Gewinn/Verlust in Prozent: Wert von frei + gestakt gegen den Einstand (ohne Gebühren). '-' = Einstand unbekannt.",
     "rolle": "Kern = BTC/ETH/SOL (Akkumulation) · L = übrige Krypto, wird automatisch geführt (E-90) · Cash = Stablecoin · "
              "- = andere Klasse · 'nicht in Watchlist' = gehalten, aber ohne Stammdaten",
-    "frei": "Frei verfügbare Menge (Bitpanda-Wallet).",
-    "gestakt": "Gestakte Menge - zählt zum Bestand (bei Bitpanda wie Spot verkaufbar).",
-    "value_eur": "Wert von frei + gestakt.",
+    "frei": "Frei verfügbare Menge in Stück (Bitpanda-Wallet).",
+    "gestakt": "Gestakte Menge in Stück - zählt zum Bestand (bei Bitpanda wie Spot verkaufbar; nur ETH braucht Tage zum Entstaken).",
+    "value_eur": "Wert in Euro von frei + gestakt zum letzten Kurs.",
     "b1_x": "Spot B1: letzter Dollar-Tagesschluss geteilt durch den Startkurs des laufenden Fensters. Ab 3,00 kommt die Mail 'Hälfte verkaufen'.",
     "b1_bis": "Ende des laufenden 365-Tage-Fensters; danach beginnt ein neues mit neuem Startkurs.",
     "b1_status": "laeuft · faellig · gemailt · zu pruefen (Kurssprung) · verpasst · kein Fenster (noch kein Kurs)",
     "upbit": "Spot B3: hat Upbit den Coin schon im Won-Markt? 'nein' = ein Listing wäre ein Verkaufsanlass (Mail). '?' = noch kein Lauf.",
 }
 HEBEL_SPALTEN = ("asset", "richtung", "hebel", "ek", "abstand", "empfehlung")
+HEBEL_TIPP = {
+    "asset": "Asset der offenen Hebelposition bei Bitpanda.",
+    "richtung": "LONG = auf steigende Kurse, SHORT = auf fallende Kurse.",
+    "hebel": "Effektiver Hebel der Position (von Bitpanda gemeldet; fehlt er, Positionswert / Eigenkapital).",
+    "ek": "Eigenkapital in Euro, das in der Position steckt (zählt zum Gesamtwert).",
+    "abstand": "Abstand vom aktuellen Kurs zum geschätzten Liquidationspreis, in Prozent des Kurses. Warnstufen ab 15 % (H15).",
+    "empfehlung": "Hebelführung H15: LIQUIDIERT > SCHLIESSEN > HEBEL SENKEN > LIQUIDATION NAHE > KURS FEHLT > STOP NACHZIEHEN > HALTEN. "
+                  "Details, Kurs, Liquidationspreis und Finanzierung im Hebel-Tab.",
+}
+DIV_TIPP = {
+    "schwerpunkt": "Hauptgruppe aus der Watchlist (oder Cash/Sonstiges, ohne Schwerpunkt). ▲/▼/● = aktive These im Schwerpunkte-Tab "
+                   "(▲ Übergewichten/Aktiv, ▼ Meiden, ● Neutral) - Begründung per Mouseover auf die Zeile.",
+    "wert_eur": "Wert in Euro dieser Gruppe: Spot frei + gestakt, Fiat unter Cash/Sonstiges - ohne Hebelpositionen.",
+    "anteil_pct": "Anteil der Gruppe am Spot-Wert (frei + gestakt + Fiat), ohne Hebel-Eigenkapital.",
+}
 HEBEL_KOPF = {"asset": "Asset", "richtung": "Richtung", "hebel": "Hebel", "ek": "Eigenkapital", "abstand": "Abstand Liquidation",
               "empfehlung": "H15-Empfehlung"}
 
@@ -83,6 +107,11 @@ def upbit_wert(symbol: str, ohne_krw: list | None) -> str:
     if ohne_krw is None:
         return "?"
     return "nein" if symbol in ohne_krw else "ja"
+
+
+def menge_text(x: float) -> str:
+    """Stueckzahl lesbar: ab einer Million ganzzahlig mit Tausendertrennung (Nutzerbild 12.10.: CAT stand als 2.6188e+07), sonst wie bisher %g."""
+    return "{:,.0f}".format(x) if abs(x) >= 1e6 else "%g" % x
 
 
 def spot_zeilen(holdings: list, preise: dict, watchlist_by_symbol: dict, fenster: dict, letzter_schluss: dict,
@@ -127,8 +156,8 @@ def spot_zeilen(holdings: list, preise: dict, watchlist_by_symbol: dict, fenster
         aus.append({"symbol": h.symbol, "asset": a, "cost": cost, "tags": tuple(tags),
                     "frei_eur": (float(h.quantity or 0.0) * pe) if pe is not None else None,
                     "gestakt_eur": (gest * pe) if pe is not None and gest > 0 else 0.0,
-                    "werte": (h.symbol, a.name if a else h.symbol, a.assetklasse if a else "-", r, "%g" % float(h.quantity or 0.0),
-                              ("%g" % gest) if gest > 0 else "-", preis, format_money((menge * pe) if pe is not None else None), avg,
+                    "werte": (h.symbol, a.name if a else h.symbol, a.assetklasse if a else "-", r, menge_text(float(h.quantity or 0.0)),
+                              menge_text(gest) if gest > 0 else "-", preis, format_money((menge * pe) if pe is not None else None), avg,
                               ("%+.1f%%" % cost.pl_pct) if cost.pl_pct is not None else "-", b1[0], b1[1], b1[2], ub)})
     return aus
 
@@ -211,7 +240,8 @@ class BestandTab(PortfolioView):
         self.tree = ttk.Treeview(self, columns=SPALTEN, show="headings", height=16)
         for c in SPALTEN:
             self.tree.heading(c, text=KOPF[c])
-            self.tree.column(c, width={"name": 150, "symbol": 70, "rolle": 110, "assetklasse": 80, "b1_status": 85, "upbit": 70}.get(c, 95),
+            self.tree.column(c, width={"name": 150, "symbol": 70, "rolle": 110, "assetklasse": 80, "b1_status": 85, "upbit": 85,
+                                       "avg_buy_price_eur": 170, "frei": 105}.get(c, 95),
                              anchor="w" if c in ("name", "assetklasse", "rolle", "b1_status") else "e")
         self.tree.tag_configure("stale", foreground=theme.stale_color())
         self.tree.tag_configure("pl_positive", foreground=theme.success_color())
@@ -229,6 +259,7 @@ class BestandTab(PortfolioView):
         for c in HEBEL_SPALTEN:
             self.hebel_tree.heading(c, text=HEBEL_KOPF[c])
             self.hebel_tree.column(c, width=130 if c == "empfehlung" else 110, anchor="w" if c in ("asset", "richtung", "empfehlung") else "e")
+        add_heading_tooltips(self.hebel_tree, HEBEL_TIPP)
         self.hebel_tree.pack(fill="x", padx=8, pady=(2, 6))
 
         ttk.Label(self, text="Diversifikation nach Schwerpunkt", font=("", 10, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
@@ -241,6 +272,7 @@ class BestandTab(PortfolioView):
         self.diversifikation_tree.tag_configure("these_negativ", foreground=theme.danger_color())
         self.diversifikation_tree.tag_configure("these_neutral", foreground=theme.info_color())
         self._diversifikation_reapply_sort = make_sortable(self.diversifikation_tree, numeric_columns=frozenset({"wert_eur", "anteil_pct"}))
+        add_heading_tooltips(self.diversifikation_tree, DIV_TIPP)       # P15b: im Neubau verloren gegangen (PortfolioView hatte schwerpunkt)
         add_row_tooltips(self.diversifikation_tree, lambda iid: self._diversifikation_tooltips.get(iid))
         self.diversifikation_tree.pack(fill="x", padx=8, pady=(0, 6))
 

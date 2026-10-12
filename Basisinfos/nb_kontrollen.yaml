@@ -154,7 +154,9 @@ kontrollen:
     art: manuell
     nachweis: "Nutzerbild der GUI am NB: Tab 'Bestand', 28 L-Zeilen mit B1-Spalten (x ~1,00), Upbit nein bei ~11-12, Hebel ETH/BTC, Gesamtwert mit 'Hebel-Eigenkapital'; GUI reagiert fluessig (kein Haenger im 3-s-Takt)"
     faellig_bis: "2026-10-15"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-12"
+    beleg: "Nutzerbild 12.10. 17:14 (NB): Tab 'Bestand' statt 'Portfolio', 47 Bestaende, Rolle Kern/L/Cash/-, B1 x Start 1,00-1,10 mit Fenster bis 10.10.2027 'laeuft', Upbit KRW nein bei ASTER/BEAMX/BNB/BRETT/CAT, Hebel ETH 5,0x 12,5 % LIQUIDATION NAHE und BTC 3,0x 26,3 % HALTEN; Summenzeile und unterer Teil nicht im Bild -> K-GUI-3b"
   - id: K-UB-1
     titel: "P16 Spot B3 Upbit mit Schalter AUS: Job stuendlich :40 UTC, erster Lauf Startmarke, Laeufe fehlerfrei, Kreis ohne KRW 11-12, keine Mail"
     seit: "2026-10-12"
@@ -163,6 +165,17 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach Pull + Neustart (>= 2 h): Logzeilen 'Spot-Upbit: ok · ... ohne KRW n ... (Schalter aus - nur Protokoll)', die erste mit 'Startmarke'; Statusseite Karte Betrieb 'Spot-Upbit (B3)' ok; keine Mail 'verkaufen (Upbit-Listing)'"
     faellig_bis: "2026-10-15"
+    status: erfuellt
+    erfuellt_am: "2026-10-12"
+    beleg: "Diagnose 12.10. 17:28: Neustart 12:59; 13:40 'Spot-Upbit: ok - 28 L-Bestaende, ohne KRW 12 - Meldungen neu 9 - Startmarke (Schalter aus)'; 14:40/15:40/16:40 ok, Faelle 0, keine Mail. Fehler nur 12:58 zwischen Pull und Neustart (alter Prozess, neue Dateien), danach keiner"
+  - id: K-GUI-3b
+    titel: "P15b Mouseover: JEDE Spalte in Bestand- und Hebel-Tab erklaert (Spot, Hebel kurz, Diversifikation; Signale, Positionen, Freigabe); CAT-Menge ausgeschrieben; Einstand/Upbit-Spalte breiter; Summenzeile mit Hebel-Eigenkapital sichtbar"
+    seit: "2026-10-12"
+    paket: P15b
+    commit: ""
+    art: manuell
+    nachweis: "Nutzerbild nach Pull + GUI-Neustart: Mouseover auf einen Spaltenkopf (z. B. 'Einstand' oder 'Abstand Liquidation') zeigt die Erklaerung; CAT frei als 26,187,965; unten 'Gesamtwert ... (Spot frei ... Hebel-Eigenkapital ...)'"
+    faellig_bis: "2026-10-16"
     status: offen
   - id: K-UB-2
     titel: "P16 Spot B3 eingeschaltet (nach Nutzer-Ja): bei einem echten KRW-Listing eines L-Bestands binnen 6 h Mail 'X verkaufen (Upbit-Listing)' mit Wochen-/Tageschart"

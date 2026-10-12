@@ -1092,3 +1092,24 @@ Nutzer 12.10.: *„Ja, den Ausbau eindeutig kennzeichnen, damit man nicht über 
 - Suite GuiKette **51/51**, Paket BitpandaInventur **6/6**.
 
 Am NB: **K-GUI-3** (dein Bild der GUI).
+
+### G-Z1 P15b — Mouseover für jede Spalte, nach dem ersten Bild (12.10.2026)
+
+Nutzer 12.10. (Bild des Tabs am NB): *„bitte überall ein Mouseover mit der genauen Bedeutung der Spalten, wenn noch nicht eingebaut“*.
+
+**Bestandsaufnahme:**
+- Die Watchlist war vollständig erklärt.
+- Im **Bestand-Tab** fehlten 6 Spot-Spalten und die ganze Hebel-Tabelle. ⚠️ Außerdem war die Erklärung der Diversifikation (*Schwerpunkt* ▲/▼/●), die der alte Portfolio-Tab hatte, **beim Neubau verloren gegangen**; sie ist wiederhergestellt.
+- Im **Hebel-Tab** fehlten 10 Spalten.
+
+**Gebaut:**
+- Jede Spalte jeder Tabelle in Bestand- und Hebel-Tab hat einen Text. Die Aussagen sind am Code geprüft: Hebel, Liquidationspreis, REGEL0-Vermerk, Signal-Asset, Kursquelle.
+- Nach dem Bild außerdem: Mengen ab einer Million ausgeschrieben (CAT stand als *2.6188e+07*); die Spalten *Einstand* und *Upbit KRW* sind breiter.
+
+**Nachweis:**
+- Suite GuiKette **52/52**, neue Wache *jede Spalte erklärt*. Sie ist aus den Spaltenlisten abgeleitet; gegengetestet wird sie, indem ein Text entfernt wird → rot.
+- `p15_pruefstand` 11/11, `p12_pruefstand` 8/8.
+
+Am NB: **K-GUI-3b**. K-GUI-3 ist mit dem Bild erfüllt.
+
+**Hinweis:** Die alten Tabs (Signale, Marktscan, Screener, Regime, Schwerpunkte) sind nicht angefasst. Regime und Schwerpunkte haben gar keine Spaltenerklärung; sie gehen mit GUI-5 ins Archiv bzw. in *Multi-Asset (ruht)*.

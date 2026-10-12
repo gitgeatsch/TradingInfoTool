@@ -46,7 +46,9 @@ URTEIL_WORT = {"stuetzt": "stützt", "spricht_dagegen": "spricht dagegen", "neut
 SIGNAL_SPALTEN = ("asset", "signal", "stufe", "status", "gemailt", "trader", "ausstieg")
 SIGNAL_KOPF = {"asset": "Asset", "signal": "Signal (Ortszeit)", "stufe": "Stufe", "status": "Status", "gemailt": "gemailt",
                "trader": "Trader", "ausstieg": "Ausstieg"}
+# P15b (12.10.2026, Nutzer: *"ueberall ein Mouseover mit der genauen Bedeutung der Spalten"*): jede Spalte erklaert (Suite GuiKette)
 SIGNAL_TIPP = {
+    "asset": "Asset des REGEL0-Signals: der Bitpanda-Name (= Watchlist), sonst das Binance-Kürzel.",
     "signal": "Schluss der Signalstunde in Ortszeit - ab da stand das Signal fest.",
     "stufe": "Hebelstufe: endgueltig, sonst vorlaeufig (die endgueltige steht nach dem naechsten Lauf fest).",
     "status": "Stand aus den Zeiten der Zeile: Einstieg, laeuft, Ausstieg faellig, beendet, kein Handel, nicht gemailt.",
@@ -59,6 +61,13 @@ POS_KOPF = {"asset": "Asset", "richtung": "Richtung", "hebel": "Hebel", "ek": "E
             "abstand": "Abstand", "empfehlung": "H15-Empfehlung", "fin": "Finanzierung bisher / Tag", "ergebnis": "Ergebnis netto",
             "regel0": "REGEL0"}
 POS_TIPP = {
+    "asset": "Asset der offenen Hebelposition bei Bitpanda.",
+    "richtung": "LONG = auf steigende Kurse, SHORT = auf fallende Kurse.",
+    "hebel": "Effektiver Hebel der Position (von Bitpanda gemeldet; fehlt er, Positionswert / Eigenkapital).",
+    "ek": "Eigenkapital in Euro, das in der Position steckt.",
+    "kurs": "Letzter Kurs in Euro (CoinGecko, alle 15 min).",
+    "liq": "Geschätzter Liquidationspreis in Euro - aus Einstand, Hebel, Richtung, bisheriger Haltedauer (Finanzierung) und Sicherheitsmarge.",
+    "regel0": "'REGEL0, Ausstieg tt.mm. hh:mm', wenn in den 24 h vor der Eröffnung ein REGEL0-Signal für das Asset feststand (nur LONG); sonst '-'.",
     "abstand": "Abstand Kurs -> geschaetzte Liquidation in Prozent des Kurses. Warnstufen ab 15 % (H15).",
     "empfehlung": "Hebelfuehrung H15: LIQUIDIERT > SCHLIESSEN > HEBEL SENKEN > LIQUIDATION NAHE > KURS FEHLT > STOP NACHZIEHEN > HALTEN.",
     "fin": "Finanzierungskosten des Kredits seit Eroeffnung und je Tag (Bitpanda-Satz).",
@@ -67,6 +76,8 @@ POS_TIPP = {
 FREI_SPALTEN = ("asset", "schalter", "daten", "letztes")
 FREI_KOPF = {"asset": "Asset", "schalter": "Hebel-Schalter", "daten": "REGEL0-Daten", "letztes": "letztes REGEL0-Signal"}
 FREI_TIPP = {
+    "asset": "Krypto-Asset der Watchlist (ohne Stablecoins) oder mit eigener Schalterzeile.",
+    "letztes": "Schluss der Signalstunde des jüngsten REGEL0-Signals für dieses Asset (Ortszeit); '-' = noch nie eines.",
     "schalter": "Nur mit Schalter AN wird ein REGEL0-Signal gemailt (Opt-in). Offene Positionen werden unabhaengig davon gefuehrt (H15).",
     "daten": "Hat die REGEL0 Stundenkurse fuer dieses Asset (da / keine)? FEHLEN = Schalter an, aber keine Kurse - dann kommt kein Signal.",
 }
