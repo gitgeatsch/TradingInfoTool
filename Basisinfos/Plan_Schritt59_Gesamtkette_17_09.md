@@ -2490,3 +2490,8 @@ Schritt7 §23.24.
 - Erster Spot-Bau der Stufe 1: Die Mitnahme ×3 je L-Bestand ist eingebaut, gemessen und bitgleich zur Messung, mit Schalter aus.
 - Mit dem Einschalten fällt die alte Stop-Nachzieh-Mail für Spot weg (A6).
 - Konzeptprüfung *auf Herz und Nieren* vor B3/B4/C1.
+
+**Nachtrag 12.10.2026 (35) — Spot-Einstieg (E-101, E-102):**
+- B4 Abbau-Reihenfolge trägt in Dollar und ist zum Bau freigegeben.
+- Ein Einstieg je Asset ist mit freien Daten ab 2024 nicht belegbar (K-3, K-1/K-2, U1–U5 gemessen).
+- Spot ist damit Führung des Bestands plus Kauf nach Marktlage.

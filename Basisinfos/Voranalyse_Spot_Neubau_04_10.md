@@ -5572,3 +5572,59 @@ Nutzer 11.10.: *„Ja, Messplan U2/U1 vorbereiten, prüfen und gegenprüfen“*.
 - Der Treffer in Stufe 1 liegt im Bereich der Auswahl (2 von 10 Feldern über 1,2).
 - Lift Absturz 1,18 heißt: Ein Teil ist Bewegung.
 - Die Kosten bei den Smallcaps (6,4 %) stellen einen hohen Anspruch.
+
+### 46.4 Ergebnis (12.10.2026; `k47_messung.py` → `.txt`, Gegenprobe `k47_messung_gegenprobe.py` **8/8**)
+
+Nutzer 11.10.: *„Ja, Messung U2/U1 laufen lassen, prüfen und gegenprüfen“*.
+
+| ab 2024 | **U2 Gebühren-Wachstum, oben** | **U1 Stablecoins je Kette, unten** |
+|---|---|---|
+| Einstiege | 765 · 32 Monate · 114 Coins | 433 · 29 Monate · 57 Coins |
+| **Korb gegen BTC** | **−4,64 Pp** (Median der Monate −5,56) · Bootstrap **0,004** | **−4,02 Pp** (−5,40) · Bootstrap 0,027 |
+| Nullwelt mit Merkmal | −5,39 Pp (−6,99 / −3,69) · **Rang 0,818** | −5,83 Pp (−7,46 / −3,90) · **Rang 0,965** |
+| Abstand zur Nullwelt | +0,75 Pp | +1,81 Pp |
+| Spiegel | 1,19 (Lauf 14 % / Absturz 23 %; Nullwelt 12 / 23 %) | 0,99 |
+| nach Kosten | −8,28 Pp | −6,81 Pp |
+| Selbsttest (a) Fehlalarm | **0 von 200** ✔ | 0 von 200 ✔ |
+| **Urteil nach §46.2** | **SCHADET** (formal: der Korb liegt sicher unter BTC) | **TRÄGT NICHT** |
+
+**Auskunft:**
+
+| | U2 | U1 |
+|---|---|---|
+| Nullwelt alle der Klasse | −4,70 Pp, Rang 0,53 | −5,22 Pp, Rang 0,85 |
+| je Klasse | H −2,81 · M −7,53 · S −2,64 Pp | H −0,67 · M −4,20 · S −7,78 Pp |
+| je Jahr | 2024 −3,70 · 2025 −7,78 · 2026 −1,34 | 2024 −1,34 · 2025 −9,82 · 2026 +1,67 |
+| ohne stärksten Monat · Weglassprobe · nur Bitpanda | −5,62 · −5,40 · −4,62 | −5,59 · −6,74 · −4,04 |
+| Zeitgrenze 15 / 60 T | −2,16 / −9,48 | −2,43 / −12,16 |
+
+**Gegenprobe 8/8:**
+- Ertrag aus Rohkursen an allen 765 / 433 Einstiegen (Abweichung 10⁻¹⁶);
+- Korb als eigene Monatsrechnung;
+- Nullwelt **analytisch** −5,39 / −5,83 Pp gleich der gezogenen;
+- Lauf und Absturz an je 60 Einstiegen aus eigener Relativreihe.
+
+### 46.5 Selbsttest (b) — Planfehler, korrigiert wiederholt (Lehre §43.5/§43.6: berichten, nicht fragen)
+
+| | vorab (§46.2) | korrigiert (`k47_aufloesung_nachtrag.py`, 100 × 1.000) |
+|---|---|---|
+| Frage | +x Pp ergibt das **volle** Urteil TRÄGT (auch Korb > 0) | +x Pp wird **gegen die Nullwelt** gefunden (Rang ≥ 0,975) |
+| U2 | +2 Pp 0 % · **+5 Pp 0 %** · +10 Pp 90 % | +2 Pp 59 % · **+3 Pp 92 %** · **+5 Pp 100 %** · +10 Pp 100 % |
+| U1 | 0 % · 0 % · 0 % | 46 % · 90 % · 100 % · 100 % |
+
+- **Ursache:** Die Nullwelt liegt bei −5,4 / −5,8 Pp. Ein gepflanzter Vorsprung von +5 Pp hebt den Korb deshalb nicht über null, und TRÄGT verlangt Korb > 0. Damit war der Test für x = 5 **rechnerisch unbestehbar**; er hätte die Fähigkeit der Anlage gemessen, BTC zu schlagen, nicht ihre Auflösung.
+- ⇒ Die Anlage **löst** +3 Pp in ≥ 90 % auf. Das echte Ergebnis (+0,75 / +1,81 Pp) liegt **darunter**: Es fehlt nicht an Auflösung, es fehlt am Effekt.
+- ⇒ Das Urteil **gilt**: U2 SCHADET, U1 TRÄGT NICHT.
+
+### 46.6 Was das heißt (Folge vorab §46.3: *trägt nicht / schadet*)
+
+1. **Weder Gebühren-Wachstum noch Stablecoin-Zufluss je Kette ergeben einen Einstieg.**
+   - Ein Kauf verliert in 30 T **4–5 Pp gegen BTC**.
+   - Ein zufälliger Coin derselben Klasse mit Merkmal verliert ähnlich viel (−5,4 / −5,8 Pp).
+   - Wie in §37: Es ist der **Altmarkt**, der gegen BTC verliert. Die Merkmale schieben das um ≤ 2 Pp, zu wenig gegen die Kosten (2,8–3,6 % im Mittel).
+2. **„Schadet“ bei U2** heißt nicht, dass das Merkmal umkehrt (Rang 0,82 gegen die Nullwelt). Es ist der absolute Verlust gegen BTC, den die ganze Klasse trägt.
+3. **Kürzer ist besser** (15 T −2 Pp, 60 T −9 bis −12 Pp): dasselbe Muster wie in §31.7 und §37.4.
+4. ⇒ **§44.7 gilt jetzt ohne Vorbehalt:** Mit den freien Daten (Kurs, Umsatz, Terminmarkt, Ankündigungen, Dominanz, TVL, Adressen, Gebühren, Stablecoins je Kette, MVRV, Korrelation) ist ab 2024 **kein Einstieg je Asset belegbar**.
+   - Der Spot-**Kauf** bleibt eine **Marktlage**-Entscheidung (Ampel C1) mit geordneter Kandidatenliste (A3).
+   - Die **Führung** (B1, B3, B4) trägt.
+5. **Was offen bleibt** (nicht als Einstieg, sondern als Beobachtung): U7 Nachrichten (Datenprobe), U3 Halter-Einnahmen (erst ab 2024 genug Coins, ohne Wahlmenge), U6 Positionierung (niedrige Erwartung). Keines davon rechtfertigt nach diesem Gesamtbild eine weitere Messrunde **vor** dem Bau der Führung.

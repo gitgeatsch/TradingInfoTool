@@ -1,0 +1,4 @@
+NACHTRAG AUFLOESUNG U2/U1 (Auskunft): +x Pp gegen die Nullwelt mit Merkmal gefunden (Rang >= 0,975), 100 Wiederholungen x 1.000 Ziehungen
+
+U2 gebuehr90 oben: +2 Pp 59 % · +3 Pp 92 % · +5 Pp 100 % · +10 Pp 100 %
+U1 stab90 unten: +2 Pp 46 % · +3 Pp 90 % · +5 Pp 100 % · +10 Pp 100 %

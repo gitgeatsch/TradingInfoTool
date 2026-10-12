@@ -1166,3 +1166,13 @@ Schritt7 §23.24.
 - B4-Vormessung (Spot §43): unteres Fünftel −12,5 Pp Dollar in 12 M gegen Zufall der Klasse (beständige Nullwelt, Rang 0,000), in jeder Klasse und jedem Jahr negativ; Gegenprobe 4/4.
 - Der Selbsttest scheiterte zuerst an **meinem** Planparameter (40 Ziehungen: 5 % rechnerisch unerreichbar). Korrigiert wiederholt (200 × 1.000): **4,5 %**, bestanden.
 - Bau nach §39.7 mit Belegstufe in Dollar. Vorher B4-Voranalyse mit Universum NB (§42.1) und D3.
+
+# E-102 · Spot: Einstieg je Asset mit freien Daten nicht belegbar — Befund (12.10.2026)
+
+**12.10.2026** · Messung U2/U1 (Spot §46.4–46.6, Nutzer 11.10.: *„Messung U2/U1 laufen lassen, prüfen und gegenprüfen“*).
+- Gebühren-Wachstum gegen Kurs (U2) **schadet** absolut (−4,6 Pp gegen BTC in 30 T), ist gegen Zufall derselben Klasse nicht besser (Rang 0,82).
+- Stablecoins je Kette (U1) **trägt nicht** (−4,0 Pp, Rang 0,97).
+- Die Anlage löst +3 Pp in ≥ 90 % auf: Es fehlt der Effekt, nicht die Auflösung.
+- Zusammen mit §35, §37, §38, §40, §44, §45: **Mit freien Daten ist ab 2024 kein Einstieg je Asset belegbar.**
+- Folge (vorab): Der Spot-Kauf bleibt eine Marktlage-Entscheidung (Ampel C1) mit geordneter Kandidatenliste (A3); die Führung (B1, B3, B4) trägt.
+- O46 erledigt; U7, U3, U6 nur noch als Beobachtung, keine Messrunde vor dem Bau der Führung.

@@ -1,0 +1,10 @@
+G1  gleich     U2 Ertrag aus Rohkursen an 765 Einstiegen, groesste Abweichung 2.2e-16
+G2  gleich     U2 Korb eigene Monatsrechnung -4.64 Pp (Messung -4.64)
+G3  gleich     U2 Nullwelt analytisch -5.39 Pp (gezogen -5.39)
+G4  gleich     U2 Lauf/Absturz an 60 Einstiegen aus eigener Relativreihe, Abweichungen 0
+G1  gleich     U1 Ertrag aus Rohkursen an 433 Einstiegen, groesste Abweichung 2.2e-16
+G2  gleich     U1 Korb eigene Monatsrechnung -4.02 Pp (Messung -4.02)
+G3  gleich     U1 Nullwelt analytisch -5.83 Pp (gezogen -5.83)
+G4  gleich     U1 Lauf/Absturz an 60 Einstiegen aus eigener Relativreihe, Abweichungen 0
+
+8 von 8 gleich
