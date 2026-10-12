@@ -5628,3 +5628,73 @@ Nutzer 11.10.: *„Ja, Messung U2/U1 laufen lassen, prüfen und gegenprüfen“*
    - Der Spot-**Kauf** bleibt eine **Marktlage**-Entscheidung (Ampel C1) mit geordneter Kandidatenliste (A3).
    - Die **Führung** (B1, B3, B4) trägt.
 5. **Was offen bleibt** (nicht als Einstieg, sondern als Beobachtung): U7 Nachrichten (Datenprobe), U3 Halter-Einnahmen (erst ab 2024 genug Coins, ohne Wahlmenge), U6 Positionierung (niedrige Erwartung). Keines davon rechtfertigt nach diesem Gesamtbild eine weitere Messrunde **vor** dem Bau der Führung.
+
+
+## 47. Voranalyse P16 — Spot B3 Upbit-Verkaufsanlass (12.10.2026, im Bündel mit P15)
+
+Nutzer 12.10.: *„Ja, Voranalyse P15 + P16 vorbereiten, prüfen und gegenprüfen“*. Grundlage: §38.4 (gemessen), §39.7 (Handlung, E-91), §42.2 (Halter-Sicht in Dollar). P15 steht im Plan_Asset_Lebenszyklus unter **G-Y**.
+
+**Fakten** (`p15p16_voranalyse.py`, NB-Sicherung 11.10. 11:49; Gegenprobe `p15p16_gegenprobe.py` **4/4**):
+
+| | |
+|---|---|
+| Kreis heute | L-Bestände **ohne** KRW-Markt bei Upbit: **11** (ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN). Die Gegenprobe über eine zweite Schnittstelle (`/v1/ticker`) liefert dieselben 11. XDC käme am NB hinzu, wenn es dort in der Watchlist steht |
+| Zuordnung | Upbit-Kürzel = Bitpanda-Symbol, außer `symbol_zuordnung.csv` mit Faktor 1 (**CANTON → CC**) |
+| Archiv | 785 Meldungen 2017-10 bis 2026-10-08; nach der Regel der Messung **137 KRW-Listings, alle ab 2024**. Gegenprobe über `c2_messung.ereignisse`: 137 |
+| **Häufigkeit** | ab 2024 trafen **4** Listings einen heutigen Bestand (BIO 10/2025, **MON** 11/2025, TAO 02/2026, CC 04/2026), also ≈ **1,5 im Jahr**. ⚠️ **Korrektur zu §42.2:** Dort stand 3, weil MON außerhalb der gemessenen Menge lag (kein Binance-Spot) |
+| Schnittstelle | `api-manager.upbit.com/api/v1/announcements` (Kategorie *trade*) und `api.upbit.com/v1/market/all`, beide frei, ohne Schlüssel, heute erreichbar |
+
+### 47.1 Die Regel — wie gemessen, nichts neu gewählt
+
+| | gemessen (§38) | Betrieb |
+|---|---|---|
+| Ereignis | Upbit-Meldung *trade*, Titel mit *신규 거래지원* und *KRW*, Kürzel in Klammern **vor** dem Stichwort | **dieselbe** Regel (eine Funktion; Teil 0 prüft sie am Archiv: 137 gleich) |
+| Zeitpunkt | Veröffentlichung (`first_listed_at`), Kauf/Bezug **+4 h** | stündlicher Abruf; Mail im nächsten Lauf nach der Meldung |
+| Wirkung | 7 T **−10 Pp** gegen BTC, in Dollar **−8,5 %**, fällt in 25 von 32 | — |
+| Handlung | — | **„X verkaufen – in den nächsten Stunden“**, die **ganze** Position (frei + gestakt). Gemessen ist *Halten gegen Nicht-Halten* der ganzen Position; eine Teilmenge wäre eine neue Wahl |
+
+### 47.2 Bauweise (Vorschlag)
+
+| Teil | Inhalt |
+|---|---|
+| `agent/spot_upbit.py` | reine Rechnung: `listing(titel)` (die Regel), `kreis` (= `spot_mitnahme.kreis` ohne KRW-Markt), `lauf` (Meldungen holen, neu ablegen, Fälle bilden), `mail`. Liest die Produktion nur `mode=ro`, schreibt nur `spot_betrieb.db` (Tabellen `upbit_meldung`, `upbit_lauf`, Protokoll D7) |
+| Job `spot_upbit_job` | **stündlich** (Minute :40, abseits von O29 :58 und dem Nachlader :05), nur am Betriebsgerät, **eigenständig** (nicht an der Rollen-Kette, Lehre H15) |
+| Fristen | Mail nur, wenn die Meldung **≤ 6 h** alt ist (gemessen +4 h, eine Stunde Abrufraster und Puffer). Älter → *verpasst*, keine Mail. **Erster Lauf** setzt eine Startmarke: alte Meldungen werden nur abgelegt |
+| Schalter | `spot_upbit_aktiv` in `regel0_betrieb.yaml`, Vorgabe **aus**: Protokoll ja, Mail nein (Muster B1) |
+| Mail (E-91) | Betreff *„Spot: X verkaufen (Upbit-Listing)“*. **1 Was tun:** ganze Position, in den nächsten Stunden. **2 Warum:** Belegstufe genau nach §42.2 (*„gegen BTC gemessen: Halten schadet; in Dollar fiel der Coin in 25 von 32 Fällen, im Mittel −8,5 % in 7 T“*). Für Coins **ohne** Binance-Spot (KAS, BRETT, SUPRA, VSN): *„gemessen auf Coins mit Binance-Spot, dieser liegt außerhalb“*. **3 Kontext:** Kurs seit der Meldung, Kosten D6, Wochen- und Tageschart (O45), Link zur Meldung. **4 Technik** |
+| Sichtbar | Teilexport-Abschnitt *SPOT-UPBIT (B3)*, Statusseite (Betrieb-Zeile, Schalterkarte), GUI-3 Spalte *Upbit KRW* |
+| **nicht in P16** | **Futures-Start** (Binance-Katalog 48): Nach §39.7 gibt es dafür keine eigene Mail, nur den Zusatz in der Abbau-Zeile → kommt mit **P18 (B4)** |
+
+### 47.3 Risiken und Prüfpunkte
+
+| | |
+|---|---|
+| Kürzel falsch zugeordnet | nur über `symbol_zuordnung` (Faktor 1); ein Listing eines **anderen** Coins mit gleichem Kürzel wäre möglich → die Mail nennt den Upbit-Titel wörtlich |
+| Upbit nicht erreichbar | Fehler in `upbit_lauf`, keine Mail, scheitert nie nach außen (P-8); die Statusseite zeigt den letzten Fehler |
+| Doppelte Meldung (Upbit ändert den Titel) | Schlüssel = Meldungs-ID **und** Kürzel; Mail je Kürzel einmal |
+| Rückwirkung | keine auf Hebel/O29: eigene Tabellen, eigener Job, eigener Schalter |
+| Grundgesamtheit | gemessen auf Coins mit Binance-Spot ≥ 90 T (32 Fälle); der Betrieb gilt für alle L-Bestände → für die Coins außerhalb in der Mail benannt (wie B1) |
+
+### 47.4 Nachweis vorab
+
+- **Teil 0 (R-R11):** `listing()` findet am Archiv `data/_c2` dieselben 137 Ereignisse (Kürzel und Zeit) wie `c2_messung.ereignisse`; sonst Abbruch.
+- **Prüfstand** (Wegwerf-Ablage, Kopie der NB-Sicherung, Versand abgefangen, Upbit gestellt):
+  - neue Meldung zu einem Kreis-Coin → **eine** Mail mit ganzer Menge;
+  - Coin schon in KRW oder nicht im Bestand → nichts;
+  - CANTON/CC über die Zuordnung;
+  - Meldung 7 h alt → *verpasst*;
+  - erster Lauf → nur Startmarke;
+  - Schalter aus → Protokoll, keine Mail;
+  - doppelte Meldung → einmal;
+  - Upbit-Fehler → Lauf mit Fehler, kein Abbruch;
+  - Produktion unverändert (Prüfsumme).
+- **Gegenprobe:** eigene Regel-Umsetzung am Archiv, Kreis per eigenem SQL plus `/v1/ticker`.
+- **Suite:** neues Paket *SpotUpbit*. Am NB **K-UB-1** (Schalter aus: Läufe stündlich fehlerfrei, Kreis 11–12, keine Mail), danach nach deinem Ja **K-UB-2** (eingeschaltet; erst beim echten Listing prüfbar).
+
+### 47.5 Bündel P15 + P16 (E-97)
+
+- **Ein Pull** für beide.
+  - P15 ist reine GUI ohne Job und Mail.
+  - P16 bringt einen neuen Job, aber die **Mail ist aus**, bis du einschaltest.
+- Beides ist bündelbar: Keines schreibt in die Produktion oder ändert ein laufendes Signal.
+- Kontrollen **K-GUI-3** und **K-UB-1** mit **einer** Diagnose.

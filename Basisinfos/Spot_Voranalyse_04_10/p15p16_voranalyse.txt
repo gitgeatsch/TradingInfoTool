@@ -1,0 +1,14 @@
+V1 Bestand nach Rolle (NB-Sicherung):
+   Cash-aequivalent              1  EURCV
+   Kern                          3  BTC, ETH, SOL
+   L                            27  ALGO, ASTER, AVAX, BEAMX, BIO, BNB, BRETT, CANTON, CAT, HYPE, INJ, KAIA, KAS, LINK, MON, MORPHO, NEAR, PLUME, QNT, SEI, SUI, SUPRA, TAO, TURBO, VSN, W, XLM
+   andere Klasse (aktien)        3  BW, ROL, VST
+   andere Klasse (etf)           8  3QSS, CEBS, DBPK, EXH3, G2X, ISOC, VVMX, X136
+   andere Klasse (rohstoffe)     4  OD7C, OD7H, OD7L, OD7N
+   nicht in der Watchlist        1  XDC
+
+V2 hebel_positions: 191 Zeilen, offen 2: BTC, ETH (Spalten: id, symbol, richtung, status, eroeffnet_am, geschlossen_am, hebel_effektiv, positionswert_eur, kreditbetrag_eur, eigenkapital_eur, positionsmenge, letzte_transaktion_unix_timestamp)
+
+V3 Upbit: 294 KRW-Maerkte · L-Bestaende 27 · davon OHNE KRW-Markt (Kreis B3) 11: ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN · Zuordnung abweichend: {'CANTON': 'CC'}
+
+V4 Upbit-Archiv: 785 Meldungen 2017-10-27 bis 2026-10-08 · KRW-Listings (Regel der Messung) 137, ab 2024 137 · davon heutige L-Bestaende: [('2025-10-20', 'BIO'), ('2025-11-24', 'MON'), ('2026-02-16', 'TAO'), ('2026-04-14', 'CC')]

@@ -1,0 +1,6 @@
+G1  gleich     Bestaende mit frei + gestakt > 0: 47 (V1 47)
+G2  gleich     offen (geschlossen_am leer): ['BTC', 'ETH']
+G3  gleich     ohne KRW-Kurs: ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN (erwartet die 11 des Kreises; BIO/TAO/CC mit Kurs)
+G4  gleich     Upbit-Listings ueber c2_messung.ereignisse: 137 (V4 137)
+
+4 von 4 gleich

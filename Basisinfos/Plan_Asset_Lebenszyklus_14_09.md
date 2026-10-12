@@ -1000,3 +1000,52 @@ Nutzer 11.10.: *„1. bis GUI-4 doppelt lassen 2. aus der GUI entfernen“*.
   - Statusseite: Karte *Betrieb* mit Zeile *Spot-Mitnahme ×3 (B1)*; Schalterkarte *Spot-Mitnahme ×3 (B1) – Mail*;
   - Teilexport *SPOT-MITNAHME (B1)*.
 - Der App-Tab *Spot-Bestand* kommt mit GUI-3 (P15).
+
+
+### G-Y Voranalyse P15 — GUI-3 Bestand-Tab (12.10.2026, im Bündel mit P16)
+
+Nutzer 12.10.: *„Ja, Voranalyse P15 + P16 vorbereiten, prüfen und gegenprüfen“*.
+
+**Zielbild:** abgestimmt in G-K, Tab *1 Bestand*: *„was du hältst, richtig bewertet“*. Fakten erhoben mit `p15p16_voranalyse.py` an der NB-Sicherung 11.10. 11:49, Gegenprobe `p15p16_gegenprobe.py` **4/4**.
+
+**Ist `ui/portfolio.py` (533 Zeilen, Tab *Portfolio*):**
+- **eine** Tabelle für alle **47** Bestände mit frei + gestakt > 0:
+  - Kern 3, L 27, EURCV, Aktien 3, ETF 8, Rohstoffe 4;
+  - **XDC ist gehalten, steht aber nicht in der Watchlist** des Desktops. Am NB zählt B1 28 L-Bestände; die Watchlist am NB weicht also ab.
+- Spalten: Symbol, Name, Assetklasse, Bestand (*frei (+ gestakt)*), Preis, Wert (frei + gestakt), Einstand, G/V %.
+- Darunter die Diversifikation nach Schwerpunkt (mit Thesen-Markern), der Knopf **„Letzte Bewertung anzeigen“** (letzte KI-Analyse der **angehaltenen** Rollen-Kette), der Gesamtwert (frei + gestakt + Fiat, **ohne Hebel-Eigenkapital**) und das Fiat-Feld (Ausnahme).
+- **Fehlt:** Rolle (Kern/L), B1-Stand, Hebelpositionen. Eine Marktwert-Klasse H/M/S rechnet der Betrieb am NB heute **nicht** (sie braucht das NB-Universum aus P18, Spot §42.1).
+- Neu aufgebaut wird der Tab **alle 3 s** (`app._poll_prices`). Doppelklick = Einstand (`AvgBuyPriceDialog`, GF4).
+- Bitpanda-Abgleich: Menü *Datei* und Job alle 30 min.
+- **Nur `ui/app.py` importiert `PortfolioView`**; keine Suite-Prüfung liest Textstellen aus `portfolio.py`.
+
+**Vorschlag: neuer Tab `ui/bestand_tab.py` an der Stelle von *Portfolio*; `portfolio.py` bleibt** (der Dialog wird wiederverwendet), wie bei P12.
+
+| Bereich | Inhalt | Quelle |
+|---|---|---|
+| **Spot** (alle Klassen) | Symbol, Name, Assetklasse, **frei**, **gestakt** (eigene Spalten), Preis (⚠ veraltet), Wert, Einstand, G/V %, **Rolle** (*Kern* BTC/ETH/SOL · *L* übrige Krypto · *Cash* · *—* andere Klassen · *nicht in Watchlist*), **B1: × Startkurs**, **Fenster bis**, **B1-Status** (offen / fällig / zu prüfen / verpasst / kein Kurs), **Upbit KRW** (ja/nein, aus P16) | holdings, `price_cache`, `spot_mitnahme.kreis` + `spot_betrieb.db` (nur lesend) |
+| **Hebel** (kurz) | Asset, Richtung, Hebel, Eigenkapital, Abstand %, H15-Empfehlung, Abgleich Bitpanda; Hinweis *„Details im Hebel-Tab“* | `hebelfuehrung.lade`, `betriebslage.hebel_wallet_abgleich` — dieselbe Quelle wie Tab 2 |
+| **Summen** | Spot frei · gestakt · Fiat · **Hebel-Eigenkapital** · **Gesamt** (Definition G-K) · letzter Bitpanda-Abgleich | wie heute + `hebel_positions` |
+| Diversifikation | unverändert | wie heute |
+| Knöpfe | Doppelklick Einstand (GF4), Fiat-Ausnahme (bleibt) | wie heute |
+
+**Weitere Punkte:**
+- **Laufzeit:** Der Spot-Teil bleibt im 3-s-Takt. B1 und Hebel werden nur gelesen, wenn der Tab **sichtbar** ist, und höchstens alle **60 s** (Muster P12). Unveränderte Daten zeichnen nichts neu.
+- **Marktwert-Klasse H/M/S:** Spalte erst mit **P18**, weil der NB sie heute nicht rechnet. Eine CoinGecko-Rangnäherung wäre eine **andere Grundgesamtheit** als die Messung (Regel *Grundgesamtheit ist keine Stellschraube*).
+- ⚠️ **Der Gesamtwert ändert sich**, weil das Hebel-Eigenkapital hinzukommt. Die Zeile nennt die Teile einzeln, damit der Sprung nachvollziehbar bleibt.
+
+⚠️ **Zur Rücksprache (Regel *Umbau: prüfen, was fehlt*):**
+1. **„Letzte Bewertung anzeigen“** gehört zur angehaltenen Rollen-Kette (letzte Analysen bis 05.10.). Jetzt **entfernen** (Code bleibt), oder bis GUI-5 (Archiv) im Tab lassen?
+2. Der Tab heißt künftig **„Bestand“** statt *Portfolio*. Inhaltlich fehlt nichts: Alles Bisherige bleibt, es kommt nur dazu.
+
+**Nachweis vorab:**
+- **Prüfstand** gegen eine Kopie der NB-Sicherung (Tk unsichtbar, Muster `p12_pruefstand`):
+  - jede Spalte gefüllt;
+  - Summen gegen eigenes SQL;
+  - Rolle gleich `spot_mitnahme.kreis`;
+  - B1 gegen eine Wegwerf-Ablage aus `spot_mitnahme.lauf`;
+  - Hebel gleich `hebelfuehrung.lade`;
+  - kein Schreibzugriff (Prüfsumme);
+  - Laufzeit des Lesens.
+- **Gegenprobe:** eigene Wertsumme, eigene ×-Rechnung aus Dollar-Schlüssen.
+- **Suite:** GuiKette erweitert. Am NB: **K-GUI-3**.
