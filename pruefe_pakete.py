@@ -22227,6 +22227,12 @@ def paket_guikette() -> None:
     pruefe(P, "⚠️ P15b: JEDE Spalte in Bestand- und Hebel-Tab hat eine Erklaerung im Mouseover - und jede Tabelle ruft add_heading_tooltips",
            not any(_ohne15b.values()) and _bt15.count("add_heading_tooltips(") >= 3 and _ht12.count("add_heading_tooltips(") >= 3,
            "%s" % {k_: v_ for k_, v_ in _ohne15b.items() if v_})
+    import ui.heading_tooltip as _TT15
+    pruefe(P, "⚠️ P15c: Mouseover nie ausserhalb des Bildschirms - am rechten Rand links vom Zeiger (Spaltenkopf und Zeile)",
+           _TT15.lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and _TT15.lage(10, 10, 300, 80, 2000, 1100) == (22, 28)
+           and "platziere(tip, tree)" in _quelltext("ui/row_tooltip.py") and "platziere(tip, tree)" in _quelltext("ui/heading_tooltip.py")
+           and "winfo_pointerx() + 12" not in _quelltext("ui/row_tooltip.py") + _quelltext("ui/heading_tooltip.py"))
+    pruefe(P, "P15c: Bestand-Spot hat eine waagrechte Laufleiste - keine Spalte verschwindet rechts", "xscrollcommand=_xs.set" in _bt15)
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
     pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
            not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))

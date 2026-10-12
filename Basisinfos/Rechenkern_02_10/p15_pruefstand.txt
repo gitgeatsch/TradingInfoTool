@@ -8,7 +8,10 @@ P7   bestanden Knoepfe ['Aktualisieren', 'Speichern'] · Doppelklick gebunden ·
 P8   bestanden app.py haengt BestandTab als 'Bestand' ein · PortfolioView nicht mehr · Kennzeichnung in portfolio.py und letzte_bewertung.py
 P9   bestanden zweiter refresh ohne Aenderung: delete gerufen 0 mal
 P10  bestanden Produktion und Ablage nach dem Lesen unveraendert
-P11  bestanden Laufzeit: Aufbau 0.23 s · schneller Teil 0.004 s · langsamer Teil 0.07 s (Desktop)
+P11  bestanden Laufzeit: Aufbau 0.26 s · schneller Teil 0.005 s · langsamer Teil 0.08 s (Desktop)
+P12  bestanden Spaltenbreiten zusammen 1210 (x 1,5 = 1815 <= 1900) · waagrechte Laufleiste True
+P13  bestanden Einstand kompakt ('⚠' statt '(⚠ n unbepreist)'): lange Texte []
+P14  bestanden Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile
 
 Beispielzeilen:
   symbol=BEAMX | rolle=L | frei=166249 | gestakt=- | value_eur=398.59 | b1_x=1,00 | b1_bis=10.10.2027 | b1_status=laeuft | upbit=nein
@@ -18,4 +21,4 @@ Beispielzeilen:
   symbol=VVMX | rolle=- | frei=47.2015 | gestakt=- | value_eur=503.83 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
   symbol=XDC | rolle=nicht in Watchlist | frei=14999.7 | gestakt=- | value_eur=466.64 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
 
-11 von 11 bestanden
+14 von 14 bestanden

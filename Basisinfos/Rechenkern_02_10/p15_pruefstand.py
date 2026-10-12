@@ -127,6 +127,16 @@ tab.refresh(erzwingen=True)
 t_langsam = time.perf_counter() - t2
 pruefe("P10", summe(PROD) == vor_p and summe(os.path.join(ABL, SM.ABLAGE)) == vor_a, "Produktion und Ablage nach dem Lesen unveraendert")
 pruefe("P11", t_schnell < 1.0 and t_langsam < 5.0, "Laufzeit: Aufbau %.2f s · schneller Teil %.3f s · langsamer Teil %.2f s (Desktop)" % (t_init, t_schnell, t_langsam))
+# P15c (12.10.2026, Nutzerbild: Spalte 'Upbit KRW' abgeschnitten, Mouseover rechts nicht lesbar)
+breite = sum(int(tab.tree.column(c_, "width")) for c_ in BT.SPALTEN)
+pruefe("P12", breite * 1.5 <= 1900 and bool(tab.tree.cget("xscrollcommand")), "Spaltenbreiten zusammen %d (x 1,5 = %d <= 1900) · waagrechte Laufleiste %s" % (
+    breite, breite * 1.5, bool(tab.tree.cget("xscrollcommand"))))
+lang = [z[s_]["avg_buy_price_eur"] for s_ in z if "unbepreist" in z[s_]["avg_buy_price_eur"] or "e+" in z[s_]["avg_buy_price_eur"]]
+pruefe("P13", not lang and any(z[s_]["avg_buy_price_eur"].endswith(" ⚠") for s_ in z), "Einstand kompakt ('⚠' statt '(⚠ n unbepreist)'): lange Texte %s" % lang[:3])
+from ui.heading_tooltip import lage
+pruefe("P14", lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and lage(1000, 500, 300, 80, 2000, 1100) == (1012, 518)
+       and "platziere(tip, tree)" in open("ui/row_tooltip.py", encoding="utf-8").read() and "platziere(tip, tree)" in open("ui/heading_tooltip.py", encoding="utf-8").read(),
+       "Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile")
 root.destroy()
 c.close()
 print("\nBeispielzeilen:")

@@ -1113,3 +1113,21 @@ Nutzer 12.10. (Bild des Tabs am NB): *„bitte überall ein Mouseover mit der ge
 Am NB: **K-GUI-3b**. K-GUI-3 ist mit dem Bild erfüllt.
 
 **Hinweis:** Die alten Tabs (Signale, Marktscan, Screener, Regime, Schwerpunkte) sind nicht angefasst. Regime und Schwerpunkte haben gar keine Spaltenerklärung; sie gehen mit GUI-5 ins Archiv bzw. in *Multi-Asset (ruht)*.
+
+### G-Z2 P15c — Nachbesserung nach dem zweiten Bild (12.10.2026)
+
+Nutzer 12.10. (Bild nach Pull und GUI-Neustart): *„eine Spalte fehlt in der Anzeige, Mouseover ist da, aber kann rechts in der Tabelle nicht gelesen werden, da es rechts von der Maus gerendert wird“*.
+
+| Fehler | Ursache | behoben |
+|---|---|---|
+| Spalte *Upbit KRW* abgeschnitten | meine breitere Einstand-Spalte (P15b) – die Summe der Breiten passte bei 150 % Anzeige nicht mehr ins Fenster, und eine waagrechte Laufleiste fehlte | Breiten neu (Summe 1.210, ×1,5 = 1.815 ≤ 1.900), **waagrechte Laufleiste** |
+| Mouseover am rechten Rand nicht lesbar | das Fenster stand immer rechts unten vom Zeiger (Spaltenkopf **und** Zeile) | `heading_tooltip.platziere` / `lage`: reicht der Bildschirm nicht, **links bzw. oberhalb** vom Zeiger. Gilt für alle Tabs (gemeinsame Funktion) |
+| Einstand lang, *2.6188e+07* in der Einstand-Spalte bei CAT | Zusatz *(⚠ n unbepreist)* | kompakt **„⚠“** bzw. **„(m)“**; die Menge steht im Zeilen-Mouseover |
+
+**Nachweis:**
+- `p15_pruefstand` **14/14** (neu P12 Breite und Laufleiste, P13 Einstand kompakt, P14 Randregel);
+- `p12_pruefstand` 8/8;
+- `lage()` an fünf Randfällen;
+- GuiKette **54/54** (zwei neue Wachen).
+
+Am NB: **K-GUI-3b** (neues Bild).

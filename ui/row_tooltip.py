@@ -37,11 +37,13 @@ def add_row_tooltips(tree: ttk.Treeview, text_provider: Callable[[str], str | No
         tip = tk.Toplevel(tree)
         tip.wm_overrideredirect(True)
         tip.attributes("-topmost", True)
-        tip.wm_geometry(f"+{tree.winfo_pointerx() + 12}+{tree.winfo_pointery() + 18}")
         tk.Label(
             tip, text=text, background=bg, foreground=fg, relief="solid", borderwidth=1,
             wraplength=360, justify="left", padx=6, pady=3,
         ).pack()
+        from ui.heading_tooltip import platziere
+
+        platziere(tip, tree)                                # P15c: am Bildschirmrand nach links/oben
         state["tooltip"] = tip
 
     def on_motion(event: tk.Event) -> None:

@@ -49,8 +49,9 @@ TIPP = {
     "name": "Vollständiger Name des Assets (aus der Watchlist; ohne Eintrag dort steht das Kurzzeichen).",
     "assetklasse": "krypto, aktien, etf oder rohstoffe - aus der Watchlist.",
     "price_eur": "Letzter Kurs in Euro aus dem Preis-Abruf (Krypto: CoinGecko, Wertpapiere: yfinance). ⚠ = veraltet, kein aktueller Abruf.",
-    "avg_buy_price_eur": "Durchschnittlicher Einstandspreis je Stück in Euro - aus deinen Bitpanda-Käufen berechnet, '(manuell)' = per "
-                         "Doppelklick überschrieben, '⚠ n unbepreist' = n Stück ohne bekannten Kaufpreis (z. B. Staking-Gutschrift).",
+    "avg_buy_price_eur": "Durchschnittlicher Einstandspreis je Stück in Euro - aus deinen Bitpanda-Käufen berechnet. '(m)' = manuell per "
+                         "Doppelklick überschrieben, '⚠' = ein Teil der Menge ohne bekannten Kaufpreis (z. B. Staking-Gutschrift) - wie viel, "
+                         "zeigt das Mouseover auf der Zeile.",
     "pl_pct": "Gewinn/Verlust in Prozent: Wert von frei + gestakt gegen den Einstand (ohne Gebühren). '-' = Einstand unbekannt.",
     "rolle": "Kern = BTC/ETH/SOL (Akkumulation) · L = übrige Krypto, wird automatisch geführt (E-90) · Cash = Stablecoin · "
              "- = andere Klasse · 'nicht in Watchlist' = gehalten, aber ohne Stammdaten",
@@ -130,14 +131,15 @@ def spot_zeilen(holdings: list, preise: dict, watchlist_by_symbol: dict, fenster
         stale = is_price_stale(p.fetched_at if p else None)
         menge = float(h.quantity or 0.0) + gest
         cost = compute_cost_basis_view(h, pe, menge=menge)
+        # P15c (12.10.2026, Nutzerbild): kompakt - die Einzelheiten (Herkunft, unbepreiste Menge) stehen im Zeilen-Mouseover
         if cost.source == "unbekannt":
             avg = "unbekannt"
         else:
             avg = format_money(cost.effective_avg_price_eur)
             if cost.source == "manuell":
-                avg += " (manuell)"
+                avg += " (m)"
             elif cost.unknown_quantity > 0:
-                avg += " (⚠ %g unbepreist)" % cost.unknown_quantity
+                avg += " ⚠"
         preis = format_money(pe)
         if stale and preis != "-":
             preis = "⚠ " + preis
@@ -240,8 +242,10 @@ class BestandTab(PortfolioView):
         self.tree = ttk.Treeview(self, columns=SPALTEN, show="headings", height=16)
         for c in SPALTEN:
             self.tree.heading(c, text=KOPF[c])
-            self.tree.column(c, width={"name": 150, "symbol": 70, "rolle": 110, "assetklasse": 80, "b1_status": 85, "upbit": 85,
-                                       "avg_buy_price_eur": 170, "frei": 105}.get(c, 95),
+            # P15c: Summe der Breiten passt auch bei 150 % Anzeige in ein Vollbild; dazu die waagrechte Laufleiste (keine Spalte verschwindet)
+            self.tree.column(c, width={"symbol": 70, "name": 130, "assetklasse": 75, "rolle": 100, "frei": 95, "gestakt": 85, "price_eur": 90,
+                                       "value_eur": 85, "avg_buy_price_eur": 110, "pl_pct": 65, "b1_x": 75, "b1_bis": 85, "b1_status": 70,
+                                       "upbit": 75}[c], minwidth=40,
                              anchor="w" if c in ("name", "assetklasse", "rolle", "b1_status") else "e")
         self.tree.tag_configure("stale", foreground=theme.stale_color())
         self.tree.tag_configure("pl_positive", foreground=theme.success_color())
@@ -252,7 +256,10 @@ class BestandTab(PortfolioView):
         add_heading_tooltips(self.tree, TIPP)
         add_row_tooltips(self.tree, self._row_tooltip_text)
         self.tree.bind("<Double-1>", self._on_edit_avg_price)        # GF4 Einstand (geerbt)
-        self.tree.pack(fill="both", expand=True, padx=8, pady=(4, 6))
+        _xs = ttk.Scrollbar(self, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(xscrollcommand=_xs.set)
+        self.tree.pack(fill="both", expand=True, padx=8, pady=(4, 0))
+        _xs.pack(fill="x", padx=8, pady=(0, 6))
 
         ttk.Label(self, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold")).pack(anchor="w", padx=8)
         self.hebel_tree = ttk.Treeview(self, columns=HEBEL_SPALTEN, show="headings", height=3)
