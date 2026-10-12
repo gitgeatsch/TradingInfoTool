@@ -18,6 +18,8 @@ import database.db as db
 from ui.formatting import format_zeitpunkt_lokal
 
 
+# ⛔ 12.10.2026 (P15): einziger GUI-Aufrufer war der Knopf im ABGELOESTEN ui/portfolio.py - im neuen Bestand-Tab ausgebaut. Die
+# Funktion zeigt die letzte Analyse der seit 05.10. angehaltenen Rollen-Kette; Wiederverwendung nur nach Ruecksprache (Archiv, GUI-5).
 def show_letzte_bewertung(parent, db_conn_factory, symbol: str) -> None:
     conn = db_conn_factory()
     try:

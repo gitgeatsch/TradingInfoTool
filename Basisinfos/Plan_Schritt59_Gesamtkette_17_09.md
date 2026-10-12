@@ -2495,3 +2495,8 @@ Schritt7 §23.24.
 - B4 Abbau-Reihenfolge trägt in Dollar und ist zum Bau freigegeben.
 - Ein Einstieg je Asset ist mit freien Daten ab 2024 nicht belegbar (K-3, K-1/K-2, U1–U5 gemessen).
 - Spot ist damit Führung des Bestands plus Kauf nach Marktlage.
+
+**Nachtrag 12.10.2026 (36) — Bestand-Tab und Spot B3 (E-103):**
+- Die GUI zeigt den Bestand mit Rolle und B1-Stand; der alte Portfolio-Tab ist abgelöst und gekennzeichnet.
+- Spot B3 (Upbit-Verkaufsanlass) läuft mit Schalter aus.
+- Spot-Führung damit: B1 an, B3 gebaut, B4 als Nächstes (P18).

@@ -58,6 +58,13 @@ def spot_mitnahme(daten: str = DATEN) -> dict:
     return SM.stand(daten)
 
 
+def spot_upbit(daten: str = DATEN) -> dict:
+    """P16 Spot B3: Stand der Upbit-Laeufe, Kreis ohne KRW-Markt, Faelle (data/spot_betrieb.db, nur lesend)."""
+    from agent import spot_upbit as SU
+
+    return SU.stand(daten)
+
+
 def hebel_wallet_abgleich(c) -> dict:
     """P11 (O36 Schritt B): Bitpanda-Hebel-Wallets gegen die offenen Positionen - Ergebnis + Kennzeile (agent/hebel_wallet_abgleich)."""
     from agent import hebel_wallet_abgleich as HW
@@ -306,6 +313,32 @@ def mit_regel0_daten(namen, daten: str = DATEN) -> set:
     return {n for n in namen if zu.get(n, n) in bestand}
 
 
+def mit_binance_spot(namen, daten: str = DATEN) -> set:
+    """P16 (12.10.2026, Gegenprobe G4): welche dieser BITPANDA-Namen eine Binance-SPOT-Tagesreihe haben - die Grundlage, auf der B1
+    (Watchlist-Universum) und B3 (Coins mit Binance-Spot) GEMESSEN sind. NICHT ``mit_regel0_daten``: dort zaehlen auch reine Futures-
+    Reihen (KAS, BRETT, HYPE, CC, MON) - der Mail-Hinweis *'liegt ausserhalb'* fehlte dann bei Coins, die gar keinen Spot haben.
+    Quelle: ``messdaten.db`` Zeilen mit quelle 'binance_mess' (am NB die Betriebskopie, TRADING + BREAK) und ``stundenkurse_alle._quelle``
+    mit markt 'spot'."""
+    spot = set()
+    pm = os.path.join(daten, "messdaten.db")
+    if os.path.exists(pm):
+        c = ro(pm)
+        try:
+            spot = {x for (x,) in c.execute("SELECT DISTINCT symbol FROM price_history_ohlc WHERE quelle='binance_mess'")}
+        finally:
+            c.close()
+    pa = os.path.join(daten, "stundenkurse_alle.db")
+    if os.path.exists(pa):
+        c = ro(pa)
+        try:
+            if "_quelle" in tabellen(c):
+                spot |= {x for (x,) in c.execute("SELECT symbol FROM _quelle WHERE markt='spot'")}
+        finally:
+            c.close()
+    zu = zuordnung_bitpanda()
+    return {n for n in namen if zu.get(n, n) in spot}
+
+
 def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dict:
     """Neuaufnahme (3 Laeufe), Datenbestand, gesperrte Mails, Hebel-Schalter ohne Daten (Teilexport REGEL0-NEUAUFNAHME)."""
     erg = {"neuaufnahme": None, "gesperrt": None, "ohne_daten": None}
@@ -345,7 +378,7 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
 
 # ══ Schalter, Jobs, Bestand, Kontingent ════════════════════════════════════════════════════════════════════════════════════
 SCHALTER = ("testwoche_freigegeben", "alter_hebelweg_aus", "spot_kette_angehalten", "ankuendigung_aktiv", "hebelfuehrung_aktiv",
-            "thesen_pausiert", "spot_mitnahme_aktiv")
+            "thesen_pausiert", "spot_mitnahme_aktiv", "spot_upbit_aktiv")
 
 
 def schalter() -> dict:

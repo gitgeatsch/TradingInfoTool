@@ -18,6 +18,13 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 12.10.2026 (5) — Spot B3 Upbit und Bestand-Tab
+>
+> | Hier fehlt | Stand seit 12.10.2026 |
+> |---|---|
+> | Spot-Verkaufsanlass Upbit | `spot_upbit_job` stündlich :40 UTC (eigenständig): KRW-Listing eines L-Bestands → Mail *„X verkaufen“* (Schalter `spot_upbit_aktiv`, E-103) |
+> | GUI Bestand | Tab *Bestand* (`ui/bestand_tab.py`) ersetzt *Portfolio*; `ui/portfolio.py` ABGELÖST |
+>
 > ## ⚠️ NACHTRAG 11.10.2026 (4) — Spot B1 Mitnahme ×3
 >
 > | Hier fehlt | Stand seit 11.10.2026 |

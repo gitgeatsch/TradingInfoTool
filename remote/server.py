@@ -796,6 +796,14 @@ function renderBetrieb(b) {
          (sm.ablage ? (sm.offen + " Fenster offen · " + sm.ausgeloest_offen + " ausgelöst") : "noch kein Lauf") + "</span></div>";
     (sm.letzte || []).slice(0, 3).forEach(function (p) { x += '<div class="unter">' + esc(p[0]) + " · " + esc(p[1]) + " · " + esc(p[2]) + "</div>"; });
   }
+  const su = b.spot_upbit;
+  if (su) {
+    const l = su.letzter;
+    x += '<div class="row" style="margin-top:6px"><strong>Spot-Upbit (B3)</strong><span' + (l && !l[1] ? ' class="err"' : "") + ">" +
+         (l ? "Lauf " + fmtStempel(l[0]) + (l[1] ? " · ok" : " · FEHLER") + " · ohne KRW " + (su.ohne_krw || []).length : "noch kein Lauf") + "</span></div>";
+    if (l && l[6]) x += '<div class="unter err">' + esc(l[6]) + "</div>";
+    (su.je_status || []).forEach(function (r) { x += '<div class="unter">Fälle ' + esc(r[0]) + ": " + r[1] + "</div>"; });
+  }
   const na = b.neuaufnahme;
   x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Neuaufnahme</strong><span>' + (na ? fmtStempel(na[0]) : "noch kein Lauf") + "</span></div>";
   if (na) x += '<div class="unter">Regel ' + na[1] + " · Datei " + na[2] + " · neu: " + esc(na[3] || "-") + (na[4] ? " · ⚠ " + esc(na[4]) : "") + "</div>";
@@ -815,6 +823,7 @@ const SCHALTER_TEXT = {
   hebelfuehrung_aktiv: ["Hebelführung H15", "an", "aus"],
   thesen_pausiert: ["Thesen (Multi-Asset, O42)", "pausiert", "laufen"],
   spot_mitnahme_aktiv: ["Spot-Mitnahme ×3 (B1) – Mail", "an", "aus (nur Protokoll)"],
+  spot_upbit_aktiv: ["Spot-Upbit-Verkaufsanlass (B3) – Mail", "an", "aus (nur Protokoll)"],
 };
 function renderSchalter(sch) {
   return Object.keys(sch).map(function (k) {

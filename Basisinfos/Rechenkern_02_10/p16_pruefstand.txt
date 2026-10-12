@@ -1,0 +1,34 @@
+S1   bestanden erster Lauf: Startmarke True · Faelle 0 · Mails 0
+S9   bestanden Kreis ohne KRW 12 (abgeleitet 12) · BEAMX drin, ALGO nicht, CANTON drin
+S2   bestanden Mail 1 · Betreff TradingInfoTool: Spot: BEAMX verkaufen (Upbit-Listing) · Menge 166248,58072538
+S2b  bestanden zweiter Lauf: Mails BEAMX weiter 1
+S3   bestanden XYZQ (nicht im Bestand) und BTC (Kern): Faelle 0, neue Mails 0
+S4   bestanden Faelle ['CANTON'] · Mail CANTON (CC) True
+S5   bestanden HYPE 7 h alt: Status ('verpasst',), neue Mails 0
+S6   bestanden Schalter aus: Status ('faellig',), keine Mail; eingeschaltet 3 h nach der Meldung: Mail QNT True
+S7   bestanden dieselbe Meldung erneut: Faelle 4 -> 4
+S8   bestanden Upbit-Fehler: Job gelaufen True, ok False, Lauf (0, 'ConnectionError: Upbit gestellt nicht erreichbar')
+S10  bestanden Stand: Laeufe 10, ok 9, je Status [('gemailt', 3), ('verpasst', 1)], letzter Fehler True
+S11  bestanden Wegwerf-Produktion unveraendert
+
+Muster der Mail (S2):
+1  WAS ZU TUN IST
+  BEAMX: die GANZE Position verkaufen – in den nächsten Stunden (166248,58072538 Stück).
+
+2  WARUM
+  Upbit hat BEAMX für den Handel in Won (KRW) angekündigt: 2026-10-12 09:00 UTC, vor 1,0 Stunden.
+  Gemessen ab 2024 an 32 Upbit-Listings von Coins, die schon handelten: Halten lag nach 7 Tagen 10 Prozentpunkte unter BTC (schadet, Rang 0,00 gegen Zufall der Klasse); in Dollar fiel der Coin in 25 von 32 Fällen, im Mittel −8,5 % (Spot §38.4, §42.2).
+  In den ersten Stunden nach der Meldung stieg der Kurs im Median um 12 % – danach wurde der Anstieg abgegeben.
+  Hinweis: Gemessen ist auf Coins mit Binance-Spot; BEAMX liegt außerhalb – angewandt, nicht auf ihm gemessen.
+
+3  KONTEXT (keine Handlung)
+  Kurs gegen den letzten Tagesschluss vor der Meldung: +0,0 %.
+  Kosten bei Bitpanda je Seite nach Klasse: H 0,36 % · M 0,88 % · S 3,20 % (nur Information).
+  Wiedereinstieg und Erlös: nicht gemessen.
+  Meldung: https://upbit.com/service_center/notice?id=901
+  Titel: 빔엑스(BEAMX) 신규 거래지원 안내 (KRW, USDT 마켓)
+
+4  TECHNIK
+  Spot B3 Upbit-Verkaufsanlass · Regel wie die Messung C2-b · Mail nur bis 6 h nach der Meldung.
+
+12 von 12 bestanden

@@ -1049,3 +1049,46 @@ Nutzer 12.10.: *„Ja, Voranalyse P15 + P16 vorbereiten, prüfen und gegenprüfe
   - Laufzeit des Lesens.
 - **Gegenprobe:** eigene Wertsumme, eigene ×-Rechnung aus Dollar-Schlüssen.
 - **Suite:** GuiKette erweitert. Am NB: **K-GUI-3**.
+
+### G-Z P15 gebaut — Bestand-Tab (12.10.2026, im Bündel mit P16)
+
+Nutzer 12.10.: *„Ja, den Ausbau eindeutig kennzeichnen, damit man nicht über den alten Code stolpert“* (Rücksprache G-Y).
+
+**Entscheidungen:**
+1. Der Knopf *Letzte Bewertung* **entfällt**.
+2. Der Tab heißt **Bestand**.
+
+**Gebaut:**
+- `ui/bestand_tab.py` (`BestandTab`) ersetzt den Tab *Portfolio*.
+  - Er erbt von `PortfolioView`: Einstand per Doppelklick (GF4), Fiat-Feld, Diversifikation, Tooltip.
+  - Er ruft deren Konstruktor **bewusst nicht** (dort entsteht der alte Knopf).
+- Inhalt wie G-Y:
+  - Spot für alle 47 Bestände, mit Rolle, frei/gestakt getrennt, B1 (× Start, Fenster bis, Status) und Upbit KRW;
+  - Hebel kurz;
+  - Summe mit Hebel-Eigenkapital.
+- B1, B3 und Hebel werden nur bei sichtbarem Tab gelesen, höchstens alle 60 s; unveränderte Daten zeichnen nichts neu.
+
+**Ausbau gekennzeichnet:**
+- `ui/portfolio.py`: Kopf *„⛔⛔ ABGELOEST am 12.10.2026 … NICHT MEHR IN DER GUI EINGEHAENGT“*, dazu ein Vermerk am alten Knopf.
+- `ui/letzte_bewertung.py`: Vermerk *einziger GUI-Aufrufer war der abgelöste Tab*.
+- `ui/app.py`: Kommentar am Import und an der Einhängung.
+- Inventurblatt: Zeile `ui/portfolio.py` als ABGELÖST, neue Zeile `ui/bestand_tab.py`.
+- Suite *GuiKette* wacht über alle Kennzeichnungen.
+
+**Nachweis:**
+- `p15_pruefstand.py` **11/11**, Tk unsichtbar, gegen die Kopie der NB-Sicherung:
+  - 47 Zeilen, Rollen Kern 3 · L 27 · Cash 1 · andere 15 · nicht in Watchlist 1;
+  - B1 für alle 27 L-Fenster, Upbit *nein* bei 11;
+  - Hebel ETH/BTC;
+  - Summe mit Hebel-Eigenkapital 900 €;
+  - kein Knopf *Bewertung*;
+  - kein Neuzeichnen ohne Änderung;
+  - Produktion und Ablage unverändert;
+  - schneller Teil 0,004 s, langsamer Teil 0,07 s.
+- `p15_gegenprobe.py` **3/3**:
+  - Summen per eigenem SQL (Abweichung 0,0000 €);
+  - Rolle mit eigener Regel;
+  - × Start für 27 Fenster aus eigenem SQL, mit gestellten neuen Kursen.
+- Suite GuiKette **51/51**, Paket BitpandaInventur **6/6**.
+
+Am NB: **K-GUI-3** (dein Bild der GUI).

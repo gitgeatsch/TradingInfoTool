@@ -1,0 +1,6 @@
+G1  gleich     eigene Regel 137 · listing 137 · gleich True
+G2  gleich     echter Lauf: Kreis ohne KRW ['ASTER', 'BEAMX', 'BNB', 'BRETT', 'CAT', 'HYPE', 'KAS', 'QNT', 'SUPRA', 'TURBO', 'VSN'] · eigene Abfrage ['ASTER', 'BEAMX', 'BNB', 'BRETT', 'CAT', 'HYPE', 'KAS', 'QNT', 'SUPRA', 'TURBO', 'VSN']
+G3  gleich     echter Abruf: Startmarke True · abgelegte Listing-Kuerzel 9 (juengste 2026-10-09 08:06:46) · Faelle 0
+G4  gleich     mit Binance-Spot (data/): ['BEAMX', 'CAT', 'TURBO'] · eigenes SQL (Binance-Namen) ['1000CAT', 'BEAMX', 'TURBO'] - KAS, BRETT, SUPRA, HYPE, CANTON ohne Spot
+
+4 von 4 gleich

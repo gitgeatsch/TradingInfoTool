@@ -146,6 +146,33 @@ kontrollen:
     nachweis: "nach dem Einschalten: Log 'Stop-Nachzieh-Mail: N Spot-Zeilen nicht gemailt (A6'; keine 07:15-Mail mehr mit alten Spot-Signalen; bei der ersten Ausloesung Mail 'Spot: Haelfte von X verkaufen'"
     faellig_bis: "2026-10-14"
     status: offen
+  - id: K-GUI-3
+    titel: "P15 GUI-3 Bestand-Tab: Tab 'Bestand' statt 'Portfolio'; Spot alle Bestaende mit Rolle, B1 (x Start, Fenster bis, Status), Upbit KRW; Hebel kurz; Summe mit Hebel-Eigenkapital; kein Knopf 'Letzte Bewertung'"
+    seit: "2026-10-12"
+    paket: P15
+    commit: ""
+    art: manuell
+    nachweis: "Nutzerbild der GUI am NB: Tab 'Bestand', 28 L-Zeilen mit B1-Spalten (x ~1,00), Upbit nein bei ~11-12, Hebel ETH/BTC, Gesamtwert mit 'Hebel-Eigenkapital'; GUI reagiert fluessig (kein Haenger im 3-s-Takt)"
+    faellig_bis: "2026-10-15"
+    status: offen
+  - id: K-UB-1
+    titel: "P16 Spot B3 Upbit mit Schalter AUS: Job stuendlich :40 UTC, erster Lauf Startmarke, Laeufe fehlerfrei, Kreis ohne KRW 11-12, keine Mail"
+    seit: "2026-10-12"
+    paket: P16
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach Pull + Neustart (>= 2 h): Logzeilen 'Spot-Upbit: ok · ... ohne KRW n ... (Schalter aus - nur Protokoll)', die erste mit 'Startmarke'; Statusseite Karte Betrieb 'Spot-Upbit (B3)' ok; keine Mail 'verkaufen (Upbit-Listing)'"
+    faellig_bis: "2026-10-15"
+    status: offen
+  - id: K-UB-2
+    titel: "P16 Spot B3 eingeschaltet (nach Nutzer-Ja): bei einem echten KRW-Listing eines L-Bestands binnen 6 h Mail 'X verkaufen (Upbit-Listing)' mit Wochen-/Tageschart"
+    seit: "2026-10-12"
+    paket: P16
+    commit: ""
+    art: ereignis
+    nachweis: "beim ersten echten Listing: Log 'gemailt 1', Mail mit Belegstufe und Upbit-Titel; selten (~1,5 im Jahr)"
+    faellig_bis: ""
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

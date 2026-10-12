@@ -1176,3 +1176,15 @@ Schritt7 §23.24.
 - Zusammen mit §35, §37, §38, §40, §44, §45: **Mit freien Daten ist ab 2024 kein Einstieg je Asset belegbar.**
 - Folge (vorab): Der Spot-Kauf bleibt eine Marktlage-Entscheidung (Ampel C1) mit geordneter Kandidatenliste (A3); die Führung (B1, B3, B4) trägt.
 - O46 erledigt; U7, U3, U6 nur noch als Beobachtung, keine Messrunde vor dem Bau der Führung.
+
+# E-103 · Bündel P15 Bestand-Tab + P16 Spot B3 Upbit gebaut (12.10.2026)
+
+**12.10.2026** · Nutzer: *„Ja, den Ausbau eindeutig kennzeichnen, damit man nicht über den alten Code stolpert“*.
+- **P15:** Tab *Bestand* ersetzt *Portfolio*. Der Knopf *Letzte Bewertung* (Rollen-Kette, angehalten seit 05.10.) ist **ausgebaut**. Abgelöster Code ist in `portfolio.py`, `letzte_bewertung.py`, `app.py` und im Inventurblatt gekennzeichnet; die Suite wacht darüber.
+- **P16:** Upbit-KRW-Listing eines L-Bestands → Mail *„X verkaufen“* (ganze Position, ≤ 6 h). Regel wie gemessen (Teil 0: 137 gleich). Schalter `spot_upbit_aktiv` **aus**, bis du einschaltest.
+- **Eigene Festlegungen (fachlich, berichtet):**
+  - Startmarke beim ersten Lauf;
+  - Zuordnung nur über `symbol_zuordnung` Faktor 1;
+  - Futures-Start erst mit P18;
+  - der Hinweis *außerhalb* richtet sich nach Binance-**Spot** — das korrigiert auch B1 (Fund der Gegenprobe G4).
+- Nachweis: G-Z, Spot §47.6, Schritt7 §23.47.

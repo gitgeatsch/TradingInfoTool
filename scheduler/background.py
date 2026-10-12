@@ -4312,7 +4312,7 @@ def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None
                 from agent import betriebslage as _BL
                 import agent.indikator_chart as _IC
                 btc = dict(_SM.schluesse(conn, "BTC"))
-                mit_binance = _BL.mit_regel0_daten({f["symbol"] for f in erg["faellig"]}, ordner)
+                mit_binance = _BL.mit_binance_spot({f["symbol"] for f in erg["faellig"]}, ordner)   # P16 G4: Spot, nicht Futures
                 preise = db.get_latest_prices(conn)
                 for f in erg["faellig"]:
                     bf = (btc.get(f["ausloese_tag"]) / btc.get(f["start"])) if btc.get(f["ausloese_tag"]) and btc.get(f["start"]) else None
@@ -4335,6 +4335,65 @@ def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None
             conn.close()
     except Exception:                                                # noqa: BLE001
         logger.exception("Spot-Mitnahme: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
+def spot_upbit_job(conn_factory, watchlist_provider, versand=None, jetzt=None, ordner=None, http=None) -> dict:
+    """P16 Spot B3 (12.10.2026, Spot §47): Upbit-Listing eines L-Bestands als Verkaufsanlass - stuendlich zur Minute 40 (UTC).
+
+    Schreibt NUR ``data/spot_betrieb.db`` (Meldungen, Faelle, Laeufe, Protokoll); liest ``holdings``/``price_history_ohlc`` nur.
+    MAIL nur mit Schalter ``spot_upbit_aktiv`` und nur am Betriebsgeraet; je Fall genau einmal (vermerkt nur bei Zustellung), mit
+    Wochen-/Tageschart (O45). Eigenstaendig, nicht an der angehaltenen Rollen-Kette (Lehre H15). Scheitert nie nach aussen.
+    ``versand``/``http`` (Pruefstand): Ersatz fuer _sende_hinweismail(betreff, text, bilder) -> bool bzw. den Upbit-Abruf."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.regel0_groesse as _G
+        import agent.regel0_nachlader as _NL
+        import agent.spot_mitnahme as _SM
+        import agent.spot_upbit as _SU
+
+        ordner = ordner or _NL.DATEN_VORGABE
+        if versand is None:
+            erlaubt, grund = _NL.betrieb_erlaubt(ordner)
+            if not erlaubt:
+                logger.info("Spot-Upbit: uebersprungen - %s", grund)
+                aus["grund"] = grund
+                return aus
+        conn = conn_factory()
+        try:
+            erg = _SU.lauf(conn, ordner, watchlist_provider(), jetzt, http)
+            an = _G.spot_upbit_aktiv()
+            gemailt = []
+            if an and erg["faellig"]:
+                from agent import betriebslage as _BL
+                import agent.indikator_chart as _IC
+                mit_binance = _BL.mit_binance_spot({f["symbol"] for f in erg["faellig"]}, ordner)   # P16 G4: Spot, nicht Futures
+                preise = db.get_latest_prices(conn)
+                for f in erg["faellig"]:
+                    st = conn.execute("SELECT staked_quantity FROM holdings WHERE symbol=?", (f["symbol"],)).fetchone()
+                    vor = [k for d, k in _SM.schluesse(conn, f["symbol"]) if d < f["utc"][:10]]
+                    jetzt_usd = preise.get(f["symbol"]).price_usd if preise.get(f["symbol"]) and getattr(preise.get(f["symbol"]), "price_usd", None) else None
+                    b, t = _SU.mail(f, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, jetzt_usd, vor[-1] if vor else None)
+                    try:
+                        _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
+                        bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
+                    except Exception:                                # noqa: BLE001
+                        bilder = []
+                    ok = bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, bilder or None))
+                    if ok:
+                        _SU.vermerke_mail(ordner, f["id"], f["symbol"])
+                        gemailt.append(f["symbol"])
+            logger.info("Spot-Upbit: %s · %d L-Bestaende, ohne KRW %d · Meldungen neu %d · Faelle %d · faellig %d · gemailt %d%s%s",
+                        "ok" if erg["ok"] else "FEHLER %s" % erg["fehler"], erg["kreis"], len(erg["ohne_krw"]), erg["neu"], len(erg["faelle"]),
+                        len(erg["faellig"]), len(gemailt), " · Startmarke" if erg["startmarke"] else "",
+                        "" if an else " (Schalter aus - nur Protokoll)")
+            aus.update(gelaufen=True, schalter=an, gemailt=gemailt, **{k: erg[k] for k in ("ok", "kreis", "ohne_krw", "neu", "faelle", "faellig",
+                                                                                           "startmarke", "fehler")})
+        finally:
+            conn.close()
+    except Exception:                                                # noqa: BLE001
+        logger.exception("Spot-Upbit: Lauf fehlgeschlagen")
         aus["grund"] = "Ausnahme"
     return aus
 
@@ -5585,6 +5644,19 @@ def build_scheduler(
         args=[db_conn_factory, watchlist_provider],
         id="spot_mitnahme",
         **_nachholen("spot_mitnahme", 230, stunde=7, minute=10),
+    )
+    # P16 Spot B3 (12.10.2026): Upbit-Listing als Verkaufsanlass - stuendlich zur Minute 40 (UTC), abseits von O29 (:58) und dem
+    # REGEL0-Nachlader (:05). Ohne Schalter spot_upbit_aktiv nur Protokoll; der erste Lauf setzt die Startmarke (nichts gemailt)
+    scheduler.add_job(
+        spot_upbit_job,
+        "cron",
+        minute=40,
+        timezone=timezone.utc,
+        args=[db_conn_factory, watchlist_provider],
+        id="spot_upbit",
+        coalesce=True,
+        max_instances=1,
+        misfire_grace_time=1800,
     )
     scheduler.add_job(
         ausstiegs_job,

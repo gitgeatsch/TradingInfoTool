@@ -802,6 +802,8 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **Signalmails** (REGEL0, H15) tragen Wochen- und Tageschart mit RSI 14 und MACD 12/26/9 als Kontext (O45, E-98).
 - **GUI-Hebel-Tab** (P12): REGEL0-Signale mit Filtern (heute / 7 Tage / alle, nur Schalter an), Detail mit Mailtext; Positionen mit H15-Empfehlung, Abstand, Finanzierung und Bitpanda-Abgleich; Freigabe je Asset mit Hebel-Schalter (E-99).
 - **Spot B1 Mitnahme ×3** (P14): Jeder Krypto-Bestand außer Kern läuft in einem Fenster von 365 T ab Starttag. Schließt der Kurs bei ≥ 3 × Startkurs, kommt am Morgen danach eine Mail *Hälfte verkaufen* (gemessen: trägt auf dem ganzen Bestand). Schalter `spot_mitnahme_aktiv` (E-100).
+- **Spot B3 Upbit-Verkaufsanlass** (P16): Kündigt Upbit für einen L-Bestand den Handel in Won an, kommt binnen höchstens 6 h die Mail *„X verkaufen (Upbit-Listing)“* für die ganze Position. Gemessen: Halten lag 7 T −10 Pp unter BTC. Schalter `spot_upbit_aktiv` (E-103).
+- **GUI-Tab Bestand** (P15): Alle Bestände mit Rolle (Kern/L/Cash), frei/gestakt, Einstand, B1-Stand, Upbit KRW, dazu die Hebelpositionen kurz und eine Summe mit Hebel-Eigenkapital. Ersetzt den Portfolio-Tab.
 - **Ruhend:** Thesen-Abgleich/-Synthese (`thesen_pausiert`, E-96) bis zum Multi-Asset-Umbau (O39); die Rollen-Kette (`spot_kette_angehalten`).
 
 ## 11. Roadmap & Erweiterbarkeit

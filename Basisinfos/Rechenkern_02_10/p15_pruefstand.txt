@@ -1,0 +1,21 @@
+P1   bestanden Zeilen 47 · Bestaende 47 · Schluessel = Symbol
+P2   bestanden Rollen {'-': 15, 'L': 27, 'Kern': 3, 'Cash': 1, 'nicht in Watchlist': 1}
+P3   bestanden B1: 27 Fenster fuer 27 L-Bestaende, x 1,00 am Starttag, Nicht-L '-'
+P4   bestanden Upbit KRW: 'nein' fuer 11 (ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN)
+P5   bestanden Hebel kurz: [('ETH', '11.5 %', 'LIQUIDATION NAHE'), ('BTC', '26.6 %', 'HALTEN')]
+P6   bestanden Summenzeile: Gesamtwert: 23,713.22 EUR  (Spot frei 16,487.53 · gestakt 6,057.45 · Fiat 268.24 · Hebel-Eigenkapital 900.00)
+P7   bestanden Knoepfe ['Aktualisieren', 'Speichern'] · Doppelklick gebunden · Diversifikation 8 Zeilen
+P8   bestanden app.py haengt BestandTab als 'Bestand' ein · PortfolioView nicht mehr · Kennzeichnung in portfolio.py und letzte_bewertung.py
+P9   bestanden zweiter refresh ohne Aenderung: delete gerufen 0 mal
+P10  bestanden Produktion und Ablage nach dem Lesen unveraendert
+P11  bestanden Laufzeit: Aufbau 0.22 s · schneller Teil 0.004 s · langsamer Teil 0.07 s (Desktop)
+
+Beispielzeilen:
+  symbol=BEAMX | rolle=L | frei=166249 | gestakt=- | value_eur=398.59 | b1_x=1,00 | b1_bis=10.10.2027 | b1_status=laeuft | upbit=nein
+  symbol=LINK | rolle=L | frei=141.896 | gestakt=- | value_eur=1,627.55 | b1_x=1,00 | b1_bis=10.10.2027 | b1_status=laeuft | upbit=ja
+  symbol=BTC | rolle=Kern | frei=0.054966 | gestakt=- | value_eur=4,071.11 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+  symbol=EURCV | rolle=Cash | frei=296.043 | gestakt=- | value_eur=295.76 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+  symbol=VVMX | rolle=- | frei=47.2015 | gestakt=- | value_eur=503.83 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+  symbol=XDC | rolle=nicht in Watchlist | frei=14999.7 | gestakt=- | value_eur=466.64 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+
+11 von 11 bestanden

@@ -3097,3 +3097,11 @@ Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `k
 - A6: Die Spot-Zeilen der alten Stop-Mail fallen mit dem Schalter weg.
 - Teil 0 bitgleich (7.819 Positionen), Prüfstand 10/10, Gegenprobe 3/3.
 - Ausführlich: Spot §41.8. Am NB: **K-SP-1**, danach **K-SP-2** nach deinem Ja.
+
+### 23.47 Bündel P15 GUI-3 + P16 Spot B3 (12.10.2026)
+
+- **P15:** Tab *Bestand* statt *Portfolio*, Knopf *Letzte Bewertung* ausgebaut, alter Code gekennzeichnet (G-Z).
+- **P16:** Upbit-Verkaufsanlass, eigener Job stündlich :40 UTC, Schalter aus zuerst (Spot §47.6).
+- **Fund G4:** Der Hinweis *außerhalb Binance* richtet sich in B1 und B3 nach Binance-**Spot** (`mit_binance_spot`), nicht nach REGEL0-Daten mit Futures.
+- Prüfstände 11/11 und 12/12, Gegenproben 3/3 und 4/4, Teil 0 137 gleich.
+- Am NB: **K-GUI-3**, **K-UB-1**; nach deinem Ja **K-UB-2**.

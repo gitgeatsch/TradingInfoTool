@@ -1,4 +1,11 @@
-"""Portfolio-Tab: Bestaende, aktueller Preis, aktueller Wert (U-6, Phase-1-Umfang),
+"""⛔⛔ ABGELOEST am 12.10.2026 (P15 / GUI-3, Plan_Asset_Lebenszyklus_14_09.md G-Y) - NICHT MEHR IN DER GUI EINGEHAENGT.
+Nachfolger: ``ui/bestand_tab.py`` (``BestandTab``, Tab *Bestand*). Diese Datei bleibt NUR, weil ``BestandTab`` von ``PortfolioView``
+erbt (Einstand-Dialog ``AvgBuyPriceDialog``, Fiat-Feld, Diversifikation, Einstands-Tooltip). NEUE Funktionen gehoeren nach
+``bestand_tab.py``, nicht hierher. AUSGEBAUT (Nutzer 12.10.: *"den Ausbau eindeutig kennzeichnen"*): der Knopf *Letzte Bewertung
+anzeigen* - er zeigte die letzte KI-Analyse der seit 05.10. angehaltenen Rollen-Kette (``PortfolioView.__init__`` legt ihn noch an,
+``BestandTab`` ruft diesen Konstruktor bewusst NICHT).
+
+Bisheriger Text: Portfolio-Tab: Bestaende, aktueller Preis, aktueller Wert (U-6, Phase-1-Umfang),
 seit 2026-07-11 zusaetzlich Einstandspreis + Gewinn/Verlust (siehe
 importer/bitpanda_avg_cost.py - echter Marktpreis aus Bitpanda-Trades, EUR)."""
 from __future__ import annotations
@@ -131,6 +138,7 @@ class PortfolioView(ttk.Frame):
         # (technisch/fundamental/makro), ohne durch die Signal-Historie
         # klicken zu muessen. Kein Doppelklick (der ist bereits fuer den
         # Einstandspreis belegt, siehe oben) - eigener Button.
+        # ⛔ AUSGEBAUT im neuen Bestand-Tab (P15, 12.10.2026) - steht nur noch in dieser abgeloesten Klasse
         ttk.Button(self, text="Letzte Bewertung anzeigen", command=self._show_letzte_bewertung).pack(
             anchor="w", padx=8, pady=(0, 4)
         )

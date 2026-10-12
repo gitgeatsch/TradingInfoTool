@@ -22192,6 +22192,32 @@ def paket_guikette() -> None:
            "%s" % _z12)
     pruefe(P, "P12: H15 und Bitpanda-Abgleich nicht im 3-s-Takt - nur sichtbar und hoechstens alle 60 s",
            _HT12.LANGSAM_S >= 60 and "self._sichtbar(1)" in _ht12 and "if stand == self._signal_stand" in _ht12)
+    # ---- P15 / GUI-3 Bestand-Tab (12.10.2026, Plan G-Y; Nutzer: *"den Ausbau eindeutig kennzeichnen"*) ---------------------------
+    _bt15 = _quelltext("ui/bestand_tab.py")
+    pruefe(P, "⚠️ P15: Tab 'Bestand' ist der neue BestandTab, PortfolioView ist nicht mehr eingehaengt",
+           "BestandTab(notebook, db_conn_factory, watchlist)" in _app12 and 'text="Bestand"' in _app12 and "PortfolioView(" not in _app12)
+    pruefe(P, "⚠️⚠️ P15: der Ausbau ist im ALTEN Code gekennzeichnet (portfolio.py Kopf ABGELOEST, letzte_bewertung.py, app.py)",
+           _quelltext("ui/portfolio.py").lstrip().startswith('"""⛔⛔ ABGELOEST') and "ABGELOESTEN ui/portfolio.py" in io.open("ui/letzte_bewertung.py", encoding="utf-8").read()   # Kennzeichnung = Kommentar: ROHtext
+           and "ui/portfolio.py ist ABGELOEST" in _app12)
+    pruefe(P, "⚠️ P15: KEIN Knopf 'Letzte Bewertung' im Bestand-Tab, PortfolioView.__init__ wird bewusst nicht gerufen",
+           "letzte_bewertung" not in _nur_code("ui/bestand_tab.py") and "ttk.Frame.__init__(self, parent)" in _bt15
+           and "PortfolioView.__init__" not in _nur_code("ui/bestand_tab.py"))
+    _sch15 = [z for z in _nur_code("ui/bestand_tab.py").splitlines() if re.search(r"db\s*\.\s*set_|\bINSERT\b|\bUPDATE\b|\bDELETE\b", z)]
+    pruefe(P, "P15: der Bestand-Tab schreibt selbst nichts (Einstand und Fiat nur ueber die geerbten Dialoge)", not _sch15, "%s" % _sch15)
+    import ui.bestand_tab as _BT15
+    from types import SimpleNamespace as _NS15
+    _r15 = {s_: _BT15.rolle(s_, a_) for s_, a_ in (("BTC", _NS15(assetklasse="krypto", ist_cash_aequivalent=False)),
+                                                   ("LINK", _NS15(assetklasse="krypto", ist_cash_aequivalent=False)),
+                                                   ("EURCV", _NS15(assetklasse="krypto", ist_cash_aequivalent=True)),
+                                                   ("VVMX", _NS15(assetklasse="etf", ist_cash_aequivalent=False)), ("XDC", None))}
+    pruefe(P, "P15: Rolle Kern / L / Cash / - / nicht in Watchlist (gestellte Assets)",
+           _r15 == {"BTC": "Kern", "LINK": "L", "EURCV": "Cash", "VVMX": "-", "XDC": "nicht in Watchlist"}, "%s" % _r15)
+    _f15 = {"LINK": {"startkurs_usd": 10.0, "ende": "2027-10-10", "status": "laeuft"}}
+    pruefe(P, "P15: B1-Spalten aus Fenster und letztem Dollar-Schluss; Upbit 'nein' nur im Kreis ohne KRW, '?' ohne Lauf",
+           _BT15.b1_werte("LINK", _f15, {"LINK": 30.0}) == ("3,00", "10.10.2027", "laeuft") and _BT15.b1_werte("SUI", _f15, {})[2] == "kein Fenster"
+           and _BT15.upbit_wert("BEAMX", ["BEAMX"]) == "nein" and _BT15.upbit_wert("LINK", ["BEAMX"]) == "ja" and _BT15.upbit_wert("LINK", None) == "?")
+    pruefe(P, "P15: B1, Upbit und Hebel nicht im 3-s-Takt - nur sichtbar und hoechstens alle 60 s; unveraendert -> nichts neu",
+           _BT15.LANGSAM_S >= 60 and "self.winfo_ismapped()" in _bt15 and "if stand != self._stand" in _bt15)
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
     pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
            not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))
@@ -22234,6 +22260,38 @@ def paket_spot_mitnahme() -> None:
                  capture_output=True, text=True, encoding="utf-8", timeout=900)
     pruefe(P, "⚠️⚠️ Pruefstand am Seiteneffekt: Kreis, x3, Fenster, Sprung, verpasst, Schalter, A6, Produktion unberuehrt",
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
+def paket_spot_upbit() -> None:
+    """SPOT B3 UPBIT-VERKAUFSANLASS (P16, 12.10.2026, Spot §47) - die Regel ist die der Messung C2-b, der Job haengt nicht an der Rollen-Kette.
+
+    Gemessen (§38.4, §42.2): nach einem Upbit-KRW-Listing lag Halten 7 T -10 Pp unter BTC (schadet), in Dollar -8,5 %. Die Wachen halten
+    fest: dieselbe Regel (Teil 0 am Archiv, p16_teil0.py), ganze Position, Mail nur bis 6 h, Schalter standardmaessig aus, Hinweis
+    'ausserhalb' nach Binance-SPOT (nicht nach REGEL0-Daten, die auch reine Futures zaehlen - Gegenprobe G4)."""
+    P = "SpotUpbit"
+    import os
+    import subprocess as _sp
+    import agent.spot_upbit as _SU
+    import agent.regel0_groesse as _G
+
+    pruefe(P, "die Regel wie gemessen: KRW-Listing, Kuerzel in Klammern VOR dem Stichwort; BTC-Markt allein ist kein Listing",
+           _SU.listing("빔엑스(BEAMX) 신규 거래지원 안내 (KRW, USDT 마켓)") == ["BEAMX"] and _SU.listing("엑스(ABC) 신규 거래지원 안내 (BTC 마켓)") == []
+           and _SU.listing("엑스(ABC) 거래 유의 종목 지정 (KRW)") == [])
+    _r = _sp.run([sys.executable, "-X", "utf8", os.path.join("Basisinfos", "Rechenkern_02_10", "p16_teil0.py")], capture_output=True, text=True,
+                 encoding="utf-8", timeout=600)
+    pruefe(P, "⚠️⚠️ Teil 0 (R-R11): die Betriebsregel findet am Archiv dieselben 137 Ereignisse wie die Messung",
+           "1 von 1 gleich" in (_r.stdout or ""), (_r.stdout or "")[-200:] + (_r.stderr or "")[-200:])
+    pruefe(P, "⚠️⚠️ der Schalter ist im CODE standardmaessig AUS (Mail nur nach Nutzer-Ja)", _G.VORGABE.get("spot_upbit_aktiv") is False)
+    _bq = _quelltext("scheduler/background.py")
+    pruefe(P, "der Job laeuft stuendlich zur Minute 40 UTC, eigenstaendig - nicht aus der angehaltenen Rollen-Kette",
+           'id="spot_upbit"' in _bq and "minute=40," in _bq.split('id="spot_upbit"')[0][-300:] and "spot_upbit" not in _quelltext("agent/rollen_lauf.py"))
+    pruefe(P, "Mail nur mit Schalter, ganze Position, hoechstens 6 h nach der Meldung, erster Lauf = Startmarke",
+           "_G.spot_upbit_aktiv()" in _bq and _SU.MAIL_HOECHSTENS_H == 6 and "GANZE Position" in _quelltext("agent/spot_upbit.py")
+           and "upbit startmarke" in _quelltext("agent/spot_upbit.py"))
+    pruefe(P, "⚠️ Hinweis 'ausserhalb' nach Binance-SPOT in B1 UND B3 (nicht mit_regel0_daten - zaehlt Futures)",
+           _bq.count("_BL.mit_binance_spot(") == 2 and "_BL.mit_regel0_daten({f[" not in _bq)
+    pruefe(P, "die Ablage ist eine eigene Datei, die Produktion wird nur gelesen", _SU.ABLAGE == "spot_betrieb.db"
+           and "conn_prod.execute(" not in _quelltext("agent/spot_upbit.py"))
 
 
 def paket_kontrollen() -> None:
@@ -32254,6 +32312,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
+          "SpotUpbit": paket_spot_upbit,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

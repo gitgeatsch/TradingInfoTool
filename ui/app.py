@@ -21,7 +21,7 @@ from ui.formatting import format_money, format_price_age, format_zeitpunkt_lokal
 from ui.heading_tooltip import add_heading_tooltips
 from ui.hebel_tab import HebelTab
 from ui.marktscan_view import MarktscanView
-from ui.portfolio import PortfolioView
+from ui.bestand_tab import BestandTab   # P15 (12.10.2026): ERSETZT den Tab Portfolio (ui/portfolio.py ist ABGELOEST, nicht mehr eingehaengt)
 from ui.regime_view import RegimeView
 from ui.row_tooltip import add_row_tooltips
 from ui.screener_view import ScreenerView
@@ -164,8 +164,10 @@ class TradingInfoToolApp(tk.Tk):
         self._watchlist_frame = self._build_watchlist_tab(notebook)
         notebook.add(self._watchlist_frame, text="Watchlist")
 
-        self._portfolio_view = PortfolioView(notebook, db_conn_factory, watchlist)
-        notebook.add(self._portfolio_view, text="Portfolio")
+        # P15 / GUI-3 (12.10.2026, G-Y): der Bestand-Tab ersetzt den alten Portfolio-Tab. Der Name _portfolio_view bleibt, weil
+        # refresh() und reload_cash_reserve_from_db() an 8 Stellen gerufen werden - die Klasse ist BestandTab, nicht PortfolioView.
+        self._portfolio_view = BestandTab(notebook, db_conn_factory, watchlist)
+        notebook.add(self._portfolio_view, text="Bestand")
 
         self._signals_view = SignalsView(
             notebook, db_conn_factory, watchlist, groq_client, coingecko_client, kraken_client,

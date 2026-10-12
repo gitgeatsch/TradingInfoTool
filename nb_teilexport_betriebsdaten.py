@@ -423,6 +423,26 @@ def _inhalt() -> int:
                 print("    naechstes Fensterende: %-8s %s bis %s" % r)
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Spot-Mitnahme nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # P16 Spot B3 (12.10.2026): Upbit-Listing als Verkaufsanlass - Laeufe, Kreis ohne KRW, Faelle (data/spot_betrieb.db, nur lesend; K-UB-1)
+    print()
+    print("-" * 100)
+    try:
+        su = BL.spot_upbit(DATEN)
+        import agent.regel0_groesse as _G16
+        if not su.get("ablage") or not su.get("laeufe"):
+            print("SPOT-UPBIT (B3): Schalter %s · noch kein Lauf" % ("AN" if _G16.spot_upbit_aktiv() else "aus"))
+        else:
+            l = su["letzter"]
+            print("SPOT-UPBIT (B3): Schalter %s · Laeufe %d, davon ok %d · letzter %s %s · Meldungen %d (juengste %s) · Faelle: %s" % (
+                "AN" if _G16.spot_upbit_aktiv() else "aus", su["laeufe"], su["ok"], l[0], "ok" if l[1] else "FEHLER " + str(l[6]),
+                su["meldungen"], su["juengste_meldung"], ", ".join("%s %d" % r for r in su["je_status"]) or "-"))
+            print("    L-Bestaende ohne KRW-Markt (Kreis B3): %d - %s" % (len(su["ohne_krw"]), ", ".join(su["ohne_krw"]) or "-"))
+            if su["letzter_fehler"]:
+                print("    letzter Fehler: %s %s" % su["letzter_fehler"])
+            for r in su["letzte"]:
+                print("    %s · %-8s %-17s %s" % (r[0], r[1], r[2], str(r[3])[:90]))
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Spot-Upbit nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P9 (10.10.2026, G-O): die NB-Kontrollen aus Basisinfos/nb_kontrollen.yaml - automatische live ausgewertet, dieselbe Quelle wie
     # die Statusseite (Karte "Offene NB-Kontrollen"). Nur die offenen; die Historie steht in der Datei.
     print()

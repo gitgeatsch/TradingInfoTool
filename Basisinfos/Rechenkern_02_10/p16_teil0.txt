@@ -1,0 +1,3 @@
+TEIL 0: Betrieb 137 Ereignisse · Messung 137 · gleich True
+
+1 von 1 gleich

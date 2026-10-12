@@ -38,7 +38,10 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                thesen_pausiert=False,
                # P14 Spot B1 (11.10.2026): Mitnahme x3 - MAIL nur mit Schalter (das Protokoll laeuft immer); mit ihm geht die alte
                # Stop-Nachzieh-Mail fuer Spot aus (A6). Vorgabe AUS: eingeschaltet nach der Pruefung mit Nutzer-Ja (Muster O29)
-               spot_mitnahme_aktiv=False)
+               spot_mitnahme_aktiv=False,
+               # P16 Spot B3 (12.10.2026): Upbit-Listing eines L-Bestands -> Verkaufsmail; das Protokoll laeuft immer, die MAIL nur mit
+               # Schalter. Vorgabe AUS: eingeschaltet nach K-UB-1 mit Nutzer-Ja (Muster O29/B1)
+               spot_upbit_aktiv=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -68,6 +71,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: thesen_pausiert muss true oder false sein")
     if not isinstance(werte["spot_mitnahme_aktiv"], bool):
         raise ValueError("regel0_betrieb.yaml: spot_mitnahme_aktiv muss true oder false sein")
+    if not isinstance(werte["spot_upbit_aktiv"], bool):
+        raise ValueError("regel0_betrieb.yaml: spot_upbit_aktiv muss true oder false sein")
     if not (0 < float(werte["liquidations_warnung_abstand"]) < 1):
         raise ValueError("regel0_betrieb.yaml: liquidations_warnung_abstand als Anteil zwischen 0 und 1 (z. B. 0.15)")
     werte["liquidations_warnung_abstand"] = float(werte["liquidations_warnung_abstand"])
@@ -82,6 +87,14 @@ def thesen_pausiert(werte: dict | None = None) -> bool:
     Ein stiller Halt waere hier harmlos, aber er waere unsichtbar - die Vorgabe ist das bisherige Verhalten."""
     try:
         return bool((werte if werte is not None else lade())["thesen_pausiert"])
+    except Exception:                                          # noqa: BLE001
+        return False
+
+
+def spot_upbit_aktiv(werte: dict | None = None) -> bool:
+    """Spot B3 Upbit-Verkaufsmail an? (P16) - im Zweifel (Datei unlesbar) NEIN: dann laeuft nur das Protokoll."""
+    try:
+        return bool((werte if werte is not None else lade())["spot_upbit_aktiv"])
     except Exception:                                          # noqa: BLE001
         return False
 

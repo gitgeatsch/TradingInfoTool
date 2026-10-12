@@ -5698,3 +5698,40 @@ Nutzer 12.10.: *„Ja, Voranalyse P15 + P16 vorbereiten, prüfen und gegenprüfe
   - P16 bringt einen neuen Job, aber die **Mail ist aus**, bis du einschaltest.
 - Beides ist bündelbar: Keines schreibt in die Produktion oder ändert ein laufendes Signal.
 - Kontrollen **K-GUI-3** und **K-UB-1** mit **einer** Diagnose.
+
+### 47.6 P16 gebaut (12.10.2026)
+
+**Gebaut:**
+- `agent/spot_upbit.py`: `listing` (die Regel), `zuordnung`, `lauf`, `mail`, `stand`.
+- Job `spot_upbit_job` stündlich :40 UTC.
+- Schalter `spot_upbit_aktiv` (Vorgabe **aus**).
+- Ablage `data/spot_betrieb.db` (Tabellen `upbit_meldung`, `upbit_fall`, `upbit_lauf`, Protokoll D7).
+- Sichtbar: Teilexport *SPOT-UPBIT (B3)*, Statusseite (Karte Betrieb, Schalterkarte), GUI-3 Spalte *Upbit KRW*.
+
+⚠️ **Fund der Gegenprobe G4 — betrifft auch B1:**
+- Der Mail-Hinweis *„gemessen auf Coins mit Binance-Spot, dieser liegt außerhalb“* prüfte bisher `mit_regel0_daten`. Dort zählen auch reine **Futures**-Reihen (KAS, BRETT, HYPE, CC, MON); der Hinweis wäre bei diesen Coins **fälschlich weggefallen**.
+- **Neu:** `betriebslage.mit_binance_spot`, also Binance-**Spot**-Tagesreihen aus `messdaten.db` (`quelle='binance_mess'`; am NB die Betriebskopie) und `stundenkurse_alle._quelle` mit `markt='spot'`.
+- Gilt in **B1 und B3**. B1 ändert damit nur den Hinweistext, nicht die Auslösung.
+
+**Nachweis:**
+- **Teil 0 (R-R11)** `p16_teil0.py`: Die Betriebsregel findet am Archiv dieselben **137** Ereignisse (Kürzel und Zeit) wie `c2_messung.ereignisse`.
+- `p16_pruefstand.py` **12/12** (Wegwerf-Kopie der NB-Sicherung, Upbit gestellt, Versand abgefangen):
+  - Startmarke;
+  - Kreis abgeleitet;
+  - BEAMX-Listing → **eine** Mail mit der ganzen Menge, danach keine weitere;
+  - Coin nicht im Bestand und Kern → nichts;
+  - CANTON über CC;
+  - 7 h alt → verpasst;
+  - Schalter aus → Protokoll, eingeschaltet → Mail kommt nach;
+  - Doppelmeldung einmal;
+  - Upbit-Fehler → Lauf mit Fehler, kein Abbruch;
+  - Stand für Statusseite/Teilexport;
+  - Produktion unverändert.
+- `p16_gegenprobe.py` **4/4**:
+  - eigene Regel ohne regulären Ausdruck (137 gleich);
+  - **echter** Upbit-Lauf auf der Kopie: Kreis ohne KRW gleich der eigenen Abfrage `/v1/ticker` (11);
+  - echter Abruf mit Startmarke;
+  - Binance-Spot-Hinweis gegen eigenes SQL (BEAMX, TURBO, CAT mit Spot; KAS, BRETT, SUPRA, HYPE, CANTON ohne).
+- Suite-Paket **SpotUpbit** 8/8, SpotMitnahme 9/9.
+
+**Am NB:** Pull + Neustart → **K-UB-1** (Schalter aus, ≥ 2 h). Danach dein Ja zum Einschalten → **K-UB-2** (beim ersten echten Listing).
