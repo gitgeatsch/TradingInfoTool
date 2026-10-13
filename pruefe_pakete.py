@@ -22243,6 +22243,8 @@ def paket_guikette() -> None:
     pruefe(P, "⚠️ P15e: die Schwerpunkt-Diversifikation ist im Bestand-Tab AUS und fuer GUI-5/O39 AUFBEWAHRT (portfolio.py gekennzeichnet)",
            "_refresh_diversifikation" not in _nur_code("ui/bestand_tab.py") and "def _refresh_diversifikation(" in _quelltext("ui/portfolio.py")
            and "AUFBEWAHRT fuer GUI-5" in io.open("ui/portfolio.py", encoding="utf-8").read())
+    pruefe(P, "P15g: Spot, Hebel und Aufteilung in EINEM senkrechten PanedWindow (Hoehe per Trennleiste verschiebbar), Fiat-Feld fest unten",
+           'ttk.PanedWindow(self, orient="vertical")' in _bt15 and _bt15.count("self._paned.add(") == 3 and 'cash_frame.pack(side="bottom"' in _bt15)
     pruefe(P, "P15e: Spot-Tabelle mit senkrechter UND waagrechter Laufleiste", "yscrollcommand=_ys.set" in _bt15 and "xscrollcommand=_xs.set" in _bt15)
     pruefe(P, "P15d: Gesamtwert OBEN (vor der Spot-Tabelle), Hebel-Summe in der Hebel-Ueberschrift - unten war sie bei 150 % nicht sichtbar",
            0 <= _bt15.find("self.total_label.pack(") < _bt15.find("self.tree = ttk.Treeview(") and "Eigenkapital zusammen" in _bt15)

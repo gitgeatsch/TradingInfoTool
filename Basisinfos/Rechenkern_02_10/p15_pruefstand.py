@@ -140,7 +140,7 @@ pruefe("P14", lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and lage(1000,
        "Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile")
 # P15d (13.10.2026, Nutzer: *"Summe fuer Hebel ist nicht sichtbar"*): Gesamtwert OBEN (vor der Spot-Tabelle), Hebel-Summe in der Hebel-Ueberschrift
 reihe = [w_ for w_ in tab.pack_slaves()]
-oben = reihe.index(tab.total_label) < reihe.index(tab._spot_rahmen)            # P15e: die Spot-Tabelle sitzt mit Laufleisten in einem Rahmen
+oben = reihe.index(tab.total_label) < reihe.index(tab._paned)                  # P15g: die drei Bereiche sitzen im verschiebbaren PanedWindow
 hk = tab.hebel_kopf.cget("text")
 pruefe("P15", oben and "Hebel-Eigenkapital" in tab.total_label.cget("text") and "offene Positionen: 2" in hk and "900.00" in hk and int(tab.tree.cget("height")) == 12,
        "Gesamtwert oben %s · Hebel-Ueberschrift '%s' · Spot-Hoehe %s" % (oben, hk, tab.tree.cget("height")))
@@ -155,6 +155,23 @@ hoehe = int(tab.tree.cget("height")) + int(tab.hebel_tree.cget("height")) + int(
 pruefe("P18", hoehe <= 16 and int(tab.hebel_tree.cget("height")) == 2 and len(tab.aufteilung_tree.get_children()) == 2,
        "Zeilen zusammen %d (Spot %s + Hebel %s + Aufteilung %s) - vorher 13 + 3 + 7 = 23" % (
            hoehe, tab.tree.cget("height"), tab.hebel_tree.cget("height"), tab.aufteilung_tree.cget("height")))
+# P15g (13.10.2026, Nutzer: *"die drei Bereiche in der Hoehe anpassbar machen"*): ein senkrechtes PanedWindow mit Spot, Hebel, Aufteilung;
+# das Fiat-Feld haengt fest unten AUSSERHALB davon; die Trennleiste laesst sich setzen (Fenster kurz sichtbar, ausserhalb des Bildschirms)
+panes = [str(p_) for p_ in tab._paned.panes()]
+inhalt = [str(tab.tree.master), str(tab.hebel_tree.master), str(tab.aufteilung_tree.master)]
+root.deiconify()
+root.geometry("1400x900+-3000+-3000")
+nb.pack(fill="both", expand=True)
+root.update()
+vorher = tab._paned.sashpos(0)
+tab._paned.sashpos(0, max(50, vorher - 120))
+root.update()
+nachher = tab._paned.sashpos(0)
+pruefe("P19", str(tab._paned.cget("orient")) == "vertical" and panes == inhalt and vorher > 0 and nachher < vorher
+       and str(tab.cash_reserve_status.master) not in panes and "Speichern" in knoepfe,
+       "PanedWindow senkrecht, Bereiche %s · Trennleiste 1: %s -> %s · Fiat-Feld ausserhalb" % (
+           [p_.rsplit(".", 1)[-1] for p_ in panes], vorher, nachher))
+root.withdraw()
 pruefe("P17", bool(tab.tree.cget("yscrollcommand")) and bool(tab.tree.cget("xscrollcommand")), "Spot-Tabelle: senkrechte %s und waagrechte %s Laufleiste" % (
     bool(tab.tree.cget("yscrollcommand")), bool(tab.tree.cget("xscrollcommand"))))
 root.destroy()

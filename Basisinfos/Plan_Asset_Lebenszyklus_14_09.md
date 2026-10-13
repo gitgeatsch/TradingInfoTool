@@ -1164,3 +1164,11 @@ Nutzer 13.10. (Bild 06:38): *„unten ist entweder ein alter Bereich bzw. Multi-
   - Die Hebel-Tabelle ist so hoch wie die Zahl der Positionen (1–5).
   - Spot 12 Zeilen mit Laufleiste — zusammen **16** Zeilen.
 - **Nachweis:** `p15_pruefstand` **18/18** (neu P18 Höhe), `p15_gegenprobe` 4/4, GuiKette 58/58.
+
+### G-Z6 P15g — die drei Bereiche in der Höhe verschiebbar (13.10.2026)
+
+- Nutzer 13.10.: *„du kannst zusätzlich die drei Bereiche auch in der Höhe anpassbar machen zum Verschieben, wenn notwendig, oder?“*
+- **Gebaut:** Spot, Hebel und Aufteilung liegen in **einem senkrechten PanedWindow**; die Trennleisten lassen sich mit der Maus ziehen.
+  - Kopfzeile und Gesamtwert stehen fest oben.
+  - Das Fiat-Feld hängt fest unten und rutscht beim Ziehen nicht aus dem Fenster.
+- **Nachweis:** `p15_pruefstand` **19/19** (neu P19: drei Bereiche, Trennleiste programmgesteuert verschoben 479 → 359, Fiat-Feld außerhalb), GuiKette mit Wache P15g.

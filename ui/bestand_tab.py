@@ -268,8 +268,15 @@ class BestandTab(PortfolioView):
         # Anzeige nicht mehr ins Fenster
         self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
         self.total_label.pack(anchor="w", padx=8, pady=(2, 0))
-        rahmen = ttk.Frame(self)                                    # P15e: senkrechte UND waagrechte Laufleiste
-        rahmen.pack(fill="both", expand=True, padx=8, pady=(4, 6))
+        # P15g (13.10.2026, Nutzer: *"die drei Bereiche auch in der Hoehe anpassbar machen zum Verschieben"*): Spot, Hebel und Aufteilung
+        # liegen in EINEM senkrechten PanedWindow - die Trennleisten lassen sich mit der Maus ziehen. Das Fiat-Feld haengt FEST unten
+        # (zuerst gepackt, side=bottom), damit es beim Ziehen nie aus dem Fenster rutscht.
+        cash_frame = ttk.Frame(self)
+        cash_frame.pack(side="bottom", anchor="e", padx=8, pady=(0, 8))
+        self._paned = ttk.PanedWindow(self, orient="vertical")
+        self._paned.pack(fill="both", expand=True, padx=8, pady=(4, 4))
+        rahmen = ttk.Frame(self._paned)                             # P15e: senkrechte UND waagrechte Laufleiste
+        self._paned.add(rahmen, weight=4)
         self._spot_rahmen = rahmen
         self.tree = ttk.Treeview(rahmen, columns=SPALTEN, show="headings", height=12)          # P15f: 12 Zeilen, Rest ueber die Laufleiste
         for c in SPALTEN:
@@ -297,26 +304,28 @@ class BestandTab(PortfolioView):
         rahmen.rowconfigure(0, weight=1)
         rahmen.columnconfigure(0, weight=1)
 
-        self.hebel_kopf = ttk.Label(self, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold"))
-        self.hebel_kopf.pack(anchor="w", padx=8)                     # P15d: nennt die Hebel-Summe (Zahl, Eigenkapital zusammen)
-        self.hebel_tree = ttk.Treeview(self, columns=HEBEL_SPALTEN, show="headings", height=2)   # P15f: Hoehe = Zahl der Positionen (_langsam)
+        hebel_bereich = ttk.Frame(self._paned)
+        self._paned.add(hebel_bereich, weight=1)
+        self.hebel_kopf = ttk.Label(hebel_bereich, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold"))
+        self.hebel_kopf.pack(anchor="w", pady=(4, 0))                # P15d: nennt die Hebel-Summe (Zahl, Eigenkapital zusammen)
+        self.hebel_tree = ttk.Treeview(hebel_bereich, columns=HEBEL_SPALTEN, show="headings", height=2)   # P15f: Hoehe = Zahl der Positionen
         for c in HEBEL_SPALTEN:
             self.hebel_tree.heading(c, text=HEBEL_KOPF[c])
             self.hebel_tree.column(c, width=130 if c == "empfehlung" else 110, anchor="w" if c in ("asset", "richtung", "empfehlung") else "e")
         add_heading_tooltips(self.hebel_tree, HEBEL_TIPP)
-        self.hebel_tree.pack(fill="x", padx=8, pady=(2, 6))
+        self.hebel_tree.pack(fill="both", expand=True, pady=(2, 4))
 
         # P15e: AUFTEILUNG NACH ROLLE statt Diversifikation nach Schwerpunkt (die zieht mit GUI-5 nach Multi-Asset (ruht), Plan P20)
-        ttk.Label(self, text="Aufteilung nach Rolle", font=("", 10, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
-        self.aufteilung_tree = ttk.Treeview(self, columns=AUF_SPALTEN, show="headings", height=2)
+        auf_bereich = ttk.Frame(self._paned)
+        self._paned.add(auf_bereich, weight=1)
+        ttk.Label(auf_bereich, text="Aufteilung nach Rolle", font=("", 10, "bold")).pack(anchor="w", pady=(4, 2))
+        self.aufteilung_tree = ttk.Treeview(auf_bereich, columns=AUF_SPALTEN, show="headings", height=2)
         for c in AUF_SPALTEN:
             self.aufteilung_tree.heading(c, text=AUF_KOPF[c])
             self.aufteilung_tree.column(c, width=90 if c == "zeile" else 120, anchor="w" if c == "zeile" else "e")
         add_heading_tooltips(self.aufteilung_tree, AUF_TIPP)
-        self.aufteilung_tree.pack(fill="x", padx=8, pady=(0, 6))
+        self.aufteilung_tree.pack(fill="both", expand=True, pady=(0, 4))
 
-        cash_frame = ttk.Frame(self)
-        cash_frame.pack(anchor="e", padx=8, pady=(0, 8))
         ttk.Label(cash_frame, text="Fiat-Guthaben auf Börse (EUR, vom Bitpanda-Abgleich; Speichern nur als Ausnahme):").pack(side="left", padx=(0, 6))
         self.cash_reserve_var = tk.StringVar()
         ttk.Entry(cash_frame, textvariable=self.cash_reserve_var, width=10, justify="right").pack(side="left")
