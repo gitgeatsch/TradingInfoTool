@@ -970,6 +970,21 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     coingecko_id: nano
+  - symbol: XDC
+    name: XDC Network
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: xdce-crowd-sale
+  - symbol: CT
+    name: Concrete
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: concrete
+  - symbol: HBAR
+    name: Hedera
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: hedera-hashgraph
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:

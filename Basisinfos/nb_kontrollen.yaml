@@ -198,6 +198,16 @@ kontrollen:
     beleg: "Zwischenstand Diagnose 13.10. 12:12: Lauf 11:40 'Spot-Upbit: ok - 28 L-Bestaende, ohne KRW 12 - Meldungen neu 0 - Faelle 0 - gemailt 0' OHNE '(Schalter aus)' - der Schalter wirkt (wird je Lauf aus regel0_betrieb.yaml gelesen, griff schon nach dem Pull, vor dem Neustart 11:45); bis 10:40 noch '(Schalter aus)'. Kein ERROR seit 12.10. 12:58. Offen: das Ereignis (erstes echtes Listing)"
     faellig_bis: ""
     status: offen
+  - id: K-WL-1
+    titel: "Watchlist: HBAR neu, XDC und CT aus der NB-Ortsaenderung ins Repo (13.10., Nutzer-Ja); NB-config.yaml wieder gleich dem Repo"
+    seit: "2026-10-13"
+    paket: WL
+    commit: ""
+    art: manuell
+    nachweis: "vor dem Pull am NB: git diff Basisinfos/config.yaml enthaelt NUR die Bloecke XDC und CT (sonst erst ins Repo uebernehmen), dann git stash (nicht verwerfen) + Pull + Neustart Dienst und GUI. Diagnose danach: keine Warnung 'Position ohne Watchlist-Eintrag - Hedera (HBAR)'; holdings HBAR 1306,5162; price_cache HBAR (hedera-hashgraph); B1-Logzeile 07:10 'Fenster neu 1' bzw. Protokoll 'kein Kurs' bis price_history_ohlc HBAR hat, Kreis 29 L-Bestaende; git status am NB ohne config.yaml"
+    faellig_bis: "2026-10-16"
+    status: offen
+    beleg: "Befund 13.10.: NB-Watchlist hat XDC (Preise ab 28.09.) und CT (ab 08.10.), das Repo nicht - Ortsaenderung per GUI am NB, config.yaml im Repo seit 22.09. unveraendert. Ein Pull mit geaenderter config.yaml waere daran gescheitert. Gegenprobe Desktop auf Prod-Sicherung 13.10. 10:12: neue Watchlist ohne HBAR = NB-Watchlist (62 Eintraege, gleiche Reihenfolge); B1-Kreis 28 wie NB-Log (vorher am Desktop 27, XDC fehlte); Aufteilung L 11.037,17 (Bild 11:46: 11.072,46, Kurszeit), 'nicht in Watchlist' entfaellt; Zuordnung Katalog HBAR -> HBAR (vorher None)"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
