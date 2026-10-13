@@ -1154,3 +1154,13 @@ Nutzer 13.10. (Bild 06:38): *„unten ist entweder ein alter Bereich bzw. Multi-
 - `p15_pruefstand` **17/17**: P16 Aufteilung mit 7 Gruppen, Hebel 900 €, Anteile 100 %; P17 beide Laufleisten; P7 ohne Schwerpunkt-Tabelle.
 - `p15_gegenprobe` **4/4**: G4 Aufteilung per eigenem SQL, Abweichung 0,0000 €.
 - GuiKette **58/58** (Wachen: Aufteilung an gestellten Zeilen; Schwerpunkt aus und aufbewahrt; Laufleisten).
+
+### G-Z5 P15f — die Aufteilung passt ins Fenster (13.10.2026)
+
+- **Bild 13.10. 07:12:** Nutzer: *„der Bereich unten mit Aufteilung nach Rolle ist leer … ist das korrekt so?“* — Nein.
+- **Ursache:** Die Tabelle war nicht leer, sondern lag bei 150 % Anzeige **unter dem Fensterrand** (13 + 3 + 7 = 23 Tabellenzeilen).
+- **Behoben:**
+  - Die Aufteilung ist **waagrecht**: eine Spalte je Gruppe, zwei Zeilen *Wert (EUR)* und *Anteil %*, mit Mouseover je Gruppe.
+  - Die Hebel-Tabelle ist so hoch wie die Zahl der Positionen (1–5).
+  - Spot 12 Zeilen mit Laufleiste — zusammen **16** Zeilen.
+- **Nachweis:** `p15_pruefstand` **18/18** (neu P18 Höhe), `p15_gegenprobe` 4/4, GuiKette 58/58.

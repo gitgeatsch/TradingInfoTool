@@ -142,14 +142,19 @@ pruefe("P14", lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and lage(1000,
 reihe = [w_ for w_ in tab.pack_slaves()]
 oben = reihe.index(tab.total_label) < reihe.index(tab._spot_rahmen)            # P15e: die Spot-Tabelle sitzt mit Laufleisten in einem Rahmen
 hk = tab.hebel_kopf.cget("text")
-pruefe("P15", oben and "Hebel-Eigenkapital" in tab.total_label.cget("text") and "offene Positionen: 2" in hk and "900.00" in hk and int(tab.tree.cget("height")) == 13,
+pruefe("P15", oben and "Hebel-Eigenkapital" in tab.total_label.cget("text") and "offene Positionen: 2" in hk and "900.00" in hk and int(tab.tree.cget("height")) == 12,
        "Gesamtwert oben %s · Hebel-Ueberschrift '%s' · Spot-Hoehe %s" % (oben, hk, tab.tree.cget("height")))
 # P15e (13.10.2026, Nutzer: *"Ja, 1 bis 3 so umsetzen"*): Aufteilung nach Rolle, senkrechte Laufleiste
-auf = {tab.aufteilung_tree.set(i_, "gruppe"): (tab.aufteilung_tree.set(i_, "wert_eur"), tab.aufteilung_tree.set(i_, "anteil_pct"))
-       for i_ in tab.aufteilung_tree.get_children()}
+# P15f: waagrecht - Zeile 'Wert (EUR)' und 'Anteil %', eine Spalte je Gruppe
+auf = {g_: (tab.aufteilung_tree.set("auf|wert", g_), tab.aufteilung_tree.set("auf|anteil", g_)) for g_ in BT.AUF_REIHE
+       if tab.aufteilung_tree.set("auf|wert", g_) != "-"}
 summe_anteil = sum(float(v_[1]) for v_ in auf.values())
 pruefe("P16", set(auf) == {"Kern", "L", "Cash", "Fiat", "andere Klassen", "nicht in Watchlist", "Hebel"} and abs(summe_anteil - 100.0) < 0.5
        and auf["Hebel"][0] == "900.00", "Aufteilung %s · Anteile zusammen %.1f %%" % (auf, summe_anteil))
+hoehe = int(tab.tree.cget("height")) + int(tab.hebel_tree.cget("height")) + int(tab.aufteilung_tree.cget("height"))
+pruefe("P18", hoehe <= 16 and int(tab.hebel_tree.cget("height")) == 2 and len(tab.aufteilung_tree.get_children()) == 2,
+       "Zeilen zusammen %d (Spot %s + Hebel %s + Aufteilung %s) - vorher 13 + 3 + 7 = 23" % (
+           hoehe, tab.tree.cget("height"), tab.hebel_tree.cget("height"), tab.aufteilung_tree.cget("height")))
 pruefe("P17", bool(tab.tree.cget("yscrollcommand")) and bool(tab.tree.cget("xscrollcommand")), "Spot-Tabelle: senkrechte %s und waagrechte %s Laufleiste" % (
     bool(tab.tree.cget("yscrollcommand")), bool(tab.tree.cget("xscrollcommand"))))
 root.destroy()

@@ -75,15 +75,21 @@ HEBEL_TIPP = {
     "empfehlung": "Hebelführung H15: LIQUIDIERT > SCHLIESSEN > HEBEL SENKEN > LIQUIDATION NAHE > KURS FEHLT > STOP NACHZIEHEN > HALTEN. "
                   "Details, Kurs, Liquidationspreis und Finanzierung im Hebel-Tab.",
 }
-AUF_SPALTEN = ("gruppe", "wert_eur", "anteil_pct")
-AUF_KOPF = {"gruppe": "Gruppe", "wert_eur": "Wert (EUR)", "anteil_pct": "Anteil %"}
-AUF_TIPP = {
-    "gruppe": "Kern = BTC/ETH/SOL · L = übrige Krypto (Mitnahme ×3) · Cash = Stablecoins · Fiat = Euro-Guthaben auf der Börse · "
-              "andere Klassen = Aktien, ETF, Rohstoffe · nicht in Watchlist = gehalten, ohne Stammdaten · Hebel = Eigenkapital der offenen Positionen.",
-    "wert_eur": "Wert in Euro der Gruppe: Spot frei + gestakt zum letzten Kurs; bei Hebel das Eigenkapital.",
-    "anteil_pct": "Anteil der Gruppe am Gesamtwert (oben) - die Anteile ergeben zusammen 100 %.",
-}
 AUF_REIHE = ("Kern", "L", "Cash", "Fiat", "andere Klassen", "nicht in Watchlist", "Hebel")
+# P15f (13.10.2026, Nutzerbild: *"der Bereich unten mit Aufteilung nach Rolle ist leer"* - er lag unter dem Fensterrand): WAAGRECHT, eine
+# Spalte je Gruppe, zwei Zeilen (Wert, Anteil) - braucht drei statt acht Zeilen Hoehe
+AUF_SPALTEN = ("zeile",) + AUF_REIHE
+AUF_KOPF = dict({"zeile": ""}, **{g: g for g in AUF_REIHE})
+AUF_TIPP = {
+    "zeile": "Wert in Euro und Anteil am Gesamtwert (oben) je Gruppe - die Anteile ergeben zusammen 100 %.",
+    "Kern": "BTC, ETH, SOL - Akkumulation, frei + gestakt zum letzten Kurs.",
+    "L": "Übrige Krypto-Bestände (E-90) - geführt mit Mitnahme ×3 (B1) und Upbit-Verkaufsanlass (B3).",
+    "Cash": "Stablecoins (z. B. EURCV), frei + gestakt.",
+    "Fiat": "Euro-Guthaben auf der Börse (Bitpanda-Abgleich).",
+    "andere Klassen": "Aktien, ETF und Rohstoffe.",
+    "nicht in Watchlist": "Gehaltene Assets, die in der Watchlist fehlen (z. B. XDC) - ohne Rolle, nicht in B1/B3.",
+    "Hebel": "Eigenkapital der offenen Hebelpositionen - dieselbe Summe wie in der Hebel-Überschrift darüber.",
+}
 HEBEL_KOPF = {"asset": "Asset", "richtung": "Richtung", "hebel": "Hebel", "ek": "Eigenkapital", "abstand": "Abstand Liquidation",
               "empfehlung": "H15-Empfehlung"}
 
@@ -265,7 +271,7 @@ class BestandTab(PortfolioView):
         rahmen = ttk.Frame(self)                                    # P15e: senkrechte UND waagrechte Laufleiste
         rahmen.pack(fill="both", expand=True, padx=8, pady=(4, 6))
         self._spot_rahmen = rahmen
-        self.tree = ttk.Treeview(rahmen, columns=SPALTEN, show="headings", height=13)
+        self.tree = ttk.Treeview(rahmen, columns=SPALTEN, show="headings", height=12)          # P15f: 12 Zeilen, Rest ueber die Laufleiste
         for c in SPALTEN:
             self.tree.heading(c, text=KOPF[c])
             # P15c: Summe der Breiten passt auch bei 150 % Anzeige in ein Vollbild; dazu die waagrechte Laufleiste (keine Spalte verschwindet)
@@ -293,7 +299,7 @@ class BestandTab(PortfolioView):
 
         self.hebel_kopf = ttk.Label(self, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold"))
         self.hebel_kopf.pack(anchor="w", padx=8)                     # P15d: nennt die Hebel-Summe (Zahl, Eigenkapital zusammen)
-        self.hebel_tree = ttk.Treeview(self, columns=HEBEL_SPALTEN, show="headings", height=3)
+        self.hebel_tree = ttk.Treeview(self, columns=HEBEL_SPALTEN, show="headings", height=2)   # P15f: Hoehe = Zahl der Positionen (_langsam)
         for c in HEBEL_SPALTEN:
             self.hebel_tree.heading(c, text=HEBEL_KOPF[c])
             self.hebel_tree.column(c, width=130 if c == "empfehlung" else 110, anchor="w" if c in ("asset", "richtung", "empfehlung") else "e")
@@ -302,10 +308,10 @@ class BestandTab(PortfolioView):
 
         # P15e: AUFTEILUNG NACH ROLLE statt Diversifikation nach Schwerpunkt (die zieht mit GUI-5 nach Multi-Asset (ruht), Plan P20)
         ttk.Label(self, text="Aufteilung nach Rolle", font=("", 10, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
-        self.aufteilung_tree = ttk.Treeview(self, columns=AUF_SPALTEN, show="headings", height=len(AUF_REIHE))
+        self.aufteilung_tree = ttk.Treeview(self, columns=AUF_SPALTEN, show="headings", height=2)
         for c in AUF_SPALTEN:
             self.aufteilung_tree.heading(c, text=AUF_KOPF[c])
-            self.aufteilung_tree.column(c, width=160, anchor="w" if c == "gruppe" else "e")
+            self.aufteilung_tree.column(c, width=90 if c == "zeile" else 120, anchor="w" if c == "zeile" else "e")
         add_heading_tooltips(self.aufteilung_tree, AUF_TIPP)
         self.aufteilung_tree.pack(fill="x", padx=8, pady=(0, 6))
 
@@ -347,6 +353,7 @@ class BestandTab(PortfolioView):
         self.hebel_tree.delete(*self.hebel_tree.get_children())
         for z in self._hebel or [("Keine offenen Positionen", "-", "-", "-", "-", "-")]:
             self.hebel_tree.insert("", "end", values=z)
+        self.hebel_tree.configure(height=max(1, min(5, len(self._hebel))))
 
     def refresh(self, erzwingen: bool = False) -> None:
         jetzt = time.monotonic()
@@ -380,6 +387,9 @@ class BestandTab(PortfolioView):
                 format_money(s[k]) for k in ("frei", "gestakt", "fiat", "hebel_ek"))
             self.total_label.config(text="Gesamtwert: %s EUR  (%s)" % (format_money(s["gesamt"]), teile))
             self.aufteilung_tree.delete(*self.aufteilung_tree.get_children())
-            for g, w, a in aufteilung(zeilen, s):
-                self.aufteilung_tree.insert("", "end", iid="auf|" + g, values=(g, format_money(w), "%.1f" % a))
+            auf = {g: (w, a) for g, w, a in aufteilung(zeilen, s)}
+            self.aufteilung_tree.insert("", "end", iid="auf|wert", values=("Wert (EUR)",) + tuple(
+                format_money(auf[g][0]) if g in auf else "-" for g in AUF_REIHE))
+            self.aufteilung_tree.insert("", "end", iid="auf|anteil", values=("Anteil %",) + tuple(
+                ("%.1f" % auf[g][1]) if g in auf else "-" for g in AUF_REIHE))
         self.status.config(text="Stand %s · %d Bestände" % (datetime.now().strftime("%H:%M:%S"), len(zeilen)))

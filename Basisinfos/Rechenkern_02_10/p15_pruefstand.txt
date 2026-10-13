@@ -4,16 +4,17 @@ P3   bestanden B1: 27 Fenster fuer 27 L-Bestaende, x 1,00 am Starttag, Nicht-L '
 P4   bestanden Upbit KRW: 'nein' fuer 11 (ASTER, BEAMX, BNB, BRETT, CAT, HYPE, KAS, QNT, SUPRA, TURBO, VSN)
 P5   bestanden Hebel kurz: [('ETH', '11.3 %', 'LIQUIDATION NAHE'), ('BTC', '26.4 %', 'HALTEN')]
 P6   bestanden Summenzeile: Gesamtwert: 23,713.22 EUR  (Spot frei 16,487.53 · gestakt 6,057.45 · Fiat 268.24 · Hebel-Eigenkapital 900.00)
-P7   bestanden Knoepfe ['Aktualisieren', 'Speichern'] · Doppelklick gebunden · Aufteilung nach Rolle 7 Zeilen · keine Schwerpunkt-Tabelle
+P7   bestanden Knoepfe ['Aktualisieren', 'Speichern'] · Doppelklick gebunden · Aufteilung nach Rolle 2 Zeilen · keine Schwerpunkt-Tabelle
 P8   bestanden app.py haengt BestandTab als 'Bestand' ein · PortfolioView nicht mehr · Kennzeichnung in portfolio.py und letzte_bewertung.py
 P9   bestanden zweiter refresh ohne Aenderung: delete gerufen 0 mal
 P10  bestanden Produktion und Ablage nach dem Lesen unveraendert
-P11  bestanden Laufzeit: Aufbau 0.19 s · schneller Teil 0.004 s · langsamer Teil 0.07 s (Desktop)
+P11  bestanden Laufzeit: Aufbau 0.22 s · schneller Teil 0.004 s · langsamer Teil 0.08 s (Desktop)
 P12  bestanden Spaltenbreiten zusammen 1210 (x 1,5 = 1815 <= 1900) · waagrechte Laufleiste True
 P13  bestanden Einstand kompakt ('⚠' statt '(⚠ n unbepreist)'): lange Texte []
 P14  bestanden Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile
-P15  bestanden Gesamtwert oben True · Hebel-Ueberschrift 'Hebel – offene Positionen: 2 · Eigenkapital zusammen 900.00 EUR (kurz; Details im Hebel-Tab)' · Spot-Hoehe 13
+P15  bestanden Gesamtwert oben True · Hebel-Ueberschrift 'Hebel – offene Positionen: 2 · Eigenkapital zusammen 900.00 EUR (kurz; Details im Hebel-Tab)' · Spot-Hoehe 12
 P16  bestanden Aufteilung {'Kern': ('5,906.83', '24.9'), 'L': ('10,388.68', '43.8'), 'Cash': ('295.76', '1.2'), 'Fiat': ('268.24', '1.1'), 'andere Klassen': ('5,487.07', '23.1'), 'nicht in Watchlist': ('466.64', '2.0'), 'Hebel': ('900.00', '3.8')} · Anteile zusammen 99.9 %
+P18  bestanden Zeilen zusammen 16 (Spot 12 + Hebel 2 + Aufteilung 2) - vorher 13 + 3 + 7 = 23
 P17  bestanden Spot-Tabelle: senkrechte True und waagrechte True Laufleiste
 
 Beispielzeilen:
@@ -24,4 +25,4 @@ Beispielzeilen:
   symbol=VVMX | rolle=- | frei=47.2015 | gestakt=- | value_eur=503.83 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
   symbol=XDC | rolle=nicht in Watchlist | frei=14999.7 | gestakt=- | value_eur=466.64 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
 
-17 von 17 bestanden
+18 von 18 bestanden
