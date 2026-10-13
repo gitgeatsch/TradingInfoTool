@@ -9,10 +9,10 @@
 - K-GUI-3b: Bild zeigt beide Hebel-Zeilen und die volle Aufteilung, die Summen sind nachgerechnet. Offen nur noch Mouseover rechts.
 - Kein ERROR seit 12.10. 12:58. Laufzeitwarnungen nur zu den Preis-Refresh-Zeiten (K-ST-3).
 - **Neu: HBAR** (1.306,52 Stück, ~102 EUR) liegt seit 13.10. 02:59 bei Bitpanda, steht aber nicht in der Watchlist. Deshalb fehlt es im Bestand-Tab, im Gesamtwert und in B1/B3.
-- **Watchlist-Abgleich (Nutzer-Ja):** HBAR aufgenommen. Dabei zeigte sich: XDC und CT stehen nur in der config.yaml am NB, nicht im Repo; sie wurden am NB über die GUI eingetragen. Beide sind jetzt identisch im Repo.
+- **Watchlist-Abgleich (Nutzer-Ja):** HBAR aufgenommen. Dabei zeigte sich: XDC und CT stehen nur in der config.yaml am NB, nicht im Repo; sie wurden am NB über die GUI eingetragen. XDC ist jetzt identisch im Repo. **Nutzer 13.10.:** CT war ein Airdrop, den Bitpanda zeitweise bereitgestellt hat; er wurde geswapped. CT ist deshalb **entfernt**. HBAR ist ein echter Trade wie XDC; beide laufen als L-Bestände.
   - Am NB vor dem Pull: `git diff` der config.yaml prüfen, dann `git stash` → K-WL-1.
   - XLM war in der Watchlist und im Bestand vollständig.
-  - Sonst keine Lücke: Im Log der letzten 3 Tage steht nur noch SPC als Staub (0,03 EUR). CT hat den Bestand 0.
+  - Sonst keine Lücke: Im Log der letzten 3 Tage steht nur noch SPC als Staub (0,03 EUR). CT ist entfernt (Bestand 0 seit 09.10.).
 
 **Stand 13.10.2026 (morgens):**
 - K-SP-2 erfüllt (A6: keine Stop-Mail mehr), K-UB-1 erfüllt.

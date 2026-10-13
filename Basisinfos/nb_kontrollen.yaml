@@ -199,15 +199,15 @@ kontrollen:
     faellig_bis: ""
     status: offen
   - id: K-WL-1
-    titel: "Watchlist: HBAR neu, XDC und CT aus der NB-Ortsaenderung ins Repo (13.10., Nutzer-Ja); NB-config.yaml wieder gleich dem Repo"
+    titel: "Watchlist: HBAR neu (echter Trade wie XDC), XDC aus der NB-Ortsaenderung ins Repo, CT entfernt (Airdrop, geswapped) - 13.10., Nutzer-Ja; NB-config.yaml wieder gleich dem Repo"
     seit: "2026-10-13"
     paket: WL
     commit: ""
     art: manuell
-    nachweis: "vor dem Pull am NB: git diff Basisinfos/config.yaml enthaelt NUR die Bloecke XDC und CT (sonst erst ins Repo uebernehmen), dann git stash (nicht verwerfen) + Pull + Neustart Dienst und GUI. Diagnose danach: keine Warnung 'Position ohne Watchlist-Eintrag - Hedera (HBAR)'; holdings HBAR 1306,5162; price_cache HBAR (hedera-hashgraph); B1-Logzeile 07:10 'Fenster neu 1' bzw. Protokoll 'kein Kurs' bis price_history_ohlc HBAR hat, Kreis 29 L-Bestaende; git status am NB ohne config.yaml"
+    nachweis: "vor dem Pull am NB: git diff Basisinfos/config.yaml enthaelt NUR die Bloecke XDC und CT (sonst erst ins Repo uebernehmen), dann git stash (nicht verwerfen) + Pull + Neustart Dienst und GUI. Diagnose danach: keine Warnung 'Position ohne Watchlist-Eintrag - Hedera (HBAR)'; holdings HBAR 1306,5162; price_cache HBAR (hedera-hashgraph); B1-Logzeile 07:10 'Fenster neu 1' bzw. Protokoll 'kein Kurs' bis price_history_ohlc HBAR hat, Kreis 29 L-Bestaende; CT nicht mehr in der Watchlist (Statusseite/Diagnose watchlist_stammdaten 62 Eintraege ohne CT), keine Warnung zu CT (Bestand 0); git status am NB ohne config.yaml"
     faellig_bis: "2026-10-16"
     status: offen
-    beleg: "Befund 13.10.: NB-Watchlist hat XDC (Preise ab 28.09.) und CT (ab 08.10.), das Repo nicht - Ortsaenderung per GUI am NB, config.yaml im Repo seit 22.09. unveraendert. Ein Pull mit geaenderter config.yaml waere daran gescheitert. Gegenprobe Desktop auf Prod-Sicherung 13.10. 10:12: neue Watchlist ohne HBAR = NB-Watchlist (62 Eintraege, gleiche Reihenfolge); B1-Kreis 28 wie NB-Log (vorher am Desktop 27, XDC fehlte); Aufteilung L 11.037,17 (Bild 11:46: 11.072,46, Kurszeit), 'nicht in Watchlist' entfaellt; Zuordnung Katalog HBAR -> HBAR (vorher None)"
+    beleg: "Befund 13.10.: NB-Watchlist hat XDC (Preise ab 28.09.) und CT (ab 08.10.), das Repo nicht - Ortsaenderung per GUI am NB, config.yaml im Repo seit 22.09. unveraendert. Ein Pull mit geaenderter config.yaml waere daran gescheitert. Gegenprobe Desktop auf Prod-Sicherung 13.10. 10:12: neue Watchlist ohne HBAR = NB-Watchlist (62 Eintraege, gleiche Reihenfolge); B1-Kreis 28 wie NB-Log (vorher am Desktop 27, XDC fehlte); Aufteilung L 11.037,17 (Bild 11:46: 11.072,46, Kurszeit), 'nicht in Watchlist' entfaellt; Zuordnung Katalog HBAR -> HBAR (vorher None). Nutzer 13.10.: *CT war zuerst ein Airdrop (zeitweise von BP bereitgestellt), wurde geswapped und kann entfernt werden. HBAR ist ein echter Trade analog XDC* -> CT aus der Watchlist (holdings CT 0 seit 09.10.; Bestand-Tab, B1-Kreis und Bitpanda-Abgleich ueberspringen Menge 0); XDC und HBAR als L-Bestaende (B1, B3)"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
