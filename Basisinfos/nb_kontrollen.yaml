@@ -206,8 +206,9 @@ kontrollen:
     art: manuell
     nachweis: "vor dem Pull am NB: git diff Basisinfos/config.yaml enthaelt NUR die Bloecke XDC und CT (sonst erst ins Repo uebernehmen), dann git stash (nicht verwerfen) + Pull + Neustart Dienst und GUI. Diagnose danach: keine Warnung 'Position ohne Watchlist-Eintrag - Hedera (HBAR)'; holdings HBAR 1306,5162; price_cache HBAR (hedera-hashgraph); B1-Logzeile 07:10 'Fenster neu 1' bzw. Protokoll 'kein Kurs' bis price_history_ohlc HBAR hat, Kreis 29 L-Bestaende; CT nicht mehr in der Watchlist (Statusseite/Diagnose watchlist_stammdaten 62 Eintraege ohne CT), keine Warnung zu CT (Bestand 0); git status am NB ohne config.yaml"
     faellig_bis: "2026-10-16"
-    status: offen
-    beleg: "Befund 13.10.: NB-Watchlist hat XDC (Preise ab 28.09.) und CT (ab 08.10.), das Repo nicht - Ortsaenderung per GUI am NB, config.yaml im Repo seit 22.09. unveraendert. Ein Pull mit geaenderter config.yaml waere daran gescheitert. Gegenprobe Desktop auf Prod-Sicherung 13.10. 10:12: neue Watchlist ohne HBAR = NB-Watchlist (62 Eintraege, gleiche Reihenfolge); B1-Kreis 28 wie NB-Log (vorher am Desktop 27, XDC fehlte); Aufteilung L 11.037,17 (Bild 11:46: 11.072,46, Kurszeit), 'nicht in Watchlist' entfaellt; Zuordnung Katalog HBAR -> HBAR (vorher None). Nutzer 13.10.: *CT war zuerst ein Airdrop (zeitweise von BP bereitgestellt), wurde geswapped und kann entfernt werden. HBAR ist ein echter Trade analog XDC* -> CT aus der Watchlist (holdings CT 0 seit 09.10.; Bestand-Tab, B1-Kreis und Bitpanda-Abgleich ueberspringen Menge 0); XDC und HBAR als L-Bestaende (B1, B3)"
+    status: erfuellt
+    erfuellt_am: "2026-10-13"
+    beleg: "Befund 13.10.: NB-Watchlist hat XDC (Preise ab 28.09.) und CT (ab 08.10.), das Repo nicht - Ortsaenderung per GUI am NB, config.yaml im Repo seit 22.09. unveraendert. Ein Pull mit geaenderter config.yaml waere daran gescheitert. Gegenprobe Desktop auf Prod-Sicherung 13.10. 10:12: neue Watchlist ohne HBAR = NB-Watchlist (62 Eintraege, gleiche Reihenfolge); B1-Kreis 28 wie NB-Log (vorher am Desktop 27, XDC fehlte); Aufteilung L 11.037,17 (Bild 11:46: 11.072,46, Kurszeit), 'nicht in Watchlist' entfaellt; Zuordnung Katalog HBAR -> HBAR (vorher None). Nutzer 13.10.: *CT war zuerst ein Airdrop (zeitweise von BP bereitgestellt), wurde geswapped und kann entfernt werden. HBAR ist ein echter Trade analog XDC* -> CT aus der Watchlist (holdings CT 0 seit 09.10.; Bestand-Tab, B1-Kreis und Bitpanda-Abgleich ueberspringen Menge 0); XDC und HBAR als L-Bestaende (B1, B3) | Diagnose 13.10. 17:34 (NB auf d4c78da8, Neustarts 16:02 und 17:30): Watchlist NB 62 = Repo (Punkt 17), XDC/HBAR mit Name und CoinGecko-ID, CT weg; 16:02:40 'Aenderung HBAR: frei 0 -> 1306,5162 (Zuwachs)', holdings HBAR 1306,51619436; keine Warnung 'ohne Watchlist-Eintrag' mehr, nur Staub SPC (0,03 EUR); Upbit 16:40 '29 L-Bestaende, ohne KRW 12'; kein ERROR seit 12.10. 12:58. Offen als Folge: HBAR hat noch keine Tageskerzen (Kraken-OHLC zuletzt 12.10. 02:05 - der 24-h-Takt beginnt bei jedem Neustart neu, HBAR nicht in KRAKEN_PAIR_MAP, kommt ueber den Rueckfall Boersen-Klines beim naechsten Lauf, spaetestens wenn der Waechter die Kraken-Reihen als veraltet sieht) - bis dahin B1 'kein Kurs', dann 'Fenster neu' HBAR"
   - id: K-GIT-1
     titel: "P21 Git-Stand des NB in der Diagnose, Watchlist gegen das Repo (Exportkatalog Punkt 17)"
     seit: "2026-10-13"
@@ -216,7 +217,9 @@ kontrollen:
     art: manuell
     nachweis: "Pull genuegt, kein Neustart (die Diagnose ist ein eigenes Skript). Naechste Diagnose: Abschnitt git_stand mit dem gepushten Commit (quelle git), geaendert leer oder nur config.yaml.bak, Stash 'NB-Watchlist XDC CT' sichtbar; Punkt 17: Watchlist NB = Repo (62), keine Abweichung ausser der Stash-Erinnerung. Nach K-WL-1 am NB 'git stash drop', dann meldet Punkt 17 nichts mehr"
     faellig_bis: "2026-10-16"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-13"
+    beleg: "Diagnose 13.10. 17:34: git_stand head d4c78da8 (quelle git, Zweig main), 0 Commits hinter origin/main, geaendert [] (config.yaml.bak am NB NICHT geaendert - gemessen), Stash 'NB-Watchlist XDC CT'; Punkt 17: Watchlist 62/62 gegen config.yaml zum NB-Commit, einzige Meldung die Stash-Erinnerung -> Nutzer: git stash drop"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
