@@ -5735,3 +5735,19 @@ Nutzer 12.10.: *„Ja, Voranalyse P15 + P16 vorbereiten, prüfen und gegenprüfe
 - Suite-Paket **SpotUpbit** 8/8, SpotMitnahme 9/9.
 
 **Am NB:** Pull + Neustart → **K-UB-1** (Schalter aus, ≥ 2 h). Danach dein Ja zum Einschalten → **K-UB-2** (beim ersten echten Listing).
+
+### 47.7 B3 eingeschaltet, mit Begründung in der Mail (13.10.2026)
+
+- Nutzer 13.10.: *„Ja, schreibe noch dazu, warum ein Upbit-Listing positiv oder negativ ist“*. Voraussetzung **K-UB-1** ist erfüllt: Läufe seit 12.10. 13:40 fehlerfrei, 12 Coins ohne KRW-Markt, keine Mail.
+- **Schalter** `spot_upbit_aktiv: true`.
+- **Neu in der Mail** (Abschnitt *2 Warum*), ausdrücklich als *fachliche Erklärung – gemessen ist nur der Kursverlauf* gekennzeichnet:
+
+| | |
+|---|---|
+| positiv, erste Stunden | Upbit ist die größte Börse Südkoreas. Der Won-Markt öffnet den Coin für viele Privatanleger, die Nachfrage springt, oft mit Aufschlag gegenüber anderen Börsen |
+| negativ, danach | Arbitrage (günstiger anderswo kaufen, in Korea verkaufen), frühe Halter nehmen den Sprung mit (*sell the news*), die Aufmerksamkeit lässt nach |
+| für den Halter | Der Sprung ist die Verkaufsgelegenheit; Halten danach lag gemessen 10 Pp unter BTC |
+
+- ⚠️ Die Gründe sind **nicht gemessen** (Regel *Erklärung ist kein Befund*). Gemessen sind nur +12 % bis +4 h und −10 Pp gegen BTC in 7 T.
+- `p16_pruefstand` **12/12** (S2 prüft die Begründung und die Kennzeichnung).
+- Am NB: **K-UB-2** (Ereignis).

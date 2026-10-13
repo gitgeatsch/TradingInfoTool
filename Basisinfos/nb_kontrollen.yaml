@@ -189,12 +189,12 @@ kontrollen:
     faellig_bis: "2026-10-16"
     status: offen
   - id: K-UB-2
-    titel: "P16 Spot B3 eingeschaltet (nach Nutzer-Ja): bei einem echten KRW-Listing eines L-Bestands binnen 6 h Mail 'X verkaufen (Upbit-Listing)' mit Wochen-/Tageschart"
+    titel: "P16 Spot B3 EINGESCHALTET 13.10. (Nutzer-Ja): bei einem echten KRW-Listing eines L-Bestands binnen 6 h Mail 'X verkaufen (Upbit-Listing)' mit Wochen-/Tageschart"
     seit: "2026-10-12"
     paket: P16
     commit: ""
     art: ereignis
-    nachweis: "beim ersten echten Listing: Log 'gemailt 1', Mail mit Belegstufe und Upbit-Titel; selten (~1,5 im Jahr)"
+    nachweis: "nach Pull + Neustart: Logzeilen 'Spot-Upbit: ok ...' OHNE '(Schalter aus - nur Protokoll)'; beim ersten echten Listing: Log 'gemailt 1', Mail mit Belegstufe, Begruendung positiv/negativ und Upbit-Titel; selten (~1,5 im Jahr)"
     faellig_bis: ""
     status: offen
   - id: K-ALARM-2

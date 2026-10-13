@@ -186,7 +186,14 @@ def mail(fall: dict, ausserhalb_binance: bool = False, gestakt: float | None = N
           "  Upbit hat %s für den Handel in Won (KRW) angekündigt: %s UTC, vor %s Stunden." % (
               fall["kuerzel"] if fall["kuerzel"] == s else "%s (%s)" % (s, fall["kuerzel"]), fall["utc"][:16], ("%.1f" % fall["alter_h"]).replace(".", ",")),
           "  " + BELEG + ".",
-          "  In den ersten Stunden nach der Meldung stieg der Kurs im Median um 12 % – danach wurde der Anstieg abgegeben."]
+          "  In den ersten Stunden nach der Meldung stieg der Kurs im Median um 12 % – danach wurde der Anstieg abgegeben.",
+          "",
+          "  Warum ein Upbit-Listing erst positiv und dann negativ wirkt (fachliche Erklärung – gemessen ist nur der Kursverlauf oben):",
+          "  · Positiv, in den ersten Stunden: Upbit ist die größte Börse Südkoreas. Der Won-Markt öffnet den Coin für viele Privatanleger,",
+          "    die ihn bisher nicht kaufen konnten – die Nachfrage springt, oft mit Aufschlag gegenüber anderen Börsen.",
+          "  · Negativ, danach: Händler kaufen den Coin günstiger an anderen Börsen und verkaufen ihn in Korea (Arbitrage), frühe Halter",
+          "    nehmen den Sprung mit („sell the news“), und die Aufmerksamkeit lässt nach – der Anstieg wird abgegeben.",
+          "  · Für dich als Halter: Der Sprung ist die Verkaufsgelegenheit; wer danach hält, lag gemessen im Mittel 10 Prozentpunkte unter BTC."]
     if ausserhalb_binance:
         z.append("  Hinweis: Gemessen ist auf Coins mit Binance-Spot; %s liegt außerhalb – angewandt, nicht auf ihm gemessen." % s)
     z += ["", "3  KONTEXT (keine Handlung)"]

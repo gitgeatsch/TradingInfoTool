@@ -19,6 +19,13 @@ Muster der Mail (S2):
   Upbit hat BEAMX für den Handel in Won (KRW) angekündigt: 2026-10-12 09:00 UTC, vor 1,0 Stunden.
   Gemessen ab 2024 an 32 Upbit-Listings von Coins, die schon handelten: Halten lag nach 7 Tagen 10 Prozentpunkte unter BTC (schadet, Rang 0,00 gegen Zufall der Klasse); in Dollar fiel der Coin in 25 von 32 Fällen, im Mittel −8,5 % (Spot §38.4, §42.2).
   In den ersten Stunden nach der Meldung stieg der Kurs im Median um 12 % – danach wurde der Anstieg abgegeben.
+
+  Warum ein Upbit-Listing erst positiv und dann negativ wirkt (fachliche Erklärung – gemessen ist nur der Kursverlauf oben):
+  · Positiv, in den ersten Stunden: Upbit ist die größte Börse Südkoreas. Der Won-Markt öffnet den Coin für viele Privatanleger,
+    die ihn bisher nicht kaufen konnten – die Nachfrage springt, oft mit Aufschlag gegenüber anderen Börsen.
+  · Negativ, danach: Händler kaufen den Coin günstiger an anderen Börsen und verkaufen ihn in Korea (Arbitrage), frühe Halter
+    nehmen den Sprung mit („sell the news“), und die Aufmerksamkeit lässt nach – der Anstieg wird abgegeben.
+  · Für dich als Halter: Der Sprung ist die Verkaufsgelegenheit; wer danach hält, lag gemessen im Mittel 10 Prozentpunkte unter BTC.
   Hinweis: Gemessen ist auf Coins mit Binance-Spot; BEAMX liegt außerhalb – angewandt, nicht auf ihm gemessen.
 
 3  KONTEXT (keine Handlung)

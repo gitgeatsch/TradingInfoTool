@@ -108,7 +108,7 @@ meldung(901, "빔엑스(BEAMX) 신규 거래지원 안내 (KRW, USDT 마켓)", 1
 r = job(J1)
 m = [p for p in POST if "BEAMX" in p[0]]
 menge = kreis.get("BEAMX")
-pruefe("S2", len(m) == 1 and "GANZE Position" in m[0][1] and SM._menge(menge) in m[0][1] and m[0][0].startswith("TradingInfoTool: Spot: BEAMX verkaufen"),
+pruefe("S2", len(m) == 1 and "GANZE Position" in m[0][1] and "erst positiv und dann negativ" in m[0][1] and "gemessen ist nur der Kursverlauf" in m[0][1] and SM._menge(menge) in m[0][1] and m[0][0].startswith("TradingInfoTool: Spot: BEAMX verkaufen"),
        "Mail %d · Betreff %s · Menge %s" % (len(m), m[0][0] if m else "-", SM._menge(menge) if menge else "-"))
 r2 = job(J1 + timedelta(minutes=30))
 pruefe("S2b", len([p for p in POST if "BEAMX" in p[0]]) == 1, "zweiter Lauf: Mails BEAMX weiter %d" % len([p for p in POST if "BEAMX" in p[0]]))
