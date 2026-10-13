@@ -3880,11 +3880,25 @@ def main() -> None:
             "beobachtungsstatus": a.beobachtungsstatus,
             "hauptgruppe": a.hauptgruppe,
             "unterkategorie": a.unterkategorie,
+            # P21 (13.10.2026): Name und CoinGecko-ID, damit der Abgleich NB gegen Repo (git_stand.bewerte) auch eine
+            # falsche ID findet - eine falsche ID ist so schlimm wie ein fehlender Eintrag. Additiv, kein Leser bricht.
+            "name": a.name,
+            "coingecko_id": a.coingecko_id,
         }
         for a in watchlist
     }
 
+    # ⚠️⚠️ P21 (13.10.2026, Voranalyse Schritt7 §23.48): AUF WELCHEM STAND IST DER NB, und was ist dort VON HAND
+    # geaendert? XDC und CT standen ab 08.10. nur in der NB-config.yaml (GUI), fuenf Tage unbemerkt. Klein, daher
+    # auch in der schlanken Fassung; nur lesend (--no-optional-locks), wirft nie.
+    try:
+        import git_stand as _GS
+        git_stand_abschnitt = _GS.lesen()
+    except Exception as exc:  # noqa: BLE001 - die Diagnose darf hieran nie sterben
+        git_stand_abschnitt = {"nicht_verfuegbar": "%s: %s" % (type(exc).__name__, exc)}
+
     payload = {
+        "git_stand": git_stand_abschnitt,
         "watchlist_stammdaten": watchlist_stammdaten,
         "hebel_faktensaetze": hebel_faktensaetze,
         "richtungsverteilung": richtungsverteilung,

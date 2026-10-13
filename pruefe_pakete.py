@@ -22295,6 +22295,130 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_gitstand() -> None:
+    """P21 (13.10.2026, Voranalyse Schritt7 §23.48): GIT-STAND DES NB IN DER DIAGNOSE, WATCHLIST GEGEN DAS REPO.
+
+    ⚠️⚠️ Anlass: XDC und CT standen ab 08.10. nur in der config.yaml AM NB (GUI-Aufnahme), fuenf Tage unbemerkt - die
+    Diagnose zeigte XDC, aber nichts verglich. Geprueft wird am SEITENEFFEKT in einem Wegwerf-Repo (nie im Projekt):
+    Index bitgleich, Aenderung erkannt, ohne Aenderung KEINE Meldung (die Pruefung kann scheitern), ohne git kein Absturz."""
+    P = "GitStand"
+    import hashlib as _hl
+    import io as _io
+    import os as _os
+    import shutil as _sh
+    import subprocess as _sp
+    import tempfile as _tf
+    import time as _t
+    from pathlib import Path as _Pa
+
+    import git_stand as _GS
+
+    _git = _GS._git_pfad()
+    if not _git:
+        pruefe(P, "git am Desktop vorhanden (sonst ist P21 hier nicht pruefbar)", False, "git nicht im Pfad")
+        return
+    _w = _Pa(_tf.mkdtemp(prefix="p21_"))
+    _cfg = _w / "Basisinfos" / "config.yaml"
+    _bak = _w / "Basisinfos" / "config.yaml.bak"
+
+    def _run(*a):
+        return _sp.run([_git, *a], cwd=str(_w), capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
+
+    def _idx():
+        return _hl.sha256((_w / ".git" / "index").read_bytes()).hexdigest()
+
+    def _eintrag(s, cg):
+        return "  - symbol: %s\n    name: %s\n    rolle: taktisch\n    beobachtungsstatus: beobachtung\n    coingecko_id: %s\n" % (s, s, cg)
+
+    def _stamm(text):
+        import yaml as _y
+        return {e["symbol"]: {"assetklasse": e.get("assetklasse", "krypto"), "rolle": e["rolle"], "beobachtungsstatus": e["beobachtungsstatus"],
+                              "name": e["name"], "coingecko_id": e.get("coingecko_id")} for e in _y.safe_load(text)["watchlist"]}
+    try:
+        _run("init", "-q", "-b", "main")
+        _run("config", "user.email", "p21@test")
+        _run("config", "user.name", "p21")
+        _cfg.parent.mkdir(parents=True)
+        _basis = "watchlist:\n" + _eintrag("BTC", "bitcoin") + _eintrag("XLM", "stellar") + "\nstrategien: []\n"
+        _cfg.write_text(_basis, encoding="utf-8")
+        _bak.write_text(_basis, encoding="utf-8")
+        _run("add", "-A")
+        _run("commit", "-q", "-m", "basis")
+        _head = _run("rev-parse", "HEAD").strip()
+
+        # G1 ohne Aenderung: HEAD stimmt, nichts geaendert, KEINE Meldung - und der Index bleibt bitgleich, auch nach touch
+        _os.utime(_cfg, None)
+        _t.sleep(1.1)
+        _vor = _idx()
+        _g1 = _GS.lesen(_w)
+        _m1, _i1 = _GS.bewerte({"git_stand": _g1, "watchlist_stammdaten": _stamm(_basis)}, _w)
+        pruefe(P, "⚠️⚠️ ohne Seiteneffekt: nach touch einer versionierten Datei bleibt die Index-Datei bitgleich (--no-optional-locks)",
+               _idx() == _vor, "Index %s" % ("bitgleich" if _idx() == _vor else "GESCHRIEBEN"))
+        pruefe(P, "ohne Aenderung: Commit wie git rev-parse, geaendert leer, Stash leer, keine Auffaelligkeit",
+               _g1["head"] == _head and _g1["geaendert"] == [] and _g1["stash"] == [] and _m1 == [] and not _g1["fehler"],
+               "head %s/%s · geaendert %s · Meldungen %s" % ((_g1["head"] or "-")[:8], _head[:8], _g1["geaendert"], _m1))
+        # Gegenprobe zum Schalter: OHNE --no-optional-locks wird der Index geschrieben - sonst bewiese G1 nichts
+        _os.utime(_cfg, None)
+        _t.sleep(1.1)
+        _vor = _idx()
+        _run("status", "--porcelain")
+        pruefe(P, "Gegenprobe: ohne den Schalter schreibt git status den Index (der Schalter ist noetig)", _idx() != _vor)
+
+        # G2 die GUI-Aufnahme am NB nachgestellt: XDC angehaengt -> config.yaml lokal geaendert UND Watchlist nur am NB
+        _neu = _basis.replace("\nstrategien", _eintrag("XDC", "xdce-crowd-sale") + "\nstrategien")
+        _cfg.write_text(_neu, encoding="utf-8")
+        _bak.write_text(_neu, encoding="utf-8")
+        _g2 = _GS.lesen(_w)
+        _m2, _i2 = _GS.bewerte({"git_stand": _g2, "watchlist_stammdaten": _stamm(_neu)}, _w)
+        pruefe(P, "⚠️⚠️ der Fall XDC: lokal geaenderte config.yaml UND 'Watchlist nur am NB: XDC' gemeldet; config.yaml.bak nur als Info",
+               ("M", "Basisinfos/config.yaml") in [tuple(x) for x in _g2["geaendert"]]
+               and any("lokal geaendert: M Basisinfos/config.yaml " in z for z in _m2)
+               and any("nur am NB" in z and "XDC" in z for z in _m2) and not any("config.yaml.bak" in z for z in _m2)
+               and any("config.yaml.bak" in z and "bekannt" in z for z in _i2), "Meldungen %s" % _m2)
+        # G3 Feld weicht ab (falsche CoinGecko-ID) und Eintrag nur im Repo
+        _cfg.write_text(_basis, encoding="utf-8")
+        _bak.write_text(_basis, encoding="utf-8")
+        _s3 = _stamm(_basis)
+        _s3["XLM"]["coingecko_id"] = "stellar-falsch"
+        del _s3["BTC"]
+        _m3, _ = _GS.bewerte({"git_stand": _GS.lesen(_w), "watchlist_stammdaten": _s3}, _w)
+        pruefe(P, "falsche CoinGecko-ID und Eintrag nur im Repo werden gemeldet",
+               any("XLM: coingecko_id" in z for z in _m3) and any("nur im Repo" in z and "BTC" in z for z in _m3), "%s" % _m3)
+        # G4 aeltere Diagnose ohne name/coingecko_id: kein Fehlalarm aus fehlenden Feldern
+        _s4 = {k: {f: v for f, v in e.items() if f not in ("name", "coingecko_id")} for k, e in _stamm(_basis).items()}
+        _m4, _ = _GS.bewerte({"git_stand": _GS.lesen(_w), "watchlist_stammdaten": _s4}, _w)
+        pruefe(P, "aeltere Diagnose ohne name/coingecko_id: kein Fehlalarm", _m4 == [], "%s" % _m4)
+        # G5 Stash -> Erinnerung; G6 unbekannter Commit -> gegen HEAD mit Hinweis; fehlender Abschnitt -> Meldung
+        _cfg.write_text(_neu, encoding="utf-8")
+        _run("stash", "push", "-q", "-m", "NB-Watchlist XDC", "--", "Basisinfos/config.yaml")
+        _g5 = _GS.lesen(_w)
+        _m5, _ = _GS.bewerte({"git_stand": _g5, "watchlist_stammdaten": _stamm(_basis)}, _w)
+        _m6, _i6 = _GS.bewerte({"git_stand": dict(_g5, head="0" * 40), "watchlist_stammdaten": _stamm(_basis)}, _w)
+        _m7, _ = _GS.bewerte({"watchlist_stammdaten": _stamm(_basis)}, _w)
+        pruefe(P, "Stash wird als Erinnerung gemeldet; unbekannter NB-Commit -> gegen HEAD mit Hinweis; fehlendes git_stand -> Meldung",
+               len(_g5["stash"] or []) == 1 and any("Stash" in z for z in _m5) and any("hier unbekannt" in z for z in _i6)
+               and any("git_stand fehlt" in z for z in _m7), "Stash %s · Info %s · %s" % (_g5["stash"], _i6[-1:], _m7))
+        # G7 ohne git im Pfad (git=""): Commit aus den Dateien, auch aus packed-refs; keine Ausnahme; Punkt 17 sagt 'unbekannt'
+        _run("pack-refs", "--all")
+        _lose = (_w / ".git" / "refs" / "heads" / "main").exists()
+        _g7 = _GS.lesen(_w, git="")
+        _m8, _ = _GS.bewerte({"git_stand": _g7, "watchlist_stammdaten": _stamm(_basis)}, _w)
+        pruefe(P, "ohne git im Pfad: Commit aus .git (packed-refs), keine Ausnahme, Punkt 17 meldet 'unbekannt'",
+               _g7["head"] == _head and _g7["quelle_head"] == "dateien" and not _lose and _g7["geaendert"] is None
+               and any("unbekannt" in z for z in _m8), "head %s · lose Ref noch da %s · %s" % ((_g7["head"] or "-")[:8], _lose, _m8[:1]))
+    finally:
+        _sh.rmtree(_w, ignore_errors=True)
+
+    # G8 im Quelltext: die Diagnose schreibt git_stand (nicht unter den grossen, also auch schlank), Watchlist mit Name und ID;
+    # Punkt 17 ruft bewerte
+    import extract_notebook_diagnose as _X
+    _q = _io.open("extract_notebook_diagnose.py", encoding="utf-8").read()
+    _pe = _io.open("pruefe_export_standard.py", encoding="utf-8").read()
+    pruefe(P, "Diagnose: Abschnitt git_stand (auch schlank), watchlist_stammdaten mit name und coingecko_id; Punkt 17 im Exportkatalog",
+           '"git_stand": git_stand_abschnitt' in _q and "git_stand" not in _X.GROSSE_ABSCHNITTE and '"coingecko_id": a.coingecko_id' in _q
+           and '"name": a.name' in _q and "_GS.bewerte(d)" in _pe)
+
+
 def paket_spot_upbit() -> None:
     """SPOT B3 UPBIT-VERKAUFSANLASS (P16, 12.10.2026, Spot §47) - die Regel ist die der Messung C2-b, der Job haengt nicht an der Rollen-Kette.
 
@@ -32345,7 +32469,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit,
+          "SpotUpbit": paket_spot_upbit, "GitStand": paket_gitstand,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -3154,3 +3154,17 @@ Nutzer: *„warum hast du das nicht gesehen in der Diagnose?“*
 - den Stash „NB-Watchlist XDC CT“.
 
 Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
+
+**✔ Gebaut 13.10. (Nutzer: *„unabhängig davon kannst du den Punkt umsetzen“*):**
+- Modul `git_stand.py` mit `lesen` (Seite NB) und `bewerte` (Seite Desktop).
+- Die Diagnose hat den Abschnitt `git_stand`; die Watchlist trägt zusätzlich Namen und CoinGecko-ID.
+- Exportkatalog Punkt 17 „NB gegen Repo“.
+- Suite-Paket **GitStand 10/10**, im Wegwerf-Repo:
+  - Index bitgleich; Gegenprobe ohne Schalter: Index geschrieben;
+  - der Fall XDC wird gemeldet, `config.yaml.bak` nur als Info;
+  - falsche ID und Eintrag nur im Repo werden gemeldet;
+  - ältere Diagnose ohne Felder: kein Fehlalarm;
+  - Stash, unbekannter Commit und fehlender Abschnitt werden gemeldet;
+  - ohne `git` kommt der Commit aus `packed-refs`.
+- Mutationen: Ohne Schalter wird G1 rot, ohne Vergleich G2 und G3.
+- Punkt 17 auf der Diagnose von 12:12, also vor dem Pull: *git_stand fehlt*, *nur am NB: CT*, *nur im Repo: HBAR*. Das ist richtig für den Stand vor dem Pull.

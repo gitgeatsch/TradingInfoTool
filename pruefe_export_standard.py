@@ -432,6 +432,19 @@ def main() -> None:
                   f"systemguete={e.get('systemguete',0)} crv_baender={e.get('crv_baender',0)} "
                   f"score_gesamt={e.get('score_gesamt',0)}")
 
+    # 17 NB gegen Repo (P21, 13.10.2026, Voranalyse Schritt7 §23.48)
+    # ⚠️⚠️ XDC und CT standen ab 08.10. NUR in der config.yaml am NB (GUI-Aufnahme) - fuenf Tage, obwohl die Diagnose
+    # XDC zeigte: nichts verglich sie mit dem Repo. Hier wird verglichen - gegen die config.yaml ZUM Commit des NB.
+    import git_stand as _GS
+    _m17, _i17 = _GS.bewerte(d)
+    print("\n17. NB gegen Repo (Git-Stand, Watchlist):")
+    for _z in _i17:
+        print(f"{OK}{_z}")
+    for _z in _m17:
+        melde(_z)
+    if not _m17:
+        print(f"{OK}keine Abweichung")
+
     print()
     print("=" * 78)
     print(f"AUFFAELLIGKEITEN: {len(funde)}")
