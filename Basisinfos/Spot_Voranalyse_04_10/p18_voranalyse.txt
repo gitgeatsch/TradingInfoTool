@@ -1,0 +1,55 @@
+P18 VORANALYSE B4 · Messbasis bis 2026-09-20 · Universum 515 Coins (ohne Stablecoins/Sonder/Kern)
+
+TEIL 0 dieselbe Regel (E3, 20 Stichtage der Vormessung):
+   (a) streng, dieselben Coins wie die Messung: 7471 von 7471 Anker mit gleichem Fuenftel (BITGLEICH)
+   (b) frei, alle Coins mit Kurs am Stichtag: 7464 von 7471 gleich (99.91 %) · 2 Anker nur im Betrieb (ohne Kurs am Folgetag)
+
+TEIL 1 D3 Stammsatz (bis t-500) + 500-T-Fenster gegen volle Geschichte: 2216 Coin-Stichtage, 0 mit Abweichung in F1/F2/F8 (GLEICH)
+
+BESTAND (Prod-Sicherung): 29 L-Coins · Binance-Spot (live bis Messbasis-Ende) 18 · ausserhalb 11: ASTER, BRETT, CANTON, HYPE, KAS, MON, MORPHO, PLUME, SUPRA, VSN, XDC
+   davon mit Produktionsreihe >= 400 Kerzen (Uebernahmeregel): BRETT, HYPE, KAS, MORPHO, PLUME, SUPRA, XDC · zu jung/kurz: ASTER, CANTON, MON, VSN
+   Gegenprobe Uebernahme BRETT: 854 Tage gemeinsam, groesste rel. Abweichung Kurs 7.17e-04 · Umsatz 1.76e-02
+   Gegenprobe Uebernahme HYPE: 405 Tage gemeinsam, groesste rel. Abweichung Kurs 3.51e-02 · Umsatz 4.65e+00
+   Gegenprobe Uebernahme KAS: 1078 Tage gemeinsam, groesste rel. Abweichung Kurs 2.02e-02 · Umsatz 1.71e+00
+   Gegenprobe Uebernahme MORPHO: 637 Tage gemeinsam, groesste rel. Abweichung Kurs 1.26e-02 · Umsatz 9.90e-01
+   Gegenprobe Uebernahme PLUME: 484 Tage gemeinsam, groesste rel. Abweichung Kurs 1.71e-02 · Umsatz 2.39e+00
+   Gegenprobe Uebernahme SUPRA: 631 Tage gemeinsam, groesste rel. Abweichung Kurs 3.84e-03 · Umsatz 8.97e-03
+
+TEIL 2 Grundgesamtheit NB: ohne AIOZ, AKT, CAT, GRIFFAIN, mit Produktionsreihe BRETT, HYPE, KAS, MORPHO, PLUME, SUPRA, XDC
+   2026-08-01 Teil 2  Universum NB             gemeinsam 347 · anderes Fuenftel   1 (0.3 %) · andere Klasse 0 · unteres Fuenftel verlassen 0 / neu 0 · Bestand anders: -
+   2026-08-01 Teil 2b + Umlauf nur CoinGecko   gemeinsam 347 · anderes Fuenftel   7 (2.0 %) · andere Klasse 3 · unteres Fuenftel verlassen 0 / neu 0 · Bestand anders: -
+   2026-08-01 Coins ohne CoinGecko-Umlauf am NB (Ersatzklasse): 14 von 348
+   2026-09-01 Teil 2  Universum NB             gemeinsam 332 · anderes Fuenftel  11 (3.3 %) · andere Klasse 1 · unteres Fuenftel verlassen 3 / neu 0 · Bestand anders: KAIA 1->2, SEI 2->3
+   2026-09-01 Teil 2b + Umlauf nur CoinGecko   gemeinsam 332 · anderes Fuenftel  11 (3.3 %) · andere Klasse 4 · unteres Fuenftel verlassen 2 / neu 0 · Bestand anders: KAIA 1->2, SEI 2->3
+   2026-09-01 Coins ohne CoinGecko-Umlauf am NB (Ersatzklasse): 13 von 339
+
+TEIL 3 ERSTLISTE am 2026-09-01 (NB-Regel: Universum NB, Umlauf nur CoinGecko) - gehaltene L-Coins:
+   UNTEN HYPE     Fuenftel 1 (Klasse M, Perzentil 0.01)
+   UNTEN MORPHO   Fuenftel 1 (Klasse M, Perzentil 0.09)
+   UNTEN PLUME    Fuenftel 1 (Klasse S, Perzentil 0.10)
+   UNTEN SUI      Fuenftel 1 (Klasse H, Perzentil 0.12)
+   UNTEN TAO      Fuenftel 1 (Klasse H, Perzentil 0.04)
+   UNTEN TURBO    Fuenftel 1 (Klasse S, Perzentil 0.19)
+   UNTEN XDC      Fuenftel 1 (Klasse S, Perzentil 0.18)
+         BEAMX    Fuenftel 2 (Klasse S, Perzentil 0.38)
+         BIO      Fuenftel 2 (Klasse M, Perzentil 0.28)
+         BNB      Fuenftel 2 (Klasse H, Perzentil 0.33)
+         BRETT    Fuenftel 2 (Klasse S, Perzentil 0.32)
+         CAT      Fuenftel 2 (Klasse S, Perzentil 0.21)
+         KAIA     Fuenftel 2 (Klasse M, Perzentil 0.23)
+         KAS      Fuenftel 2 (Klasse S, Perzentil 0.22)
+         QNT      Fuenftel 2 (Klasse H, Perzentil 0.25)
+         HBAR     Fuenftel 3 (Klasse H, Perzentil 0.50)
+         INJ      Fuenftel 3 (Klasse M, Perzentil 0.49)
+         NEAR     Fuenftel 3 (Klasse H, Perzentil 0.46)
+         SEI      Fuenftel 3 (Klasse M, Perzentil 0.44)
+         SUPRA    Fuenftel 3 (Klasse S, Perzentil 0.45)
+         W        Fuenftel 3 (Klasse S, Perzentil 0.50)
+         ALGO     Fuenftel 4 (Klasse M, Perzentil 0.78)
+         AVAX     Fuenftel 4 (Klasse H, Perzentil 0.62)
+         LINK     Fuenftel 4 (Klasse H, Perzentil 0.71)
+         XLM      Fuenftel 4 (Klasse H, Perzentil 0.67)
+         ASTER    nicht eingeordnet - keine Reihe im Universum
+         CANTON   nicht eingeordnet - keine Reihe im Universum
+         MON      nicht eingeordnet - keine Reihe im Universum
+         VSN      nicht eingeordnet - keine Reihe im Universum

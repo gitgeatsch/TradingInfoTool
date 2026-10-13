@@ -5751,3 +5751,73 @@ Nutzer 12.10.: *„Ja, Voranalyse P15 + P16 vorbereiten, prüfen und gegenprüfe
 - ⚠️ Die Gründe sind **nicht gemessen** (Regel *Erklärung ist kein Befund*). Gemessen sind nur +12 % bis +4 h und −10 Pp gegen BTC in 7 T.
 - `p16_pruefstand` **12/12** (S2 prüft die Begründung und die Kennzeichnung).
 - Am NB: **K-UB-2** (Ereignis).
+
+
+## 48. Voranalyse P18 — Spot B4 Abbau-Reihenfolge (13.10.2026)
+
+Nutzer 13.10.: *„Ja, Voranalyse P18 vorbereiten, prüfen und gegenprüfen“*. Grundlage sind §39.7 (Handlung), §42.1 (Grundgesamtheit am NB) und §43 (Vormessung trägt, E-101).
+
+**Skripte** (Desktop, nur lesend; Prod-Sicherung 13.10. 15:34):
+- `p18_voranalyse.py` → `.txt`: Die Betriebsrechnung ist **eigenständig nachgebaut** (Klasse `B4`, ohne `mk_messung`). Sie dient so zugleich als Gegenprobe der Messung.
+- `p18_gegenprobe.py` → `.txt`: **5/5**.
+
+### 48.1 Was B4 im Betrieb tut
+
+| | |
+|---|---|
+| **Regel** | Am Monatsersten (Stichtag `t`, Tagesschluss) je Zelle *Stichtag × Marktwert-Klasse H/M/S* der Watchlist-Wert **ohne F9**: Mittel der Perzentile von F1 Tiefe unter dem Allzeithoch (unten), F2 Tage seit dem Hoch (oben), F8 Alter (oben). Ein Merkmal zählt nur in Zellen mit ≥ 10 Coins, die es haben; F1/F2 ab 180 Kerzen. **Unteres Fünftel** = Perzentil ≤ 0,2 |
+| **Handlung** (§39.7) | *„Wenn du abbaust: zuerst X“*. Eine **Ereignis-Mail**, wenn ein gehaltener L-Coin am Stichtag **neu** ins untere Fünftel fällt, und einmalig eine **Erstliste** bei Inbetriebnahme |
+| **Belegstufe** (§43, E-101) | Coins im unteren Fünftel lagen 12 Monate später **im Mittel 12,5 Prozentpunkte (Dollar) unter einem zufälligen Coin derselben Klasse** (ab 2024, 20 Stichtage, Rang 0,000). Je Klasse: H −33,9, M −16,8, S −9,4 Pp. *Vorläufig ohne TVL-Merkmal* |
+| **nicht gemessen** | die Reihenfolge **innerhalb** des unteren Fünftels. Die Mail ordnet deshalb nicht, sondern nennt alle als gleich belegt, mit Wert in EUR und Kosten je Klasse (D6) als Fakt |
+| **Kreis** | L-Bestände (frei + gestakt) wie B1/B3; Zuordnung zur Binance-Reihe über `symbol_zuordnung.csv` (CAT → 1000CAT) |
+| **nicht eingeordnet** | Coins ohne Reihe ≥ 400 Kerzen (heute ASTER, CANTON, MON, VSN): Zeile in der App *„nicht eingeordnet – zu jung (n T)“*, keine Mail |
+
+### 48.2 Gemessen und gegengeprüft
+
+| Teil | Frage | Ergebnis |
+|---|---|---|
+| **0 (R-R11)** | Gibt der Nachbau dieselben Fünftel wie die Vormessung? | **(a) bitgleich: 7.471 von 7.471** Ankern (E3, 20 Stichtage). (b) Mit allen Coins, die am Stichtag einen Kurs haben, wie der Betrieb sie kennt: 99,91 %. Die Messung brauchte zusätzlich den Kurs am Folgetag (2 Anker nur im Betrieb) |
+| **G1** | Gilt das auch außerhalb der Vormessung? Die **Funktionen der Messung** gegen den Nachbau | 01.08.2026: **349/349**, 01.09.2026: **332/332** Coins mit gleichem Fünftel |
+| **1 (D3)** | Reicht am NB ein **Stammsatz** (Hoch, Datum des Hochs, erster Kurs, Kerzenzahl bis zum Schnitt) plus das **500-T-Fenster** der Betriebskopie? | **2.216 von 2.216** Coin-Stichtage mit gleichen F1/F2/F8. G3 mit Schnitt 300 und 700 T: ebenfalls 0 Abweichungen |
+| **2 (Grundgesamtheit, §42.1)** | Betrieb = Binance-Spot + **Produktionsreihen der gehaltenen** Coins außerhalb (≥ 400 Kerzen: BRETT, HYPE, KAS, MORPHO, PLUME, SUPRA, **XDC**) statt der 10 festen Übernahmen (AIOZ, AKT, GRIFFAIN fallen weg; CAT nicht doppelt neben 1000CAT) | **01.08.** (alle Reihen da): **1 von 347** Coins mit anderem Fünftel (0,3 %), unteres Fünftel unverändert. 01.09.: 11 von 332 (3,3 %), weil die Übernahmen der Messbasis am 19.08. **eingefroren** sind. Dort ist der NB die richtigere Menge: KAIA 1 → 2, SEI 2 → 3 |
+| **2b (Umlauf)** | Am NB gibt es den Umlauf nur von CoinGecko (`umlaufmenge_cg.db`); CoinMetrics und das Strukturprofil liegen nur am Desktop | 14 von 348 Coins (01.08.) ohne CoinGecko-Umlauf bekommen die Ersatzklasse wie in der Messung. Wirkung: 7 von 347 mit anderem Fünftel (2,0 %), 3 mit anderer Klasse, **unteres Fünftel unverändert** |
+| **G2 (D5-Zuordnung)** | Ist der gehaltene Coin auch der Coin der Binance-Reihe? Tagesschluss der Produktion gegen die Messbasis, gleicher Tag, Median über 60 Tage | **17/17 zwischen 0,998 und 1,000** (CAT über Faktor 1.000). ⚠️ Der erste Lauf verglich den Preis-Cache vom 13.10. mit dem Schluss vom 20.09.; das meldete AVAX und NEAR fälschlich. Mein Testfehler, korrigiert |
+| Übernahmen gegen Produktion | Sind die Produktionsreihen dieselben wie die Übernahmen? | Kurs bis 3,5 % (HYPE) verschieden, **Umsatz bis Faktor 4,7** (HYPE, KAS: Bybit-Zeilen in der Produktion). Auf die Fünftel wirkt das kaum (Teil 2: 0,3 %), weil die Klasse am Marktwert hängt |
+
+**Erstliste**, Stand 01.09.2026 nach NB-Regel (Universum NB, Umlauf nur CoinGecko). Das ist der letzte Stichtag der Messbasis; der Betrieb rechnet den 01.10. selbst:
+- **unteres Fünftel: HYPE, MORPHO, PLUME, SUI, TAO, TURBO, XDC** (7 von 25 eingeordneten L-Coins).
+- KAIA steht knapp darüber (Perzentil 0,23), CAT 0,21, KAS 0,22.
+- Nicht eingeordnet: ASTER, CANTON, MON, VSN.
+
+⚠️ **Vorbehalt zu F8 Alter:** Es ist das Alter der **Reihe**, nicht das des Coins. Bei Coins außerhalb Binance beginnt die Reihe mit den Daten der Produktion: HYPE ab 11.07.2025, obwohl der Coin seit 11/2024 handelt. In der Messung galt dasselbe (die Übernahmen stammen aus derselben Quelle), die Regel ist also gleich. Fachlich liegt HYPE dadurch jünger, als es ist. Die Mail nennt F8 deshalb als *„Daten seit …“*.
+
+### 48.3 Wie der NB die Daten bekommt (ohne Handgriff am Desktop, Regel *Labor-only ist FAIL*)
+
+| Baustein | Quelle am NB | Neu |
+|---|---|---|
+| Kurse und Umsatz Binance-Spot | Betriebskopie `messdaten.db` (500 T, TRADING + BREAK, täglich 03:30) | – |
+| **D3 Stammsatz** | **einmal** am NB die ganze Kerzenreihe je Paar bei Binance (`lade_messreihen.hole_alles`, frei, etwa 534 × 3 Abrufe); danach bei jedem Lauf mit dem 500-T-Fenster fortgeschrieben (Teil 1/G3: gleich) | Tabelle `abbau_stamm` in `spot_betrieb.db`; ein neues Paar ohne Stammsatz wird beim Lauf nachgeholt |
+| gehaltene Coins außerhalb Binance | `price_history_ohlc` der Produktion, nur lesend, ≥ 400 Kerzen | – |
+| Umlauf | `umlaufmenge_cg.db` (täglich 06:35) | – |
+| Bestand | `holdings` frei + gestakt, Watchlist | – |
+
+⚠️ **Gesehen am 13.10.:** Die Tageskerzen der Produktion hängen am Kraken-OHLC-Job, dessen 24-h-Takt bei jedem Neustart neu beginnt. Fehlt einem Coin außerhalb Binance der Schluss des Stichtags, kommt er in **diesem** Lauf nicht ins Universum. **Festlegung:** Der Job rechnet ab dem 2. des Monats täglich nach dem Morgenlauf, bis alle Eingänge den Schluss des Stichtags haben, höchstens bis zum 5. Danach rechnet er mit dem, was da ist, und protokolliert die Fehlenden.
+
+### 48.4 Bauumfang (Vorschlag)
+
+| # | Inhalt |
+|---|---|
+| B4-1 | `agent/spot_abbau.py`: Regel = Klasse `B4` aus `p18_voranalyse.py` (Teil 0 bitgleich), Stammsatz, Lauf, Ablage in `spot_betrieb.db` (`abbau_stamm`, `abbau_lauf`, `abbau_fuenftel`) |
+| B4-2 | Job täglich 07:20 vom 2. bis 5. des Monats (siehe 48.3); Schalter `spot_abbau_aktiv` **aus** zuerst |
+| B4-3 | Mail: Erstliste einmal, danach nur **neu** im unteren Fünftel. Je Coin: Handlung, Belegstufe, Fakten (Tiefe vom Hoch, Tage seit Hoch, Daten seit, Klasse, Wert in EUR, Kosten je Seite), Kontext B1/B3 |
+| B4-4 | Bestand-Tab: Spalte **B4** (Fünftel 1–5 oder *nicht eingeordnet – Grund*) mit Mouseover |
+| B4-5 | Statusseite, Teilexport, Kontrollen **K-SP-3** (erster Lauf, Schalter aus), **K-SP-3b** (Erstliste nach dem Einschalten) |
+| B4-6 | Prüfstand am Seiteneffekt (Wegwerf-Produktion, Wegwerf-Ablage, Binance gestellt), Teil 0 im Suite-Paket |
+
+**Nicht in P18 (fachlich entschieden):**
+- **Futures-Start (Katalog 48):** trägt nicht (§39.5, Bootstrap 0,26). Er kommt als Auskunft in den Spot-Tab (P19), nicht in die Mail (E-91).
+- **D4 TVL:** bleibt hinter B4 (§39.9: das untere Fünftel bleibt auch ohne F9 das schlechteste).
+
+**Zur Entscheidung:**
+- **GUI-4 *Meine Assets* (O40, Stammdaten in die DB statt `config.yaml`).** Im Plan steht O40 bei P18. B4 braucht aber den **Kurs-Stammsatz D3**, nicht O40. O40 ist ein eigener Umbau mit vielen Lesern der Watchlist, und er würde die Pull-Kollision vom 13.10. (K-WL-1) an der Wurzel lösen.
+- Vorschlag: **O40 als eigenes Paket P18b** mit eigener Voranalyse, nach B4.
