@@ -3105,3 +3105,52 @@ Schalter `thesen_pausiert` in `regel0_betrieb.yaml`: `kategorie_synthese` und `k
 - **Fund G4:** Der Hinweis *außerhalb Binance* richtet sich in B1 und B3 nach Binance-**Spot** (`mit_binance_spot`), nicht nach REGEL0-Daten mit Futures.
 - Prüfstände 11/11 und 12/12, Gegenproben 3/3 und 4/4, Teil 0 137 gleich.
 - Am NB: **K-GUI-3**, **K-UB-1**; nach deinem Ja **K-UB-2**.
+
+### 23.48 P21: Git-Stand des NB in der Diagnose, Watchlist gegen das Repo (Voranalyse 13.10.2026)
+
+**Anlass.** Im Plan bei O26 steht seit dem 08.10.: XDC und CT wurden am NB über die GUI in die Watchlist eingetragen. Das änderte nur die config.yaml am NB, nicht das Repo. Aufgefallen ist es erst am 13.10. über eine Summe im Nutzerbild (L war 459 EUR höher als meine Rechnung, genau XDC). Die Folgen:
+- XDC fehlte am Desktop in allen Prüfungen.
+- Der Pull mit HBAR wäre abgebrochen.
+
+Nutzer: *„warum hast du das nicht gesehen in der Diagnose?“*
+
+**Ist-Stand am Code (geprüft):**
+- `extract_notebook_diagnose.py` schreibt `watchlist_stammdaten` mit Assetklasse, Rolle, Status und Gruppen, aber ohne Namen und ohne CoinGecko-ID. Zum Git-Stand schreibt es nichts.
+- `pruefe_export_standard.py` (16 Punkte) vergleicht nichts mit dem Repo.
+- In der Suite prüfen die Pakete *Export* und *Diagnoseumfang* nur die Abschnitte, nicht den Stand des Geräts.
+- Die Diagnose startet der Nutzer von Hand. Weder ein Job noch die GUI ruft sie auf.
+
+**Gemessen und gegengeprüft (Desktop, 13.10.):**
+
+| | Ergebnis |
+|---|---|
+| `git --no-optional-locks status --porcelain --untracked-files=no` + `rev-parse HEAD` + `stash list` | 0,14 s; die Index-Datei bleibt bitgleich |
+| Gegenprobe ohne `--no-optional-locks` (nach `touch` einer versionierten Datei) | Index **geschrieben**. Der Schalter ist also nötig, sonst hätte die Diagnose am NB einen Seiteneffekt im Repo |
+| Rückwirkend: NB-Watchlist (Diagnose 12:12) gegen config.yaml zu **b7f2b325** | *nur NB:* **XDC, CT** - der Abgleich hätte es gefunden |
+| dieselbe NB-Liste gegen **000659eb** | *nur NB:* CT, *nur Repo:* HBAR - genau der Unterschied, den der Pull bringt |
+| am Desktop selbst | geändert ist nur `Basisinfos/config.yaml.bak`, eine Sicherungskopie (nie committen) |
+
+**Bau (Vorschlag):**
+
+| | Was | Wie |
+|---|---|---|
+| **A** | neuer Abschnitt `git_stand` der Diagnose, klein und daher auch in der schlanken Fassung | `head` aus `.git/HEAD` bzw. `packed-refs` (geht auch ohne `git` im Pfad); mit `git`: geänderte **versionierte** Dateien, Stash-Liste, Zweig. Frist 20 s; bei Fehlern `nicht_verfuegbar` mit Grund, keine Ausnahme. Keine Remote-URL, kein Zugriff auf die DB |
+| **A2** | `watchlist_stammdaten` bekommt zusätzlich `name` und `coingecko_id` | additiv, bestehende Leser bleiben unberührt; eine falsche ID wäre so schlimm wie ein fehlender Eintrag |
+| **B** | `pruefe_export_standard.py`, neuer Punkt **17 „NB gegen Repo“** | meldet: (a) `git_stand` fehlt; (b) jede geänderte versionierte Datei, außer `config.yaml.bak` (nur Infozeile, mit Grund); (c) Watchlist am NB gegen die config.yaml **zum Commit des NB** (`git show <head>:…`; ist der Commit am Desktop unbekannt, gegen HEAD mit Hinweis), getrennt nach *nur NB*, *nur Repo* und Feldern (Rolle, Status, Klasse, CoinGecko-ID); (d) Stash nicht leer, als Erinnerung; Infozeile: wie viele Commits der NB hinter `origin/main` liegt |
+| **C** | Suite-Paket **GitStand** | am Seiteneffekt, in einem Wegwerf-Klon: Index bitgleich; ein angehängter Watchlist-Eintrag wird als geänderte config.yaml erkannt; Punkt 17 meldet *nur NB XDC*; ohne Änderung keine Meldung (die Prüfung kann also scheitern); ohne `git` im Pfad bleibt `head` lesbar, keine Ausnahme; `git_stand` nicht unter `GROSSE_ABSCHNITTE` |
+
+**Nicht im Umfang:** Teilexport, Statusseite und O26 (die automatische Aufnahme; deren Bauvorgabe steht im Plan).
+
+**Risiken:**
+- `git` fehlt im Pfad: Dann bleibt der Commit lesbar, nur die Liste der Änderungen fehlt, und Punkt 17 meldet das.
+- Laufzeit am NB: nicht gemessen, Frist 20 s.
+- Geheimnisse: Es gehen nur Dateinamen und Stash-Texte hinaus.
+
+**Am NB:** nur ein Pull, kein Schalter und kein Neustart des Dienstes, denn die Diagnose ist ein eigenes Skript. P21 kann deshalb mit dem Pull für K-WL-1 gehen, wenn es vorher fertig ist.
+
+**Kontrolle K-GIT-1:** Die erste Diagnose danach muss enthalten:
+- `git_stand` mit dem gepushten Commit;
+- geändert nur `config.yaml.bak` oder nichts;
+- den Stash „NB-Watchlist XDC CT“.
+
+Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
