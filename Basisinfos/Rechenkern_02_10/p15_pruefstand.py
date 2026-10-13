@@ -163,6 +163,16 @@ root.deiconify()
 root.geometry("1400x900+-3000+-3000")
 nb.pack(fill="both", expand=True)
 root.update()
+# P15h: nach dem ersten Anzeigen haben Hebel und Aufteilung ihre volle Hoehe; beide Tabellen stehen am Anfang
+root.update()
+voll = (tab._hebel_bereich.winfo_height() >= tab._hebel_bereich.winfo_reqheight() - 2 and
+        tab._auf_bereich.winfo_height() >= tab._auf_bereich.winfo_reqheight() - 2)
+tab.hebel_tree.yview_scroll(1, "units")
+tab._langsam()
+oben_h = float(tab.hebel_tree.yview()[0]) == 0.0
+pruefe("P20", tab._sashes_gesetzt and voll and oben_h, "Trennleisten beim ersten Anzeigen gesetzt %s · Hebel %d/%d und Aufteilung %d/%d px (ist/verlangt) · Hebel nach Neuladen oben %s" % (
+    tab._sashes_gesetzt, tab._hebel_bereich.winfo_height(), tab._hebel_bereich.winfo_reqheight(), tab._auf_bereich.winfo_height(),
+    tab._auf_bereich.winfo_reqheight(), oben_h))
 vorher = tab._paned.sashpos(0)
 tab._paned.sashpos(0, max(50, vorher - 120))
 root.update()

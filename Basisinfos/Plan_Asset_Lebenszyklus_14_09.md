@@ -1172,3 +1172,18 @@ Nutzer 13.10. (Bild 06:38): *„unten ist entweder ein alter Bereich bzw. Multi-
   - Kopfzeile und Gesamtwert stehen fest oben.
   - Das Fiat-Feld hängt fest unten und rutscht beim Ziehen nicht aus dem Fenster.
 - **Nachweis:** `p15_pruefstand` **19/19** (neu P19: drei Bereiche, Trennleiste programmgesteuert verschoben 479 → 359, Fiat-Feld außerhalb), GuiKette mit Wache P15g.
+
+### G-Z7 P15h — Hebel-Zeilen und Aufteilung vollständig (13.10.2026)
+
+**Bild 13.10. 07:41:**
+- Aufteilung und Trennleisten sind da.
+- Die Hebel-Überschrift sagt *2 Positionen · 900 €*, in der Tabelle steht aber nur BTC. Laut Diagnose 07:40 ist ETH **offen** (12,4 %, LIQUIDATION NAHE); die Tabelle war um eine Zeile gescrollt.
+- *Anteil %* ist halb abgeschnitten.
+
+**Behoben:**
+- Hebel- und Aufteilungstabelle springen nach jedem Neuladen an den Anfang.
+- Beim ersten Anzeigen setzt der Tab die Trennleisten so, dass Hebel und Aufteilung ihre **volle Höhe** haben. Die Dicke der Trennleiste wird nachgemessen: Der Prüfstand fand 91 statt 96 px, das ist korrigiert. Danach verschiebt der Nutzer frei.
+
+**Nachweis:** `p15_pruefstand` **20/20** (neu P20: 96/96 px, Hebel nach Neuladen oben), GuiKette mit Wache P15h.
+
+**K-SP-2 erfüllt** (Diagnose 13.10. 07:44): A6 nimmt die 50 alten Spot-Zeilen heraus, keine Stop-Mail mehr. Die erste Mitnahme-Mail → **K-SP-2b** (Ereignis).

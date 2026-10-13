@@ -325,6 +325,9 @@ class BestandTab(PortfolioView):
             self.aufteilung_tree.column(c, width=90 if c == "zeile" else 120, anchor="w" if c == "zeile" else "e")
         add_heading_tooltips(self.aufteilung_tree, AUF_TIPP)
         self.aufteilung_tree.pack(fill="both", expand=True, pady=(0, 4))
+        self._hebel_bereich, self._auf_bereich = hebel_bereich, auf_bereich
+        self._sashes_gesetzt = False
+        self._paned.bind("<Configure>", lambda _e: self.after_idle(self._sashes_setzen), add="+")
 
         ttk.Label(cash_frame, text="Fiat-Guthaben auf Börse (EUR, vom Bitpanda-Abgleich; Speichern nur als Ausnahme):").pack(side="left", padx=(0, 6))
         self.cash_reserve_var = tk.StringVar()
@@ -334,6 +337,32 @@ class BestandTab(PortfolioView):
         self.cash_reserve_status.pack(side="left", padx=(6, 0))
         self.cash_reserve_synced_label = ttk.Label(cash_frame, text="", foreground=theme.info_color())
         self.cash_reserve_synced_label.pack(side="left", padx=(10, 0))
+
+    def _sashes_setzen(self) -> None:
+        """P15h (Nutzerbild 13.10.: 'Anteil %' halb abgeschnitten): beim ERSTEN Anzeigen die Trennleisten so setzen, dass Hebel und
+        Aufteilung ihre volle Hoehe haben und der Spot-Bereich den Rest bekommt. Danach nie wieder - der Nutzer verschiebt frei."""
+        if self._sashes_gesetzt:
+            return
+        h = self._paned.winfo_height()
+        if h < 200:
+            return                                  # noch nicht angezeigt
+        unten = self._auf_bereich.winfo_reqheight()
+        mitte = self._hebel_bereich.winfo_reqheight()
+        try:
+            self._paned.sashpos(1, max(100, h - unten))
+            self._paned.sashpos(0, max(80, h - unten - mitte))
+            # nachmessen: die Trennleiste selbst hat eine Dicke (Pruefstand P20: 91 statt 96 px) - um den Fehlbetrag nachschieben
+            self._paned.update_idletasks()
+            d1 = unten - self._auf_bereich.winfo_height()
+            if d1 > 0:
+                self._paned.sashpos(1, self._paned.sashpos(1) - d1)
+                self._paned.update_idletasks()
+            d0 = mitte - self._hebel_bereich.winfo_height()
+            if d0 > 0:
+                self._paned.sashpos(0, self._paned.sashpos(0) - d0)
+            self._sashes_gesetzt = True
+        except tk.TclError:
+            pass
 
     # ---- Lesen ----
     def _langsam(self) -> None:
@@ -363,6 +392,7 @@ class BestandTab(PortfolioView):
         for z in self._hebel or [("Keine offenen Positionen", "-", "-", "-", "-", "-")]:
             self.hebel_tree.insert("", "end", values=z)
         self.hebel_tree.configure(height=max(1, min(5, len(self._hebel))))
+        self.hebel_tree.yview_moveto(0)        # P15h (Nutzerbild 13.10. 07:41): ETH stand OBERHALB des Sichtbaren - die Tabelle war gescrollt
 
     def refresh(self, erzwingen: bool = False) -> None:
         jetzt = time.monotonic()
@@ -401,4 +431,5 @@ class BestandTab(PortfolioView):
                 format_money(auf[g][0]) if g in auf else "-" for g in AUF_REIHE))
             self.aufteilung_tree.insert("", "end", iid="auf|anteil", values=("Anteil %",) + tuple(
                 ("%.1f" % auf[g][1]) if g in auf else "-" for g in AUF_REIHE))
+            self.aufteilung_tree.yview_moveto(0)
         self.status.config(text="Stand %s · %d Bestände" % (datetime.now().strftime("%H:%M:%S"), len(zeilen)))
