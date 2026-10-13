@@ -109,8 +109,9 @@ def alle(w):
 
 alle(tab)
 pruefe("P7", not any("Bewertung" in k for k in knoepfe) and "Speichern" in knoepfe and tab.tree.bind("<Double-1>") and
-       len(tab.diversifikation_tree.get_children()) > 0, "Knoepfe %s · Doppelklick gebunden · Diversifikation %d Zeilen" % (
-           knoepfe, len(tab.diversifikation_tree.get_children())))
+       len(tab.aufteilung_tree.get_children()) > 0 and not hasattr(tab, "diversifikation_tree"),
+       "Knoepfe %s · Doppelklick gebunden · Aufteilung nach Rolle %d Zeilen · keine Schwerpunkt-Tabelle" % (
+           knoepfe, len(tab.aufteilung_tree.get_children())))
 app = open("ui/app.py", encoding="utf-8").read()
 pruefe("P8", "BestandTab(notebook, db_conn_factory, watchlist)" in app and 'text="Bestand"' in app and "PortfolioView(" not in app
        and "ABGELOEST" in open("ui/portfolio.py", encoding="utf-8").read()[:200] and "ABGELOESTEN ui/portfolio.py" in open("ui/letzte_bewertung.py", encoding="utf-8").read(),
@@ -139,10 +140,18 @@ pruefe("P14", lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and lage(1000,
        "Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile")
 # P15d (13.10.2026, Nutzer: *"Summe fuer Hebel ist nicht sichtbar"*): Gesamtwert OBEN (vor der Spot-Tabelle), Hebel-Summe in der Hebel-Ueberschrift
 reihe = [w_ for w_ in tab.pack_slaves()]
-oben = reihe.index(tab.total_label) < reihe.index(tab.tree)
+oben = reihe.index(tab.total_label) < reihe.index(tab._spot_rahmen)            # P15e: die Spot-Tabelle sitzt mit Laufleisten in einem Rahmen
 hk = tab.hebel_kopf.cget("text")
 pruefe("P15", oben and "Hebel-Eigenkapital" in tab.total_label.cget("text") and "offene Positionen: 2" in hk and "900.00" in hk and int(tab.tree.cget("height")) == 13,
        "Gesamtwert oben %s · Hebel-Ueberschrift '%s' · Spot-Hoehe %s" % (oben, hk, tab.tree.cget("height")))
+# P15e (13.10.2026, Nutzer: *"Ja, 1 bis 3 so umsetzen"*): Aufteilung nach Rolle, senkrechte Laufleiste
+auf = {tab.aufteilung_tree.set(i_, "gruppe"): (tab.aufteilung_tree.set(i_, "wert_eur"), tab.aufteilung_tree.set(i_, "anteil_pct"))
+       for i_ in tab.aufteilung_tree.get_children()}
+summe_anteil = sum(float(v_[1]) for v_ in auf.values())
+pruefe("P16", set(auf) == {"Kern", "L", "Cash", "Fiat", "andere Klassen", "nicht in Watchlist", "Hebel"} and abs(summe_anteil - 100.0) < 0.5
+       and auf["Hebel"][0] == "900.00", "Aufteilung %s · Anteile zusammen %.1f %%" % (auf, summe_anteil))
+pruefe("P17", bool(tab.tree.cget("yscrollcommand")) and bool(tab.tree.cget("xscrollcommand")), "Spot-Tabelle: senkrechte %s und waagrechte %s Laufleiste" % (
+    bool(tab.tree.cget("yscrollcommand")), bool(tab.tree.cget("xscrollcommand"))))
 root.destroy()
 c.close()
 print("\nBeispielzeilen:")

@@ -216,7 +216,7 @@ Nutzer 10.10.: *„3. ja, mit Statusseite starten – prüfe vorher, ob der Bau 
 | 10 | P17 | Hebel | **O38** Zusatzuniversum per Regel (nach der Messung am Desktop) | Signale in der Ablage | Rauschen, keine Mailwirkung, daher nicht dringend |
 | 11 | P18 | Spot/Betrieb | ✔ **B4-Vormessung trägt** (Spot §43, E-101: −12,5 Pp Dollar gegen Zufall der Klasse, Rang 0,000) · vor dem Bau Universum NB (§42.1) · **Spot B4** Abbau-Reihenfolge (+ D3, D5) und **GUI-4 Meine Assets** (O40, Stammdaten in die DB) | K-SP-3, K-GUI-4 | B4 braucht die Stammdaten |
 | 12 | P19 | Spot | **Spot C1** Season-Ampel (+ D1, A3) mit **Tab Markt (Krypto)** und **Tab Spot** (O41); dann **O43 Marktscan aus** | K-SP-4 | Ampel und Spot-Tab gehören zusammen |
-| 13 | P20 | Betrieb | **GUI-5 Archiv + Multi-Asset (ruht)**: alte Tabs nur lesend, Rücksprache vor jedem Entfernen | K-GUI-5 | zuletzt: erst, wenn alles Neue läuft (G3) · **mit GUI-5 auch die Spalten-Mouseover der alten Tabs** (Regime, Schwerpunkte ohne; Nutzer 12.10.) |
+| 13 | P20 | Betrieb | **GUI-5 Archiv + Multi-Asset (ruht)**: alte Tabs nur lesend, Rücksprache vor jedem Entfernen | K-GUI-5 | zuletzt: erst, wenn alles Neue läuft (G3) · **mit GUI-5 auch die Spalten-Mouseover der alten Tabs** (Regime, Schwerpunkte ohne; Nutzer 12.10.) · ⚠️ **Merkposten (Nutzer 13.10.):** die **Diversifikation nach Schwerpunkt** (Thesen ▲/▼/●) zieht in den Tab *Multi-Asset (ruht)* – Code in `PortfolioView._refresh_diversifikation`, gekennzeichnet *AUFBEWAHRT fuer GUI-5*; gebraucht für O39 |
 | später | — | Multi-Asset | **O39** (Bestand automatisch, Markt für den Aktienmarkt, Synthese wieder an) | — | nach dem Krypto-Bau |
 
 **Parallel am Desktop (keine NB-Änderung):**

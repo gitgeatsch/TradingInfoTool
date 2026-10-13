@@ -1141,3 +1141,16 @@ Am NB: **K-GUI-3b** (neues Bild).
   - Die Hebel-Überschrift nennt *„offene Positionen: n · Eigenkapital zusammen … EUR“*.
   - Die Spot-Tabelle hat 13 statt 16 Zeilen (Laufleiste).
 - **Nachweis:** `p15_pruefstand` **15/15** (neu P15), GuiKette mit Wache P15d.
+
+### G-Z4 P15e — Aufteilung nach Rolle statt Schwerpunkt, senkrechte Laufleiste (13.10.2026)
+
+Nutzer 13.10. (Bild 06:38): *„unten ist entweder ein alter Bereich bzw. Multi-Asset-Schwerpunkte – diese brauchen wir später noch einmal, oder?“* → Vorschlag 1–3 → *„Ja, 1 bis 3 so umsetzen, prüfen und gegenprüfen“*.
+
+1. Im Bestand-Tab steht die **Aufteilung nach Rolle**: Kern · L · Cash · Fiat · andere Klassen · nicht in Watchlist · Hebel, jeweils mit Wert und Anteil am Gesamtwert (zusammen 100 %). Jede Spalte hat einen Mouseover-Text.
+2. Die **Diversifikation nach Schwerpunkt** (Multi-Asset, Thesen ▲/▼/●) ist **aus dem Bestand-Tab genommen, nicht gelöscht**: Der Code `PortfolioView._refresh_diversifikation` ist als *AUFBEWAHRT für GUI-5* gekennzeichnet. Er zieht mit GUI-5 in *Multi-Asset (ruht)* (Plan P20, für O39).
+3. Die Spot-Tabelle hat eine **senkrechte und eine waagrechte Laufleiste**.
+
+**Nachweis:**
+- `p15_pruefstand` **17/17**: P16 Aufteilung mit 7 Gruppen, Hebel 900 €, Anteile 100 %; P17 beide Laufleisten; P7 ohne Schwerpunkt-Tabelle.
+- `p15_gegenprobe` **4/4**: G4 Aufteilung per eigenem SQL, Abweichung 0,0000 €.
+- GuiKette **58/58** (Wachen: Aufteilung an gestellten Zeilen; Schwerpunkt aus und aufbewahrt; Laufleisten).

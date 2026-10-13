@@ -22221,7 +22221,7 @@ def paket_guikette() -> None:
     # P15b (12.10.2026, Nutzer: *"ueberall ein Mouseover mit der genauen Bedeutung der Spalten"*) - abgeleitet aus den Spaltenlisten
     _ohne15b = {n_: [c_ for c_ in sp_ if not (tp_.get(c_) or "").strip()] for n_, sp_, tp_ in (
         ("Bestand Spot", _BT15.SPALTEN, _BT15.TIPP), ("Bestand Hebel", _BT15.HEBEL_SPALTEN, _BT15.HEBEL_TIPP),
-        ("Bestand Diversifikation", ("schwerpunkt", "wert_eur", "anteil_pct"), _BT15.DIV_TIPP),
+        ("Bestand Aufteilung nach Rolle", _BT15.AUF_SPALTEN, _BT15.AUF_TIPP),
         ("Hebel Signale", _HT12.SIGNAL_SPALTEN, _HT12.SIGNAL_TIPP), ("Hebel Positionen", _HT12.POS_SPALTEN, _HT12.POS_TIPP),
         ("Hebel Freigabe", _HT12.FREI_SPALTEN, _HT12.FREI_TIPP))}
     pruefe(P, "⚠️ P15b: JEDE Spalte in Bestand- und Hebel-Tab hat eine Erklaerung im Mouseover - und jede Tabelle ruft add_heading_tooltips",
@@ -22233,6 +22233,17 @@ def paket_guikette() -> None:
            and "platziere(tip, tree)" in _quelltext("ui/row_tooltip.py") and "platziere(tip, tree)" in _quelltext("ui/heading_tooltip.py")
            and "winfo_pointerx() + 12" not in _quelltext("ui/row_tooltip.py") + _quelltext("ui/heading_tooltip.py"))
     pruefe(P, "P15c: Bestand-Spot hat eine waagrechte Laufleiste - keine Spalte verschwindet rechts", "xscrollcommand=_xs.set" in _bt15)
+    _a15e = _BT15.aufteilung([{"frei_eur": 10.0, "gestakt_eur": 5.0, "werte": ("A", "", "", "Kern")},
+                              {"frei_eur": 20.0, "gestakt_eur": 0.0, "werte": ("B", "", "", "L")},
+                              {"frei_eur": None, "gestakt_eur": 0.0, "werte": ("C", "", "", "L")},
+                              {"frei_eur": 15.0, "gestakt_eur": 0.0, "werte": ("D", "", "", "-")}],
+                             {"fiat": 5.0, "hebel_ek": 45.0, "gesamt": 100.0})
+    pruefe(P, "P15e: Aufteilung nach Rolle statt Schwerpunkt - Gruppen, Werte, Anteile zusammen 100 % (gestellte Zeilen)",
+           _a15e == [("Kern", 15.0, 15.0), ("L", 20.0, 20.0), ("Fiat", 5.0, 5.0), ("andere Klassen", 15.0, 15.0), ("Hebel", 45.0, 45.0)], "%s" % _a15e)
+    pruefe(P, "⚠️ P15e: die Schwerpunkt-Diversifikation ist im Bestand-Tab AUS und fuer GUI-5/O39 AUFBEWAHRT (portfolio.py gekennzeichnet)",
+           "_refresh_diversifikation" not in _nur_code("ui/bestand_tab.py") and "def _refresh_diversifikation(" in _quelltext("ui/portfolio.py")
+           and "AUFBEWAHRT fuer GUI-5" in io.open("ui/portfolio.py", encoding="utf-8").read())
+    pruefe(P, "P15e: Spot-Tabelle mit senkrechter UND waagrechter Laufleiste", "yscrollcommand=_ys.set" in _bt15 and "xscrollcommand=_xs.set" in _bt15)
     pruefe(P, "P15d: Gesamtwert OBEN (vor der Spot-Tabelle), Hebel-Summe in der Hebel-Ueberschrift - unten war sie bei 150 % nicht sichtbar",
            0 <= _bt15.find("self.total_label.pack(") < _bt15.find("self.tree = ttk.Treeview(") and "Eigenkapital zusammen" in _bt15)
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings

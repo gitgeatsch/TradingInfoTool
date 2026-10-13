@@ -3,7 +3,10 @@
 Nutzer 12.10.: *"Ja, den Ausbau eindeutig kennzeichnen, damit man nicht ueber den alten Code stolpert"* - der Knopf *Letzte Bewertung
 anzeigen* (letzte KI-Analyse der seit 05.10. angehaltenen Rollen-Kette) ist AUSGEBAUT; ``ui/portfolio.py`` ist als ABGELOEST gekennzeichnet
 und nicht mehr in der GUI eingehaengt. Uebernommen (geerbt, unveraendert): Einstand per Doppelklick (GF4, ``AvgBuyPriceDialog``),
-Fiat-Feld als Ausnahme, Diversifikation nach Schwerpunkt, Einstands-Tooltip.
+Fiat-Feld als Ausnahme, Einstands-Tooltip. Die DIVERSIFIKATION NACH SCHWERPUNKT (Multi-Asset, Thesen des Schwerpunkte-Tabs) ist seit
+P15e (13.10.2026, Nutzer: *"Ja, 1 bis 3 so umsetzen"*) NICHT mehr hier: an ihrer Stelle die AUFTEILUNG NACH ROLLE (Kern / L / Cash / Fiat /
+andere Klassen / Hebel). Die Schwerpunkt-Diversifikation zieht mit GUI-5 in den Tab *Multi-Asset (ruht)* (Plan P20, fuer O39) - der Code
+dafuer bleibt in ``PortfolioView._refresh_diversifikation``.
 
 BEREICHE:
   Spot     ALLE Bestaende (frei + gestakt > 0, alle Klassen): Symbol, Name, Assetklasse, ROLLE (Kern / L / Cash / - / nicht in Watchlist),
@@ -23,7 +26,6 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import ttk
 
-import config as config_module
 import database.db as db
 import ui.theme as theme
 from importer.bitpanda_avg_cost import compute_cost_basis_view
@@ -73,12 +75,15 @@ HEBEL_TIPP = {
     "empfehlung": "Hebelführung H15: LIQUIDIERT > SCHLIESSEN > HEBEL SENKEN > LIQUIDATION NAHE > KURS FEHLT > STOP NACHZIEHEN > HALTEN. "
                   "Details, Kurs, Liquidationspreis und Finanzierung im Hebel-Tab.",
 }
-DIV_TIPP = {
-    "schwerpunkt": "Hauptgruppe aus der Watchlist (oder Cash/Sonstiges, ohne Schwerpunkt). ▲/▼/● = aktive These im Schwerpunkte-Tab "
-                   "(▲ Übergewichten/Aktiv, ▼ Meiden, ● Neutral) - Begründung per Mouseover auf die Zeile.",
-    "wert_eur": "Wert in Euro dieser Gruppe: Spot frei + gestakt, Fiat unter Cash/Sonstiges - ohne Hebelpositionen.",
-    "anteil_pct": "Anteil der Gruppe am Spot-Wert (frei + gestakt + Fiat), ohne Hebel-Eigenkapital.",
+AUF_SPALTEN = ("gruppe", "wert_eur", "anteil_pct")
+AUF_KOPF = {"gruppe": "Gruppe", "wert_eur": "Wert (EUR)", "anteil_pct": "Anteil %"}
+AUF_TIPP = {
+    "gruppe": "Kern = BTC/ETH/SOL · L = übrige Krypto (Mitnahme ×3) · Cash = Stablecoins · Fiat = Euro-Guthaben auf der Börse · "
+              "andere Klassen = Aktien, ETF, Rohstoffe · nicht in Watchlist = gehalten, ohne Stammdaten · Hebel = Eigenkapital der offenen Positionen.",
+    "wert_eur": "Wert in Euro der Gruppe: Spot frei + gestakt zum letzten Kurs; bei Hebel das Eigenkapital.",
+    "anteil_pct": "Anteil der Gruppe am Gesamtwert (oben) - die Anteile ergeben zusammen 100 %.",
 }
+AUF_REIHE = ("Kern", "L", "Cash", "Fiat", "andere Klassen", "nicht in Watchlist", "Hebel")
 HEBEL_KOPF = {"asset": "Asset", "richtung": "Richtung", "hebel": "Hebel", "ek": "Eigenkapital", "abstand": "Abstand Liquidation",
               "empfehlung": "H15-Empfehlung"}
 
@@ -173,6 +178,20 @@ def hebel_zeilen(trades: list) -> list:
     return aus
 
 
+def aufteilung(zeilen: list, s: dict) -> list:
+    """P15e: [(Gruppe, Wert EUR, Anteil %)] nach Rolle - Anteile am Gesamtwert, zusammen 100 %. Gruppen ohne Wert entfallen."""
+    gruppe = {"Kern": "Kern", "L": "L", "Cash": "Cash", "-": "andere Klassen", "nicht in Watchlist": "nicht in Watchlist"}
+    w = dict.fromkeys(AUF_REIHE, 0.0)
+    for z in zeilen:
+        if z["frei_eur"] is None:
+            continue
+        w[gruppe[z["werte"][3]]] += (z["frei_eur"] or 0.0) + (z["gestakt_eur"] or 0.0)
+    w["Fiat"] += s["fiat"]
+    w["Hebel"] += s["hebel_ek"]
+    g = s["gesamt"] or 0.0
+    return [(k, w[k], (100.0 * w[k] / g) if g else 0.0) for k in AUF_REIHE if w[k] > 0]
+
+
 def summen(zeilen: list, fiat_eur: float, hebel_ek_eur: float) -> dict:
     frei = sum(z["frei_eur"] for z in zeilen if z["frei_eur"] is not None)
     gest = sum(z["gestakt_eur"] or 0.0 for z in zeilen)
@@ -210,7 +229,8 @@ def letzte_schluesse(conn, symbole) -> dict:
 
 # ══ der Tab ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 class BestandTab(PortfolioView):
-    """Erbt die bewaehrten Teile von PortfolioView (Einstand, Fiat, Diversifikation, Tooltip) - der Aufbau ist NEU (P15)."""
+    """Erbt die bewaehrten Teile von PortfolioView (Einstand, Fiat, Einstands-Tooltip) - der Aufbau ist NEU (P15); statt der Diversifikation
+    nach Schwerpunkt die Aufteilung nach Rolle (P15e)."""
 
     def __init__(self, parent, db_conn_factory, watchlist, spot_ordner: str | None = None):     # noqa: D401 - eigener Aufbau
         ttk.Frame.__init__(self, parent)                     # bewusst NICHT PortfolioView.__init__ (dort: Knopf 'Letzte Bewertung')
@@ -219,7 +239,6 @@ class BestandTab(PortfolioView):
         self._db_conn_factory = db_conn_factory
         self._cost_basis_by_symbol: dict = {}
         self._watchlist_by_symbol = {a.symbol: a for a in watchlist}
-        self._diversifikation_tooltips: dict = {}
         self._ordner = spot_ordner or NL.DATEN_VORGABE
         self._zuletzt_langsam = 0.0
         self._fenster: dict = {}
@@ -243,7 +262,10 @@ class BestandTab(PortfolioView):
         # Anzeige nicht mehr ins Fenster
         self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
         self.total_label.pack(anchor="w", padx=8, pady=(2, 0))
-        self.tree = ttk.Treeview(self, columns=SPALTEN, show="headings", height=13)
+        rahmen = ttk.Frame(self)                                    # P15e: senkrechte UND waagrechte Laufleiste
+        rahmen.pack(fill="both", expand=True, padx=8, pady=(4, 6))
+        self._spot_rahmen = rahmen
+        self.tree = ttk.Treeview(rahmen, columns=SPALTEN, show="headings", height=13)
         for c in SPALTEN:
             self.tree.heading(c, text=KOPF[c])
             # P15c: Summe der Breiten passt auch bei 150 % Anzeige in ein Vollbild; dazu die waagrechte Laufleiste (keine Spalte verschwindet)
@@ -260,10 +282,14 @@ class BestandTab(PortfolioView):
         add_heading_tooltips(self.tree, TIPP)
         add_row_tooltips(self.tree, self._row_tooltip_text)
         self.tree.bind("<Double-1>", self._on_edit_avg_price)        # GF4 Einstand (geerbt)
-        _xs = ttk.Scrollbar(self, orient="horizontal", command=self.tree.xview)
-        self.tree.configure(xscrollcommand=_xs.set)
-        self.tree.pack(fill="both", expand=True, padx=8, pady=(4, 0))
-        _xs.pack(fill="x", padx=8, pady=(0, 6))
+        _xs = ttk.Scrollbar(rahmen, orient="horizontal", command=self.tree.xview)
+        _ys = ttk.Scrollbar(rahmen, orient="vertical", command=self.tree.yview)
+        self.tree.configure(xscrollcommand=_xs.set, yscrollcommand=_ys.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        _ys.grid(row=0, column=1, sticky="ns")
+        _xs.grid(row=1, column=0, sticky="ew")
+        rahmen.rowconfigure(0, weight=1)
+        rahmen.columnconfigure(0, weight=1)
 
         self.hebel_kopf = ttk.Label(self, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold"))
         self.hebel_kopf.pack(anchor="w", padx=8)                     # P15d: nennt die Hebel-Summe (Zahl, Eigenkapital zusammen)
@@ -274,19 +300,14 @@ class BestandTab(PortfolioView):
         add_heading_tooltips(self.hebel_tree, HEBEL_TIPP)
         self.hebel_tree.pack(fill="x", padx=8, pady=(2, 6))
 
-        ttk.Label(self, text="Diversifikation nach Schwerpunkt", font=("", 10, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
-        dspalten = ("schwerpunkt", "wert_eur", "anteil_pct")
-        self.diversifikation_tree = ttk.Treeview(self, columns=dspalten, show="headings", height=5)
-        for c, t in zip(dspalten, ("Schwerpunkt", "Wert (EUR)", "Anteil %")):
-            self.diversifikation_tree.heading(c, text=t)
-            self.diversifikation_tree.column(c, width=160, anchor="w" if c == "schwerpunkt" else "e")
-        self.diversifikation_tree.tag_configure("these_positiv", foreground=theme.success_color())
-        self.diversifikation_tree.tag_configure("these_negativ", foreground=theme.danger_color())
-        self.diversifikation_tree.tag_configure("these_neutral", foreground=theme.info_color())
-        self._diversifikation_reapply_sort = make_sortable(self.diversifikation_tree, numeric_columns=frozenset({"wert_eur", "anteil_pct"}))
-        add_heading_tooltips(self.diversifikation_tree, DIV_TIPP)       # P15b: im Neubau verloren gegangen (PortfolioView hatte schwerpunkt)
-        add_row_tooltips(self.diversifikation_tree, lambda iid: self._diversifikation_tooltips.get(iid))
-        self.diversifikation_tree.pack(fill="x", padx=8, pady=(0, 6))
+        # P15e: AUFTEILUNG NACH ROLLE statt Diversifikation nach Schwerpunkt (die zieht mit GUI-5 nach Multi-Asset (ruht), Plan P20)
+        ttk.Label(self, text="Aufteilung nach Rolle", font=("", 10, "bold")).pack(anchor="w", padx=8, pady=(4, 2))
+        self.aufteilung_tree = ttk.Treeview(self, columns=AUF_SPALTEN, show="headings", height=len(AUF_REIHE))
+        for c in AUF_SPALTEN:
+            self.aufteilung_tree.heading(c, text=AUF_KOPF[c])
+            self.aufteilung_tree.column(c, width=160, anchor="w" if c == "gruppe" else "e")
+        add_heading_tooltips(self.aufteilung_tree, AUF_TIPP)
+        self.aufteilung_tree.pack(fill="x", padx=8, pady=(0, 6))
 
         cash_frame = ttk.Frame(self)
         cash_frame.pack(anchor="e", padx=8, pady=(0, 8))
@@ -337,7 +358,6 @@ class BestandTab(PortfolioView):
             holdings = db.get_all_holdings(conn)
             preise = db.get_latest_prices(conn)
             fiat = db.get_cash_reserve_fiat_eur(conn)
-            thesen = db.get_aktive_thesen(conn)
         finally:
             conn.close()
         zeilen = spot_zeilen(holdings, preise, self._watchlist_by_symbol, self._fenster, self._schluss, self._ohne_krw)
@@ -359,24 +379,7 @@ class BestandTab(PortfolioView):
             teile = "Spot frei %s · gestakt %s · Fiat %s · Hebel-Eigenkapital %s" % tuple(
                 format_money(s[k]) for k in ("frei", "gestakt", "fiat", "hebel_ek"))
             self.total_label.config(text="Gesamtwert: %s EUR  (%s)" % (format_money(s["gesamt"]), teile))
-            self._diversifikation_neu(zeilen, s, thesen)
+            self.aufteilung_tree.delete(*self.aufteilung_tree.get_children())
+            for g, w, a in aufteilung(zeilen, s):
+                self.aufteilung_tree.insert("", "end", iid="auf|" + g, values=(g, format_money(w), "%.1f" % a))
         self.status.config(text="Stand %s · %d Bestände" % (datetime.now().strftime("%H:%M:%S"), len(zeilen)))
-
-    def _diversifikation_neu(self, zeilen: list, s: dict, thesen: list) -> None:
-        """Wie bisher (PortfolioView): Spot frei + gestakt + Fiat nach Hauptgruppe - ohne Hebel."""
-        je_gruppe, gruppen_id, thesen_je = {}, {}, {}
-        for t in thesen:
-            thesen_je.setdefault(t.hauptgruppe, []).append(t)
-        for z in zeilen:
-            w = (z["frei_eur"] or 0.0) + (z["gestakt_eur"] or 0.0)
-            if z["frei_eur"] is None:
-                continue
-            a = z["asset"]
-            name = config_module.get_hauptgruppe_name(a.hauptgruppe) if a else None
-            k = name or "ohne Schwerpunkt"
-            je_gruppe[k] = je_gruppe.get(k, 0.0) + w
-            if a and a.hauptgruppe:
-                gruppen_id.setdefault(k, a.hauptgruppe)
-        if s["fiat"] > 0:
-            je_gruppe["Cash/Sonstiges"] = je_gruppe.get("Cash/Sonstiges", 0.0) + s["fiat"]
-        self._refresh_diversifikation(je_gruppe, s["frei"] + s["gestakt"] + s["fiat"], gruppen_id, thesen_je)

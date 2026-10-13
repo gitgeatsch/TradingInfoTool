@@ -110,4 +110,27 @@ c.close()
 c2.close()
 abl.close()
 shutil.rmtree(T, ignore_errors=True)
+# G4 (P15e): Aufteilung nach Rolle per eigenem SQL und eigener Regel - gegen bestand_tab.aufteilung
+c3 = sqlite3.connect("file:%s?mode=ro" % sys.argv[1].replace("\\", "/"), uri=True)
+c3.row_factory = sqlite3.Row
+pr3 = {r["symbol"]: r["price_eur"] for r in c3.execute(
+    "SELECT symbol, price_eur FROM price_cache p WHERE fetched_at = (SELECT MAX(fetched_at) FROM price_cache q WHERE q.symbol = p.symbol)")}
+eig = {}
+for r in c3.execute("SELECT symbol, quantity, staked_quantity FROM holdings"):
+    m_ = float(r["quantity"] or 0) + float(r["staked_quantity"] or 0)
+    if m_ <= 0 or pr3.get(r["symbol"]) is None:
+        continue
+    a_ = wl.get(r["symbol"])
+    g_ = ("nicht in Watchlist" if a_ is None else "Cash" if a_.ist_cash_aequivalent else
+          ("Kern" if r["symbol"] in ("BTC", "ETH", "SOL") else "L") if a_.assetklasse == "krypto" else "andere Klassen")
+    eig[g_] = eig.get(g_, 0.0) + m_ * pr3[r["symbol"]]
+eig["Fiat"] = float(c3.execute("SELECT value FROM meta WHERE key='cash_reserve_fiat_eur'").fetchone()[0] or 0)
+eig["Hebel"] = sum(float(r[0] or 0) for r in c3.execute("SELECT eigenkapital_eur FROM hebel_positions WHERE geschlossen_am IS NULL"))
+z3 = BT.spot_zeilen(db.get_all_holdings(c3), db.get_latest_prices(c3), wl, {}, {}, None)
+s3 = BT.summen(z3, db.get_cash_reserve_fiat_eur(c3), sum(float(t.get("eigenkapital_eur") or 0) for t in HF.lade(c3)))
+tab3 = {g_: w_ for g_, w_, _ in BT.aufteilung(z3, s3)}
+abw3 = max(abs(tab3.get(k_, 0.0) - v_) for k_, v_ in eig.items())
+pruefe("G4", abw3 < 0.01 and set(tab3) == {k_ for k_, v_ in eig.items() if v_ > 0},
+       "Aufteilung eigen %s · groesste Abweichung %.4f" % ({k_: round(v_, 2) for k_, v_ in eig.items()}, abw3))
+c3.close()
 print("\n%d von %d gleich" % (sum(ERG), len(ERG)))

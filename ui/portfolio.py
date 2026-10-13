@@ -393,6 +393,8 @@ class PortfolioView(ttk.Frame):
 
         self._refresh_diversifikation(schwerpunkt_totals, total_value_eur, schwerpunkt_hauptgruppe_id, thesen_by_hauptgruppe)
 
+    # ⛔ 13.10.2026 (P15e): im Bestand-Tab NICHT mehr genutzt (dort: Aufteilung nach Rolle). AUFBEWAHRT fuer GUI-5: die Diversifikation
+    # nach Schwerpunkt zieht in den Tab 'Multi-Asset (ruht)' (Plan P20, fuer O39) - nicht loeschen.
     def _refresh_diversifikation(
         self, schwerpunkt_totals: dict[str, float], total_value_eur: float,
         schwerpunkt_hauptgruppe_id: dict[str, str], thesen_by_hauptgruppe: dict[str, list],

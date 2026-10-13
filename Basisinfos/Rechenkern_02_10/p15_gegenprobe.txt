@@ -1,5 +1,6 @@
 G1  gleich     eigen: frei 16487.53 · gestakt 6057.45 · Fiat 268.24 · Hebel-EK 900.00 · gesamt 23713.22 · Tab gesamt 23713.22 · groesste Abweichung 0.0000
 G2  gleich     Rolle eigene Regel gegen den Tab: Abweichungen []
 G3  gleich     x Start fuer 27 Fenster eigen gleich Tab · neue Kurse {'LINK': '1,37', 'BEAMX': '0,81', 'INJ': '3,05', 'KAS': '2,20', 'W': '1,00'}
+G4  gleich     Aufteilung eigen {'Cash': 295.76, 'Kern': 5906.83, 'L': 10388.68, 'andere Klassen': 5487.07, 'nicht in Watchlist': 466.64, 'Fiat': 268.24, 'Hebel': 900.0} · groesste Abweichung 0.0000
 
-3 von 3 gleich
+4 von 4 gleich
