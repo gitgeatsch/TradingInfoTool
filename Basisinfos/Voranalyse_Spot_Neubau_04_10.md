@@ -5821,3 +5821,41 @@ Nutzer 13.10.: *„Ja, Voranalyse P18 vorbereiten, prüfen und gegenprüfen“*.
 **Zur Entscheidung:**
 - **GUI-4 *Meine Assets* (O40, Stammdaten in die DB statt `config.yaml`).** Im Plan steht O40 bei P18. B4 braucht aber den **Kurs-Stammsatz D3**, nicht O40. O40 ist ein eigener Umbau mit vielen Lesern der Watchlist, und er würde die Pull-Kollision vom 13.10. (K-WL-1) an der Wurzel lösen.
 - Vorschlag: **O40 als eigenes Paket P18b** mit eigener Voranalyse, nach B4.
+
+### 48.5 O40 geprüft: Ist die Watchlist in der Datenbank wirklich besser? (13.10.2026)
+
+Nutzer 13.10.: *„ja – prüfe aber vorher, ob die Watchlist auch wirklich besser in der Datenbank ist oder ob wir Nachteile haben“*.
+
+**Ist-Stand (gezählt):**
+- Die Watchlist ist ein Block von 62 Einträgen in `Basisinfos/config.yaml`. Die Datei hat 1.900 Zeilen mit 30 weiteren Abschnitten (Risiko, Strategien, Marktscan, Regime …), die versioniert bleiben müssen.
+- 63 Python-Dateien lesen `get_watchlist()`, davon 19 im Betrieb und 15 Mess- und Prüfskripte.
+- Es gibt **fünf Schreibwege**, alle in die versionierte Datei am NB:
+  - die GUI (*Asset hinzufügen*, *Bearbeiten*);
+  - Marktscan;
+  - Screener;
+  - ⚠️ **automatisch** der Importer der Hebelpositionen (`importer/bitpanda_margin_positions.py:413`, neue Hebel-Coins).
+- `config.yaml` hat 132 Commits, 9 seit dem 01.09.
+- Abweichung am NB bisher: XDC (28.09.) und CT (08.10.), nachgewiesen und behoben (K-WL-1). P21 meldet jede weitere.
+
+| | **A: ganz in die Datenbank** (O40 wie geplant) | **B: Repo-Grundliste + NB-Ergänzung** | C: wie heute + Regel |
+|---|---|---|---|
+| Pull-Kollision | gelöst | **gelöst**: Die Schreibwege am NB schreiben in eine **nicht versionierte** Ergänzung | bleibt (der Importer schreibt automatisch) |
+| Desktop: Tests, Prüfstände, 15 Messskripte | ⚠️ verlieren ihre Quelle; sie bräuchten die Prod-Sicherung oder einen Abgleich → **Abweichung in der Gegenrichtung** | Grundliste im Repo wie heute; die Ergänzung kommt über die Diagnose (`watchlist_stammdaten`, P21) | wie heute |
+| Verlauf, Prüfung, Rückweg | ⚠️ kein Git-Verlauf, kein Diff, kein Rückweg per Commit | Grundliste mit Git-Verlauf; Ergänzung mit Datum je Eintrag | Git |
+| Hand-Bearbeitung (*„BEARBEITEN IN NOTEPAD++“*) | ⚠️ entfällt (nur noch über die GUI) | bleibt für die Grundliste | bleibt |
+| Umbau | ⚠️ groß: 63 Leser, Migration, eine Zeit lang zwei Quellen | **klein**: eine Stelle (`get_watchlist` führt beide zusammen), fünf Schreiber umleiten | keiner |
+| Automatische Aufnahme (O26), Kennzeichen *Bestand / Hebel / beobachtet* | natürlich | Ergänzung = O26-Bauvorgabe (*nie in die versionierte Datei*); *Bestand* wird zur Laufzeit aus `holdings` abgeleitet und nicht gespeichert | nein |
+| Ausfall | Prod-DB = einzige Quelle (Sicherungen mehrmals täglich) | Grundliste immer da; die Ergänzung liegt in der Prod-DB | – |
+
+⇒ **Fachliches Ergebnis:**
+- A löst die Kollision, bringt aber drei echte Nachteile:
+  - Der Desktop verliert seine Quelle für Tests und Messungen; das wäre dieselbe Art Abweichung, nur umgekehrt.
+  - Der Git-Verlauf geht verloren.
+  - Der Umbau ist groß.
+- **B löst dasselbe mit einem kleinen Umbau und ohne diese Nachteile.**
+- **Vorschlag P18b = Variante B:**
+  - Tabelle `watchlist_ergaenzung` in der Produktion, mit Datum, Herkunft (GUI, Importer, Marktscan, O26) und dem Kennzeichen *entfernt*.
+  - `get_watchlist()` liest Grundliste plus Ergänzung. Die Ergänzung ergänzt oder überschreibt; ein Eintrag mit *entfernt* blendet einen Eintrag der Grundliste aus.
+  - Die fünf Schreiber schreiben nur noch dorthin.
+  - Punkt 17 der Exportprüfung zeigt die Ergänzung als *„nur am NB – ins Repo übernehmen?“*. Ich übernehme sie bei Bedarf per Commit.
+- O40 *Meine Assets* (Ansicht, Kennzeichen) baut darauf auf; der Bestand wird aus `holdings` abgeleitet.
