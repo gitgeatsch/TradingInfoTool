@@ -40,10 +40,10 @@ logger = logging.getLogger(__name__)
 LANGSAM_S = 60
 KERN = ("BTC", "ETH", "SOL")
 SPALTEN = ("symbol", "name", "assetklasse", "rolle", "frei", "gestakt", "price_eur", "value_eur", "avg_buy_price_eur", "pl_pct",
-           "b1_x", "b1_bis", "b1_status", "upbit")
+           "b1_x", "b1_bis", "b1_status", "upbit", "b4")
 KOPF = {"symbol": "Symbol", "name": "Name", "assetklasse": "Assetklasse", "rolle": "Rolle", "frei": "frei", "gestakt": "gestakt",
         "price_eur": "Preis (EUR)", "value_eur": "Wert (EUR)", "avg_buy_price_eur": "Einstand (EUR)", "pl_pct": "G/V %",
-        "b1_x": "× Start (B1)", "b1_bis": "Fenster bis", "b1_status": "B1", "upbit": "Upbit KRW"}
+        "b1_x": "× Start (B1)", "b1_bis": "Fenster bis", "b1_status": "B1", "upbit": "Upbit KRW", "b4": "Abbau (B4)"}
 # P15b (12.10.2026, Nutzer: *"bitte ueberall ein Mouseover mit der genauen Bedeutung der Spalten"*): JEDE Spalte jeder Tabelle erklaert
 # (Suite GuiKette prueft die Vollstaendigkeit gegen die Spaltenliste)
 TIPP = {
@@ -64,6 +64,9 @@ TIPP = {
     "b1_bis": "Ende des laufenden 365-Tage-Fensters; danach beginnt ein neues mit neuem Startkurs.",
     "b1_status": "laeuft · faellig · gemailt · zu pruefen (Kurssprung) · verpasst · kein Fenster (noch kein Kurs)",
     "upbit": "Spot B3: hat Upbit den Coin schon im Won-Markt? 'nein' = ein Listing wäre ein Verkaufsanlass (Mail). '?' = noch kein Lauf.",
+    "b4": "Spot B4 Abbau-Reihenfolge: Fünftel des Watchlist-Werts in der Klasse am letzten Monatsersten (1 = unten … 5 = oben; "
+          "Tiefe unter dem Hoch, Tage seit dem Hoch, Datenalter). '1 unten' = beim Abbau zuerst verkaufen (gemessen: 12 Monate danach "
+          "−12,5 Pp gegen Zufall der Klasse). '–' = nicht eingeordnet, der Grund steht im Zeilen-Mouseover. '?' = noch kein Lauf.",
 }
 HEBEL_SPALTEN = ("asset", "richtung", "hebel", "ek", "abstand", "empfehlung")
 HEBEL_TIPP = {
@@ -126,8 +129,21 @@ def menge_text(x: float) -> str:
     return "{:,.0f}".format(x) if abs(x) >= 1e6 else "%g" % x
 
 
+def b4_wert(symbol: str, b4: dict | None) -> str:
+    """P18: '1 unten' · '2'..'5' (mit Klasse) · '–' (nicht eingeordnet) · '?' (noch kein Lauf / nicht im Kreis)."""
+    if not b4:
+        return "?"
+    x = b4.get(symbol)
+    if x is None:
+        return "?"
+    _t, q, kl, _g = x
+    if q is None:
+        return "–"
+    return ("1 unten" if int(q) == 1 else str(int(q))) + (" (%s)" % kl if kl else "")
+
+
 def spot_zeilen(holdings: list, preise: dict, watchlist_by_symbol: dict, fenster: dict, letzter_schluss: dict,
-                ohne_krw: list | None) -> list:
+                ohne_krw: list | None, b4: dict | None = None) -> list:
     """Je Bestand (frei + gestakt > 0) eine Zeile; dazu die Summen-Bausteine. -> [{'symbol', 'werte', 'tags', 'frei_eur', 'gestakt_eur',
     'cost'}]"""
     aus = []
@@ -157,8 +173,9 @@ def spot_zeilen(holdings: list, preise: dict, watchlist_by_symbol: dict, fenster
         if r == "L":
             b1 = b1_werte(h.symbol, fenster, letzter_schluss)
             ub = upbit_wert(h.symbol, ohne_krw)
+            bv = b4_wert(h.symbol, b4)
         else:
-            b1, ub = ("-", "-", "-"), "-"
+            b1, ub, bv = ("-", "-", "-"), "-", "-"
         tags = []
         if stale:
             tags.append("stale")
@@ -171,7 +188,7 @@ def spot_zeilen(holdings: list, preise: dict, watchlist_by_symbol: dict, fenster
                     "gestakt_eur": (gest * pe) if pe is not None and gest > 0 else 0.0,
                     "werte": (h.symbol, a.name if a else h.symbol, a.assetklasse if a else "-", r, menge_text(float(h.quantity or 0.0)),
                               menge_text(gest) if gest > 0 else "-", preis, format_money((menge * pe) if pe is not None else None), avg,
-                              ("%+.1f%%" % cost.pl_pct) if cost.pl_pct is not None else "-", b1[0], b1[1], b1[2], ub)})
+                              ("%+.1f%%" % cost.pl_pct) if cost.pl_pct is not None else "-", b1[0], b1[1], b1[2], ub, bv)})
     return aus
 
 
@@ -250,6 +267,7 @@ class BestandTab(PortfolioView):
         self._fenster: dict = {}
         self._schluss: dict = {}
         self._ohne_krw = None
+        self._b4 = None
         self._hebel: list = []
         self._hebel_ek = 0.0
         self._stand = None
@@ -282,10 +300,11 @@ class BestandTab(PortfolioView):
         for c in SPALTEN:
             self.tree.heading(c, text=KOPF[c])
             # P15c: Summe der Breiten passt auch bei 150 % Anzeige in ein Vollbild; dazu die waagrechte Laufleiste (keine Spalte verschwindet)
-            self.tree.column(c, width={"symbol": 70, "name": 130, "assetklasse": 75, "rolle": 100, "frei": 95, "gestakt": 85, "price_eur": 90,
+            # P18 (13.10.2026): Spalte Abbau (B4) dazu - Name und frei schmaler, damit die Summe bei 150 % weiter <= 1900 px bleibt (P12)
+            self.tree.column(c, width={"symbol": 70, "name": 115, "assetklasse": 75, "rolle": 100, "frei": 85, "gestakt": 85, "price_eur": 90,
                                        "value_eur": 85, "avg_buy_price_eur": 110, "pl_pct": 65, "b1_x": 75, "b1_bis": 85, "b1_status": 70,
-                                       "upbit": 75}[c], minwidth=40,
-                             anchor="w" if c in ("name", "assetklasse", "rolle", "b1_status") else "e")
+                                       "upbit": 75, "b4": 80}[c], minwidth=40,
+                             anchor="w" if c in ("name", "assetklasse", "rolle", "b1_status", "b4") else "e")
         self.tree.tag_configure("stale", foreground=theme.stale_color())
         self.tree.tag_configure("pl_positive", foreground=theme.success_color())
         self.tree.tag_configure("pl_negative", foreground=theme.danger_color())
@@ -374,6 +393,8 @@ class BestandTab(PortfolioView):
             self._fenster, _ = lese_b1(self._ordner)
             su = BL.spot_upbit(self._ordner)
             self._ohne_krw = su.get("ohne_krw") if su.get("laeufe") else None
+            from agent import spot_abbau as SA
+            self._b4 = SA.letzte_fuenftel(self._ordner) or None
         except Exception:                                   # noqa: BLE001
             logger.exception("Bestand-Tab: B1/B3-Ablage nicht lesbar")
         conn = self._db_conn_factory()
@@ -406,7 +427,7 @@ class BestandTab(PortfolioView):
             fiat = db.get_cash_reserve_fiat_eur(conn)
         finally:
             conn.close()
-        zeilen = spot_zeilen(holdings, preise, self._watchlist_by_symbol, self._fenster, self._schluss, self._ohne_krw)
+        zeilen = spot_zeilen(holdings, preise, self._watchlist_by_symbol, self._fenster, self._schluss, self._ohne_krw, self._b4)
         s = summen(zeilen, fiat, self._hebel_ek)
         stand = (tuple((z["werte"], z["tags"]) for z in zeilen), round(s["gesamt"], 2))
         if stand != self._stand:

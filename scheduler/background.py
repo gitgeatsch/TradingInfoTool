@@ -4398,6 +4398,60 @@ def spot_upbit_job(conn_factory, watchlist_provider, versand=None, jetzt=None, o
     return aus
 
 
+def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, ordner=None, http=None) -> dict:
+    """P18 Spot B4 (13.10.2026, Spot §48): Abbau-Reihenfolge - taeglich 07:25 und beim Start; gerechnet wird EINMAL je Monatsstichtag
+    (ab dem 2., wenn alle Eingaenge den Schluss haben, spaetestens am 5.), danach nur noch die Mail-Lage.
+
+    Schreibt NUR ``data/spot_betrieb.db`` (Stammsaetze, Laeufe, Fuenftel je Bestand, Protokoll); liest Betriebskopie, Umlauf, ``holdings``
+    und ``price_history_ohlc`` nur. MAIL nur mit Schalter ``spot_abbau_aktiv`` und nur am Betriebsgeraet; je Stichtag hoechstens EINE
+    (vermerkt nur bei Zustellung). Eigenstaendig, nicht an der angehaltenen Rollen-Kette (Lehre H15). Scheitert nie nach aussen.
+    ``versand``/``http`` (Pruefstand): Ersatz fuer _sende_hinweismail(betreff, text, bilder) -> bool bzw. den Binance-Abruf."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.regel0_groesse as _G
+        import agent.regel0_nachlader as _NL
+        import agent.spot_abbau as _SA
+
+        ordner = ordner or _NL.DATEN_VORGABE
+        if versand is None:
+            erlaubt, grund = _NL.betrieb_erlaubt(ordner)
+            if not erlaubt:
+                logger.info("Spot-Abbau: uebersprungen - %s", grund)
+                aus["grund"] = grund
+                return aus
+        conn = conn_factory()
+        try:
+            erg = _SA.lauf(conn, ordner, watchlist_provider(), heute, http)
+            an = _G.spot_abbau_aktiv()
+            gemailt = False
+            fall = _SA.faellig(ordner, erg["stichtag"]) if erg["status"] in ("fertig", "schon") else None
+            if an and fall:
+                from agent import betriebslage as _BL
+                preise = db.get_latest_prices(conn)
+                werte = {}
+                for r in fall["liste"]:
+                    p = preise.get(r[0])
+                    werte[r[0]] = (p.price_eur * float(r[9] or 0)) if p and p.price_eur else None
+                draussen = {r[0] for r in fall["liste"]} - _BL.mit_binance_spot({r[0] for r in fall["liste"]}, ordner)
+                b, t = _SA.mail(fall, werte, draussen)
+                if bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, None)):
+                    _SA.vermerke_mail(ordner, erg["stichtag"])
+                    gemailt = True
+            logger.info("Spot-Abbau: Stichtag %s · %s%s · %d L-Bestaende · Universum %d · unten %s · neu %s%s · gemailt %s%s",
+                        erg["stichtag"], erg["status"], (" (%s)" % erg["fehler"]) if erg.get("fehler") else "", erg["kreis"], erg["universum"],
+                        ",".join(erg["unten"]) or "-", ",".join(erg["neu"]) or "-",
+                        (" · ohne Kurs " + ",".join(erg["fehlend"])) if erg["fehlend"] else "", "ja" if gemailt else "nein",
+                        "" if an else " (Schalter aus - nur Protokoll)")
+            aus.update(gelaufen=True, schalter=an, gemailt=gemailt, **{k: erg.get(k) for k in ("stichtag", "status", "art", "unten", "neu",
+                                                                                               "fehlend", "kreis", "universum", "geholt", "fehler")})
+        finally:
+            conn.close()
+    except Exception:                                                # noqa: BLE001
+        logger.exception("Spot-Abbau: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
 HEBEL_WALLET_SPERRE_STUNDEN = 6.0
 
 
@@ -5657,6 +5711,17 @@ def build_scheduler(
         coalesce=True,
         max_instances=1,
         misfire_grace_time=1800,
+    )
+    # P18 Spot B4 (13.10.2026): Abbau-Reihenfolge - taeglich 07:25 (NACH der Betriebskopie 03:30, dem Umlauf 06:35 und refresh_ohlc),
+    # gerechnet wird einmal je Monatsstichtag; sonst nur die Mail-Lage (schnell). Ohne Schalter spot_abbau_aktiv nur Protokoll
+    scheduler.add_job(
+        spot_abbau_job,
+        "cron",
+        hour=7,
+        minute=25,
+        args=[db_conn_factory, watchlist_provider],
+        id="spot_abbau",
+        **_nachholen("spot_abbau", 300, stunde=7, minute=25),
     )
     scheduler.add_job(
         ausstiegs_job,

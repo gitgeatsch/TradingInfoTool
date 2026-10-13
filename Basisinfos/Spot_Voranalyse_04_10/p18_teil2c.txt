@@ -1,0 +1,4 @@
+2026-08-01 NB mit Ersatz (Umlauf von t)   gemeinsam 349 · anderes Fuenftel 0 (0.0 %) · andere Klasse 0 · H 24 -> 24 · unteres Fuenftel verlassen 0 / neu 0
+2026-08-01 NB ohne Ersatz                 gemeinsam 349 · anderes Fuenftel 16 (4.6 %) · andere Klasse 24 · H 24 -> 0 · unteres Fuenftel verlassen 1 / neu 1
+2026-09-01 NB mit Ersatz (Umlauf von t)   gemeinsam 332 · anderes Fuenftel 0 (0.0 %) · andere Klasse 0 · H 24 -> 24 · unteres Fuenftel verlassen 0 / neu 0
+2026-09-01 NB ohne Ersatz                 gemeinsam 332 · anderes Fuenftel 17 (5.1 %) · andere Klasse 24 · H 24 -> 0 · unteres Fuenftel verlassen 1 / neu 1

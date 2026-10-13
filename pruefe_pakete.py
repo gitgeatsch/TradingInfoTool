@@ -22419,6 +22419,110 @@ def paket_gitstand() -> None:
            and '"name": a.name' in _q and "_GS.bewerte(d)" in _pe)
 
 
+def paket_spot_abbau() -> None:
+    """SPOT B4 ABBAU-REIHENFOLGE (P18, 13.10.2026, Spot §48) - die Regel ist die der Vormessung (Nachbau bitgleich 7.471/7.471, Pruefstand
+    p18_pruefstand.py 12/12 gegen die volle Messbasis). Hier SYNTHETISCH und schnell: Stammsatz + Fenster = volle Geschichte, ein Lauf in
+    einer Wegwerf-Ablage, Mail, Schalter, Job. Die Produktion wird nie beruehrt."""
+    P = "SpotAbbau"
+    import os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    import types as _ty
+    from datetime import date as _d, timedelta as _td
+
+    import numpy as _np
+    import pandas as _pd
+
+    import agent.regel0_groesse as _G
+    import agent.spot_abbau as _SA
+
+    # ---- W1 synthetische Welt: 60 Coins, Zufallspfade, verschiedene Starts; Umlauf konstant je Coin
+    rng = _np.random.default_rng(18)
+    idx = _pd.date_range("2021-06-01", "2026-09-01", freq="D")
+    K = {}
+    for j in range(60):
+        start = int(rng.integers(0, 1400))
+        x = _np.full(len(idx), _np.nan)
+        x[start:] = _np.exp(_np.cumsum(rng.normal(-0.001, 0.05, len(idx) - start)))
+        K["C%02d" % j] = x
+    K = _pd.DataFrame(K, index=idx)
+    Uv = K * _pd.DataFrame(rng.uniform(1e5, 1e8, K.shape), index=idx, columns=K.columns)
+    menge = {s: float(rng.uniform(1e6, 1e9)) for s in K.columns}
+    um = lambda s, m: menge[s]                       # noqa: E731
+    t = _pd.Timestamp("2026-09-01")
+    voll = _SA.Wert(K, Uv, set(), um).fuenftel(t)
+    ab = t - _pd.Timedelta(days=_SA.FENSTER_T)
+    schnitt = (ab - _pd.Timedelta(days=1)).date()
+    stamm, erst = {}, {}
+    for s in K.columns:
+        r = K[s].dropna()
+        st = _SA.stamm_aus([x.date().isoformat() for x in r.index], list(r.values), schnitt)
+        erst[s] = st["erst"]
+        stamm[s] = (st["hoch"] if st["hoch"] is not None else _np.nan,
+                    (_pd.Timestamp(st["tag_hoch"]) - ab).days if st["tag_hoch"] else -1, _pd.Timestamp(st["erst"]), int(st["n"]), -1)
+    fen = _SA.Wert(K.loc[ab:t], Uv.loc[ab:t], set(), um, stamm=stamm, erst=erst).fuenftel(t)
+    # ⚠️ Fuenftel UND Merkmale vergleichen (Mutation 13.10.: ein um einen Tag verschobenes Hoch-Datum bei allen Coins laesst die Raenge und
+    # damit jedes Fuenftel gleich - nur die Merkmale verraten es)
+    _sp = ["q", "F1", "F2", "F8"]
+    a, b = voll.set_index("sym")[_sp], fen.set_index("sym")[_sp]
+    gleich = sum(all((a.at[s, c] == b.at[s, c]) or (a.at[s, c] != a.at[s, c] and b.at[s, c] != b.at[s, c]) for c in _sp)
+                 for s in a.index if s in b.index)
+    pruefe(P, "⚠️⚠️ D3: Stammsatz bis t-%d + Fenster gibt dieselben Merkmale und Fuenftel wie die volle Geschichte (synthetisch, 60 Coins)" % (
+        _SA.FENSTER_T + 1), gleich == len(a) and set(a.index) == set(b.index) and voll.q.notna().sum() >= 30, "%d von %d gleich" % (gleich, len(a)))
+    pruefe(P, "unteres Fuenftel = Perzentil <= 0,2 je Zelle; eine Zelle braucht >= 10 Coins mit Wert",
+           ((voll.q == 1) == (voll.p <= 0.2)).all() and all(n >= 10 for n in voll[voll.p.notna()].groupby("kl").size()))
+    # ---- W2 ein Lauf in einer Wegwerf-Ablage: junge Reihen (Spanne < 495 T) -> kein Binance-Abruf; Ersatzregel Umlauf
+    o = _tf.mkdtemp(prefix="spotabbau_")
+    kp = _sq.connect(os.path.join(o, _SA.KOPIE))
+    kp.execute("CREATE TABLE price_history_ohlc (symbol TEXT, assetklasse TEXT, currency TEXT, date TEXT, open REAL, high REAL, low REAL, close REAL, "
+               "volume REAL, fetched_at TEXT, quelle TEXT)")
+    k_ab = _pd.Timestamp("2025-06-01")
+    for s in K.columns:
+        r = K[s].loc[k_ab:].dropna()
+        kp.executemany("INSERT INTO price_history_ohlc VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                       [(s, "krypto", "USD", d_.date().isoformat(), v, v, v, v, float(Uv.at[d_, s] / v), None, None) for d_, v in r.items()])
+    kp.commit()
+    kp.close()
+    ul = _sq.connect(os.path.join(o, _SA.UMLAUF))
+    ul.execute("CREATE TABLE umlaufmenge (symbol TEXT, datum TEXT, wert REAL)")
+    ul.executemany("INSERT INTO umlaufmenge VALUES (?,?,?)", [(s, d_, menge[s]) for s in K.columns for d_ in ("2026-08-28", "2026-09-01")])
+    ul.commit()
+    ul.close()
+    pr = _sq.connect(":memory:")
+    pr.execute("CREATE TABLE holdings (symbol TEXT, quantity REAL, staked_quantity REAL)")
+    pr.execute("CREATE TABLE price_history_ohlc (symbol TEXT, currency TEXT, date TEXT, close REAL, volume REAL, quelle TEXT)")
+    halt = [s for s in K.columns if K[s].loc[k_ab:].notna().sum() > 300][:3]
+    pr.executemany("INSERT INTO holdings VALUES (?,?,?)", [(s, 10.0, 0.0) for s in halt])
+    wl = [_ty.SimpleNamespace(symbol=s, assetklasse="krypto", ist_cash_aequivalent=False) for s in K.columns]
+    abrufe = []
+    e = _SA.lauf(pr, o, wl, _d(2026, 9, 10), http=lambda s: abrufe.append(s) or [])
+    pruefe(P, "ein Lauf am 10.: fertig, Erstliste, Fuenftel je Bestand abgelegt, kein Binance-Abruf bei kurzen Reihen",
+           e["status"] == "fertig" and e["art"] == "erstliste" and e["universum"] >= 20 and not abrufe
+           and set(_SA.letzte_fuenftel(o)) == set(halt), "%s · Universum %s · Abrufe %d · unten %s" % (e["status"], e["universum"], len(abrufe), e["unten"]))
+    e2 = _SA.lauf(pr, o, wl, _d(2026, 9, 11))
+    st = _SA.stand(o)
+    pruefe(P, "zweiter Lauf im selben Monat: 'schon' (einmal je Stichtag); stand() fuer Statusseite und Teilexport",
+           e2["status"] == "schon" and st["laeufe"] == 1 and st["letzter"][0] == "2026-09-01")
+    pruefe(P, "vor dem 2. des Monats wird nicht gerechnet (der Schluss des Ersten liegt erst am 2. vor)",
+           _SA.lauf(pr, o, wl, _d(2026, 10, 1))["status"] == "frueh")
+    pr.close()
+    # ---- W3 Mail, Schalter, Job, Quelle
+    b_, t_ = _SA.mail({"stichtag": "2026-10-01", "art": "erstliste", "liste": [("XDC", "XDC", "S", -0.8, 500.0, 900.0, 0.1, 1, None, 10.0)]},
+                      {"XDC": 456.0}, {"XDC"})
+    pruefe(P, "Mail: Handlung 'Wenn du abbaust', Beleg in Dollar gegen Zufall der Klasse, Reihenfolge NICHT nach Guete, Hinweis ausserhalb Binance",
+           "Wenn du Spot-Bestände abbaust" in t_ and "12,5 Prozentpunkte" in t_ and "nicht nach Güte" in t_ and "außerhalb Binance" in t_
+           and b_.startswith("Spot: Abbau-Reihenfolge"))
+    pruefe(P, "⚠️⚠️ der Schalter ist im CODE standardmaessig AUS (Mail nur nach Nutzer-Ja)", _G.VORGABE.get("spot_abbau_aktiv") is False)
+    _bq = _quelltext("scheduler/background.py")
+    _sq_ = _quelltext("agent/spot_abbau.py")
+    pruefe(P, "Job taeglich 07:25, eigenstaendig, Mail nur mit Schalter, Hinweis 'ausserhalb' nach Binance-SPOT",
+           'id="spot_abbau"' in _bq and "minute=25," in _bq.split('id="spot_abbau"')[0][-200:] and "_G.spot_abbau_aktiv()" in _bq
+           and "spot_abbau" not in _quelltext("agent/rollen_lauf.py") and _bq.count("_BL.mit_binance_spot(") == 3)
+    pruefe(P, "⚠️ Ersatzregel Umlauf (Vormonat ohne Wert -> Umlauf am Stichtag, Spot §48.6) und Kopie nur Krypto",
+           "_asof(r, pd.Timestamp(t))" in _sq_ and _sq_.count("assetklasse='krypto'") >= 4)
+    pruefe(P, "die Ablage ist eine eigene Datei, die Produktion wird nur gelesen", _SA.ABLAGE == "spot_betrieb.db"
+           and "conn_prod.execute(" not in _sq_ and "conn_prod.commit" not in _sq_)
+
 def paket_spot_upbit() -> None:
     """SPOT B3 UPBIT-VERKAUFSANLASS (P16, 12.10.2026, Spot §47) - die Regel ist die der Messung C2-b, der Job haengt nicht an der Rollen-Kette.
 
@@ -22445,8 +22549,8 @@ def paket_spot_upbit() -> None:
     pruefe(P, "Mail nur mit Schalter, ganze Position, hoechstens 6 h nach der Meldung, erster Lauf = Startmarke",
            "_G.spot_upbit_aktiv()" in _bq and _SU.MAIL_HOECHSTENS_H == 6 and "GANZE Position" in _quelltext("agent/spot_upbit.py")
            and "upbit startmarke" in _quelltext("agent/spot_upbit.py"))
-    pruefe(P, "⚠️ Hinweis 'ausserhalb' nach Binance-SPOT in B1 UND B3 (nicht mit_regel0_daten - zaehlt Futures)",
-           _bq.count("_BL.mit_binance_spot(") == 2 and "_BL.mit_regel0_daten({f[" not in _bq)
+    pruefe(P, "⚠️ Hinweis 'ausserhalb' nach Binance-SPOT in B1, B3 UND B4 (P18; nicht mit_regel0_daten - zaehlt Futures)",
+           _bq.count("_BL.mit_binance_spot(") == 3 and "_BL.mit_regel0_daten({f[" not in _bq)
     pruefe(P, "die Ablage ist eine eigene Datei, die Produktion wird nur gelesen", _SU.ABLAGE == "spot_betrieb.db"
            and "conn_prod.execute(" not in _quelltext("agent/spot_upbit.py"))
 
@@ -32469,7 +32573,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "GitStand": paket_gitstand,
+          "SpotUpbit": paket_spot_upbit, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -804,6 +804,14 @@ function renderBetrieb(b) {
     if (l && l[6]) x += '<div class="unter err">' + esc(l[6]) + "</div>";
     (su.je_status || []).forEach(function (r) { x += '<div class="unter">Fälle ' + esc(r[0]) + ": " + r[1] + "</div>"; });
   }
+  const sa = b.spot_abbau;
+  if (sa) {
+    const l = sa.letzter;
+    x += '<div class="row" style="margin-top:6px"><strong>Spot-Abbau (B4)</strong><span' + (l && l[2] === "fehler" ? ' class="err"' : "") + ">" +
+         (l ? "Stichtag " + esc(l[0]) + " · " + esc(l[2]) + (l[4] != null ? " · Universum " + l[4] : "") : "noch kein Lauf") + "</span></div>";
+    if (l && l[6]) x += '<div class="unter">unteres Fünftel: ' + esc(JSON.parse(l[6]).join(", ") || "-") + (l[9] ? " · gemailt " + esc(l[9]) : "") + "</div>";
+    if (l && l[10]) x += '<div class="unter err">' + esc(l[10]) + "</div>";
+  }
   const na = b.neuaufnahme;
   x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Neuaufnahme</strong><span>' + (na ? fmtStempel(na[0]) : "noch kein Lauf") + "</span></div>";
   if (na) x += '<div class="unter">Regel ' + na[1] + " · Datei " + na[2] + " · neu: " + esc(na[3] || "-") + (na[4] ? " · ⚠ " + esc(na[4]) : "") + "</div>";
@@ -824,6 +832,7 @@ const SCHALTER_TEXT = {
   thesen_pausiert: ["Thesen (Multi-Asset, O42)", "pausiert", "laufen"],
   spot_mitnahme_aktiv: ["Spot-Mitnahme ×3 (B1) – Mail", "an", "aus (nur Protokoll)"],
   spot_upbit_aktiv: ["Spot-Upbit-Verkaufsanlass (B3) – Mail", "an", "aus (nur Protokoll)"],
+  spot_abbau_aktiv: ["Spot-Abbau-Reihenfolge (B4) – Mail", "an", "aus (nur Protokoll)"],
 };
 function renderSchalter(sch) {
   return Object.keys(sch).map(function (k) {

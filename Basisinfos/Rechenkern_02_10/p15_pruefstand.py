@@ -23,7 +23,7 @@ import sqlite3
 import sys
 import tempfile
 import time
-from datetime import date
+from datetime import date, timedelta
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
@@ -63,7 +63,10 @@ def conn_factory():
     return c
 
 
-SM.lauf(conn_factory(), ABL, WL, date(2026, 10, 12))
+# ⚠️ KORREKTUR 13.10.: der Lauftag folgt dem letzten Tagesschluss der Sicherung (vorher fest 12.10. - mit der Sicherung vom 13.10. lag
+# schon der Schluss vom 12.10. vor, und 'x 1,00 am Starttag' stimmte nicht mehr)
+_letzt = conn_factory().execute("SELECT MAX(substr(date, 1, 10)) FROM price_history_ohlc WHERE symbol='BTC' AND currency='USD'").fetchone()[0]
+SM.lauf(conn_factory(), ABL, WL, date.fromisoformat(_letzt) + timedelta(days=1))
 KRW = ["KRW-" + s for s in ("ALGO", "AVAX", "BIO", "CC", "INJ", "KAIA", "LINK", "MON", "MORPHO", "NEAR", "PLUME", "SEI", "SUI", "TAO", "W", "XLM")]
 SU.lauf(conn_factory(), ABL, WL, http=lambda url, params: [{"market": m} for m in KRW] if url == SU.MAERKTE else {"data": {"notices": []}})
 vor_p, vor_a = summe(PROD), summe(os.path.join(ABL, SM.ABLAGE))
@@ -78,19 +81,36 @@ nb.add(tab, text="Bestand")
 z = {tab.tree.set(i, "symbol"): {c: tab.tree.set(i, c) for c in BT.SPALTEN} for i in tab.tree.get_children()}
 c = conn_factory()
 n47 = c.execute("SELECT COUNT(*) FROM holdings WHERE COALESCE(quantity,0) + COALESCE(staked_quantity,0) > 0").fetchone()[0]
-pruefe("P1", len(z) == n47 == 47 and all(tab.tree.exists(s) for s in z), "Zeilen %d · Bestaende %d · Schluessel = Symbol" % (len(z), n47))
+# ⚠️ KORREKTUR 13.10. (P18): P1-P4 und P16 zaehlten den Stand der Sicherung vom 12.10. AUF (47 Bestaende, 27 L, 11 ohne KRW, eine Gruppe
+# 'nicht in Watchlist'). Mit HBAR (neu gehalten) und XDC (jetzt in der Watchlist) wurden sie rot, ohne dass der Tab falsch war - die
+# Falle *eine Pruefung, die Zustaende AUFZAEHLT, veraltet still*. Die Erwartungen werden jetzt aus den DATEN abgeleitet.
+pruefe("P1", len(z) == n47 and n47 >= 40 and all(tab.tree.exists(s) for s in z), "Zeilen %d · Bestaende %d · Schluessel = Symbol" % (len(z), n47))
 rollen = {}
 for s, r in z.items():
     rollen[r["rolle"]] = rollen.get(r["rolle"], 0) + 1
-pruefe("P2", rollen == {"Kern": 3, "L": 27, "Cash": 1, "-": 15, "nicht in Watchlist": 1}, "Rollen %s" % rollen)
+_wl = {a.symbol: a for a in WL}
+soll_rollen = {}
+for s_, in c.execute("SELECT symbol FROM holdings WHERE COALESCE(quantity,0) + COALESCE(staked_quantity,0) > 0"):
+    r_ = BT.rolle(s_, _wl.get(s_))
+    soll_rollen[r_] = soll_rollen.get(r_, 0) + 1
+pruefe("P2", rollen == soll_rollen and rollen.get("Kern") == 3, "Rollen %s (aus Bestand + Watchlist abgeleitet: %s)" % (rollen, soll_rollen))
 kreis = SM.kreis(c, WL)
 fenster = {r[0] for r in sqlite3.connect(os.path.join(ABL, SM.ABLAGE)).execute("SELECT symbol FROM fenster WHERE geschlossen_am IS NULL")}
 b1_ok = all((z[s]["b1_status"] == "laeuft" and z[s]["b1_x"] == "1,00" and z[s]["b1_bis"] != "-") if s in fenster else z[s]["b1_status"] == "kein Fenster"
             for s in kreis) and all(z[s]["b1_x"] == "-" for s in z if z[s]["rolle"] != "L")
-pruefe("P3", b1_ok and len(fenster) == len(kreis) == 27, "B1: %d Fenster fuer %d L-Bestaende, x 1,00 am Starttag, Nicht-L '-'" % (len(fenster), len(kreis)))
+mit_kurs = {s_ for s_ in kreis if SM.schluesse(c, s_)}
+pruefe("P3", b1_ok and fenster == mit_kurs and len(kreis) >= 20, "B1: %d Fenster fuer %d L-Bestaende (ohne Tageskurs: %s), x 1,00 am Starttag, Nicht-L '-'%s" % (
+    len(fenster), len(kreis), ", ".join(sorted(set(kreis) - mit_kurs)) or "-",
+    "" if b1_ok and fenster == mit_kurs else " · Fenster ohne Kurs %s, Kurs ohne Fenster %s, b1_ok %s" % (sorted(fenster - mit_kurs), sorted(mit_kurs - fenster), b1_ok)))
 ohne = set(SU.stand(ABL)["ohne_krw"])
 up_ok = all(z[s]["upbit"] == ("nein" if s in ohne else "ja") for s in kreis) and all(z[s]["upbit"] == "-" for s in z if z[s]["rolle"] != "L")
-pruefe("P4", up_ok and len(ohne) == 11, "Upbit KRW: 'nein' fuer %d (%s)" % (len(ohne), ", ".join(sorted(ohne))))
+_krw = {m_.split("-")[1] for m_ in KRW}
+soll_ohne = {s_ for s_ in kreis if {"CANTON": "CC"}.get(s_, s_) not in _krw}
+# P18 (13.10.2026): Spalte Abbau (B4) - ohne B4-Lauf in der Ablage '?' fuer L, '-' fuer alle anderen; mit Lauf das Fuenftel
+pruefe("P21", all(z[s_]["b4"] == "?" for s_ in kreis) and all(z[s_]["b4"] == "-" for s_ in z if z[s_]["rolle"] != "L")
+       and BT.b4_wert("X", {"X": ("2026-10-01", 1, "S", None)}) == "1 unten (S)" and BT.b4_wert("Y", {"Y": ("2026-10-01", None, None, "zu jung")}) == "–",
+       "Spalte Abbau (B4): ohne Lauf '?' fuer %d L-Bestaende, '-' sonst; mit Lauf '1 unten (S)' / '–'" % len(kreis))
+pruefe("P4", up_ok and ohne == soll_ohne, "Upbit KRW: 'nein' fuer %d (%s) · abgeleitet aus dem gestellten KRW-Markt" % (len(ohne), ", ".join(sorted(ohne))))
 trades = HF.lade(c)
 h = [tab.hebel_tree.item(i, "values") for i in tab.hebel_tree.get_children()]
 pruefe("P5", sorted(x[0] for x in h) == sorted(t["symbol"] for t in trades) == ["BTC", "ETH"],
@@ -149,7 +169,10 @@ pruefe("P15", oben and "Hebel-Eigenkapital" in tab.total_label.cget("text") and 
 auf = {g_: (tab.aufteilung_tree.set("auf|wert", g_), tab.aufteilung_tree.set("auf|anteil", g_)) for g_ in BT.AUF_REIHE
        if tab.aufteilung_tree.set("auf|wert", g_) != "-"}
 summe_anteil = sum(float(v_[1]) for v_ in auf.values())
-pruefe("P16", set(auf) == {"Kern", "L", "Cash", "Fiat", "andere Klassen", "nicht in Watchlist", "Hebel"} and abs(summe_anteil - 100.0) < 0.5
+_gr = {"Kern": "Kern", "L": "L", "Cash": "Cash", "-": "andere Klassen", "nicht in Watchlist": "nicht in Watchlist"}
+import database.db as _db
+soll_gruppen = {_gr[r_] for r_ in soll_rollen} | {"Hebel"} | ({"Fiat"} if (_db.get_cash_reserve_fiat_eur(c) or 0) > 0 else set())
+pruefe("P16", set(auf) == soll_gruppen and abs(summe_anteil - 100.0) < 0.5
        and auf["Hebel"][0] == "900.00", "Aufteilung %s · Anteile zusammen %.1f %%" % (auf, summe_anteil))
 hoehe = int(tab.tree.cget("height")) + int(tab.hebel_tree.cget("height")) + int(tab.aufteilung_tree.cget("height"))
 pruefe("P18", hoehe <= 16 and int(tab.hebel_tree.cget("height")) == 2 and len(tab.aufteilung_tree.get_children()) == 2,

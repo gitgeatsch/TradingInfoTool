@@ -5859,3 +5859,30 @@ Nutzer 13.10.: *„ja – prüfe aber vorher, ob die Watchlist auch wirklich bes
   - Die fünf Schreiber schreiben nur noch dorthin.
   - Punkt 17 der Exportprüfung zeigt die Ergänzung als *„nur am NB – ins Repo übernehmen?“*. Ich übernehme sie bei Bedarf per Commit.
 - O40 *Meine Assets* (Ansicht, Kennzeichen) baut darauf auf; der Bestand wird aus `holdings` abgeleitet.
+
+### 48.6 Nachtrag beim Bau: Umlauf der Vormonate am NB (13.10.2026, `p18_teil2c.py` → `.txt`)
+
+**Gefunden beim Bau, nicht in 48.2:**
+- Die Klasse H verlangt den Marktwert-Rang an t, t−1 M und t−2 M.
+- Am NB reicht die CoinGecko-Umlaufreihe nur bis etwa 08.09.2026 zurück (Betriebskopie). Für den Stichtag 01.10. fehlen dort **beide** Vormonate, für 01.11. einer.
+- Teil 2b hatte am Desktop mit voller Umlauf-Historie gerechnet und das nicht gesehen.
+
+| NB-Lage nachgestellt (CoinGecko-Umlauf nur ab t−7 T) | 01.08.2026 | 01.09.2026 |
+|---|---|---|
+| **ohne Ersatz** | H 24 → **0**, 16 Coins mit anderem Fünftel (4,6 %) | H 24 → **0**, 17 (5,1 %) |
+| **Ersatz: Umlauf am Stichtag auch für die Vormonate** | **0 Abweichungen** | **0 Abweichungen** |
+
+⇒ Die Ersatzregel ist **dieselbe wie in der Messung**: vor dem 21.09.2025 galt dort der Umlauf von *heute* mal der Kurs des Tages (`mk_messung.umlauf_stufe`). Gebaut wird sie so. Ab dem 01.12.2026 hat der NB die Vormonate selbst, und die Ersatzregel greift dann nicht mehr.
+
+### 48.7 Gebaut (13.10.2026, Nutzer: *„ja“*)
+
+| Teil | Stand |
+|---|---|
+| `agent/spot_abbau.py` | Regel = Klasse `Wert` (derselbe Code wie der Nachbau `p18_voranalyse.B4`); Stammsatz D3 (`abbau_stamm`: von Binance geholt, aus der Kopie oder fortgeschrieben); Lauf einmal je Stichtag, Wartezeit bis zum 5.; Ablage `abbau_lauf`, `abbau_fuenftel` in `spot_betrieb.db`; Mail; `stand`, `letzte_fuenftel` |
+| Betrieb | Job `spot_abbau` täglich 07:25 und beim Start; Schalter `spot_abbau_aktiv` **aus**; Statusseite (Karte Betrieb, Schalter), Teilexport *SPOT-ABBAU (B4)*; Bestand-Tab Spalte *Abbau (B4)* mit Mouseover |
+| **Prüfstand** `p18_pruefstand.py` | **12/12**, NB-Lage nachgestellt (Betriebskopie 500 T je Reihe ohne Übernahmen, Umlauf erst ab 25.07., Binance gestellt, Wegwerf-Produktion) gegen den Nachbau auf der **vollen** Messbasis: **01.08. 347/347, 01.09. 339/339** Coins mit gleichem Fünftel; Stammsatz am 01.09. **fortgeschrieben** (343, 0 neue Abrufe); Erstliste 01.08. und *neu* 01.09. (HYPE); wartet bei fehlendem Kurs und bei gescheitertem Binance-Abruf bis zum 5.; Zuordnung D5 (KAIA ×1,5 → *unsicher*); Wegwerf-Produktion und Kopie unverändert |
+| ⚠️ Fehler im Bau gefunden und behoben | (1) Für ungekürzte, aber fensterlange Reihen wurde der Stammsatz nur aus dem Fenster gebildet. (2) „Gekürzt“ ist jetzt an der **Spanne** der Reihe erkannt, nicht am Datum. (3) Doppelte Tage werden verworfen, Kopie-Abfragen nur Krypto. (4) Scheitert ein Binance-Abruf, wartet der Lauf bis zum 5., statt den Coin still wegzulassen |
+| ⚠️ Fehler im **Prüfstand** (nicht im Modul) | Der Bezug zählte die Übernahmen als Binance-Reihen und legte die 400-Kerzen-Grenze einmal statt je Stichtag fest (HYPE: 386 T am 01.08., 417 T am 01.09.). Korrigiert, im Code vermerkt |
+| Suite-Paket **SpotAbbau** | 11/11, synthetisch: D3 (Merkmale **und** Fünftel; die Mutation *Hoch-Datum −1 T* wird gefunden), ein Lauf in einer Wegwerf-Ablage, einmal je Stichtag, nicht vor dem 2., Mail, Schalter aus, Job, Ersatzregel, Produktion nur gelesen |
+
+**Am NB:** Pull und Neustart. Der erste Lauf rechnet sofort den Stichtag **01.10.2026** (Inbetriebnahme mitten im Monat) und holt dafür einmal etwa 340 Reihen bei Binance (frei, wenige Minuten). Kontrolle **K-SP-3**; nach deinem Ja zum Schalter **K-SP-3b** (Erstliste per Mail).

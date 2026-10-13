@@ -65,6 +65,13 @@ def spot_upbit(daten: str = DATEN) -> dict:
     return SU.stand(daten)
 
 
+def spot_abbau(daten: str = DATEN) -> dict:
+    """P18 Spot B4: Stand der Abbau-Laeufe (Stichtag, Universum, unteres Fuenftel, Stammsaetze; data/spot_betrieb.db, nur lesend)."""
+    from agent import spot_abbau as SA
+
+    return SA.stand(daten)
+
+
 def hebel_wallet_abgleich(c) -> dict:
     """P11 (O36 Schritt B): Bitpanda-Hebel-Wallets gegen die offenen Positionen - Ergebnis + Kennzeile (agent/hebel_wallet_abgleich)."""
     from agent import hebel_wallet_abgleich as HW
@@ -378,7 +385,7 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
 
 # ══ Schalter, Jobs, Bestand, Kontingent ════════════════════════════════════════════════════════════════════════════════════
 SCHALTER = ("testwoche_freigegeben", "alter_hebelweg_aus", "spot_kette_angehalten", "ankuendigung_aktiv", "hebelfuehrung_aktiv",
-            "thesen_pausiert", "spot_mitnahme_aktiv", "spot_upbit_aktiv")
+            "thesen_pausiert", "spot_mitnahme_aktiv", "spot_upbit_aktiv", "spot_abbau_aktiv")
 
 
 def schalter() -> dict:

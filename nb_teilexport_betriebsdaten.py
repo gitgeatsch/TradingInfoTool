@@ -443,6 +443,24 @@ def _inhalt() -> int:
                 print("    %s · %-8s %-17s %s" % (r[0], r[1], r[2], str(r[3])[:90]))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Spot-Upbit nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # P18 Spot B4 (13.10.2026): Abbau-Reihenfolge - letzter Stichtag, Universum, unteres Fuenftel, Stammsaetze (data/spot_betrieb.db, nur lesend; K-SP-3)
+    print()
+    print("-" * 100)
+    try:
+        sa = BL.spot_abbau(DATEN)
+        import agent.regel0_groesse as _G18
+        if not sa.get("ablage") or not sa.get("laeufe"):
+            print("SPOT-ABBAU (B4): Schalter %s · noch kein Lauf" % ("AN" if _G18.spot_abbau_aktiv() else "aus"))
+        else:
+            l = sa["letzter"]
+            print("SPOT-ABBAU (B4): Schalter %s · Laeufe %d · Stichtag %s %s (%s) · am %s · Universum %s · Zellen %s · Stammsaetze %d (von Binance %d)" % (
+                "AN" if _G18.spot_abbau_aktiv() else "aus", sa["laeufe"], l[0], l[2], l[3], l[1], l[4], l[5], sa["stamm"], sa["stamm_binance"]))
+            print("    unteres Fuenftel: %s · neu: %s · ohne Kurs: %s · gemailt: %s%s" % (l[6], l[7], l[8], l[9] or "-",
+                                                                                         (" · FEHLER " + str(l[10])) if l[10] else ""))
+            for r in sa["letzte"]:
+                print("    %s · %-8s %-17s %s" % (r[0], r[1], r[2], str(r[3])[:110]))
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Spot-Abbau nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P9 (10.10.2026, G-O): die NB-Kontrollen aus Basisinfos/nb_kontrollen.yaml - automatische live ausgewertet, dieselbe Quelle wie
     # die Statusseite (Karte "Offene NB-Kontrollen"). Nur die offenen; die Historie steht in der Datei.
     print()

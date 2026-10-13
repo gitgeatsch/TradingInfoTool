@@ -1283,7 +1283,7 @@ def _get_betrieb(conn: sqlite3.Connection) -> dict:
         except (TypeError, ValueError):
             alter_min = None
         jobs.append({"job": job_id, "zuletzt_am": zuletzt, "alter_min": alter_min})
-    return {"jobs": jobs, "nachlader": BL.nachlader_kurz(_daten_ordner()), "spot_mitnahme": BL.spot_mitnahme(_daten_ordner()), "spot_upbit": BL.spot_upbit(_daten_ordner()),
+    return {"jobs": jobs, "nachlader": BL.nachlader_kurz(_daten_ordner()), "spot_mitnahme": BL.spot_mitnahme(_daten_ordner()), "spot_upbit": BL.spot_upbit(_daten_ordner()), "spot_abbau": BL.spot_abbau(_daten_ordner()),
             **_get_neuaufnahme()}
 
 
