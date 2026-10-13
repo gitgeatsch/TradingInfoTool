@@ -137,6 +137,12 @@ from ui.heading_tooltip import lage
 pruefe("P14", lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and lage(1000, 500, 300, 80, 2000, 1100) == (1012, 518)
        and "platziere(tip, tree)" in open("ui/row_tooltip.py", encoding="utf-8").read() and "platziere(tip, tree)" in open("ui/heading_tooltip.py", encoding="utf-8").read(),
        "Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile")
+# P15d (13.10.2026, Nutzer: *"Summe fuer Hebel ist nicht sichtbar"*): Gesamtwert OBEN (vor der Spot-Tabelle), Hebel-Summe in der Hebel-Ueberschrift
+reihe = [w_ for w_ in tab.pack_slaves()]
+oben = reihe.index(tab.total_label) < reihe.index(tab.tree)
+hk = tab.hebel_kopf.cget("text")
+pruefe("P15", oben and "Hebel-Eigenkapital" in tab.total_label.cget("text") and "offene Positionen: 2" in hk and "900.00" in hk and int(tab.tree.cget("height")) == 13,
+       "Gesamtwert oben %s · Hebel-Ueberschrift '%s' · Spot-Hoehe %s" % (oben, hk, tab.tree.cget("height")))
 root.destroy()
 c.close()
 print("\nBeispielzeilen:")

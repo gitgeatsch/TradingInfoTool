@@ -1131,3 +1131,13 @@ Nutzer 12.10. (Bild nach Pull und GUI-Neustart): *„eine Spalte fehlt in der An
 - GuiKette **54/54** (zwei neue Wachen).
 
 Am NB: **K-GUI-3b** (neues Bild).
+
+### G-Z3 P15d — Summen sichtbar (13.10.2026)
+
+- **Bild 13.10. 05:03:** Upbit-Spalte, Laufleiste, kompakter Einstand und CAT-Menge passen. Nutzer: *„Summe für Hebel ist nicht sichtbar“*.
+- **Ursache:** Die Summenzeile stand ganz unten und lag bei 150 % Anzeige außerhalb des Fensters.
+- **Behoben:**
+  - Der **Gesamtwert** mit allen Teilen steht **oben** unter der Kopfzeile.
+  - Die Hebel-Überschrift nennt *„offene Positionen: n · Eigenkapital zusammen … EUR“*.
+  - Die Spot-Tabelle hat 13 statt 16 Zeilen (Laufleiste).
+- **Nachweis:** `p15_pruefstand` **15/15** (neu P15), GuiKette mit Wache P15d.

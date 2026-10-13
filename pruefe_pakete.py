@@ -22233,6 +22233,8 @@ def paket_guikette() -> None:
            and "platziere(tip, tree)" in _quelltext("ui/row_tooltip.py") and "platziere(tip, tree)" in _quelltext("ui/heading_tooltip.py")
            and "winfo_pointerx() + 12" not in _quelltext("ui/row_tooltip.py") + _quelltext("ui/heading_tooltip.py"))
     pruefe(P, "P15c: Bestand-Spot hat eine waagrechte Laufleiste - keine Spalte verschwindet rechts", "xscrollcommand=_xs.set" in _bt15)
+    pruefe(P, "P15d: Gesamtwert OBEN (vor der Spot-Tabelle), Hebel-Summe in der Hebel-Ueberschrift - unten war sie bei 150 % nicht sichtbar",
+           0 <= _bt15.find("self.total_label.pack(") < _bt15.find("self.tree = ttk.Treeview(") and "Eigenkapital zusammen" in _bt15)
     _bl9 = _quelltext("agent/betriebslage.py")  # _nur_code entfernt Strings - und die SQL steht in Strings
     pruefe(P, "⚠️⚠️ betriebslage liest nur (kein INSERT/UPDATE/DELETE, fremde Dateien mode=ro)",
            not re.search(r"\b(INSERT|UPDATE|DELETE|REPLACE INTO|CREATE TABLE)\b", _bl9) and "mode=ro" in _quelltext("agent/betriebslage.py"))

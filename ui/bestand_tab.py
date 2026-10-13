@@ -239,7 +239,11 @@ class BestandTab(PortfolioView):
         ttk.Button(kopf, text="Aktualisieren", command=lambda: self.refresh(erzwingen=True)).pack(side="right")
         self.status = ttk.Label(kopf, text="", foreground=theme.info_color())
         self.status.pack(side="right", padx=8)
-        self.tree = ttk.Treeview(self, columns=SPALTEN, show="headings", height=16)
+        # P15d (13.10.2026, Nutzer: *"Summe fuer Hebel ist nicht sichtbar"*): der Gesamtwert steht OBEN - unten passte er bei 150 %
+        # Anzeige nicht mehr ins Fenster
+        self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
+        self.total_label.pack(anchor="w", padx=8, pady=(2, 0))
+        self.tree = ttk.Treeview(self, columns=SPALTEN, show="headings", height=13)
         for c in SPALTEN:
             self.tree.heading(c, text=KOPF[c])
             # P15c: Summe der Breiten passt auch bei 150 % Anzeige in ein Vollbild; dazu die waagrechte Laufleiste (keine Spalte verschwindet)
@@ -261,7 +265,8 @@ class BestandTab(PortfolioView):
         self.tree.pack(fill="both", expand=True, padx=8, pady=(4, 0))
         _xs.pack(fill="x", padx=8, pady=(0, 6))
 
-        ttk.Label(self, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold")).pack(anchor="w", padx=8)
+        self.hebel_kopf = ttk.Label(self, text="Hebel – offene Positionen (kurz; Details im Hebel-Tab)", font=("", 10, "bold"))
+        self.hebel_kopf.pack(anchor="w", padx=8)                     # P15d: nennt die Hebel-Summe (Zahl, Eigenkapital zusammen)
         self.hebel_tree = ttk.Treeview(self, columns=HEBEL_SPALTEN, show="headings", height=3)
         for c in HEBEL_SPALTEN:
             self.hebel_tree.heading(c, text=HEBEL_KOPF[c])
@@ -283,8 +288,6 @@ class BestandTab(PortfolioView):
         add_row_tooltips(self.diversifikation_tree, lambda iid: self._diversifikation_tooltips.get(iid))
         self.diversifikation_tree.pack(fill="x", padx=8, pady=(0, 6))
 
-        self.total_label = ttk.Label(self, text="Gesamtwert: -", font=("", 10, "bold"))
-        self.total_label.pack(anchor="e", padx=8, pady=(0, 4))
         cash_frame = ttk.Frame(self)
         cash_frame.pack(anchor="e", padx=8, pady=(0, 8))
         ttk.Label(cash_frame, text="Fiat-Guthaben auf Börse (EUR, vom Bitpanda-Abgleich; Speichern nur als Ausnahme):").pack(side="left", padx=(0, 6))
@@ -318,6 +321,8 @@ class BestandTab(PortfolioView):
             logger.exception("Bestand-Tab: Hebelpositionen nicht lesbar")
         finally:
             conn.close()
+        self.hebel_kopf.config(text="Hebel – offene Positionen: %d · Eigenkapital zusammen %s EUR (kurz; Details im Hebel-Tab)" % (
+            len(self._hebel), format_money(self._hebel_ek)))
         self.hebel_tree.delete(*self.hebel_tree.get_children())
         for z in self._hebel or [("Keine offenen Positionen", "-", "-", "-", "-", "-")]:
             self.hebel_tree.insert("", "end", values=z)
