@@ -5886,3 +5886,8 @@ Nutzer 13.10.: *„ja – prüfe aber vorher, ob die Watchlist auch wirklich bes
 | Suite-Paket **SpotAbbau** | 11/11, synthetisch: D3 (Merkmale **und** Fünftel; die Mutation *Hoch-Datum −1 T* wird gefunden), ein Lauf in einer Wegwerf-Ablage, einmal je Stichtag, nicht vor dem 2., Mail, Schalter aus, Job, Ersatzregel, Produktion nur gelesen |
 
 **Am NB:** Pull und Neustart. Der erste Lauf rechnet sofort den Stichtag **01.10.2026** (Inbetriebnahme mitten im Monat) und holt dafür einmal etwa 340 Reihen bei Binance (frei, wenige Minuten). Kontrolle **K-SP-3**; nach deinem Ja zum Schalter **K-SP-3b** (Erstliste per Mail).
+
+**Erster NB-Lauf und Einschalten (14.10.2026):**
+- Diagnose und Teilexport: Stichtag 01.10. *fertig*, Universum 344 (H 26, M 78, S 240), 364 Stammsätze (345 von Binance), kein Fehler, keine Mail (K-SP-3 erfüllt).
+- Erstliste: **HYPE, KAIA, MORPHO, PLUME, QNT, SUI, TAO, XDC**. Gegen die Desktop-Rechnung vom 01.09. fällt TURBO heraus (dort 0,18), KAIA (0,23) und QNT (0,25) kommen hinzu, alles Grenzfälle.
+- Nutzer 14.10.: *„Ja B4 einschalten und pushen“* → , Kontrolle **K-SP-3b**.
