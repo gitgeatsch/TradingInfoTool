@@ -241,7 +241,9 @@ kontrollen:
     art: ereignis
     nachweis: "nach Pull (kein Neustart noetig, der Schalter wird je Lauf gelesen): Mail Erstliste beim naechsten Lauf (07:25; HYPE, KAIA, MORPHO, PLUME, QNT, SUI, TAO, XDC), Logzeile 'gemailt ja', danach 'gemailt nein'; am 02.11.2026 Stichtag 01.11. mit art neu - Mail nur, wenn ein Bestand NEU ins untere Fuenftel faellt"
     faellig_bis: ""
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-14"
+    beleg: "Nutzer 14.10.: *Die Mail mit der Abbau-Reihenfolge ist angekommen* (Lauf 07:25, Erstliste Stichtag 01.10.: HYPE, KAIA, MORPHO, PLUME, QNT, SUI, TAO, XDC). Der Monatsfall (nur Neue) laeuft als K-SP-3c am 02.11."
   - id: K-WL-2
     titel: "P18b Watchlist = Grundliste (config.yaml) + Ergaenzung (Datenbank am NB): kein Schreibweg aendert mehr die versionierte config.yaml"
     seit: "2026-10-14"
@@ -261,6 +263,15 @@ kontrollen:
     art: ereignis
     nachweis: "nach Pull + Neustart: Mouseover auf ASTER/CANTON/MON/VSN zeigt 'Abbau (B4) ... nicht eingeordnet: zu jung'. Beim naechsten neuen Coin bei Bitpanda (heute keiner ausser Staub SPC): Zeile 'nicht in Watchlist' mit Wert, Doppelklick oeffnet den Dialog mit Symbol/Name/Klasse; nach 'Hinzufuegen' Punkt 17 Hinweis 'Ergaenzung am NB: X (Herkunft gui_bestand)'"
     faellig_bis: ""
+    status: offen
+  - id: K-SP-3c
+    titel: "P18 Spot B4 erster Monatsstichtag nach der Erstliste (01.11.2026): Lauf am 02.11., Mail NUR fuer Bestaende, die neu ins untere Fuenftel fallen"
+    seit: "2026-10-14"
+    paket: P18
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach dem 02.11. 07:25: Logzeile 'Spot-Abbau: Stichtag 2026-11-01 · fertig · ... neu X' (art neu); Mail nur, wenn 'neu' nicht leer; Teilexport Laeufe 2; der Umlauf der Vormonate kommt dann zum Teil schon aus der eigenen NB-Reihe (Ersatzregel nur noch fuer 01.09.)"
+    faellig_bis: "2026-11-04"
     status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
