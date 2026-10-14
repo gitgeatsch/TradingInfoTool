@@ -1,0 +1,30 @@
+V1   bestanden Stichtag 2026-09-01 · Universum 339 · unten HYPE,MORPHO,PLUME,SUI,TAO,TURBO,XDC · abbau_fuenftel gleich True · abbau_lauf gleich True · mit Fehler: B4 fertig, Protokoll ['RuntimeError: gestellter Fehler P22']
+V2   bestanden Universum 339 (mit Wert 326) · Menge und Klassen wie B4 True · Wert unabhaengig True · Fuenftel unabhaengig True · je Klasse H 24 M 76 S 226
+V3   bestanden Erstliste HYPE,MORPHO,PLUME,SUI,TAO,TURBO,XDC · Zeilen 7 von 7 Coins · Messlage True · ohne verw kein Wort 'Verwässerung' True · Beispiel: Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
+V4   bestanden B1 mit True / ohne True · B3 mit True / ohne True · Zeile: Umlaufmenge +18,2 % in 90 Tagen (stärkstes Fünftel der Klasse H, Grenzen vom Stichtag 01.09.2026)
+V5   bestanden Text: Einschaetzung True, Technik True · HTML True · ohne Zeile bitgleich True
+V6   bestanden TAO heute Umlaufmenge +18,2 % in 90 Tagen (stärkstes Fünftel der Klasse H, Grenzen vom Stichtag 01.09.2026) (eigen +0.1668) Fuenftel 5 (eigen 5) · HYPE: Verwässerung 90 T: für HYPE gibt es keine Mengenreihe (CoinGecko-Umlauf nicht erfasst) · NB ohne Ergaenzung: Verwässerung 90 T: noch keine 90 Tage Mengenhistorie
+V7   bestanden Statusseite: [('PLUME', '+11,1 %', 'S', '2026-09-01'), ('MORPHO', '+7,9 %', 'M', '2026-09-01'), ('W', '+7,3 %', 'S', '2026-09-01'), ('XLM', '+2,9 %', 'H', '2026-09-01'), ('LINK', '+2,9 %', 'H', '2026-09-01')] · eigen gezaehlt ['LINK', 'MORPHO', 'PLUME', 'W', 'XLM']
+V8   bestanden turnover ['turnover', 'betriebskopie', None, 14, '2026-09-22'] · schnitt ['schnitt', 'betriebskopie', None, 500, '2026-09-20']
+V9   bestanden Wegwerf-Produktion, Betriebskopie, Mengenreihe unveraendert: {'prod': True, 'kopie': True, 'umlauf': True}
+
+Muster B4-Mail, Abschnitt 3 (V3):
+  HYPE: Klasse M · 2 % unter dem Allzeithoch · Hoch vor 5 Tagen · Daten seit 417 Tagen · Perzentil 0,01 · Wert 1000 EUR · Kosten je Seite 0,88 %
+     Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
+  MORPHO: Klasse M · 34 % unter dem Allzeithoch · Hoch vor 592 Tagen · Daten seit 649 Tagen · Perzentil 0,09 · Wert 1000 EUR · Kosten je Seite 0,88 %
+     Verwässerung 90 T +7,9 % (stärkstes Fünftel)
+  PLUME: Klasse S · 93 % unter dem Allzeithoch · Hoch vor 476 Tagen · Daten seit 496 Tagen · Perzentil 0,10 · Wert 1000 EUR · Kosten je Seite 3,20 %
+     Verwässerung 90 T +11,1 % (stärkstes Fünftel)
+  SUI: Klasse H · 86 % unter dem Allzeithoch · Hoch vor 605 Tagen · Daten seit 1217 Tagen · Perzentil 0,12 · Wert 1000 EUR · Kosten je Seite 0,36 %
+     Verwässerung 90 T +1,1 % (4. Fünftel)
+  TAO: Klasse H · 69 % unter dem Allzeithoch · Hoch vor 632 Tagen · Daten seit 873 Tagen · Perzentil 0,04 · Wert 1000 EUR · Kosten je Seite 0,36 %
+     Verwässerung 90 T +0,0 % (geringstes Fünftel)
+  TURBO: Klasse S · 93 % unter dem Allzeithoch · Hoch vor 629 Tagen · Daten seit 715 Tagen · Perzentil 0,19 · Wert 1000 EUR · Kosten je Seite 3,20 %
+     Verwässerung 90 T +0,0 % (2. Fünftel)
+  XDC: Klasse S · 80 % unter dem Allzeithoch · Hoch vor 592 Tagen · Daten seit 971 Tagen · Perzentil 0,18 · Wert 1000 EUR · Kosten je Seite 3,20 %
+     Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
+  Verwässerung = wie stark die Umlaufmenge in 90 Tagen gewachsen ist (Freigab
+
+Muster REGEL0, Einschaetzung (V5): Verwässerung    Umlaufmenge +18,2 % in 90 Tagen (stärkstes Fünftel der Klasse H, Grenzen vom
+
+9 von 9 bestanden

@@ -464,6 +464,22 @@ def _inhalt() -> int:
                                                                                          (" · FEHLER " + str(l[10])) if l[10] else ""))
             for r in sa["letzte"]:
                 print("    %s · %-8s %-17s %s" % (r[0], r[1], r[2], str(r[3])[:110]))
+            # P22 (15.10.2026): Verwaesserung je Bestandscoin am Stichtag (Fakt)
+            try:
+                import agent.spot_abbau as _SA22
+                _c22 = _SA22.SM._ro(os.path.join(DATEN, _SA22.ABLAGE))
+                try:
+                    _z22 = _c22.execute("SELECT f.symbol, v.klasse, v.verw90, v.fuenftel FROM abbau_fuenftel f LEFT JOIN verw_universum v "
+                                        "ON v.stichtag = f.stichtag AND v.symbol = f.reihe WHERE f.stichtag=? ORDER BY v.verw90 DESC", (l[0],)).fetchall()
+                finally:
+                    _c22.close()
+                _mit = [r for r in _z22 if r[2] is not None]
+                print("    Verwaesserung 90 T (P22): %d von %d Bestandscoins mit Wert%s" % (len(_mit), len(_z22), "" if _mit else
+                      " - am NB ab 12/2026 (90 T Mengenhistorie) oder nach USB-Ergaenzung"))
+                for r in _mit:
+                    print("      %-8s Klasse %s · %+.1f %% · Fuenftel %s" % (r[0], r[1], 100 * (__import__("math").exp(r[2]) - 1), r[3] or "-"))
+            except Exception as _e22:                                  # noqa: BLE001
+                print("    Verwaesserung 90 T (P22): nicht lesbar (%s)" % type(_e22).__name__)
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Spot-Abbau nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P9 (10.10.2026, G-O): die NB-Kontrollen aus Basisinfos/nb_kontrollen.yaml - automatische live ausgewertet, dieselbe Quelle wie

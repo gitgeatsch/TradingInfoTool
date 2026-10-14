@@ -1254,3 +1254,16 @@ Schritt7 §23.24.
   - Die Datenhaltung läuft über die NB-Fortschreibung und den Desktop-Vollabruf vor 09/2027.
 - **Vorschlag, offen:** *Verwässerung 90 T* als Fakt im Mouseover (Paket mit Voranalyse, am NB ab ~12/2026).
 - Nachweis: Spot §53.
+
+# E-109 · P22 Verwässerung als Fakt gebaut (15.10.2026)
+
+**15.10.2026** · Nutzer: *„Ja, hätte gerne immer die Verwässerung auch beim Kauf … P22 bauen, prüfen und gegenprüfen.“*
+- **Gebaut:** Faktenzeile in B4, B1, B3 und REGEL0 (Kauf), Statusseite, Teilexport. B4-Regel bitgleich. Prüfstand 9/9, Suite 6/6.
+- **Eigene fachliche Festlegungen (berichtet):**
+  - Fünftel mit Mittelrang wie in der Messung.
+  - Zwischen den Stichtagen gilt der Wert **heute**, eingeordnet an den Grenzen des letzten Stichtags (Grund: TAO sprang in drei Wochen von 0 auf +18 %).
+  - Keine eigene Mail.
+  - „Beim Kauf“ = REGEL0, weil es eine Spot-Kaufmail nicht gibt (E-102).
+  - Diagnose: zwei Lesefehler der Mengendatei behoben.
+- **Offen, zur Entscheidung:** USB-Ergänzung, P22c Freigabe-Rhythmus als Fakt, P22b Coins außerhalb Binance.
+- Nachweis: Spot §54.6/54.7, Schritt7 §23.49.

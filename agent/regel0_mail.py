@@ -110,7 +110,7 @@ def _prozent(x: float) -> str:
 
 
 def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
-                  ankuendigung=None) -> dict:
+                  ankuendigung=None, verwaesserung=None) -> dict:
     """O25 (Nutzer 04.10.2026: *nicht die bisherige Form uebernehmen*; M-a bis M-f): EINE Gliederung fuer Text und HTML.
 
     Reihenfolge M-a: (1) was zu tun ist - (2) Chart - (3) Einschaetzung - (4) Begruendung der Rollen - (5) Technik.
@@ -167,6 +167,9 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     # O29 (E-83/E-84): eine Binance-Ankuendigung (Delisting, Monitoring) als FAKT - keine Bewertung, kein Ausloeser
     if isinstance(ankuendigung, dict) and ankuendigung.get("ein"):
         ein_z.append(("Binance", ankuendigung["ein"]))
+    # P22 (15.10.2026): die Verwaesserung des Assets als FAKT ("beim Kauf", Nutzer) - keine Bewertung, kein Ausloeser
+    if isinstance(verwaesserung, dict) and verwaesserung.get("ein"):
+        ein_z.append(("Verwässerung", verwaesserung["ein"]))
     ein_z.append(("Gefahr je Stufe", "2x %s · 3x %s · 5x %s binnen 24 h (Grenze 2 %%)" % (
         _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5")))))
 
@@ -183,6 +186,8 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     technik += [("Vermerk", x) for x in vm]
     if isinstance(ankuendigung, dict):
         technik += list(ankuendigung.get("technik") or [])
+    if isinstance(verwaesserung, dict):
+        technik += list(verwaesserung.get("technik") or [])
     technik += [("Regel", "REGEL0.1 (rsi-Ersteintritt, v-dach %s, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %%)" % (
                     ("%+.4f" % r["vh"]).replace(".", ",") if r.get("vh") is not None else "-")),
                 ("Einsatz", "Startwerte in regel0_betrieb.yaml; die Hebelstufen je Asset bei Bitpanda sind noch nicht als Daten hinterlegt (D2)")]
@@ -247,16 +252,16 @@ def _als_html(t: dict, bilder: int = 0) -> str:
 
 
 def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
-                ankuendigung=None) -> tuple:
+                ankuendigung=None, verwaesserung=None) -> tuple:
     """-> (Betreff, Text). Der Text ist auch das Detail im Hebel-Tab (eine Quelle). Aufbau O25: ``_signal_teile``."""
-    t = _signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung)
+    t = _signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung, verwaesserung)
     return t["betreff"], _als_text(t)
 
 
 def signal_html(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
-                bilder: int = 0, ankuendigung=None) -> str:
+                bilder: int = 0, ankuendigung=None, verwaesserung=None) -> str:
     """Die HTML-Fassung derselben Gliederung (O25 M-d)."""
-    return _als_html(_signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung), bilder)
+    return _als_html(_signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung, verwaesserung), bilder)
 
 
 def korrektur_mail(r: dict, alt: int, neu: int, werte: dict, jetzt: datetime) -> tuple:
@@ -311,7 +316,8 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
 
 
 def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
-             bild=None, pruefung=None, position=None, spot=None, senden_html=None, ankuendigung=None, zusatzbilder=None) -> dict:
+             bild=None, pruefung=None, position=None, spot=None, senden_html=None, ankuendigung=None, zusatzbilder=None,
+             verwaesserung=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
@@ -412,7 +418,14 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                 except Exception as exc:                        # noqa: BLE001
                     __import__("logging").getLogger(__name__).warning("REGEL0-Ankuendigung %s gescheitert: %s: %s", r.get("symbol"),
                                                                       type(exc).__name__, exc)
-            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, _an)
+            _vw = None
+            if verwaesserung is not None:                     # P22: scheitert nie - ohne Zeile geht die Mail trotzdem (P-8)
+                try:
+                    _vw = verwaesserung(r)
+                except Exception as exc:                        # noqa: BLE001
+                    __import__("logging").getLogger(__name__).warning("REGEL0-Verwaesserung %s gescheitert: %s: %s", r.get("symbol"),
+                                                                      type(exc).__name__, exc)
+            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, _an, _vw)
             bilder = None
             if bild is not None:
                 try:
@@ -433,7 +446,7 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                     bilder = (bilder or []) + _zb
             if senden_html is not None:
                 try:
-                    _h = signal_html(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, len(bilder or []), _an)
+                    _h = signal_html(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, len(bilder or []), _an, _vw)
                 except Exception:                               # noqa: BLE001
                     _h = None
                 _ok = senden_html(b, t, _h, bilder)

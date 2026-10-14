@@ -409,6 +409,14 @@ def lauf(conn_prod, ordner: str, watchlist: list, heute: date | None = None, htt
         z = W.fuenftel(pd.Timestamp(t)).set_index("sym")
         if mit_tabelle:                                      # Pruefstand: das ganze Universum, nicht nur der Bestand
             erg["_tabelle"] = z.reset_index()
+        # P22 (15.10.2026): Verwaesserung 90 T als FAKT fuer dasselbe Universum und dieselben Klassen - eigene Tabellen, die Regel B4
+        # oben bleibt unberuehrt; scheitert nie (ohne Verwaesserung laeuft B4 wie vorher)
+        try:
+            from agent import verwaesserung as VW
+            erg["verw"] = VW.speichere(c, t.isoformat(), z.reset_index(), cgh)
+        except Exception as exc:                             # noqa: BLE001
+            erg["verw"] = None
+            c.execute("INSERT INTO protokoll VALUES (?,?,?,?)", (jt, "-", "verwaesserung fehler", ("%s: %s" % (type(exc).__name__, exc))[:300]))
         erg["universum"] = int(z.q.notna().sum())
         zellen = {k: int((z.kl == k).sum()) for k in ("H", "M", "S")}
         # ---- je gehaltenem Coin
@@ -506,8 +514,9 @@ def vermerke_mail(ordner: str, t: str) -> None:
 
 
 # ══ die Mail (E-91: Coin · was tun · wann · warum) ════════════════════════════════════════════════════════════════════════════
-def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set) -> tuple:
-    """``werte_eur``: {Symbol: Wert in EUR (frei + gestakt)}; Reihenfolge nach Wert - die Guete INNERHALB des Fuenftels ist nicht gemessen."""
+def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None = None) -> tuple:
+    """``werte_eur``: {Symbol: Wert in EUR (frei + gestakt)}; Reihenfolge nach Wert - die Guete INNERHALB des Fuenftels ist nicht gemessen.
+    ``verw`` (P22): {Symbol: (log-Wachstum 90 T, Fuenftel)} am Stichtag - Faktenzeile je Coin, kein Teil der Regel."""
     liste = sorted(fall["liste"], key=lambda r: -(werte_eur.get(r[0]) or 0))
     namen = ", ".join(r[0] for r in liste)
     b = "Spot: Abbau-Reihenfolge – zuerst %s" % namen
@@ -532,8 +541,12 @@ def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set) -> tuple:
                      "%d" % f2 if f2 is not None else "?", "%d" % f8 if f8 is not None else "?", ("%.2f" % p).replace(".", ","),
                      _eur(werte_eur.get(s)), ("%.2f" % SM.KOSTEN_JE_SEITE.get(kl, 0)).replace(".", ","),
                      " · außerhalb Binance: eingeordnet, nicht gemessen" if s in ausserhalb_binance else ""))
+        if verw is not None:
+            from agent import verwaesserung as VW
+            z.append("     " + VW.text_stichtag(*(verw.get(s) or (None, None))))
     z += ["", "4  KONTEXT (keine Handlung)",
           "  Mitnahme ×3 (B1) und Upbit-Listing (B3) gelten weiter; kommt dort eine Mail, hat sie Vorrang (sie hat einen Termin).",
+          *(["  " + __import__("agent.verwaesserung", fromlist=["MESSLAGE"]).MESSLAGE + "."] if verw is not None else []),
           "  Der Erlös: Wohin er geht, ist nicht gemessen – in der Messung lag er still (Dollar).",
           "", "5  TECHNIK", "  Spot B4 · Stichtag %s · Wert ohne TVL (F1, F2, F8) · Fünftel je Klasse · Spot §43/§48." % fall["stichtag"]]
     return b, "\n".join(z)
@@ -561,9 +574,30 @@ def stand(ordner: str) -> dict:
         n = c.execute("SELECT COUNT(*) FROM abbau_lauf").fetchone()[0]
         st = c.execute("SELECT COUNT(*), SUM(quelle='binance') FROM abbau_stamm").fetchone()
         letzte = [tuple(r) for r in c.execute("SELECT am, symbol, art, text FROM protokoll WHERE art LIKE 'abbau%' ORDER BY rowid DESC LIMIT 4")]
-        return {"ablage": True, "laeufe": n, "letzter": tuple(l) if l else None, "stamm": st[0] or 0, "stamm_binance": st[1] or 0, "letzte": letzte}
+        verw = []
+        if l and c.execute("SELECT 1 FROM sqlite_master WHERE name='verw_universum'").fetchone():
+            from agent import verwaesserung as VW               # P22: Bestandscoins im staerksten Verwaesserungs-Fuenftel
+            reihen = {r[0]: r[1] for r in c.execute("SELECT symbol, reihe FROM abbau_fuenftel WHERE stichtag=? AND reihe IS NOT NULL", (l[0],))}
+            verw = VW.stand_bestand(ordner, reihen)
+        return {"ablage": True, "laeufe": n, "letzter": tuple(l) if l else None, "stamm": st[0] or 0, "stamm_binance": st[1] or 0, "letzte": letzte,
+                "verw_staerkstes": verw}
     finally:
         c.close()
+
+
+def verw_am_stichtag(ordner: str, t: str, liste: list) -> dict:
+    """P22: {Bestandsymbol: (log-Wachstum 90 T, Fuenftel)} fuer die Zeilen ``liste`` (abbau_fuenftel: symbol, reihe, ...) am Stichtag."""
+    p = os.path.join(ordner, ABLAGE)
+    if not os.path.exists(p):
+        return {}
+    c = SM._ro(p)
+    try:
+        if not c.execute("SELECT 1 FROM sqlite_master WHERE name='verw_universum'").fetchone():
+            return {}
+        w = {r[0]: (r[1], r[2]) for r in c.execute("SELECT symbol, verw90, fuenftel FROM verw_universum WHERE stichtag=?", (t,))}
+    finally:
+        c.close()
+    return {r[0]: w.get(r[1] or r[0], (None, None)) for r in liste}
 
 
 def letzte_fuenftel(ordner: str) -> dict:

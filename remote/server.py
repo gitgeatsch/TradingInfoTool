@@ -811,6 +811,9 @@ function renderBetrieb(b) {
          (l ? "Stichtag " + esc(l[0]) + " · " + esc(l[2]) + (l[4] != null ? " · Universum " + l[4] : "") : "noch kein Lauf") + "</span></div>";
     if (l && l[6]) x += '<div class="unter">unteres Fünftel: ' + esc(JSON.parse(l[6]).join(", ") || "-") + (l[9] ? " · gemailt " + esc(l[9]) : "") + "</div>";
     if (l && l[10]) x += '<div class="unter err">' + esc(l[10]) + "</div>";
+    // P22 (15.10.2026): Verwaesserung als Fakt - Bestandscoins im staerksten Fuenftel ihrer Klasse am Stichtag
+    if (l && sa.verw_staerkstes) x += '<div class="unter">Verwässerung 90 T, stärkstes Fünftel (Bestand, Fakt): ' +
+         (sa.verw_staerkstes.length ? esc(sa.verw_staerkstes.map(function (r) { return r[0] + " " + r[1] + " (" + r[2] + ")"; }).join(", ")) : "keiner") + "</div>";
   }
   const na = b.neuaufnahme;
   x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Neuaufnahme</strong><span>' + (na ? fmtStempel(na[0]) : "noch kein Lauf") + "</span></div>";

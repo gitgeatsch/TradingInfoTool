@@ -6708,3 +6708,54 @@ Die NB-Diagnose meldet `umlaufmenge_cg.db` unter *messbasen* als **„nicht lesb
 1. Umfang V1–V6 so?
 2. V7 jetzt mit oder als P22b danach (Vorschlag: danach)?
 3. NB: USB-Ergänzung (Wert ab 01.11.; Vorschlag) oder warten (Wert ab 01.01.2027)?
+
+### 54.6 P22 gebaut (15.10.2026; Prüfstand `p22_pruefstand.py` 9/9, Suite-Paket `Verwaesserung` 6/6)
+
+Nutzer 15.10.: *„Ja, hätte gerne immer die Verwässerung auch beim Kauf … P22 bauen, prüfen und gegenprüfen.“*
+
+**Gebaut:**
+
+| Teil | Ort | Wirkung |
+|---|---|---|
+| Modul | `agent/verwaesserung.py` | Wert 90 T (log, B4-Lesegrenze), Fünftel je B4-Klasse, Faktenzeile, Messlage-Satz, Statusliste |
+| B4-Lauf | `spot_abbau.lauf` | schreibt am Stichtag `verw_universum` und `verw_grenzen` (eigene Tabellen); scheitert P22, läuft B4 **unverändert** weiter (Protokoll) |
+| B4-Mail | Abschnitt *Je Coin* + Kontext | „Verwässerung 90 T +x % (Fünftel)“ und der Messlage-Satz |
+| B1- und B3-Mail | Kontext | Wert heute, eingeordnet an den Grenzen des letzten Stichtags, + Messlage |
+| **REGEL0-Signalmail** („beim Kauf“) | Einschätzung + Technik, Text und HTML | dieselbe Zeile; ein scheiternder Lieferant hält die Mail nicht auf |
+| Statusseite | B4-Karte | Bestandscoins im stärksten Fünftel |
+| Teilexport | Abschnitt SPOT-ABBAU | Verwässerung je Bestandscoin |
+| Diagnose | `_messbasen` | Nebenfund §54.4 behoben, **dazu ein zweiter Fehler an derselben Stelle**: Die Datumsabfrage suchte die Tabelle `splycur`, die Datei hat `umlaufmenge` |
+
+- *„Beim Kauf“*: Eine Spot-Kaufmail gibt es nicht (Einstieg je Asset ab 2024 nicht belegt, E-102). Kauf-Mails sind heute die REGEL0-Signale. Jede künftige Kaufmail nutzt `verwaesserung.mailteil`.
+
+**Prüfstand** (Wegwerf-Ablage auf D:, NB-Lage nachgestellt, Stichtag 01.09.2026):
+- **V1** B4 **bitgleich** mit und ohne P22, auch wenn P22 scheitert.
+- **V2** Universum (339), Klassen, Wert und Fünftel **unabhängig nachgerechnet**. ⚠️ Der erste Bezug war rot, weil er Bindungen willkürlich brach. Viele Coins haben exakt 0 % (feste Menge); der Mittelrang folgt der Messung. Das war ein Fehler im Bezug, nicht im Modul.
+- **V3–V5** Mails: mit Zeile, ohne Zeile bitgleich.
+- **V6** `fakt` unabhängig gerechnet (TAO +18,2 % heute, stärkstes Fünftel H); HYPE ohne Mengenreihe; NB ohne Ergänzung meldet *„noch keine 90 Tage“*.
+- **V7** Statusliste.
+- **V8** Diagnose lesbar (Mengendatei `betriebskopie`, 14 T, Stand 22.09.).
+- **V9** Produktion, Betriebskopie und Mengenreihe unverändert.
+
+**Beobachtet (Auskunft):** Erstliste B4 am 01.09.:
+- MORPHO +7,9 % und PLUME +11,1 % liegen im stärksten Fünftel; beide Gründe kommen zusammen.
+- TAO stand am 01.09. bei 0,0 % (geringstes Fünftel), am 20.09. bei +18,2 % (stärkstes). Die Menge springt. Deshalb liest die Mail zwischen den Stichtagen den Wert **heute**.
+
+### 54.7 Nutzerfragen 15.10.: künftige Freigabetermine und USB-Ergänzung
+
+**Gibt es eine Quelle mit dem nächsten Ausgabetermin?**
+- **Frei: nein.** Die Freigabepläne führen DefiLlama (`emissions`, kostenpflichtig, HTTP 402), Tokenomist (ehemals TokenUnlocks), CryptoRank und Messari, alle kostenpflichtig. CoinGecko und Coinpaprika liefern keine Pläne. Das offene Repository der DefiLlama-Adapter ist nicht mehr öffentlich.
+- **Aber messbar aus der eigenen Reihe: der RHYTHMUS der Vergangenheit.**
+  - Von 375 Coins mit Mengenreihe haben 275 mindestens einen Sprungtag (+1 % an einem Tag), 169 mindestens drei.
+  - **14 haben einen monatlichen Rhythmus** (≥ 70 % der Abstände 26–35 T), zum Beispiel APT (12 Ereignisse, gleicher Kalendertag), ENA, ETHFI, SUI, IQ, SAHARA, ACE, GUN, MOVE, EIGEN.
+- **Vorschlag P22c:** In der Mail steht dann zum Beispiel *„Freigaben zuletzt monatlich, zuletzt am 14.09.; bei gleichem Rhythmus wäre die nächste um den 14.10.“*. Das ist ein **Fakt über die Vergangenheit**, kein Kalender und keine Vorhersage. Bei Coins ohne Rhythmus steht nichts. ⚠️ Bei manchen endete der Rhythmus (SUI zuletzt 05/2026), deshalb die Regel „nur, wenn der letzte Abstand im Rhythmus liegt“.
+
+**Was die USB-Ergänzung genau ist:**
+- **Keine DB wird ersetzt.**
+  - Die NB-Datei `umlaufmenge_cg.db` beginnt am 08.09.2026 und wird dort täglich fortgeschrieben.
+  - Die Desktop-Datei hat die Tage **davor** (21.09.2025 bis 07.09.2026).
+- **Ablauf:**
+  - Eine kleine Datei mit **nur diesen älteren Zeilen** wird gebaut (rund 7 MB) und per USB übertragen.
+  - Am NB fügt ein Skript sie **einmal** ein: nur Tage vor dem 08.09., *INSERT OR IGNORE*, vorher eine Sicherung der NB-Datei. Die Marke `_nur_betrieb` und alle NB-Tage bleiben unberührt.
+- **Wirkung:** Die Verwässerung gibt es ab dem nächsten Lauf statt ab 12/2026. Der B4-Stichtag 01.11. hätte sie schon.
+- **Ohne Ergänzung** kommt der Wert von selbst ab 07.12.2026 (B4: 01.01.2027). Die Mails sagen bis dahin *„noch keine 90 Tage Mengenhistorie“*.

@@ -3168,3 +3168,13 @@ Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
   - ohne `git` kommt der Commit aus `packed-refs`.
 - Mutationen: Ohne Schalter wird G1 rot, ohne Vergleich G2 und G3.
 - Punkt 17 auf der Diagnose von 12:12, also vor dem Pull: *git_stand fehlt*, *nur am NB: CT*, *nur im Repo: HBAR*. Das ist richtig für den Stand vor dem Pull.
+
+### 23.49 P22 Verwässerung als Fakt in Mail und Statusseite (15.10.2026)
+
+**Bau:** `agent/verwaesserung.py`; B4-Lauf (eigene Tabellen `verw_universum`, `verw_grenzen` in `spot_betrieb.db`); Mails B4, B1, B3, REGEL0; Statusseite B4-Karte; Teilexport SPOT-ABBAU; Diagnose `_messbasen` (Marke und Tabelle der Mengendatei).
+
+**Prüfung:** Prüfstand 9/9 an der Wegwerf-Ablage, Suite-Paket `Verwaesserung` 6/6, volle Suite ohne neue Fehler.
+
+**Am NB:** Pull und Neustart. Die Werte erscheinen ab 07.12.2026 von selbst, mit USB-Ergänzung sofort. Kontrolle **K-VW-1**.
+
+**Schalter:** keiner. Die Zeile ist Information in Mails, die ohnehin laufen; ohne Mengenhistorie steht *„noch keine 90 Tage“*.

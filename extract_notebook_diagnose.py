@@ -3080,16 +3080,26 @@ def _messbasen() -> dict:
                     # Form, nicht `voll`: wer sie mit `voll` verwechselt,
                     # haelt eine Attrappe fuer die Wahrheit.
                     z["form"] = "betriebskopie"
-                    _m = c.execute("SELECT behalte_tage, mindest_kerzen, "
-                                   "gebaut_am FROM _nur_betrieb "
-                                   "LIMIT 1").fetchone() or (None, None, None)
-                    z["behalte_tage"], z["mindest_kerzen"] = _m[0], _m[1]
-                    z["marke_gebaut_am"] = _m[2]
+                    # KORREKTUR 15.10.2026 (P22, Spot §54.4): die Marke hat je Datei EIGENE Spalten - messdaten.db
+                    # (behalte_tage, mindest_kerzen, gebaut_am), umlaufmenge_cg.db (hinweis, tage, gebaut_am). Die feste
+                    # Spaltenliste meldete die Mengendatei als "nicht lesbar", obwohl sie in Ordnung ist.
+                    _sp_m = [r[1] for r in c.execute("PRAGMA table_info(_nur_betrieb)")]
+                    _wahl = [x for x in ("behalte_tage", "mindest_kerzen", "tage", "gebaut_am") if x in _sp_m]
+                    _r_m = c.execute("SELECT %s FROM _nur_betrieb LIMIT 1" % ", ".join(_wahl)).fetchone() if _wahl else None
+                    _m = dict(zip(_wahl, _r_m or ()))
+                    z["behalte_tage"] = _m.get("behalte_tage", _m.get("tage"))
+                    z["mindest_kerzen"] = _m.get("mindest_kerzen")
+                    z["marke_gebaut_am"] = _m.get("gebaut_am")
                     z["hinweis"] = ("Sollzustand am Notebook - taeglich vom "
                                     "`betriebsreihen_job` nachgezogen. "
                                     "NICHT messen (Survivorship, fehlende "
                                     "Historie)")
                     _t, _sp = DATUM[groesse]
+                    # KORREKTUR 15.10.2026 (P22): `turnover` liegt seit 22.09. in umlaufmenge_cg.db - Tabelle `umlaufmenge`,
+                    # nicht `splycur` (die alte Coin-Metrics-Datei). Die vorhandene Tabelle nehmen, nicht die aufgezaehlte.
+                    _tabs = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+                    if _t not in _tabs and "umlaufmenge" in _tabs:
+                        _t = "umlaufmenge"
                     _mx = c.execute("SELECT MAX(%s) FROM %s"
                                     % (_sp, _t)).fetchone()[0]
                     z["juengste_daten"] = str(_mx)[:19] if _mx else None

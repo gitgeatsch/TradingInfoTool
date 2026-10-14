@@ -22297,6 +22297,45 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_verwaesserung() -> None:
+    """P22 (15.10.2026, Spot §53/§54): VERWAESSERUNG ALS FAKT IN MAIL UND STATUSSEITE.
+
+    Nutzer: *"haette gerne immer die Verwaesserung auch beim Kauf"* · *"die GUI nutze ich nur zur Wartung - der Rest kommt per eMail"*.
+    Geprueft: die Faktenzeile steht in B4/B1/B3/REGEL0 und auf der Statusseite, B4 bleibt BITGLEICH (auch wenn P22 scheitert), der
+    Wert ist unabhaengig nachgerechnet; der Pruefstand laeuft an einer Wegwerf-Kopie der juengsten Sicherung (nie an der Produktion)."""
+    P = "Verwaesserung"
+    import glob as _gl
+    import os as _os
+    import subprocess as _sp
+
+    import agent.verwaesserung as _VW
+
+    _q = {f: _quelltext(f) for f in ("agent/spot_abbau.py", "agent/spot_mitnahme.py", "agent/spot_upbit.py", "agent/regel0_mail.py",
+                                     "scheduler/background.py", "remote/server.py", "nb_teilexport_betriebsdaten.py")}
+    pruefe(P, "B4-Lauf schreibt die Verwaesserung in EIGENE Tabellen und faengt jeden Fehler ab (die Regel B4 bleibt unberuehrt)",
+           "VW.speichere(c, t.isoformat(), z.reset_index(), cgh)" in _q["agent/spot_abbau.py"]
+           and "verwaesserung fehler" in _q["agent/spot_abbau.py"])
+    pruefe(P, "Mails: B4, B1, B3 und REGEL0 (\"beim Kauf\") bekommen die Zeile; keine eigene Mail",
+           "verw_am_stichtag(ordner, fall[\"stichtag\"], fall[\"liste\"])" in _q["scheduler/background.py"]
+           and _q["scheduler/background.py"].count("_VW.fakt(ordner, f[\"symbol\"])") == 2
+           and "verwaesserung=lambda r:" in _q["scheduler/background.py"]
+           and "verw_text" in _q["agent/spot_mitnahme.py"] and "verw_text" in _q["agent/spot_upbit.py"]
+           and "verwaesserung" in _q["agent/regel0_mail.py"].split("def _als_text")[0])
+    pruefe(P, "Statusseite und Teilexport zeigen sie (die GUI sieht der Nutzer nicht)",
+           "sa.verw_staerkstes" in _q["remote/server.py"] and "Verwaesserung 90 T (P22)" in _q["nb_teilexport_betriebsdaten.py"])
+    pruefe(P, "der Messlage-Satz nennt beide Seiten und die Grenze (ein Jahr, ein Regime)",
+           "+5,8" in _VW.MESSLAGE and "−3,8" in _VW.MESSLAGE and "nicht belegt" in _VW.MESSLAGE and "ein Marktregime" in _VW.MESSLAGE)
+    _sich = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
+    if not _sich:
+        pruefe(P, "Pruefstand p22 (braucht eine Prod-Sicherung im Austauschordner)", False, "keine Sicherung gefunden")
+        return
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p22_pruefstand.py"), _sich[-1]],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
+    pruefe(P, "⚠️⚠️ Pruefstand am Seiteneffekt (%s): B4 bitgleich, Universum/Wert/Fuenftel unabhaengig, Mails, fakt, stand, Diagnose, "
+              "nichts veraendert" % _os.path.basename(_sich[-1]),
+           "9 von 9 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_wegwerf() -> None:
     """15.10.2026: WEGWERF-ORDNER AUF D: UND AUFRAEUMEN OHNE STILLES SCHEITERN (wegwerf.py).
 
@@ -32809,7 +32848,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

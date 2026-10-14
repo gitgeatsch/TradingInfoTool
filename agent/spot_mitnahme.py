@@ -194,7 +194,8 @@ def vermerke_mail(ordner: str, symbol: str, start: str) -> None:
 
 
 # ══ die Mail (E-91: Coin · was tun · bis wann · warum) ══════════════════════════════════════════════════════════════════════
-def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool = False, gestakt: float | None = None) -> tuple:
+def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool = False, gestakt: float | None = None,
+         verw_text: str | None = None) -> tuple:
     s = fall["symbol"]
     x = fall["ausloese_kurs"] / fall["startkurs_usd"]
     haelfte = fall["menge"] / 2.0
@@ -217,6 +218,10 @@ def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool =
     z.append("  Kosten bei Bitpanda je Seite nach Klasse: H %s %% · M %s %% · S %s %% (nur Information, nicht Teil der Regel)." % tuple(
         ("%.2f" % KOSTEN_JE_SEITE[k]).replace(".", ",") for k in ("H", "M", "S")))
     z.append("  Der Erlös: Wohin er geht, ist nicht gemessen – in der Messung lag er still (Dollar).")
+    if verw_text:                                                # P22 (15.10.2026): Verwaesserung als Fakt, nicht Teil der Regel
+        from agent import verwaesserung as _VW
+        z.append("  " + verw_text + ".")
+        z.append("  (" + _VW.MESSLAGE + ".)")
     z += ["", "4  TECHNIK", "  Spot B1 Mitnahme ×3 · Fenster %s bis %s · Dollar-Tagesschluss (price_history_ohlc) · Verkauf am Folgetag wie gemessen." % (
         fall["start"], fall["ende"])]
     return b, "\n".join(z)

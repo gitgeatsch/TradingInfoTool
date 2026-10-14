@@ -273,6 +273,15 @@ kontrollen:
     nachweis: "Diagnose nach dem 02.11. 07:25: Logzeile 'Spot-Abbau: Stichtag 2026-11-01 · fertig · ... neu X' (art neu); Mail nur, wenn 'neu' nicht leer; Teilexport Laeufe 2; der Umlauf der Vormonate kommt dann zum Teil schon aus der eigenen NB-Reihe (Ersatzregel nur noch fuer 01.09.)"
     faellig_bis: "2026-11-04"
     status: offen
+  - id: K-VW-1
+    titel: "P22 Verwaesserung: Diagnose liest die Mengendatei (messbasen turnover = betriebskopie, nicht 'nicht lesbar'); Teilexport zeigt die Zeile 'Verwaesserung 90 T (P22)'; naechste REGEL0-/B1-/B3-/B4-Mail traegt die Verwaesserungszeile"
+    seit: "2026-10-15"
+    paket: P22
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach Pull+Neustart: messbasen -> turnover form 'betriebskopie' mit juengste_daten; Teilexport SPOT-ABBAU: 'Verwaesserung 90 T (P22): ...' (ohne USB-Ergaenzung bis 12/2026 'am NB ab 12/2026'); erste Mail danach: Zeile 'Verwaesserung' (ohne Historie: 'noch keine 90 Tage Mengenhistorie')"
+    faellig_bis: "2026-11-04"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

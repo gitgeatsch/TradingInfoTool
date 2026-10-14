@@ -175,7 +175,7 @@ def vermerke_mail(ordner: str, meldung_id: int, symbol: str) -> None:
 
 # ══ die Mail (E-91: Coin · was tun · bis wann · warum) ══════════════════════════════════════════════════════════════════════
 def mail(fall: dict, ausserhalb_binance: bool = False, gestakt: float | None = None, kurs_jetzt_usd: float | None = None,
-         kurs_vorher_usd: float | None = None) -> tuple:
+         kurs_vorher_usd: float | None = None, verw_text: str | None = None) -> tuple:
     s = fall["symbol"]
     b = "Spot: %s verkaufen (Upbit-Listing)" % s
     z = ["1  WAS ZU TUN IST",
@@ -204,6 +204,10 @@ def mail(fall: dict, ausserhalb_binance: bool = False, gestakt: float | None = N
     z.append("  Wiedereinstieg und Erlös: nicht gemessen.")
     z.append("  Meldung: %s" % (MELDUNG_LINK % fall["id"]))
     z.append("  Titel: %s" % fall.get("titel", ""))
+    if verw_text:                                                # P22 (15.10.2026): Verwaesserung als Fakt, nicht Teil der Regel
+        from agent import verwaesserung as _VW
+        z.append("  " + verw_text + ".")
+        z.append("  (" + _VW.MESSLAGE + ".)")
     z += ["", "4  TECHNIK", "  Spot B3 Upbit-Verkaufsanlass · Regel wie die Messung C2-b · Mail nur bis %d h nach der Meldung." % MAIL_HOECHSTENS_H]
     return b, "\n".join(z)
 

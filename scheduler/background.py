@@ -1724,6 +1724,8 @@ def _regel0_mails() -> None:
                          senden_html=lambda b, t, h, bi: _sende_hinweismail(b, t, bi, h),   # O25 M-d: eigenes HTML
                          # O29 (E-83/E-84): Binance-Ankuendigung als Fakt - nur mit Schalter ankuendigung_aktiv, liest nur die Ablage
                          ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r),
+                         # P22 (15.10.2026): Verwaesserung des Assets als Fakt - "beim Kauf" (Nutzer); liest Mengenreihe + Ablage nur
+                         verwaesserung=lambda r: __import__("agent.verwaesserung", fromlist=["mailteil"]).mailteil(_NL.DATEN_VORGABE, r["symbol"]),
                          # O45 (11.10.2026): Wochen- und Tageschart mit RSI/MACD als weitere Bilder in "2 · Chart" (Kontext, kein Ausloeser)
                          zusatzbilder=lambda r: _IC.bilder(_NL.DATEN_VORGABE, r["symbol"], r.get("bitpanda") or r["symbol"],
                                                            r.get("eur_je_usd"), praefix="regel0"))
@@ -4321,7 +4323,12 @@ def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None
                 for f in erg["faellig"]:
                     bf = (btc.get(f["ausloese_tag"]) / btc.get(f["start"])) if btc.get(f["ausloese_tag"]) and btc.get(f["start"]) else None
                     st = conn.execute("SELECT staked_quantity FROM holdings WHERE symbol=?", (f["symbol"],)).fetchone()
-                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None)
+                    try:                                             # P22: Verwaesserung als Fakt - scheitert nie nach aussen
+                        from agent import verwaesserung as _VW
+                        _vw = _VW.fakt(ordner, f["symbol"])["text"]
+                    except Exception:                                # noqa: BLE001
+                        _vw = None
+                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, _vw)
                     try:
                         _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
                         bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
@@ -4378,7 +4385,13 @@ def spot_upbit_job(conn_factory, watchlist_provider, versand=None, jetzt=None, o
                     st = conn.execute("SELECT staked_quantity FROM holdings WHERE symbol=?", (f["symbol"],)).fetchone()
                     vor = [k for d, k in _SM.schluesse(conn, f["symbol"]) if d < f["utc"][:10]]
                     jetzt_usd = preise.get(f["symbol"]).price_usd if preise.get(f["symbol"]) and getattr(preise.get(f["symbol"]), "price_usd", None) else None
-                    b, t = _SU.mail(f, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, jetzt_usd, vor[-1] if vor else None)
+                    try:                                             # P22: Verwaesserung als Fakt - scheitert nie nach aussen
+                        from agent import verwaesserung as _VW
+                        _vw = _VW.fakt(ordner, f["symbol"])["text"]
+                    except Exception:                                # noqa: BLE001
+                        _vw = None
+                    b, t = _SU.mail(f, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, jetzt_usd, vor[-1] if vor else None,
+                                    _vw)
                     try:
                         _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
                         bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
@@ -4437,7 +4450,11 @@ def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, o
                     p = preise.get(r[0])
                     werte[r[0]] = (p.price_eur * float(r[9] or 0)) if p and p.price_eur else None
                 draussen = {r[0] for r in fall["liste"]} - _BL.mit_binance_spot({r[0] for r in fall["liste"]}, ordner)
-                b, t = _SA.mail(fall, werte, draussen)
+                try:                                                 # P22: Verwaesserung am Stichtag als Fakt je Coin
+                    _verw = _SA.verw_am_stichtag(ordner, fall["stichtag"], fall["liste"])
+                except Exception:                                    # noqa: BLE001
+                    _verw = None
+                b, t = _SA.mail(fall, werte, draussen, _verw)
                 if bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, None)):
                     _SA.vermerke_mail(ordner, erg["stichtag"])
                     gemailt = True
