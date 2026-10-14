@@ -1,0 +1,23 @@
+P54 VORANALYSE Verwaesserung · Stichtage 2026-01-01 bis 2026-06-01
+
+TEIL 1  GEGENPRUEFUNG IN BETRIEBSFORM (B4-Universum, B4-Klassen, Lesegrenze _asof)
+  B4-Universum je Stichtag: 320 327 331 336 331 337 · davon mit Verwaesserung: 294 299 302 309 312 320
+  Zellen mit >= 10 Coins: 18 (H 6 · M 6 · S 6) · Coin-Stichtage 1765 · Grenze oberes Fuenftel ab +5.0 % in 90 T
+  (a) staerkste Verwaesserung (oberes Fuenftel)      -3.8 log-Pp gg. Klasse · p hoch 0.9460 / tief 0.0545 · je Stichtag -12 -13 -4 +3 +1 +2 · je Klasse H -1.4 M -5.9 S -4.2
+  (a) geringste Verwaesserung (unteres Fuenftel)     +5.8 log-Pp gg. Klasse · p hoch 0.0145 / tief 0.9860 · je Stichtag +7 +6 +8 +0 +4 +10 · je Klasse H +1.1 M +12.0 S +4.1
+  (b) Schleife je Zelle: oben  -3.83 · unten  +5.76 log-Pp -> gleich (a)
+  Ueberschneidung mit B4: Spearman Verwaesserung ~ B4-Perzentil -0.01 · im B4-unteren Fuenftel liegen 24 % des staerksten Verwaesserungs-Fuenftels (Zufall 20 %)
+    innerhalb B4 unteres Fuenftel  staerkste Verwaesserung   -8.0 log-Pp gg. Klasse (n 86)
+    innerhalb B4 uebrige           staerkste Verwaesserung   -3.2 log-Pp gg. Klasse (n 272)
+  ZERLEGUNG: B4-Universum mit Marktwert-DRITTELN (Zellen wie §53): oben   -5.8 · unten   +4.8 log-Pp (§53.3: -7,4 / +6,4; B4-Klassen: -3.8 / +5.8)
+  Was das B4-Universum gegenueber §53 weglaesst: < 400 Kerzen, < 30 T Umsatz in 90 T, ausserhalb Binance-Spot, Sonderwerte
+
+TEIL 2  ABDECKUNG
+  Watchlist-Grundliste    46 Coins · mit Mengenreihe 31 · im B4-Universum (06/2026) 35 · ohne Reihe: AIOZ, AKT, ASTER, BIO, BRETT, CANTON, CAT, EURCV, GRIFFAIN, HYPE, KAS, MON, SUPRA, VSN, XDC
+  B4-Erstliste 14.10.      8 Coins · mit Mengenreihe 6 · im B4-Universum (06/2026) 6 · ohne Reihe: HYPE, XDC
+  Erstliste, Verwaesserung 90 T bis 20.09.2026 (Desktop-Reihe): HYPE - · KAIA +2.7 % · MORPHO +8.0 % · PLUME +7.1 % · QNT +0.0 % · SUI +1.7 % · TAO +18.2 % · XDC -
+
+TEIL 3  DATENLAGE AM NB
+  USB-Kopie 22.09.: 2026-09-08 bis 2026-09-22, 374 Symbole, Marke _nur_betrieb ja · NB schreibt seither taeglich fort (Diagnose 14.10.: Datenstand 2026-10-14)
+  -> 90 T Historie am NB ab 2026-12-07 · erster B4-Stichtag mit Verwaesserung: 2027-01-01 (ohne Ergaenzung)
+  Ergaenzung moeglich: Desktop-Reihe 2025-09-21 bis 2026-09-07 (132145 Zeilen vor dem NB-Beginn) -> mit ihr gaebe es 90 T sofort

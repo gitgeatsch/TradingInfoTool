@@ -6645,3 +6645,66 @@ Werte in log-Pp gegen die eigene Zelle (in Klammern p der erwarteten Seite). *tr
 1. **Volle Messung S2 ab 10/2027**, mit dann zwei Jahren und einem Regimewechsel, so es einen gibt; dieselbe Form wie hier, Bonferroni über die Regimezellen.
 2. **Bis dahin als Fakt** (nicht als Auslöser): *Verwässerung 90 T* je Watchlist- und Bestandscoin im Mouseover von Bestand und B4. Am NB ist das ab etwa 12/2026 möglich (90 T NB-Historie). Das wäre ein Paket mit Voranalyse und Ja.
 3. **Desktop-Vollabruf** der Umlaufmenge vor 09/2027 in die NB-Kontrollen bzw. den Plan aufnehmen.
+
+## 54. Voranalyse P22: Verwässerung als Fakt in Mail und Statusseite (15.10.2026; `p54_verwaesserung_voranalyse.py` → `.txt`)
+
+**Nutzer 15.10.:**
+- *„Ok, zuerst: Was wollen wir mit der Verwässerung erreichen?“*
+- *„Die GUI nutze ich nur zur Wartung … Der Rest kommt alles per eMail.“*
+- *„Ja, Voranalyse vorbereiten, prüfen und gegenprüfen.“*
+
+**Ziel:** Die Verwässerung (Umlaufmenge der letzten 90 T) soll den Nutzer **dort** erreichen, wo er entscheidet: in den Mails, die ohnehin eine Handlung tragen (B4 Abbau, B1 Mitnahme, B3 Verkaufsanlass), und auf der Statusseite. Sie ist **Fakt**, kein Auslöser, keine eigene Mail und keine Begründung (Regel 4).
+
+### 54.1 Prüfen: Gilt der Befund in der BETRIEBSFORM?
+
+§53.3 war im Universum *alle Coins mit Mengenreihe* und in Marktwert-Dritteln gemessen. Im Betrieb rechnet B4 mit **seinem** Universum (Binance-Spot, ≥ 400 Kerzen, ≥ 30 T Umsatz, ohne Sonderwerte) und **seinen** Klassen (H ≤ 30, M ≤ 100, S Rest). Gerechnet mit **demselben Code** (`agent.spot_abbau.Wert`, Lesegrenze `_asof`):
+
+| Form | stärkstes Fünftel | geringstes Fünftel |
+|---|---|---|
+| §53.3: alle Coins, Drittel | −7,4 (p 0,0005; 6/6 Monate) | +6,4 (p 0,002; 6/6) |
+| B4-Universum, Drittel | −5,8 | +4,8 |
+| **B4-Universum, B4-Klassen (Betrieb)** | **−3,8 (p 0,055)**; je Monat −12 −13 −4 **+3 +1 +2** | **+5,8 (p 0,015)**; je Monat +7 +6 +8 0 +4 +10 |
+
+- ⚠️ **In der Betriebsform ist der Ausschluss nicht belegt** und kippt in den letzten drei Monaten leicht. Belegt bleibt die günstige Seite: Geringe Verwässerung lag besser.
+- Der Unterschied kommt **zu etwa gleichen Teilen** aus dem Universum (B4 lässt junge, illiquide und Nicht-Binance-Coins weg; −7,4 → −5,8) und aus den Klassen (die kleine H-Klasse mit 30 Coins; −5,8 → −3,8).
+- **Die Richtung ist in jeder Form gleich, die Größe hängt an der Zuschneidung.** ⇒ Das trägt einen **Fakt**, kein Gewicht.
+- **Unabhängig von B4:** Verwässerung und B4-Wert hängen nicht zusammen (Spearman −0,01). Im B4-unteren Fünftel liegen 24 % des stärksten Verwässerungsfünftels (Zufall 20 %). Wo beides zusammenkommt, lag der Coin **−8,0 log-Pp** unter der Klasse (n 86), sonst −3,2 (Auskunft, kleine Zahl).
+- **Gegenprüfung:** zweiter Rechenweg (Schleife je Zelle) **gleich** dem vektoriellen.
+
+### 54.2 Abdeckung
+
+| Liste | Coins | mit Mengenreihe | ohne |
+|---|---|---|---|
+| Watchlist-Grundliste (Krypto) | 46 | **31** | AIOZ, AKT, ASTER, BIO, BRETT, CANTON, CAT, EURCV, GRIFFAIN, **HYPE**, KAS, MON, SUPRA, VSN, **XDC** |
+| B4-Erstliste 14.10. | 8 | 6 | **HYPE, XDC** (nicht auf Binance-Spot) |
+
+- Heute (Desktop-Reihe bis 20.09.): TAO **+18,2 %**, MORPHO +8,0 %, PLUME +7,1 %, KAIA +2,7 %, SUI +1,7 %, QNT 0,0 %.
+- ⚠️ Ein Drittel der Watchlist hat **keine** Mengenreihe. Die Reihe kennt nur Coins der Binance-Messmenge. Für Coins außerhalb (HYPE, XDC, KAS …) müsste der Tagesjob sie neu aufnehmen. Die CoinGecko-ID steht in der Watchlist, 365 T sind frei abrufbar.
+
+### 54.3 Datenlage am NB
+
+- Die NB-Reihe beginnt am **08.09.2026** (USB 22.09., 14 T) und wird täglich fortgeschrieben. 90 T liegen ab **07.12.2026** vor; der erste B4-Stichtag mit Verwässerung wäre der **01.01.2027**.
+- **Ergänzung möglich:** Die Desktop-Reihe 21.09.2025 bis 07.09.2026 (132.145 Zeilen) per USB in die NB-Datei *einfügen* (nur Tage **vor** dem NB-Beginn, keine Überschreibung, Marke `_nur_betrieb` bleibt). Dann gibt es den Wert **sofort**, schon am B4-Stichtag 01.11.
+- Beide Wege sind dieselbe Größe: Der Vollabruf nimmt Marktwert/Preis, der Tagesjob `circulating_supply`; an 119 Symbolen gemessen ist die Median-Abweichung 0,000 % (Befund im Docstring `hole_umlaufmenge_cg.taeglich`).
+
+### 54.4 Nebenfund
+
+Die NB-Diagnose meldet `umlaufmenge_cg.db` unter *messbasen* als **„nicht lesbar: no such column: behalte_tage“**. Ursache: `extract_notebook_diagnose.py` (Z. 3083) liest die Marke `_nur_betrieb` mit den Spalten der `messdaten`-Marke. Die Umlauf-Marke hat aber `hinweis, tage, gebaut_am`. Die Datei ist in Ordnung, die **Diagnose** ist falsch. Das wird im Paket mit behoben.
+
+### 54.5 Bauumfang P22 (Vorschlag)
+
+| # | Teil | Inhalt |
+|---|---|---|
+| V1 | B4-Lauf | je Stichtag die Verwässerung 90 T für das B4-Universum, Fünftel je B4-Klasse. Je Bestandscoin in `abbau_fuenftel` (neue Spalten `verw90`, `verw_fuenftel`). Die Regel B4 selbst bleibt **unverändert** (die Suite wacht: Teil 0 bitgleich) |
+| V2 | B4-Mail | Abschnitt *Je Coin*: „Verwässerung 90 T +x % (stärkstes Fünftel)“. Dazu im Kontext **ein** Satz zur Messlage: *Fakt, nicht Teil der Regel; 2026 lag das geringste Fünftel +5,8 Pp besser (p 0,015), das stärkste −3,8 Pp (nicht belegt); ein Jahr, ein Regime* |
+| V3 | B1- und B3-Mail | dieselbe Zeile aus dem letzten B4-Stichtag, wenn vorhanden |
+| V4 | Statusseite | in der B4-Karte: Bestandscoins im stärksten Fünftel, mit Wert und Stichtag |
+| V5 | Diagnose | Nebenfund 54.4 beheben. Neu im Teilexport: Verwässerung je Bestandscoin |
+| V6 | Prüfstand und Suite | `p22_pruefstand.py` gegen eine Wegwerf-Ablage (Mail-Text, Spalten, B4 bitgleich), Suite-Paket `Verwaesserung`, NB-Kontrolle K-VW-1 |
+| (V7) | Abdeckung außerhalb Binance | HYPE, XDC, KAS … in den Tagesjob aufnehmen (CoinGecko-ID aus der Watchlist, 365 T Erstabruf). **Vorschlag: als P22b danach**, weil es den Abrufjob ändert |
+| (V8) | NB-Ergänzung | USB-Einfügung der Desktop-Reihe (54.3), gebündelt mit dem Pull |
+
+**Zur Entscheidung:**
+1. Umfang V1–V6 so?
+2. V7 jetzt mit oder als P22b danach (Vorschlag: danach)?
+3. NB: USB-Ergänzung (Wert ab 01.11.; Vorschlag) oder warten (Wert ab 01.01.2027)?
