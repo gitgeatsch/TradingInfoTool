@@ -6616,3 +6616,32 @@ Werte in log-Pp gegen die eigene Zelle (in Klammern p der erwarteten Seite). *tr
 - **Nullwelt:** beständige Zufallszahl je Coin, 2.000 Ziehungen (§52.2 geeicht).
 - **Weiter zur Messung**, wenn eine Auswahl p ≤ 0,10 hat **und** in mindestens 4 von 6 Stichtagen dasselbe Vorzeichen zeigt. Auch dann erst, wenn die Datenlage reicht (ab 10/2027).
 - **Auskunft:** dasselbe für *Sprungtage* (Tage mit Angebot +5 % oder mehr an einem Tag in den 90 T davor).
+
+### 53.3 Ergebnis der Vorprüfung S2 (15.10.2026; `p53_s2_vorpruefung.py` → `.txt`)
+
+**WEITER, und zwar deutlich.** 6 Stichtage (01–06/2026), 2.056 Coin-Stichtage, 357 Coins, Nullwelt 2.000 beständige Ziehungen:
+
+| Auswahl | Abstand 90 T gegen Zelle | p | Vorzeichen je Stichtag |
+|---|---|---|---|
+| **oberes Fünftel** (Angebot +5,6 % oder mehr in 90 T) | **−7,4 log-Pp** | **0,0005** | **6 von 6** (−4 −14 −11 −2 −6 −8) |
+| unteres Fünftel (geringste Verwässerung) | **+6,4 log-Pp** | 0,002 | 6 von 6 (+6 +7 +9 +3 +6 +8) |
+| Auskunft: mindestens ein Sprungtag (+5 % an einem Tag) | −2,9 log-Pp | – | – |
+
+**Die drei Fallen geprüft:**
+1. **Selbsttest:** 200 AR(1)-Merkmale mit der Trägheit des echten Rangs (ρ 0,76) ergaben 24 Alarme bei 0,05 (Soll 40) und 1 bei 0,0025 (Soll 2). Die Nullwelt ist **vorsichtig**. Bestanden.
+2. **Nicht das Alter:** Angebotswachstum und Alter hängen kaum zusammen (Spearman −0,04). Innerhalb jedes Altersdrittels bleibt der Effekt: oben −5,4 / −6,8 / −1,9, unten +8,1 / +6,7 / +8,1.
+3. **Nicht die vergangene Kursbewegung** (die Menge ist Marktwert/Preis): Spearman −0,10. Innerhalb jedes Kursdrittels bleibt der Effekt (oben −3,4 / −4,9 / −9,0, unten +5,0 / +3,7 / +10,4) und ist **am stärksten nach Anstiegen**. Das passt zu Verkäufen aus Freigaben in die Stärke hinein.
+
+**Einordnung:**
+- ⭐ **Das ist der erste Spot-Befund ab 2024, der in beide Richtungen trennt.** Verwässerung meiden *und* geringe Verwässerung bevorzugen zeigen gleichgerichtet in jedem Monat.
+- ⚠️ **Grenze:** **ein** Jahr und **ein** Regime (fallender Markt 2026), überlappende 90-T-Fenster. Ob es im Aufwärtsmarkt gilt, ist offen; genau das war der Einwand des Nutzers. ⇒ **Kein Urteil, keine Regel**, bevor ein zweites Regime in den Daten ist.
+- **Datenhaltung:**
+  - Der NB schreibt die Reihe täglich fort (Job `externe_reihen`, *INSERT OR REPLACE*, kein Löschen), und zwar **mit** den in der Zwischenzeit eingestellten Coins.
+  - Der Desktop holt bei Bedarf 365 T zurück (`hole_umlaufmenge_cg.py`).
+  - ⚠️ Der nächste Vollabruf am Desktop muss **vor 09/2027** laufen, sonst reißt die Desktop-Reihe ab.
+  - ⚠️ Die NB-Datei ist eine **Betriebskopie** (`_nur_betrieb`). Ob sie für die Messung 10/2027 herangezogen wird, ist dann zu entscheiden (Regel *Betriebskopie ist keine Messbasis*).
+
+**Vorschlag:**
+1. **Volle Messung S2 ab 10/2027**, mit dann zwei Jahren und einem Regimewechsel, so es einen gibt; dieselbe Form wie hier, Bonferroni über die Regimezellen.
+2. **Bis dahin als Fakt** (nicht als Auslöser): *Verwässerung 90 T* je Watchlist- und Bestandscoin im Mouseover von Bestand und B4. Am NB ist das ab etwa 12/2026 möglich (90 T NB-Historie). Das wäre ein Paket mit Voranalyse und Ja.
+3. **Desktop-Vollabruf** der Umlaufmenge vor 09/2027 in die NB-Kontrollen bzw. den Plan aufnehmen.

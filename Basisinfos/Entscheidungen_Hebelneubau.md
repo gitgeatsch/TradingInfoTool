@@ -1241,3 +1241,16 @@ Schritt7 §23.24.
 - **Eigene fachliche Festlegungen (berichtet):** B4 bekommt **keinen** Regimeschalter (kein Umkehrbefund). Das Niveau je Regime wird Fakt-Anzeige (U-B). Selbsttest bestanden (3 von 4.800), Gegenprobe 28/28.
 - **Nächster Schritt:** U-C S2 Angebot, zuerst Datenquellen-Inventar und Abdeckung (Regel *Datenquellen vor dem Bau*).
 - Nachweis: Spot §52.2.
+
+# E-108 · U-C S2 Angebot: Datenlage und Vorprüfung (15.10.2026)
+
+**15.10.2026** · Nutzer: *„ja machen wir so“* (U-C nach Ordnung × Regime).
+- **Datenquellen:** Ab 2024 gibt es keine freie Quelle (CoinGecko und Coinpaprika nur 365 T, CoinMetrics ohne die neuen Token, DefiLlama-Freigabepläne kostenpflichtig). Möglich ist der Querschnitt 09/2025 bis 09/2026.
+- **Vorprüfung:**
+  - Die stärkste Verwässerung liegt bei −7,4 log-Pp in 90 T (p 0,0005), die geringste bei +6,4 (p 0,002), jeweils in 6 von 6 Monaten.
+  - Weder Alter noch Kursbewegung erklären es. Der Selbsttest ist bestanden.
+- **Eigene fachliche Festlegungen (berichtet):**
+  - Kein Urteil und keine Regel vor einem zweiten Regime; volle Messung ab 10/2027.
+  - Die Datenhaltung läuft über die NB-Fortschreibung und den Desktop-Vollabruf vor 09/2027.
+- **Vorschlag, offen:** *Verwässerung 90 T* als Fakt im Mouseover (Paket mit Voranalyse, am NB ab ~12/2026).
+- Nachweis: Spot §53.

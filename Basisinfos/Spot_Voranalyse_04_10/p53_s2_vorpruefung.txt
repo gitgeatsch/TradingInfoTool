@@ -1,0 +1,19 @@
+P53 VORPRUEFUNG S2 Angebot · Stichtage 2026-01-01 bis 2026-06-01 · 2056 Coins x Stichtag · 357 verschiedene Coins · Nullwelt 2000 bestaendige Ziehungen
+
+  Angebotswachstum 90 T: Median +0.4 % · oberes Fuenftel ab +5.6 % · Anteil mit Sprungtag 20 %
+  OBERES Fuenftel (staerkste Verwaesserung)    Abstand   -7.4 log-Pp gg. Zelle · p hoch 1.0000 / tief 0.0005 · gleiches Vorzeichen 6 von 6 Stichtagen · je Stichtag -4 -14 -11 -2 -6 -8
+  UNTERES Fuenftel (geringste Verwaesserung)   Abstand   +6.4 log-Pp gg. Zelle · p hoch 0.0020 / tief 0.9985 · gleiches Vorzeichen 6 von 6 Stichtagen · je Stichtag +6 +7 +9 +3 +6 +8
+
+  AUSKUNFT Sprungtage: Coins mit >= 1 Tag Angebot +5 % in den 90 T davor: 419 · Abstand gg. Zelle -2.9 log-Pp
+
+  SELBSTTEST: 200 AR(1)-Merkmale (rho 0.762 = Monatstraegheit des echten Rangs), 400 Pruefungen: p <= 0,05 je Seite 24 (Soll 40, Grenze 52) / p <= 0,0025 1 (Soll 2, Grenze 4,8) -> bestanden
+  ALTER: Spearman Angebotswachstum ~ Alter -0.04 (je Stichtag gemittelt; Alter ab erstem Kurs in messdaten, fruehestens 2018-09)
+    jung   n  687 / Alter Median  449 T / oberes Fuenftel   -5.4 / unteres   +8.1 log-Pp gg. Zelle (Zelle = Stichtag x Klasse x Altersdrittel)
+    mittel n  684 / Alter Median 1524 T / oberes Fuenftel   -6.8 / unteres   +6.7 log-Pp gg. Zelle (Zelle = Stichtag x Klasse x Altersdrittel)
+    alt    n  685 / Alter Median 2122 T / oberes Fuenftel   -1.9 / unteres   +8.1 log-Pp gg. Zelle (Zelle = Stichtag x Klasse x Altersdrittel)
+  KURS: Spearman Angebotswachstum ~ Kursertrag der 90 T davor -0.10 (je Stichtag gemittelt)
+    Kurs 90 T davor fiel  n  687 / oberes Fuenftel   -3.4 / unteres   +5.0 log-Pp gg. Zelle (Zelle = Stichtag x Klasse x Kursdrittel)
+    Kurs 90 T davor mitte n  684 / oberes Fuenftel   -4.9 / unteres   +3.7 log-Pp gg. Zelle (Zelle = Stichtag x Klasse x Kursdrittel)
+    Kurs 90 T davor stieg n  685 / oberes Fuenftel   -9.0 / unteres  +10.4 log-Pp gg. Zelle (Zelle = Stichtag x Klasse x Kursdrittel)
+
+ENTSCHEIDUNG Vorpruefung (§53.2): WEITER - OBERES Fuenftel (staerkste Verwaesserung) -7.4 Pp (p 0.000, wie erwartet); UNTERES Fuenftel (geringste Verwaesserung) +6.4 Pp (p 0.002, wie erwartet) -> volle Messung erst bei ausreichender Datenlage (ab 10/2027)
