@@ -250,7 +250,9 @@ kontrollen:
     art: manuell
     nachweis: "nach Pull + Neustart: Diagnose watchlist_stammdaten mit 'quelle' je Symbol (alle 'grundliste'), Abschnitt watchlist_ergaenzung leer, Punkt 17 ohne Watchlist-Meldung; Teilexport 'WATCHLIST-ERGAENZUNG am NB: 0'. Beim naechsten Eintrag ueber die GUI (oder einem neuen Hebel-Coin): Punkt 17 HINWEIS 'Ergaenzung am NB: X', git_stand.geaendert bleibt leer"
     faellig_bis: "2026-10-17"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-14"
+    beleg: "Diagnose 14.10. 07:08 (Neustart 07:02, NB auf f4a45b51, 0 Commits hinter origin/main): watchlist_stammdaten 62 Eintraege, alle quelle grundliste; watchlist_ergaenzung leer; Punkt 17 keine Abweichung; git_stand geaendert [] und Stash geloescht; kein ERROR seit dem Start; Bitpanda-Abgleich 07:02 ok (1 Position ohne Watchlist = Staub SPC). Der Fall 'naechster GUI-Eintrag -> Hinweis' laeuft unter K-GUI-6 (Herkunft gui_bestand)"
   - id: K-GUI-6
     titel: "P18c Bestand-Tab: Bitpanda-Positionen ohne Watchlist-Eintrag als eigene Zeilen (zaehlen im Gesamtwert), Doppelklick -> 'Asset hinzufuegen' vorausgefuellt mit Preisabgleich; Grund B4 im Zeilen-Mouseover"
     seit: "2026-10-14"
