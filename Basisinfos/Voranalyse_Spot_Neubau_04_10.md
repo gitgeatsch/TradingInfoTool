@@ -6511,3 +6511,39 @@ Zur Einordnung:
 - **U-C** (S2 Angebot) bleibt der nächste Kandidat, jetzt mit Prüfung je Regime.
 - **Neu:** Gewinner (Ausbruch, Schiefe) brauchen ein **eigenes** Merkmal. Fortbestand liefert sie nicht.
 - Vor einem Bau: Messplan *Ordnung × Regime* vorab mit **beiden** Zielgrößen (log = typische Münze, einfacher Korb = Halterbilanz) und Bonferroni über die Regimezellen.
+
+### 52.1 Messplan *Ordnung × Regime* Fassung 1 — VORAB festgelegt (15.10.2026, Nutzer: *„ja machen wir so“*)
+
+**Frage:** Trennt die Ordnung der Watchlist (Wert ohne F9 in Marktwert-Zellen, = B4) in **jedem** Regime? Zweiseitig: Wirkt sie (oben besser, unten schlechter), kehrt sie sich um, oder ist es nicht entscheidbar?
+
+**Daten:** `data/_spot/b4_vormessung.csv` (Messbasis Desktop). Monatsstichtage 2019-01 bis 2025-09, 12-M-Dollar-Ertrag, eingestellte Coins enthalten. Es ist dieselbe Basis wie §43 und §52.
+
+**Prüfungen** (2 Auswahlen × 2 Zielgrößen × 6 Regimezellen = **24**):
+
+| Achse | Werte |
+|---|---|
+| Auswahl | oberes Fünftel (p > 0,8) · unteres Fünftel (p ≤ 0,2), je gegen die **eigene Zelle** (Stichtag × Klasse) |
+| Zielgröße | **Z1 typische Münze** = mittlerer log-Ertrag · **Z2 Halter-Korb** = log des gleichgewichteten einfachen Mittels |
+| Regime (zum Stichtag bekannt) | BTC über / unter 200-T-Schnitt · BTC 90 T steigt / fällt · Epoche E2 / E3. E1 nur Auskunft (24 Monate) |
+
+- **Nullwelt:** beständige Zufallszahl je Coin, Fünftel je Zelle (wie §43), **2.000** Ziehungen; p je Seite nach der Stufung.
+- **Urteil je Prüfung:** Bonferroni über 24, je Seite 0,025/24 = **0,00104**.
+  - *trägt* in der erwarteten Richtung (oben > Zelle, unten < Zelle);
+  - *kehrt um* in der Gegenrichtung;
+  - sonst *nicht entscheidbar*.
+- **Kippt die Ordnung** (These des Nutzers), heißt das: in mindestens einer Regimezelle *kehrt um*, oder der Unterschied zwischen den Zellen eines Regimepaars (Interaktion) liegt außerhalb der Nullwelt. Die Interaktion ist eine Auskunft, zweiseitig, Schwelle 0,025/6 je Seite.
+- **Auskunft Niveau:** mittlerer Zellertrag je Regime in Dollar und gegen BTC (*Regime = wie viel*).
+- **Selbsttest:**
+  - (a) 200 Zufallsmerkmale mit **Trägheit wie der echte Wert**: AR(1) je Coin über die Monate, ρ gemessen aus dem echten p9. Die Nullwelt bleibt die beständige. Das ist nicht zirkulär, weil die Merkmale sich bewegen und die Nullwelt nicht (R-R14). Soll nach der Stufung bei 0,025 je Seite sowie über Bonferroni.
+  - (b) Pflanzung y + β·sd·z(Merkmal) als Auflösungskurve, je Z1 und Z2.
+- **Gegenprobe:** eigener Rechenweg, eine Schleife je Zelle, für alle 24 Abstände.
+
+⚠️ **Ehrlich zur Reihenfolge:** Die Voranalyse §52 (Z1, 500 Ziehungen) lief **vor** diesem Plan; sie gilt als Stufe 1. Gegen Anpassung an das Gesehene:
+- Die Regimezellen sind **genau** die aus §52, keine neue Auswahl.
+- Z2 kommt neu hinzu (aus §51.10 begründet).
+- Die Schwelle ist strenger (Bonferroni 24 statt Einzelrang).
+
+**Folge vorab:**
+- *Trägt* die Ordnung in allen Regimezellen: U-A (Schutz durch B4) gilt regime-unabhängig, das Regime bleibt Anzeige für *wie viel*.
+- *Kehrt* sie in einer Zelle *um*: Die Ordnung bekommt einen Regimeschalter, aber nur, wenn das Regime vorab erkennbar ist (sonst Auskunft).
+- *Trägt* nur Z1, nicht Z2: Die Ordnung ist **Schutz** (Verluste meiden), keine **Rendite**-Auswahl.
