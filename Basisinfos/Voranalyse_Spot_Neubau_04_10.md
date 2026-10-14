@@ -6030,3 +6030,60 @@ Nutzer 14.10.: *„die Kalibrierung auf 2020 und 2021 ist ein Problem – wenn w
 - Die Ampel wird wie §49.3 gebaut, als **Fakt-Anzeige**.
 - Die Mail-Schalter bleiben **aus**, bis O47 Schritt 2 vorliegt.
 - Fällt der Holdout durch, wird Fassung n+1 mit Ursachenbegründung abgestimmt (Regel *Hypothesen nicht starr*).
+
+
+## 50. Hypothese H-SEL — keine große Altseason mehr, aber gewinnbringende Auswahl (14.10.2026, O48)
+
+Nutzer 14.10.: *„Ich rede nicht von mehr Daten, sondern von der Hypothese, dass es keine Altseason in dieser Größenordnung mehr geben wird, man aber dennoch gewinnbringend über selektive Altcoins investiert.“*
+
+**Die Hypothese in zwei Teilen:**
+
+| Teil | Aussage | prüfbar? |
+|---|---|---|
+| **H-SEL-A** | Eine breite Altseason wie 2020/21 kommt nicht wieder | **nicht vorab**, denn es ist eine Aussage über die Zukunft. Beobachtbar vorwärts: Ampel und Breite (P19). Die Lage ab 2024 passt dazu (0 % Season-Tage, §49.3) |
+| **H-SEL-B** | Auch ohne Season lässt sich mit **ausgewählten** Altcoins Gewinn machen | **ja, und zwar genau im Messfokus ab 2024**. Eine Kalibrierung an Seasons braucht es dafür nicht |
+
+**Was die Daten ab 2024 schon sagen (§30.2):**
+- Der Markt im Ganzen: BTC +94 %, Altindex **−87 % gegen BTC** bzw. −52 % in Dollar; Alts schlagen BTC in 7 von 32 Monaten.
+- Aber **Gewinner gibt es reichlich**: Je Coin und Monat verdoppelt sich ein Coin binnen 180 T gegen BTC in **8,1 %** der Fälle (238 verschiedene Coins, H 6,6 · M 6,6 · S 8,8 %).
+- ⇒ H-SEL-B steht und fällt mit **einer** Frage: Lassen sich diese Gewinner **vorab** erkennen?
+
+**Bisher geprüfte Auswahlregeln ab 2024 (alle im Spot-Strang):**
+
+| Regel | Ergebnis ab 2024 |
+|---|---|
+| Watchlist oberes Fünftel (Fortbestand) + 12 M halten | Korb **−42 %** (BTC +22 %) |
+| dasselbe + Führung X2 (Nachlauf −35 %) | **−4 %** (BTC +14 %): die Führung halbiert den Verlust, Gewinn entsteht nicht |
+| K-H1 Momentum gegen BTC (30 T) | H −1,1 Pp: **trägt nicht**; M formal **schadet** |
+| K-3 ruhiger Boden | **schadet** |
+| K-1/K-2 nach Dominanz-Spitze | **nicht entscheidbar** (Auflösung reicht nicht) |
+| U2 Gebühren-Wachstum | **schadet** (−4,6 Pp gegen BTC) |
+| U1 Stablecoins je Kette | **trägt nicht** |
+| Listings (Upbit, Futures-Start) als Einstieg | nein, nur als Verkaufsanlass (B3) |
+| Watchlist unteres Fünftel | **−12,5 Pp** unter Zufall (das ist B4, also Abbau) |
+
+⇒ **Stand:** Keine bisher geprüfte Auswahl war ab 2024 in Dollar oder gegen BTC gewinnbringend. Gemessen ist das gegen **diese** Regeln, nicht gegen die Hypothese.
+
+**Noch nicht geprüfte Familien (mit freien Daten messbar):**
+
+| # | Familie | Idee |
+|---|---|---|
+| S1 | **Sektor-Rotation** | Stärke der **Kategorie** (KI, RWA, Meme, L1 …) statt des einzelnen Coins; kaufen im stärksten Sektor |
+| S2 | **Angebot** | niedrige Inflation bzw. keine großen Unlocks (FDV/Marktwert, Umlauf-Zuwachs); hohe Ausgabe drückt den Kurs |
+| S3 | **Halter-Einnahmen / Rückkäufe** | Protokolle, die Einnahmen an Halter geben (bisher nur Auskunft) |
+| S4 | **Widerstand in BTC-Schwäche** | Coins, die in BTC-Rückgängen weniger fallen |
+| S5 | **Neu-Listing an großen Spot-Börsen** (Coinbase, Binance) mit Haltedauer über Monate | bisher nur kurz und für Upbit/Futures gemessen |
+| S6 | **Kombination** der stärksten Einzelmerkmale (Regel: Einzelbeitrag schwach, die Kombination ist die Anwendung) | – |
+
+**Zu entscheiden (Ziel):**
+- Was heißt *gewinnbringend*: (a) **in Dollar nach Kosten > 0**, (b) **besser als BTC** (die Alternative wäre, BTC zu halten), oder (c) beides?
+- Vorschlag: Urteil gegen BTC, Dollar als Auskunft daneben.
+
+**Vorschlag O48:**
+1. **Inventur:** alle bisher geprüften Regeln in **einer** Tabelle mit **derselben** Zielgröße (12 M, Dollar und gegen BTC, nach Kosten, ab 2024). Bisher sind die Zielgrößen verschieden (30 T, 12 M, Saldo).
+2. **Vorprüfung** S1–S6 (kurz, volle Daten ab 2024; Stufe 1 vor jeder langen Messung).
+3. Messplan vorab nur für Familien mit Aussicht.
+
+**Folge:**
+- Gilt H-SEL-A, ist die Ampel (P19) eine **Wache** (*kein breiter Aufbau*), kein Auslöser. P19 bleibt als Fakt-Anzeige sinnvoll.
+- O47 (Holdout 2017/18) verliert an Gewicht. Vorschlag: zurückstellen.
