@@ -6,7 +6,7 @@
 
 **Stand 14.10.2026 (morgens):**
 - K-SP-3 erfüllt (H 26 / M 78 / S 240, Erstliste 8 Coins). **B4 eingeschaltet** (Nutzer-Ja) → K-SP-3b (Erstliste per Mail, 07:25).
-- Nutzer-Ja: Voranalyse **P18b** Variante B (Grundliste im Repo + NB-Ergänzung).
+- Nutzer-Ja: Voranalyse **P18b** Variante B (Grundliste im Repo + NB-Ergänzung). → vorgelegt (Plan_Asset_Lebenszyklus G-Z8, Prototyp bitgleich).
 
 **Stand 13.10.2026 (nachts):**
 - **P18 B4 gebaut** (Spot §48.7), Prüfstand 12/12, Suite SpotAbbau 11/11, Schalter aus. Am NB: Pull + Neustart → K-SP-3; danach Ja zum Schalter → K-SP-3b.

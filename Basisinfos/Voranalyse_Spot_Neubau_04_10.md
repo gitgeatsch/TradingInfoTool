@@ -5890,4 +5890,4 @@ Nutzer 13.10.: *„ja – prüfe aber vorher, ob die Watchlist auch wirklich bes
 **Erster NB-Lauf und Einschalten (14.10.2026):**
 - Diagnose und Teilexport: Stichtag 01.10. *fertig*, Universum 344 (H 26, M 78, S 240), 364 Stammsätze (345 von Binance), kein Fehler, keine Mail (K-SP-3 erfüllt).
 - Erstliste: **HYPE, KAIA, MORPHO, PLUME, QNT, SUI, TAO, XDC**. Gegen die Desktop-Rechnung vom 01.09. fällt TURBO heraus (dort 0,18), KAIA (0,23) und QNT (0,25) kommen hinzu, alles Grenzfälle.
-- Nutzer 14.10.: *„Ja B4 einschalten und pushen“* → , Kontrolle **K-SP-3b**.
+- Nutzer 14.10.: *„Ja B4 einschalten und pushen“* → `spot_abbau_aktiv: true`, Kontrolle **K-SP-3b**.

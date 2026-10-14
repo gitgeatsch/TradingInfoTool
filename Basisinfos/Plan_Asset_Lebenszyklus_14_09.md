@@ -1187,3 +1187,54 @@ Nutzer 13.10. (Bild 06:38): *„unten ist entweder ein alter Bereich bzw. Multi-
 **Nachweis:** `p15_pruefstand` **20/20** (neu P20: 96/96 px, Hebel nach Neuladen oben), GuiKette mit Wache P15h.
 
 **K-SP-2 erfüllt** (Diagnose 13.10. 07:44): A6 nimmt die 50 alten Spot-Zeilen heraus, keine Stop-Mail mehr. Die erste Mitnahme-Mail → **K-SP-2b** (Ereignis).
+
+### G-Z8 P18b — Watchlist: Grundliste im Repo + Ergänzung am NB (Voranalyse 14.10.2026)
+
+Nutzer 14.10.: *„P18b Voranalyse vorbereiten“* (Variante B nach Spot §48.5).
+
+**Ziel:**
+- Kein Schreibweg am NB ändert mehr die versionierte `config.yaml`, damit kein Pull mehr an einer lokalen Änderung scheitert (Anlass: XDC und CT, K-WL-1).
+- Der Desktop behält seine Quelle für Tests und Messungen, und die Grundliste behält Git-Verlauf und Hand-Bearbeitung.
+
+**Ist-Stand am Code (geprüft):**
+
+| | Befund |
+|---|---|
+| Laden | `config.load_config()` hält die ganze `config.yaml` im Speicher (`_config_cache`); `get_watchlist()` baut daraus die 62 `WatchlistAsset` |
+| ⚠️ Kommentar falsch | `scheduler/background.py` (`refresh_prices_job`) und `main.py` sagen *„get_watchlist() liest config.yaml ohne Caching“*. Tatsächlich wird zwischengespeichert. Richtig ist trotzdem die Wirkung: GUI, Scheduler und Statusseite laufen am NB in **einem** Prozess (`main.py`), und jeder Schreibweg leert den Zwischenspeicher. Eine Änderung von außen (Pull) wirkt erst nach dem Neustart |
+| Leser | 63 Dateien rufen `get_watchlist()`, 19 davon im Betrieb. Direkt an der Datei lesen nur `git_stand.py` (Repo, gewollt), `messe_signalbilanz_je_asset.py` (Messung am Desktop) und ⚠️ `nb_teilexport_betriebsdaten.py:226` (die Zeile *WATCHLIST krypto* am NB, würde die Ergänzung übersehen) |
+| Schreiber | fünf Wege, alle über vier Funktionen in `config.py`: `add_watchlist_entry` (GUI *Asset hinzufügen*, Marktscan, Screener, **Hebel-Importer automatisch**) und `_update_watchlist_field` / `update_watchlist_kategorie` (GUI *Bearbeiten*: Rolle, Status, CoinGecko-ID, Kategorie). Die Aufrufer übergeben nur Werte |
+| Datenbank | `database/db.py` importiert `config` nur **innerhalb** einer Funktion (Migration der Hebel-Schalter in `init_db`), also gibt es keinen Ring. `db.DB_PATH` ist in Prüfskripten umbiegbar |
+
+**Prototyp (Wegwerf-DB, 14.10.):**
+- Mit leerer Ergänzung ergibt sich genau die heutige Liste (**62 Einträge, bitgleich**).
+- Neuaufnahme, Überschreiben eines Feldes (XLM Rolle) und Ausblenden (QNT) wirken richtig.
+- Lesen 0,7 ms.
+
+**Bau (Vorschlag):**
+
+| # | Inhalt |
+|---|---|
+| W-1 | Tabelle `watchlist_ergaenzung` in der Produktion (`symbol` PK, `eintrag` JSON nur mit den geänderten Feldern, `entfernt`, `herkunft` = gui / gui_bearbeiten / marktscan / screener / hebel_import / o26, `angelegt_am`, `geaendert_am`). Angelegt in `init_db` (App-Start am NB), **nie** beim Lesen |
+| W-2 | `get_watchlist()` = Grundliste aus `config.yaml` **plus** Ergänzung. Ein Eintrag ergänzt (neues Symbol, hinten angehängt) oder überschreibt Felder (Symbol der Grundliste); *entfernt* blendet aus. Gelesen nur mit `mode=ro`; fehlt die Datei oder die Tabelle (Desktop, Prüfskripte), ist die Ergänzung leer. Zwischengespeichert wie heute; jeder Schreibweg leert den Speicher |
+| W-3 | Die vier Schreibfunktionen schreiben in die Ergänzung statt in die Datei, mit denselben Prüfungen wie heute (Symbol schon vorhanden, Kategorie gültig, Wert ändert sich). Die Aufrufer bleiben **unverändert**; `herkunft` kommt als optionaler Parameter, ohne ihn gilt *gui* |
+| W-4 | Diagnose: `watchlist_stammdaten` je Symbol mit `quelle` (grundliste / ergaenzung / grundliste+ergaenzung) und `herkunft`. Punkt 17: Einträge aus der Ergänzung sind **Hinweise** (*„nur am NB – ins Repo übernehmen?“*), keine Auffälligkeit. Eine Abweichung **ohne** Ergänzung bleibt eine Auffälligkeit; die lokal geänderte `config.yaml` ebenso |
+| W-5 | Teilexport: die Zeile *WATCHLIST* über `get_watchlist()` und dazu die Ergänzung je Eintrag (Herkunft, Datum) |
+| W-6 | Übernahme ins Repo: Ich trage den Eintrag per Commit in die Grundliste ein. Danach ist die Ergänzung **deckungsgleich**, und Punkt 17 meldet *„überflüssig“*. Gelöscht wird die Zeile **nicht** automatisch (*nichts löschen ohne Ja*), sondern mit deinem Ja |
+| W-7 | Die falschen Kommentare *„ohne Caching“* in `background.py` und `main.py` richtigstellen |
+| W-8 | Prüfstand am Seiteneffekt (Wegwerf-Produktion): Teil 0 bitgleich mit leerer Ergänzung; jede der vier Schreibfunktionen schreibt in die Ergänzung und **nicht** in `config.yaml` (Prüfsumme); der Hebel-Importer legt einen neuen Coin in der Ergänzung an; Zwischenspeicher nach dem Schreiben frisch; *entfernt* blendet aus; Punkt 17 mit Ergänzung = Hinweis, ohne = Auffälligkeit; Standard-DB unberührt. Dazu ein Suite-Paket |
+
+**Risiken:**
+- Ein Fehler im Zusammenführen träfe alle 63 Leser. Dagegen stehen Teil 0 bitgleich und der Prototyp.
+- Zwei Orte: Wer nur die Datei liest, sieht die Ergänzung nicht. Das betrifft die drei direkten Leser oben. Der Teilexport wird umgestellt; `git_stand` und die Messung am Desktop sollen die Grundliste lesen.
+- Der Desktop sieht Einträge, die es nur am NB gibt, erst über die Diagnose. So ist es gewollt; Punkt 17 nennt sie.
+
+**Nicht in P18b:**
+- O40 *Meine Assets* (Ansicht, Kennzeichen Bestand / Hebel / beobachtet; der Bestand wird zur Laufzeit aus `holdings` abgeleitet).
+- O26 (automatische Aufnahme neuer Bitpanda-Bestände; sie schreibt dann in genau diese Ergänzung).
+
+**Am NB:** Pull und Neustart (`init_db` legt die Tabelle an). Kontrolle **K-WL-2**:
+- Die Diagnose zeigt `quelle` je Symbol, Punkt 17 ist still (Ergänzung leer).
+- Der nächste Eintrag über die GUI erscheint als Hinweis, und `git status` bleibt leer.
+
+Aufwand etwa ein halber Tag einschließlich Prüfstand.
