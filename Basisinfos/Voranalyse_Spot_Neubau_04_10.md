@@ -6074,6 +6074,7 @@ Nutzer 14.10.: *„Ich rede nicht von mehr Daten, sondern von der Hypothese, das
 | S4 | **Widerstand in BTC-Schwäche** | Coins, die in BTC-Rückgängen weniger fallen |
 | S5 | **Neu-Listing an großen Spot-Börsen** (Coinbase, Binance) mit Haltedauer über Monate | bisher nur kurz und für Upbit/Futures gemessen |
 | S6 | **Kombination** der stärksten Einzelmerkmale (Regel: Einzelbeitrag schwach, die Kombination ist die Anwendung) | – |
+| **S7** | **„Zuerst das Geld“ als ein Parameter unter mehreren** (Nutzer 14.10.: *„Zuerst das Geld ist auch weiter gültig, aber nicht als einziger Parameter“*) | Die Geld-Lage als **Gewicht**, nicht als Blocker (Regel *Achsen sind Gewichte*). Gefragt ist: Trägt eine Auswahl S1–S6 besser, wenn Geld fließt? Das ist **ab 2024 messbar**, weil die Geld-Lage dort schwankt: Stablecoins 91 T > 10 % an **43 %** der Tage, Netto-Liquidität 13 W steigend an **52 %**, M2 J/J > 5 % nur an 2 %, beides zusammen (M2 und Stablecoins) an 0 %. Anders als bei der Season gibt es also genug Wechsel |
 
 **Zu entscheiden (Ziel):**
 - Was heißt *gewinnbringend*: (a) **in Dollar nach Kosten > 0**, (b) **besser als BTC** (die Alternative wäre, BTC zu halten), oder (c) beides?
