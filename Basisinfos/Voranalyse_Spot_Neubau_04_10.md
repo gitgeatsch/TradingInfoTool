@@ -6225,3 +6225,34 @@ Nutzer 14.10.: *„Es sollte eine fachlich korrekte und messbare Grundlage gesch
 - **Weiter zur Messung,** wenn mindestens ein Kanal oder Gesamt über den ganzen Zeitraum im äußeren Zehntel der Nullwelt liegt **und** in E3 dasselbe Vorzeichen hat. Sonst Bericht und Abstimmung.
 
 **Folge vorab:** wie 51.4. Trägt ein Kanal, wird daraus eine **Umfeld-Ampel als Gewicht**; trägt keiner, bleibt es eine Fakt-Anzeige *nicht gemessen*. Nie ein Auslöser, nie ein Blocker.
+
+### 51.6 Ergebnis der Vorprüfung (Stufe 1, 14.10.2026; `p51_vorpruefung.py` → `.txt`)
+
+**Entscheidung nach §51.5: WEITER zur Messung.** Sieben Fälle bei Krypto liegen im äußeren Zehntel der Nullwelt (200 Verschiebungen) und haben **in E3 dasselbe Vorzeichen**:
+
+| Ziel | Kanal | Abstand günstig − ungünstig | Rang | E1 / E2 / E3 |
+|---|---|---|---|---|
+| BTC 90 T | **K8 Dollar kurz** (Dollar fällt) | **+33,2 %** | 0,995 | +36,0 / +42,3 / **+16,6** |
+| BTC 90 T | **Gesamt kurz** | **+28,2 %** | 0,995 | +24,7 / – / **+16,0** |
+| BTC 90 T | **K2 Netto-Liquidität kurz** (13 W steigt) | +28,1 % | 0,945 | +37,3 / +21,4 / **+18,2** |
+| BTC 90 T | K6 Kredit kurz (Baa-Aufschlag wird enger) | +23,1 % | 0,905 | +25,5 / +27,8 / +5,7 |
+| BTC 90 T | K5 Kurve lang | **−27,1 %** | 0,035 | – / −8,9 / −23,5 |
+| BTC 180 T | K5 Kurve lang | −45,9 % | 0,040 | – / −30,1 / −43,8 |
+| **Altkorb gegen BTC 90 T** | **K2 Netto-Liquidität kurz** | **+23,0 %** | 1,000 | +40,2 / +18,8 / +3,3 |
+
+**Was auffällt:**
+- **Die kurzen Änderungen tragen, die Niveaus kaum.** Dollar, Netto-Liquidität und Kredit sowie *Gesamt kurz* trennen BTC in allen drei Epochen gleichgerichtet. Die **Niveaus** haben in E3 meist nur **eine** Klasse (Realzins und 2 J lagen ab 2024 fast immer im ungünstigen Drittel). Ein Urteil über E3 ist für sie daher **nicht möglich**, das ist Datenlage, kein Ergebnis.
+- ⚠️ **Die Kurve wirkt umgekehrt zum Lehrbuch:** Eine **steile** Kurve ging mit **schwächerem** BTC einher (−27 %). Fachlich passt das zur *Wiederversteilung nach einer Inversion*, die typisch vor Abschwüngen auftritt (2007/08, 2020; heute: 10J−3M von 0,0 auf 0,95). Für die Messung gilt sie als möglicher Fall *schadet*.
+- **Altcoins gegen BTC:** Nur die **Netto-Liquidität kurz** trägt und hält in E3 das Vorzeichen, aber schwach (+3,3). Die starken Niveau-Effekte (M2, Netto-Liquidität, 2 J, Realzins) haben in E3 keinen Vergleich.
+- **Aktien (Probe):** kaum etwas in allen Epochen gleichgerichtet. Der Realzins kurz trennt den S&P 500 (+4,4 %, 0,995), E3 ist dort nicht vergleichbar.
+- **Auskunft:** Gold reagiert auf **fallende 2-J-Renditen** (+4,2 %, 0,995, E3 +7,3); Rohstoffe (DBC) auf fallende Realzinsen und den Gesamtstand.
+- **Stand heute:** *Gesamt lang* **günstig** (M2, Netto-Liquidität, Kredit, NFCI, VIX günstig; Realzins und 2 J ungünstig). *Gesamt kurz* **neutral**: Dollar und Netto-Liquidität kurz neutral, Kredit kurz günstig, Realzins und 2 J kurz ungünstig.
+  - ⚠️ Die gemessen tragenden Kanäle sind die **kurzen**, und die stehen heute **neutral**.
+  - Das korrigiert meine Lehrbuch-Einschätzung in 51.3 teilweise: Der Zins-Gegenwind ist ein **Niveau**, und Niveaus sind in E3 nicht prüfbar.
+
+**Nächster Schritt (Stufe 2, nach dem festen Plan):**
+- 1.000 Verschiebungen mit Bonferroni-Schwelle;
+- Spiegelprobe;
+- Selbsttest (Phasen-Randomisierung, Pflanzung als Auflösungskurve);
+- Weglassprobe;
+- Gegenprobe mit eigenem Rechenweg.
