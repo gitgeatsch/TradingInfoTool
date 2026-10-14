@@ -5891,3 +5891,85 @@ Nutzer 13.10.: *„ja – prüfe aber vorher, ob die Watchlist auch wirklich bes
 - Diagnose und Teilexport: Stichtag 01.10. *fertig*, Universum 344 (H 26, M 78, S 240), 364 Stammsätze (345 von Binance), kein Fehler, keine Mail (K-SP-3 erfüllt).
 - Erstliste: **HYPE, KAIA, MORPHO, PLUME, QNT, SUI, TAO, XDC**. Gegen die Desktop-Rechnung vom 01.09. fällt TURBO heraus (dort 0,18), KAIA (0,23) und QNT (0,25) kommen hinzu, alles Grenzfälle.
 - Nutzer 14.10.: *„Ja B4 einschalten und pushen“* → `spot_abbau_aktiv: true`, Kontrolle **K-SP-3b**.
+
+
+## 49. Voranalyse P19 — Spot C1 Season-Ampel (+ D1 Nachlader, A3 Kandidatenliste, Spot-Tab, O43) (14.10.2026)
+
+Nutzer 14.10.: *„Ja, Voranalyse P19 vorbereiten, prüfen und gegenprüfen – zur Reihenfolge: was ist dein Vorschlag, habe keine Präferenz“*.
+
+**Reihenfolge (Vorschlag):**
+- heute die Voranalyse P19 (nur Desktop);
+- mit dem N5-Ergebnis (~15.10.) **H14 zuerst**, weil der Hebel Vorrang hat (T-1 bis T-6);
+- danach der Bau P19;
+- wenn es zeitlich passt, H14 und P19 in einem Pull.
+
+**Skripte** (Desktop, nur lesend; Abrufe FRED fredgraph.csv und DefiLlama frei; Prod-Sicherung 14.10. 03:29):
+- `p19_voranalyse.py` → `.txt`;
+- `p19_haltezeit.txt`;
+- Gegenprobe `p19_gegenprobe.py` **4/4**.
+
+### 49.1 Gemessen und gegengeprüft
+
+| Teil | Frage | Ergebnis |
+|---|---|---|
+| **0 (R-R11)** | Gibt der Nachbau (Klasse `Ampel`) aus B1/B2/B3 denselben Stand wie die Kalibrierung §36.4? | **2.639 von 2.639 Tagen bitgleich** |
+| Stufen §36.5 | Wie verteilen sich die Stufen? (Beschreibung, ein Zyklus) | kalt 62,6 % der Tage (Season-Anteil 2,0 %) · Vorlauf 3,6 % (2,1 %) · **Season-Klima 9,5 % (34,4 %)** · Überhitzung 6,8 % (14,4 %) · Ende 17,5 % (11,3 %); Basis 7,5 %. **Seit 2023 durchgehend *kalt*** |
+| **Haltezeit** (neu) | Wie oft wechselt die Stufe? | **86 Wechsel** 2019–2022, vor allem zwischen Season-Klima, Überhitzung und Ende: ~12 Mails im Jahr. Mit Mindestdauer: 3 T → 4,2 · **7 T → 2,4** · 14 T → 1,7 Mails/Jahr, die Stufe *Vorlauf / Season-Klima* kommt weiter 27–120 T **vor** dem Season-Start. Mit 21 T bricht das: teils zu spät oder gar nicht. ⇒ **7 T** (Mitte des Plateaus 3–14 T, nicht die Grenze, Regel K3) |
+| **1 Breite** | Eigener Rechenweg gegen `s1_messung`? | **bitgleich** (628 Tage ab 2025). Am NB-Universum (Kopie, ohne die 10 Übernahmen): mittlere Abweichung −0,004, größte 0,025, **1 von 628 Tagen** auf der anderen Seite von 0,6 |
+| **2 Daten** | Geben frisch abgerufene Reihen (wie die Messung: M2SL +35 T, DefiLlama `stablecoincharts/all` peggedUSD +1 T, Netto-Liquidität) dieselben Werte? | **identisch** an 2.639 Tagen (keine Revision), Stand nirgends anders |
+| G3 Quelle B1 | BTC aus der Produktion (Kraken USD) gegen die Messbasis (Binance USDT) | bis 1,2 Pp Abweichung der 91-T-Rendite, **an keinem Tag** eine andere Seite der Schwelle 20 %. ⇒ Der Bau rechnet B1 aus der **Betriebskopie** (Binance, dieselbe Quelle wie die Messung). Erster Gegenprobenlauf rot an **meiner** Toleranz 0,01, korrigiert |
+
+**Ampel heute (14.10.2026):**
+
+| | Wert | Schwelle | vor 30 T | vor 90 T |
+|---|---|---|---|---|
+| B1 BTC 91 T | **+28,5 %** ✔ | 20 % | +18,0 % | −15,1 % |
+| B2 M2 J/J | **+5,7 %** ✔ (knapp) | 5 % | +5,7 % | +5,3 % |
+| B3 Stablecoins 91 T | **+1,5 %** ✗ | 10 % | −1,3 % | −3,4 % |
+| Kontext | Breite 0,53 (Messbasis bis 20.09.) · Netto-Liquidität 13 W −1,6 % · Fear & Greed 62 | | | |
+
+⇒ **Stand 2 von 3, Stufe *ungewohnt*:**
+- BTC läuft, das Geld fehlt: keine Stablecoin-Zuflüsse, M2 nur knapp über der Schwelle.
+- Wie am 08.10.: Die Lage gab es seit 2019 nie, und **fachlich ist sie kein Season-Vorlauf**.
+- B3 steigt (von −3,4 auf +1,5 %), ist aber weit von +10 % entfernt.
+
+**Kandidatenliste A3** (oberes Fünftel des Watchlist-Werts ohne F9, wie B4, am 01.09.):
+- 69 Coins (H 6 · M 17 · S 46), davon 67 bei Bitpanda handelbar.
+- Beispiele H: ETC, LTC, ADA, DOGE, ICP, UNI · M: NEO, SNX, IOTA, THETA … · S: ONT, AUDIO, OGN …
+- Belegstufe: *ordnet den Fortbestand* (§25.6/§39.9: E3 +12,1 Pp Saldo gegen die Klasse).
+- ⚠️ *Tote* Projekte sind damit nicht zu erkennen (§21: FTT steht drin). Ein Einstieg je Asset ist **nicht** belegt (E-102).
+- Die kurze Liste *beste 10 je Klasse* deutet in die gute Richtung (§21.6: E3 +4,2 Pp, Rang 0,90), trägt aber nicht.
+
+### 49.2 Daten am NB (ohne Handgriff am Desktop)
+
+| Bedingung | heute am NB | Bau |
+|---|---|---|
+| B1 BTC 91 T | Betriebskopie (Binance, 500 T) ✔ | aus der Kopie |
+| B2 M2 J/J | nur der letzte Wert (`macro_snapshot`, FRED mit Schlüssel) ✗ | **D1:** `fredgraph.csv?id=M2SL` (frei, ohne Schlüssel, die ganze Reihe), +35 T wie gemessen |
+| B3 Stablecoins 91 T | `externe_reihe` erst seit 17.08. (59 Punkte, Tageswert) ✗ | **D1:** DefiLlama `stablecoincharts/all` (ein Abruf, die ganze Reihe, peggedUSD, +1 T) wie gemessen |
+| Breite | Kopie ✔; Stablecoins aus dem B4-Stammsatz (`median_absret`) | aus der Kopie (Top 50 nach Umsatz 30 T, ohne BTC und Stablecoins) |
+| Kontext Netto-Liquidität | ✗ | D1: WALCL, WTREGEN, RRPONTSYD (fredgraph.csv) |
+| Kontext Fear & Greed | `macro_snapshot` ✔ | – |
+
+### 49.3 Bauumfang (Vorschlag)
+
+| # | Inhalt |
+|---|---|
+| C1-1 | `agent/season_ampel.py`: Regel = Nachbau (Teil 0 bitgleich); Stufe aus dem Muster (§36.5), *Ende* = 3/3 in den letzten 90 T an und jetzt nicht; **Haltezeit 7 T**: eine neue Stufe gilt erst nach 7 Tagen in Folge |
+| C1-2 | D1-Nachlader im selben Job (täglich 07:30): fünf Reihen in `spot_betrieb.db` (`ampel_reihe`); Tageswerte und Stufe in `ampel_tag`; beim ersten Lauf **rückwärts** aus Kopie und Reihen gerechnet (Verlauf, Ende-Regel, Haltezeit) |
+| C1-3 | **Mail** (E-91) nur beim Wechsel der **geltenden** Stufe in eine Stufe mit Handlung: *Vorlauf* → „L-Kandidaten bereit, erste kleine Tranche möglich“; *Season-Klima* → „L aufbauen in Tranchen“; *Überhitzung/Ende* → „kein Neuaufbau“. Kandidaten **beste 10 je Klasse** (H alle), *ordnet, nicht belegt*; Schalter `season_ampel_aktiv` **aus** zuerst |
+| C1-4 | Eine Zeile **Ampel** als Kontext oben in den Mails B1/B3/B4 (§34: *„oben in jeder Spot-Mail“*) |
+| A3 | B4 legt am Monatsersten das **ganze** Universum ab (`abbau_universum`), nicht nur den Bestand; daraus kommt die Kandidatenliste: oberes Fünftel, bei Bitpanda handelbar, gehaltene markiert (O41: *keine Bevorzugung des Bestands*) |
+| GUI | Tab **Spot-Markt**: oben die Ampel (je Bedingung Wert, Schwelle, an/aus, vor 30/90 T; Stufe seit; Kontext), Verlauf 12 Monate als kleine Grafik; unten die Kandidatenliste je Klasse; Mouseover je Spalte |
+| O43 | Marktscan-Job (04/16 Uhr, CoinGecko) **ruht** per Schalter, sobald der Tab da ist (Nutzer 10.10.: *„JA“*). Der Tab *Marktscan* bleibt bis GUI-5 |
+| Betrieb | Statusseite (Karte, Schalter), Teilexport *SEASON-AMPEL*, Kontrollen **K-SP-4** (Lauf, Stufe *ungewohnt*, keine Mail), **K-GUI-7** (Tab), **K-MS-1** (Marktscan ruht) |
+| Prüfung | Prüfstand am Seiteneffekt (Kopie nachgestellt, Reihen gestellt): Teil 0 gegen die Kalibrierung, Haltezeit, Mail nur bei Wechsel; Suite-Paket |
+
+**Fachlich festgelegt (nicht zur Wahl):**
+- Haltezeit 7 T (Plateau).
+- Ende-Regel 90 T: so lang wie die Zielgröße der Wahrheit.
+- *„Mitnahme straffen“* (§34) wird **nicht** gesagt, weil es nicht gemessen ist (B1 bleibt ×3).
+- Netto-Liquidität bleibt **Kontext**; als vierte Bedingung erst in Fassung n+1, vorwärts geprüft (§36.5).
+- B1 aus der Kopie (G3); Breite am NB-Universum (Teil 1).
+
+**Aufwand:** etwa ein Tag. Am NB: Pull und Neustart (Dienst und GUI).

@@ -1,0 +1,6 @@
+G1  gleich     Stufen vektoriell gegen Schleife: 2639 von 2639 Tagen gleich
+G2  gleich     Haltezeit 7 T als Lauflaengen-Rechnung: 18 Wechsel (Zustandsmaschine: 18)
+G3  gleich     B1 Produktion (Kraken) gegen Messbasis (Binance) 2026: 263 Tage, groesste Abweichung 0.0119 (Quellen-Unterschied), andere Seite der Schwelle 20 %: 0 -> der Bau nimmt die Betriebskopie
+G4  gleich     Muster -> Stufe von Hand nach §36.5 (heute ungewohnt; Vorlauf, Season-Klima, Ueberhitzung, Ende)
+
+4 von 4 gleich

@@ -1,0 +1,27 @@
+P19 VORANALYSE Season-Ampel · Kalibrierung 2019-04-02 bis 2026-06-22 (2639 Tage)
+
+TEIL 0 Stand X von 3 aus B1/B2/B3: 2639 von 2639 Tagen gleich der Kalibrierung (BITGLEICH)
+   Stufen nach §36.5 (Ende = 3/3 in den letzten 90 T an, jetzt nicht) - Beschreibung, ein Zyklus:
+     Ende          Tage  462 (17.5 %) · Season-Tage  11.3 % (Basis 7.5 %) · Jahre 2019,2020,2021,2022
+     Season-Klima  Tage  250 ( 9.5 %) · Season-Tage  34.4 % (Basis 7.5 %) · Jahre 2019,2020,2021
+     Ueberhitzung  Tage  180 ( 6.8 %) · Season-Tage  14.4 % (Basis 7.5 %) · Jahre 2020,2021
+     Vorlauf       Tage   94 ( 3.6 %) · Season-Tage   2.1 % (Basis 7.5 %) · Jahre 2019,2020,2021,2022
+     kalt          Tage 1653 (62.6 %) · Season-Tage   2.0 % (Basis 7.5 %) · Jahre 2019,2022,2023,2024,2025,2026
+   Stufenwechsel: 86 in 2639 Tagen (= Ereignis-Mails, wenn jede Stufe mit Handlung mailte: 85)
+   Wechsel ab 2023: 
+
+TEIL 1 Breite eigener Rechenweg gegen s1_messung (ab 2025, 628 Tage): gleich an 100.0 % der Tage (BITGLEICH)
+   NB-Universum (ohne die 10 Uebernahmen): mittlere Abweichung -0.004, groesste 0.025 · Tage mit anderer Seite der Schwelle 0,6: 1 von 628
+
+TEIL 2 frisch abgerufen gegen die Kalibrierung (2639 gemeinsame Tage): B2 M2 groesste Abweichung 0.0000 (Tage > 0,001: 0) · B3 Stablecoins groesste 0.0000 (Tage > 0,001: 0) · Stand anders an 0 Tagen
+   letzte Werte: M2SL 2026-09-05 (23342.8, inkl. 35 T Verzug) · Stablecoins 2026-10-15 (311.2 Mrd USD) · Netto-Liquiditaet 2026-10-14
+
+TEIL 3 AMPEL HEUTE (BTC-Schluss bis 2026-10-14 aus der Produktion):
+   2026-10-14  B1 BTC 91T  +28.5 % an · B2 M2 J/J  +5.7 % an · B3 Stablecoins 91T  +1.5 % aus · Stand 2 von 3 · Breite 0.53 (Stand 2026-09-20) · Stufe ungewohnt · Netto-Liq 13W -1.6 % · F&G 62
+   2026-09-14  B1 BTC 91T  +18.0 % aus · B2 M2 J/J  +5.7 % an · B3 Stablecoins 91T  -1.3 % aus · Stand 1 von 3 · Breite 0.43 · Stufe kalt · Netto-Liq 13W -0.7 % · F&G 57
+   2026-07-16  B1 BTC 91T  -15.1 % aus · B2 M2 J/J  +5.3 % an · B3 Stablecoins 91T  -3.4 % aus · Stand 1 von 3 · Breite 0.40 · Stufe kalt · Netto-Liq 13W +0.3 % · F&G 25
+
+TEIL 4 KANDIDATENLISTE A3 am 2026-09-01: oberes Fuenftel 69 Coins (H 6 · M 17 · S 46), davon bei Bitpanda handelbar 67 (H 6 · M 17 · S 44); davon schon gehalten: -
+   H: ETC 1.00, LTC 0.96, ADA 0.92, DOGE 0.88, ICP 0.81, UNI 0.81
+   M: NEO 1.00, SNX 0.99, IOTA 0.97, THETA 0.96, SUN 0.95, FIL 0.94, CHZ 0.92, GRT 0.91, VET 0.90, COMP 0.89, SAND 0.87, 1INCH 0.86
+   S: ONT 1.00, AUDIO 1.00, OGN 0.99, DODO 0.99, SKL 0.98, BAND 0.98, HOT 0.97, ZIL 0.97, WIN 0.97, SUSHI 0.96, FTT 0.96, UMA 0.95

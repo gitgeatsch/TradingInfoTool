@@ -1,0 +1,8 @@
+HALTEZEIT je Stufe (P19, Spot §49) - Kalibrierung 2019-04-02 bis 2026-06-22, 2639 Tage; Mails = Wechsel in eine Stufe mit Handlung
+  Haltezeit  1 T: Wechsel  86 · Mails  85 (11.8 je Jahr) · Season-Klima-Tage mit Season 34.4 % · erster Vorlauf/Season-Klima je Season-Start (T) [-120, -120, -120, -120, -120, -108, -110, -68, -44, -49, -51, -59, -65, -67, None]
+      haeufigste Wechsel: Season-Klima->Ende 16, Season-Klima->Ueberhitzung 16, Ueberhitzung->Season-Klima 15, Ende->Season-Klima 14, Ueberhitzung->Ende 9, Ende->Ueberhitzung 7
+  Haltezeit  3 T: Wechsel  31 · Mails  30 (4.2 je Jahr) · Season-Klima-Tage mit Season 34.0 % · erster Vorlauf/Season-Klima je Season-Start (T) [-118, -120, -120, -120, -120, -31, -33, -66, -42, -47, -49, -57, -63, -65, None]
+  Haltezeit  7 T: Wechsel  18 · Mails  17 (2.4 je Jahr) · Season-Klima-Tage mit Season 34.7 % · erster Vorlauf/Season-Klima je Season-Start (T) [-114, -120, -120, -120, -120, -27, -29, -62, -38, -43, -45, -53, -59, -61, None]
+      haeufigste Wechsel: Season-Klima->Ende 3, Ende->Vorlauf 3, Ende->Season-Klima 2, Ueberhitzung->Ende 2, Season-Klima->Ueberhitzung 2, kalt->Season-Klima 1
+  Haltezeit 14 T: Wechsel  13 · Mails  12 (1.7 je Jahr) · Season-Klima-Tage mit Season 34.1 % · erster Vorlauf/Season-Klima je Season-Start (T) [-107, -120, -120, -120, -120, -20, -22, -55, -31, -36, -38, -46, -52, -54, None]
+  Haltezeit 21 T: Wechsel   9 · Mails   8 (1.1 je Jahr) · Season-Klima-Tage mit Season 78.0 % · erster Vorlauf/Season-Klima je Season-Start (T) [-100, -120, -120, -120, -120, 9, 7, -26, None, None, None, None, None, None, None]
