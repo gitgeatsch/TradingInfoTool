@@ -6590,3 +6590,29 @@ Werte in log-Pp gegen die eigene Zelle (in Klammern p der erwarteten Seite). *tr
 - U-A gilt regime-unabhängig: B4 bleibt, wie es läuft, ein Regimeschalter ist nicht nötig.
 - U-B: Das Niveau je Regime wird Fakt-Anzeige.
 - Nächster Schritt **U-C S2 Angebot** (Ausschluss), zuerst Datenquellen und Abdeckung.
+
+## 53. U-C S2 Angebot: Datenquellen, Abdeckung und Vorprüfung (15.10.2026)
+
+### 53.1 Datenquellen-Inventar (frei, geprüft 15.10.)
+
+| Quelle | Größe | Zeitraum | Abdeckung | Urteil |
+|---|---|---|---|---|
+| CoinGecko `market_chart` (eigene `umlaufmenge_cg.db`) | Free Float = Marktwert/Preis, täglich, **sieht Unlocks** (Sprünge gezählt) | **nur 365 T** (ab 2025-09-21); am NB läuft sie täglich fort (Job `externe_reihen`) | **375** Coins mit Kurs, einschließlich 35 eingestellter (BREAK) | ✔ für die Vorprüfung; für *ab 2024* **zu kurz** |
+| Coin Metrics Community `SplyCur` | Gesamtausgabe auf dem Ledger | mehrjährig | 139 Assets, davon viele Stablecoins und Wrapper. **Es fehlen** fast alle neuen Token mit Unlocks (SUI, TAO, APT, ARB, OP, TIA, JUP …) | ✘ deckt die These nicht. *Ledger* sieht keine Freigabe vorab geprägter Token |
+| DefiLlama `emissions` (Freigabepläne) | Unlock-Kalender | – | – | ✘ **kostenpflichtig** (HTTP 402) |
+| Coinpaprika | historische Ticker | nur 1 Jahr frei | – | ✘ wie CoinGecko |
+| Freigabepläne als offener Quelltext (DefiLlama-Adapter) | – | – | Repository nicht mehr öffentlich | ✘ |
+
+⇒ **Mit freien Daten ist S2 ab 2024 nicht messbar.** Möglich ist nur ein **Querschnitt im letzten Jahr** (09/2025 bis 09/2026, ein Regime, fallender Markt). Die Reihe wächst am NB täglich; die volle Messung lohnt frühestens ab 10/2027.
+
+### 53.2 Vorprüfung S2 (Stufe 1) — Plan VORAB
+
+- **Merkmal:** Angebotswachstum über 90 T, log(Free Float t / t−90).
+- **Stichtage:** Monatserste 01/2026 bis 06/2026 (6). Das Ziel ist der 90-T-log-Ertrag ab t+1 aus `messdaten.db`, gegen die eigene Zelle (Stichtag × Marktwert-Drittel).
+- **Auswahl:**
+  - oberes Fünftel = **stärkste Verwässerung**; erwartet *schlechter* = Ausschluss trägt;
+  - unteres Fünftel = geringste Verwässerung; erwartet *besser*.
+  - Zweiseitig geprüft.
+- **Nullwelt:** beständige Zufallszahl je Coin, 2.000 Ziehungen (§52.2 geeicht).
+- **Weiter zur Messung**, wenn eine Auswahl p ≤ 0,10 hat **und** in mindestens 4 von 6 Stichtagen dasselbe Vorzeichen zeigt. Auch dann erst, wenn die Datenlage reicht (ab 10/2027).
+- **Auskunft:** dasselbe für *Sprungtage* (Tage mit Angebot +5 % oder mehr an einem Tag in den 90 T davor).
