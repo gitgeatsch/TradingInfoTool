@@ -5989,3 +5989,44 @@ Nutzer 14.10.: *„Ja, Voranalyse P19 vorbereiten, prüfen und gegenprüfen – 
 - Seit **März 2021** gab es keine echte Season mehr, seit **2024** nicht einmal eine kurze Gegenbewegung.
 - Die Ampel steht seit 2023 durchgehend auf *kalt* bzw. heute auf *ungewohnt*.
 - Das passt zum Altindex ab 2024 (−87 % gegen BTC, §30.2).
+
+### 49.4 Die Kalibrierung auf einem Zyklus — Weg zu einer besseren Methode (14.10.2026, O47)
+
+Nutzer 14.10.: *„die Kalibrierung auf 2020 und 2021 ist ein Problem – wenn wir eine genauere oder bessere Methode finden würden, wäre es hilfreich“*.
+
+**Das Problem genau:**
+- Die Schwellen (§36.3, K3) stammen aus der Erzählung und liegen auf einem Plateau.
+- Belegt ist aber nur **ein** Zyklus: Leave-one-out bricht, ohne 2020/21 fällt 3 von 3 auf 2,7 % Season-Tage.
+- Seit 2024 gibt es **keine** Season, der Messfokus ab 2024 kann die Ampel also grundsätzlich nicht prüfen (§42.5).
+- Mehr Daten aus derselben Zeit helfen nicht. Die Grenze ist die **Zahl der Zyklen**, nicht die Rechenmenge (wie beim Marktzustand, Befund 2.599).
+
+**Machbarkeit eines zweiten, unabhängigen Zyklus (geprüft 14.10., freie Quellen):**
+
+| Bedarf | Quelle | Abdeckung |
+|---|---|---|
+| Altcoin-Korb 2017/18 | CoinMetrics **Community** (frei, ohne Schlüssel): PriceUSD und CapMrktCurUSD | **59 Coins** mit Tagespreis vor 10/2017 (XRP, LTC, NEO, XLM, EOS, DASH, XMR, ETC, OMG, ZEC …), 123 vor 2019. Binance-Messbasis erst ab 08/2017 mit 12 Coins |
+| B3 Stablecoins | CoinMetrics USDT SplyCur | ab **2015** (DefiLlama erst ab 11/2017 und dort unvollständig) |
+| B2 M2, Netto-Liquidität | FRED | Jahrzehnte |
+| 2013/14 | – | nur 2–16 Coins, zu wenig |
+
+**Vorschlag: Fassung 2 = echter Holdout auf 2017/18 (O47):**
+1. **Brücke zuerst (R-R11):** Der Korb muss aus CoinMetrics kommen. Er wird nach **Marktwert** statt nach Umsatz gebildet, weil es in der Community-Schnittstelle keinen Börsenumsatz gibt. Auf 2019–2026 wird gemessen, ob dieser Korb dieselben Season-Episoden findet wie S1. Nur wenn ja, ist der Vergleich zulässig.
+2. **Messplan vorab:** Wahrheit 2017/18 wie §36.3. Die Ampel wird mit den **eingefrorenen** Schwellen und Stufen aus 2020/21 gerechnet, **ohne** Neukalibrierung. Gefragt ist: Erschien *Vorlauf / Season-Klima* vor oder in der Season 12/2017–01/2018, und blieb sie im Absturz 2018 und in 2019 *kalt*?
+3. **Erst danach:** mit zwei Zyklen ein Leave-one-cycle-out (jeweils auf einem kalibriert, auf dem anderen geprüft).
+
+**Was das leisten kann:**
+- eine echte Prüfung außerhalb der Stichprobe;
+- danach zwei statt einem Zyklus.
+
+**Was nicht:**
+- statistische Sicherheit, denn zwei Zyklen bleiben wenig;
+- 2017 war ein anderer Markt (ICO-Welle). Ein Fehlschlag kann auch daran liegen, und das gehört dann so benannt.
+
+**Ergänzend, wenn gewünscht:** den **Mechanismus** an einem Markt mit vielen Zyklen prüfen.
+- *„Erst das Geld, dann die Stärke“* lässt sich an Nebenwerten gegen Standardwerte prüfen, etwa Russell 2000 gegen S&P 500, frei über FRED und yfinance, ab 1987.
+- Das stützt den Mechanismus, nicht die Krypto-Schwellen.
+
+**Folge für P19:**
+- Die Ampel wird wie §49.3 gebaut, als **Fakt-Anzeige**.
+- Die Mail-Schalter bleiben **aus**, bis O47 Schritt 2 vorliegt.
+- Fällt der Holdout durch, wird Fassung n+1 mit Ursachenbegründung abgestimmt (Regel *Hypothesen nicht starr*).
