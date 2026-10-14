@@ -15,6 +15,8 @@ import time
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(WURZEL)
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import nb_kopie_regel0 as K
 
 ok_alle = []
@@ -110,7 +112,7 @@ if "--echt" in sys.argv and os.path.exists(os.path.join("data", "stundenkurse.db
     dt = time.time() - t0
     pruefe("echte Desktop-Messbasis (%.0f MB) in %.0f s kopiert, quick_check %s, Quelle unberuehrt" % (
         os.path.getsize(q) / 1e6, dt, k["quick_check"]), k["quick_check"] == "ok" and sha(q) == h0 and os.path.getmtime(q) == m0)
-    shutil.rmtree(z6, ignore_errors=True)
+    wegwerf.aufraeumen(z6)
 for x in (p, z, z2, p5, z5):
-    shutil.rmtree(x, ignore_errors=True)
+    wegwerf.aufraeumen(x)
 print("%d Pruefungen, %s" % (len(ok_alle), "ALLE BESTANDEN" if all(ok_alle) else "%d FEHLGESCHLAGEN" % ok_alle.count(False)))

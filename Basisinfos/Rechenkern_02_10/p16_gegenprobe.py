@@ -20,6 +20,8 @@ import requests
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 import agent.spot_mitnahme as SM  # noqa: E402
 import agent.spot_upbit as SU  # noqa: E402
@@ -89,5 +91,5 @@ eigen = {r[0] for r in sqlite3.connect("file:data/messdaten.db?mode=ro", uri=Tru
 pruefe("G4", mit == {"BEAMX", "TURBO", "CAT"} and eigen == {"BEAMX", "TURBO", "1000CAT"},
        "mit Binance-Spot (data/): %s · eigenes SQL (Binance-Namen) %s - KAS, BRETT, SUPRA, HYPE, CANTON ohne Spot" % (sorted(mit), sorted(eigen)))
 cp.close()
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print("\n%d von %d gleich" % (sum(ERG), len(ERG)))

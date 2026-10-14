@@ -17,6 +17,8 @@ from datetime import datetime, timedelta, timezone
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, os.getcwd())
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import agent.regel0_ablage as AB
 import agent.regel0_mail as RM
 import agent.regel0_stundenlauf as SL
@@ -103,5 +105,5 @@ c.close()
 pruefe("Mail: Einstieg vorbei (ALT, Einstieg 08:00, Schluss 09:00 UTC) -> verpasst, keine Mail; NEU -> Signalmail",
        z["verpasst"] == 1 and z["signal"] == 1 and v.get("ALT") and not v.get("NEU") and len(post) == 1 and " NEU " in post[0], (z, v, post))
 for x in (A, B, d):
-    shutil.rmtree(x, ignore_errors=True)
+    wegwerf.aufraeumen(x)
 print("%d Pruefungen, %s" % (len(ok_alle), "ALLE BESTANDEN" if all(ok_alle) else "%d FEHLGESCHLAGEN" % ok_alle.count(False)), flush=True)

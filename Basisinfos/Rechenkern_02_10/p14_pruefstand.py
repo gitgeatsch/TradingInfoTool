@@ -24,6 +24,8 @@ from types import SimpleNamespace as NS
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 import agent.regel0_groesse as G  # noqa: E402
 import agent.spot_mitnahme as SM  # noqa: E402
@@ -184,6 +186,6 @@ AR.parameter_aus_config = _par
 pruefe("S9", gesendet == [["Y"], ["X", "Y"]] and lief.count("protokoll") == 2 and lief.count("verfolgung") == 2,
        "an: %s · aus: %s · Protokoll/Verfolgung %s" % (gesendet[0] if gesendet else None, gesendet[1] if len(gesendet) > 1 else None, lief))
 import shutil  # noqa: E402
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print()
 print("%d von %d bestanden" % (sum(ERG), len(ERG)))

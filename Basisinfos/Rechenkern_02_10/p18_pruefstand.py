@@ -30,6 +30,8 @@ PROD_Q = os.path.abspath(sys.argv[1])
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
 sys.path.insert(0, os.path.join(WURZEL, "Basisinfos", "Spot_Voranalyse_04_10"))
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 sys.argv = ["x", PROD_Q]
 import numpy as np  # noqa: E402
@@ -257,5 +259,5 @@ pruefe("S8", w4["status"] == "wartet" and "Stammsatz SUI" in w4["fehlend"] and e
 c3.close()
 print("\nMuster der Mail (S3):\n" + m1[1])
 cpq.close()
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print("\n%d von %d bestanden" % (sum(ERG), len(ERG)))

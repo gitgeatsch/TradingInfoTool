@@ -18,6 +18,8 @@ from types import SimpleNamespace as NS
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 D = os.path.abspath(sys.argv[1])
 import config as C  # noqa: E402
@@ -53,7 +55,7 @@ for s in sorted(eigen):
         abw.append((s, fen.get(s), soll))
 c.close()
 pruefe("G2", not abw and len(fen) == len([s for s in eigen if s in fen]), "%d Fenster angelegt, Startkurse abweichend: %s" % (len(fen), abw[:5]))
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 
 # G3 unabhaengige Schleife
 random.seed(11)
@@ -112,6 +114,6 @@ n_fen = a.execute("SELECT COUNT(*) FROM fenster").fetchone()[0]
 a.close()
 k.close()
 pruefe("G3", not diff and n_aus > 5, "40 Reihen x 800 Tage: %d Fenster, %d Ausloesungen, Abweichungen %d %s" % (n_fen, n_aus, len(diff), diff[:2]))
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print()
 print("%d von %d gleich (G0 in p14_teil0.py)" % (sum(ERG), len(ERG)))

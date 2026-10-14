@@ -22,6 +22,8 @@ from pathlib import Path
 QUELLE = os.path.abspath(sys.argv[1])
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 import config as C  # noqa: E402
 import database.db as db  # noqa: E402
@@ -69,8 +71,13 @@ try:
     c.close()
     neu = sorted(set(nach) - set(vor))
     gleich = all(nach[t] == vor[t] for t in vor)
-    pruefe("W1", neu == ["watchlist_ergaenzung"] and gleich and nach["watchlist_ergaenzung"] == 0,
-           "init_db: neue Tabellen %s · alle %d anderen mit gleicher Zeilenzahl %s" % (neu, len(vor), gleich))
+    # KORREKTUR 15.10.2026: Sicherungen ab 14.10. tragen die Tabelle schon (P18b am NB) - die Pruefung leitet den Sollzustand aus der
+    # Sicherung ab, statt "neu = genau diese Tabelle" aufzuzaehlen (Regel: eine Pruefung, die Zustaende aufzaehlt, veraltet still)
+    schon_da = "watchlist_ergaenzung" in vor
+    pruefe("W1", neu == ([] if schon_da else ["watchlist_ergaenzung"]) and gleich and "watchlist_ergaenzung" in nach
+           and (schon_da or nach["watchlist_ergaenzung"] == 0),
+           "init_db: neue Tabellen %s (watchlist_ergaenzung schon in der Sicherung: %s) · alle %d anderen mit gleicher Zeilenzahl %s" % (
+               neu, schon_da, len(vor), gleich))
     import yaml
     datei = [e["symbol"] for e in yaml.safe_load(open(C.CONFIG_PATH, encoding="utf-8"))["watchlist"]]
     wl = C.get_watchlist()
@@ -111,5 +118,5 @@ finally:
     db.DB_PATH = alt_pfad
     C._config_cache = None
 pruefe("W6", summe(QUELLE) == q_vor and summe(C.CONFIG_PATH) == cfg_vor, "Original-Sicherung und config.yaml unberuehrt")
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print("\n%d von %d bestanden" % (sum(ERG), len(ERG)))

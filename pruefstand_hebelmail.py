@@ -41,6 +41,8 @@ AUFRUF:
         (Richtungsschalter am abgefangenen Versand - siehe `schalterprobe`)
 """
 from __future__ import annotations
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 
 import io
 import sqlite3
@@ -165,7 +167,7 @@ def baue(db_pfad: str, symbol: str = "SOL", stop_rel: float = 1 - 80.26 / 88.14,
                              config=betriebskonfiguration(), db=db_pfad)
     finally:
         DBM.DB_PATH = _alt_pfad
-        shutil.rmtree(_tmp.parent, ignore_errors=True)
+        wegwerf.aufraeumen(str(_tmp.parent))
     erg["_kurs"], erg["_stop"], erg["_tag"] = kurs, stop, r[i].date \
         if hasattr(r[i], "date") else "?"
     return erg

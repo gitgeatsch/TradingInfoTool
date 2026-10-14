@@ -31,6 +31,8 @@ from datetime import datetime, timedelta, timezone
 
 HIER = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, HIER)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(HIER)
 DECKEL = int(os.environ.get("KAL_DECKEL", "260"))
 ANKER = int(os.environ.get("KAL_ANKER", "50"))
@@ -233,7 +235,7 @@ def main(quelle: str, ausgabe: str) -> int:
     print("\nAufrufe gesamt: %d (Deckel %d) · Standard-DB unberuehrt: %s" % (
         zaehl["n"], DECKEL, os.path.getmtime(os.path.join(HIER, "data", "tradinginfotool.db")) == std_vorher))
     shutil.copy(os.path.join(ablage, "regel0_signale.db"), os.path.join(ausgabe, "kalibrier_ablage.db"))   # alle Ein- und Ausgaben als Beleg
-    shutil.rmtree(tmp, ignore_errors=True)
+    wegwerf.aufraeumen(tmp)
     return 0
 
 

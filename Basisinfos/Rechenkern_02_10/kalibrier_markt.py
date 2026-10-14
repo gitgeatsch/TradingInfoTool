@@ -25,6 +25,8 @@ from pathlib import Path
 
 HIER = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, HIER)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(HIER)
 DECKEL = 75
 B0 = datetime(2020, 1, 1, tzinfo=timezone.utc)
@@ -86,7 +88,7 @@ def main(quelle: str) -> int:
         len(gueltig), dict(v), 100 * top, "OK" if top <= 0.70 else "NICHT erfuellt"))
     print("Aufrufe gesamt: %d (Deckel %d) · Standard-DB unberuehrt: %s" % (
         zaehl["n"], DECKEL, os.path.getmtime(os.path.join(HIER, "data", "tradinginfotool.db")) == std_vorher))
-    shutil.rmtree(tmp, ignore_errors=True)
+    wegwerf.aufraeumen(tmp)
     return 0
 
 

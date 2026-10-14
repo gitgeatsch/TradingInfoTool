@@ -80,6 +80,8 @@ mt = {p: os.path.getmtime(os.path.join(PROJ, "data", p)) for p in ("tradinginfot
 
 # P1
 sys.path.insert(0, HIER)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import n4_rueckspiel as N  # noqa: E402
 a = N.lade_anker()
 r1, r2 = N.reihenfolge(a), N.reihenfolge(a)

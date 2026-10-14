@@ -18,6 +18,8 @@ from pathlib import Path
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, os.getcwd())
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import agent.regel0_ablage as AB
 import agent.regel0_mail as RM
 
@@ -60,19 +62,19 @@ pruefe("A  keine offene Position -> keine Mail", not post and z["entfallen"] == 
 pruefe("A  entfallen als Fakt vermerkt (Zeit + Grund), Erinnerung NICHT als verschickt", r[0] is None and r[1] and "keine offene" in (r[2] or ""), str(r))
 z2, post2, _ = lauf(d, lambda: {"stand": frisch, "veraltet": False, "stunden": 0.2, "positionen": [("SEI", "LONG", "x")]}, "A2")
 pruefe("A  naechster Lauf schickt NICHTS nach (auch wenn jetzt eine Position da waere)", not post2 and z2["entfallen"] == 0, str(z2))
-shutil.rmtree(d, ignore_errors=True)
+wegwerf.aufraeumen(d)
 
 d = ablage("SEI")
 z, post, r = lauf(d, lambda: {"stand": frisch, "veraltet": False, "stunden": 0.2, "positionen": [("SEI", "LONG", "2026-10-03T14:02:00")]}, "B")
 pruefe("B  offene Position -> Mail mit Vermerk", len(post) == 1 and "offene Hebelposition SEI LONG" in post[0][1] and r[0], str(post)[:200])
 z2, post2, _ = lauf(d, lambda: {"stand": frisch, "veraltet": False, "stunden": 0.2, "positionen": [("SEI", "LONG", "x")]}, "B2")
 pruefe("B  nicht doppelt", not post2, str(post2)[:120])
-shutil.rmtree(d, ignore_errors=True)
+wegwerf.aufraeumen(d)
 
 d = ablage("SEI")
 z, post, r = lauf(d, lambda: {"stand": frisch - timedelta(hours=3), "veraltet": True, "stunden": 3.2, "positionen": []}, "C")
 pruefe("C  Abgleich veraltet -> Mail mit Vermerk *unbekannt*", len(post) == 1 and "Positionsstand unbekannt" in post[0][1] and z["entfallen"] == 0, str(post)[:200])
-shutil.rmtree(d, ignore_errors=True)
+wegwerf.aufraeumen(d)
 
 d = ablage("SEI")
 
@@ -83,12 +85,12 @@ def _wirft():
 
 z, post, r = lauf(d, _wirft, "D")
 pruefe("D  Positionsstand wirft -> Mail mit Vermerk *nicht lesbar*", len(post) == 1 and "nicht lesbar" in post[0][1], str(post)[:200])
-shutil.rmtree(d, ignore_errors=True)
+wegwerf.aufraeumen(d)
 
 d = ablage("SEI")
 z, post, r = lauf(d, None, "E")
 pruefe("E  ohne position -> altes Verhalten", len(post) == 1 and "Position:" not in post[0][1], str(post)[:200])
-shutil.rmtree(d, ignore_errors=True)
+wegwerf.aufraeumen(d)
 
 pruefe("Abgleich nie gelaufen -> unbekannt (nicht *keine Position*)", RM.position_stand({"bitpanda": "SEI"}, {"stand": None, "veraltet": False,
                                                                                                          "positionen": []})[0] is None)
@@ -108,5 +110,5 @@ if len(sys.argv) > 1:
         db.DB_PATH = vorher
     print("  NB-Kopie: Stand %s, veraltet %s, offene Positionen %s" % (bef["stand"], bef["veraltet"], bef["positionen"]))
     pruefe("NB-Kopie lesbar: Befund vollstaendig", set(bef) == {"stand", "veraltet", "stunden", "positionen"}, str(bef))
-    shutil.rmtree(kopie.parent, ignore_errors=True)
+    wegwerf.aufraeumen(kopie.parent)
 print("%d Pruefungen, %s" % (len(ok_alle), "ALLE BESTANDEN" if all(ok_alle) else "%d FEHLGESCHLAGEN" % ok_alle.count(False)))

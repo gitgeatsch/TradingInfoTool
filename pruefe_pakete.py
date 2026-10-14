@@ -45,6 +45,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, ".")
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 
 _ERGEBNISSE: list[tuple[str, str, bool, str]] = []
 
@@ -3861,7 +3863,7 @@ def _paket_b1_rumpf() -> None:
                "wird uebergeben, nie hier geoeffnet; die Fakten-Module lesen "
                "mit ihrer eigenen Vorgabe, und das muss LESEN bleiben")
     finally:
-        _shutil.rmtree(_tmp_b1, ignore_errors=True)
+        wegwerf.aufraeumen(_tmp_b1)
     pruefe(P, "er schreibt auch in die Kopie nichts",
            not erg["signale"],
            "trocken heisst: kein Modellaufruf, kein Schreiben, keine Mail")
@@ -22295,6 +22297,58 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_wegwerf() -> None:
+    """15.10.2026: WEGWERF-ORDNER AUF D: UND AUFRAEUMEN OHNE STILLES SCHEITERN (wegwerf.py).
+
+    ⚠️⚠️ Anlass: Die C-Partition lief voll - 48 liegengebliebene Wegwerf-Ordner (16 GB) in %TEMP%. ``rmtree`` mit ``ignore_errors``
+    verschwieg, dass Windows eine noch offene SQLite-Datei nicht loescht. Geprueft wird am SEITENEFFEKT (offene Verbindung, echter
+    Ordner) und im Quelltext (jede Datei, die Wegwerf-Ordner anlegt, nutzt ``wegwerf``; niemand loescht mehr still)."""
+    P = "Wegwerf"
+    import ast as _ast
+    import os as _os
+    import sqlite3 as _sq
+    import subprocess as _sp
+    import tempfile as _tf
+
+    import wegwerf as _W
+
+    pruefe(P, "Wegwerf-Ort liegt auf D: (C: entlastet)", _W.BASIS.upper().startswith("D:"), _W.BASIS)
+    pruefe(P, "tempfile legt in diesem Prozess unter dem Wegwerf-Ort an", _tf.gettempdir() == _W.BASIS, _tf.gettempdir())
+    _t = _tf.mkdtemp(prefix="wegwerf_probe_")
+    _c = _sq.connect(_os.path.join(_t, "probe.db"))
+    _c.execute("CREATE TABLE a (x)")
+    _c.commit()
+    _ok = _W.aufraeumen(_t)
+    try:
+        _c.execute("SELECT 1")
+        _zu = False
+    except _sq.ProgrammingError:
+        _zu = True
+    pruefe(P, "⚠️⚠️ Seiteneffekt: Ordner mit OFFENER SQLite-Verbindung wird geloescht (das alte rmtree scheiterte hier still)",
+           _ok and not _os.path.exists(_t) and _zu, "geloescht %s · Verbindung geschlossen %s" % (_ok, _zu))
+    _aussen = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "Basisinfos")
+    pruefe(P, "Schutz: ausserhalb des Wegwerf-Orts wird NICHT geloescht", _W.aufraeumen(_aussen) is False and _os.path.isdir(_aussen))
+    _dateien = [f for f in _sp.run(["git", "ls-files", "*.py"], capture_output=True, text=True,
+                                   cwd=_os.path.dirname(_os.path.abspath(__file__))).stdout.split() if f != "wegwerf.py"]
+    _ohne, _still = [], []
+    for _f in _dateien:
+        try:
+            _q = io.open(_f, encoding="utf-8").read()
+        except (OSError, UnicodeDecodeError):
+            continue
+        if "mkdtemp" in _q or "TemporaryDirectory" in _q:
+            _baum = _ast.parse(_q)
+            if not any(isinstance(n, _ast.Import) and any(a.name == "wegwerf" for a in n.names) for n in _baum.body):
+                _ohne.append(_f)
+        if re.search(r"rmtree\([^)\n]*ignore_errors\s*=\s*True", _q):
+            _still.append(_f)
+    pruefe(P, "jede Datei mit Wegwerf-Ordner importiert wegwerf auf oberster Ebene", not _ohne, ", ".join(_ohne[:8]) or "%d Dateien" % len(_dateien))
+    pruefe(P, "⚠️ niemand loescht mehr still (rmtree mit ignore_errors=True)", not _still, ", ".join(_still[:8]))
+    _alt = [n for n in _os.listdir(_W.BASIS) if _os.path.isdir(_os.path.join(_W.BASIS, n))
+            and __import__("time").time() - _os.path.getmtime(_os.path.join(_W.BASIS, n)) > _W.ALT_STUNDEN * 3600]
+    pruefe(P, "keine Reste aelter als %d h am Wegwerf-Ort" % _W.ALT_STUNDEN, not _alt, ", ".join(_alt[:8]))
+
+
 def paket_gitstand() -> None:
     """P21 (13.10.2026, Voranalyse Schritt7 §23.48): GIT-STAND DES NB IN DER DIAGNOSE, WATCHLIST GEGEN DAS REPO.
 
@@ -22407,7 +22461,7 @@ def paket_gitstand() -> None:
                _g7["head"] == _head and _g7["quelle_head"] == "dateien" and not _lose and _g7["geaendert"] is None
                and any("unbekannt" in z for z in _m8), "head %s · lose Ref noch da %s · %s" % ((_g7["head"] or "-")[:8], _lose, _m8[:1]))
     finally:
-        _sh.rmtree(_w, ignore_errors=True)
+        wegwerf.aufraeumen(_w)
 
     # G8 im Quelltext: die Diagnose schreibt git_stand (nicht unter den grossen, also auch schlank), Watchlist mit Name und ID;
     # Punkt 17 ruft bewerte
@@ -22886,7 +22940,7 @@ def paket_standard_db() -> None:
         # der Selbsttest darf das Ergebnis der Suite nicht faerben
         del _STANDARD_DB_SCHREIBER[_vorher:]
         import shutil
-        shutil.rmtree(_tmp, ignore_errors=True)
+        wegwerf.aufraeumen(_tmp)
 
     # (4) die zwei gefundenen Stellen bleiben repariert
     _q = _quelltext("pruefe_pakete.py")
@@ -27571,7 +27625,7 @@ def paket_umlaufmenge() -> None:
         pruefe(P, "die Frischegrenze bleibt 21 Tage", _MR.SPLYCUR_FRISCHE_TAGE == 21, "")
     finally:
         import shutil as _sh
-        _sh.rmtree(_tmp, ignore_errors=True)
+        wegwerf.aufraeumen(_tmp)
 
     # ---- 6  DIE DATENFRISCHE --------------------------------------------
     _q = [q for q in _DF.REGISTRATUR if q.name == _MR.SPLYCUR_QUELLE]
@@ -30677,7 +30731,7 @@ def paket_protokoll() -> None:
         con.close()
     finally:
         # Windows haelt die Datei kurz fest - ein Rest im Temp ist kein Befund.
-        _sh.rmtree(tmp, ignore_errors=True)
+        wegwerf.aufraeumen(tmp)
 
     # ---- 2 Die Phase wird abgeleitet, nicht geraten -----------------------
     faelle = [
@@ -30816,7 +30870,7 @@ def paket_protokoll() -> None:
                "terminmarkt" in (_link["notizen"] or ""), str(_link["notizen"]))
         con2.close()
     finally:
-        _sh.rmtree(tmp2, ignore_errors=True)
+        wegwerf.aufraeumen(tmp2)
 
     # ⚠️ EIN PROTOKOLL DARF DEN LAUF NICHT ANHALTEN - am Seiteneffekt gezeigt
     class _KaputtCon:
@@ -30916,7 +30970,7 @@ def paket_protokoll() -> None:
                _FP.schreibe(con3, {}, "2026-09-18T05:23:00") == 0, "")
         con3.close()
     finally:
-        _sh.rmtree(tmp3, ignore_errors=True)
+        wegwerf.aufraeumen(tmp3)
 
     q3 = io.open("scheduler/background.py", encoding="utf-8").read()
     pruefe(P, "⚠️ der Ausstiegs-Job protokolliert VOR dem Mailversand",
@@ -30969,7 +31023,7 @@ def paket_protokoll() -> None:
                "(gemessen: %s)" % str((n_a, n_b, n_c)))
         con6.close()
     finally:
-        _sh.rmtree(tmp6, ignore_errors=True)
+        wegwerf.aufraeumen(tmp6)
     import agent.assetklassen as _AK6
     import inspect as _insp6
     _qak = _insp6.getsource(_AK6.zellen)
@@ -31124,7 +31178,7 @@ def paket_protokoll() -> None:
                "nachzieht (%s)" % _kurz)
         con8.close()
     finally:
-        _sh.rmtree(tmp8, ignore_errors=True)
+        wegwerf.aufraeumen(tmp8)
 
     _qb8 = io.open("scheduler/background.py", encoding="utf-8").read()
     pruefe(P, "der taegliche Job zieht die Ausstiege nach, und ein Ausfall haelt ihn nicht an",
@@ -31897,7 +31951,7 @@ def paket_zaehlung() -> None:
         pruefe(P, "der Vorbehalt steht im Kopf UND am Ende",
                text.count(_ZK.VORBEHALT) >= 3, str(text.count(_ZK.VORBEHALT)))
     finally:
-        _sh.rmtree(tmpz, ignore_errors=True)
+        wegwerf.aufraeumen(tmpz)
 
 def paket_regel0_betrieb() -> None:
     """E-44 (02.10.2026): Positionsgroesse der REGEL0 im Betrieb - agent/regel0_groesse.py + Basisinfos/regel0_betrieb.yaml.
@@ -32755,7 +32809,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -13,6 +13,8 @@ from pathlib import Path
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, os.getcwd())
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import agent.regel0_ablage as AB
 import agent.regel0_groesse as G
 import agent.regel0_llm as LLM
@@ -51,7 +53,7 @@ def lauf(**kw):
     post.clear()
     z = RM.versende(d, lambda *a: post.append(("alt",) + a) or True, jetzt=jetzt, werte=G.lade(),
                     kurse=lambda: ({"KAIA": 0.0376}, {"KAIAUSDT": 0.0375}, {"KAIA": 0.0321}), bild=lambda r: b"PNG", **kw)
-    shutil.rmtree(d, ignore_errors=True)
+    wegwerf.aufraeumen(d)
     return z, list(post)
 
 
@@ -116,5 +118,5 @@ if len(sys.argv) > 1:
         db.DB_PATH = vorher
     pruefe("M-f gegen die NB-Kopie: Spot-Mail vor 2 h -> Hinweis; vor 30 h -> keiner; ohne Spot-Mail -> keiner",
            h1 and "NACHKAUFEN" in h1 and "ZZTEST" in h1 and h2 is None and h3 is None, (h1, h2, h3))
-    shutil.rmtree(kopie.parent, ignore_errors=True)
+    wegwerf.aufraeumen(kopie.parent)
 print("%d Pruefungen, %s" % (len(ok_alle), "ALLE BESTANDEN" if all(ok_alle) else "%d FEHLGESCHLAGEN" % ok_alle.count(False)))

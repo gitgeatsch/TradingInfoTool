@@ -6,6 +6,8 @@ Temporaere DB, Produktiv-DB wird nicht angefasst.
 import os
 import pathlib
 import tempfile
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 from datetime import datetime, timedelta, timezone
 
 

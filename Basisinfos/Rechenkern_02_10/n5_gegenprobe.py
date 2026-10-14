@@ -25,6 +25,8 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 PROJ = os.path.dirname(os.path.dirname(HIER))
 sys.path.insert(0, HIER)
 sys.path.insert(0, PROJ)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(PROJ)
 import n5_pruefe as P          # noqa: E402
 import n5_rueckspiel as N5     # noqa: E402

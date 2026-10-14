@@ -3,6 +3,8 @@ Kein Start des Schedulers (start() wird nie gerufen) - es werden nur die geplant
 naechsten Laeufe gelesen."""
 import os, sys, sqlite3, tempfile, datetime as D
 sys.path.insert(0, r"D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool")
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(r"D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool")
 import database.db as db
 tmp = tempfile.mkdtemp()

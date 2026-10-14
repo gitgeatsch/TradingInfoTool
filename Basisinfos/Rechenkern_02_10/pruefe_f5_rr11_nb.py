@@ -26,6 +26,8 @@ from datetime import datetime, timedelta
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(WURZEL)
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 B0 = datetime(2020, 1, 1)
 F = "%Y-%m-%d %H:%M"
 
@@ -58,7 +60,7 @@ def _block(arg):
         _l, sig = lies(os.path.join(abl, "regel0_signale.db"))
         return {k: v for k, v in sig.items() if a <= h_von(k[1]) + 1 <= b}
     finally:
-        shutil.rmtree(abl, ignore_errors=True)
+        wegwerf.aufraeumen(abl)
 
 
 def nachrechnen(daten: str, modelle: str, von: int, bis: int, prozesse: int = 4) -> dict:
@@ -72,7 +74,7 @@ def nachrechnen(daten: str, modelle: str, von: int, bis: int, prozesse: int = 4)
     try:
         SL.betrieb_lauf(daten, von, vor, modelle, ausgabe=print)
     finally:
-        shutil.rmtree(vor, ignore_errors=True)
+        wegwerf.aufraeumen(vor)
     erg = {}
     if n == 1:
         for bl in bloecke:
@@ -142,7 +144,7 @@ def gegenprobe() -> int:
         rot = [x for x in ("nur_nb", "nur_desk", "vh", "vorl", "endg") if e[x]]
         ok.append(rot == [feld])
         print("  %s  eingebauter Fehler *%s* -> genau %s rot (%s)" % ("OK  " if ok[-1] else "FEHL", name, feld, rot))
-    shutil.rmtree(abl, ignore_errors=True)
+    wegwerf.aufraeumen(abl)
     print("%d Pruefungen, %s" % (len(ok), "ALLE BESTANDEN" if all(ok) else "%d FEHLGESCHLAGEN" % ok.count(False)))
     return 0 if all(ok) else 1
 

@@ -12,6 +12,8 @@ from pathlib import Path
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, os.getcwd())
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import api.email_notify as EN
 import config as CFG
 import database.db as db
@@ -52,5 +54,5 @@ try:
     pruefe("Datenbank nicht lesbar: die Meldung geht trotzdem raus, der Speicher sperrt die Wiederholung", r4 and not r5, (r4, r5))
 finally:
     db.DB_PATH = vorher
-    shutil.rmtree(kopie.parent, ignore_errors=True)
+    wegwerf.aufraeumen(kopie.parent)
 print("%d Pruefungen, %s" % (len(ok_alle), "ALLE BESTANDEN" if all(ok_alle) else "%d FEHLGESCHLAGEN" % ok_alle.count(False)))

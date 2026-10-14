@@ -27,6 +27,8 @@ from datetime import date, timedelta
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 import tkinter as tk  # noqa: E402
 from tkinter import ttk  # noqa: E402
@@ -269,5 +271,5 @@ print("\nBeispielzeilen:")
 for s in ("BEAMX", "LINK", "BTC", "EURCV", "VVMX", "XDC"):
     if s in z:
         print("  " + " | ".join("%s=%s" % (k, z[s][k]) for k in ("symbol", "rolle", "frei", "gestakt", "value_eur", "b1_x", "b1_bis", "b1_status", "upbit")))
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print("\n%d von %d bestanden" % (sum(ERG), len(ERG)))

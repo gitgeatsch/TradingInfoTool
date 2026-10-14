@@ -24,6 +24,8 @@ from datetime import datetime, timezone
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 STD = os.path.join("data", "tradinginfotool.db")
 vorher = hashlib.sha256(open(STD, "rb").read()).hexdigest() if os.path.exists(STD) else None

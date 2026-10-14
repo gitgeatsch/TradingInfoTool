@@ -20,6 +20,8 @@ import pandas as pd
 
 HIER = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, HIER)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(HIER)
 sys.stdout.reconfigure(encoding="utf-8")
 import agent.regel0_nachlader as NL                                # noqa: E402
@@ -157,5 +159,5 @@ RM.versende(abl, lambda b, t: post.append((b, t)) or True, datetime(2026, 6, 18,
 pruef("ZK-Signal: in der Ablage OHNE Bitpanda-Namen und ohne Schalter, keine Mail", zk and zk[0][1] is None and zk[0][2] is None and not [b for b, _t in post if " ZK " in b],
       "%s · Mails %s" % (zk, [b for b, _t in post]))
 for x in (d, d2, d3, abl, mod):
-    shutil.rmtree(x, ignore_errors=True)
+    wegwerf.aufraeumen(x)
 print("SCHLUSS: %s (%d von %d)" % ("✔ bestanden" if all(ergebnis) else "⛔ NICHT bestanden", sum(ergebnis), len(ergebnis)))

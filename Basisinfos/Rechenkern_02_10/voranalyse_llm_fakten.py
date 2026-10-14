@@ -18,6 +18,8 @@ import sqlite3
 import statistics as st
 import sys
 import tempfile
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 
 HIER = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -87,7 +89,7 @@ def main(quelle: str) -> None:
             print("      Unterschied %.1f Prozentpunkte zwischen zwei gleich grossen Gruppen (80 %% Macht, 5 %%): n=%d Handel = %d Tage"
                   % (100 * d, n, n / je_tag))
     c.close()
-    shutil.rmtree(tmp, ignore_errors=True)
+    wegwerf.aufraeumen(tmp)
 
 
 if __name__ == "__main__":

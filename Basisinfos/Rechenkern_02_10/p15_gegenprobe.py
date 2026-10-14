@@ -17,6 +17,8 @@ from datetime import date
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 import agent.spot_mitnahme as SM  # noqa: E402
 import config as C  # noqa: E402
@@ -109,7 +111,7 @@ pruefe("G3", not abw and beispiele == {"LINK": "1,37", "BEAMX": "0,81", "INJ": "
 c.close()
 c2.close()
 abl.close()
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 # G4 (P15e): Aufteilung nach Rolle per eigenem SQL und eigener Regel - gegen bestand_tab.aufteilung
 c3 = sqlite3.connect("file:%s?mode=ro" % sys.argv[1].replace("\\", "/"), uri=True)
 c3.row_factory = sqlite3.Row

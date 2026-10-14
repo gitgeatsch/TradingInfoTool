@@ -23,6 +23,8 @@ from datetime import datetime, timezone
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 D = os.path.abspath(sys.argv[1])
 ORIG = os.path.join(D, "tradinginfotool.db")
@@ -182,6 +184,6 @@ pruefe("T8", "from ui.hebel_tab import HebelTab" in app and "from ui.hebel_view 
        "HebelTab eingebunden %s · alter Import weg %s · fremde Importe %s" % ("HebelTab(notebook" in app, "from ui.hebel_view import" not in app, fremd))
 root.destroy()
 import shutil  # noqa: E402
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print()
 print("%d von %d bestanden" % (sum(ERG), len(ERG)))

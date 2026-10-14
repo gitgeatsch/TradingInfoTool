@@ -27,6 +27,8 @@ from datetime import datetime, timedelta, timezone
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 D = os.path.abspath(sys.argv[1])
 KOPIE = os.path.join(D, "tradinginfotool.db")
@@ -218,7 +220,7 @@ pruefe("C3", r5.get("mail") is not None and gesendet and len(gesendet[0][2]) == 
        and all(b_["filename"].startswith("hebel_") for b_ in gesendet[0][2]) and "Charts %d" % (2 * len(syms)) in log.getvalue(),
        "gemeldet %s · Bilder %d · Logzeile %s" % (syms, len(gesendet[0][2]) if gesendet else 0, "Charts %d" % (2 * len(syms)) in log.getvalue()))
 pruefe("C4", r6.get("zugestellt") is True and len(alt) == 1, "Versand mit (betreff, text): zugestellt %s" % r6.get("zugestellt"))
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 pruefe("C5", summe(KOPIE) == vor, "Pruefsumme der NB-Kopie %s" % ("gleich" if summe(KOPIE) == vor else "GEAENDERT"))
 print()
 print("%d von %d bestanden" % (sum(ERG), len(ERG)))

@@ -26,6 +26,8 @@ from datetime import datetime, timedelta, timezone
 
 WURZEL = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, WURZEL)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(WURZEL)
 import agent.regel0_groesse as G  # noqa: E402
 import agent.spot_mitnahme as SM  # noqa: E402
@@ -165,5 +167,5 @@ c.close()
 # S11
 pruefe("S11", summe(PROD) == vor, "Wegwerf-Produktion %s" % ("unveraendert" if summe(PROD) == vor else "GEAENDERT"))
 print("\nMuster der Mail (S2):\n" + (m[0][1] if m else "-"))
-shutil.rmtree(T, ignore_errors=True)
+wegwerf.aufraeumen(T)
 print("\n%d von %d bestanden" % (sum(ERG), len(ERG)))

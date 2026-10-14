@@ -19,6 +19,8 @@ from datetime import datetime, timedelta, timezone
 
 HIER = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, HIER)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 os.chdir(HIER)
 
 ERG = []
@@ -242,7 +244,7 @@ def main(quelle):
            std_vorher is None or os.path.getmtime(std) == std_vorher)
     n = sum(ERG)
     print("SCHLUSS: %s (%d von %d)" % ("✔ bestanden" if n == len(ERG) else "⛔ NICHT bestanden", n, len(ERG)))
-    shutil.rmtree(tmp, ignore_errors=True)
+    wegwerf.aufraeumen(tmp)
     return 0 if n == len(ERG) else 1
 
 

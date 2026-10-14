@@ -19,6 +19,8 @@ PROJ = os.path.dirname(os.path.dirname(HIER))
 os.chdir(PROJ)
 sys.path.insert(0, PROJ)
 sys.path.insert(0, HIER)
+__import__("sys").path.append(__import__("os").path.abspath(__file__).split("TradingInfoTool")[0] + "TradingInfoTool")  # wegwerf.py
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (15.10.2026)
 import agent.binance_ankuendigungen as BA     # noqa: E402
 import e1_messung as EM                        # noqa: E402
 
