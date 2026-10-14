@@ -6380,3 +6380,33 @@ Nutzer 14.10.: *„ja starten“*.
   - Das kommt in die Umfeld-Anzeige: *„Kaufkraft des Euro: …“*.
 - **Stand heute:** Gold in Euro +99 % seit 01/2024, aber −5,3 % seit 02/2026, während der Realzins in Dollar von 1,9 auf 2,9 % stieg.
 - ⚠️ **Erwartung vorab:** Mit 13 Jahren BTC ist auch K10 voraussichtlich *nicht entscheidbar* (Auflösung §51.7). Sein Wert liegt in der **Auskunft**.
+
+### 51.9 Messplan K10 „Vertrauen in Fiat“ Fassung 2 — VORAB festgelegt (14.10.2026, Nutzer: *„ja – prüfen wir diese Thesen und den Maßstab“*)
+
+**Kanäle** (Markt, in Dollar; Quellen frei: Gold-Future `GC=F` yfinance, DFII10, DTWEXBGS FRED; Verzug 1 T):
+
+| # | Größe | lang | kurz |
+|---|---|---|---|
+| K10a | **Gold über dem Realzins:** Rest der rollierenden 5-J-Regression log(Gold) ~ DFII10, nur Vergangenheit | Niveau des Rests | 3-M-Änderung des Rests |
+| K10b | **Gold in Weltwährung:** log(Gold × Dollar-Index) = Gold in den Fremdwährungen des Index | 52-W-Änderung | 13-W-Änderung |
+
+**Einteilung:** wie §51.5, Drittel im rollierenden 5-J-Fenster. Die Richtung ist **zweiseitig**; als *günstig* gilt vorab steigendes Misstrauen (These „digitales Gold“), ein Vorzeichen dagegen zählt als *schadet*.
+
+**Zielgrößen:** T1 BTC 90 T / 180 T, T2 Altkorb gegen BTC 90 T (Urteil). M3 S&P 500 90 T als Probe. Gold selbst ist **kein** Ziel, weil das zirkulär wäre.
+
+**Nullwelt N2** (R-R14): gemeinsame Phasen-Randomisierung der vier K10-Reihen; Vorprüfung mit 200, Messung mit 1.000 Surrogaten.
+
+**Urteil:**
+- Bonferroni über **alle 11 Kanäle** (K1–K10b): je Seite 0,025/11 = **0,0023**;
+- dasselbe Vorzeichen in E1, E2 und E3;
+- Spiegelprobe.
+
+**Selbsttest:** echte K10-Reihen gegen 200 synthetische Ziele (beide Richtungen nach R-R14) und Pflanzung als Auflösungskurve.
+
+**Vorprüfung (Stufe 1):** Weiter zur Messung, wenn ein K10-Kanal bei T1 oder T2 im äußeren Zehntel der N2-Nullwelt liegt **und** in E3 dasselbe Vorzeichen hat.
+
+**Erwartung vorab:** *nicht entscheidbar* (Auflösung §51.7).
+
+**Auskunft Euro** (nicht gemessen, nur Anzeige): Gold in Euro, HICP J/J, €STR − HICP.
+
+**Folge:** wie §51.7. Trägt K10, wird er Gewicht; sonst bleibt er Fakt-Anzeige.
