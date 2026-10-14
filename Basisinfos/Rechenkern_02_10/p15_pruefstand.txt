@@ -1,31 +1,36 @@
 P1   bestanden Zeilen 48 · Bestaende 48 · Schluessel = Symbol
 P2   bestanden Rollen {'-': 15, 'L': 29, 'Kern': 3, 'Cash': 1} (aus Bestand + Watchlist abgeleitet: {'Cash': 1, 'Kern': 3, 'L': 29, '-': 15})
-P3   bestanden B1: 28 Fenster fuer 29 L-Bestaende (ohne Tageskurs: HBAR), x 1,00 am Starttag, Nicht-L '-'
+P3   bestanden B1: 29 Fenster fuer 29 L-Bestaende (ohne Tageskurs: -), x 1,00 am Starttag, Nicht-L '-'
 P21  bestanden Spalte Abbau (B4): ohne Lauf '?' fuer 29 L-Bestaende, '-' sonst; mit Lauf '1 unten (S)' / '–'
 P4   bestanden Upbit KRW: 'nein' fuer 13 (ASTER, BEAMX, BNB, BRETT, CAT, HBAR, HYPE, KAS, QNT, SUPRA, TURBO, VSN, XDC) · abgeleitet aus dem gestellten KRW-Markt
-P5   bestanden Hebel kurz: [('ETH', '11.9 %', 'LIQUIDATION NAHE'), ('BTC', '26.8 %', 'HALTEN')]
-P6   bestanden Summenzeile: Gesamtwert: 23,704.77 EUR  (Spot frei 16,665.03 · gestakt 5,985.38 · Fiat 154.36 · Hebel-Eigenkapital 900.00)
+P5   bestanden Hebel kurz: [('ETH', '11.5 %', 'LIQUIDATION NAHE'), ('BTC', '26.8 %', 'HALTEN')]
+P6   bestanden Summenzeile: Gesamtwert: 23,814.69 EUR  (Spot frei 16,699.02 · gestakt 6,051.24 · Fiat 164.43 · Hebel-Eigenkapital 900.00)
 P7   bestanden Knoepfe ['Aktualisieren', 'Speichern'] · Doppelklick gebunden · Aufteilung nach Rolle 2 Zeilen · keine Schwerpunkt-Tabelle
 P8   bestanden app.py haengt BestandTab als 'Bestand' ein · PortfolioView nicht mehr · Kennzeichnung in portfolio.py und letzte_bewertung.py
 P9   bestanden zweiter refresh ohne Aenderung: delete gerufen 0 mal
 P10  bestanden Produktion und Ablage nach dem Lesen unveraendert
-P11  bestanden Laufzeit: Aufbau 0.53 s · schneller Teil 0.005 s · langsamer Teil 0.07 s (Desktop)
+P11  bestanden Laufzeit: Aufbau 0.48 s · schneller Teil 0.004 s · langsamer Teil 0.07 s (Desktop)
 P12  bestanden Spaltenbreiten zusammen 1265 (x 1,5 = 1897 <= 1900) · waagrechte Laufleiste True
 P13  bestanden Einstand kompakt ('⚠' statt '(⚠ n unbepreist)'): lange Texte []
 P14  bestanden Mouseover am rechten Rand links vom Zeiger, Spaltenkopf UND Zeile
 P15  bestanden Gesamtwert oben True · Hebel-Ueberschrift 'Hebel – offene Positionen: 2 · Eigenkapital zusammen 900.00 EUR (kurz; Details im Hebel-Tab)' · Spot-Hoehe 12
-P16  bestanden Aufteilung {'Kern': ('6,036.67', '25.5'), 'L': ('11,064.86', '46.7'), 'Cash': ('196.02', '0.8'), 'Fiat': ('154.36', '0.7'), 'andere Klassen': ('5,352.86', '22.6'), 'Hebel': ('900.00', '3.8')} · Anteile zusammen 100.1 %
+P16  bestanden Aufteilung {'Kern': ('6,036.03', '25.3'), 'L': ('11,172.36', '46.9'), 'Cash': ('196.03', '0.8'), 'Fiat': ('164.43', '0.7'), 'andere Klassen': ('5,345.85', '22.4'), 'Hebel': ('900.00', '3.8')} · Anteile zusammen 99.9 %
 P18  bestanden Zeilen zusammen 16 (Spot 12 + Hebel 2 + Aufteilung 2) - vorher 13 + 3 + 7 = 23
 P20  bestanden Trennleisten beim ersten Anzeigen gesetzt True · Hebel 96/96 und Aufteilung 96/96 px (ist/verlangt) · Hebel nach Neuladen oben True
 P19  bestanden PanedWindow senkrecht, Bereiche ['!frame', '!frame2', '!frame3'] · Trennleiste 1: 576 -> 456 · Fiat-Feld ausserhalb
 P17  bestanden Spot-Tabelle: senkrechte True und waagrechte True Laufleiste
+P22  bestanden Zeilen-Mouseover ASTER: ': +8.8%\nAbbau (B4) am 2026-10-01 nicht eingeordnet: zu jung (372 Tage Daten, Regel ab 400)'
+P23  bestanden Zeile ZZBP {'rolle': 'nicht in Watchlist', 'frei': '80', 'gestakt': '20', 'value_eur': '50.00', 'assetklasse': 'krypto'} · Staub ZZST False · XLM (in der Watchlist) False · Aufteilung 'nicht in Watchlist' 50.00
+P24  bestanden Gesamtwert 23814.69 -> 23864.69 (+50,00 EUR aus der Position ohne Watchlist)
+P25  bestanden Doppelklick -> Vorschlag {'symbol': 'ZZBP', 'name': 'Zz Bitpanda', 'assetklasse': 'krypto', 'preis_eur': 0.5} · Mouseover 'Bei Bitpanda gehalten (Art: coin), aber NICHT in der Watchli'
+P26  bestanden nach der Aufnahme: Zeile bp|ZZBP weg
 
 Beispielzeilen:
-  symbol=BEAMX | rolle=L | frei=166249 | gestakt=- | value_eur=410.14 | b1_x=1,00 | b1_bis=12.10.2027 | b1_status=laeuft | upbit=nein
-  symbol=LINK | rolle=L | frei=141.896 | gestakt=- | value_eur=1,641.74 | b1_x=1,00 | b1_bis=12.10.2027 | b1_status=laeuft | upbit=ja
-  symbol=BTC | rolle=Kern | frei=0.054966 | gestakt=- | value_eur=4,101.29 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
-  symbol=EURCV | rolle=Cash | frei=196.113 | gestakt=- | value_eur=196.02 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
-  symbol=VVMX | rolle=- | frei=47.2015 | gestakt=- | value_eur=475.79 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
-  symbol=XDC | rolle=L | frei=14999.7 | gestakt=- | value_eur=455.79 | b1_x=1,00 | b1_bis=12.10.2027 | b1_status=laeuft | upbit=nein
+  symbol=BEAMX | rolle=L | frei=166249 | gestakt=- | value_eur=459.28 | b1_x=1,00 | b1_bis=14.10.2027 | b1_status=laeuft | upbit=nein
+  symbol=LINK | rolle=L | frei=141.896 | gestakt=- | value_eur=1,641.74 | b1_x=1,00 | b1_bis=14.10.2027 | b1_status=laeuft | upbit=ja
+  symbol=BTC | rolle=Kern | frei=0.054966 | gestakt=- | value_eur=4,102.93 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+  symbol=EURCV | rolle=Cash | frei=196.113 | gestakt=- | value_eur=196.03 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+  symbol=VVMX | rolle=- | frei=47.2015 | gestakt=- | value_eur=473.53 | b1_x=- | b1_bis=- | b1_status=- | upbit=-
+  symbol=XDC | rolle=L | frei=14999.7 | gestakt=- | value_eur=463.55 | b1_x=1,00 | b1_bis=14.10.2027 | b1_status=laeuft | upbit=nein
 
-21 von 21 bestanden
+26 von 26 bestanden

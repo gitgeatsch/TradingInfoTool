@@ -166,7 +166,7 @@ class TradingInfoToolApp(tk.Tk):
 
         # P15 / GUI-3 (12.10.2026, G-Y): der Bestand-Tab ersetzt den alten Portfolio-Tab. Der Name _portfolio_view bleibt, weil
         # refresh() und reload_cash_reserve_from_db() an 8 Stellen gerufen werden - die Klasse ist BestandTab, nicht PortfolioView.
-        self._portfolio_view = BestandTab(notebook, db_conn_factory, watchlist)
+        self._portfolio_view = BestandTab(notebook, db_conn_factory, watchlist, aufnehmen=self._open_asset_add_vorbelegt)   # P18c
         notebook.add(self._portfolio_view, text="Bestand")
 
         self._signals_view = SignalsView(
@@ -792,6 +792,10 @@ class TradingInfoToolApp(tk.Tk):
     def _open_asset_add_dialog(self) -> None:
         AssetAddDialog(self, on_added=self._on_watchlist_changed)
 
+    def _open_asset_add_vorbelegt(self, vorschlag: dict) -> None:
+        """P18c (14.10.2026): aus dem Bestand-Tab (Doppelklick auf eine Bitpanda-Position ohne Watchlist-Eintrag) - vorausgefuellt."""
+        AssetAddDialog(self, on_added=self._on_watchlist_changed, vorbelegung=vorschlag)
+
     def _open_asset_edit_dialog(self) -> None:
         tree = self._watchlist_frame.tree
         selected = tree.selection()
@@ -846,7 +850,9 @@ class TradingInfoToolApp(tk.Tk):
         15 Min, max. 24 Std. bei den taeglichen Jobs)."""
         messagebox.showinfo(
             "Watchlist geändert",
-            "Änderung gespeichert (config.yaml dieses Geräts). Die Anzeige aktualisiert sich "
+            "Änderung gespeichert (Watchlist-Ergänzung dieses Geräts in der Datenbank - die versionierte config.yaml bleibt "
+            "unverändert, P18b). Ein gehaltener Coin erscheint mit dem nächsten Bitpanda-Abgleich (spätestens 30 min) im Bestand. "
+            "Die Anzeige aktualisiert sich "
             "innerhalb weniger Sekunden; die Jobs lesen die Watchlist bei ihrem nächsten Lauf. "
             "Hinweis: Die alte Rollen-Kette ist angehalten - aus der Watchlist entstehen derzeit "
             "keine Spot-Signale. Die Tabs Signale, Marktscan und Portfolio lesen sie erst nach "
@@ -1558,6 +1564,30 @@ def _try_auto_resolve_coingecko_id(symbol: str, coingecko_client) -> str | None:
         return None
 
 
+PREIS_SPANNE = (0.8, 1.25)
+
+
+def preis_passt(bitpanda_eur: float | None, coingecko_eur: float | None) -> bool | None:
+    """P18c: Ist der CoinGecko-Kurs derselbe Coin wie bei Bitpanda? None = nicht pruefbar. Die Spanne prueft die IDENTITAET, keine Genauigkeit:
+    derselbe Coin weicht zwischen zwei Quellen nur um Spread und Zeitversatz ab (wenige %), ein falscher Coin liegt meist um ein Vielfaches
+    daneben (D5-Abgleich 13.10.: 17 von 17 Bestaenden zwischen 0,998 und 1,000 am Tagesschluss)."""
+    if not bitpanda_eur or not coingecko_eur or bitpanda_eur <= 0 or coingecko_eur <= 0:
+        return None
+    return PREIS_SPANNE[0] <= coingecko_eur / bitpanda_eur <= PREIS_SPANNE[1]
+
+
+def _preis_warnung(bitpanda_eur, coingecko_id: str, coingecko_client) -> str | None:
+    try:
+        d = coingecko_client.get_simple_prices([coingecko_id], ("eur",))
+        cg = (d.get(coingecko_id) or {}).get("eur")
+    except Exception as exc:                                     # noqa: BLE001
+        return "Preisabgleich nicht möglich (%s) - CoinGecko-ID '%s' bitte selbst prüfen" % (type(exc).__name__, coingecko_id)
+    ok = preis_passt(bitpanda_eur, cg)
+    if ok is False:
+        return ("Preis passt nicht: Bitpanda %.6g EUR, CoinGecko '%s' %.6g EUR - vermutlich die FALSCHE CoinGecko-ID" % (bitpanda_eur, coingecko_id, cg))
+    return None
+
+
 class CoinSearchDialog(tk.Toplevel):
     """CoinGecko-Symbolsuche (2026-07-19, Watchlist-Tab-Konsistenzpruefung -
     Nutzer-Nachfrage "das solltest du doch automatisch ergaenzen koennen").
@@ -1657,10 +1687,11 @@ class AssetAddDialog(tk.Toplevel):
     CoinGecko/Bitpanda durch (_validate_new_asset()) - Warnungen blockieren
     NICHT, der Nutzer entscheidet nach Kenntnis der Warnung final selbst."""
 
-    def __init__(self, parent, on_added=None) -> None:
+    def __init__(self, parent, on_added=None, vorbelegung: dict | None = None) -> None:
         super().__init__(parent)
         self._parent_app = parent
         self._on_added = on_added
+        self._vorbelegung = vorbelegung or None   # P18c: aus dem Bestand-Tab (Bitpanda-Position ohne Watchlist-Eintrag)
         self.title("Asset hinzufügen")
         self.resizable(False, False)
         self.transient(parent)
@@ -1711,8 +1742,21 @@ class AssetAddDialog(tk.Toplevel):
         # gruppierbar bleiben.
         self._get_kategorie_ids = _build_kategorie_selector(frame, row=len(fields))
 
+        # P18c (14.10.2026, Plan_Asset_Lebenszyklus G-Z10): VORAUSGEFUELLT aus dem Bitpanda-Bestand - Symbol, Name, Klasse (Vorschlag aus der
+        # Art im Katalog), Rolle taktisch; die CoinGecko-ID sucht 'Hinzufuegen' wie bisher, dazu ein Preisabgleich gegen Bitpanda
+        v = self._vorbelegung
+        if v:
+            self._symbol_var.set(v.get("symbol") or "")
+            self._name_var.set(v.get("name") or "")
+            if v.get("assetklasse"):
+                self._assetklasse_var.set(v["assetklasse"])
+            hinweis = "Aus deinem Bitpanda-Bestand: %s Stück, %s EUR · Art bei Bitpanda: %s%s" % (
+                ("%.8f" % (v.get("menge") or 0)).rstrip("0").rstrip("."), ("%.2f" % v["wert_eur"]) if v.get("wert_eur") is not None else "?",
+                v.get("gruppe") or "?", "" if v.get("assetklasse") else " - Klasse bitte wählen")
+            ttk.Label(frame, text=hinweis, foreground=theme.info_color()).grid(row=len(fields) + 2, column=0, columnspan=3, sticky="w", pady=(6, 0))
+
         button_frame = ttk.Frame(frame)
-        button_frame.grid(row=len(fields) + 2, column=0, columnspan=3, sticky="e", pady=(10, 0))
+        button_frame.grid(row=len(fields) + 3, column=0, columnspan=3, sticky="e", pady=(10, 0))   # P18c: Zeile +2 = Hinweis
         ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
         ttk.Button(button_frame, text="Hinzufügen", command=self._on_submit).pack(side="right")
 
@@ -1763,6 +1807,11 @@ class AssetAddDialog(tk.Toplevel):
         warnungen = _validate_new_asset(
             symbol, name, assetklasse, coingecko_id, self._parent_app._coingecko_client,
         )
+        # P18c: Preisabgleich der gefundenen CoinGecko-ID gegen den Bitpanda-Kurs (Muster D5) - fängt eine FALSCHE ID ab
+        if self._vorbelegung and coingecko_id and assetklasse == "krypto":
+            w = _preis_warnung(self._vorbelegung.get("preis_eur"), coingecko_id, self._parent_app._coingecko_client)
+            if w:
+                warnungen.append(w)
         if warnungen:
             proceed = messagebox.askyesno(
                 "Validierungswarnungen",
@@ -1778,6 +1827,7 @@ class AssetAddDialog(tk.Toplevel):
                 beobachtungsstatus=self._beobachtungsstatus_var.get(),
                 coingecko_id=coingecko_id, assetklasse=assetklasse, yfinance_symbol=yfinance_symbol,
                 hauptgruppe=hauptgruppe, unterkategorie=unterkategorie,
+                herkunft="gui_bestand" if self._vorbelegung else "gui",          # P18b/P18c
             )
         except config_module.WatchlistWriteError as exc:
             messagebox.showerror("Asset hinzufügen", f"Fehlgeschlagen: {exc}")

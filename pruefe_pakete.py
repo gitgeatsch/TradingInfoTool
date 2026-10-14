@@ -22195,7 +22195,7 @@ def paket_guikette() -> None:
     # ---- P15 / GUI-3 Bestand-Tab (12.10.2026, Plan G-Y; Nutzer: *"den Ausbau eindeutig kennzeichnen"*) ---------------------------
     _bt15 = _quelltext("ui/bestand_tab.py")
     pruefe(P, "⚠️ P15: Tab 'Bestand' ist der neue BestandTab, PortfolioView ist nicht mehr eingehaengt",
-           "BestandTab(notebook, db_conn_factory, watchlist)" in _app12 and 'text="Bestand"' in _app12 and "PortfolioView(" not in _app12)
+           "BestandTab(notebook, db_conn_factory, watchlist" in _app12 and 'text="Bestand"' in _app12 and "PortfolioView(" not in _app12)
     pruefe(P, "⚠️⚠️ P15: der Ausbau ist im ALTEN Code gekennzeichnet (portfolio.py Kopf ABGELOEST, letzte_bewertung.py, app.py)",
            _quelltext("ui/portfolio.py").lstrip().startswith('"""⛔⛔ ABGELOEST') and "ABGELOESTEN ui/portfolio.py" in io.open("ui/letzte_bewertung.py", encoding="utf-8").read()   # Kennzeichnung = Kommentar: ROHtext
            and "ui/portfolio.py ist ABGELOEST" in _app12)
@@ -22633,6 +22633,77 @@ def paket_watchlist_ergaenzung() -> None:
            q.count("CONFIG_PATH.write_bytes(") == 4 and 'herkunft="hebel_import"' in _quelltext("importer/bitpanda_margin_positions.py")
            and 'herkunft="marktscan"' in _quelltext("ui/marktscan_view.py") and 'herkunft="screener"' in _quelltext("ui/screener_view.py"),
            "write_bytes in config.py: %d (Soll 4, nur Einstellungs-Schalter: _set_top_level_skalar, _setze_top_level_skalar + Rueckweg, Regime-Override)" % q.count("CONFIG_PATH.write_bytes("))
+
+def paket_asset_aufnahme() -> None:
+    """P18c (14.10.2026, Plan_Asset_Lebenszyklus G-Z10, Nutzer: *"pruefe, ob Asset hinzufuegen einfacher umsetzbar ist"*): Bitpanda-Positionen
+    OHNE Watchlist-Eintrag sind im Bestand-Tab sichtbar (zaehlen im Gesamtwert) und per Doppelklick VORAUSGEFUELLT aufnehmbar, mit
+    Preisabgleich der CoinGecko-ID. Rein und schnell; der Tab selbst steht im Pruefstand p15 (P23-P26)."""
+    P = "AssetAufnahme"
+    import json as _js
+    import sqlite3 as _sq
+    import tempfile as _tf
+    import types as _ty
+    from pathlib import Path as _Pa
+
+    import database.db as _db
+    import ui.bestand_tab as _BT
+    from importer import bitpanda_bestand as _BB
+    import ui.app as _APP
+
+    roh = _js.dumps({"stand": "x", "positionen": [
+        {"symbol": "ZZA", "name": "Zz A", "gruppe": "coin", "frei": 3.0, "gestakt": 1.0, "wert_eur": 40.0, "staub": False},
+        {"symbol": "ZZB", "name": "Zz B", "gruppe": "equity_complex_etc", "frei": 2.0, "gestakt": 0.0, "wert_eur": 10.0, "staub": False},
+        {"symbol": "ZZS", "name": "Staub", "gruppe": "token", "frei": 9.0, "gestakt": 0.0, "wert_eur": 0.02, "staub": True},
+        {"symbol": "XLM", "name": "Stellar", "gruppe": "coin", "frei": 1.0, "gestakt": 0.0, "wert_eur": 0.3, "staub": False},
+        {"symbol": "ZZH", "name": "Gehalten", "gruppe": "coin", "frei": 1.0, "gestakt": 0.0, "wert_eur": 5.0, "staub": False}]})
+    z = _BT.ohne_watchlist_zeilen(roh, {"XLM"}, {"ZZH"})
+    a = {x["symbol"]: x for x in z}
+    pruefe(P, "Zeilen ohne Watchlist: ohne Staub, ohne Symbole schon in der Watchlist oder im Bestand; Wert anteilig frei/gestakt; iid bp|",
+           sorted(a) == ["ZZA", "ZZB"] and a["ZZA"]["iid"] == "bp|ZZA" and abs(a["ZZA"]["frei_eur"] - 30.0) < 1e-9
+           and abs(a["ZZA"]["gestakt_eur"] - 10.0) < 1e-9 and a["ZZA"]["werte"][3] == "nicht in Watchlist" and len(a["ZZA"]["werte"]) == len(_BT.SPALTEN),
+           "%s" % sorted(a))
+    pruefe(P, "Klassen-Vorschlag aus der Art im Katalog: coin/token -> krypto, Aktie/ETF/Metall; ETC nicht eindeutig -> kein Vorschlag",
+           a["ZZA"]["vorschlag"]["assetklasse"] == "krypto" and a["ZZB"]["vorschlag"]["assetklasse"] is None
+           and _BT.KLASSE_AUS_GRUPPE["token"] == "krypto" and _BT.KLASSE_AUS_GRUPPE["equity_stock"] == "aktien"
+           and _BT.KLASSE_AUS_GRUPPE["metal"] == "rohstoffe" and abs(a["ZZA"]["vorschlag"]["preis_eur"] - 10.0) < 1e-9)
+    pruefe(P, "kaputte oder fehlende Ablage -> keine Zeilen, kein Absturz",
+           _BT.ohne_watchlist_zeilen(None, set(), set()) == [] and _BT.ohne_watchlist_zeilen("{kaputt", set(), set()) == [])
+    # Preisabgleich
+    class _Cg:
+        def __init__(self, preis=None, fehler=False):
+            self.preis, self.fehler = preis, fehler
+
+        def get_simple_prices(self, ids, vs):
+            if self.fehler:
+                raise ConnectionError("gestellt")
+            return {ids[0]: {"eur": self.preis}}
+    pruefe(P, "Preisabgleich: derselbe Coin (Spread/Zeitversatz) passt, ein falscher (Faktor 3) nicht; ohne Kurs nicht pruefbar",
+           _APP.preis_passt(1.0, 1.05) is True and _APP.preis_passt(1.0, 3.0) is False and _APP.preis_passt(None, 1.0) is None
+           and _APP._preis_warnung(1.0, "x", _Cg(1.02)) is None and "FALSCHE" in (_APP._preis_warnung(1.0, "x", _Cg(4.0)) or "")
+           and "nicht möglich" in (_APP._preis_warnung(1.0, "x", _Cg(fehler=True)) or ""))
+    # Importer: Satz und Ablage
+    e = _BB.ohne_watchlist_eintrag("aid1", _ty.SimpleNamespace(symbol="HBAR", name="Hedera", gruppe="coin", isin=None),
+                                   {"frei": 1306.5, "gestakt": 0.0}, _ty.SimpleNamespace(wert_eur=101.5), 1306.5)
+    alt = _db.DB_PATH
+    t = _Pa(_tf.mkdtemp(prefix="aufn_")) / "w.db"
+    try:
+        c = _sq.connect(str(t))
+        c.row_factory = _sq.Row
+        _db.init_db(c)
+        _BB.speichere_ohne_watchlist(c, [e])
+        gel = _js.loads(_db.get_meta_wert(c, _BB.META_OHNE_WATCHLIST))
+        c.close()
+    finally:
+        _db.DB_PATH = alt
+    pruefe(P, "Importer legt die Positionen ohne Watchlist mit Menge, Wert und Art ab (je vollem Abgleich, auch leer)",
+           e["symbol"] == "HBAR" and e["gruppe"] == "coin" and e["wert_eur"] == 101.5 and not e["staub"]
+           and gel["positionen"][0]["symbol"] == "HBAR" and gel["stand"])
+    qi, qt, qa = _quelltext("importer/bitpanda_bestand.py"), _quelltext("ui/bestand_tab.py"), _quelltext("ui/app.py")
+    pruefe(P, "verdrahtet: Abgleich ruft die Ablage, Mail nennt den Doppelklick; Tab bindet den Doppelklick; App reicht 'aufnehmen' durch; "
+              "Dialog vorausgefuellt mit Preisabgleich und Herkunft gui_bestand",
+           "speichere_ohne_watchlist(conn, ohne_wl)" in qi and "ohne_wl.append(ohne_watchlist_eintrag(" in qi and "doppelklicken" in qi
+           and 'self.tree.bind("<Double-1>", self._on_doppelklick)' in qt and "aufnehmen=self._open_asset_add_vorbelegt" in qa
+           and "_preis_warnung(self._vorbelegung.get(" in qa and 'herkunft="gui_bestand" if self._vorbelegung else "gui"' in qa)
 
 def paket_spot_upbit() -> None:
     """SPOT B3 UPBIT-VERKAUFSANLASS (P16, 12.10.2026, Spot §47) - die Regel ist die der Messung C2-b, der Job haengt nicht an der Rollen-Kette.
@@ -32684,7 +32755,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -1282,3 +1282,15 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 
 - **Nicht** automatisch, sondern weiter mit deiner Bestätigung (Airdrops wie CT nur auf Rückfrage). Das vollautomatische O26 bleibt später.
 - Aufwand etwa 2–3 Stunden; GUI-Neustart; schreibt über P18b in die Ergänzung.
+
+### G-Z11 P18c gebaut — Positionen ohne Watchlist sichtbar, Aufnahme vorausgefüllt (14.10.2026, Nutzer: *„Ja pushen und P18c bauen“*)
+
+| Teil | Stand |
+|---|---|
+| Importer (`bitpanda_bestand`) | Jeder volle Abgleich legt die Positionen **ohne** Watchlist-Eintrag mit Kürzel, Name, Art, Menge (frei/gestakt), Wert und Staub-Kennzeichen in `meta` ab (`bitpanda_ohne_watchlist`), auch leer. Die tägliche Mail nennt den Doppelklick |
+| Bestand-Tab | Solche Positionen sind **eigene Zeilen** (Rolle *nicht in Watchlist*, blau). Sie zählen im **Gesamtwert** und in der Aufteilung, ohne Staub (< 1 EUR). Zeilen-Mouseover erklärt sie. **Doppelklick** öffnet die Aufnahme. Nach der Aufnahme verschwindet die Zeile sofort; der Bestand selbst folgt mit dem nächsten Abgleich (≤ 30 min) |
+| Dialog *Asset hinzufügen* | **vorausgefüllt**: Symbol, Name, Klasse (Vorschlag aus der Art im Katalog: coin/token → krypto, stock → aktien, etf → etf, metal → rohstoffe; ETC u. a. ohne Vorschlag), Rolle taktisch. Ein Hinweis zeigt Menge, Wert und Art. Die CoinGecko-ID sucht der Dialog wie bisher; **neu** ist der **Preisabgleich** gegen den Bitpanda-Kurs (Spanne 0,8–1,25: prüft die Identität, keine Genauigkeit; der D5-Abgleich am Tagesschluss lag bei 0,998–1,000). Ein falscher Coin ergibt eine Warnung vor dem Speichern. Herkunft in der Ergänzung: `gui_bestand` |
+| Nachtrag P18 | Der Grund *„nicht eingeordnet“* der Spalte *Abbau (B4)* steht jetzt wirklich im Zeilen-Mouseover; die Spaltenerklärung versprach das schon seit P18 |
+| Hinweis-Text der App | *„Änderung gespeichert (config.yaml dieses Geräts)“* → *Watchlist-Ergänzung in der Datenbank, config.yaml unverändert* |
+| **Prüfstand p15** | **26/26**: P22 (Grund B4 im Mouseover); P23–P26 auf einer zweiten Wegwerf-Kopie:<br>• Zeile mit Rolle, Menge und Wert; Staub und Symbole aus der Watchlist fehlen.<br>• Aufteilung *nicht in Watchlist* 50,00, Gesamtwert +50,00.<br>• Doppelklick liefert den Vorschlag (Klasse krypto, Preis je Stück).<br>• Nach der Aufnahme ist die Zeile weg |
+| Suite-Paket **AssetAufnahme** | **7/7**: Zeilen (ohne Staub, Watchlist und Bestand; Wert anteilig), Klassen-Vorschlag, kaputte Ablage, Preisabgleich (passt / falscher Coin / nicht prüfbar), Importer-Satz und Ablage, Verdrahtung. Mutationen *Staub nicht gefiltert* und *Preis immer ok* werden gefunden |

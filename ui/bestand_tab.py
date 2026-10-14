@@ -97,6 +97,42 @@ HEBEL_KOPF = {"asset": "Asset", "richtung": "Richtung", "hebel": "Hebel", "ek": 
               "empfehlung": "H15-Empfehlung"}
 
 
+# P18c (14.10.2026, Plan_Asset_Lebenszyklus G-Z10): Art im Bitpanda-Katalog -> Vorschlag Assetklasse (nur ein VORSCHLAG im Dialog; ETC,
+# Index, Hebel-Token usw. sind nicht eindeutig - dort waehlst du)
+KLASSE_AUS_GRUPPE = {"coin": "krypto", "token": "krypto", "stock": "aktien", "equity_stock": "aktien", "etf": "etf", "equity_etf": "etf",
+                     "equity_complex_etf": "etf", "metal": "rohstoffe"}
+
+
+def ohne_watchlist_zeilen(roh: str | None, watchlist_symbole: set, gehalten: set) -> list:
+    """Die Bitpanda-Positionen ohne Watchlist-Eintrag (Ablage des Bestandsabgleichs, ``importer.bitpanda_bestand.META_OHNE_WATCHLIST``)
+    als Zeilen des Spot-Bereichs. Ohne Staub; ohne Symbole, die inzwischen in der Watchlist oder im Bestand stehen (Aufnahme vor dem
+    naechsten Abgleich). -> wie spot_zeilen, dazu 'iid' (bp|Symbol) und 'vorschlag' fuer den Dialog."""
+    import json
+
+    try:
+        d = json.loads(roh) if roh else {}
+    except ValueError:
+        return []
+    aus = []
+    for p in d.get("positionen") or []:
+        s = (p.get("symbol") or "").upper()
+        if not s or p.get("staub") or s in watchlist_symbole or s in gehalten:
+            continue
+        frei, gest = float(p.get("frei") or 0.0), float(p.get("gestakt") or 0.0)
+        menge = frei + gest
+        wert = p.get("wert_eur")
+        preis = (wert / menge) if (wert is not None and menge > 0) else None
+        klasse = KLASSE_AUS_GRUPPE.get(p.get("gruppe") or "")
+        aus.append({"symbol": s, "iid": "bp|" + s, "asset": None, "cost": None, "tags": ("ohne_watchlist",),
+                    "frei_eur": (wert * frei / menge) if (wert is not None and menge > 0) else None,
+                    "gestakt_eur": (wert * gest / menge) if (wert is not None and menge > 0 and gest > 0) else 0.0,
+                    "werte": (s, p.get("name") or s, klasse or (p.get("gruppe") or "-"), "nicht in Watchlist", menge_text(frei),
+                              menge_text(gest) if gest > 0 else "-", format_money(preis), format_money(wert), "-", "-", "-", "-", "-", "-", "-"),
+                    "vorschlag": {"symbol": s, "name": p.get("name") or s, "assetklasse": klasse, "gruppe": p.get("gruppe"),
+                                  "preis_eur": preis, "menge": menge, "wert_eur": wert, "isin": p.get("isin")}})
+    return aus
+
+
 # ══ reine Aufbereitung (Pruefstand ohne Fenster) ═════════════════════════════════════════════════════════════════════════════
 def rolle(symbol: str, asset) -> str:
     if asset is None:
@@ -255,12 +291,14 @@ class BestandTab(PortfolioView):
     """Erbt die bewaehrten Teile von PortfolioView (Einstand, Fiat, Einstands-Tooltip) - der Aufbau ist NEU (P15); statt der Diversifikation
     nach Schwerpunkt die Aufteilung nach Rolle (P15e)."""
 
-    def __init__(self, parent, db_conn_factory, watchlist, spot_ordner: str | None = None):     # noqa: D401 - eigener Aufbau
+    def __init__(self, parent, db_conn_factory, watchlist, spot_ordner: str | None = None, aufnehmen=None):  # noqa: D401 - eigener Aufbau
         ttk.Frame.__init__(self, parent)                     # bewusst NICHT PortfolioView.__init__ (dort: Knopf 'Letzte Bewertung')
         from agent import regel0_nachlader as NL
 
         self._db_conn_factory = db_conn_factory
         self._cost_basis_by_symbol: dict = {}
+        self._watchlist = watchlist          # P18c: dieselbe Liste wie die App (alle 3 s frisch) - je refresh neu gelesen
+        self._aufnehmen = aufnehmen          # P18c: Callback der App -> 'Asset hinzufuegen' vorausgefuellt
         self._watchlist_by_symbol = {a.symbol: a for a in watchlist}
         self._ordner = spot_ordner or NL.DATEN_VORGABE
         self._zuletzt_langsam = 0.0
@@ -268,6 +306,7 @@ class BestandTab(PortfolioView):
         self._schluss: dict = {}
         self._ohne_krw = None
         self._b4 = None
+        self._vorschlaege = {}
         self._hebel: list = []
         self._hebel_ek = 0.0
         self._stand = None
@@ -309,11 +348,12 @@ class BestandTab(PortfolioView):
         self.tree.tag_configure("pl_positive", foreground=theme.success_color())
         self.tree.tag_configure("pl_negative", foreground=theme.danger_color())
         self.tree.tag_configure("b1_achtung", foreground=theme.warn_color())
+        self.tree.tag_configure("ohne_watchlist", foreground=theme.info_color())     # P18c
         self._reapply_sort = make_sortable(self.tree, numeric_columns=frozenset({"frei", "gestakt", "price_eur", "value_eur", "avg_buy_price_eur",
                                                                                   "pl_pct", "b1_x"}))
         add_heading_tooltips(self.tree, TIPP)
         add_row_tooltips(self.tree, self._row_tooltip_text)
-        self.tree.bind("<Double-1>", self._on_edit_avg_price)        # GF4 Einstand (geerbt)
+        self.tree.bind("<Double-1>", self._on_doppelklick)           # GF4 Einstand (geerbt) - P18c: Zeile ohne Watchlist -> aufnehmen
         _xs = ttk.Scrollbar(rahmen, orient="horizontal", command=self.tree.xview)
         _ys = ttk.Scrollbar(rahmen, orient="vertical", command=self.tree.yview)
         self.tree.configure(xscrollcommand=_xs.set, yscrollcommand=_ys.set)
@@ -415,6 +455,34 @@ class BestandTab(PortfolioView):
         self.hebel_tree.configure(height=max(1, min(5, len(self._hebel))))
         self.hebel_tree.yview_moveto(0)        # P15h (Nutzerbild 13.10. 07:41): ETH stand OBERHALB des Sichtbaren - die Tabelle war gescrollt
 
+    def _row_tooltip_text(self, symbol: str) -> str | None:
+        """Zeilen-Mouseover: Einstand (geerbt), dazu P18c die Erklaerung der Zeilen ohne Watchlist-Eintrag und P18 der Grund, warum B4
+        einen Coin nicht einordnet (die Spaltenerklaerung verweist hierher)."""
+        if str(symbol).startswith("bp|"):
+            v = self._vorschlaege.get(symbol) or {}
+            return ("Bei Bitpanda gehalten (Art: %s), aber NICHT in der Watchlist - zählt im Gesamtwert, ohne Mitnahme (B1), Upbit (B3) "
+                    "und Abbau (B4).\nDoppelklick: in die Watchlist aufnehmen - 'Asset hinzufügen' ist vorausgefüllt." % (v.get("gruppe") or "?"))
+        teile = []
+        t = PortfolioView._row_tooltip_text(self, symbol)
+        if t:
+            teile.append(t)
+        x = (self._b4 or {}).get(symbol)
+        if x is not None and x[1] is None and x[3]:
+            teile.append("Abbau (B4) am %s nicht eingeordnet: %s" % (x[0], x[3]))
+        return "\n".join(teile) or None
+
+    def _on_doppelklick(self, event=None) -> None:
+        """P18c: Doppelklick auf eine Bitpanda-Position OHNE Watchlist-Eintrag -> 'Asset hinzufuegen' vorausgefuellt; sonst wie bisher
+        der Einstand (GF4)."""
+        auswahl = self.tree.selection()
+        iid = auswahl[0] if auswahl else None
+        if iid and str(iid).startswith("bp|"):
+            v = self._vorschlaege.get(iid)
+            if v is not None and self._aufnehmen is not None:
+                self._aufnehmen(v)
+            return
+        self._on_edit_avg_price(event)
+
     def refresh(self, erzwingen: bool = False) -> None:
         jetzt = time.monotonic()
         if erzwingen or (self.winfo_ismapped() and jetzt - self._zuletzt_langsam >= LANGSAM_S):
@@ -425,9 +493,16 @@ class BestandTab(PortfolioView):
             holdings = db.get_all_holdings(conn)
             preise = db.get_latest_prices(conn)
             fiat = db.get_cash_reserve_fiat_eur(conn)
+            from importer.bitpanda_bestand import META_OHNE_WATCHLIST
+            ohne_roh = db.get_meta_wert(conn, META_OHNE_WATCHLIST)
         finally:
             conn.close()
+        self._watchlist_by_symbol = {a.symbol: a for a in self._watchlist}
         zeilen = spot_zeilen(holdings, preise, self._watchlist_by_symbol, self._fenster, self._schluss, self._ohne_krw, self._b4)
+        gehalten = {h.symbol for h in holdings if float(h.quantity or 0) + float(h.staked_quantity or 0) > 0}
+        dazu = ohne_watchlist_zeilen(ohne_roh, set(self._watchlist_by_symbol), gehalten)
+        self._vorschlaege = {z["iid"]: z["vorschlag"] for z in dazu}
+        zeilen = sorted(zeilen + dazu, key=lambda z: z["symbol"])
         s = summen(zeilen, fiat, self._hebel_ek)
         stand = (tuple((z["werte"], z["tags"]) for z in zeilen), round(s["gesamt"], 2))
         if stand != self._stand:
@@ -437,8 +512,9 @@ class BestandTab(PortfolioView):
             self.tree.delete(*self.tree.get_children())
             self._cost_basis_by_symbol = {}
             for z in zeilen:
-                self._cost_basis_by_symbol[z["symbol"]] = z["cost"]
-                self.tree.insert("", "end", iid=z["symbol"], values=z["werte"], tags=z["tags"])
+                if z["cost"] is not None:
+                    self._cost_basis_by_symbol[z["symbol"]] = z["cost"]
+                self.tree.insert("", "end", iid=z.get("iid", z["symbol"]), values=z["werte"], tags=z["tags"])
             self._reapply_sort()
             theme.restripe_treeview(self.tree)
             if alt and self.tree.exists(alt):

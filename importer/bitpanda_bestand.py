@@ -50,6 +50,7 @@ Lauf nicht nachzulesen, ob E10 gegriffen hatte.
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -109,6 +110,26 @@ META_CASH_ORDERS = "cash_orders_anzahl"
 META_CASH_ORDERS_EUR = "cash_orders_kauf_eur"
 META_CASH_AELTESTE = "cash_aelteste_order"
 META_CASH_DETAILS = "cash_details_quelle"      # fusion | differenz
+# P18c (14.10.2026, Plan_Asset_Lebenszyklus G-Z10): die Bitpanda-Positionen OHNE Watchlist-Eintrag mit Menge und Wert - bisher nur Log
+# und Mail, in der App unsichtbar (HBAR 13.10.: ~102 EUR fehlten im Gesamtwert). Je vollem Abgleich neu geschrieben (auch leer); der
+# Bestand-Tab liest sie und bietet per Doppelklick die vorausgefuellte Aufnahme an.
+META_OHNE_WATCHLIST = "bitpanda_ohne_watchlist"
+
+
+def ohne_watchlist_eintrag(aid: str, eintrag, b: dict, p, bp_gesamt: float) -> dict:
+    """Eine Position ohne Watchlist-Eintrag als ablegbarer Satz (rein, fuer Pruefstand und Suite)."""
+    wert = p.wert_eur if p else None
+    frei, gestakt = float(b.get("frei") or 0.0), float(b.get("gestakt") or 0.0)
+    if abs(frei) + abs(gestakt) <= _EPS:
+        frei, gestakt = float(bp_gesamt or 0.0), 0.0
+    return {"asset_id": aid, "symbol": (eintrag.symbol if eintrag else None), "name": (eintrag.name if eintrag else None),
+            "gruppe": (eintrag.gruppe if eintrag else None), "isin": (eintrag.isin if eintrag else None), "frei": frei, "gestakt": gestakt,
+            "wert_eur": wert, "staub": bool(wert is not None and wert < STAUB_EUR)}
+
+
+def speichere_ohne_watchlist(conn, liste: list) -> None:
+    db.set_meta_wert(conn, META_OHNE_WATCHLIST, json.dumps({"stand": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                                            "positionen": liste}, ensure_ascii=False))
 _ISIN = re.compile(r"^([A-Z]{2}[A-Z0-9]{9}[0-9])(\.|$)")
 _EPS = 1e-9
 
@@ -361,6 +382,7 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
     symbole, isin = watchlist_zuordnung(watchlist)
     alte = {h.symbol: h for h in db.get_all_holdings(conn)}
     gesehen: set = set()
+    ohne_wl: list = []                                           # P18c
 
     for aid in sorted(set(zeilen_je) | {a for a, b in bestand.items() if abs(b["gesamt"]) > _EPS}):
         zeilen = zeilen_je.get(aid, [])
@@ -400,6 +422,7 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
             wert = p.wert_eur if p else None
             zeile = "%s: %s Stueck, %s" % (name, _menge(bp_gesamt), _eur(wert))
             result.unmatched_bitpanda_symbols.append(zeile)
+            ohne_wl.append(ohne_watchlist_eintrag(aid, eintrag, b, p, bp_gesamt))
             if wert is not None and wert < STAUB_EUR:
                 logger.info("Bitpanda-Bestand (neu): Staub ohne Watchlist-Eintrag - %s", zeile)
                 continue
@@ -410,9 +433,10 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
                 wert="%s (%s Stueck)" % (_eur(wert), _menge(bp_gesamt)),
                 status="NICHT im Bestand und NICHT im Kapital - das System kennt diesen Wert nicht und "
                        "bewertet ihn nicht",
-                aktion="In der Oberflaeche ueber ,Asset hinzufuegen' aufnehmen (Assetklasse und "
-                       "Kursquelle angeben). Ist die Position gewollt ausserhalb der Beobachtung, "
-                       "diese Mail ignorieren - sie wiederholt sich hoechstens einmal am Tag."))
+                aktion="In der App im Tab ,Bestand' die Zeile doppelklicken - ,Asset hinzufuegen' ist dann "
+                       "vorausgefuellt (Symbol, Name, Klasse, CoinGecko-ID mit Preisabgleich), nur noch bestaetigen. "
+                       "Ist die Position gewollt ausserhalb der Beobachtung (z. B. ein Airdrop), diese Mail ignorieren "
+                       "- sie wiederholt sich hoechstens einmal am Tag."))
             continue
 
         gesehen.add(intern)
@@ -444,6 +468,10 @@ def abgleich_neu(conn, api_key: str, watchlist=None, melden=None) -> BitpandaSyn
     result.cash = cash  # type: ignore[attr-defined]
 
     db.set_bitpanda_holdings_synced_at(conn, datetime.now(timezone.utc).isoformat())
+    try:
+        speichere_ohne_watchlist(conn, ohne_wl)                  # P18c - auch leer: "keine" ist eine Aussage
+    except Exception:                                            # noqa: BLE001 - die Anzeige darf den Abgleich nie stoeren
+        logger.exception("Bitpanda-Bestand (neu): Positionen ohne Watchlist nicht abgelegt")
     _protokoll(result, cash)
     for m in meldungen:
         if melden is not None:

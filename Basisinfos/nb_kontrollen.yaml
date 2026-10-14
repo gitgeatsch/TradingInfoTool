@@ -251,6 +251,15 @@ kontrollen:
     nachweis: "nach Pull + Neustart: Diagnose watchlist_stammdaten mit 'quelle' je Symbol (alle 'grundliste'), Abschnitt watchlist_ergaenzung leer, Punkt 17 ohne Watchlist-Meldung; Teilexport 'WATCHLIST-ERGAENZUNG am NB: 0'. Beim naechsten Eintrag ueber die GUI (oder einem neuen Hebel-Coin): Punkt 17 HINWEIS 'Ergaenzung am NB: X', git_stand.geaendert bleibt leer"
     faellig_bis: "2026-10-17"
     status: offen
+  - id: K-GUI-6
+    titel: "P18c Bestand-Tab: Bitpanda-Positionen ohne Watchlist-Eintrag als eigene Zeilen (zaehlen im Gesamtwert), Doppelklick -> 'Asset hinzufuegen' vorausgefuellt mit Preisabgleich; Grund B4 im Zeilen-Mouseover"
+    seit: "2026-10-14"
+    paket: P18c
+    commit: ""
+    art: ereignis
+    nachweis: "nach Pull + Neustart: Mouseover auf ASTER/CANTON/MON/VSN zeigt 'Abbau (B4) ... nicht eingeordnet: zu jung'. Beim naechsten neuen Coin bei Bitpanda (heute keiner ausser Staub SPC): Zeile 'nicht in Watchlist' mit Wert, Doppelklick oeffnet den Dialog mit Symbol/Name/Klasse; nach 'Hinzufuegen' Punkt 17 Hinweis 'Ergaenzung am NB: X (Herkunft gui_bestand)'"
+    faellig_bis: ""
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

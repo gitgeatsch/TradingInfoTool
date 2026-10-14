@@ -133,7 +133,7 @@ pruefe("P7", not any("Bewertung" in k for k in knoepfe) and "Speichern" in knoep
        "Knoepfe %s · Doppelklick gebunden · Aufteilung nach Rolle %d Zeilen · keine Schwerpunkt-Tabelle" % (
            knoepfe, len(tab.aufteilung_tree.get_children())))
 app = open("ui/app.py", encoding="utf-8").read()
-pruefe("P8", "BestandTab(notebook, db_conn_factory, watchlist)" in app and 'text="Bestand"' in app and "PortfolioView(" not in app
+pruefe("P8", "BestandTab(notebook, db_conn_factory, watchlist" in app and 'text="Bestand"' in app and "PortfolioView(" not in app
        and "ABGELOEST" in open("ui/portfolio.py", encoding="utf-8").read()[:200] and "ABGELOESTEN ui/portfolio.py" in open("ui/letzte_bewertung.py", encoding="utf-8").read(),
        "app.py haengt BestandTab als 'Bestand' ein · PortfolioView nicht mehr · Kennzeichnung in portfolio.py und letzte_bewertung.py")
 geloescht = []
@@ -207,6 +207,62 @@ pruefe("P19", str(tab._paned.cget("orient")) == "vertical" and panes == inhalt a
 root.withdraw()
 pruefe("P17", bool(tab.tree.cget("yscrollcommand")) and bool(tab.tree.cget("xscrollcommand")), "Spot-Tabelle: senkrechte %s und waagrechte %s Laufleiste" % (
     bool(tab.tree.cget("yscrollcommand")), bool(tab.tree.cget("xscrollcommand"))))
+# P18 Nachtrag (14.10.2026): der Grund 'nicht eingeordnet' der Spalte Abbau (B4) steht im ZEILEN-Mouseover (die Spaltenerklaerung verweist dorthin)
+tab._b4 = {"ASTER": ("2026-10-01", None, None, "zu jung (372 Tage Daten, Regel ab 400)")}
+_tt = tab._row_tooltip_text("ASTER") or ""
+pruefe("P22", "nicht eingeordnet: zu jung" in _tt, "Zeilen-Mouseover ASTER: %r" % _tt[-90:])
+# P18c (14.10.2026, Plan_Asset_Lebenszyklus G-Z10): Bitpanda-Positionen OHNE Watchlist-Eintrag sichtbar, zaehlen im Gesamtwert, Doppelklick ->
+# 'Asset hinzufuegen' vorausgefuellt. Auf einer ZWEITEN Wegwerf-Kopie (die erste bleibt fuer P10 unveraendert)
+import json as _json  # noqa: E402
+from importer.bitpanda_bestand import META_OHNE_WATCHLIST  # noqa: E402
+PROD2 = os.path.join(T, "prod2.db")
+shutil.copy(PROD, PROD2)
+_c2 = sqlite3.connect(PROD2)
+_c2.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", (META_OHNE_WATCHLIST, _json.dumps({"stand": "2026-10-14T05:00:00+00:00", "positionen": [
+    {"asset_id": "a1", "symbol": "ZZBP", "name": "Zz Bitpanda", "gruppe": "coin", "isin": None, "frei": 80.0, "gestakt": 20.0, "wert_eur": 50.0, "staub": False},
+    {"asset_id": "a2", "symbol": "ZZST", "name": "Zz Staub", "gruppe": "token", "isin": None, "frei": 6.0, "gestakt": 0.0, "wert_eur": 0.03, "staub": True},
+    {"asset_id": "a3", "symbol": "XLM", "name": "Stellar", "gruppe": "coin", "isin": None, "frei": 1.0, "gestakt": 0.0, "wert_eur": 0.2, "staub": False}]})))
+_c2.commit()
+_c2.close()
+
+
+def conn_factory2():
+    c_ = sqlite3.connect("file:%s?mode=ro" % PROD2.replace("\\", "/"), uri=True)
+    c_.row_factory = sqlite3.Row
+    return c_
+
+
+_auf = []
+root2 = tk.Tk()
+root2.withdraw()
+nb2 = ttk.Notebook(root2)
+tab2 = BT.BestandTab(nb2, conn_factory2, WL, spot_ordner=ABL, aufnehmen=_auf.append)
+nb2.add(tab2, text="Bestand")
+tab2.refresh(erzwingen=True)
+_ex = tab2.tree.exists("bp|ZZBP")
+_w = {c_: tab2.tree.set("bp|ZZBP", c_) for c_ in BT.SPALTEN} if _ex else {}
+_ges1 = tab.total_label.cget("text")
+_ges2 = tab2.total_label.cget("text")
+_auf_nw = tab2.aufteilung_tree.set("auf|wert", "nicht in Watchlist")
+pruefe("P23", _ex and _w["rolle"] == "nicht in Watchlist" and _w["value_eur"] == "50.00" and _w["frei"] == "80" and _w["gestakt"] == "20"
+       and _w["assetklasse"] == "krypto" and not tab2.tree.exists("bp|ZZST") and not tab2.tree.exists("bp|XLM") and _auf_nw == "50.00",
+       "Zeile ZZBP %s · Staub ZZST %s · XLM (in der Watchlist) %s · Aufteilung 'nicht in Watchlist' %s" % (
+           {k: _w.get(k) for k in ("rolle", "frei", "gestakt", "value_eur", "assetklasse")}, tab2.tree.exists("bp|ZZST"), tab2.tree.exists("bp|XLM"), _auf_nw))
+import re as _re  # noqa: E402
+_zahl = lambda t: float(_re.search(r"Gesamtwert: ([\d,]+\.\d\d)", t).group(1).replace(",", ""))   # noqa: E731
+pruefe("P24", abs(_zahl(_ges2) - _zahl(_ges1) - 50.0) < 0.011, "Gesamtwert %s -> %s (+50,00 EUR aus der Position ohne Watchlist)" % (_zahl(_ges1), _zahl(_ges2)))
+tab2.tree.selection_set("bp|ZZBP")
+tab2._on_doppelklick(None)
+_v = _auf[0] if _auf else {}
+_tt2 = tab2._row_tooltip_text("bp|ZZBP") or ""
+pruefe("P25", len(_auf) == 1 and _v.get("symbol") == "ZZBP" and _v.get("assetklasse") == "krypto" and abs((_v.get("preis_eur") or 0) - 0.5) < 1e-9
+       and "Doppelklick" in _tt2, "Doppelklick -> Vorschlag %s · Mouseover %r" % ({k: _v.get(k) for k in ("symbol", "name", "assetklasse", "preis_eur")}, _tt2[:60]))
+# nach der Aufnahme (die App-Liste enthaelt ZZBP) verschwindet die Zeile beim naechsten refresh - vor dem naechsten Abgleich
+WL.append(C.WatchlistAsset(symbol="ZZBP", name="Zz Bitpanda", rolle="taktisch", beobachtungsstatus="beobachtung"))
+tab2.refresh(erzwingen=True)
+pruefe("P26", not tab2.tree.exists("bp|ZZBP"), "nach der Aufnahme: Zeile bp|ZZBP %s" % ("noch da" if tab2.tree.exists("bp|ZZBP") else "weg"))
+WL.pop()
+root2.destroy()
 root.destroy()
 c.close()
 print("\nBeispielzeilen:")
