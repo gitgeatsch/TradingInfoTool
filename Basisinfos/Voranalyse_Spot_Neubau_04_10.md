@@ -5973,3 +5973,19 @@ Nutzer 14.10.: *„Ja, Voranalyse P19 vorbereiten, prüfen und gegenprüfen – 
 - B1 aus der Kopie (G3); Breite am NB-Universum (Teil 1).
 
 **Aufwand:** etwa ein Tag. Am NB: Pull und Neustart (Dienst und GUI).
+
+**Abgestimmt** (Nutzer 14.10.: *„Ja passt vorerst“*): Bauumfang wie 49.3, gebaut nach H14.
+
+**Einordnung „Seasons“** (Kalibrierung §36.4, Wahrheit = Korb Top 50 schlägt BTC in den folgenden 90 T um ≥ 25 Pp):
+
+| Zeitraum | Länge | Einordnung |
+|---|---|---|
+| 04/2020 | 17 + 34 T | Season (nach dem Corona-Crash) |
+| 12/2020 – 03/2021 | 95 T | **die große Season** |
+| 06/2022 | 11 T | kurze Gegenbewegung im Bärenmarkt |
+| 10/2023 | 8 T | kurze Gegenbewegung |
+
+- Season-Tage je Jahr: 2019 0 % · 2020 23 % · 2021 22 % · 2022 7 % · 2023 2,5 % · **2024, 2025, 2026: 0 %**.
+- Seit **März 2021** gab es keine echte Season mehr, seit **2024** nicht einmal eine kurze Gegenbewegung.
+- Die Ampel steht seit 2023 durchgehend auf *kalt* bzw. heute auf *ungewohnt*.
+- Das passt zum Altindex ab 2024 (−87 % gegen BTC, §30.2).

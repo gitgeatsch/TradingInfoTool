@@ -6,6 +6,7 @@
 
 **Stand 14.10.2026 (abends):**
 - **Voranalyse P19** vorgelegt (Spot §49), Gegenprobe 4/4. Ampel heute 2 von 3, Stufe *ungewohnt* (kein Season-Vorlauf). Reihenfolge: H14 nach N5 zuerst, dann der Bau P19.
+- Nutzer 14.10.: *„Ja passt vorerst“*. Der Bauumfang P19 ist abgestimmt, gebaut wird nach H14.
 
 **Stand 14.10.2026 (nachmittags):**
 - **K-WL-2 erfüllt** (P18b am NB), **K-SP-3b erfüllt**: Erstliste B4 per Mail angekommen (Nutzer). Nächste B4-Kontrolle K-SP-3c am 02.11.
