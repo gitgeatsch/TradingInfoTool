@@ -231,6 +231,7 @@ kontrollen:
     nachweis: "Diagnose nach Pull + Neustart (Job 07:25 und beim Start): Logzeile 'Spot-Abbau: Stichtag 2026-10-01 · fertig · 29 L-Bestaende · Universum ~330-350 · unten ... · neu ... (Schalter aus - nur Protokoll)'; Teilexport SPOT-ABBAU (B4): Zellen H/M/S mit H > 0 (Ersatzregel Umlauf wirkt, §48.6), Stammsaetze ~340 (von Binance), kein FEHLER; Erstliste plausibel gegen die Desktop-Rechnung (01.09.: HYPE, MORPHO, PLUME, SUI, TAO, TURBO, XDC); am naechsten Tag 'schon' (einmal je Stichtag); Bestand-Tab Spalte 'Abbau (B4)' gefuellt; keine Mail 'Abbau-Reihenfolge'"
     faellig_bis: "2026-10-16"
     status: offen
+    beleg: "Zwischenstand Diagnose 14.10. 05:29 (NB auf 2fb91d71, Neustart 13.10. 23:46): Lauf nachgeholt 23:51:54 -> 00:00:57 (9 min, Stammsaetze von Binance), 'Stichtag 2026-10-01 · fertig · 29 L-Bestaende · Universum 344 · unten HYPE,KAIA,MORPHO,PLUME,QNT,SUI,TAO,XDC · gemailt nein (Schalter aus)'; kein ERROR, keine Stoerung anderer Jobs (Upbit 03:40/04:40 ok, Kraken-OHLC 02:06). Erstliste gegen Desktop 01.09.: TURBO raus (dort 0,18), KAIA (0,23) und QNT (0,25) rein - Grenzfaelle, Monatswechsel. Offen: Zellen H/M/S (H > 0, Ersatzregel) und Stammsaetze aus dem Teilexport; zweiter Lauf 'schon'; Spalte im Bestand-Tab"
   - id: K-SP-3b
     titel: "P18 Spot B4 nach dem Einschalten (Nutzer-Ja): genau EINE Mail 'Spot: Abbau-Reihenfolge – zuerst ...' (Erstliste), danach je Monat nur Neue"
     seit: "2026-10-13"
