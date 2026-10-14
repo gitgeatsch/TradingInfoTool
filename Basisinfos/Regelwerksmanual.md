@@ -5247,7 +5247,24 @@ aus einer Messung eine **Hebelregel** wird, steht in:
 | **Spot-Rollen und Default** | 09.10. (E-89, E-90): *„A3 ja so“* | Kern BTC/ETH/SOL fest, alle anderen automatisch L, kein Pflichteintrag; K erst mit funktionierender Lösung |
 | **Jede Mail eine Handlung** | 09.10. (E-91): *„ohne konkrete Ableitung auf eine Handlung … bei 30+ Assets ist das nur Arbeit“* | Mail nur mit Coin, Handlung, Frist, gemessener Begründung; der Rest im App-Tab; Monatsmail nur Option (O35) |
 | **Spot und Hebel getrennt, gestakt = Spot** | 09.10. (E-93): *„wir brauchen … eine klare Trennung“* · *„gestaked und wie normale Spot-Positionen zu führen, Ausnahme nur ETH“* | Trennung nach Bitpanda-Wallet-Art, Zuordnung über die Menge; Bestand = frei + gestakt; ETH-Handlungen nennen die Entstake-Dauer |
+| **Makro-Umfeld** | 14.10.: *„eine fachlich korrekte und messbare Grundlage“* · *„sinnvoll kombinieren“* · *„JA – finde ich gut“* (E-104) | eine Makro-Grundlage für alle Klassen, Urteil nur Krypto; gemessen **nicht entscheidbar** → Fakt-Anzeige, kein Gewicht |
 
 ➤ **Verhältnis zu R-R11:** gilt unverändert — auch im Neubau stößt nur
 eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
 2.675).
+
+# ⚠️⚠️⚠️ R-R14 — BEI TRÄGEN REIHEN IST DIE ZEITVERSCHIEBUNG KEINE NULLWELT (14.10.2026)
+
+**Anlass:** Makro-Messung Spot §51.7 (E-104). Die im Plan vorab festgelegte Nullwelt *zirkuläre Verschiebung mit Rand 365 T* fiel im eigenen Selbsttest durch: **9 statt 0,8** Fehlalarme über Bonferroni. Sie hätte *Dollar kurz* als TRÄGT ausgegeben.
+
+## Die Regel
+
+| # | |
+|---|---|
+| 1 | Ist das **Merkmal träge** (Niveau, Monats- oder Wochenreihe, rollierendes Perzentil) **und** das Ziel überlappend (90 T an Monatsersten), dann ist eine Zeitverschiebung als Nullwelt **zu eng**: Der Abstand ist glatt in der Verschiebung, und der ganze Gipfel zählt als extrem |
+| 2 | Die Nullwelt wird dann aus **Surrogaten des Merkmals** gebaut (Phasen-Randomisierung; bei mehreren Kanälen **gemeinsam**, damit Gesamt und Weglassprobe stimmen) |
+| 3 | ⚠️ Der Selbsttest läuft **in beide Richtungen**: Surrogat-Merkmal gegen echtes Ziel **und** echtes Merkmal gegen synthetisches Ziel. Der erste allein ist bei Surrogaten zirkulär |
+| 4 | Ist auch die Ersatz-Nullwelt zu großzügig, gilt sie nur für **„nicht belegt“**, nie für **„trägt“** |
+| 5 | Vor dem Urteil *trägt nicht* steht die **Auflösung** (Pflanzung). Reicht sie nicht für die gemessene Größe, heißt das Urteil *nicht entscheidbar* |
+
+➤ Gilt für jede Messung mit langsamen Umfeldgrößen (Makro, Dominanz, Season-Ampel). Verwandt: Messstandard (Nullpunkt aus Ziehungen), R-R11.

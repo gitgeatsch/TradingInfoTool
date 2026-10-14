@@ -6256,3 +6256,72 @@ Nutzer 14.10.: *„Es sollte eine fachlich korrekte und messbare Grundlage gesch
 - Selbsttest (Phasen-Randomisierung, Pflanzung als Auflösungskurve);
 - Weglassprobe;
 - Gegenprobe mit eigenem Rechenweg.
+
+### 51.7 Ergebnis der Hauptmessung (Stufe 2, 14.10.2026; `p51_messung.py`, `p51_messung_n2.py`, `p51_gegenprobe.py` → `.txt`)
+
+Nutzer 14.10.: *„ja starten“*.
+
+**Urteil: Kein Makro-Kanal ist für Krypto belegt (TRÄGT 0, SCHADET 0 von 60 Prüfungen).** Das heißt **„nicht entscheidbar, die Auflösung reicht nicht“**, **nicht** *„trägt nicht“*: Die gemessenen Abstände sind groß, aber die Anlage kann Effekte dieser Größe mit 13 Jahren BTC nicht sicher von Zufall trennen.
+
+**1. Die Nullwelt aus dem Plan (N1, zirkuläre Verschiebung) hat ihren Selbsttest NICHT bestanden.**
+- 200 phasen-randomisierte Makroreihen gegen das echte Ziel ergaben bei BTC 90 T **9 Fehlalarme über Bonferroni, Soll 0,8**, und 18 statt 10 bei 0,025 je Seite.
+- **Ursache:** Bei trägen Reihen ist der Abstand T(k) als Funktion der Verschiebung k glatt. Jede Verschiebung im breiten Gipfel gilt gegen ihre *ferne* Vergleichsmenge als extrem, die Fehlalarmquote wächst also mit der Gipfelbreite. Der Rand von 365 T verstärkt das noch.
+- Unter N1 hätte *K8 Dollar kurz* (BTC 90 T) als TRÄGT gegolten (p 0,002). **Das war ein Fehlalarm der Anlage, kein Befund.**
+- Das ist ein Fehler meiner Eichung, nicht der Hypothese. Korrigiert und wiederholt nach der stehenden Regel; das Urteil (Bonferroni, Epochen, Spiegelprobe) bleibt unverändert.
+
+**2. Ersatz N2: Surrogat-Nullwelt für das Merkmal.**
+- Alle 18 Kanalreihen werden **gemeinsam** phasen-randomisiert (gleiche Phasen für alle Spalten). So bleiben Spektrum und Kreuzspektrum erhalten, der Bezug zum Ziel nicht.
+- Danach wird exakt gleich eingeteilt, Gesamt aus den Surrogat-Kanälen; 1.000 Surrogate.
+- **Selbsttest N2 mit echten Kanälen gegen 200 synthetische Ziele** (phasen-randomisierte Tageserträge):
+
+| Ziel | Fehlalarme über Bonferroni | Soll (Grenze) |
+|---|---|---|
+| Altkorb gegen BTC | **8** (bestanden) | 16 (24) |
+| BTC 90 T | **44** | 16 (24) |
+| BTC 180 T | **53** | 16 (24) |
+
+- ⇒ Auch N2 ist bei BTC noch **zu großzügig**, etwa um den Faktor 1,5 bis 2,8.
+- **Für das Urteil ist das unschädlich:** Eine zu großzügige Nullwelt kann nur zu *viel* finden. Wenn schon N2 nichts über die Schwelle hebt, tut es eine strengere erst recht nicht.
+
+**3. Die stärksten Fälle (Nullwelt N2):**
+
+| Ziel | Kanal | Abstand | p | E1 / E2 / E3 | Spiegel (auf ≥ +20 %; ab ≤ −20 %) |
+|---|---|---|---|---|---|
+| BTC 90 T | **K2 Netto-Liquidität kurz** | +28,1 % | 0,006 | +37 / +21 / +18 | 49 gegen 32 %; 13 gegen 22 % |
+| BTC 90 T | **K8 Dollar kurz** | +33,2 % | 0,007 | +36 / +42 / +17 | 57 gegen 24 %; 7 gegen 22 % |
+| BTC 90 T | Gesamt kurz | +30,7 % | 0,019 (Schwelle 0,0125) | +29 / – / +16 | 58 gegen 20 %; 12 gegen 28 % |
+| BTC 180 T | K2 Netto-Liquidität kurz | +35,3 % | 0,016 | +53 / +21 / +9 | – |
+| Altkorb gegen BTC 90 T | **K2 Netto-Liquidität kurz** | +23,0 % | 0,010 | +40 / +19 / +3 | 16 gegen 4 %; 23 gegen 52 % |
+| Altkorb gegen BTC 90 T | K2 Netto-Liquidität lang · K4 2 J lang · K8 Dollar lang | +21 bis +23 % | 0,02–0,03 | E3 nicht prüfbar | – |
+
+- ⚠️ **Die Kurve** (in §51.6 *umgekehrt*, −27 %) liegt unter N2 bei p 0,07. Ihr Ergebnis in der Vorprüfung kam aus der zu engen Nullwelt; es bleibt **keine** Aussage zur Kurve.
+- ⭐ **Die Netto-Liquidität kurz ist der einzige Kanal mit demselben Vorzeichen bei BTC 90 T, BTC 180 T und Altkorb und in allen Epochen.** Damit ist *„Zuerst das Geld“* der beste Kandidat, aber nicht belegt.
+
+**4. Auflösung (Selbsttest b, Pflanzung in synthetische Ziele mit echtem Kanal):**
+- BTC 90 T: ein gepflanzter Abstand von **+42 % wird nur in 23 % gefunden**, mit Epochenbedingung in 7 %.
+- Altkorb: +22 % in 10 %.
+- Die gemessenen Abstände (+23 bis +33 %) liegen **unter** dem, was die Anlage sicher auflöst. Deshalb lautet das Urteil *nicht entscheidbar*, nicht *trägt nicht*.
+- **Fachlicher Grund:** 13 Jahre BTC sind etwa drei Zyklen. Makroreihen bewegen sich langsam, deshalb gibt es nur wenige **unabhängige** Beobachtungen. **Mehr Kanäle helfen dagegen nicht**, mehr Zeit schon.
+
+**5. Weglassprobe:** *Gesamt kurz* (BTC 90 T) bleibt ohne jeden einzelnen Kanal bei +24 bis +30 %. Er hängt an keinem Kanal allein: Das Umfeld wirkt breit, wenn es wirkt.
+
+**6. Gegenprobe (eigener Rechenweg: Perzentil als Schleife, Ziel direkt aus dem Kurs, Monats-Verschiebung):**
+- **7 von 7** Abständen gleich, wenn die Bindungen wie in der Messung als Mittelrang gezählt werden.
+- Mit der Konvention „≤“ kippt bei *Netto-Liquidität kurz* ein einziger Stichtag die Klasse, und der Abstand springt von +28,1 auf +32,2 %. ⚠️ Das zeigt, wie wenige Beobachtungen hier entscheiden.
+
+**7. Gold** (Nutzer 14.10.: *„steigt, wenn der Geldwert sinkt und das Vertrauen in Fiat schwindet, siehe den Anstieg vor 8 Monaten“*):
+- **Fakt:** Gold stieg von 2.073 (01/2024) auf 4.653 $ (02/2026), **+124 %**, bei einem Realzins von **1,7 bis 2,2 %**, also im ungünstigen Drittel. Seit 02/2026 liegt Gold bei −10 % (4.165 $), der Realzins ist auf 2,9 % gestiegen.
+- **Gemessen (Auskunft):** Gold 90 T reagiert auf **fallende 2-J-Renditen** (+3,9 %, p 0,023, E1 und E3 gleich). Den klassischen Realzins-Zusammenhang gibt es ab 2022 nicht mehr: Gold stieg trotz hoher Realzinsen.
+- ⇒ Das passt zur These *Vertrauen und Entwertung* (Zentralbankkäufe, Staatsdefizite). Mit den neun Kanälen ist sie **nicht** abgebildet; dafür fehlt ein Vertrauenskanal.
+- **Vorschlag Fassung 2, K10 „Vertrauen in Fiat“** (frei verfügbar):
+  - Gold gegen Realzins (Rest der Regression, rollierend 5 J);
+  - Gold in Dollar gegen Dollar-Index;
+  - optional Laufzeitprämie 10 J (Kim-Wright, FRED `THREEFYTP10`).
+  - Prüffrage für Krypto: **Geht ein steigender Vertrauenskanal BTC voraus („digitales Gold“)?**
+  - ⚠️ Für K10 gilt dieselbe Grenze der Auflösung: Mit 13 Jahren BTC wäre auch er voraussichtlich *nicht entscheidbar*. Sinnvoll ist er als **Auskunft im Umfeld**, nicht als neue Hoffnung auf ein Urteil.
+
+**8. Folge (vorab festgelegt, §51.4/§51.5):**
+- **Keine Umfeld-Ampel als Gewicht.** Das Makro-Umfeld bleibt eine **Fakt-Anzeige** (Auskunft in der Mail bzw. auf der Statusseite): je Kanal günstig / neutral / ungünstig, mit dem Hinweis *„nicht als Wirkung belegt“*. Nie ein Auslöser, nie ein Blocker.
+- **Stand heute:** *lang* günstig (Geldmenge, Netto-Liquidität, Kredit, NFCI, VIX; Realzins und 2 J ungünstig). *kurz* neutral (Netto-Liquidität und Dollar neutral, Kredit günstig, Realzins und 2 J ungünstig).
+- Die beiden Kandidaten mit der größten Aussicht (Netto-Liquidität kurz, Dollar kurz) **vorwärts beobachten**. Jedes Jahr Daten mehr erhöht die Auflösung; Nachmessung frühestens 10/2027, ohne die Regel zu ändern.
+- Die Makro-Grundlage (Daten, Kanäle, Einteilung) ist gebaut und gilt **klassenübergreifend**, so wie mit dem Nutzer vereinbart. Für Aktien zeigt die Probe nur kleine Effekte (Nasdaq/S&P: Netto-Liquidität kurz +2,2 %, p 0,006, alle Epochen gleich).

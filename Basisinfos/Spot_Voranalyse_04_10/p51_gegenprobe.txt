@@ -1,0 +1,12 @@
+P51 GEGENPROBE · 7 Faelle mit p <= 0,05 aus p51_messung_n2.txt
+
+  T1 BTC 90T           K2 Netto-Liquiditaet kurz  Abstand  +32.2 % (Mittelrang  +28.1, Messung  +28.1) · p 0.0210 (Messung 0.0060) · ABWEICHUNG
+  T1 BTC 90T           K8 Dollar kurz             Abstand  +33.2 % (Mittelrang  +33.2, Messung  +33.2) · p 0.0010 (Messung 0.0070) · gleich
+  T1 BTC 180T          K2 Netto-Liquiditaet kurz  Abstand  +38.2 % (Mittelrang  +35.3, Messung  +35.3) · p 0.1219 (Messung 0.0160) · gleich
+  T2 Altkorb/BTC 90T   K2 Netto-Liquiditaet lang  Abstand  +21.6 % (Mittelrang  +21.6, Messung  +21.6) · p 0.0010 (Messung 0.0220) · gleich
+  T2 Altkorb/BTC 90T   K2 Netto-Liquiditaet kurz  Abstand  +23.0 % (Mittelrang  +23.0, Messung  +23.0) · p 0.0010 (Messung 0.0100) · gleich
+  T2 Altkorb/BTC 90T   K4 Zinspfad 2J lang        Abstand  +22.7 % (Mittelrang  +22.7, Messung  +22.7) · p 0.0010 (Messung 0.0211) · gleich
+  T2 Altkorb/BTC 90T   K8 Dollar lang             Abstand  +21.2 % (Mittelrang  +21.2, Messung  +21.2) · p 0.0689 (Messung 0.0303) · gleich
+
+=> 6 von 7 Faellen gleich (Abstand +-max(1 Pp, 10 %), gleiches Vorzeichen)
+   Hinweis: p hier = Verschiebung in Monaten (N1-artig, laut Selbsttest zu eng) - nur Auskunft, kein Vergleichsmass.

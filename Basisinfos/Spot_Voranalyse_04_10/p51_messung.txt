@@ -1,0 +1,248 @@
+P51 MESSUNG Makro-Umfeld (§51.5, Stufe 2) · Daten bis 2026-10-14 · Nullwelt 1000 zirkulaere Verschiebungen · Bonferroni Kanal 0.0028, Gesamt 0.0125 je Seite
+
+Spalten: n je Klasse · Abstand guenstig-unguenstig (log-Ertrag) · je Epoche · p je Seite (Stufung) · Spiegel: Anteil >= +20 %% guenstig/unguenstig, <= -20 %% guenstig/unguenstig
+==========================================================================================================================================================================
+T1 BTC 90T  [Urteil]
+  K1 Geldmenge lang            n+  35 n-  66 ·    +3.6 % · E1  +21.3 E2  -16.8 E3    -   · p hoch 0.4076 tief 0.5934 · Spiegel auf 49/39 ab 17/14 % · nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  51 n-  50 ·   +12.6 % · E1   +6.7 E2    -   E3    -   · p hoch 0.2458 tief 0.7552 · Spiegel auf 51/34 ab  8/20 % · nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  38 n-  74 ·   +13.4 % · E1  +18.0 E2   +1.7 E3    -   · p hoch 0.3477 tief 0.6533 · Spiegel auf 53/35 ab 24/16 % · nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  45 n-  60 ·   +28.1 % · E1  +37.3 E2  +21.4 E3  +18.2 · p hoch 0.0480 tief 0.9530 · Spiegel auf 49/32 ab 13/22 % · nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  43 n-  68 ·   +10.3 % · E1  +23.4 E2  -16.0 E3    -   · p hoch 0.1648 tief 0.8362 · Spiegel auf 42/34 ab 21/ 9 % · nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  46 n-  61 ·   +10.2 % · E1   -0.8 E2  +37.2 E3    -   · p hoch 0.2288 tief 0.7722 · Spiegel auf 52/30 ab 15/28 % · nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  29 n-  89 ·   +19.4 % · E1  +35.0 E2   +1.2 E3    -   · p hoch 0.1119 tief 0.8891 · Spiegel auf 55/42 ab 21/12 % · nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J kurz          n+  50 n-  66 ·   +11.4 % · E1   +8.9 E2  +26.9 E3  +12.0 · p hoch 0.1958 tief 0.8052 · Spiegel auf 44/27 ab 16/23 % · nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  25 n-  95 ·   -27.1 % · E1    -   E2   -8.9 E3  -23.5 · p hoch 0.9710 tief 0.0300 · Spiegel auf 16/40 ab 52/13 % · nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  34 n-  30 ·    +7.7 % · E1   +7.4 E2  +27.6 E3    -   · p hoch 0.3007 tief 0.7003 · Spiegel auf 41/40 ab 21/20 % · nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 107 n-  22 ·   -10.3 % · E1  -12.7 E2   +9.6 E3    -   · p hoch 0.7153 tief 0.2857 · Spiegel auf 37/55 ab 22/ 5 % · nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  54 n-  55 ·   +23.1 % · E1  +25.5 E2  +27.8 E3   +5.7 · p hoch 0.0909 tief 0.9101 · Spiegel auf 52/25 ab 15/20 % · nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  58 n-  43 ·    +2.6 % · E1   +3.3 E2   +4.9 E3    -   · p hoch 0.4106 tief 0.5904 · Spiegel auf 33/47 ab 40/ 9 % · nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  46 n-  61 ·   +22.9 % · E1  +23.6 E2  +34.0 E3   +5.1 · p hoch 0.0789 tief 0.9221 · Spiegel auf 52/25 ab 13/26 % · nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  10 n- 118 ·    +4.2 % · E1    -   E2  +22.4 E3    -   · p hoch 0.3976 tief 0.6034 · Spiegel auf 50/41 ab 20/14 % · nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  46 n-  55 ·   +33.2 % · E1  +36.0 E2  +42.3 E3  +16.6 · p hoch 0.0020 tief 0.9990 · Spiegel auf 57/24 ab  7/22 % · TRAEGT
+  K9 VIX lang                  n+  67 n-  52 ·   +22.2 % · E1  +24.1 E2  +34.6 E3    -   · p hoch 0.0669 tief 0.9341 · Spiegel auf 46/33 ab 21/21 % · nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  49 n-  59 ·    +3.4 % · E1   +4.4 E2  +21.3 E3  -17.0 · p hoch 0.4076 tief 0.5934 · Spiegel auf 51/34 ab 16/20 % · nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  47 n-  61 ·   +16.6 % · E1  +39.7 E2   +2.8 E3    -   · p hoch 0.0749 tief 0.9261 · Spiegel auf 36/31 ab 28/20 % · nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  57 n-  55 ·   +28.2 % · E1  +24.7 E2    -   E3  +16.0 · p hoch 0.0030 tief 0.9980 · Spiegel auf 58/22 ab 12/27 % · nicht entscheidbar (E2 nicht pruefbar)
+==========================================================================================================================================================================
+T1 BTC 180T  [Urteil]
+  K1 Geldmenge lang            n+  32 n-  66 ·    +9.1 % · E1  +56.3 E2  -55.7 E3    -   · p hoch 0.3656 tief 0.6354 · Spiegel auf 62/65 ab 16/18 % · nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  50 n-  50 ·   +15.2 % · E1   +2.6 E2    -   E3    -   · p hoch 0.2517 tief 0.7493 · Spiegel auf 68/52 ab  8/24 % · nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  38 n-  72 ·   +19.0 % · E1  +37.4 E2  -20.7 E3    -   · p hoch 0.3826 tief 0.6184 · Spiegel auf 53/53 ab 21/21 % · nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  44 n-  60 ·   +35.3 % · E1  +53.2 E2  +21.3 E3   +8.7 · p hoch 0.1289 tief 0.8721 · Spiegel auf 64/55 ab  9/30 % · nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  43 n-  65 ·   +12.7 % · E1  +42.9 E2  -55.2 E3    -   · p hoch 0.2378 tief 0.7632 · Spiegel auf 51/58 ab 19/18 % · nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  46 n-  60 ·    -8.6 % · E1  -16.4 E2   +4.1 E3    -   · p hoch 0.6653 tief 0.3357 · Spiegel auf 57/55 ab 15/27 % · nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  29 n-  89 ·   +28.7 % · E1  +64.9 E2  -20.3 E3    -   · p hoch 0.1129 tief 0.8881 · Spiegel auf 59/64 ab 10/18 % · nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J kurz          n+  50 n-  64 ·    +7.4 % · E1  +10.7 E2  +38.6 E3  -17.8 · p hoch 0.4535 tief 0.5475 · Spiegel auf 56/47 ab 18/33 % · nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  24 n-  95 ·   -45.9 % · E1    -   E2  -30.1 E3  -43.8 · p hoch 0.9780 tief 0.0230 · Spiegel auf 12/64 ab 42/16 % · nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  34 n-  30 ·   -25.5 % · E1  -21.8 E2   +8.6 E3    -   · p hoch 0.9311 tief 0.0699 · Spiegel auf 56/63 ab 21/13 % · nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 104 n-  22 ·   -32.4 % · E1  -38.8 E2   +7.9 E3    -   · p hoch 0.8392 tief 0.1618 · Spiegel auf 46/86 ab 31/ 5 % · nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  52 n-  54 ·   +30.1 % · E1  +29.3 E2  +45.9 E3   -5.9 · p hoch 0.1758 tief 0.8252 · Spiegel auf 65/48 ab 15/26 % · nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  55 n-  43 ·   -18.5 % · E1  -21.7 E2  -14.0 E3    -   · p hoch 0.7902 tief 0.2108 · Spiegel auf 31/79 ab 38/ 9 % · nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  45 n-  60 ·   +37.7 % · E1  +44.1 E2  +63.2 E3  -27.5 · p hoch 0.0260 tief 0.9750 · Spiegel auf 64/40 ab 18/33 % · nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+   8 n- 118 ·   -22.1 % · E1    -   E2   -2.2 E3    -   · p hoch 0.7502 tief 0.2507 · Spiegel auf 25/61 ab 12/18 % · nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  46 n-  55 ·   +35.4 % · E1  +53.2 E2  +30.9 E3  -14.7 · p hoch 0.0150 tief 0.9860 · Spiegel auf 65/42 ab 13/31 % · nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  66 n-  52 ·   +23.1 % · E1  +18.8 E2  +66.7 E3    -   · p hoch 0.1429 tief 0.8581 · Spiegel auf 62/48 ab 23/23 % · nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  47 n-  59 ·    -2.4 % · E1   +1.6 E2  +16.4 E3  -38.9 · p hoch 0.5914 tief 0.4096 · Spiegel auf 57/53 ab 28/24 % · nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  44 n-  61 ·   +12.9 % · E1  +58.5 E2  -23.9 E3    -   · p hoch 0.3017 tief 0.6993 · Spiegel auf 45/54 ab 32/26 % · nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  55 n-  54 ·   +31.0 % · E1  +31.8 E2    -   E3  -30.0 · p hoch 0.0270 tief 0.9740 · Spiegel auf 65/41 ab 16/31 % · nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+T2 Altkorb/BTC 90T  [Urteil]
+  K1 Geldmenge lang            n+  31 n-  31 ·   +18.1 % · E1  +28.7 E2  +17.9 E3    -   · p hoch 0.0010 tief 1.0000 · Spiegel auf 16/ 3 ab 26/48 % · nicht entscheidbar (E3 nicht pruefbar)
+  K1 Geldmenge kurz            n+  36 n-  25 ·    +1.7 % · E1    -   E2    -   E3    -   · p hoch 0.5864 tief 0.4146 · Spiegel auf 14/ 4 ab 39/40 % · nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  25 n-  34 ·   +21.6 % · E1  +20.2 E2  +16.9 E3    -   · p hoch 0.0010 tief 1.0000 · Spiegel auf 20/ 3 ab 24/41 % · nicht entscheidbar (E3 nicht pruefbar)
+  K2 Netto-Liquiditaet kurz    n+  31 n-  27 ·   +23.0 % · E1  +40.2 E2  +18.8 E3   +3.3 · p hoch 0.0060 tief 0.9950 · Spiegel auf 16/ 4 ab 23/52 % · nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  34 n-  46 ·   +11.5 % · E1    -   E2  +13.7 E3    -   · p hoch 0.0480 tief 0.9530 · Spiegel auf 15/ 2 ab 32/39 % · nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  36 n-  28 ·    -6.4 % · E1    -   E2   +6.8 E3    -   · p hoch 0.6773 tief 0.3237 · Spiegel auf  8/11 ab 39/32 % · nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  22 n-  39 ·   +22.7 % · E1  +26.5 E2  +24.9 E3    -   · p hoch 0.0010 tief 1.0000 · Spiegel auf 23/ 5 ab 18/46 % · nicht entscheidbar (E3 nicht pruefbar)
+  K4 Zinspfad 2J kurz          n+  40 n-  24 ·    +5.6 % · E1    -   E2   -9.3 E3  +18.6 · p hoch 0.3716 tief 0.6294 · Spiegel auf  5/ 4 ab 38/50 % · nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  23 n-  42 ·    +9.7 % · E1    -   E2  +15.2 E3   +8.5 · p hoch 0.1489 tief 0.8521 · Spiegel auf  9/ 2 ab 17/38 % · nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  29 n-  16 ·    +4.7 % · E1    -   E2  +26.4 E3    -   · p hoch 0.3387 tief 0.6623 · Spiegel auf 17/ 6 ab 31/25 % · nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+  53 n-  13 ·    -4.0 % · E1   +0.9 E2   +4.8 E3    -   · p hoch 0.7542 tief 0.2468 · Spiegel auf  4/15 ab 40/38 % · nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  27 n-  31 ·    -5.1 % · E1  -22.4 E2  +15.2 E3  -21.1 · p hoch 0.6194 tief 0.3816 · Spiegel auf  7/ 6 ab 48/35 % · nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  32 n-  27 ·    -7.2 % · E1  -53.2 E2  +26.6 E3    -   · p hoch 0.7263 tief 0.2747 · Spiegel auf  9/15 ab 41/30 % · nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  32 n-  33 ·    -5.7 % · E1  -35.0 E2  +21.8 E3  -14.1 · p hoch 0.6743 tief 0.3267 · Spiegel auf 12/ 9 ab 44/30 % · nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  10 n-  63 ·   +21.2 % · E1    -   E2  +31.3 E3    -   · p hoch 0.0539 tief 0.9471 · Spiegel auf 20/ 6 ab 20/43 % · nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  30 n-  26 ·    -4.2 % · E1    -   E2   +6.1 E3  +20.8 · p hoch 0.6184 tief 0.3826 · Spiegel auf  7/15 ab 37/31 % · nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  24 n-  36 ·   -14.2 % · E1    -   E2  -12.8 E3    -   · p hoch 0.9780 tief 0.0230 · Spiegel auf  0/17 ab 42/33 % · nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  32 n-  29 ·    +1.8 % · E1   -8.7 E2  +11.1 E3   -3.2 · p hoch 0.3826 tief 0.6184 · Spiegel auf 12/10 ab 34/34 % · nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  40 n-  20 ·    +5.9 % · E1    -   E2  +18.8 E3    -   · p hoch 0.2458 tief 0.7552 · Spiegel auf 12/10 ab 25/40 % · nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  36 n-  26 ·    -1.4 % · E1    -   E2    -   E3   +9.1 · p hoch 0.5834 tief 0.4176 · Spiegel auf  8/ 8 ab 42/38 % · nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+M1 Nasdaq/SPX 90T  [Probe]
+  K1 Geldmenge lang            n+  80 n-  84 ·    +0.6 % · E1   +1.7 E2   -4.8 E3    -   · p hoch 0.2607 tief 0.7403 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  81 n-  76 ·    +0.5 % · E1   +1.0 E2    -   E3    -   · p hoch 0.2438 tief 0.7572 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  71 n-  95 ·    +1.5 % · E1   +2.4 E2   -2.6 E3    -   · p hoch 0.0589 tief 0.9421 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  75 n-  89 ·    +1.8 % · E1   +1.6 E2   +2.1 E3   +2.7 · p hoch 0.0140 tief 0.9870 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  97 n-  92 ·    -0.4 % · E1   +0.2 E2   -4.5 E3    -   · p hoch 0.6174 tief 0.3836 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  77 n-  82 ·    +1.5 % · E1   +0.9 E2   +2.4 E3    -   · p hoch 0.0200 tief 0.9810 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  87 n- 109 ·    +0.7 % · E1   +0.8 E2   -1.8 E3    -   · p hoch 0.1499 tief 0.8511 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J kurz          n+  79 n-  81 ·    +2.4 % · E1   +2.2 E2   +5.7 E3   +0.9 · p hoch 0.0140 tief 0.9870 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  64 n- 124 ·    +0.7 % · E1   +1.3 E2   -2.2 E3   +2.5 · p hoch 0.2378 tief 0.7632 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  60 n-  48 ·    +1.4 % · E1   +1.5 E2   -1.9 E3    -   · p hoch 0.0629 tief 0.9381 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 126 n-  59 ·    -0.3 % · E1   -0.3 E2   +3.7 E3    -   · p hoch 0.6224 tief 0.3786 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  80 n-  90 ·    -0.7 % · E1   -1.2 E2   +2.5 E3   -2.1 · p hoch 0.7992 tief 0.2018 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  75 n-  79 ·    -1.0 % · E1   -1.1 E2   -1.4 E3    -   · p hoch 0.8721 tief 0.1289 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  79 n-  90 ·    -0.1 % · E1   -0.9 E2   +3.4 E3   -0.6 · p hoch 0.5485 tief 0.4525 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  30 n- 124 ·    -0.9 % · E1   -1.1 E2   -1.2 E3    -   · p hoch 0.7902 tief 0.2108 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  59 n-  69 ·    +0.8 % · E1   -0.7 E2   +5.3 E3   +1.9 · p hoch 0.1648 tief 0.8362 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  93 n-  91 ·    -0.8 % · E1   -1.5 E2   +5.2 E3    -   · p hoch 0.8651 tief 0.1359 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  79 n-  88 ·    -0.3 % · E1   -0.4 E2   +3.1 E3   -3.9 · p hoch 0.6783 tief 0.3227 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  86 n-  62 ·    +0.6 % · E1   +1.5 E2   -2.7 E3    -   · p hoch 0.2208 tief 0.7802 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  78 n-  68 ·    +1.7 % · E1   +0.8 E2    -   E3   +1.5 · p hoch 0.0070 tief 0.9940 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (E2 nicht pruefbar)
+==========================================================================================================================================================================
+M2 Russell/SPX 90T  [Probe]
+  K1 Geldmenge lang            n+  80 n-  84 ·    +0.5 % · E1   +0.9 E2   -1.4 E3    -   · p hoch 0.2388 tief 0.7622 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  81 n-  76 ·    +0.5 % · E1   +0.1 E2    -   E3    -   · p hoch 0.3407 tief 0.6603 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  71 n-  95 ·    -0.2 % · E1   +0.5 E2   -2.9 E3    -   · p hoch 0.5694 tief 0.4316 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  75 n-  89 ·    -1.0 % · E1   -0.3 E2   -2.9 E3   -1.6 · p hoch 0.8591 tief 0.1419 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  97 n-  92 ·    +1.7 % · E1   +2.5 E2   -1.9 E3    -   · p hoch 0.0110 tief 0.9900 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  77 n-  82 ·    +0.2 % · E1   +0.4 E2   -3.4 E3    -   · p hoch 0.4126 tief 0.5884 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  87 n- 109 ·    +1.5 % · E1   +2.0 E2   -3.4 E3    -   · p hoch 0.0010 tief 1.0000 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (E3 nicht pruefbar)
+  K4 Zinspfad 2J kurz          n+  79 n-  81 ·    +0.3 % · E1   -0.2 E2   -0.1 E3   +1.0 · p hoch 0.3866 tief 0.6144 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  64 n- 124 ·    +0.5 % · E1   +1.1 E2   -4.1 E3   +3.3 · p hoch 0.2038 tief 0.7972 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  60 n-  48 ·    +0.5 % · E1   -0.7 E2   +3.8 E3    -   · p hoch 0.3736 tief 0.6274 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 126 n-  59 ·    -2.7 % · E1   -2.0 E2   -4.9 E3    -   · p hoch 1.0000 tief 0.0010 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (E3 nicht pruefbar)
+  K6 Kredit BAA kurz           n+  80 n-  90 ·    +0.1 % · E1   +1.7 E2   -5.9 E3   -3.5 · p hoch 0.4625 tief 0.5385 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  75 n-  79 ·    -1.2 % · E1   -1.4 E2   -3.3 E3    -   · p hoch 0.9191 tief 0.0819 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  79 n-  90 ·    +0.0 % · E1   +1.2 E2   -3.4 E3   -4.1 · p hoch 0.4705 tief 0.5305 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  30 n- 124 ·    +0.5 % · E1   +0.8 E2   -1.4 E3    -   · p hoch 0.2667 tief 0.7343 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  59 n-  69 ·    +0.5 % · E1   +1.1 E2   -4.7 E3   +2.6 · p hoch 0.3556 tief 0.6454 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  93 n-  91 ·    -1.2 % · E1   -1.5 E2   -1.0 E3    -   · p hoch 0.9351 tief 0.0659 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  79 n-  88 ·    -0.3 % · E1   +0.0 E2   -1.2 E3   -1.5 · p hoch 0.6833 tief 0.3177 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  86 n-  62 ·    +0.6 % · E1   +1.3 E2   -3.7 E3    -   · p hoch 0.2098 tief 0.7912 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  78 n-  68 ·    +0.2 % · E1   +0.2 E2    -   E3   -0.8 · p hoch 0.3516 tief 0.6494 · Spiegel auf  0/ 0 ab  0/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+M3 SPX 90T  [Probe]
+  K1 Geldmenge lang            n+  80 n-  84 ·    -1.3 % · E1   -0.9 E2   -2.2 E3    -   · p hoch 0.7972 tief 0.2038 · Spiegel auf  2/ 0 ab  4/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  81 n-  76 ·    +0.9 % · E1   -0.1 E2    -   E3    -   · p hoch 0.2827 tief 0.7183 · Spiegel auf  1/ 0 ab  1/ 1 % · (Probe) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  71 n-  95 ·    +0.6 % · E1   +0.3 E2   +2.7 E3    -   · p hoch 0.4206 tief 0.5804 · Spiegel auf  3/ 0 ab  3/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  75 n-  89 ·    -1.3 % · E1   -3.6 E2   +8.7 E3   +3.3 · p hoch 0.7063 tief 0.2947 · Spiegel auf  1/ 1 ab  3/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  97 n-  92 ·    -0.7 % · E1   +0.9 E2   -2.0 E3    -   · p hoch 0.5844 tief 0.4166 · Spiegel auf  1/ 0 ab  3/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  77 n-  82 ·    +4.4 % · E1   +4.6 E2   +2.7 E3    -   · p hoch 0.0070 tief 0.9940 · Spiegel auf  3/ 0 ab  0/ 2 % · (Probe) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  87 n- 109 ·    +0.2 % · E1   -0.0 E2   +3.0 E3    -   · p hoch 0.5305 tief 0.4705 · Spiegel auf  2/ 0 ab  2/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J kurz          n+  79 n-  81 ·    +0.9 % · E1   -1.0 E2   +9.2 E3   -0.2 · p hoch 0.3127 tief 0.6883 · Spiegel auf  1/ 0 ab  1/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  64 n- 124 ·    -0.8 % · E1   -2.3 E2   +1.6 E3   -0.5 · p hoch 0.7383 tief 0.2627 · Spiegel auf  2/ 0 ab  3/ 1 % · (Probe) nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  60 n-  48 ·    -0.2 % · E1   -2.2 E2   +3.4 E3    -   · p hoch 0.5964 tief 0.4046 · Spiegel auf  2/ 0 ab  2/ 4 % · (Probe) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 126 n-  59 ·    +0.3 % · E1   +0.0 E2   +2.0 E3    -   · p hoch 0.3177 tief 0.6833 · Spiegel auf  0/ 3 ab  1/ 3 % · (Probe) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  80 n-  90 ·    +1.8 % · E1   +2.2 E2   +3.2 E3   -2.4 · p hoch 0.1548 tief 0.8462 · Spiegel auf  1/ 1 ab  1/ 2 % · (Probe) nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  75 n-  79 ·    +1.5 % · E1   +1.0 E2   +3.8 E3    -   · p hoch 0.2098 tief 0.7912 · Spiegel auf  0/ 3 ab  0/ 3 % · (Probe) nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  79 n-  90 ·    +1.9 % · E1   +1.8 E2   +4.9 E3   -3.7 · p hoch 0.1269 tief 0.8741 · Spiegel auf  1/ 1 ab  1/ 2 % · (Probe) nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  30 n- 124 ·    -1.0 % · E1   -2.5 E2   +3.4 E3    -   · p hoch 0.6683 tief 0.3327 · Spiegel auf  0/ 2 ab  0/ 1 % · (Probe) nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  59 n-  69 ·    -0.4 % · E1   -2.5 E2   +2.7 E3   +4.3 · p hoch 0.6074 tief 0.3936 · Spiegel auf  0/ 1 ab  2/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  93 n-  91 ·    -0.1 % · E1   -0.5 E2   +1.6 E3    -   · p hoch 0.4705 tief 0.5305 · Spiegel auf  0/ 2 ab  0/ 2 % · (Probe) nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  79 n-  88 ·    -0.1 % · E1   +0.2 E2   +0.5 E3   -3.3 · p hoch 0.5115 tief 0.4895 · Spiegel auf  1/ 1 ab  1/ 2 % · (Probe) nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  86 n-  62 ·    +1.2 % · E1   +1.2 E2   +1.3 E3    -   · p hoch 0.0809 tief 0.9201 · Spiegel auf  2/ 0 ab  1/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  78 n-  68 ·    -0.3 % · E1   -2.1 E2    -   E3   +1.1 · p hoch 0.5455 tief 0.4555 · Spiegel auf  0/ 0 ab  1/ 0 % · (Probe) nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+A1 Gold 90T  [Auskunft]
+  K1 Geldmenge lang            n+  80 n-  84 ·    -1.3 % · E1   +0.2 E2   -2.9 E3    -   · p hoch 0.7013 tief 0.2997 · Spiegel auf  5/ 0 ab  1/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  81 n-  76 ·    +2.0 % · E1   +1.2 E2    -   E3    -   · p hoch 0.0659 tief 0.9351 · Spiegel auf  1/ 1 ab  0/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  71 n-  95 ·    +1.1 % · E1   +2.2 E2   -1.1 E3    -   · p hoch 0.2627 tief 0.7383 · Spiegel auf  4/ 2 ab  1/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  75 n-  89 ·    -0.3 % · E1   +0.7 E2   +0.0 E3   -5.7 · p hoch 0.5804 tief 0.4206 · Spiegel auf  3/ 2 ab  3/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  97 n-  92 ·    -3.3 % · E1   -2.7 E2   -2.7 E3    -   · p hoch 0.9510 tief 0.0500 · Spiegel auf  1/ 2 ab  2/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  77 n-  82 ·    +2.0 % · E1   +2.0 E2   -2.0 E3    -   · p hoch 0.0869 tief 0.9141 · Spiegel auf  1/ 2 ab  0/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J lang          n+  87 n- 109 ·    -0.8 % · E1   +0.2 E2   -1.6 E3    -   · p hoch 0.5165 tief 0.4845 · Spiegel auf  3/ 0 ab  2/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J kurz          n+  79 n-  81 ·    +4.2 % · E1   +3.9 E2   -1.4 E3   +7.3 · p hoch 0.0030 tief 0.9980 · Spiegel auf  5/ 0 ab  0/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  64 n- 124 ·    +3.0 % · E1   +4.3 E2   -0.4 E3   -3.9 · p hoch 0.1419 tief 0.8591 · Spiegel auf  6/ 0 ab  2/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  60 n-  48 ·    +2.3 % · E1   +3.5 E2   -2.2 E3    -   · p hoch 0.0899 tief 0.9111 · Spiegel auf  5/ 0 ab  2/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 126 n-  59 ·    -1.0 % · E1   -3.0 E2   +1.5 E3    -   · p hoch 0.6733 tief 0.3277 · Spiegel auf  0/ 7 ab  0/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  80 n-  90 ·    -0.1 % · E1   -1.1 E2   +3.9 E3   +3.8 · p hoch 0.5485 tief 0.4525 · Spiegel auf  1/ 3 ab  0/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  75 n-  79 ·    -1.6 % · E1   -3.4 E2   -1.4 E3    -   · p hoch 0.7852 tief 0.2158 · Spiegel auf  1/ 4 ab  1/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  79 n-  90 ·    +1.6 % · E1   +0.2 E2   +3.2 E3   +8.0 · p hoch 0.1459 tief 0.8551 · Spiegel auf  1/ 3 ab  0/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  30 n- 124 ·    -1.9 % · E1   +1.8 E2   -5.0 E3    -   · p hoch 0.6653 tief 0.3357 · Spiegel auf  0/ 0 ab  0/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  59 n-  69 ·    -0.5 % · E1   -0.7 E2   -1.9 E3   -0.7 · p hoch 0.5534 tief 0.4476 · Spiegel auf  0/ 0 ab  0/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  93 n-  91 ·    -0.3 % · E1   -2.8 E2   -0.8 E3    -   · p hoch 0.6224 tief 0.3786 · Spiegel auf  1/ 4 ab  1/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  79 n-  88 ·    +1.8 % · E1   +1.8 E2   -4.3 E3  +10.5 · p hoch 0.1548 tief 0.8462 · Spiegel auf  1/ 2 ab  1/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  86 n-  62 ·    +2.7 % · E1   +2.9 E2   -0.6 E3    -   · p hoch 0.1568 tief 0.8442 · Spiegel auf  2/ 0 ab  0/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  Gesamt kurz                  n+  78 n-  68 ·    +2.0 % · E1   +2.0 E2    -   E3   +2.4 · p hoch 0.1199 tief 0.8811 · Spiegel auf  0/ 0 ab  0/ 0 % · (Auskunft) nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+A2 DBC 90T  [Auskunft]
+  K1 Geldmenge lang            n+  80 n-  82 ·    +2.2 % · E1   -0.3 E2  +13.3 E3    -   · p hoch 0.1828 tief 0.8182 · Spiegel auf  9/ 0 ab  8/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K1 Geldmenge kurz            n+  81 n-  76 ·    +1.2 % · E1   +0.9 E2    -   E3    -   · p hoch 0.3876 tief 0.6134 · Spiegel auf  5/ 1 ab  2/ 3 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet lang    n+  71 n-  95 ·    +0.9 % · E1   -1.0 E2  +15.4 E3    -   · p hoch 0.3037 tief 0.6973 · Spiegel auf  6/ 3 ab  7/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K2 Netto-Liquiditaet kurz    n+  75 n-  89 ·    -1.8 % · E1   -4.0 E2   +4.9 E3   +4.6 · p hoch 0.7283 tief 0.2727 · Spiegel auf  1/ 3 ab  7/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K3 Realzins lang             n+  97 n-  91 ·    +1.9 % · E1   +0.9 E2  +13.7 E3    -   · p hoch 0.1918 tief 0.8092 · Spiegel auf  5/ 3 ab  5/ 3 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K3 Realzins kurz             n+  77 n-  82 ·    +8.3 % · E1  +10.6 E2   +2.4 E3    -   · p hoch 0.0010 tief 1.0000 · Spiegel auf  4/ 1 ab  1/ 9 % · (Auskunft) nicht entscheidbar (E3 nicht pruefbar)
+  K4 Zinspfad 2J lang          n+  87 n- 107 ·    +2.3 % · E1   +0.9 E2  +10.6 E3    -   · p hoch 0.1419 tief 0.8591 · Spiegel auf  3/ 0 ab  6/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K4 Zinspfad 2J kurz          n+  79 n-  81 ·    +3.7 % · E1   +4.0 E2   -3.6 E3   +7.6 · p hoch 0.0639 tief 0.9371 · Spiegel auf  5/ 4 ab  5/ 2 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K5 Kurve lang                n+  64 n- 122 ·    +3.6 % · E1   +0.2 E2  +11.3 E3   +6.5 · p hoch 0.1359 tief 0.8651 · Spiegel auf  8/ 0 ab  6/ 3 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K5 Kurve kurz                n+  60 n-  48 ·    +3.4 % · E1   +1.3 E2   +8.7 E3    -   · p hoch 0.1179 tief 0.8831 · Spiegel auf  7/ 0 ab  7/ 4 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA lang           n+ 124 n-  59 ·    -1.6 % · E1   -3.9 E2   +4.4 E3    -   · p hoch 0.6294 tief 0.3716 · Spiegel auf  5/ 5 ab  3/ 8 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K6 Kredit BAA kurz           n+  80 n-  90 ·    +1.2 % · E1   +1.1 E2   -0.4 E3   +5.0 · p hoch 0.3177 tief 0.6833 · Spiegel auf  2/ 6 ab  4/ 6 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K7 NFCI lang                 n+  75 n-  77 ·    -0.3 % · E1   -4.9 E2   +9.7 E3    -   · p hoch 0.5514 tief 0.4496 · Spiegel auf  4/ 4 ab  4/ 6 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K7 NFCI kurz                 n+  79 n-  90 ·    +0.5 % · E1   +0.6 E2   -2.4 E3   +5.3 · p hoch 0.3836 tief 0.6174 · Spiegel auf  3/ 6 ab  5/ 6 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K8 Dollar lang               n+  30 n- 124 ·    +3.7 % · E1   +0.7 E2   +9.6 E3    -   · p hoch 0.0410 tief 0.9600 · Spiegel auf  3/ 3 ab  0/ 3 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K8 Dollar kurz               n+  59 n-  69 ·    +2.3 % · E1   +1.5 E2   +0.2 E3   +8.0 · p hoch 0.1099 tief 0.8911 · Spiegel auf  2/ 4 ab  2/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K9 VIX lang                  n+  91 n-  91 ·    -2.6 % · E1   -3.0 E2   -4.4 E3    -   · p hoch 0.8921 tief 0.1089 · Spiegel auf  1/ 5 ab  2/ 7 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  K9 VIX kurz                  n+  79 n-  88 ·    +1.1 % · E1   +0.2 E2   +1.7 E3   +5.5 · p hoch 0.3007 tief 0.7003 · Spiegel auf  4/ 5 ab  5/ 6 % · (Auskunft) nicht entscheidbar (Nullwelt)
+  Gesamt lang                  n+  86 n-  62 ·    +6.0 % · E1   +2.9 E2  +14.1 E3    -   · p hoch 0.0090 tief 0.9920 · Spiegel auf  8/ 0 ab  2/ 2 % · (Auskunft) nicht entscheidbar (E3 nicht pruefbar)
+  Gesamt kurz                  n+  78 n-  68 ·    +1.9 % · E1   +1.3 E2    -   E3  +10.1 · p hoch 0.1479 tief 0.8531 · Spiegel auf  3/ 4 ab  4/ 1 % · (Auskunft) nicht entscheidbar (Nullwelt)
+
+==========================================================================================================================================================================
+URTEILE KRYPTO (Plan §51.5):
+  T1 BTC 90T           K8 Dollar kurz                +33.2 %  p 0.0020  -> TRAEGT
+  T1 BTC 90T           Gesamt kurz                   +28.2 %  p 0.0030  -> nicht entscheidbar (E2 nicht pruefbar)
+  T1 BTC 180T          K5 Kurve lang                 -45.9 %  p 0.0230  -> nicht entscheidbar (Nullwelt)
+  T1 BTC 180T          K8 Dollar kurz                +35.4 %  p 0.0150  -> nicht entscheidbar (Nullwelt)
+  T2 Altkorb/BTC 90T   K1 Geldmenge lang             +18.1 %  p 0.0010  -> nicht entscheidbar (E3 nicht pruefbar)
+  T2 Altkorb/BTC 90T   K2 Netto-Liquiditaet lang     +21.6 %  p 0.0010  -> nicht entscheidbar (E3 nicht pruefbar)
+  T2 Altkorb/BTC 90T   K2 Netto-Liquiditaet kurz     +23.0 %  p 0.0060  -> nicht entscheidbar (Nullwelt)
+  T2 Altkorb/BTC 90T   K4 Zinspfad 2J lang           +22.7 %  p 0.0010  -> nicht entscheidbar (E3 nicht pruefbar)
+  T2 Altkorb/BTC 90T   K9 VIX lang                   -14.2 %  p 0.0230  -> nicht entscheidbar (Nullwelt)
+  => TRAEGT 1 · SCHADET 0 · von 60 Pruefungen
+
+WEGLASSPROBE (Gesamt ohne je einen Kanal; Krypto):
+  T1 BTC 90T           Gesamt lang alle +16.6 % (p 0.0739) · ohne: K1 +12.4 (p 0.201) · K2 +11.7 (p 0.144) · K3 +24.8 (p 0.024) · K4 +20.3 (p 0.062) · K5 +16.6 (p 0.056) · K6  -1.3 (p 0.482) · K7 +12.9 (p 0.169) · K8 +19.7 (p 0.060) · K9  -1.4 (p 0.482)
+  T1 BTC 90T           Gesamt kurz alle +28.2 % (p 0.0040) · ohne: K1 +26.4 (p 0.011) · K2 +23.9 (p 0.010) · K3 +30.0 (p 0.005) · K4 +26.8 (p 0.011) · K5 +24.1 (p 0.025) · K6 +21.7 (p 0.016) · K7 +24.8 (p 0.014) · K8 +23.8 (p 0.012) · K9 +27.7 (p 0.008)
+  T1 BTC 180T          Gesamt lang alle +12.9 % (p 0.3067) · ohne: K1  +8.4 (p 0.302) · K2  +7.3 (p 0.374) · K3 +25.8 (p 0.168) · K4 +15.1 (p 0.310) · K5 +14.4 (p 0.278) · K6  -3.9 (p 0.424) · K7 +15.5 (p 0.293) · K8 +17.1 (p 0.270) · K9  -4.2 (p 0.405)
+  T1 BTC 180T          Gesamt kurz alle +31.0 % (p 0.0300) · ohne: K1 +28.2 (p 0.054) · K2 +25.1 (p 0.053) · K3 +37.7 (p 0.021) · K4 +29.8 (p 0.054) · K5 +28.3 (p 0.055) · K6 +20.0 (p 0.128) · K7 +20.9 (p 0.171) · K8 +21.3 (p 0.120) · K9 +28.3 (p 0.042)
+  T2 Altkorb/BTC 90T   Gesamt lang alle  +5.9 % (p 0.2248) · ohne: K1  +5.5 (p 0.330) · K2  +4.5 (p 0.286) · K3 +11.1 (p 0.135) · K4  +3.1 (p 0.332) · K5  +8.3 (p 0.151) · K6  +3.8 (p 0.365) · K7 +13.1 (p 0.048) · K8  +5.9 (p 0.227) · K9  +0.3 (p 0.461)
+  T2 Altkorb/BTC 90T   Gesamt kurz alle  -1.4 % (p 0.4496) · ohne: K1  +0.5 (p 0.500) · K2  -2.0 (p 0.356) · K3  +2.6 (p 0.435) · K4  -0.8 (p 0.468) · K5  -1.2 (p 0.413) · K6  +0.1 (p 0.473) · K7  +2.2 (p 0.494) · K8  -2.7 (p 0.366) · K9  +1.9 (p 0.472)
+D:\Python\Lib\site-packages\numpy\_core\fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:219: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:219: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+D:\Python\Lib\site-packages\numpy\_core\_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+SELBSTTEST (a): 200 phasen-randomisierte Makroreihen (gleiches Spektrum, kein Zusammenhang mit dem Ziel)
+  T1 BTC 90T             gueltig 200 · Bonferroni Kanal 9 (Soll 0.8, Grenze 2.6) UEBER · 0,025 je Seite 18 (Soll 10.0, Grenze 16.2) UEBER · 0,05 je Seite 30 (Soll 20.0, Grenze 28.5) UEBER · volles Urteil 2
+  T1 BTC 180T            gueltig 200 · Bonferroni Kanal 9 (Soll 0.8, Grenze 2.6) UEBER · 0,025 je Seite 20 (Soll 10.0, Grenze 16.2) UEBER · 0,05 je Seite 31 (Soll 20.0, Grenze 28.5) UEBER · volles Urteil 0
+  T2 Altkorb/BTC 90T     gueltig 196 · Bonferroni Kanal 9 (Soll 0.8, Grenze 2.5) UEBER · 0,025 je Seite 22 (Soll 9.8, Grenze 15.9) UEBER · 0,05 je Seite 35 (Soll 19.6, Grenze 28.0) UEBER · volles Urteil 2
+  => Selbsttest (a) NICHT bestanden
+
+SELBSTTEST (b): Pflanzung Ziel + beta * sd(Ziel) * z(Merkmal), je Staerke 60 Merkmale; Fund = p <= Bonferroni (Kanal)
+  T1 BTC 90T (sd 0.480)
+    beta 0.00: Abstand  +1.0 % Fund   2 % (mit Epochen   0 %)
+    beta 0.05: Abstand  +5.8 % Fund   3 % (mit Epochen   2 %)
+    beta 0.10: Abstand +10.0 % Fund   5 % (mit Epochen   2 %)
+    beta 0.20: Abstand +17.8 % Fund  10 % (mit Epochen   5 %)
+    beta 0.30: Abstand +26.8 % Fund  28 % (mit Epochen  13 %)
+    beta 0.50: Abstand +45.9 % Fund  67 % (mit Epochen  37 %)
+  T1 BTC 180T (sd 0.652)
+    beta 0.00: Abstand  -7.6 % Fund   2 % (mit Epochen   0 %)
+    beta 0.05: Abstand  -1.7 % Fund   5 % (mit Epochen   0 %)
+    beta 0.10: Abstand  +4.3 % Fund  10 % (mit Epochen   3 %)
+    beta 0.20: Abstand +17.2 % Fund  17 % (mit Epochen   8 %)
+    beta 0.30: Abstand +28.8 % Fund  28 % (mit Epochen  13 %)
+    beta 0.50: Abstand +51.4 % Fund  48 % (mit Epochen  22 %)
+  T2 Altkorb/BTC 90T (sd 0.277)
+    beta 0.00: Abstand  -1.2 % Fund   2 % (mit Epochen   0 %)
+    beta 0.05: Abstand  +0.8 % Fund   3 % (mit Epochen   0 %)
+    beta 0.10: Abstand  +2.4 % Fund   3 % (mit Epochen   0 %)
+    beta 0.20: Abstand  +7.3 % Fund  10 % (mit Epochen   0 %)
+    beta 0.30: Abstand +13.3 % Fund  23 % (mit Epochen   5 %)
+    beta 0.50: Abstand +24.1 % Fund  48 % (mit Epochen  17 %)
+
+STAND HEUTE (2026-10-14): K1 Geldmenge lang + · K1 Geldmenge kurz 0 · K2 Netto-Liquiditaet lang + · K2 Netto-Liquiditaet kurz 0 · K3 Realzins lang - · K3 Realzins kurz - · K4 Zinspfad 2J lang - · K4 Zinspfad 2J kurz - · K5 Kurve lang + · K5 Kurve kurz - · K6 Kredit BAA lang + · K6 Kredit BAA kurz + · K7 NFCI lang + · K7 NFCI kurz 0 · K8 Dollar lang 0 · K8 Dollar kurz 0 · K9 VIX lang + · K9 VIX kurz 0 · Gesamt lang + · Gesamt kurz 0
+Laufzeit 33 s

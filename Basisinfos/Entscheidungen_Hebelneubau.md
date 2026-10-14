@@ -1188,3 +1188,16 @@ Schritt7 §23.24.
   - Futures-Start erst mit P18;
   - der Hinweis *außerhalb* richtet sich nach Binance-**Spot** — das korrigiert auch B1 (Fund der Gegenprobe G4).
 - Nachweis: G-Z, Spot §47.6, Schritt7 §23.47.
+
+# E-104 · Makro-Umfeld gemessen: nicht entscheidbar; Nullwelt N1 ersetzt (14.10.2026)
+
+**14.10.2026** · Nutzer: *„JA – finde ich gut“* (Messplan §51.5, gemeinsame Makro-Grundlage, Urteil nur Krypto) · *„ja starten“* (Hauptmessung).
+- **Ergebnis:** Kein Kanal ist für BTC oder Altcoins belegt (0 von 60). Das Urteil lautet *nicht entscheidbar*, weil die Auflösung nicht reicht (gepflanzt +42 % nur in 23 % gefunden). Beste Kandidaten: Netto-Liquidität kurz und Dollar kurz.
+- **Eigene fachliche Festlegungen (berichtet):**
+  - Die Nullwelt N1 aus dem Plan (zirkuläre Verschiebung) ist **verworfen**, weil ihr Selbsttest fiel (9 statt 0,8 Fehlalarme).
+  - Ersatz ist die Surrogat-Nullwelt N2 (gemeinsame Phasen-Randomisierung der Kanäle). Sie ist bei BTC selbst noch zu großzügig; das stützt das Urteil *nicht belegt*, weil eine strengere Nullwelt nur weniger findet.
+  - Das Urteil selbst (Bonferroni, Epochen, Spiegelprobe) ist **unverändert**.
+  - Gegenprobe 7/7 (Mittelrang).
+- **Folge (vorab):** Das Umfeld wird Fakt-Anzeige, kein Gewicht, kein Auslöser, kein Blocker. Die Kandidaten werden vorwärts beobachtet.
+- **Gold:** Die Nutzerthese *Vertrauen in Fiat* ist mit den neun Kanälen nicht abgebildet. Vorschlag K10 als Auskunft, zur Abstimmung.
+- Nachweis: Spot §51.7, Regelwerksmanual R-R14.

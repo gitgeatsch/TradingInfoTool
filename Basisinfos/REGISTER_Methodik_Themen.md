@@ -22,21 +22,21 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.86** | Querschnitt oder Zeitreihe — und der Kalendertag als Klammer | 4701 |
 | **2.98** | ⚠️ Die Blockzahl hängt an den TAGEN, nicht an den Symbolen | 5099 |
 | **2.101** | ⚠️⚠️ Ist die Größe eine ZEITPUNKT-Aussage oder eine ASSET-Eigenschaft? — die Frage kommt VOR der | 5256 |
-| **2.104** | ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl | 5507 |
-| **2.107** | ⚠️⚠️ Wie viele Beobachtungen sind es wirklich? — 985 Läufe waren 12 Tage | 5629 |
-| **2.109** | ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen | 5723 |
-| **2.110** | ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026) | 5765 |
-| **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6273 |
-| **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6646 |
-| **2.127** | ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026) | 7613 |
-| **2.130** | ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026) | 7854 |
-| **2.131** | ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026) | 7950 |
-| **2.132** | ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026) | 8034 |
-| **2.135** | ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometri | 8271 |
-| **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8557 |
-| **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10243 |
-| **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10579 |
-| **2.508** | ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09 | 11092 |
+| **2.104** | ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl | 5517 |
+| **2.107** | ⚠️⚠️ Wie viele Beobachtungen sind es wirklich? — 985 Läufe waren 12 Tage | 5639 |
+| **2.109** | ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen | 5733 |
+| **2.110** | ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026) | 5775 |
+| **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6283 |
+| **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6656 |
+| **2.127** | ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026) | 7623 |
+| **2.130** | ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026) | 7864 |
+| **2.131** | ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026) | 7960 |
+| **2.132** | ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026) | 8044 |
+| **2.135** | ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometri | 8281 |
+| **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8567 |
+| **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10253 |
+| **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10589 |
+| **2.508** | ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09 | 11102 |
 
 ## Block, Bootstrap und Abhaengigkeit (48)
 
@@ -67,29 +67,29 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.93** | ⚠️ Eine Schwelle wird gegen den QUOTENGLEICHEN Zufall gemessen | 4871 |
 | **2.95** | ⚠️ Der Block-Bootstrap deckt nicht, wenn es zu wenige BLOECKE gibt | 5004 |
 | **2.98** | ⚠️ Die Blockzahl hängt an den TAGEN, nicht an den Symbolen | 5099 |
-| **2.105** | ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer | 5544 |
-| **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5923 |
-| **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6273 |
-| **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6796 |
-| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7343 |
-| **2.127** | ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026) | 7613 |
-| **2.128** | ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026) | 7702 |
-| **2.129** | ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026) | 7782 |
-| **2.134** | ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026) | 8181 |
-| **2.135** | ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometri | 8271 |
-| **2.136** | ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026) | 8411 |
-| **2.137** | ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026) | 8504 |
-| **2.140** | ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09. | 8782 |
-| **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8878 |
-| **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9545 |
-| **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9847 |
-| **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10436 |
-| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10686 |
-| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10801 |
-| **2.506** | ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄG | 10940 |
-| **2.509** | ⚠️⚠️ WENN KEINE SCHWELLE TRIFFT, IST DIE LISTE ZULÄSSIG — ABER NUR MIT ERZEUGER UND SEITENEFFEKT | 11176 |
-| **2.676** | ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026) | 11345 |
-| **2.677** | ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026) | 11372 |
+| **2.105** | ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer | 5554 |
+| **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5933 |
+| **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6283 |
+| **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6806 |
+| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7353 |
+| **2.127** | ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026) | 7623 |
+| **2.128** | ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026) | 7712 |
+| **2.129** | ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026) | 7792 |
+| **2.134** | ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026) | 8191 |
+| **2.135** | ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometri | 8281 |
+| **2.136** | ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026) | 8421 |
+| **2.137** | ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026) | 8514 |
+| **2.140** | ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09. | 8792 |
+| **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8888 |
+| **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9555 |
+| **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9857 |
+| **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10446 |
+| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10696 |
+| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10811 |
+| **2.506** | ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄG | 10950 |
+| **2.509** | ⚠️⚠️ WENN KEINE SCHWELLE TRIFFT, IST DIE LISTE ZULÄSSIG — ABER NUR MIT ERZEUGER UND SEITENEFFEKT | 11186 |
+| **2.676** | ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026) | 11355 |
+| **2.677** | ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026) | 11382 |
 
 ## Trennschaerfe und Positivkontrolle (19)
 
@@ -100,20 +100,20 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.94** | ⚠️⚠️ Eine Prüfung, die auf EINEM Parameterwert steht, ist kein Nachweis | 4913 |
 | **2.95** | ⚠️ Der Block-Bootstrap deckt nicht, wenn es zu wenige BLOECKE gibt | 5004 |
 | **2.98** | ⚠️ Die Blockzahl hängt an den TAGEN, nicht an den Symbolen | 5099 |
-| **2.105** | ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer | 5544 |
-| **2.110** | ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026) | 5765 |
-| **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6561 |
-| **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6646 |
-| **2.137** | ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026) | 8504 |
-| **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8878 |
-| **2.142** | ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026) | 8978 |
-| **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 9112 |
-| **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9313 |
-| **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9462 |
-| **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10243 |
-| **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10353 |
-| **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10436 |
-| **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10579 |
+| **2.105** | ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer | 5554 |
+| **2.110** | ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026) | 5775 |
+| **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6571 |
+| **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6656 |
+| **2.137** | ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026) | 8514 |
+| **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8888 |
+| **2.142** | ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026) | 8988 |
+| **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 9122 |
+| **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9323 |
+| **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9472 |
+| **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10253 |
+| **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10363 |
+| **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10446 |
+| **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10589 |
 
 ## Zielgroesse und MASSSTAB (60)
 
@@ -137,48 +137,48 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.99** | ⚠️⚠️ Der Schichtentest — eine niedrige Korrelation entlastet einen Kandidaten NICHT | 5131 |
 | **2.101** | ⚠️⚠️ Ist die Größe eine ZEITPUNKT-Aussage oder eine ASSET-Eigenschaft? — die Frage kommt VOR der | 5256 |
 | **2.102** | Werkzeugkasten-Nachtrag (02.09.2026) — die Ausroll- und Betriebswerkzeuge | 5323 |
-| **2.104** | ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl | 5507 |
-| **2.110** | ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026) | 5765 |
-| **2.112** | ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026) | 6080 |
-| **2.113** | ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026) | 6189 |
-| **2.115** | ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026) | 6350 |
-| **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6430 |
-| **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6561 |
-| **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6646 |
-| **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6931 |
-| **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 7025 |
-| **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 7141 |
-| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7227 |
-| **2.126** | ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026) | 7514 |
-| **2.127** | ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026) | 7613 |
-| **2.128** | ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026) | 7702 |
-| **2.129** | ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026) | 7782 |
-| **2.130** | ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026) | 7854 |
-| **2.131** | ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026) | 7950 |
-| **2.132** | ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026) | 8034 |
-| **2.133** | ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026) | 8104 |
-| **2.134** | ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026) | 8181 |
-| **2.135** | ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometri | 8271 |
-| **2.136** | ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026) | 8411 |
-| **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8557 |
-| **2.139** | ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026) | 8668 |
-| **2.140** | ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09. | 8782 |
-| **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8878 |
-| **2.142** | ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026) | 8978 |
-| **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 9112 |
-| **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9405 |
-| **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10243 |
-| **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10353 |
-| **2.490** | ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026) | 10762 |
-| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10801 |
-| **2.502** | ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTRO | 10853 |
-| **2.506** | ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄG | 10940 |
-| **2.507** | ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026) | 11020 |
-| **2.508** | ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09 | 11092 |
-| **2.675** | ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026) | 11296 |
-| **2.676** | ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026) | 11345 |
-| **2.677** | ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026) | 11372 |
-| **2.678** | ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026) | 11398 |
+| **2.104** | ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl | 5517 |
+| **2.110** | ⚠️⚠️⚠️ DIE MESSNORM — die Grundlage wird nicht je Messung neu gewählt (06.09.2026) | 5775 |
+| **2.112** | ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026) | 6090 |
+| **2.113** | ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026) | 6199 |
+| **2.115** | ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026) | 6360 |
+| **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6440 |
+| **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6571 |
+| **2.118** | ⚠️⚠️⚠️ SCHRITT 3 — DAS TOR IST OFFEN, UND DAHINTER LIEGT MEHR (06.09.2026) | 6656 |
+| **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6941 |
+| **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 7035 |
+| **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 7151 |
+| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7237 |
+| **2.126** | ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026) | 7524 |
+| **2.127** | ✔ O4 — EINE BELEGTE DREITEILUNG. Und N-46 ist überholt (06.09.2026) | 7623 |
+| **2.128** | ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026) | 7712 |
+| **2.129** | ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026) | 7792 |
+| **2.130** | ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026) | 7864 |
+| **2.131** | ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026) | 7960 |
+| **2.132** | ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026) | 8044 |
+| **2.133** | ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026) | 8114 |
+| **2.134** | ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026) | 8191 |
+| **2.135** | ✖✖✖ N-52 — `vola` TRÄGT KEINE RICHTUNG. Der stärkste Befund des Tages war unsere eigene Geometri | 8281 |
+| **2.136** | ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026) | 8421 |
+| **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8567 |
+| **2.139** | ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026) | 8678 |
+| **2.140** | ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09. | 8792 |
+| **2.141** | ✖ N-58 — `turnover`s STUFEN LASSEN SICH NICHT HERLEITEN. Und das ist eine belastbare Aussage (07 | 8888 |
+| **2.142** | ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026) | 8988 |
+| **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 9122 |
+| **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9415 |
+| **2.188** | ⚠️⚠️⚠️ DER MESSSTANDARD — und wie drei Fehler ihn nötig machten | 10253 |
+| **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10363 |
+| **2.490** | ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026) | 10772 |
+| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10811 |
+| **2.502** | ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTRO | 10863 |
+| **2.506** | ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄG | 10950 |
+| **2.507** | ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026) | 11030 |
+| **2.508** | ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09 | 11102 |
+| **2.675** | ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026) | 11306 |
+| **2.676** | ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026) | 11355 |
+| **2.677** | ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026) | 11382 |
+| **2.678** | ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026) | 11408 |
 
 ## Auswahl, Menge und Universum (58)
 
@@ -210,38 +210,38 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.97** | ⚠️ Die AUFLÖSUNG einer Größe entscheidet, ob ein Auslöser trägt | 5066 |
 | **2.100** | ⚠️⚠️ Ein Nachweis, der nicht hinsehen KONNTE, ist kein Nachweis — sieben Fassungen für eine Stuf | 5195 |
 | **2.102** | Werkzeugkasten-Nachtrag (02.09.2026) — die Ausroll- und Betriebswerkzeuge | 5323 |
-| **2.104** | ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl | 5507 |
-| **2.107** | ⚠️⚠️ Wie viele Beobachtungen sind es wirklich? — 985 Läufe waren 12 Tage | 5629 |
-| **2.109** | ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen | 5723 |
-| **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6430 |
-| **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6561 |
-| **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 7025 |
-| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7227 |
-| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7343 |
-| **2.126** | ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026) | 7514 |
-| **2.133** | ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026) | 8104 |
-| **2.134** | ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026) | 8181 |
-| **2.136** | ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026) | 8411 |
-| **2.137** | ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026) | 8504 |
-| **2.139** | ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026) | 8668 |
-| **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 9112 |
-| **2.144** | ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026) | 9213 |
-| **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9313 |
-| **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9405 |
-| **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9545 |
-| **2.149** | ✔✔ DER STRUKTURFIX — F-198s Reparatur war im LADEPFAD nie angekommen (07.09.2026) | 9658 |
-| **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9750 |
-| **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9847 |
-| **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9948 |
-| **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 10069 |
-| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10154 |
-| **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10353 |
-| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10686 |
-| **2.490** | ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026) | 10762 |
-| **2.502** | ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTRO | 10853 |
-| **2.510** | ⚠️⚠️⚠️ EINE PRÜFUNG, DIE ZWEI GRÖSSEN VERGLEICHT, FÄNGT KEINEN FEHLER, DER BEIDE GLEICH VERSCHIE | 11240 |
-| **2.676** | ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026) | 11345 |
-| **2.678** | ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026) | 11398 |
+| **2.104** | ⚠️⚠️ Eine einzelne Zufallsziehung ist kein Nullpunkt — sie ist eine Zufallszahl | 5517 |
+| **2.107** | ⚠️⚠️ Wie viele Beobachtungen sind es wirklich? — 985 Läufe waren 12 Tage | 5639 |
+| **2.109** | ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen | 5733 |
+| **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6440 |
+| **2.117** | ⚠️⚠️⚠️ DER DATENFILTER ENTFERNT KEIN RAUSCHEN — ER ENTFERNT DEN BELEG (06.09.2026) | 6571 |
+| **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 7035 |
+| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7237 |
+| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7353 |
+| **2.126** | ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026) | 7524 |
+| **2.133** | ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026) | 8114 |
+| **2.134** | ✖✖ DIE AUSWAHL IST NICHT SCHÄDLICH — mein Befund war ein Grundmengen-Artefakt (06.09.2026) | 8191 |
+| **2.136** | ✔✔✔ N-53 — `turnover` IST NICHT SCHWACH. Es wurde am falschen Maßstab gemessen (06.09.2026) | 8421 |
+| **2.137** | ✖ N-54 — DIE ZWEI EBENEN SPIELEN NICHT ZUSAMMEN. Sie sind unabhängig (06.09.2026) | 8514 |
+| **2.139** | ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026) | 8678 |
+| **2.143** | ⛔⛔⛔ DAS AUDIT — sechs von sieben Messungen liefen auf der falschen MENGE (07.09.2026) | 9122 |
+| **2.144** | ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026) | 9223 |
+| **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9323 |
+| **2.146** | ✔ DIE ABDECKUNG DER KRYPTO-ASSETS — und drei Korrekturen des Nutzers (07.09.2026) | 9415 |
+| **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9555 |
+| **2.149** | ✔✔ DER STRUKTURFIX — F-198s Reparatur war im LADEPFAD nie angekommen (07.09.2026) | 9668 |
+| **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9760 |
+| **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9857 |
+| **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9958 |
+| **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 10079 |
+| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10164 |
+| **2.201** | ⚠️⚠️⚠️ FEHLER 5 — Trennschärfe und Wirkung standen auf ZWEI SKALEN | 10363 |
+| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10696 |
+| **2.490** | ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026) | 10772 |
+| **2.502** | ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTRO | 10863 |
+| **2.510** | ⚠️⚠️⚠️ EINE PRÜFUNG, DIE ZWEI GRÖSSEN VERGLEICHT, FÄNGT KEINEN FEHLER, DER BEIDE GLEICH VERSCHIE | 11250 |
+| **2.676** | ⚠️⚠️ ÜBER EINE ACHSE DASSELBE MASS — UND BEI FESTEN ANKERN DIE UHRZEIT (28.09.2026) | 11355 |
+| **2.678** | ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026) | 11408 |
 
 ## Kombination, Schichtung, Redundanz (19)
 
@@ -251,21 +251,21 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.49** | Der Preis des Absuchens ist zu beziffern (20.08.2026) | 3013 |
 | **2.91** | ⚠️ DIE CHECKLISTE — vor jeder Messung durchgehen | 4824 |
 | **2.99** | ⚠️⚠️ Der Schichtentest — eine niedrige Korrelation entlastet einen Kandidaten NICHT | 5131 |
-| **2.103** | ⚠️⚠️ Fünfte Spielart von „Test hängt an der Produktion": eine Testkonfiguration, die AUFZÄHLT st | 5450 |
-| **2.108** | ⚠️⚠️ Sechste Spielart von „Test hängt an der Produktion": die SIGNALHISTORIE | 5667 |
-| **2.113** | ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026) | 6189 |
-| **2.115** | ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026) | 6350 |
-| **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6931 |
-| **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 7025 |
-| **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 7141 |
-| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7227 |
-| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7343 |
-| **2.125** | ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026) | 7423 |
-| **2.128** | ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026) | 7702 |
-| **2.129** | ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026) | 7782 |
-| **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9462 |
-| **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9948 |
-| **2.507** | ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026) | 11020 |
+| **2.103** | ⚠️⚠️ Fünfte Spielart von „Test hängt an der Produktion": eine Testkonfiguration, die AUFZÄHLT st | 5460 |
+| **2.108** | ⚠️⚠️ Sechste Spielart von „Test hängt an der Produktion": die SIGNALHISTORIE | 5677 |
+| **2.113** | ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026) | 6199 |
+| **2.115** | ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026) | 6360 |
+| **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6941 |
+| **2.121** | ✔✔ N5 — DIE KOMBINATION TRÄGT. Der erste neue Beitrag des Umbaus (06.09.2026) | 7035 |
+| **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 7151 |
+| **2.123** | ✔ N12 — `vola` ALLEIN REICHT FAST. Und die Strategiefrage war beantwortet (06.09.2026) | 7237 |
+| **2.124** | ✔ N13 — DIE HORIZONTWAHL IST BELEGBAR. Sie ist nur klein (06.09.2026) | 7353 |
+| **2.125** | ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026) | 7433 |
+| **2.128** | ✔ N10 — DIE ÜBERSETZUNG TRÄGT, ABER DER FAKTOR IST HORIZONTABHÄNGIG (06.09.2026) | 7712 |
+| **2.129** | ⚠️⚠️⚠️ N19 — DIE UMRECHNUNG TRÄGT NUR BEI `vola`. Die alten Stufen sind zu groß (06.09.2026) | 7792 |
+| **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9472 |
+| **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9958 |
+| **2.507** | ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026) | 11030 |
 
 ## Datenlage, Simulation, zu wenig Daten (25)
 
@@ -283,19 +283,19 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.49** | Der Preis des Absuchens ist zu beziffern (20.08.2026) | 3013 |
 | **2.95** | ⚠️ Der Block-Bootstrap deckt nicht, wenn es zu wenige BLOECKE gibt | 5004 |
 | **2.100** | ⚠️⚠️ Ein Nachweis, der nicht hinsehen KONNTE, ist kein Nachweis — sieben Fassungen für eine Stuf | 5195 |
-| **2.108** | ⚠️⚠️ Sechste Spielart von „Test hängt an der Produktion": die SIGNALHISTORIE | 5667 |
-| **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5923 |
-| **2.112** | ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026) | 6080 |
-| **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6796 |
-| **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 7141 |
-| **2.130** | ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026) | 7854 |
-| **2.132** | ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026) | 8034 |
-| **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9750 |
-| **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 10069 |
-| **2.490** | ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026) | 10762 |
-| **2.508** | ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09 | 11092 |
-| **2.510** | ⚠️⚠️⚠️ EINE PRÜFUNG, DIE ZWEI GRÖSSEN VERGLEICHT, FÄNGT KEINEN FEHLER, DER BEIDE GLEICH VERSCHIE | 11240 |
-| **2.675** | ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026) | 11296 |
+| **2.108** | ⚠️⚠️ Sechste Spielart von „Test hängt an der Produktion": die SIGNALHISTORIE | 5677 |
+| **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5933 |
+| **2.112** | ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026) | 6090 |
+| **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6806 |
+| **2.122** | ⚠️⚠️ N8 — DIE TURNOVER-KOMPONENTE WÄRE WIRKUNGSLOS, NICHT DOPPELT (06.09.2026) | 7151 |
+| **2.130** | ⚠️ N19-E — `vola` LIEFERT DIE EINZIGE BELEGTE STUFENREIHE (06.09.2026) | 7864 |
+| **2.132** | ⚠️⚠️⚠️ N23 — KEINE GRÖSSE TRÄGT EINE FÜNFTEILUNG. `vola` ist eine Dreiteilung (06.09.2026) | 8044 |
+| **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9760 |
+| **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 10079 |
+| **2.490** | ⚠️⚠️ TRÄGT DIE KONTROLLE, IST ZUERST DIE MENGE VERDÄCHTIG — NICHT DIE ANLAGE (20.09.2026) | 10772 |
+| **2.508** | ⚠️⚠️⚠️ EINE EIGENE SIMULATION ERBT DIE HAUSREGELN NICHT — SIE BRAUCHT DENSELBEN NULLPUNKT (21.09 | 11102 |
+| **2.510** | ⚠️⚠️⚠️ EINE PRÜFUNG, DIE ZWEI GRÖSSEN VERGLEICHT, FÄNGT KEINEN FEHLER, DER BEIDE GLEICH VERSCHIE | 11250 |
+| **2.675** | ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026) | 11306 |
 
 ## Marktbefunde (51)
 
@@ -325,33 +325,33 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.100** | ⚠️⚠️ Ein Nachweis, der nicht hinsehen KONNTE, ist kein Nachweis — sieben Fassungen für eine Stuf | 5195 |
 | **2.101** | ⚠️⚠️ Ist die Größe eine ZEITPUNKT-Aussage oder eine ASSET-Eigenschaft? — die Frage kommt VOR der | 5256 |
 | **2.102** | Werkzeugkasten-Nachtrag (02.09.2026) — die Ausroll- und Betriebswerkzeuge | 5323 |
-| **2.105** | ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer | 5544 |
-| **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5923 |
-| **2.112** | ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026) | 6080 |
-| **2.113** | ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026) | 6189 |
-| **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6273 |
-| **2.115** | ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026) | 6350 |
-| **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6430 |
-| **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6796 |
-| **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6931 |
-| **2.125** | ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026) | 7423 |
-| **2.126** | ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026) | 7514 |
-| **2.131** | ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026) | 7950 |
-| **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8557 |
-| **2.144** | ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026) | 9213 |
-| **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9313 |
-| **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9462 |
-| **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9750 |
-| **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9948 |
-| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10154 |
-| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10686 |
-| **2.502** | ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTRO | 10853 |
-| **2.506** | ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄG | 10940 |
-| **2.507** | ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026) | 11020 |
-| **2.509** | ⚠️⚠️ WENN KEINE SCHWELLE TRIFFT, IST DIE LISTE ZULÄSSIG — ABER NUR MIT ERZEUGER UND SEITENEFFEKT | 11176 |
-| **2.675** | ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026) | 11296 |
-| **2.677** | ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026) | 11372 |
-| **2.678** | ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026) | 11398 |
+| **2.105** | ⚠️⚠️ Zwei Bänder nebeneinander sind kein Vergleich — der gepaarte Test ist einer | 5554 |
+| **2.111** | ⚠️⚠️⚠️ DIE BASISLÖSUNG FÜR „ZU WENIG DATEN" (06.09.2026) | 5933 |
+| **2.112** | ⚠️⚠️⚠️ DER ALLTAGSMARKT — und warum der MITTELWERT der falsche Maßstab ist (06.09.2026) | 6090 |
+| **2.113** | ⚠️⚠️⚠️ DIE RANGSCHICHTUNG — die Hierarchie ist echt, die AUSZAHLUNG ist umgekehrt (06.09.2026) | 6199 |
+| **2.114** | ⚠️⚠️ DER RANGVERFALL — und wie M1 an der eigenen Norm zerbrach (06.09.2026) | 6283 |
+| **2.115** | ⚠️⚠️⚠️ DERSELBE SCHNITT, ZWEI MASSSTÄBE, ENTGEGENGESETZTES VORZEICHEN (06.09.2026) | 6360 |
+| **2.116** | ⚠️⚠️⚠️ KATEGORIE UND HORIZONT DIMENSIONIERT — die Kategorie trägt NICHT (06.09.2026) | 6440 |
+| **2.119** | ⚠️⚠️⚠️ SCHRITT 4a — NICHTS IST GEFALLEN. DIE BASIS WAR FALSCH GEWÄHLT (06.09.2026) | 6806 |
+| **2.120** | ⚠️⚠️ N1 — `vola` IST NICHT REDUNDANT, ABER AUCH NICHT REIF (06.09.2026) | 6941 |
+| **2.125** | ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026) | 7433 |
+| **2.126** | ⚠️⚠️⚠️ N9 — DIE SPERRFORM IST DER FALSCHE WEG. `vola` gehört als BEITRAG (06.09.2026) | 7524 |
+| **2.131** | ✔ N22 — DIE KONTROLLE IST SAUBER. Mein Urteil war ein Einzelziehungs-Artefakt (06.09.2026) | 7960 |
+| **2.138** | ⚠️ N-55 — `vola` IN DER GEOMETRIE: es ordnet die HÖHE, nicht die BAUFORM (06.09.2026) | 8567 |
+| **2.144** | ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026) | 9223 |
+| **2.145** | ✔ N-59 — `schnitt` TRÄGT auf der selektierten Menge. Aber nicht über die Zeit (07.09.2026) | 9323 |
+| **2.147** | ○ N-60 — `schnitt`s STABILITÄT ist mit diesen Daten NICHT ENTSCHEIDBAR (07.09.2026) | 9472 |
+| **2.150** | ⚠️⚠️ DER KRYPTO-RANG LIEF GEGEN AAPL — Schutz durch Zufall, nicht durch Design (07.09.2026) | 9760 |
+| **2.152** | 📄 DER ZUSTAND DER KETTE JE STRATEGIE — und ein Befund, der nie ins Register kam (07.09.2026) | 9958 |
+| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10164 |
+| **2.477** | ⚠️⚠️ WAS EINE MESSUNG TRAGFÄHIG MACHT — sieben Prüfungen, an denen am 19./20.09.2026 Urteile gef | 10696 |
+| **2.502** | ⚠️⚠️ EINE NEUE DATENQUELLE WIRD NICHT AUF PLAUSIBILITÄT GEPRÜFT, SONDERN AUF **MUSTER MIT KONTRO | 10863 |
+| **2.506** | ⚠️⚠️⚠️ EINE GRÖSSE KANN ZWEI SEIN — UND DIE ZERLEGUNG KOSTET GENAU DIE TAGE, DIE DAS URTEIL TRÄG | 10950 |
+| **2.507** | ⚠️⚠️ WER ÜBER RÄNGE RESIDUALISIERT, BAUT GLEICHSTÄNDE EIN, DIE ES VORHER NICHT GAB (21.09.2026) | 11030 |
+| **2.509** | ⚠️⚠️ WENN KEINE SCHWELLE TRIFFT, IST DIE LISTE ZULÄSSIG — ABER NUR MIT ERZEUGER UND SEITENEFFEKT | 11186 |
+| **2.675** | ⚠️⚠️⚠️ EINE URTEILSREGEL WIRD SELBST GEPRÜFT — UND DIE PRÜFZEIT HAT EINEN VERSATZ (28.09.2026) | 11306 |
+| **2.677** | ⚠️⚠️⚠️ ANKER SIND NICHT UNABHÄNGIG — UND OHNE AUFLÖSUNG KEIN *TRÄGT NICHT* (28.09.2026) | 11382 |
+| **2.678** | ⚠️⚠️⚠️ WER NACH NORMAL PLUS BEITRAG AUSWÄHLT, WÄHLT DAS NORMAL (28.09.2026) | 11408 |
 
 ## Pruefdisziplin und Urteilslogik (21)
 
@@ -363,21 +363,21 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | **2.39** | Fail-soft ist fail-silent — zum dritten Mal (neu 2026-08-17) | 2713 |
 | **2.94** | ⚠️⚠️ Eine Prüfung, die auf EINEM Parameterwert steht, ist kein Nachweis | 4913 |
 | **2.96** | ⚠️ Eine Auswahlregel wird in BEIDE Richtungen geprüft | 5042 |
-| **2.109** | ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen | 5723 |
-| **2.125** | ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026) | 7423 |
-| **2.133** | ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026) | 8104 |
-| **2.139** | ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026) | 8668 |
-| **2.140** | ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09. | 8782 |
-| **2.142** | ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026) | 8978 |
-| **2.144** | ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026) | 9213 |
-| **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9545 |
-| **2.149** | ✔✔ DER STRUKTURFIX — F-198s Reparatur war im LADEPFAD nie angekommen (07.09.2026) | 9658 |
-| **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9847 |
-| **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 10069 |
-| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10154 |
-| **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10436 |
-| **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10579 |
-| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10801 |
+| **2.109** | ⚠️ Der quotengleiche Zufall braucht genug Auswahl je Tag — sonst gepoolt mischen | 5733 |
+| **2.125** | ✔ N14 — BEANTWORTET OHNE MESSUNG. Und der dritte R-R10-Verstoß an einem Tag (06.09.2026) | 7433 |
+| **2.133** | ✔✔ N23-E1 — DIE ENTSCHEIDUNGSGRUNDLAGE. Nur `vola` hält über die Zeit (06.09.2026) | 8114 |
+| **2.139** | ✔ N-56 — DIE OI-SPERRE TRÄGT RICHTUNG. Und `turnover` reproduziert nicht (06.09.2026) | 8678 |
+| **2.140** | ⚠️⚠️⚠️ N-57 — 31,4 % LAUFEN FLACH AUS. Die Kalibrierungsbasis hat das falsche Vorzeichen (06.09. | 8792 |
+| **2.142** | ⚠️⚠️ DIE KALIBRIERUNG DURCHGEFÜHRT — und die Schwelle verliert ihre Trennschärfe (07.09.2026) | 8988 |
+| **2.144** | ✔ DIE MENGE IST JETZT AN DIE FRAGE GEBUNDEN — und die Fehlerhistorie steht im Code (07.09.2026) | 9223 |
+| **2.148** | ✔ F-198s OFFENER PUNKT IST BEANTWORTET — sieben Kryptoreihen fehlen wirklich (07.09.2026) | 9555 |
+| **2.149** | ✔✔ DER STRUKTURFIX — F-198s Reparatur war im LADEPFAD nie angekommen (07.09.2026) | 9668 |
+| **2.151** | ✔✔ DIE SIEBEN KRYPTOREIHEN SIND GELADEN — und der Filter hat gehalten (07.09.2026) | 9857 |
+| **2.153** | ✔✔ DER 31.08.-BEFUND ZU `schnitt` FÄLLT — er stand auf der kontaminierten Basis (07.09.2026) | 10079 |
+| **2.154** | ✔✔ DAS AKKUMULATIONSMASS HÄLT — nachgemessen auf der neuen Basis (07.09.2026) | 10164 |
+| **2.204** | ✔✔✔ DER SELBSTTEST DER MESSANLAGE — gegen bekannte Wahrheit | 10446 |
+| **2.216** | ✔✔✔ DER NULLBEZUG — wogegen geprüft wird, gemessen entschieden | 10589 |
+| **2.485** | ⚠️⚠️⚠️ EINE FORMEL MIT DERSELBEN ANNAHME WIE DIE ANLAGE IST KEINE PRÜFUNG (20.09.2026) | 10811 |
 
 ## Ohne Thema zugeordnet (11)
 
@@ -393,5 +393,5 @@ Die Zeilennummer bezieht sich auf `Basisinfos/Test_und_Verifikationsmethodik.md`
 | 2.41 | `_quelltext` entfernt Kommentare - keine Docstrings (neu 2026-08-18) | 2768 |
 | 2.90 | Bevor eine Wartezeit behauptet wird: den Historie-Endpunkt suchen | 4779 |
 | 2.92 | ⚠️ Der Bytecode-Cache verfälscht Prüfungen nach einem Rücksetzen | 4843 |
-| 2.106 | ⚠️⚠️ Eine Prüfung, die eine Naht bewacht, sieht die zweite daneben nicht | 5590 |
+| 2.106 | ⚠️⚠️ Eine Prüfung, die eine Naht bewacht, sieht die zweite daneben nicht | 5600 |
 
