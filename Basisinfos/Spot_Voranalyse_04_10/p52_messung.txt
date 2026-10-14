@@ -1,0 +1,67 @@
+P52 MESSUNG Ordnung x Regime (§52.1) · Stichtage 2019-01-01 bis 2025-09-01 · 19610 Anker · 200 Zellen · Nullwelt 2000 bestaendige Ziehungen · Bonferroni 0.00104 je Seite
+
+  Auswahl Z   Regime           Zellen |   Abstand | p hoch / p tief                | Urteil
+  oben    Z1  BTC ueber 200T      128 |   +12.3 Pp | 0.0090 / 0.9915 | nicht entscheidbar
+  oben    Z1  BTC unter 200T       72 |   +15.0 Pp | 0.0020 / 0.9985 | nicht entscheidbar
+  oben    Z1  BTC 90T steigt      125 |   +12.8 Pp | 0.0060 / 0.9945 | nicht entscheidbar
+  oben    Z1  BTC 90T faellt       75 |   +13.9 Pp | 0.0030 / 0.9975 | nicht entscheidbar
+  oben    Z1  E2                  107 |   +13.4 Pp | 0.0020 / 0.9985 | nicht entscheidbar
+  oben    Z1  E3                   60 |   +17.3 Pp | 0.0065 / 0.9940 | nicht entscheidbar
+  oben    Z1  E1                   33 |    +5.2 Pp | 0.3263 / 0.6742 | (Auskunft) nicht entscheidbar
+  oben    Z2  BTC ueber 200T      128 |    +6.4 Pp | 0.0575 / 0.9430 | nicht entscheidbar
+  oben    Z2  BTC unter 200T       72 |    +6.4 Pp | 0.0395 / 0.9610 | nicht entscheidbar
+  oben    Z2  BTC 90T steigt      125 |    +5.9 Pp | 0.0620 / 0.9385 | nicht entscheidbar
+  oben    Z2  BTC 90T faellt       75 |    +7.2 Pp | 0.0295 / 0.9710 | nicht entscheidbar
+  oben    Z2  E2                  107 |    +7.4 Pp | 0.0395 / 0.9610 | nicht entscheidbar
+  oben    Z2  E3                   60 |   +13.4 Pp | 0.0625 / 0.9380 | nicht entscheidbar
+  oben    Z2  E1                   33 |    -9.7 Pp | 0.5572 / 0.4433 | (Auskunft) nicht entscheidbar
+  unten   Z1  BTC ueber 200T      128 |   -19.2 Pp | 1.0000 / 0.0005 | TRAEGT
+  unten   Z1  BTC unter 200T       72 |   -23.9 Pp | 0.9985 / 0.0020 | nicht entscheidbar
+  unten   Z1  BTC 90T steigt      125 |   -20.8 Pp | 1.0000 / 0.0005 | TRAEGT
+  unten   Z1  BTC 90T faellt       75 |   -21.2 Pp | 0.9975 / 0.0030 | nicht entscheidbar
+  unten   Z1  E2                  107 |   -20.5 Pp | 1.0000 / 0.0005 | TRAEGT
+  unten   Z1  E3                   60 |   -29.7 Pp | 1.0000 / 0.0005 | TRAEGT
+  unten   Z1  E1                   33 |    -6.2 Pp | 0.6532 / 0.3473 | (Auskunft) nicht entscheidbar
+  unten   Z2  BTC ueber 200T      128 |   -22.1 Pp | 0.9955 / 0.0050 | nicht entscheidbar
+  unten   Z2  BTC unter 200T       72 |   -20.4 Pp | 0.9980 / 0.0025 | nicht entscheidbar
+  unten   Z2  BTC 90T steigt      125 |   -23.7 Pp | 0.9990 / 0.0015 | nicht entscheidbar
+  unten   Z2  BTC 90T faellt       75 |   -17.8 Pp | 0.9910 / 0.0095 | nicht entscheidbar
+  unten   Z2  E2                  107 |   -15.7 Pp | 0.9900 / 0.0105 | nicht entscheidbar
+  unten   Z2  E3                   60 |   -33.8 Pp | 0.9990 / 0.0015 | nicht entscheidbar
+  unten   Z2  E1                   33 |   -17.9 Pp | 0.6832 / 0.3173 | (Auskunft) nicht entscheidbar
+
+  => von 24 Pruefungen: TRAEGT 4 · KEHRT UM 0 · nicht entscheidbar 20
+
+INTERAKTION (Auskunft): Unterschied des Abstands zwischen den Zellen eines Regimepaars, zweiseitig, Schwelle 0.0042 je Seite
+  oben   Z1  BTC ueber 200T  - BTC unter 200T     -2.7 Pp · p 0.6257 / 0.3748
+  oben   Z1  BTC 90T steigt  - BTC 90T faellt     -1.0 Pp · p 0.5397 / 0.4608
+  oben   Z1  E2              - E3                 -3.8 Pp · p 0.6942 / 0.3063
+  oben   Z2  BTC ueber 200T  - BTC unter 200T     +0.0 Pp · p 0.3598 / 0.6407
+  oben   Z2  BTC 90T steigt  - BTC 90T faellt     -1.2 Pp · p 0.4348 / 0.5657
+  oben   Z2  E2              - E3                 -6.1 Pp · p 0.7881 / 0.2124
+  unten  Z1  BTC ueber 200T  - BTC unter 200T     +4.7 Pp · p 0.2369 / 0.7636
+  unten  Z1  BTC 90T steigt  - BTC 90T faellt     +0.4 Pp · p 0.4313 / 0.5692
+  unten  Z1  E2              - E3                 +9.2 Pp · p 0.1569 / 0.8436
+  unten  Z2  BTC ueber 200T  - BTC unter 200T     -1.7 Pp · p 0.4563 / 0.5442
+  unten  Z2  BTC 90T steigt  - BTC 90T faellt     -5.9 Pp · p 0.7051 / 0.2954
+  unten  Z2  E2              - E3                +18.1 Pp · p 0.0830 / 0.9175
+
+AUSKUNFT NIVEAU (Regime = wie viel): mittlerer 12-M-Ertrag der Zelle je Regime (Dollar, einfach) und BTC
+  BTC ueber 200T   Zellen 128 · Watchlist-Zelle +124.6 % · BTC  +74.2 %
+  BTC unter 200T   Zellen  72 · Watchlist-Zelle  +38.0 % · BTC  +55.3 %
+  BTC 90T steigt   Zellen 125 · Watchlist-Zelle +116.6 % · BTC  +76.3 %
+  BTC 90T faellt   Zellen  75 · Watchlist-Zelle  +54.8 % · BTC  +52.6 %
+  E2               Zellen 107 · Watchlist-Zelle  +18.0 % · BTC  +39.5 %
+  E3               Zellen  60 · Watchlist-Zelle  -34.8 % · BTC  +24.3 %
+  E1               Zellen  33 · Watchlist-Zelle +571.3 % · BTC +236.2 %
+
+SELBSTTEST (a): 200 AR(1)-Merkmale je Coin, rho = 0.961 (gemessen am echten p9, Monat zu Monat) · gegen dieselbe bestaendige Nullwelt
+  Bonferroni      Fehlalarme    3 von 4800 (Soll 9.6, Grenze 15.8) ok
+  0,025 je Seite  Fehlalarme  102 von 4800 (Soll 239.9, Grenze 270.1) ok
+
+SELBSTTEST (b): Pflanzung y_log + beta*sd*z(AR-Merkmal) (Ende entsprechend), 30 Welten je Staerke, Nullwelt je Welt 1.000 Ziehungen; Fund = TRAEGT
+  beta 0.05: oben Z1 BTC unter 200T  +9.5 Pp  10 % · oben Z1 E3  +8.0 Pp   0 % · oben Z2 BTC unter 200T  +4.7 Pp  10 % · oben Z2 E3  +1.7 Pp   0 % · unten Z1 BTC unter 200T  -7.0 Pp   0 % · unten Z1 E3  -9.7 Pp   0 % · unten Z2 BTC unter 200T -11.4 Pp   0 % · unten Z2 E3 -17.4 Pp   0 %
+  beta 0.10: oben Z1 BTC unter 200T +17.1 Pp  50 % · oben Z1 E3 +13.5 Pp  13 % · oben Z2 BTC unter 200T +13.0 Pp  47 % · oben Z2 E3  +9.8 Pp   0 % · unten Z1 BTC unter 200T -17.2 Pp  13 % · unten Z1 E3 -14.5 Pp  13 % · unten Z2 BTC unter 200T -20.3 Pp  37 % · unten Z2 E3 -19.8 Pp  13 %
+  beta 0.20: oben Z1 BTC unter 200T +32.6 Pp 100 % · oben Z1 E3 +32.2 Pp  87 % · oben Z2 BTC unter 200T +27.6 Pp 100 % · oben Z2 E3 +24.3 Pp  27 % · unten Z1 BTC unter 200T -32.5 Pp  80 % · unten Z1 E3 -34.4 Pp  90 % · unten Z2 BTC unter 200T -36.6 Pp 100 % · unten Z2 E3 -40.9 Pp  67 %
+
+Laufzeit 254 s

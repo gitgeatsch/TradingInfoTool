@@ -1,0 +1,32 @@
+P52 GEGENPROBE · 28 Abstaende aus p52_messung.txt
+
+  oben   Z1 BTC ueber 200T   Gegenprobe  +12.25 Pp · Messung  +12.3 · gleich
+  oben   Z1 BTC unter 200T   Gegenprobe  +14.98 Pp · Messung  +15.0 · gleich
+  oben   Z1 BTC 90T steigt   Gegenprobe  +12.85 Pp · Messung  +12.8 · gleich
+  oben   Z1 BTC 90T faellt   Gegenprobe  +13.88 Pp · Messung  +13.9 · gleich
+  oben   Z1 E2               Gegenprobe  +13.45 Pp · Messung  +13.4 · gleich
+  oben   Z1 E3               Gegenprobe  +17.27 Pp · Messung  +17.3 · gleich
+  oben   Z1 E1               Gegenprobe   +5.21 Pp · Messung   +5.2 · gleich
+  oben   Z2 BTC ueber 200T   Gegenprobe   +6.39 Pp · Messung   +6.4 · gleich
+  oben   Z2 BTC unter 200T   Gegenprobe   +6.36 Pp · Messung   +6.4 · gleich
+  oben   Z2 BTC 90T steigt   Gegenprobe   +5.92 Pp · Messung   +5.9 · gleich
+  oben   Z2 BTC 90T faellt   Gegenprobe   +7.15 Pp · Messung   +7.2 · gleich
+  oben   Z2 E2               Gegenprobe   +7.37 Pp · Messung   +7.4 · gleich
+  oben   Z2 E3               Gegenprobe  +13.44 Pp · Messung  +13.4 · gleich
+  oben   Z2 E1               Gegenprobe   -9.68 Pp · Messung   -9.7 · gleich
+  unten  Z1 BTC ueber 200T   Gegenprobe  -19.23 Pp · Messung  -19.2 · gleich
+  unten  Z1 BTC unter 200T   Gegenprobe  -23.93 Pp · Messung  -23.9 · gleich
+  unten  Z1 BTC 90T steigt   Gegenprobe  -20.76 Pp · Messung  -20.8 · gleich
+  unten  Z1 BTC 90T faellt   Gegenprobe  -21.19 Pp · Messung  -21.2 · gleich
+  unten  Z1 E2               Gegenprobe  -20.53 Pp · Messung  -20.5 · gleich
+  unten  Z1 E3               Gegenprobe  -29.69 Pp · Messung  -29.7 · gleich
+  unten  Z1 E1               Gegenprobe   -6.25 Pp · Messung   -6.2 · gleich
+  unten  Z2 BTC ueber 200T   Gegenprobe  -22.13 Pp · Messung  -22.1 · gleich
+  unten  Z2 BTC unter 200T   Gegenprobe  -20.44 Pp · Messung  -20.4 · gleich
+  unten  Z2 BTC 90T steigt   Gegenprobe  -23.74 Pp · Messung  -23.7 · gleich
+  unten  Z2 BTC 90T faellt   Gegenprobe  -17.82 Pp · Messung  -17.8 · gleich
+  unten  Z2 E2               Gegenprobe  -15.73 Pp · Messung  -15.7 · gleich
+  unten  Z2 E3               Gegenprobe  -33.80 Pp · Messung  -33.8 · gleich
+  unten  Z2 E1               Gegenprobe  -17.95 Pp · Messung  -17.9 · gleich
+
+=> 28 von 28 gleich (Toleranz 0,05 Pp)

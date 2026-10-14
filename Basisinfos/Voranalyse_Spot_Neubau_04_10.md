@@ -6547,3 +6547,46 @@ Zur Einordnung:
 - *Trägt* die Ordnung in allen Regimezellen: U-A (Schutz durch B4) gilt regime-unabhängig, das Regime bleibt Anzeige für *wie viel*.
 - *Kehrt* sie in einer Zelle *um*: Die Ordnung bekommt einen Regimeschalter, aber nur, wenn das Regime vorab erkennbar ist (sonst Auskunft).
 - *Trägt* nur Z1, nicht Z2: Die Ordnung ist **Schutz** (Verluste meiden), keine **Rendite**-Auswahl.
+
+### 52.2 Ergebnis *Ordnung × Regime* (15.10.2026; `p52_messung.py`, `p52_gegenprobe.py` → `.txt`)
+
+**Kurz:**
+- **Die Ordnung kehrt in keinem Regime um** (0 von 24), und **kein** Regimepaar verändert sie (Interaktion 0 von 12).
+- **Belegt** ist der **Schutz**: Das untere Fünftel ist bei der typischen Münze (Z1) in **4 von 6** Regimezellen sicher schlechter als Zufall.
+- Die übrigen 20 Prüfungen haben **alle dasselbe Vorzeichen**, verfehlen aber die strenge Schwelle (Bonferroni 0,00104).
+
+| Auswahl · Ziel | über 200 T | unter 200 T | 90 T steigt | 90 T fällt | E2 | E3 |
+|---|---|---|---|---|---|---|
+| oben · Z1 typische Münze | +12,3 (0,009) | +15,0 (0,002) | +12,8 (0,006) | +13,9 (0,003) | +13,4 (0,002) | +17,3 (0,007) |
+| oben · Z2 Halter-Korb | +6,4 (0,058) | +6,4 (0,040) | +5,9 (0,062) | +7,2 (0,030) | +7,4 (0,040) | +13,4 (0,063) |
+| unten · Z1 | **−19,2 trägt** | −23,9 (0,002) | **−20,8 trägt** | −21,2 (0,003) | **−20,5 trägt** | **−29,7 trägt** |
+| unten · Z2 | −22,1 (0,005) | −20,4 (0,003) | −23,7 (0,002) | −17,8 (0,010) | −15,7 (0,011) | −33,8 (0,002) |
+
+Werte in log-Pp gegen die eigene Zelle (in Klammern p der erwarteten Seite). *trägt* = p ≤ 0,00104.
+
+**Prüfungen der Anlage:**
+- **Selbsttest (a):** 200 AR(1)-Merkmale mit der Trägheit des echten Werts (ρ 0,961) ergaben **3 Fehlalarme von 4.800** über Bonferroni (Soll 9,6) und 102 bei 0,025 (Soll 240). Die beständige Nullwelt ist eher **vorsichtig**. Bestanden.
+- **Selbsttest (b), Auflösung:**
+  - Z1 wird ab etwa **±32 Pp** sicher gefunden (80–100 %);
+  - Effekte von ±15–20 Pp werden nur zu 13–50 % gefunden;
+  - Z2 im E3 löst schlechter auf (27 % bei +24 Pp).
+  - ⇒ Die *nicht entscheidbaren* Zellen liegen **an der Auflösungsgrenze**, nicht bei null.
+- **Gegenprobe** (Schleife je Zelle, Regime neu aus den BTC-Kursen): **28 von 28** Abständen gleich.
+
+**Niveau** (Auskunft, *Regime = wie viel*; mittlerer 12-M-Ertrag der Watchlist-Zelle gegen BTC, Dollar):
+- BTC über 200 T: **+125 % gegen +74 %**
+- BTC unter 200 T: +38 % gegen +55 %
+- E2: +18 % gegen +40 %
+- **E3: −35 % gegen +24 %**
+
+⇒ Altcoins schlugen BTC nur in den frühen Aufwärtsphasen. Ab 2024 liegen sie in **jedem** BTC-Zustand darunter.
+
+**Was das für die Nutzerfrage heißt** (*„vor schlechten Assets schützen ist im Umkehrschluss auch nicht möglich, Regime für beides“*):
+1. **Schutz ist möglich und regime-unabhängig belegt** (B4, unteres Fünftel). Es ist die einzige Aussage dieser Familie, die die strenge Schwelle besteht.
+2. **Die Auswahl der Besten zeigt in jedem Regime dieselbe Richtung, ist aber nicht belegt.** Im Halter-Korb ist sie halb so groß (Schiefe: Ausbrüche liegen überall).
+3. **Das Regime ändert die Ordnung nicht, aber das Niveau stark.** Die Frage *wie viel Altcoins* ist wichtiger als *welche*, und sie ist vorab nicht belegbar (2.599). Deshalb wird sie als **Fakt** angezeigt (U-B).
+
+**Folge (vorab §52.1):**
+- U-A gilt regime-unabhängig: B4 bleibt, wie es läuft, ein Regimeschalter ist nicht nötig.
+- U-B: Das Niveau je Regime wird Fakt-Anzeige.
+- Nächster Schritt **U-C S2 Angebot** (Ausschluss), zuerst Datenquellen und Abdeckung.

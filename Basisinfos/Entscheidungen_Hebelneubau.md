@@ -1229,3 +1229,15 @@ Schritt7 §23.24.
   - U-B Anteil statt Auswahl (als Fakt mit Hürden-Bilanz);
   - U-C H-SEL-B Fassung 2 als Ausschluss, S2 Angebot zuerst.
 - Nachweis: Spot §51.10, `p50_inventur.py`, `p51_k10.py`.
+
+# E-107 · Ordnung × Regime gemessen: Schutz belegt, kein Regimeschalter (15.10.2026)
+
+**15.10.2026** · Nutzer: *„ja machen wir so“* (Messplan §52.1 vorab, danach U-C).
+- **Ergebnis:**
+  - 0 von 24 Prüfungen kehren um, 0 von 12 Interaktionen sind auffällig.
+  - Das untere Fünftel (B4) ist bei der typischen Münze in 4 von 6 Regimezellen sicher schlechter als Zufall.
+  - Das obere Fünftel liegt überall gleichgerichtet, ist aber nicht belegt.
+  - Das Niveau hängt stark am Regime: E3 Altcoins −35 % gegen BTC +24 % je 12 M.
+- **Eigene fachliche Festlegungen (berichtet):** B4 bekommt **keinen** Regimeschalter (kein Umkehrbefund). Das Niveau je Regime wird Fakt-Anzeige (U-B). Selbsttest bestanden (3 von 4.800), Gegenprobe 28/28.
+- **Nächster Schritt:** U-C S2 Angebot, zuerst Datenquellen-Inventar und Abdeckung (Regel *Datenquellen vor dem Bau*).
+- Nachweis: Spot §52.2.
