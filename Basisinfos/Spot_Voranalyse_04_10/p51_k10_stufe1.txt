@@ -1,0 +1,34 @@
+P51 K10 Vertrauen in Fiat · Stufe 1 · Zeitraum 2007-01-02 bis 2026-10-14 · 237 Stichtage · 200 Surrogate (N2) · Bonferroni 0.0023 je Seite
+
+Beta Gold~Realzins (5 J rollierend): 2012 -0.38 · 2018 -0.20 · 2022-01 -0.22 · 2024-01 0.00 · heute 0.20 (log-Punkte je Prozentpunkt Realzins)
+==========================================================================================================================================================================
+T1 BTC 90T  [Urteil]
+  K10a Gold ueber Realzins lang  n+  98 n-  42 |    +1.3 % | E1   +3.9 E2   +3.4 E3    -   | p hoch 0.5075 tief 0.4975 | Spiegel auf 39/31 ab 16/31 % | nicht entscheidbar (Nullwelt)
+  K10a Gold ueber Realzins kurz  n+  60 n-  46 |    +1.2 % | E1  +21.7 E2  -42.6 E3   -3.5 | p hoch 0.4826 tief 0.5224 | Spiegel auf 38/46 ab 23/13 % | nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung lang n+  65 n-  39 |   -14.6 % | E1  -13.1 E2  -16.0 E3    -   | p hoch 0.8109 tief 0.1940 | Spiegel auf 38/41 ab 18/33 % | nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung kurz n+  63 n-  53 |    -6.0 % | E1   -6.3 E2  -17.4 E3    -   | p hoch 0.6965 tief 0.3085 | Spiegel auf 38/36 ab 17/26 % | nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+T1 BTC 180T  [Urteil]
+  K10a Gold ueber Realzins lang  n+  95 n-  42 |    +5.8 % | E1   +4.4 E2  +36.2 E3    -   | p hoch 0.4328 tief 0.5721 | Spiegel auf 57/43 ab 22/29 % | nicht entscheidbar (Nullwelt)
+  K10a Gold ueber Realzins kurz  n+  60 n-  43 |    +6.6 % | E1  +36.0 E2  -47.0 E3    -   | p hoch 0.4080 tief 0.5970 | Spiegel auf 53/56 ab 22/21 % | nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung lang n+  63 n-  39 |    -6.6 % | E1   +1.2 E2  -20.4 E3    -   | p hoch 0.6020 tief 0.4030 | Spiegel auf 59/44 ab 21/33 % | nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung kurz n+  63 n-  50 |   -21.0 % | E1  -17.4 E2  -43.1 E3    -   | p hoch 0.8657 tief 0.1393 | Spiegel auf 54/56 ab 19/24 % | nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+T2 Altkorb/BTC 90T  [Urteil]
+  K10a Gold ueber Realzins lang  n+  67 n-  13 |   -23.6 % | E1    -   E2  -19.8 E3    -   | p hoch 0.9791 tief 0.0262 | Spiegel auf  6/23 ab 37/23 % | nicht entscheidbar (Nullwelt)
+  K10a Gold ueber Realzins kurz  n+  33 n-  35 |    -5.9 % | E1   +5.8 E2  -15.8 E3   +8.2 | p hoch 0.7313 tief 0.2736 | Spiegel auf  3/11 ab 42/29 % | nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung lang n+  51 n-  11 |    -2.6 % | E1    -   E2  +16.3 E3    -   | p hoch 0.5871 tief 0.4179 | Spiegel auf  6/ 0 ab 41/36 % | nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung kurz n+  44 n-  23 |   -22.8 % | E1    -   E2  -36.7 E3    -   | p hoch 0.9900 tief 0.0149 | Spiegel auf  5/22 ab 45/13 % | nicht entscheidbar (Nullwelt)
+==========================================================================================================================================================================
+M3 SPX 90T  [Probe]
+  K10a Gold ueber Realzins lang  n+  98 n-  77 |    +0.6 % | E1   +0.4 E2   -1.3 E3    -   | p hoch 0.2836 tief 0.7214 | Spiegel auf  1/ 0 ab  1/ 0 % | (Probe) nicht entscheidbar (Nullwelt)
+  K10a Gold ueber Realzins kurz  n+  68 n-  59 |    -1.4 % | E1   -1.7 E2   -5.8 E3   +4.1 | p hoch 0.8856 tief 0.1194 | Spiegel auf  0/ 2 ab  0/ 0 % | (Probe) nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung lang n+  79 n-  53 |    +1.5 % | E1   +1.6 E2   -2.9 E3    -   | p hoch 0.1144 tief 0.8905 | Spiegel auf  1/ 0 ab  1/ 0 % | (Probe) nicht entscheidbar (Nullwelt)
+  K10b Gold in Weltwaehrung kurz n+  73 n-  65 |    +0.6 % | E1   +0.8 E2   -3.7 E3    -   | p hoch 0.3184 tief 0.6866 | Spiegel auf  1/ 0 ab  0/ 0 % | (Probe) nicht entscheidbar (Nullwelt)
+
+==========================================================================================================================================================================
+ENTSCHEIDUNG Vorpruefung (§51.9): KEIN K10-Kanal im aeusseren Zehntel mit E3 gleich -> Bericht, keine lange Messung
+
+STAND HEUTE (2026-10-14): K10a Gold ueber Realzins lang - · K10a Gold ueber Realzins kurz - · K10b Gold in Weltwaehrung lang - · K10b Gold in Weltwaehrung kurz 0
+AUSKUNFT EURO: Gold in Euro 3732 (52 W +4.3 %) · HICP J/J 3.2 % (08/2026) · ESTR 2.44 % · Sparer-Realzins ESTR-HICP -0.8 Pp
+Laufzeit 7 s
