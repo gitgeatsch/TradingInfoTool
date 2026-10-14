@@ -6088,3 +6088,76 @@ Nutzer 14.10.: *„Ich rede nicht von mehr Daten, sondern von der Hypothese, das
 **Folge:**
 - Gilt H-SEL-A, ist die Ampel (P19) eine **Wache** (*kein breiter Aufbau*), kein Auslöser. P19 bleibt als Fakt-Anzeige sinnvoll.
 - O47 (Holdout 2017/18) verliert an Gewicht. Vorschlag: zurückstellen.
+
+
+## 51. Makro-Umfeld für Krypto — fachliche, messbare Grundlage: Voranalyse (14.10.2026, O49)
+
+Nutzer 14.10.: *„Es sollte eine fachlich korrekte und messbare Grundlage geschaffen werden; dies solltest du als Fachexperte analysieren und bewerten. Langfristige und kurzfristige Makro-Aussichten, aktuelle Beispiele: Geldmengen und Ausweitung, Anleihenmärkte 2-jährig, 10 etc., Zinsen – Kapitalmarkt, Kredit? … welches Umfeld positiv, neutral oder negativ ist, um Krypto (Risikoasset) – BTC und nachgelagert die Altcoins (Hochrisiko) – das optimale Umfeld zu bewerten.“*
+
+### 51.1 Die fachliche Grundlage: Wirkungskanäle
+
+| Kanal | Größe (frei) | Wirkung auf BTC | auf Altcoins | Fristigkeit |
+|---|---|---|---|---|
+| **Menge des Geldes** | M2 J/J (FRED M2SL, 35 T Verzug) · Netto-Liquidität Fed = Bilanz − TGA − RRP (WALCL, WTREGEN, RRPONTSYD) · Stablecoin-Umlauf | steigend **+** | stärker **+** (höheres Beta) | lang (M2, 52 W) · kurz (13 W) |
+| **Preis des Geldes / Diskontsatz** | Realzins 10 J (DFII10) · Rendite 10 J (DGS10) | steigend **−** (Opportunitätskosten eines ertragslosen Assets) | stärker **−** | lang (Niveau), kurz (3-M-Änderung) |
+| **Zinspfad** | Rendite 2 J (DGS2, Markterwartung der Notenbank) · Leitzins (DFF) | Senkungen eingepreist **+**, Erhöhungen **−** | stärker | kurz bis mittel |
+| **Zinskurve** | 10J−2J, 10J−3M (T10Y2Y, T10Y3M) | *bull steepening* (kurze Zinsen fallen) **+** · *bear steepening* (lange steigen, Laufzeitprämie) **−** · Inversion: Rezessionsrisiko voraus **−** | wie BTC | mittel bis lang |
+| **Kredit und Risikobereitschaft** | Kreditaufschlag High Yield / Investment Grade (BAMLH0A0HYM2, BAMLC0A0CM) · Finanzierungsbedingungen NFCI | eng und fallend **+**, Ausweitung **−** (früher Stress) | stärker | kurz |
+| **Dollar** | breiter Dollar-Index (DTWEXBGS) | steigend **−** (weltweite Liquidität knapper) | stärker | kurz bis mittel |
+| **Stress** | VIX | hoch **−**; Extremstress oft vor einer Liquiditätsantwort | stärker | kurz |
+| **Krypto-intern** (für Altcoins) | Stablecoins 91 T, Breite, BTC-Dominanz | – | Zufluss **+**, Dominanz steigend **−** | kurz |
+
+⇒ **Für Altcoins** gilt dasselbe Vorzeichen wie für BTC, nur mit **höherem Beta**, und zusätzlich der krypto-interne Zufluss. Das *optimale* Umfeld ist **fallende Realzinsen + eingepreiste Senkungen (2 J fällt) + wachsende Liquidität + enge, fallende Kreditaufschläge + schwächerer Dollar**, und für Altcoins dazu **Stablecoin-Zufluss bei fallender BTC-Dominanz**.
+
+### 51.2 Was wir dazu schon gemessen haben — und was nicht
+
+- **§16 (06.10.):** Die Netto-Liquidität trennte Bodenkäufe **2021–23 (+12,9 Pp, Rang 0,97)**, im ETF-Markt ab 2024 **nicht** (+1,0 Pp, Rang 0,57).
+  - Wachsende Stablecoins gingen in **beiden** Epochen mit **schlechteren** Bodenkäufen einher, also umgekehrt zur Faustregel.
+  - Passend dazu die externe Quelle (CF Benchmarks): M2 und BTC sind 2025/26 **entkoppelt**.
+- **§36.4:** Für die Seasons war die Netto-Liquidität die stärkste Einzelgröße (Lift 4,2), aber nur in **einem** Zyklus.
+- **Nie gemessen:** der **Zins- und Kreditkanal** (Realzins, 2 J, 10 J, Kurve, Kreditaufschläge, NFCI, Dollar). ⇒ Das ist die Lücke.
+- ⚠️ **Die Grenze bleibt dieselbe** (Befund 2.599): Makro ist eine Zeitachse, die Fallzahl ist die Zahl der **Regimewechsel**. Krypto hat seit 2013 etwa drei Zyklen; der ETF-Markt ab 2024 ist ein Bruch.
+
+### 51.3 Stand heute (FRED, 14.10.2026; `p51_makro_stand.py` → `.txt`) — Einschätzung nach dem Lehrbuch-Vorzeichen, **nicht gemessen**
+
+| Kanal | Wert | vor 3 M | vor 12 M | 5-J-Perzentil | Einschätzung |
+|---|---|---|---|---|---|
+| M2 J/J | **+5,7 %** | +5,4 % | +4,2 % | 0,82 | **positiv** (lang): die Geldmenge wächst wieder |
+| Netto-Liquidität Fed | 5,87 Bio. | 5,99 | 5,78 | – | **neutral**: 13 W −2,0 %, 52 W +1,5 % |
+| Leitzins | **3,88 %** | 3,62 % | 4,10 % | 0,42 | **negativ** (kurz): wieder steigend |
+| Rendite 2 J | **4,80 %** | 4,21 % | 3,60 % | 0,88 | **negativ**: +120 Bp in 12 M, der Markt preist **Erhöhungen** |
+| Rendite 10 J | **5,24 %** | 4,56 % | 4,14 % | **1,00 (5-J-Hoch)** | **negativ** |
+| **Realzins 10 J** | **2,91 %** | 2,32 % | 1,80 % | **1,00 (5-J-Hoch)** | **stark negativ**: der wichtigste Gegenwind für ein ertragsloses Risikoasset |
+| Kurve 10J−2J / 10J−3M | +0,42 / +0,95 | +0,40 / +0,74 | +0,53 / +0,03 | 0,68 / 0,84 | **negativ**: *bear steepening*, die langen Zinsen steigen schneller (Laufzeitprämie) |
+| Inflationserwartung 10 J | 2,33 % | 2,25 % | 2,30 % | 0,52 | neutral: Der Anstieg ist **real**, keine Inflationsangst |
+| Kreditaufschlag High Yield | 3,11 % | 2,69 % | 3,18 % | 0,58 | **neutral, kurzfristig Warnzeichen** (+42 Bp in 3 M) |
+| Kreditaufschlag Investment Grade | 0,83 % | 0,78 % | 0,81 % | 0,47 | neutral |
+| Finanzierungsbedingungen NFCI | −0,49 | −0,52 | −0,52 | 0,32 | **positiv**: weiter locker |
+| Dollar breit | 121,6 | 120,5 | 121,1 | 0,65 | leicht negativ |
+| VIX | 15,2 | 17,2 | 21,7 | 0,25 | positiv/neutral: ruhig, eher sorglos |
+| Krypto: Stablecoins 91 T · BTC 91 T | +1,5 % · +28,5 % | | | | Altcoins **negativ** (kein Zufluss), BTC stark |
+
+**Gesamtbild (Einschätzung):**
+- *Die Menge des Geldes ist positiv, sein Preis negativ.* M2 wächst, die Finanzierungsbedingungen sind locker und der VIX niedrig. Dagegen stehen Realzins und 10-J-Rendite auf dem **5-Jahres-Hoch**, der Markt preist wieder **Zinserhöhungen** ein (2 J +120 Bp), und die Kurve steilt sich *von oben* auf.
+- Die Kreditaufschläge weiten sich leicht: ein frühes, noch kein starkes Warnzeichen.
+- ⇒ **BTC:** neutral mit deutlichem Gegenwind aus dem Zinskanal. Der starke Kurs (+28 % in 91 T) läuft **gegen** das Zinsumfeld, das passt zu *ETF-Zuflüssen als eigenem Treiber* (§16, entkoppelt).
+- ⇒ **Altcoins:** **negativ**. Hohes Beta zu steigenden Realzinsen, kein Stablecoin-Zufluss. Das passt zur Season-Ampel *ungewohnt* (§49).
+- ⚠️ Das ist eine **Einschätzung nach Lehrbuch**. Ob diese Vorzeichen für Krypto **ab 2024** tragen, ist **nicht** gemessen, und §16 zeigt, dass die Liquidität es im ETF-Markt **nicht** tat.
+
+### 51.4 Die messbare Grundlage — Vorschlag Messplan Fassung 1 (wird nach Nutzer-Ja vorab festgelegt)
+
+| | Vorschlag |
+|---|---|
+| **Frage** | Trennt die Einteilung *positiv / neutral / negativ* je Kanal (und zusammen) den Folgeertrag von **BTC** (90 und 180 T, Dollar) und den der **Altcoins gegen BTC** (90 T)? |
+| **Merkmale (fest, klein, aus 51.1 – keine Suche)** | je Kanal **eine** Größe als Niveau (Perzentil im rollierenden 5-J-Fenster) und als 3-M-Änderung: M2 J/J · Netto-Liquidität 13 W · Realzins 10 J · Rendite 2 J · Kurve 10J−2J (mit Art der Steilheit) · HY-Aufschlag · NFCI · Dollar · VIX. Veröffentlichungsverzug eingehalten (M2 35 T, Fed wöchentlich ab Freitag, Tagesreihen +1 T) |
+| **Einteilung vorab** | Vorzeichen aus dem Mechanismus (51.1), Grenzen = Drittel des 5-J-Fensters. **Nicht** optimiert (Regel *Schwelle ist Messung, keine Wahl*: das Drittel ist die vorab feste Regel) |
+| **Gesamturteil** | Summe der Kanäle (−1/0/+1) mit gleichem Gewicht, **lang** (Niveau) und **kurz** (Änderung) getrennt |
+| **Stichtage** | Monatserste, **nicht überlappend** für das Urteil (90-T-Ziel: jeder dritte Monat), überlappend nur als Auskunft |
+| **Nullwelt** | **zirkuläre Zeitverschiebung** der Makroreihe gegen die Kursreihe (erhält die Autokorrelation beider), 1.000 Verschiebungen; Rang zweiseitig |
+| **Selbsttest** | nach der Lehre §43.5: Soll aus der Stufung, 1.000 Ziehungen, Pflanzung als Auflösungskurve |
+| **Epochen** | BTC ab **2013** (CoinMetrics frei) als Wahl/Beschreibung, **Urteil ab 2023** (Messfokus); Altcoins ab 2019 (Messbasis), Urteil ab 2023. ⚠️ Ab 2023 sind es nur ~11 unabhängige 90-T-Fenster: Ein *trägt* ist dort kaum zu erreichen, ein *schadet* schon |
+| **Mechanismus-Probe (Vorschlag)** | Derselbe Plan an **Nasdaq-100 und Russell 2000 gegen S&P 500** ab 1990 (FRED/yfinance frei): viele Zyklen. Er zeigt, ob die **Vorzeichen** überhaupt tragen; für Krypto ist das nur Stütze, kein Beleg |
+| **Sechs Prüfungen** | Nullwelt · Zeitstabilität (je Epoche) · Weglassprobe (je Kanal) · Mehrfachtesten (9 Kanäle, Bonferroni) · Ebene · Spiegelprobe |
+| **Folge vorab** | Trägt ein Kanal ab 2023 (oder schadet zweiseitig): **Umfeld-Ampel** (positiv/neutral/negativ, lang und kurz) als **Gewicht** in den Mails und in H-SEL S7. Trägt nichts: nur **Fakt-Anzeige** mit der Einschätzung 51.3, gekennzeichnet als *nicht gemessen*. ⚠️ Nie ein Auslöser und nie ein Blocker (Vorgabe 01.10.: *übergeordnete Kräfte nur gewichten*) |
+
+**Aufwand:** Vorprüfung (Stufe 1) etwa ein halber Tag, Messung danach etwa ein Tag; alles am Desktop.
