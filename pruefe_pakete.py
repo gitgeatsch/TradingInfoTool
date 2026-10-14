@@ -22523,6 +22523,117 @@ def paket_spot_abbau() -> None:
     pruefe(P, "die Ablage ist eine eigene Datei, die Produktion wird nur gelesen", _SA.ABLAGE == "spot_betrieb.db"
            and "conn_prod.execute(" not in _sq_ and "conn_prod.commit" not in _sq_)
 
+def paket_watchlist_ergaenzung() -> None:
+    """P18b (14.10.2026, Plan_Asset_Lebenszyklus G-Z8): WATCHLIST = Grundliste (config.yaml, versioniert) + Ergaenzung (Datenbank am Geraet).
+
+    ⚠️⚠️ Anlass: XDC und CT standen ab 08.10. nur in der config.yaml am NB (GUI), ein Pull mit geaenderter Datei waere gescheitert
+    (K-WL-1). Geprueft wird am SEITENEFFEKT mit einer Wegwerf-Datenbank (``db.DB_PATH`` umgebogen): kein Schreibweg aendert mehr
+    config.yaml (Pruefsumme), die leere Ergaenzung gibt die Liste von heute (bitgleich), Punkt 17 der Exportpruefung unterscheidet
+    Ergaenzung (Hinweis) von Abweichung (Auffaelligkeit)."""
+    P = "WatchlistErgaenzung"
+    import hashlib as _hl
+    import os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    from pathlib import Path as _Pa
+
+    import yaml as _y
+
+    import config as _C
+    import database.db as _db
+    import git_stand as _GS
+
+    _cfg = _C.CONFIG_PATH
+    _sum = lambda p: _hl.sha256(open(p, "rb").read()).hexdigest()       # noqa: E731
+    cfg_vor = _sum(_cfg)
+    alt_pfad = _db.DB_PATH
+    t = _Pa(_tf.mkdtemp(prefix="wlerg_")) / "wegwerf.db"
+    _db.DB_PATH = t
+    _C._config_cache = None
+
+    def _aus_datei():
+        return [_C.WatchlistAsset(symbol=e["symbol"], name=e["name"], rolle=e["rolle"], beobachtungsstatus=e["beobachtungsstatus"],
+                                  coingecko_id=e.get("coingecko_id"), assetklasse=e.get("assetklasse", "krypto"),
+                                  yfinance_symbol=e.get("yfinance_symbol"), ist_cash_aequivalent=e.get("ist_cash_aequivalent", False),
+                                  hauptgruppe=e.get("hauptgruppe"), unterkategorie=e.get("unterkategorie"))
+                for e in _y.safe_load(open(_cfg, encoding="utf-8"))["watchlist"]]
+    try:
+        # E1 Lesen legt nichts an; ohne Datei / ohne Tabelle = leere Ergaenzung = die Liste von heute
+        _sq.connect(str(t)).close()
+        e1 = _C.get_watchlist()
+        hat_tab = _sq.connect(str(t)).execute("SELECT 1 FROM sqlite_master WHERE name='watchlist_ergaenzung'").fetchone()
+        pruefe(P, "⚠️⚠️ Teil 0: ohne Ergaenzung ist die Watchlist BITGLEICH die aus config.yaml; Lesen legt keine Tabelle an",
+               e1 == _aus_datei() and not hat_tab, "%d Eintraege · Tabelle nach dem Lesen %s" % (len(e1), "DA" if hat_tab else "nicht da"))
+        c = _sq.connect(str(t))
+        c.row_factory = _sq.Row                                   # wie db.get_connection
+        _db.init_db(c)
+        c.close()
+        pruefe(P, "init_db legt die Tabelle an (App-Start am NB), die Liste bleibt gleich",
+               _sq.connect(str(t)).execute("SELECT 1 FROM sqlite_master WHERE name='watchlist_ergaenzung'").fetchone() is not None
+               and _C.get_watchlist() == _aus_datei())
+        # E2/E3 Aufnahme
+        _C.add_watchlist_entry("ZZTEST", "Zz Test", "taktisch", "beobachtung", coingecko_id="zz-test")
+        wl = _C.get_watchlist()
+        h = _C.watchlist_herkunft()
+        doppelt = False
+        try:
+            _C.add_watchlist_entry("ZZTEST", "Zz Test", "taktisch", "beobachtung")
+        except _C.WatchlistWriteError:
+            doppelt = True
+        pruefe(P, "⚠️⚠️ Aufnahme schreibt in die ERGAENZUNG, NICHT in config.yaml; neu hinten; Herkunft gui; doppelt = Fehler",
+               _sum(_cfg) == cfg_vor and wl[-1].symbol == "ZZTEST" and wl[-1].coingecko_id == "zz-test" and h["ZZTEST"] == ("ergaenzung", "gui")
+               and doppelt and _sq.connect(str(t)).execute("SELECT COUNT(*) FROM watchlist_ergaenzung").fetchone()[0] == 1,
+               "config.yaml %s · letzter %s · Herkunft %s" % ("unveraendert" if _sum(_cfg) == cfg_vor else "GEAENDERT", wl[-1].symbol, h.get("ZZTEST")))
+        # E4 Bearbeiten eines Grundlisten-Eintrags
+        x = next(a for a in _aus_datei() if a.symbol == "XLM")
+        neu = "core" if x.rolle != "core" else "taktisch"
+        r1 = _C.update_watchlist_rolle("XLM", neu)
+        r2 = _C.update_watchlist_rolle("XLM", neu)
+        r3 = _C._update_watchlist_field("XLM", "gibt_es_nicht", "x")
+        xl = next(a for a in _C.get_watchlist() if a.symbol == "XLM")
+        pruefe(P, "Bearbeiten (Rolle) eines Grundlisten-Eintrags: Ergaenzung ueberschreibt, config.yaml unveraendert; gleicher Wert / "
+                  "fehlendes Feld = kein Schreiben", r1 is True and r2 is False and r3 is False and xl.rolle == neu and _sum(_cfg) == cfg_vor
+               and _C.watchlist_herkunft()["XLM"] == ("grundliste+ergaenzung", "gui_bearbeiten"))
+        # E5 CoinGecko-ID und Kategorie (gueltig / ungueltig)
+        hg = _C.get_kategorien()["hauptgruppen"][0]
+        uk = hg["unterkategorien"][0]["id"]
+        k_ok = _C.update_watchlist_kategorie("ZZTEST", hg["id"], uk)
+        k_falsch = False
+        try:
+            _C.update_watchlist_kategorie("ZZTEST", "gibt_es_nicht", uk)
+        except _C.WatchlistWriteError:
+            k_falsch = True
+        g_ok = _C.update_watchlist_coingecko_id("ZZTEST", "zz-test-2")
+        z = next(a for a in _C.get_watchlist() if a.symbol == "ZZTEST")
+        pruefe(P, "CoinGecko-ID und Kategorie in der Ergaenzung; unbekannte Kategorie bricht VOR dem Schreiben ab",
+               k_ok and k_falsch and g_ok and z.coingecko_id == "zz-test-2" and z.hauptgruppe == hg["id"] and z.unterkategorie == uk)
+        # E6 ausblenden
+        _C._ergaenzung_schreiben("QNT", {}, "pruefung", entfernt=True)
+        pruefe(P, "'entfernt' blendet ein Symbol der Grundliste aus (config.yaml unberuehrt)",
+               "QNT" not in {a.symbol for a in _C.get_watchlist()} and _sum(_cfg) == cfg_vor)
+        # E7 Punkt 17: Ergaenzung = Hinweis, ohne Kennzeichen = Auffaelligkeit (Gegenprobe)
+        herk = _C.watchlist_herkunft()
+        stamm = {a.symbol: {"assetklasse": a.assetklasse, "rolle": a.rolle, "beobachtungsstatus": a.beobachtungsstatus, "name": a.name,
+                            "coingecko_id": a.coingecko_id, "quelle": herk[a.symbol][0], "herkunft": herk[a.symbol][1]} for a in _C.get_watchlist()}
+        gs = {"head": _GS.lesen().get("head"), "geaendert": [], "stash": [], "fehler": [], "quelle_head": "git", "zweig": "main"}
+        m, i = _GS.bewerte({"git_stand": gs, "watchlist_stammdaten": stamm, "watchlist_ergaenzung": _C.watchlist_ergaenzung()})
+        ohne = {s_: {k_: v_ for k_, v_ in e_.items() if k_ not in ("quelle", "herkunft")} for s_, e_ in stamm.items()}
+        m2, _ = _GS.bewerte({"git_stand": gs, "watchlist_stammdaten": ohne})
+        pruefe(P, "⚠️ Punkt 17: Eintraege der Ergaenzung sind HINWEISE (keine Auffaelligkeit); dieselbe Lage ohne Kennzeichen meldet sie",
+               not [x_ for x_ in m if "Watchlist" in x_] and any("Ergaenzung am NB: ZZTEST" in x_ for x_ in i)
+               and any("ueberschreibt XLM.rolle" in x_ for x_ in i) and any("ausgeblendet: QNT" in x_ for x_ in i)
+               and any("nur am NB" in x_ and "ZZTEST" in x_ for x_ in m2), "Auffaelligkeiten %s · Hinweise %d" % ([x_ for x_ in m if "Watchlist" in x_], len(i)))
+    finally:
+        _db.DB_PATH = alt_pfad
+        _C._config_cache = None
+    pruefe(P, "⚠️⚠️ config.yaml nach dem ganzen Paket bitgleich; die Watchlist am Desktop wieder die aus der Datei",
+           _sum(_cfg) == cfg_vor and _C.get_watchlist() == _aus_datei())
+    q = _quelltext("config.py")
+    pruefe(P, "kein Watchlist-Schreibweg schreibt mehr in config.yaml (nur noch die Einstellungs-Schalter); die Aufrufer tragen ihre Herkunft",
+           q.count("CONFIG_PATH.write_bytes(") == 4 and 'herkunft="hebel_import"' in _quelltext("importer/bitpanda_margin_positions.py")
+           and 'herkunft="marktscan"' in _quelltext("ui/marktscan_view.py") and 'herkunft="screener"' in _quelltext("ui/screener_view.py"),
+           "write_bytes in config.py: %d (Soll 4, nur Einstellungs-Schalter: _set_top_level_skalar, _setze_top_level_skalar + Rueckweg, Regime-Override)" % q.count("CONFIG_PATH.write_bytes("))
+
 def paket_spot_upbit() -> None:
     """SPOT B3 UPBIT-VERKAUFSANLASS (P16, 12.10.2026, Spot §47) - die Regel ist die der Messung C2-b, der Job haengt nicht an der Rollen-Kette.
 
@@ -32573,7 +32684,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand,
+          "SpotUpbit": paket_spot_upbit, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

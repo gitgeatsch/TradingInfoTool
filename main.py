@@ -375,9 +375,11 @@ def main() -> None:
         db_conn_factory=db.get_connection,
         # 2026-07-23, Restart-Fix (siehe Memory project_watchlist_live_reload_fix):
         # echte Funktionsreferenz statt Lambda um die beim Start eingefrorene
-        # `watchlist`-Variable - config.get_watchlist() liest bei JEDEM Aufruf
-        # frisch aus config.yaml, jeder Scheduler-Job ruft sie jetzt selbst zu
-        # Beginn seines eigenen Laufs auf (siehe scheduler/background.py).
+        # `watchlist`-Variable - jeder Scheduler-Job ruft config.get_watchlist()
+        # selbst zu Beginn seines eigenen Laufs auf (siehe scheduler/background.py).
+        # ⚠️ RICHTIGGESTELLT 14.10.2026 (P18b): hier stand "liest bei JEDEM Aufruf frisch
+        # aus config.yaml" - falsch, load_config haelt die Datei im Speicher; die GUI-
+        # Schreibwege leeren ihn (ein Prozess). Die Ergaenzung (Datenbank) wird je Aufruf gelesen.
         watchlist_provider=config.get_watchlist,
         groq_client=groq_client,
         gemini_client=gemini_client,

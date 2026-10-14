@@ -590,7 +590,7 @@ class MarktscanView(ttk.Frame):
         try:
             config_module.add_watchlist_entry(
                 symbol=candidate.symbol, name=candidate.name, rolle="taktisch", beobachtungsstatus="beobachtung",
-                coingecko_id=candidate.coingecko_id,
+                coingecko_id=candidate.coingecko_id, herkunft="marktscan",   # P18b: Ergaenzung
             )
         except config_module.WatchlistWriteError as exc:
             # Fallback: automatisches Schreiben fehlgeschlagen (z.B. Datei manuell

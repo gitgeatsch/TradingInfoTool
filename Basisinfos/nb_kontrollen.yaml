@@ -242,6 +242,15 @@ kontrollen:
     nachweis: "nach Pull (kein Neustart noetig, der Schalter wird je Lauf gelesen): Mail Erstliste beim naechsten Lauf (07:25; HYPE, KAIA, MORPHO, PLUME, QNT, SUI, TAO, XDC), Logzeile 'gemailt ja', danach 'gemailt nein'; am 02.11.2026 Stichtag 01.11. mit art neu - Mail nur, wenn ein Bestand NEU ins untere Fuenftel faellt"
     faellig_bis: ""
     status: offen
+  - id: K-WL-2
+    titel: "P18b Watchlist = Grundliste (config.yaml) + Ergaenzung (Datenbank am NB): kein Schreibweg aendert mehr die versionierte config.yaml"
+    seit: "2026-10-14"
+    paket: P18b
+    commit: ""
+    art: manuell
+    nachweis: "nach Pull + Neustart: Diagnose watchlist_stammdaten mit 'quelle' je Symbol (alle 'grundliste'), Abschnitt watchlist_ergaenzung leer, Punkt 17 ohne Watchlist-Meldung; Teilexport 'WATCHLIST-ERGAENZUNG am NB: 0'. Beim naechsten Eintrag ueber die GUI (oder einem neuen Hebel-Coin): Punkt 17 HINWEIS 'Ergaenzung am NB: X', git_stand.geaendert bleibt leer"
+    faellig_bis: "2026-10-17"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

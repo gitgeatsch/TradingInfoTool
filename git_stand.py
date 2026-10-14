@@ -189,10 +189,28 @@ def bewerte(d: dict, wurzel: Path | str | None = None, git: str | None = None) -
         return melden, info
     v = vergleiche_watchlist(nb, repo)
     info.append("Watchlist NB %d / Repo %d Eintraege, %s" % (len(nb), len(repo), hinweis))
-    if v["nur_nb"]:
-        melden.append("Watchlist nur am NB (nicht im Repo): %s - am NB ueber die GUI eingetragen? ins Repo uebernehmen" % ", ".join(v["nur_nb"]))
-    if v["nur_repo"]:
-        melden.append("Watchlist nur im Repo (am NB nicht): %s - Pull/Neustart am NB ausstehend oder lokal entfernt" % ", ".join(v["nur_repo"]))
+    # P18b (14.10.2026): was aus der ERGAENZUNG am NB kommt (GUI, Marktscan, Screener, Hebel-Importer), ist GEWOLLT - ein Hinweis
+    # zum Uebernehmen ins Repo, keine Auffaelligkeit. Eine Abweichung OHNE Ergaenzung bleibt eine (aeltere Diagnosen: ohne 'quelle').
+    erg = {z.get("symbol"): z for z in (d.get("watchlist_ergaenzung") or []) if isinstance(z, dict) and z.get("symbol")}
+    aus_erg = lambda s: "ergaenzung" in str((nb.get(s) or {}).get("quelle") or "")   # noqa: E731
+    for s in v["nur_nb"]:
+        if aus_erg(s):
+            info.append("Ergaenzung am NB: %s (Herkunft %s) - ins Repo uebernehmen?" % (s, (nb[s] or {}).get("herkunft") or "?"))
+        else:
+            melden.append("Watchlist nur am NB (nicht im Repo): %s - am NB ueber die GUI eingetragen? ins Repo uebernehmen" % s)
+    for s in v["nur_repo"]:
+        if (erg.get(s) or {}).get("entfernt"):
+            info.append("am NB per Ergaenzung ausgeblendet: %s (Herkunft %s)" % (s, erg[s].get("herkunft") or "?"))
+        else:
+            melden.append("Watchlist nur im Repo (am NB nicht): %s - Pull/Neustart am NB ausstehend oder lokal entfernt" % s)
+    mit_feld = set()
     for s, f, a, b in v["felder"]:
-        melden.append("Watchlist %s: %s am NB %r, im Repo %r" % (s, f, a, b))
+        mit_feld.add(s)
+        if aus_erg(s):
+            info.append("Ergaenzung am NB ueberschreibt %s.%s: NB %r, Repo %r - ins Repo uebernehmen?" % (s, f, a, b))
+        else:
+            melden.append("Watchlist %s: %s am NB %r, im Repo %r" % (s, f, a, b))
+    for s in nb:
+        if s in repo and s not in mit_feld and (nb[s] or {}).get("quelle") == "grundliste+ergaenzung":
+            info.append("Ergaenzung %s deckungsgleich mit der Grundliste - ueberfluessig (Loeschen nur mit Nutzer-Ja)" % s)
     return melden, info

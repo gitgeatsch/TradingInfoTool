@@ -412,7 +412,7 @@ def auto_add_unknown_hebel_symbols(
         try:
             config_module.add_watchlist_entry(
                 symbol=pos.symbol, name=pos.symbol, rolle="taktisch", beobachtungsstatus="beobachtung",
-                coingecko_id=coingecko_id,
+                coingecko_id=coingecko_id, herkunft="hebel_import",       # P18b: in die Ergaenzung, nicht in config.yaml
             )
             hinzugefuegt.append(pos.symbol)
             watchlist_symbols.add(pos.symbol)

@@ -222,9 +222,13 @@ def refresh_prices_job(client, conn_factory, watchlist_provider) -> bool:
 
     `watchlist_provider` (2026-07-23, Restart-Fix - siehe Memory project_
     watchlist_live_reload_fix): Callable statt fertiger Liste, wird HIER bei
-    jedem Lauf frisch aufgerufen (config.get_watchlist() liest config.yaml
-    ohne Caching) - eine neu hinzugefuegte Watchlist-Asset wird so spaetestens
-    beim naechsten Takt beruecksichtigt, ohne App-Neustart."""
+    jedem Lauf frisch aufgerufen - eine neu hinzugefuegte Watchlist-Asset wird so
+    spaetestens beim naechsten Takt beruecksichtigt, ohne App-Neustart.
+    ⚠️ RICHTIGGESTELLT 14.10.2026 (P18b): hier stand *"liest config.yaml ohne Caching"* -
+    falsch, ``load_config`` haelt die Datei im Speicher. Richtig war die WIRKUNG: GUI,
+    Scheduler und Statusseite laufen in EINEM Prozess (main.py), und jeder Schreibweg
+    leert den Speicher. Seit P18b liest ``get_watchlist`` die Ergaenzung (Datenbank) bei
+    jedem Aufruf; eine Aenderung an config.yaml von aussen (Pull) wirkt erst nach dem Neustart."""
     if not refresh_prices_lock.acquire(blocking=False):
         logger.info("Preis-Refresh: bereits in Ausführung - übersprungen")
         return False

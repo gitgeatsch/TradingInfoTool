@@ -374,7 +374,7 @@ class ScreenerView(ttk.Frame):
                 symbol=candidate.symbol, name=candidate.name, rolle="taktisch",
                 beobachtungsstatus="beobachtung", assetklasse=candidate.assetklasse,
                 yfinance_symbol=yfinance_symbol,
-                hauptgruppe=candidate.hauptgruppe, unterkategorie=candidate.unterkategorie,
+                hauptgruppe=candidate.hauptgruppe, unterkategorie=candidate.unterkategorie, herkunft="screener",   # P18b: Ergaenzung
             )
         except config_module.WatchlistWriteError as exc:
             messagebox.showerror(

@@ -171,6 +171,20 @@ CREATE TABLE IF NOT EXISTS asset_hebel_settings (
     hebel_pruefung_erlaubt  INTEGER NOT NULL
 );
 
+-- P18b (14.10.2026, Plan_Asset_Lebenszyklus G-Z8): Watchlist-ERGAENZUNG am Geraet. Die Grundliste steht versioniert in
+-- Basisinfos/config.yaml; was am NB dazukommt oder geaendert wird (GUI, Marktscan, Screener, Hebel-Importer), steht HIER -
+-- so aendert kein Schreibweg mehr die versionierte Datei, und kein Pull scheitert an einer lokalen Aenderung (K-WL-1).
+-- `eintrag` = JSON nur mit den Feldern, die die Ergaenzung setzt; `entfernt` = 1 blendet ein Symbol der Grundliste aus.
+-- config.get_watchlist() fuehrt beides zusammen (config.watchlist_eintraege()).
+CREATE TABLE IF NOT EXISTS watchlist_ergaenzung (
+    symbol        TEXT PRIMARY KEY,
+    eintrag       TEXT,
+    entfernt      INTEGER NOT NULL DEFAULT 0,
+    herkunft      TEXT,
+    angelegt_am   TEXT NOT NULL,
+    geaendert_am  TEXT NOT NULL
+);
+
 -- Bitpanda-Gelistet-Override (2026-07-20, Nutzer-Fund: CEBS/EXH3/ISOC/VVMX/
 -- X136/OD7C/OD7H/OD7L/OD7N/DBPK/3QSS werden vom /v3/assets-Endpunkt (api/
 -- bitpanda.py) nicht gefunden, sind laut zwei echten Bitpanda-Screenshots

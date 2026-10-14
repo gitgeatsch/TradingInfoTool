@@ -221,11 +221,16 @@ def _inhalt() -> int:
     print()
     print("-" * 100)
     try:
-        import yaml
-        cfg = yaml.safe_load(open(os.path.join(HIER, "Basisinfos", "config.yaml"), encoding="utf-8")) or {}
-        wl = cfg.get("watchlist") or []
-        kr = sorted(str(e.get("symbol")) for e in wl if (e.get("assetklasse") or "krypto") == "krypto")
-        print("WATCHLIST krypto (config.yaml): %d - %s" % (len(kr), ", ".join(kr)))
+        # P18b (14.10.2026): ueber get_watchlist() - Grundliste (config.yaml) + Ergaenzung am NB; die Datei allein uebersaehe die Ergaenzung
+        import config as _C18b
+        wl = _C18b.get_watchlist()
+        kr = sorted(a.symbol for a in wl if a.assetklasse == "krypto")
+        print("WATCHLIST krypto (Grundliste + Ergaenzung): %d - %s" % (len(kr), ", ".join(kr)))
+        _erg = _C18b.watchlist_ergaenzung()
+        print("WATCHLIST-ERGAENZUNG am NB: %d%s" % (len(_erg), "" if _erg else " (leer - alles steht in der Grundliste)"))
+        for z in _erg:
+            print("    %-8s %-14s %s %s%s" % (z["symbol"], z["herkunft"] or "?", z["geaendert_am"], "AUSGEBLENDET " if z["entfernt"] else "",
+                                         ", ".join("%s=%s" % kv for kv in z["felder"].items())[:110]))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Watchlist nicht lesbar: %s" % ex.__class__.__name__)
     if os.path.exists(prod):

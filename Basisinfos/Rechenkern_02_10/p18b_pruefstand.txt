@@ -1,0 +1,8 @@
+W1  bestanden init_db: neue Tabellen ['watchlist_ergaenzung'] · alle 39 anderen mit gleicher Zeilenzahl True
+W2  bestanden 62 Eintraege wie config.yaml · Quellen ['grundliste']
+W3  bestanden Hebel-Importer: hinzugefuegt ['ZZHEB'] · Herkunft ('ergaenzung', 'hebel_import') · config.yaml bitgleich
+W4  bestanden Katalog ZZHEB -> ZZHEB (ohne Neustart, get_watchlist liest die Ergaenzung je Aufruf)
+W5  bestanden Punkt 17: Auffaelligkeiten [] · Hinweis ['Ergaenzung am NB: ZZHEB (Herkunft hebel_import) - ins Repo uebernehmen?']
+W6  bestanden Original-Sicherung und config.yaml unberuehrt
+
+6 von 6 bestanden

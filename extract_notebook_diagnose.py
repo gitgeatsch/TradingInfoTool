@@ -3873,6 +3873,11 @@ def main() -> None:
     # Merkmale sind, die in KEINER Signalzeile stehen - fuer die
     # Ausschuss-Suche (Abschnitt 7 der Zielgroessen-Doku) sind sie damit neue
     # Information, nicht bloss eine Kopie. Kosten: rund 60 Symbole x 5 Felder.
+    try:
+        _wl_herkunft = config_module.watchlist_herkunft()
+        _wl_ergaenzung = config_module.watchlist_ergaenzung()
+    except Exception as exc:  # noqa: BLE001
+        _wl_herkunft, _wl_ergaenzung = {}, [{"nicht_verfuegbar": "%s: %s" % (type(exc).__name__, exc)}]
     watchlist_stammdaten = {
         a.symbol: {
             "assetklasse": a.assetklasse,
@@ -3884,6 +3889,9 @@ def main() -> None:
             # falsche ID findet - eine falsche ID ist so schlimm wie ein fehlender Eintrag. Additiv, kein Leser bricht.
             "name": a.name,
             "coingecko_id": a.coingecko_id,
+            # P18b (14.10.2026): woher der Eintrag kommt - grundliste (config.yaml) / ergaenzung (Datenbank am NB) / beides
+            "quelle": _wl_herkunft.get(a.symbol, (None, None))[0],
+            "herkunft": _wl_herkunft.get(a.symbol, (None, None))[1],
         }
         for a in watchlist
     }
@@ -3899,6 +3907,7 @@ def main() -> None:
 
     payload = {
         "git_stand": git_stand_abschnitt,
+        "watchlist_ergaenzung": _wl_ergaenzung,
         "watchlist_stammdaten": watchlist_stammdaten,
         "hebel_faktensaetze": hebel_faktensaetze,
         "richtungsverteilung": richtungsverteilung,

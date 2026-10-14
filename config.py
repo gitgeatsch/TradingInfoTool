@@ -5,7 +5,10 @@ ANTHROPIC_API_KEY/GITHUB_TOKEN-Gebrauch hier, das bleibt Phase 3 vorbehalten (P-
 lokale Autonomie, Claude nur optional)."""
 from __future__ import annotations
 
-import reimport shutil
+import json
+import logging
+import re
+import shutil
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -317,8 +320,78 @@ def bitpanda_bestand_quelle() -> str:
     return wert
 
 
+# ══ P18b (14.10.2026, Plan_Asset_Lebenszyklus G-Z8): Grundliste (config.yaml, versioniert) + Ergaenzung (Datenbank, am Geraet) ══════
+ERGAENZUNG_TABELLE = "watchlist_ergaenzung"
+WATCHLIST_FELDER = ("name", "rolle", "beobachtungsstatus", "coingecko_id", "assetklasse", "yfinance_symbol", "ist_cash_aequivalent",
+                    "hauptgruppe", "unterkategorie")
+_PFLICHT = ("name", "rolle", "beobachtungsstatus")
+
+
+def _db_pfad():
+    from database import db as _db              # spaet importiert: database.db importiert config nur innerhalb von init_db
+
+    return _db.DB_PATH
+
+
+def watchlist_ergaenzung() -> list[dict]:
+    """Die Zeilen der Ergaenzung, aelteste zuerst - NUR LESEND (``mode=ro``). Fehlt die Datei oder die Tabelle (Desktop, Pruefskripte,
+    App noch nie gestartet), ist die Ergaenzung leer; beim Lesen wird NIE etwas angelegt (Standard-DB-Regel)."""
+    import sqlite3
+
+    p = Path(_db_pfad())
+    if not p.exists():
+        return []
+    try:
+        c = sqlite3.connect("file:%s?mode=ro" % str(p).replace("\\", "/"), uri=True, timeout=5)
+        try:
+            zeilen = c.execute("SELECT symbol, eintrag, entfernt, herkunft, angelegt_am, geaendert_am FROM %s "
+                               "ORDER BY angelegt_am, symbol" % ERGAENZUNG_TABELLE).fetchall()
+        finally:
+            c.close()
+    except sqlite3.Error:
+        return []
+    aus = []
+    for s, e, ent, h, an, ge in zeilen:
+        try:
+            felder = json.loads(e) if e else {}
+        except ValueError:
+            felder = {}
+        aus.append({"symbol": s, "felder": felder, "entfernt": bool(ent), "herkunft": h, "angelegt_am": an, "geaendert_am": ge})
+    return aus
+
+
+def watchlist_eintraege() -> list[dict]:
+    """Grundliste + Ergaenzung als Eintraege (dict wie in config.yaml) mit ``_quelle`` (grundliste | ergaenzung | grundliste+ergaenzung)
+    und ``_herkunft``. Reihenfolge: Grundliste wie in der Datei, neue Symbole der Ergaenzung dahinter (in der Reihenfolge ihrer Aufnahme)."""
+    aus = [dict(e, _quelle="grundliste", _herkunft=None) for e in load_config()["watchlist"]]
+    pos = {e["symbol"]: i for i, e in enumerate(aus)}
+    weg = set()
+    for z in watchlist_ergaenzung():
+        s = z["symbol"]
+        if z["entfernt"]:
+            weg.add(s)
+            continue
+        weg.discard(s)
+        if s in pos:
+            aus[pos[s]].update({k: v for k, v in z["felder"].items() if k in WATCHLIST_FELDER})
+            aus[pos[s]]["_quelle"], aus[pos[s]]["_herkunft"] = "grundliste+ergaenzung", z["herkunft"]
+        elif all(z["felder"].get(k) for k in _PFLICHT):
+            aus.append(dict({k: v for k, v in z["felder"].items() if k in WATCHLIST_FELDER}, symbol=s, _quelle="ergaenzung",
+                            _herkunft=z["herkunft"]))
+            pos[s] = len(aus) - 1
+        else:
+            logging.getLogger(__name__).warning("Watchlist-Ergaenzung %s ohne Pflichtfelder %s - uebergangen", s, _PFLICHT)
+    return [e for e in aus if e["symbol"] not in weg]
+
+
+def watchlist_herkunft() -> dict:
+    """{Symbol: (quelle, herkunft)} - fuer Diagnose (P21 Punkt 17) und Teilexport."""
+    return {e["symbol"]: (e["_quelle"], e["_herkunft"]) for e in watchlist_eintraege()}
+
+
 def get_watchlist() -> list[WatchlistAsset]:
-    config = load_config()
+    """Die Watchlist = Grundliste aus config.yaml + Ergaenzung aus der Datenbank (P18b). Die Grundliste ist zwischengespeichert
+    (``load_config``, geleert von jedem Schreibweg); die Ergaenzung wird bei jedem Aufruf gelesen (0,7 ms, gemessen 14.10.)."""
     return [
         WatchlistAsset(
             symbol=entry["symbol"],
@@ -332,8 +405,34 @@ def get_watchlist() -> list[WatchlistAsset]:
             hauptgruppe=entry.get("hauptgruppe"),
             unterkategorie=entry.get("unterkategorie"),
         )
-        for entry in config["watchlist"]
+        for entry in watchlist_eintraege()
     ]
+
+
+def _ergaenzung_schreiben(symbol: str, felder: dict, herkunft: str, entfernt: bool = False) -> None:
+    """Setzt Felder eines Symbols in der Ergaenzung (vorhandene Felder bleiben, neue ueberschreiben) - der EINZIGE Schreibweg der
+    Watchlist seit P18b. Legt die Tabelle an, falls sie fehlt (Schreiben ist hier die Absicht; am NB legt sie init_db beim Start an)."""
+    import sqlite3
+
+    c = sqlite3.connect(str(_db_pfad()), timeout=10)
+    try:
+        c.execute("CREATE TABLE IF NOT EXISTS %s (symbol TEXT PRIMARY KEY, eintrag TEXT, entfernt INTEGER NOT NULL DEFAULT 0, herkunft TEXT, "
+                  "angelegt_am TEXT NOT NULL, geaendert_am TEXT NOT NULL)" % ERGAENZUNG_TABELLE)
+        r = c.execute("SELECT eintrag FROM %s WHERE symbol=?" % ERGAENZUNG_TABELLE, (symbol,)).fetchone()
+        alt = json.loads(r[0]) if r and r[0] else {}
+        neu = dict(alt, **felder)
+        jetzt = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        c.execute("INSERT INTO %s (symbol, eintrag, entfernt, herkunft, angelegt_am, geaendert_am) VALUES (?,?,?,?,?,?) "
+                  "ON CONFLICT(symbol) DO UPDATE SET eintrag=excluded.eintrag, entfernt=excluded.entfernt, herkunft=excluded.herkunft, "
+                  "geaendert_am=excluded.geaendert_am" % ERGAENZUNG_TABELLE,
+                  (symbol, json.dumps(neu, ensure_ascii=False), 1 if entfernt else 0, herkunft, jetzt, jetzt))
+        c.commit()
+    finally:
+        c.close()
+
+
+def _eintrag(symbol: str) -> dict | None:
+    return next((e for e in watchlist_eintraege() if e["symbol"] == symbol), None)
 
 
 class WatchlistWriteError(Exception):
@@ -371,263 +470,97 @@ def add_watchlist_entry(
     ist_cash_aequivalent: bool = False,
     hauptgruppe: str | None = None,
     unterkategorie: str | None = None,
+    herkunft: str = "gui",
 ) -> None:
-    """Fügt einen neuen Eintrag ans Ende des bestehenden `watchlist:`-Blocks in
-    Basisinfos/config.yaml an - reine TEXT-Einfügung (keine vollständige YAML-
-    Neuserialisierung mit `yaml.dump()`), damit Kommentare/Formatierung im Rest der
-    Datei byte-für-byte unangetastet bleiben (die Datei ist explizit handgepflegt,
-    "BEARBEITEN IN NOTEPAD++"). Legt IMMER vorher ein Backup an
-    (.claude/backups/config.yaml.<Zeitstempel>.bak), validiert die neue Datei per
-    `yaml.safe_load()` und stellt bei Fehlschlag automatisch das Backup wieder her
-    (Fail-Loud, P-10) - kein stiller Teilerfolg. Nutzer-Wunsch (2026-07-09), ersetzt
-    den reinen Copy-Paste-YAML-Weg aus Marktscan Stufe B/C/D.
+    """Nimmt ein neues Asset in die Watchlist auf - seit P18b (14.10.2026) in die ERGAENZUNG in der Datenbank, NICHT mehr in die
+    versionierte config.yaml (Anlass: XDC und CT standen ab 08.10. nur in der config.yaml am NB, ein Pull mit geaenderter Datei waere
+    gescheitert - K-WL-1, Plan_Asset_Lebenszyklus G-Z8). Aufrufer unveraendert: GUI *Asset hinzufuegen*, Marktscan, Screener, Hebel-
+    Importer (automatisch). ``herkunft`` haelt fest, welcher Weg geschrieben hat. Die Uebernahme in die Grundliste macht ein Commit.
 
-    `assetklasse`/`yfinance_symbol` sind fuer Multi-Asset-Tracking (Aktien/ETF/
-    Rohstoffe, Nutzer-Idee 2026-07-09) ergaenzt - Default bleibt "krypto" ohne
-    Zusatzzeilen, damit bestehende Aufrufer (UI-Watchlist-Button, Marktscan)
-    unveraendert funktionieren und der geschriebene Block fuer Krypto-Eintraege
-    exakt wie bisher aussieht."""
+    Wie bisher: ein Symbol, das schon in der Watchlist steht, ist ein Fehler (keine Aenderung). Fail-Loud (P-10): nach dem Schreiben
+    wird zurueckgelesen; fehlt der Eintrag, wird die neue Zeile entfernt und ``WatchlistWriteError`` geworfen."""
     if any(existing.symbol == symbol for existing in get_watchlist()):
         raise WatchlistWriteError(f"{symbol} ist bereits in der Watchlist - keine Änderung vorgenommen")
-
-    # Bewusst read_bytes()/write_bytes() statt read_text()/write_text(): Letzteres
-    # uebersetzt beim Schreiben unter Windows JEDES "\n" in "\r\n" (Python-Standard-
-    # verhalten bei newline=None), was die komplette Datei von LF auf CRLF umgestellt
-    # haette - genau das "byte-fuer-byte unangetastet"-Versprechen oben gebrochen
-    # haette. Zeilenende-Stil wird stattdessen aus der Originaldatei erkannt und fuer
-    # die neuen Zeilen exakt uebernommen (gefunden + gefixt 2026-07-09).
-    original_bytes = CONFIG_PATH.read_bytes()
-    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
-    original_text = original_bytes.decode("utf-8")
-    lines = original_text.splitlines(keepends=True)
-    insert_at = _find_watchlist_insert_point(lines)
-
-    entry_lines = [
-        f"  - symbol: {symbol}{newline_style}",
-        f"    name: {name}{newline_style}",
-        f"    rolle: {rolle}{newline_style}",
-        f"    beobachtungsstatus: {beobachtungsstatus}{newline_style}",
-    ]
+    felder = {"name": name, "rolle": rolle, "beobachtungsstatus": beobachtungsstatus}
     if coingecko_id is not None:
-        entry_lines.append(f"    coingecko_id: {coingecko_id}{newline_style}")
+        felder["coingecko_id"] = coingecko_id
     if assetklasse != "krypto":
-        entry_lines.append(f"    assetklasse: {assetklasse}{newline_style}")
+        felder["assetklasse"] = assetklasse
     if yfinance_symbol is not None:
-        entry_lines.append(f"    yfinance_symbol: {yfinance_symbol}{newline_style}")
+        felder["yfinance_symbol"] = yfinance_symbol
     if ist_cash_aequivalent:
-        entry_lines.append(f"    ist_cash_aequivalent: true{newline_style}")
+        felder["ist_cash_aequivalent"] = True
     if hauptgruppe is not None:
-        entry_lines.append(f"    hauptgruppe: {hauptgruppe}{newline_style}")
+        felder["hauptgruppe"] = hauptgruppe
     if unterkategorie is not None:
-        entry_lines.append(f"    unterkategorie: {unterkategorie}{newline_style}")
-    entry_block = "".join(entry_lines)
-    new_text = "".join(lines[:insert_at] + [entry_block] + lines[insert_at:])
-
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
-    shutil.copy2(CONFIG_PATH, backup_path)
-
-    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
-
+        felder["unterkategorie"] = unterkategorie
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            reparsed = yaml.safe_load(f)
-        if symbol not in {e["symbol"] for e in reparsed["watchlist"]}:
-            raise WatchlistWriteError("Validierung fehlgeschlagen: neuer Eintrag nicht im geparsten Ergebnis")
+        _ergaenzung_schreiben(symbol, felder, herkunft)
+        if not any(e.symbol == symbol for e in get_watchlist()):
+            raise WatchlistWriteError("Validierung fehlgeschlagen: neuer Eintrag nicht in der Watchlist")
     except Exception as exc:
-        shutil.copy2(backup_path, CONFIG_PATH)
-        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
-
+        _ergaenzung_zeile_loeschen_wenn_neu(symbol, felder)
+        if isinstance(exc, WatchlistWriteError):
+            raise
+        raise WatchlistWriteError(f"Schreiben fehlgeschlagen: {exc}") from exc
     global _config_cache
     _config_cache = None
 
 
-def _update_watchlist_field(symbol: str, field_name: str, new_value: str) -> bool:
-    """Aktualisiert EIN Feld eines bestehenden Watchlist-Eintrags per reiner
-    Text-Ersetzung INNERHALB des betroffenen Eintrags-Blocks (identisches
-    Backup+Validierungs-Muster wie `add_watchlist_entry()`). Interner Helfer
-    fuer `update_watchlist_rolle()`/`update_watchlist_beobachtungsstatus()` -
-    beide manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog), NIE
-    automatisch aus einem Sync-Vorgang heraus (Klassifikations-Redesign
-    2026-07-16, siehe Memory project_asset_klassifikation_redesign - genau
-    diese fehlende Trennung zwischen "manuell" und "automatisch geschrieben"
-    war der Kern der Drift-Problematik beim frueheren `status`-Feld).
-
-    Gibt `False` zurück (kein Schreibvorgang, kein Backup) wenn der Eintrag
-    nicht existiert, das Feld dort nicht vorkommt, ODER bereits den
-    Zielwert hat - nur ein echter Wertwechsel schreibt tatsächlich."""
-    original_bytes = CONFIG_PATH.read_bytes()
-    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
-    original_text = original_bytes.decode("utf-8")
-    lines = original_text.splitlines(keepends=True)
-
-    entry_start = next(
-        (i for i, line in enumerate(lines) if line.strip() == f"- symbol: {symbol}"), None,
-    )
-    if entry_start is None:
-        return False
-
-    entry_end = len(lines)
-    for i in range(entry_start + 1, len(lines)):
-        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
-            entry_end = i
-            break
-
-    field_line_idx = next(
-        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith(f"{field_name}:")), None,
-    )
-    if field_line_idx is None:
-        return False
-
-    current_value = lines[field_line_idx].split(":", 1)[1].strip()
-    if current_value == new_value:
-        return False
-
-    indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
-    lines[field_line_idx] = f"{indent}{field_name}: {new_value}{newline_style}"
-    new_text = "".join(lines)
-
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
-    shutil.copy2(CONFIG_PATH, backup_path)
-
-    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
+def _ergaenzung_zeile_loeschen_wenn_neu(symbol: str, felder: dict) -> None:
+    """Rueckweg fuer add_watchlist_entry: nur eine Zeile, die GENAU diese Felder traegt (gerade angelegt), wird entfernt."""
+    import sqlite3
 
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            reparsed = yaml.safe_load(f)
-        matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
-        if matching is None or matching.get(field_name) != new_value:
-            raise WatchlistWriteError(f"Validierung fehlgeschlagen: {field_name} nicht wie erwartet gesetzt")
-    except Exception as exc:
-        shutil.copy2(backup_path, CONFIG_PATH)
-        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
+        c = sqlite3.connect(str(_db_pfad()), timeout=10)
+        try:
+            c.execute("DELETE FROM %s WHERE symbol=? AND eintrag=?" % ERGAENZUNG_TABELLE, (symbol, json.dumps(felder, ensure_ascii=False)))
+            c.commit()
+        finally:
+            c.close()
+    except sqlite3.Error:
+        pass
 
+
+def _update_watchlist_field(symbol: str, field_name: str, new_value: str, herkunft: str = "gui_bearbeiten") -> bool:
+    """Aendert EIN Feld eines Watchlist-Eintrags - seit P18b in der ERGAENZUNG (die Grundliste in config.yaml bleibt unberuehrt).
+    Interner Helfer fuer ``update_watchlist_rolle()``/``update_watchlist_beobachtungsstatus()`` - beide manuell vom Nutzer ausgeloest
+    (GUI-Bearbeiten-Dialog), NIE automatisch aus einem Sync-Vorgang heraus (Klassifikations-Redesign 2026-07-16).
+
+    Gibt ``False`` zurueck (kein Schreibvorgang), wenn der Eintrag nicht existiert, das Feld dort nicht vorkommt ODER bereits den
+    Zielwert hat - nur ein echter Wertwechsel schreibt (wie vor P18b)."""
+    e = _eintrag(symbol)
+    if e is None or field_name not in e or e.get(field_name) == new_value:
+        return False
+    _ergaenzung_schreiben(symbol, {field_name: new_value}, herkunft)
+    if (_eintrag(symbol) or {}).get(field_name) != new_value:
+        raise WatchlistWriteError(f"Validierung fehlgeschlagen: {field_name} nicht wie erwartet gesetzt")
     global _config_cache
     _config_cache = None
     return True
 
 
-def update_watchlist_coingecko_id(symbol: str, new_coingecko_id: str) -> bool:
-    """Setzt/ergaenzt `coingecko_id` eines bestehenden Watchlist-Eintrags -
-    manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog, 2026-07-19,
-    Watchlist-Tab-Konsistenzpruefung: automatisch aus einer Hebel-Position
-    ergaenzte Symbole bekommen bewusst KEINE coingecko_id, siehe importer/
-    bitpanda_margin_positions.py::auto_add_unknown_hebel_symbols() -
-    Nachtragen war bisher trotzdem gar nicht moeglich, da AssetEditDialog
-    dieses Feld nicht anbot UND `_update_watchlist_field()` nur bereits
-    VORHANDENE Feldzeilen aktualisieren kann, keine neuen einfuegen kann
-    (add_watchlist_entry() LAESST die Zeile komplett weg, wenn
-    coingecko_id=None uebergeben wurde).
-
-    Eigene Implementierung statt Erweiterung von `_update_watchlist_field()`
-    (die bleibt unveraendert fuer ihre beiden bestehenden, bereits
-    verifizierten Aufrufer) - fuegt die Zeile direkt nach `beobachtungsstatus:`
-    ein, falls sie noch fehlt (identische Position wie in
-    `add_watchlist_entry()`s Feldreihenfolge), sonst wird die vorhandene
-    Zeile aktualisiert. Gleiches Backup+Validierungs+Rollback-Muster wie
-    `add_watchlist_entry()`/`_update_watchlist_field()`."""
-    original_bytes = CONFIG_PATH.read_bytes()
-    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
-    original_text = original_bytes.decode("utf-8")
-    lines = original_text.splitlines(keepends=True)
-
-    entry_start = next(
-        (i for i, line in enumerate(lines) if line.strip() == f"- symbol: {symbol}"), None,
-    )
-    if entry_start is None:
+def update_watchlist_coingecko_id(symbol: str, new_coingecko_id: str, herkunft: str = "gui_bearbeiten") -> bool:
+    """Setzt/ergaenzt ``coingecko_id`` eines Watchlist-Eintrags - manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog, 2026-07-19:
+    automatisch aus einer Hebel-Position ergaenzte Symbole bekommen bewusst KEINE coingecko_id, siehe importer/bitpanda_margin_positions.py).
+    Seit P18b in der ERGAENZUNG; anders als ``_update_watchlist_field`` darf das Feld vorher fehlen (wie vor P18b). ``False`` = kein
+    Eintrag oder schon dieser Wert."""
+    e = _eintrag(symbol)
+    if e is None or e.get("coingecko_id") == new_coingecko_id:
         return False
-
-    entry_end = len(lines)
-    for i in range(entry_start + 1, len(lines)):
-        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
-            entry_end = i
-            break
-
-    field_line_idx = next(
-        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("coingecko_id:")), None,
-    )
-
-    if field_line_idx is not None:
-        current_value = lines[field_line_idx].split(":", 1)[1].strip()
-        if current_value == new_coingecko_id:
-            return False
-        indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
-        lines[field_line_idx] = f"{indent}coingecko_id: {new_coingecko_id}{newline_style}"
-    else:
-        beobachtungsstatus_idx = next(
-            (i for i in range(entry_start, entry_end) if lines[i].strip().startswith("beobachtungsstatus:")), None,
-        )
-        if beobachtungsstatus_idx is None:
-            return False
-        indent = lines[beobachtungsstatus_idx][
-            : len(lines[beobachtungsstatus_idx]) - len(lines[beobachtungsstatus_idx].lstrip())
-        ]
-        new_line = f"{indent}coingecko_id: {new_coingecko_id}{newline_style}"
-        lines.insert(beobachtungsstatus_idx + 1, new_line)
-
-    new_text = "".join(lines)
-
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
-    shutil.copy2(CONFIG_PATH, backup_path)
-
-    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
-
-    try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            reparsed = yaml.safe_load(f)
-        matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
-        if matching is None or matching.get("coingecko_id") != new_coingecko_id:
-            raise WatchlistWriteError("Validierung fehlgeschlagen: coingecko_id nicht wie erwartet gesetzt")
-    except Exception as exc:
-        shutil.copy2(backup_path, CONFIG_PATH)
-        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
-
+    _ergaenzung_schreiben(symbol, {"coingecko_id": new_coingecko_id}, herkunft)
+    if (_eintrag(symbol) or {}).get("coingecko_id") != new_coingecko_id:
+        raise WatchlistWriteError("Validierung fehlgeschlagen: coingecko_id nicht wie erwartet gesetzt")
     global _config_cache
     _config_cache = None
     return True
 
 
-def _upsert_field_at_block_end(lines: list[str], entry_start: int, entry_end: int, field_name: str, new_value: str, newline_style: str) -> tuple[list[str], bool]:
-    """Interner Helfer fuer `update_watchlist_kategorie()`: setzt eine Feldzeile
-    INNERHALB eines bereits abgegrenzten Eintrags-Blocks - aktualisiert eine
-    vorhandene Zeile in-place, oder haengt eine neue ans Blockende an (bewahrt
-    damit die Reihenfolge bereits vorhandener optionaler Felder wie coingecko_id/
-    assetklasse/yfinance_symbol/ist_cash_aequivalent, siehe `add_watchlist_entry()`).
-    Gibt (aktualisierte Zeilenliste, ob sich etwas geaendert hat) zurueck - der
-    Aufrufer muss `entry_end` bei mehreren Aufrufen hintereinander selbst
-    nachfuehren (jede Einfuegung verschiebt nachfolgende Indizes um 1)."""
-    field_line_idx = next(
-        (i for i in range(entry_start, entry_end) if lines[i].strip().startswith(f"{field_name}:")), None,
-    )
-    if field_line_idx is not None:
-        current_value = lines[field_line_idx].split(":", 1)[1].strip()
-        if current_value == new_value:
-            return lines, False
-        indent = lines[field_line_idx][: len(lines[field_line_idx]) - len(lines[field_line_idx].lstrip())]
-        lines[field_line_idx] = f"{indent}{field_name}: {new_value}{newline_style}"
-        return lines, True
-    last_field_idx = entry_end - 1
-    indent = lines[last_field_idx][: len(lines[last_field_idx]) - len(lines[last_field_idx].lstrip())]
-    new_line = f"{indent}{field_name}: {new_value}{newline_style}"
-    lines.insert(entry_end, new_line)
-    return lines, True
-
-
-def update_watchlist_kategorie(symbol: str, hauptgruppe: str, unterkategorie: str) -> bool:
-    """Setzt/ergaenzt `hauptgruppe`+`unterkategorie` eines bestehenden Watchlist-
-    Eintrags ATOMAR (beide Felder oder keins) - 2026-07-19, ersetzt das anfaenglich
-    gebaute Freitext-Feld `schwerpunkt` NOCH AM SELBEN TAG (siehe WatchlistAsset-
-    Docstring: Freitext war fuer automatische Prozesse/Kategorie-Gruppierung nicht
-    zuverlaessig genug). Validiert beide IDs GEGEN Basisinfos/kategorien.yaml
-    (`get_kategorien()`) - eine unbekannte ID wirft `WatchlistWriteError`, bevor
-    irgendetwas geschrieben wird (P-10, kein stiller Datenmuell in config.yaml).
-    Manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog). Einfuegeposition ist
-    bewusst das ENDE des Eintrags-Blocks (siehe `_upsert_field_at_block_end()`)."""
+def update_watchlist_kategorie(symbol: str, hauptgruppe: str, unterkategorie: str, herkunft: str = "gui_bearbeiten") -> bool:
+    """Setzt/ergaenzt ``hauptgruppe`` + ``unterkategorie`` ATOMAR (beide Felder oder keins) - 2026-07-19, ersetzt das Freitext-Feld
+    ``schwerpunkt``. Validiert beide IDs GEGEN Basisinfos/kategorien.yaml (``get_kategorien()``) - eine unbekannte ID wirft
+    ``WatchlistWriteError``, bevor irgendetwas geschrieben wird (P-10). Seit P18b in der ERGAENZUNG. ``False`` = kein Eintrag oder
+    beide Felder unveraendert."""
     kategorien = get_kategorien()
     hauptgruppe_obj = next((hg for hg in kategorien["hauptgruppen"] if hg["id"] == hauptgruppe), None)
     if hauptgruppe_obj is None:
@@ -637,63 +570,13 @@ def update_watchlist_kategorie(symbol: str, hauptgruppe: str, unterkategorie: st
             f"Unbekannte Unterkategorie {unterkategorie!r} fuer Hauptgruppe {hauptgruppe!r} - "
             "siehe Basisinfos/kategorien.yaml"
         )
-
-    original_bytes = CONFIG_PATH.read_bytes()
-    newline_style = "\r\n" if b"\r\n" in original_bytes else "\n"
-    original_text = original_bytes.decode("utf-8")
-    lines = original_text.splitlines(keepends=True)
-
-    entry_start = next(
-        (i for i, line in enumerate(lines) if line.strip() == f"- symbol: {symbol}"), None,
-    )
-    if entry_start is None:
+    e = _eintrag(symbol)
+    if e is None or (e.get("hauptgruppe") == hauptgruppe and e.get("unterkategorie") == unterkategorie):
         return False
-
-    entry_end = len(lines)
-    for i in range(entry_start + 1, len(lines)):
-        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
-            entry_end = i
-            break
-
-    lines, changed_hg = _upsert_field_at_block_end(lines, entry_start, entry_end, "hauptgruppe", hauptgruppe, newline_style)
-
-    # Blockende NEU bestimmen (nicht rechnerisch fortschreiben) - eine Einfuegung
-    # durch den ersten Upsert verschiebt alle nachfolgenden Zeilenindizes, ein
-    # unveraendertes Feld (In-Place-Update) tut das nicht. Neu-Suchen ist robuster
-    # als die beiden Faelle einzeln zu unterscheiden.
-    entry_end_nach_hg = len(lines)
-    for i in range(entry_start + 1, len(lines)):
-        if lines[i].lstrip().startswith("- symbol:") or not lines[i].startswith(" "):
-            entry_end_nach_hg = i
-            break
-    lines, changed_uk = _upsert_field_at_block_end(lines, entry_start, entry_end_nach_hg, "unterkategorie", unterkategorie, newline_style)
-
-    if not changed_hg and not changed_uk:
-        return False
-
-    new_text = "".join(lines)
-
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    backup_path = BACKUP_DIR / f"config.yaml.{timestamp}.bak"
-    shutil.copy2(CONFIG_PATH, backup_path)
-
-    CONFIG_PATH.write_bytes(new_text.encode("utf-8"))
-
-    try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            reparsed = yaml.safe_load(f)
-        matching = next((e for e in reparsed["watchlist"] if e["symbol"] == symbol), None)
-        if (
-            matching is None
-            or matching.get("hauptgruppe") != hauptgruppe
-            or matching.get("unterkategorie") != unterkategorie
-        ):
-            raise WatchlistWriteError("Validierung fehlgeschlagen: hauptgruppe/unterkategorie nicht wie erwartet gesetzt")
-    except Exception as exc:
-        shutil.copy2(backup_path, CONFIG_PATH)
-        raise WatchlistWriteError(f"Schreiben fehlgeschlagen, Backup wiederhergestellt: {exc}") from exc
-
+    _ergaenzung_schreiben(symbol, {"hauptgruppe": hauptgruppe, "unterkategorie": unterkategorie}, herkunft)
+    n = _eintrag(symbol) or {}
+    if n.get("hauptgruppe") != hauptgruppe or n.get("unterkategorie") != unterkategorie:
+        raise WatchlistWriteError("Validierung fehlgeschlagen: hauptgruppe/unterkategorie nicht wie erwartet gesetzt")
     global _config_cache
     _config_cache = None
     return True

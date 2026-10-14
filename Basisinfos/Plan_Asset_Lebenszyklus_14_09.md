@@ -1238,3 +1238,47 @@ Nutzer 14.10.: *„P18b Voranalyse vorbereiten“* (Variante B nach Spot §48.5)
 - Der nächste Eintrag über die GUI erscheint als Hinweis, und `git status` bleibt leer.
 
 Aufwand etwa ein halber Tag einschließlich Prüfstand.
+
+### G-Z9 P18b gebaut (14.10.2026, Nutzer: *„Ja, P18b bauen, prüfen und gegenprüfen“*)
+
+| Teil | Stand |
+|---|---|
+| `database/db.py` | Tabelle `watchlist_ergaenzung` im Schema (`init_db`, App-Start) |
+| `config.py` | `watchlist_ergaenzung()` (nur lesend, legt nie etwas an), `watchlist_eintraege()` (Zusammenführen), `watchlist_herkunft()`, `get_watchlist()` liest Grundliste + Ergänzung. Die vier Schreibfunktionen schreiben in die Ergänzung (`_ergaenzung_schreiben`), gleiche Prüfungen wie vorher, Rückweg bei Fehlschlag. Der tote Text-Helfer `_upsert_field_at_block_end` ist ausgebaut |
+| Aufrufer | unverändert bis auf die Herkunft: `hebel_import`, `marktscan`, `screener`; GUI-Aufnahme `gui`, GUI-Bearbeiten `gui_bearbeiten` |
+| Diagnose / Punkt 17 | `watchlist_stammdaten` mit `quelle` und `herkunft`, Abschnitt `watchlist_ergaenzung`. Ergänzung = **Hinweis** (übernehmen? / überschreibt / ausgeblendet / deckungsgleich-überflüssig); Abweichung ohne Ergänzung = Auffälligkeit |
+| Teilexport | Watchlist über `get_watchlist()`, dazu die Ergänzung je Eintrag |
+| Kommentare | *„ohne Caching“* in `background.py` und `main.py` richtiggestellt |
+| **Prüfstand** `p18b_pruefstand.py` (Kopie der Produktion 14.10. 03:29) | **6/6**:<br>• `init_db` legt nur die neue Tabelle an, die 39 anderen behalten ihre Zeilenzahl.<br>• Die Liste ist bitgleich mit `config.yaml`.<br>• Der Hebel-Importer legt einen neuen Coin **in der Ergänzung** an, `config.yaml` bleibt bitgleich.<br>• Der Bestandsabgleich ordnet den Coin ohne Neustart zu.<br>• Punkt 17 meldet einen Hinweis, keine Auffälligkeit.<br>• Die Original-Sicherung bleibt unberührt |
+| Suite-Paket **WatchlistErgaenzung** | **10/10** mit Wegwerf-DB:<br>• Teil 0 bitgleich; Lesen legt nichts an.<br>• Aufnahme, doppelte Aufnahme, Bearbeiten (Rolle), CoinGecko-ID und Kategorie (ungültig bricht vor dem Schreiben ab), Ausblenden.<br>• Punkt 17: Hinweis statt Auffälligkeit; dieselbe Lage ohne Kennzeichen wird gemeldet.<br>• `config.yaml` bleibt bitgleich.<br>• Mutationen *Ergänzung schreibt nicht* und *entfernt wirkungslos* werden gefunden |
+
+**Fund (nicht im Umfang, zur Entscheidung):**
+- Fünf **Einstellungs-Schalter** der GUI schreiben weiterhin in die versionierte `config.yaml`: Hebel-Richtungsmodus, Marktsuche und E-Mail *nur Bitpanda-gelistet*, Regime-Override, Regime-Score-Override.
+- Sie gehören zum alten System und sind seit 28.07. **bewusst** über Git synchronisiert (*„auf beiden Geräten garantiert derselbe Wert“*).
+- Ein Klick am NB erzeugt trotzdem dieselbe lokale Änderung. P21 meldet sie.
+- Vorschlag: so lassen, sie werden selten benutzt. Falls doch nötig: dieselbe Lösung wie hier, als eigene Tabelle.
+
+### G-Z10 „Asset hinzufügen“ einfacher? (Prüfung 14.10.2026, Nutzerfrage)
+
+Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen einfacher umsetzbar ist als jetzt bei der manuellen Methode“*.
+
+**Heute (am Code geprüft):**
+- Man öffnet den Dialog und **tippt Symbol und Name**, wählt Assetklasse, Rolle und Status.
+- Die CoinGecko-ID versucht der Dialog über den Bitpanda-Namen (genau ein Treffer); sonst öffnet er die Suche. Danach folgen die Warnungen der Prüfung.
+- ⚠️ Eine gehaltene Position ohne Watchlist-Eintrag ist in der App **nicht sichtbar**: Der Bestandsabgleich übernimmt sie nicht in `holdings`, der Bestand-Tab zeigt sie nicht, und sie fehlt im Gesamtwert (HBAR 13.10.: rund 102 EUR).
+- Sichtbar ist sie nur als Logzeile und in der täglichen Mail *„Position ohne Watchlist-Eintrag“*.
+
+**Was das System schon weiß:**
+- Bitpanda-Asset-ID, Kürzel, Name und **Art aus dem Katalog**: coin/token → krypto, stock/equity_stock → aktien, etf/equity_etf → etf, metal → rohstoffe. Nur ETC ist nicht eindeutig (3QSS steht als etf in der Watchlist).
+- Dazu Menge und Wert.
+
+**Vorschlag P18c (klein, GUI):**
+
+| # | |
+|---|---|
+| 1 | Bestand-Tab: Bitpanda-Positionen **ohne** Watchlist-Eintrag als eigene Zeilen (Rolle *nicht in Watchlist*, Wert, Menge), aus `bitpanda_wallet_saldo` + `bitpanda_katalog`, nur lesend; sie zählen in Gesamtwert und Aufteilung |
+| 2 | **Doppelklick** auf eine solche Zeile öffnet *Asset hinzufügen* **vorausgefüllt**: Symbol, Name, Assetklasse aus dem Katalog, Rolle taktisch, CoinGecko-ID automatisch. **Neu** ist ein Preisabgleich der gefundenen ID gegen den Bitpanda-Kurs, damit keine falsche ID durchrutscht (Muster D5). Du drückst nur **Hinzufügen** |
+| 3 | Die Mail *„Position ohne Watchlist-Eintrag“* nennt diesen Weg |
+
+- **Nicht** automatisch, sondern weiter mit deiner Bestätigung (Airdrops wie CT nur auf Rückfrage). Das vollautomatische O26 bleibt später.
+- Aufwand etwa 2–3 Stunden; GUI-Neustart; schreibt über P18b in die Ergänzung.
