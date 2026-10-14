@@ -6161,3 +6161,67 @@ Nutzer 14.10.: *„Es sollte eine fachlich korrekte und messbare Grundlage gesch
 | **Folge vorab** | Trägt ein Kanal ab 2023 (oder schadet zweiseitig): **Umfeld-Ampel** (positiv/neutral/negativ, lang und kurz) als **Gewicht** in den Mails und in H-SEL S7. Trägt nichts: nur **Fakt-Anzeige** mit der Einschätzung 51.3, gekennzeichnet als *nicht gemessen*. ⚠️ Nie ein Auslöser und nie ein Blocker (Vorgabe 01.10.: *übergeordnete Kräfte nur gewichten*) |
 
 **Aufwand:** Vorprüfung (Stufe 1) etwa ein halber Tag, Messung danach etwa ein Tag; alles am Desktop.
+
+### 51.5 Messplan Fassung 1 — VORAB festgelegt (14.10.2026, Nutzer: *„JA – finde ich gut“*)
+
+**Umfang** (Nutzer: *„damit wir das Marktumfeld nicht für Aktien, ETF und Rohstoffe gesondert prüfen müssen – sinnvoll kombinieren?“*):
+- Die **Makro-Grundlage** (Daten, Kanäle, Einteilung) wird **einmal** gebaut und gilt für alle Klassen; später nutzt sie auch Multi-Asset (O39).
+- Ein **Urteil** gibt es jetzt nur für **Krypto**.
+- Aktien sind die **Mechanismus-Probe**.
+- Gold und Rohstoffe stehen nur als **Auskunft** daneben, ohne Urteil. So bleibt die Zahl der Tests klein.
+
+**Datenlage geprüft (frei):**
+- M2 ab 1959; Fed-Bilanz und TGA ab 2002; RRP ab 2003; Realzins ab 2003; 2 J ab 1976; Kurve ab 1976; NFCI ab 1971; Dollar ab 2006; VIX ab 1990.
+- BTC (CoinMetrics) ab 2010; Nasdaq-100 ab 1985, Russell 2000 ab 1987, S&P 500 ab 1927; Gold-Future ab 2000; DBC ab 2006.
+- ⚠️ Die ICE/BofA-Kreditaufschläge (HY, IG) gibt FRED **nur ab 10/2023** heraus (Lizenz). Ersatz ist der **Baa-Aufschlag über 10 J** (BAA10Y, ab 1986). Der HY-Aufschlag bleibt **Auskunft** zum Stand.
+
+**Die neun Kanäle** (je eine Reihe, **lang** = Niveau, **kurz** = Änderung über 3 Monate; Verzug = ab wann der Wert bekannt ist):
+
+| # | Kanal | Reihe | Verzug | lang (günstig, wenn …) | kurz (günstig, wenn …) |
+|---|---|---|---|---|---|
+| K1 | Geldmenge | M2SL → J/J-Rate | 35 T | J/J hoch | J/J steigt |
+| K2 | Netto-Liquidität | WALCL − WTREGEN − RRP | 2 T (RRP 1 T) | 52-W-Änderung hoch | 13-W-Änderung hoch |
+| K3 | Realzins | DFII10 | 1 T | niedrig | fällt |
+| K4 | Zinspfad | DGS2 | 1 T | niedrig | fällt |
+| K5 | Kurve | T10Y2Y | 1 T | steil (invertiert = ungünstig) | **Art** der Steilheit: Kurve steigt und 2 J fällt (*bull*) = +1 · Kurve steigt und 2 J steigt (*bear*) = −1 · sonst 0 |
+| K6 | Kredit | BAA10Y | 1 T | eng | wird enger |
+| K7 | Finanzierungsbedingungen | NFCI | 5 T | locker (niedrig) | lockert sich |
+| K8 | Dollar | DTWEXBGS | 1 T | schwach | fällt (in %) |
+| K9 | Stress | VIXCLS | 1 T | niedrig | fällt |
+
+**Einteilung (fest, nicht optimiert):**
+- Je Kanal und Tag wird das Perzentil der Größe im **rollierenden 5-J-Fenster** bestimmt (mindestens 3 J Daten).
+- Das günstige Drittel ergibt **+1**, das ungünstige **−1**, die Mitte **0**. Die Richtung kommt aus 51.1.
+- **Gesamt lang** und **Gesamt kurz** sind die Summen über die verfügbaren Kanäle, eingeteilt **ebenso** nach Dritteln ihres 5-J-Fensters.
+
+**Zielgrößen** (ab dem Folgetag, log-Ertrag):
+
+| Rolle | Zielgröße | Zeitraum |
+|---|---|---|
+| **Urteil** | T1 BTC 90 T und 180 T (Dollar) | ab 2013 |
+| **Urteil** | T2 Altkorb gegen BTC 90 T (S1-Korb, Top 50 nach Umsatz) | ab 2019 |
+| **Mechanismus-Probe** | M1 Nasdaq-100 / S&P 500 90 T · M2 Russell 2000 / S&P 500 90 T · M3 S&P 500 90 T | ab 2006 |
+| **Auskunft** | A1 Gold 90 T · A2 DBC (breite Rohstoffe) 90 T | ab 2006 |
+
+**Statistik:**
+- **Stichtage:** Monatserste.
+- **Größe je Kanal:** mittlere Zielgröße im günstigen minus im ungünstigen Drittel.
+- **Nullwelt:** **zirkuläre Zeitverschiebung** der Score-Reihe gegen die Zielreihe, in Tagen (Mindestabstand 365 T zum Rand), **1.000** Verschiebungen. Sie erhält die Autokorrelation beider Reihen, deshalb dürfen sich die 90-T-Fenster überlappen. Rang zweiseitig.
+- **Urteil Krypto, trägt:**
+  - (1) Rang ≤ 0,0028 bzw. ≥ 0,9972 über den ganzen Zeitraum. Das ist Bonferroni über 9 Kanäle, je Seite 0,025/9; für Gesamt lang und kurz je 0,0125.
+  - (2) **dasselbe Vorzeichen in jeder Epoche** E1 (bis 2020), E2 (2021–23), **E3 (ab 2024)**.
+  - (3) **Spiegelprobe:** Das günstige Drittel hat mehr starke Anstiege (≥ +20 % in 90 T) und weniger starke Rückgänge (≤ −20 %) als das ungünstige. Sonst ist es nur Schwankung.
+- **Schadet:** dasselbe mit umgekehrtem Vorzeichen.
+- **Sonst:** *nicht entscheidbar*. Ab 2024 allein ist kein Urteil möglich (rund 11 unabhängige 90-T-Fenster); deshalb gilt E3 über das **Vorzeichen** (Zeitstabilität), so wie §16 gezeigt hat, dass ein Kanal im ETF-Markt kippen kann.
+- **Selbsttest:**
+  - (a) 200 Zufallsmerkmale durch **Phasen-Randomisierung** echter Makroreihen (gleiches Spektrum), gleiche Prüfung. Fehlalarm höchstens nach der Stufung bei 1.000 Verschiebungen.
+  - (b) Pflanzung Ziel + β·z(Merkmal) als **Auflösungskurve**.
+- **Weitere Prüfungen:** Weglassprobe (Gesamt ohne jeden Kanal) · Ebene (BTC, Altcoins, Aktien getrennt).
+- **Gegenprobe:** eigener Rechenweg für Scores, Ziel und Rang.
+
+**Vorprüfung (Stufe 1, vor der langen Messung):**
+- Scores, Klassengrößen und Rohabstände je Kanal für T1/T2/M1–M3.
+- Nullwelt **nur** für Gesamt lang/kurz mit 200 Verschiebungen.
+- **Weiter zur Messung,** wenn mindestens ein Kanal oder Gesamt über den ganzen Zeitraum im äußeren Zehntel der Nullwelt liegt **und** in E3 dasselbe Vorzeichen hat. Sonst Bericht und Abstimmung.
+
+**Folge vorab:** wie 51.4. Trägt ein Kanal, wird daraus eine **Umfeld-Ampel als Gewicht**; trägt keiner, bleibt es eine Fakt-Anzeige *nicht gemessen*. Nie ein Auslöser, nie ein Blocker.
