@@ -6468,3 +6468,46 @@ Zur Einordnung:
 | – | Maßstab **Fassung 2** (Beleg gegen Zufall + Bilanz in Euro) gilt für jede künftige Spot-Regel | §51.10 Punkt 3 |
 
 ⚠️ Das ist **eine Systemfrage, keine Anlageempfehlung**. Welcher Anteil wofür, entscheidet der Nutzer; das System liefert die gemessene Bilanz.
+
+## 52. Voranalyse: Auswahl und Schutz je REGIME (14.10.2026; `p52_regime_voranalyse.py` → `.txt`)
+
+**Nutzer 14.10.:**
+- *„JA, können wir so versuchen, bin mir aber nicht sicher, ob wir hier zu grob werden.“*
+- *„Umkehrschluss: Wie sollen wir uns statt Gewinner zu finden vor schlechten Assets schützen, das ist im Umkehrschluss auch nicht möglich. Siehe QNT, war über Jahre tot.“*
+- *„Mein Hinweis geht in die Regime-Richtung für beides. Du redest von Ausstieg, das ist schon klar.“*
+
+**Frage:** Kippt die Ordnung der Watchlist (Wert ohne F9, Marktwert-Zellen) mit dem Regime? Wenn ja, wären weder Auswahl (oberes Fünftel) noch Schutz (unteres Fünftel) regime-unabhängig.
+
+**Messung:**
+- Größe: 12-M-Dollar-Ertrag als log, Abstand Fünftel minus eigene Zelle.
+- Nullwelt: beständige Zufallszahl je Coin, 500 Ziehungen.
+- Regime nur aus zum Stichtag **bekannten** Größen: Epoche, BTC über/unter 200-T-Schnitt, BTC 90 T steigend/fallend.
+- Stichtage 2019–2025, 81 Monate. ⚠️ Das ist eine **Voranalyse** mit vielen Zellen: Belastbar ist nur das **Muster**, nicht die einzelne Zelle.
+
+| Regime | Monate | oberes Fünftel − Zelle | Rang | unteres Fünftel − Zelle | Rang |
+|---|---|---|---|---|---|
+| alle | 81 | **+13,2** | 0,996 | **−20,9** | 0,000 |
+| E1 (bis 2020) | 24 | +5,2 | 0,64 | −6,2 | 0,35 |
+| E2 (2021–23) | 37 | +13,4 | 0,998 | −20,5 | 0,000 |
+| E3 (ab 2024) | 20 | +17,3 | 0,990 | −29,7 | 0,000 |
+| BTC über 200 T | 51 | +12,3 | 0,992 | −19,2 | 0,000 |
+| BTC unter 200 T | 30 | +15,0 | 1,000 | −23,9 | 0,000 |
+| BTC 90 T fällt / steigt | 31 / 50 | +13,9 / +12,8 | 0,994 / 0,998 | −21,2 / −20,8 | 0,000 / 0,000 |
+| E1+E2 & BTC über 200 T (Bullenphasen) | 34 | +8,2 | 0,90 | −12,5 | 0,020 |
+
+**Was das sagt:**
+- **Die Ordnung kippt mit dem Regime nicht.** Oben schlägt die typische Münze ihre Zelle, unten verliert sie, und zwar in steigenden **und** fallenden BTC-Phasen, in E2 **und** E3. Nur E1 ist zu dünn (24 Monate, breites Band). In den Bullenphasen E1+E2 ist der Effekt **schwächer**, aber gleichgerichtet.
+- ⇒ **Der Umkehrschluss gilt so nicht:** Schutz vor den Schwachen ist **gemessen** möglich, in jedem Regime mit genug Daten. QNT ist ein **Einzelfall gegen die Statistik**: Es lag 2021–2023 im unteren Fünftel und schlug 2022 BTC (12 M ab 06/2022 ×1,73 gegen BTC ×0,89). Fälle dieser Art gibt es, im Mittel verliert das untere Fünftel trotzdem sicher.
+- ⭐ **Wo der Nutzer recht hat:** Das Regime bestimmt das **Niveau** aller Altcoins, und keine Ordnung entkommt ihm. In E3 gewinnt das obere Fünftel +17 Pp gegen die Zelle, liegt aber absolut bei **−49 %** (§51.10), weil die ganze Zelle fällt. **Ordnung = welche, Regime = wie viel.**
+- ⚠️ **Die technische Feinheit hinter dem „zu grob“:**
+  - In log (die typische Münze) ist das obere Fünftel klar besser (Rang 0,99).
+  - Im gleichgewichteten **Korb** (einfacher Mittelwert, also das, was ein Halter bekommt) nur Rang 0,94 (§51.10).
+  - Der Grund ist die **Schiefe**: Die wenigen extremen Gewinner liegen über alle Fünftel verstreut. Die Ordnung misst **Fortbestand**, nicht **Ausbruch**; das passt zu dem, was die Altcoin-Watchlist schon gezeigt hat (*findet Ausbrüche nicht*).
+- **Grenze für das Regime selbst:** Vorab erkennbar ist es nicht belegt (Befund 2.599: Die wirksame Stichprobe ist die Zahl der Regimewechsel). Das *Wie viel* bleibt deshalb **Fakt-Anzeige** (U-B), kein Auslöser.
+
+**Folge für U-A bis U-C** (Vorschlag):
+- **U-A** (Schutz) ist bestätigt, und zwar regime-unabhängig, nicht nur im Ausstieg: Die Ordnung (B4) sagt *wer*.
+- **U-B** wird präziser: **Regime × Ordnung.** Das Regime ist Anzeige für *wie viel*, die Ordnung für *welche*.
+- **U-C** (S2 Angebot) bleibt der nächste Kandidat, jetzt mit Prüfung je Regime.
+- **Neu:** Gewinner (Ausbruch, Schiefe) brauchen ein **eigenes** Merkmal. Fortbestand liefert sie nicht.
+- Vor einem Bau: Messplan *Ordnung × Regime* vorab mit **beiden** Zielgrößen (log = typische Münze, einfacher Korb = Halterbilanz) und Bonferroni über die Regimezellen.

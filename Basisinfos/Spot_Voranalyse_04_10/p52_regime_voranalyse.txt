@@ -1,0 +1,17 @@
+P52 VORANALYSE Regime x Auswahl/Schutz · Stichtage 2019-01-01 bis 2025-09-01 · 19610 Anker · Nullwelt 500 bestaendige Ziehungen
+
+  Regime                      Tage | OBERES Fuenftel - Zelle (log-Pp), Rang       | UNTERES Fuenftel - Zelle (log-Pp), Rang     
+  alle                          81 |   +13.2 · Rang 0.996 (Zufall 2,5/97,5   -9.0/  +9.3) |   -20.9 · Rang 0.000 (Zufall 2,5/97,5   -7.9/ +10.6)
+  E1                            24 |    +5.2 · Rang 0.642 (Zufall 2,5/97,5  -21.8/ +22.8) |    -6.2 · Rang 0.352 (Zufall 2,5/97,5  -25.0/ +28.4)
+  E2                            37 |   +13.4 · Rang 0.998 (Zufall 2,5/97,5  -12.1/  +9.9) |   -20.5 · Rang 0.000 (Zufall 2,5/97,5  -11.6/ +12.2)
+  E3                            20 |   +17.3 · Rang 0.990 (Zufall 2,5/97,5  -14.1/ +14.8) |   -29.7 · Rang 0.000 (Zufall 2,5/97,5  -13.6/ +16.6)
+  BTC ueber 200T                51 |   +12.3 · Rang 0.992 (Zufall 2,5/97,5   -9.0/ +10.0) |   -19.2 · Rang 0.000 (Zufall 2,5/97,5   -9.6/ +11.2)
+  BTC unter 200T                30 |   +15.0 · Rang 1.000 (Zufall 2,5/97,5  -13.9/ +11.3) |   -23.9 · Rang 0.000 (Zufall 2,5/97,5  -13.6/ +12.4)
+  BTC 90T faellt                31 |   +13.9 · Rang 0.994 (Zufall 2,5/97,5  -12.6/ +10.5) |   -21.2 · Rang 0.000 (Zufall 2,5/97,5  -13.2/ +11.8)
+  BTC 90T steigt                50 |   +12.8 · Rang 0.998 (Zufall 2,5/97,5   -9.2/ +10.1) |   -20.8 · Rang 0.000 (Zufall 2,5/97,5   -9.5/ +11.3)
+  E3 & BTC ueber 200T           17 |   +18.3 · Rang 0.996 (Zufall 2,5/97,5  -13.7/ +14.8) |   -29.4 · Rang 0.000 (Zufall 2,5/97,5  -13.7/ +16.1)
+  E3 & BTC unter 200T            3 |   +11.3 · Rang 0.902 (Zufall 2,5/97,5  -18.5/ +18.4) |   -31.2 · Rang 0.000 (Zufall 2,5/97,5  -17.0/ +21.4)
+  E1+E2 & BTC unter 200T        27 |   +15.5 · Rang 0.998 (Zufall 2,5/97,5  -15.7/ +12.3) |   -22.9 · Rang 0.002 (Zufall 2,5/97,5  -14.8/ +14.1)
+  E1+E2 & BTC ueber 200T        34 |    +8.2 · Rang 0.900 (Zufall 2,5/97,5  -11.1/ +11.9) |   -12.5 · Rang 0.020 (Zufall 2,5/97,5  -12.2/ +13.7)
+
+Lesart: oberes Fuenftel Rang >= 0,975 = Auswahl wirkt · unteres Fuenftel Rang <= 0,025 = Schutz wirkt (die Schwachen sind sicher schwaecher).
