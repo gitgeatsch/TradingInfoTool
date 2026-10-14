@@ -1201,3 +1201,17 @@ Schritt7 §23.24.
 - **Folge (vorab):** Das Umfeld wird Fakt-Anzeige, kein Gewicht, kein Auslöser, kein Blocker. Die Kandidaten werden vorwärts beobachtet.
 - **Gold:** Die Nutzerthese *Vertrauen in Fiat* ist mit den neun Kanälen nicht abgebildet. Vorschlag K10 als Auskunft, zur Abstimmung.
 - Nachweis: Spot §51.7, Regelwerksmanual R-R14.
+
+# E-105 · Währung des Vergleichs und Maßstab gewinnbringend (14.10.2026)
+
+**14.10.2026** · Nutzer: *„für mein Fiat Euro als Vergleich, für den Markt Dollar“* · *„gewinnbringend wäre u. U. bereits, wenn man die Inflation schlägt, also nicht investiert ist“*.
+- **Entschieden:** Gemessen wird in **Dollar**, bilanziert für den Nutzer in **Euro**. K10 *Vertrauen in Fiat* kommt als Messplan Fassung 2 (Markt in Dollar, Euro-Kaufkraft als Auskunft).
+- **Eigene fachliche Festlegungen (berichtet):**
+  - Inflation = HICP Euroraum. Risikolos = €STR, beides frei bei FRED.
+  - Bilanz in log-Ertrag, denn das ist der geometrische Ertrag und enthält den Schwankungsabschlag.
+  - Kosten in der Bilanz, nicht in der Bewertung (Regel 2). Steuern sind Auskunft.
+- **Vorschlag, offen:**
+  - *gewinnbringend* = schlägt H1 Inflation;
+  - *lohnt als Auswahl* = schlägt zusätzlich BTC;
+  - Rückgang und Schwankung als Auskunft.
+- Nachweis: Spot §51.8.

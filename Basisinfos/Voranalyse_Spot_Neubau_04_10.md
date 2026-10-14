@@ -6325,3 +6325,58 @@ Nutzer 14.10.: *„ja starten“*.
 - **Stand heute:** *lang* günstig (Geldmenge, Netto-Liquidität, Kredit, NFCI, VIX; Realzins und 2 J ungünstig). *kurz* neutral (Netto-Liquidität und Dollar neutral, Kredit günstig, Realzins und 2 J ungünstig).
 - Die beiden Kandidaten mit der größten Aussicht (Netto-Liquidität kurz, Dollar kurz) **vorwärts beobachten**. Jedes Jahr Daten mehr erhöht die Auflösung; Nachmessung frühestens 10/2027, ohne die Regel zu ändern.
 - Die Makro-Grundlage (Daten, Kanäle, Einteilung) ist gebaut und gilt **klassenübergreifend**, so wie mit dem Nutzer vereinbart. Für Aktien zeigt die Probe nur kleine Effekte (Nasdaq/S&P: Netto-Liquidität kurz +2,2 %, p 0,006, alle Epochen gleich).
+
+### 51.8 Maßstab *gewinnbringend* (O48) und K10 *Vertrauen in Fiat* (14.10.2026, Nachtrag)
+
+**Nutzer 14.10.:**
+- *„Für mein Fiat Euro als Vergleich, für den Markt Dollar.“*
+- *„Gewinnbringend wäre u. U. bereits, wenn man die Inflation schlägt, also nicht investiert ist. Kannst du hier noch etwas Fachliches beitragen?“*
+
+**1. Die Hürden-Leiter** (alles in **Euro**, log-Ertrag, Stichtag 01/2024 bis 10/2026; Quellen frei: HICP Euroraum FRED `CP0000EZ19M086NEST`, €STR `ECBESTRVOLWGTTRMDMNRT`, EUR/USD `DEXUSEU`):
+
+| Hürde | Frage | 01/2024 → heute |
+|---|---|---|
+| H0 nominal > 0 | Habe ich mehr Euro? | – |
+| **H1 Inflation** | Habe ich Kaufkraft gewonnen? | **+7,9 %** (HICP bis 08/2026, J/J 3,2 %) |
+| **H2 risikolos verzinst** | Bin ich besser als Geld, das *nicht investiert* auf Zinsen liegt? | **+7,8 %** (€STR) |
+| **H3 BTC** | Bin ich besser als die **einfachere** Krypto-Anlage? | BTC **+87 %** |
+| zum Vergleich | – | Altkorb (Top 50 nach Umsatz, monatlich gewechselt) **−85 %** · Gold **+99 %** · EUR/USD +1,2 % |
+
+**2. Was fachlich dazugehört:**
+- **„Nicht investiert“ ist nicht null.** Geld auf Zinsen (€STR) hat die Inflation seit 2024 fast genau gehalten (+7,8 gegen +7,9 %). H1 und H2 liegen also zusammen, und **die Hürde ist rund 3 % im Jahr, nicht 0 %**. Unverzinstes Geld hat 7,9 % Kaufkraft verloren. ⚠️ Bankzinsen auf Tagesgeld liegen meist unter €STR; €STR ist die Obergrenze des risikolosen Ertrags.
+- **Risiko kostet Rendite, auch ohne Verlustjahr.** Bei Schwankung σ ist der tatsächlich erzielte (geometrische) Ertrag rund **σ²/2 unter dem Durchschnitt**. Seit 2024:
+  - BTC: σ 47 %, Abschlag rund **11 % im Jahr**, größter Rückgang −53 %;
+  - Altkorb: σ 76 %, Abschlag rund **29 % im Jahr**, größter Rückgang −92 %.
+  - Eine Auswahl muss diesen Abschlag erst verdienen, bevor sie die Inflation schlägt. Einzelne Altcoins schwanken noch stärker. Deshalb messen wir **log-Erträge** (das ist der geometrische Ertrag), nie Durchschnittserträge.
+- **Wer Krypto-Risiko ohnehin trägt, für den ist BTC die Alternative.** Schlägt eine Altcoin-Auswahl die Inflation, aber nicht BTC, dann ist sie *gewinnbringend*, und trotzdem wäre BTC halten einfacher und besser gewesen. Ab 2024 war der Abstand gewaltig (+87 % gegen −85 %).
+- **Währung:**
+  - Gemessen wird **in Dollar**, weil der Markt in Dollar handelt (Nutzer).
+  - Bilanziert wird **in Euro**, denn das ist das Geld des Nutzers. Seit 2024 hat das kaum Unterschied gemacht (+1,2 %), in **einzelnen Jahren** sehr wohl: 2025 stieg der Euro gegenüber dem Dollar um 14,4 %.
+- **Kosten und Steuern:**
+  - Regel 2 bleibt: Gebühren gehören **nicht in die Bewertung** (Signal).
+  - In die **Bilanz** einer Strategie (*„war sie gewinnbringend?“*) gehören sie aber hinein, weil sie die Hürde erhöhen. Die Steuer hängt vom Wohnsitz ab und ist **Auskunft**, nicht Teil der Messung.
+
+**3. Vorschlag zum Maßstab für H-SEL-B (zur Entscheidung):**
+
+| Urteil | Bedingung (12 M, in Euro, nach Kosten, ab 2024) |
+|---|---|
+| **gewinnbringend** (Nutzerdefinition) | Auswahl schlägt **H1 Inflation**; H2 €STR daneben als Auskunft, weil fast gleich |
+| **lohnt als Auswahl** | Auswahl schlägt **zusätzlich H3 BTC** |
+| Auskunft | größter Rückgang, Schwankung, Zeit unter Wasser |
+
+⇒ Beides wird ausgewiesen. Der Nutzer entscheidet, ob schon *gewinnbringend* für eine Spot-Regel reicht.
+⚠️ **Zeigt die Inventur (O48 Schritt 1) wie bisher keine Regel über H1, ist H-SEL-B mit freien Daten ab 2024 nicht belegt**, gleich welche Hürde gilt.
+
+**4. K10 „Vertrauen in Fiat“ — Messplan-Entwurf Fassung 2 (Nutzer: Euro für das eigene Geld, Dollar für den Markt):**
+- **Markt (Dollar):**
+  - K10a Gold gegen Realzins: Rest der rollierenden 5-J-Regression Gold ~ DFII10, *lang* = Niveau des Rests, *kurz* = 3-M-Änderung. Günstig ist steigendes Misstrauen, die Richtung wird **zweiseitig** geprüft.
+  - K10b Gold gegen den Dollar-Index (Gold steigt *trotz* starken Dollars = Vertrauensverlust in Fiat allgemein).
+  - Prüffrage für Krypto: **Läuft K10 BTC voraus?**
+  - Einteilung, Nullwelt N2 (Surrogate, R-R14), Urteil, Selbsttest und Gegenprobe wie §51.5/§51.7.
+- **Eigenes Geld (Euro), nur Auskunft:**
+  - Gold in Euro;
+  - HICP J/J;
+  - €STR minus HICP (Realzins des Sparers; heute 2,44 − 3,2 = **−0,8 %**).
+  - Das kommt in die Umfeld-Anzeige: *„Kaufkraft des Euro: …“*.
+- **Stand heute:** Gold in Euro +99 % seit 01/2024, aber −5,3 % seit 02/2026, während der Realzins in Dollar von 1,9 auf 2,9 % stieg.
+- ⚠️ **Erwartung vorab:** Mit 13 Jahren BTC ist auch K10 voraussichtlich *nicht entscheidbar* (Auflösung §51.7). Sein Wert liegt in der **Auskunft**.
