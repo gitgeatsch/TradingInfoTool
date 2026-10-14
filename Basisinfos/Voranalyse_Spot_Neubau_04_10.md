@@ -6410,3 +6410,61 @@ Nutzer 14.10.: *„ja starten“*.
 **Auskunft Euro** (nicht gemessen, nur Anzeige): Gold in Euro, HICP J/J, €STR − HICP.
 
 **Folge:** wie §51.7. Trägt K10, wird er Gewicht; sonst bleibt er Fakt-Anzeige.
+
+### 51.10 Thesen und Maßstab geprüft (14.10.2026; `p51_k10.py`, `p50_inventur.py` → `.txt`)
+
+Nutzer 14.10.: *„Ja – prüfen wir diese Thesen und den Maßstab. Sollten wir hier an die Grenzen geraten bzw. feststellen, dass diese fachlich oder technisch falsch sind, müssen wir umdenken.“*
+
+**1. K10 *Vertrauen in Fiat* (Vorprüfung, §51.9): keine lange Messung.**
+- Kein K10-Kanal liegt bei BTC oder Altkorb im äußeren Zehntel der Nullwelt N2 **und** hat in E3 dasselbe Vorzeichen.
+- Bei BTC sind die Abstände klein (−15 bis +7 %). Beim Altkorb ist das Vorzeichen eher **negativ** (Gold in Weltwährung kurz −23 %, p 0,015): Steigendes Misstrauen ging mit **schwächeren Altcoins gegen BTC** einher. E3 ist dort nicht prüfbar.
+- ⭐ **Der Bruch selbst ist messbar, als Fakt:** Das rollierende 5-J-Beta Gold ~ Realzins lag 2012 bei **−0,38**, 2018 bei −0,20, 01/2024 bei **0,00** und liegt heute bei **+0,20**. Gold steigt heute *mit* dem Realzins, und genau das meint die These *Vertrauen statt Zins*.
+- ⚠️ **Technische Grenze:** Ein rollierender Rest „lernt“ einen neuen Zusammenhang nach einigen Jahren mit und verliert damit das Signal. Deshalb taugt das **Beta** als Anzeige, der Rest nicht.
+- **Auskunft Euro heute:** Gold 3.732 €/oz (52 W +4,3 %); HICP J/J 3,2 % (08/2026); €STR 2,44 %; **Sparer-Realzins −0,8 Pp**.
+
+**2. Inventur mit einheitlichem Maßstab** (Euro, log-Ertrag, nach Kosten; Kurse bis 20.09.2026):
+
+| Regel | Bilanz in Euro je Einheit | über H1 Inflation | Beleg gegen Zufall |
+|---|---|---|---|
+| A0 alle Coins der Watchlist-Zellen, 12 M | **−56 %** je 12 M | 5 % der Stichtage | – (das ist der Markt) |
+| A1 oberes Fünftel, 12 M halten | **−49 %** | 5 % | Rang **0,94**: besser als Zufall (−57 %), aber nicht belegt |
+| A2 dasselbe + Führung X2 (Rest auf €STR) | **−12 %** | 25 % | – |
+| A9 unteres Fünftel (B4) | **−67 %** | 0 % | Rang **0,000**: schlechter als Zufall (reproduziert §43) |
+| Regel 3 Momentum, 30 T | −9 % je Einstieg | 34 % | §37: trägt nicht / schadet |
+| Regel 4 ruhiger Boden, 30 T | −10 % | 29 % | §40: schadet |
+| Regel 6 Gebühren-Wachstum, 30 T | −10 % | 32 % | §46: schadet |
+| Regel 7 Stablecoins je Kette, 30 T | −10 % | 31 % | §46: trägt nicht |
+| **Hürden** (01/2024 bis 09/2026) | H1 Inflation +7,8 % · H2 €STR +7,4 % · **BTC halten +74 %** (log +55,6) | | |
+
+Zur Einordnung:
+- A1 und A2 sind **Varianten** von Regel 1 und 2 (Marktwert- statt Umsatz-Klassen, Wert ohne F9). Sie widerlegen die Zahlen in §21 nicht (R-R11).
+- **Gegenprobe Rechenweg:** 3 × 200 von 200 Einstiegen gleich dem gespeicherten `ex`.
+- Regel 5 (Dominanz) hat Einstiege nur für 2023 gespeichert. Regel 8 (Listings) misst 7 T. Beide stehen nur mit ihrem Urteil in der Tabelle (§44: nicht entscheidbar; §38: trägt nicht / schadet).
+
+**3. Ist der Maßstab richtig?**
+- **Fachlich: ja, aber unvollständig.**
+  - Inflation, Zins und BTC in Euro und nach Kosten sind die richtigen Hürden für die **Bilanz**.
+  - Eine Hürde allein **belegt** aber keine Auswahlfähigkeit. In einem steigenden Markt schlägt sie auch der Zufall, in einem fallenden scheitert jede Auswahl daran.
+  - ⇒ **Maßstab Fassung 2:**
+    - (a) **Beleg** = besser als eine gleich große Zufallsauswahl aus demselben Universum (Rang);
+    - (b) **Bilanz** = H1, H2 und H3 als Fakt.
+  - *gewinnbringend* braucht (b) über H1. *Lohnt als Auswahl* braucht (a) **und** (b) über H3.
+- **Technisch: an der Grenze.** 12 M ab 2024 ergeben nur **20 überlappende Fenster**, das sind rund 1,7 unabhängige Jahre. Die Bilanz über 12 M ist damit ein **Fakt**, kein Nachweis. Belegen lässt sich nur der Querschnitt (gegen Zufall am selben Stichtag).
+- **Und der Maßstab ist nicht der Engpass:** Alle Regeln liegen deutlich unter H1: die 12-M-Regeln um 16 bis 113 log-Pp, die 30-T-Regeln um 9 bis 11 Pp je Einstieg. Ob H1, H2 oder H3 gilt, ändert **kein** Urteil.
+
+**4. Was die Prüfung über die These H-SEL-B sagt:**
+- Das Universum hat je 12 M **−56 %** in Euro verloren, während BTC stieg. Eine Auswahl müsste also rund **60 Pp über Zufall** liegen, um nur die Inflation zu schlagen.
+- Die beste geprüfte Auswahl (A1) liegt **+8 Pp** über Zufall, und auch das ist nicht belegt.
+- ⇒ **Mit den geprüften Regeln ist H-SEL-B nicht erfüllt, und der Abstand ist keine Frage der Feinjustierung.**
+- Gemessen **wirkt** etwas anderes: die **Führung** (X2 verkleinert den Verlust von −49 auf −12 %) und der **Abbau** (B4: das untere Fünftel ist sicher schlechter als Zufall).
+
+**5. Umdenken: Vorschlag zur Abstimmung**
+
+| # | Ansatz | Begründung |
+|---|---|---|
+| U-A | **Altcoins: Schutz statt Auswahl.** Das System leistet bei Altcoins die **Führung** (B1, B3, B4, X2), keine Kaufempfehlung je Coin | gemessen trägt nur das; deckt sich mit E-102 |
+| U-B | **Anteil statt Auswahl.** Die größte Stellgröße ist, *wie viel* in Altcoins, BTC oder Zinsgeld liegt, nicht *welcher* Coin. Das System zeigt den Anteil mit der Hürden-Bilanz als **Fakt** | −56 % (Altcoins) gegen +6 % (BTC, je 12 M) ist der größte Unterschied der ganzen Messreihe |
+| U-C | **H-SEL-B Fassung 2: Ausschluss statt Treffer.** Zuerst **S2 Angebot** (hohe Token-Inflation und Unlocks *meiden*). Das ist der plausibelste ungeprüfte Grund für den Verfall ab 2024 und passt zu U-A | „wer verliert sicher“ ist ab 2024 messbar (B4); „wer gewinnt“ bisher nicht |
+| – | Maßstab **Fassung 2** (Beleg gegen Zufall + Bilanz in Euro) gilt für jede künftige Spot-Regel | §51.10 Punkt 3 |
+
+⚠️ Das ist **eine Systemfrage, keine Anlageempfehlung**. Welcher Anteil wofür, entscheidet der Nutzer; das System liefert die gemessene Bilanz.

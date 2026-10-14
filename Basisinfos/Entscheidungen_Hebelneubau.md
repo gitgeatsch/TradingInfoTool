@@ -1215,3 +1215,17 @@ Schritt7 §23.24.
   - *lohnt als Auswahl* = schlägt zusätzlich BTC;
   - Rückgang und Schwankung als Auskunft.
 - Nachweis: Spot §51.8.
+
+# E-106 · Thesen und Maßstab geprüft: H-SEL-B nicht erfüllt, Maßstab Fassung 2, Umdenken vorgeschlagen (14.10.2026)
+
+**14.10.2026** · Nutzer: *„Ja – prüfen wir diese Thesen und den Maßstab … sonst müssen wir umdenken“*.
+- **K10:** Die Vorprüfung schließt die lange Messung aus. Als Fakt bleibt der Bruch Gold ~ Realzins (Beta −0,38 → +0,20).
+- **Inventur** (Euro, nach Kosten, ab 2024): Keine geprüfte Regel schlägt die Inflation.
+  - Universum −56 % je 12 M, beste Auswahl −49 %, Rang gegen Zufall 0,94;
+  - Führung X2 −12 %; B4 sicher schlechter als Zufall.
+- **Eigene fachliche Festlegung (berichtet):** Maßstab **Fassung 2** = Beleg gegen eine gleich große Zufallsauswahl + Bilanz H1/H2/H3 als Fakt. Grund: Eine Hürde allein belegt keine Auswahlfähigkeit. 12 M ab 2024 sind nur 20 überlappende Fenster.
+- **Zur Entscheidung (Umdenken):**
+  - U-A Altcoins: Schutz statt Auswahl;
+  - U-B Anteil statt Auswahl (als Fakt mit Hürden-Bilanz);
+  - U-C H-SEL-B Fassung 2 als Ausschluss, S2 Angebot zuerst.
+- Nachweis: Spot §51.10, `p50_inventur.py`, `p51_k10.py`.

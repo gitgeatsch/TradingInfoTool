@@ -1,0 +1,23 @@
+P50 INVENTUR · Massstab §51.8 · Kurse bis 2026-09-20 · HICP bis 08/2026 (danach letzte J/J-Rate) · alle Ertraege log, in Euro, nach Kosten
+
+TEIL A · 12 M ab Monatsstichtag · E3 2024-02-01 bis 2025-09-01 · 20 Stichtage · 7471 Anker (Coin x Stichtag)
+
+  A0 alle Coins der Watchlist-Zellen             n  7471 | Euro nach Kosten   -82.2 % (einfach  -56 %) | H1 Infl  +2.3 · H2 ESTR  +2.5 · H3 BTC   +6.3 | ueber H1   5 % · ueber H3   0 % | gg. H1   -84.5 · gg. H3   -88.5 Pp
+  A1 oberes Fuenftel, 12 M halten                n  1522 | Euro nach Kosten   -67.7 % (einfach  -49 %) | H1 Infl  +2.3 · H2 ESTR  +2.5 · H3 BTC   +6.8 | ueber H1   5 % · ueber H3   0 % | gg. H1   -70.0 · gg. H3   -74.5 Pp
+  A2 oberes Fuenftel + Fuehrung X2 (Rest ESTR)   n  1522 | Euro nach Kosten   -13.3 % (einfach  -12 %) | H1 Infl  +2.3 · H2 ESTR  +2.5 · H3 BTC   +6.8 | ueber H1  25 % · ueber H3  30 % | gg. H1   -15.6 · gg. H3   -20.0 Pp
+  A9 unteres Fuenftel (B4)                       n  1474 | Euro nach Kosten  -110.7 % (einfach  -67 %) | H1 Infl  +2.3 · H2 ESTR  +2.5 · H3 BTC   +6.3 | ueber H1   0 % · ueber H3   0 % | gg. H1  -113.0 · gg. H3  -117.0 Pp
+     Auskunft: eingestellte Coins = -100 %: Korb -120.3 %
+
+  BELEG gegen Zufallsauswahl (bestaendige Zufallszahl je Coin, gleiches Fuenftel je Zelle, 200 Ziehungen):
+    A1 oberes Fuenftel    -67.7 % · Zufall Mittel  -83.5 % (2,5./97,5.  -96.0 /  -64.0) · Rang 0.940
+    A9 unteres Fuenftel  -110.7 % · Zufall Mittel  -84.2 % (2,5./97,5.  -99.6 /  -64.4) · Rang 0.000
+
+TEIL B · 30 T je Einstieg (Tagesregeln, gespeicherte Einstiege ab 2024) · Bilanz je Einstieg; Beleg aus der jeweiligen Messung
+  Regel 3 K-H1 Momentum 30 T                     n  1555 | Euro nach Kosten    -9.0 % (einfach   -9 %) | H1 Infl  +0.2 · H2 ESTR  +0.2 · H3 BTC   +0.7 | ueber H1  34 % · ueber H3  30 % | gg. H1    -9.2 · gg. H3    -9.7 Pp | je Jahr hochgerechnet -109 % (H1 +2.9 %) | Beleg §37: trägt nicht (H) / schadet (M)
+  Regel 4 K-3 ruhiger Boden                      n   494 | Euro nach Kosten   -11.0 % (einfach  -10 %) | H1 Infl  +0.2 · H2 ESTR  +0.2 · H3 BTC   +0.2 | ueber H1  29 % · ueber H3  22 % | gg. H1   -11.2 · gg. H3   -11.1 Pp | je Jahr hochgerechnet -133 % (H1 +3.0 %) | Beleg §40: schadet
+  Regel 6 U2 Gebuehren-Wachstum                  n   765 | Euro nach Kosten   -11.1 % (einfach  -10 %) | H1 Infl  +0.2 · H2 ESTR  +0.2 · H3 BTC   -0.7 | ueber H1  32 % · ueber H3  25 % | gg. H1   -11.3 · gg. H3   -10.3 Pp | je Jahr hochgerechnet -135 % (H1 +3.0 %) | Beleg §46: schadet
+  Regel 7 U1 Stablecoins je Kette                n   433 | Euro nach Kosten   -11.0 % (einfach  -10 %) | H1 Infl  +0.2 · H2 ESTR  +0.2 · H3 BTC   -1.0 | ueber H1  31 % · ueber H3  25 % | gg. H1   -11.2 · gg. H3   -10.0 Pp | je Jahr hochgerechnet -133 % (H1 +2.5 %) | Beleg §46: trägt nicht
+
+GEGENPROBE Rechenweg Teil B (Index-Basis 2017-08-17, Ertrag gegen BTC = 'ex' der Messung): k37_messung_H: 200 von 200 gleich (|d| < 0,001), Median |d| 0.00000 · k3_messung: 200 von 200 gleich (|d| < 0,001), Median |d| 0.00000 · k47_messung_U2: 200 von 200 gleich (|d| < 0,001), Median |d| 0.00000
+
+BILANZ ganzer Zeitraum 01/2024 bis 2026-09-20 (Euro): H1 Inflation +7.8 % · H2 ESTR +7.4 % · BTC halten +55.6 % (log)
