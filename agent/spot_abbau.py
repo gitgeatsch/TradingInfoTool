@@ -413,7 +413,8 @@ def lauf(conn_prod, ordner: str, watchlist: list, heute: date | None = None, htt
         # oben bleibt unberuehrt; scheitert nie (ohne Verwaesserung laeuft B4 wie vorher)
         try:
             from agent import verwaesserung as VW
-            erg["verw"] = VW.speichere(c, t.isoformat(), z.reset_index(), cgh)
+            from agent import umlauf_zusatz as UZ           # P22b: Zusatz-Coins NUR fuer die Verwaesserung, nie fuer die Klassen
+            erg["verw"] = VW.speichere(c, t.isoformat(), z.reset_index(), {**UZ.reihen(ordner), **cgh})
         except Exception as exc:                             # noqa: BLE001
             erg["verw"] = None
             c.execute("INSERT INTO protokoll VALUES (?,?,?,?)", (jt, "-", "verwaesserung fehler", ("%s: %s" % (type(exc).__name__, exc))[:300]))
@@ -608,7 +609,7 @@ def verw_am_stichtag(ordner: str, t: str, liste: list) -> dict:
     aus = {r[0]: w.get(r[1] or r[0], (None, None)) for r in liste}
     try:                                                     # P22c: Freigabe-Rhythmus (Vergangenheit) je Coin dazu
         from agent import verwaesserung as VW
-        reihen = _umlauf(ordner)
+        reihen = VW.alle_reihen(ordner)[0]                   # P22b: mit Zusatz-Coins
         heute = datetime.now(timezone.utc).date()
         aus = {r[0]: tuple(aus[r[0]]) + (VW.rhythmus_text(VW.rhythmus(reihen.get(r[1] or r[0]), heute)),) for r in liste}
     except Exception:                                        # noqa: BLE001

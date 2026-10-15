@@ -1885,6 +1885,16 @@ def externe_reihen_job(conn_factory) -> None:
                     "(Umbaukonzept T7)", _ziel)
             else:
                 _HU.taeglich(_ziel)
+                # P22b (15.10.2026): Zusatz-Coins ausserhalb Binance - eigene Tabelle, nur fuer die Verwaesserung (Spot §57)
+                try:
+                    import agent.umlauf_zusatz as _UZ
+                    import config as _cfg22b
+                    _z = _UZ.pflege(_ziel, _cfg22b.get_watchlist())
+                    logger.info("Umlauf-Zusatz: %d Kandidaten · Erstabruf %s · Tageswert %d · ohne Wert %d%s", _z["kandidaten"],
+                                ", ".join("%s %s" % (x[0], x[1]) for x in _z["erstabruf"]) or "-", _z["tageswert"], _z["ohne_wert"],
+                                (" · Fehler " + ", ".join(_z["fehler"])) if _z["fehler"] else "")
+                except Exception as exc:                     # noqa: BLE001
+                    logger.warning("Umlauf-Zusatz nicht gepflegt: %s", exc)
         except Exception as exc:                             # noqa: BLE001
             logger.warning("Freier Umlauf nicht auffrischbar: %s", exc)
 

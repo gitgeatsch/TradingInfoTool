@@ -294,6 +294,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-15"
     beleg: "Diagnose 15.10. 06:42 (NB auf f470e018, keine lokalen Aenderungen): austausch_eingang.umlauf_ergaenzung vorhanden unter G:\\Meine Ablage\\Claude_Austauschordner, 132.145 Zeilen, Pruefsumme ok, Ziel-Marke ja, schon eingespielt; messbasen turnover: Form betriebskopie, aelteste_daten 2025-09-21, juengste 2026-10-15, 376 Symbole, 8,0 MB, Vermerk 2026-10-15 04:31 UTC angeboten 132.145 / eingefuegt 132.145, Sicherung umlaufmenge_cg.vor_ergaenzung_20261015_043159.db"
+  - id: K-UZ-1
+    titel: "P22b Umlauf-Zusatz: Job externe_reihen holt die Coins ausserhalb Binance (HYPE, XDC, KAS ...) und schreibt sie taeglich fort"
+    seit: "2026-10-15"
+    paket: P22b
+    commit: ""
+    art: manuell
+    nachweis: "Log nach 06:35: 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf HYPE ok, ... · Tageswert ...' (am Folgetag: Erstabruf -, Tageswert 13); Diagnose umlauf_zusatz: je_urteil ok 13 (BIO verworfen, MON evtl. verworfen wenn < 300 Punkte), von 2025-10, bis heute; Teilexport SPOT-ABBAU: 'Umlauf-Zusatz (P22b ...)'. Danach Mail zu HYPE/XDC: Verwaesserungszeile mit Vermerk 'angewandt, nicht auf diesem Coin gemessen'"
+    faellig_bis: "2026-10-20"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

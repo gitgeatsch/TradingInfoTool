@@ -3187,3 +3187,15 @@ Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
 **Nachtrag 15.10. — P22c Freigabe-Rhythmus (Spot §55):**
 - Der Satz erscheint in denselben Mails wie P22 und auf der Statusseite. Er braucht die Ergänzung (K-UE-1), sonst ist die Reihe zu kurz.
 - Ein eigener Schalter ist dafür nicht nötig.
+
+### 23.50 P22b Umlauf-Zusatz für Coins außerhalb Binance (15.10.2026)
+
+**Bau:**
+- `agent/umlauf_zusatz.py`, gepflegt im Job `externe_reihen` (06:35).
+- Die eigenen Tabellen in `umlaufmenge_cg.db` liest nur die Verwässerung.
+
+**Prüfung:** Prüfstand 8/8 mit Pfad durch den Job-Abschnitt, Gegenprobe mit echten Daten 3/3, Suite.
+
+**Am NB:**
+- Pull und Neustart; der erste Lauf holt die 14 Coins selbst (etwa 3 min).
+- Kontrolle **K-UZ-1**.

@@ -164,19 +164,34 @@ def rhythmus_text(rh: dict | None) -> str | None:
     return t
 
 
+def alle_reihen(ordner: str) -> tuple:
+    """P22b: (Reihen der Hauptreihe UND der Zusatztabelle, Menge der Zusatz-Symbole). Die Hauptreihe hat Vorrang. Nur lesend.
+    ⚠️ NUR fuer Verwaesserung und Rhythmus - die B4-Klassen und turnover lesen weiter allein ``umlaufmenge`` (Grundgesamtheit, §57)."""
+    from agent import spot_abbau as SA
+    from agent import umlauf_zusatz as UZ
+    haupt = SA._umlauf(ordner)
+    zus = {s: r for s, r in UZ.reihen(ordner).items() if s not in haupt}
+    return {**zus, **haupt}, set(zus)
+
+
+ZUSATZ_VERMERK = "angewandt, nicht auf diesem Coin gemessen – außerhalb der Binance-Messmenge"
+
+
 def fakt(ordner: str, symbol: str, heute: date | None = None, reihen: dict | None = None) -> dict | None:
     """Die Verwaesserung eines Coins als Fakt: {'heute', 'fuenftel', 'klasse', 'stichtag', 'v_stichtag', 'q_stichtag', 'text'} oder
     {'text': Grund} wenn nichts da ist. ``symbol`` = Bestand- oder Binance-Symbol (Zuordnung wie B4). Scheitert nie."""
     try:
         heute = heute or datetime.now(timezone.utc).date()
         b = _binance(symbol)
+        zusatz = set()
         if reihen is None:
-            from agent import spot_abbau as SA
-            reihen = SA._umlauf(ordner)
-        r = reihen.get(b) if reihen else None
+            reihen, zusatz = alle_reihen(ordner)
+        r = (reihen.get(b) if reihen else None)
+        if r is None and reihen and symbol in reihen:            # Zusatz-Coins tragen das Watchlist-Symbol
+            r, b = reihen[symbol], symbol
         v = wert(r, heute)
         aus = {"symbol": symbol, "reihe": b, "hat_reihe": r is not None, "heute": v, "fuenftel": None, "klasse": None, "stichtag": None,
-               "v_stichtag": None, "q_stichtag": None}
+               "v_stichtag": None, "q_stichtag": None, "zusatz": b in zusatz}
         p = _ablage(ordner)
         if os.path.exists(p):
             from agent import spot_mitnahme as SM
@@ -214,7 +229,11 @@ def text(f: dict) -> str:
             return "Verwässerung 90 T: für %s gibt es keine Mengenreihe (CoinGecko-Umlauf nicht erfasst)" % f.get("reihe")
         return "Verwässerung 90 T: noch keine 90 Tage Mengenhistorie"
     if f.get("heute") is not None:
-        t = "Umlaufmenge %s in 90 Tagen" % _pct(f["heute"])
+        # P22b: exakt 0 heisst bei CoinGecko oft "nicht nachgefuehrt" - fuer neue Token ist das nicht gegenpruefbar (§57)
+        t = ("Umlaufmenge laut CoinGecko unverändert in 90 Tagen" if abs(f["heute"]) < 1e-9 else
+             "Umlaufmenge %s in 90 Tagen" % _pct(f["heute"]))
+        if f.get("zusatz"):
+            t += " (" + ZUSATZ_VERMERK + ")"
         if f.get("fuenftel"):
             t += " (%s der Klasse %s, Grenzen vom Stichtag %s)" % (WORT[f["fuenftel"]], f["klasse"], _de(f["stichtag"]))
         elif f.get("klasse") is None and not f.get("universum_da"):
@@ -272,8 +291,7 @@ def text_stichtag(v: float | None, q: int | None, rh_text: str | None = None) ->
 
 def rhythmus_bestand(ordner: str, bestand_reihen: dict, heute=None, reihen: dict | None = None) -> list:
     """Statusseite/Teilexport (P22c): Bestandscoins mit lebendem Rhythmus -> [(Symbol, Art, naechste, je Freigabe %)] nach Termin."""
-    from agent import spot_abbau as SA
-    reihen = SA._umlauf(ordner) if reihen is None else reihen
+    reihen = alle_reihen(ordner)[0] if reihen is None else reihen
     heute = heute or datetime.now(timezone.utc).date()
     aus = []
     for s, b in bestand_reihen.items():

@@ -480,6 +480,10 @@ def _inhalt() -> int:
                     print("      %-8s Klasse %s · %+.1f %% · Fuenftel %s" % (r[0], r[1], 100 * (__import__("math").exp(r[2]) - 1), r[3] or "-"))
                 for r in sa.get("verw_rhythmus") or []:            # P22c
                     print("      Rhythmus %-8s %s · naechste um %s · je Freigabe %s" % r)
+                _uz = __import__("agent.umlauf_zusatz", fromlist=["stand"]).stand(os.path.join(DATEN, "umlaufmenge_cg.db"))   # P22b
+                print("    Umlauf-Zusatz (P22b, Coins ausserhalb Binance): %s" % (
+                    ("%s · %s bis %s · ok: %s" % (_uz.get("je_urteil"), _uz.get("von"), _uz.get("bis"), ", ".join(_uz.get("ok") or [])))
+                    if _uz.get("tabelle") else "noch nicht angelegt (erster Lauf des Jobs externe_reihen)"))
             except Exception as _e22:                                  # noqa: BLE001
                 print("    Verwaesserung 90 T (P22): nicht lesbar (%s)" % type(_e22).__name__)
     except Exception as ex:                                      # noqa: BLE001

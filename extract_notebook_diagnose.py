@@ -4066,6 +4066,7 @@ def main() -> None:
         "marktrang_ausfaelle": _marktrang_ausfaelle(log_zeilen),
         "messbasen": _messbasen(),
         "austausch_eingang": _austausch_eingang(),         # P22 15.10.: liegt die Ergaenzung am NB vollstaendig bereit?
+        "umlauf_zusatz": __import__("agent.umlauf_zusatz", fromlist=["stand"]).stand("data/umlaufmenge_cg.db"),   # P22b
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

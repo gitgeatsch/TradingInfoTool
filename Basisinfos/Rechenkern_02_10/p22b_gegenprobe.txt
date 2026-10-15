@@ -1,0 +1,7 @@
+Lauf 15.10.2026 (Desktop, nach dem Neustart):
+Erstabruf echt: [('HYPE', 'ok', 366), ('KAS', 'ok', 366), ('SUPRA', 'ok', 366)] · Tageswert 0 · Fehler []
+  SUPRA  Modul +39.3 % · Voranalyse p57 +39.4 % · gleich
+  KAS    Modul +0.7 % · Voranalyse p57 +0.7 % · gleich
+  HYPE   Modul +0.0 % · Voranalyse p57 +0.0 % · gleich
+
+3 von 3 gleich (Toleranz 0,15 Pp: der laufende Tageswert bewegt sich zwischen zwei Abrufen)

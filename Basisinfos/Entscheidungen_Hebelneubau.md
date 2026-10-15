@@ -1278,3 +1278,21 @@ Schritt7 §23.24.
   - Kein Satz ohne laufenden Rhythmus.
   - „Fällig gewesen“ ab 3 T Überschreitung.
 - Nachweis: Spot §54.8, §55; K-UE-1.
+
+# E-111 · P22b Variante B gebaut; Feature-Wunsch O51 (15.10.2026)
+
+**15.10.2026** · Nutzer:
+- *„Ja, Variante B bauen, prüfen und gegenprüfen.“*
+- *„Merke dir noch ein Feature für die neue oder alte Watchlist: Assets wieder entfernen und nicht nur ausmustern.“*
+
+**Gebaut:** Coins außerhalb Binance stehen in einer eigenen Zusatztabelle. Nur die Verwässerung liest sie; B4-Klassen und turnover bleiben bitgleich. Der NB-Job holt die Historie selbst.
+
+**Eigene fachliche Festlegungen (berichtet):**
+- Stablecoins werden an der Kursruhe erkannt (dieselbe Regel wie B4), Cash-Äquivalente der Watchlist sind ausgenommen.
+- Ein Abruffehler ist kein Urteil.
+- Höchstens 20 Erstabrufe je Lauf.
+- Die Hauptreihe hat Vorrang vor dem Zusatz.
+
+**O51:** Watchlist-Assets entfernen statt nur ausmustern. Gemerkt, Voranalyse folgt.
+
+Nachweis: Spot §57.1, Schritt7 §23.50, K-UZ-1.

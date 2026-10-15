@@ -22313,7 +22313,7 @@ def paket_verwaesserung() -> None:
     _q = {f: _quelltext(f) for f in ("agent/spot_abbau.py", "agent/spot_mitnahme.py", "agent/spot_upbit.py", "agent/regel0_mail.py",
                                      "scheduler/background.py", "remote/server.py", "nb_teilexport_betriebsdaten.py")}
     pruefe(P, "B4-Lauf schreibt die Verwaesserung in EIGENE Tabellen und faengt jeden Fehler ab (die Regel B4 bleibt unberuehrt)",
-           "VW.speichere(c, t.isoformat(), z.reset_index(), cgh)" in _q["agent/spot_abbau.py"]
+           "VW.speichere(c, t.isoformat(), z.reset_index(), {**UZ.reihen(ordner), **cgh})" in _q["agent/spot_abbau.py"]
            and "verwaesserung fehler" in _q["agent/spot_abbau.py"])
     pruefe(P, "Mails: B4, B1, B3 und REGEL0 (\"beim Kauf\") bekommen die Zeile; keine eigene Mail",
            "verw_am_stichtag(ordner, fall[\"stichtag\"], fall[\"liste\"])" in _q["scheduler/background.py"]
@@ -22341,10 +22341,21 @@ def paket_verwaesserung() -> None:
                   capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     pruefe(P, "⚠️⚠️ Pruefstand P22c: Rhythmus = unabhaengige Schleife und p55, Quoten mit dem Modulcode reproduziert, Texte, Mails, Statusseite",
            "6 von 6 bestanden" in (_rc.stdout or ""), " | ".join(z for z in (_rc.stdout or "").splitlines() if " FEHLER " in z) or (_rc.stderr or "")[-300:])
+    # P22b (15.10.2026): Zusatz-Coins ausserhalb Binance - eigene Tabelle, B4-Klassen und turnover lesen sie NIE (Grundgesamtheit, §57)
+    _qa, _qm, _qb = _quelltext("agent/spot_abbau.py"), _quelltext("agent/marktrang.py"), _quelltext("scheduler/background.py")
+    pruefe(P, "P22b: B4-Klassen lesen nur umlaufmenge (Wert(..., umlauf) aus cgh), die Zusatztabelle nur die Verwaesserung",
+           "{**UZ.reihen(ordner), **cgh}" in _qa and "W = Wert(K, U, ausschluss | (set(K.columns) - set(stamm)), umlauf," in _qa
+           and "umlaufmenge_zusatz" not in _qm and '"SELECT DISTINCT symbol FROM umlaufmenge"' in _qm)
+    pruefe(P, "P22b: der Job externe_reihen pflegt die Zusatztabelle (mit Watchlist aus config) und scheitert nie nach aussen",
+           "_UZ.pflege(_ziel, _cfg22b.get_watchlist())" in _qb and "Umlauf-Zusatz nicht gepflegt" in _qb)
     _sich = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
     if not _sich:
         pruefe(P, "Pruefstand p22 (braucht eine Prod-Sicherung im Austauschordner)", False, "keine Sicherung gefunden")
         return
+    _rb = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p22b_pruefstand.py"), _sich[-1]],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
+    pruefe(P, "⚠️⚠️ Pruefstand P22b: Kandidaten, Erstabruf/Urteile, Tageswert, B4 bitgleich, turnover-Messbasis bitgleich, fakt, PFAD Job, stand",
+           "8 von 8 bestanden" in (_rb.stdout or ""), " | ".join(z for z in (_rb.stdout or "").splitlines() if " FEHLER " in z) or (_rb.stderr or "")[-300:])
     _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p22_pruefstand.py"), _sich[-1]],
                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
     pruefe(P, "⚠️⚠️ Pruefstand am Seiteneffekt (%s): B4 bitgleich, Universum/Wert/Fuenftel unabhaengig, Mails, fakt, stand, Diagnose, "

@@ -1,0 +1,10 @@
+Z1   bestanden 14 Kandidaten: AIOZ, AKT, ASTER, BIO, BRETT, CANTON, CAT, GRIFFAIN, HYPE, KAS, MON, SUPRA, VSN, XDC · EURCV (Cash-Aequivalent) draussen True
+Z2   bestanden Urteile {'HYPE': 'ok', 'XDC': 'ok', 'MON': 'verworfen', 'ASTER': 'abruf 429', 'EURCV2': 'stablecoin'} · HYPE Menge = Marktwert/Preis, groesste Abweichung 2.2e-16 · umlaufmenge + Marke bitgleich True
+Z3   bestanden zweiter Lauf: market_chart nur ['aster-2'] · Erstabruf-Tag 13 = ok 13 · Folgetag: /coins/markets EIN Abruf, Tageswerte 13, HYPE = Sollwert True · gleicher Tag nochmal: 0
+Z4   bestanden abbau_fuenftel gleich True · abbau_lauf gleich True · Klassen gleich True · Zusatz-Coins im Universum mit Verwaesserung: HYPE +3.0 %, XDC +0.0 %, KAS +3.0 %, BRETT +3.0 %, SUPRA +3.0 % (ohne Zusatz: keine)
+Z5   bestanden turnover-Messbasis mit/ohne Zusatz gleich True (2920 Zeichen), XDC/KAS nicht darin True
+Z6   bestanden HYPE: Umlaufmenge +3,5 % in 90 Tagen (angewandt, nicht auf diesem Coin gemessen (außerhalb der Binance-Messmenge)) (4. Fünftel der Klasse M, Grenzen vom Sti (eigen +0.0348) | XDC: Umlaufmenge laut CoinGecko unverändert in 90 Tagen (angewandt, nicht auf diesem Coin gemessen (außerhalb der B
+Z7   bestanden Job-Abschnitt: Umlauf-Zusatz: 14 Kandidaten · Erstabruf AIOZ ok, AKT ok, ASTER ok, BIO ok, BRETT ok, CANTON ok, CAT ok, GRIFFAIN ok, HYPE ok, KAS ok, MON verworfen, SUPRA ok,  · stand {'ok': 13, 'verworfen': 1}
+Z8   bestanden stand: {'ok': 13, 'stablecoin': 1, 'verworfen': 1}, 2025-09-20 bis 2026-09-21 · Wegwerf-Produktion unveraendert True
+
+8 von 8 bestanden

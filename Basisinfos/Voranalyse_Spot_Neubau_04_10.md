@@ -6951,3 +6951,38 @@ Nutzer 15.10.: *„Ja, Voranalyse P22b vorbereiten, prüfen und gegenprüfen.“
 - **Prüfung:**
   - Prüfstand am Seiteneffekt: B4 bitgleich, turnover-Messbasis unverändert, Zusatzwerte unabhängig nachgerechnet, Mailtexte, Tagesjob mit gestelltem Abruf, Erstabruf einmalig.
   - Dazu die Suite und eine NB-Kontrolle.
+
+### 57.1 P22b gebaut, Variante B (15.10.2026; `p22b_pruefstand.py` 8/8, `p22b_gegenprobe.py` 3/3)
+
+Nutzer 15.10.: *„Ja, Variante B bauen, prüfen und gegenprüfen.“*
+
+| Teil | Ort | Wirkung |
+|---|---|---|
+| Modul | `agent/umlauf_zusatz.py` | Tabellen `umlaufmenge_zusatz` und `abruf_zusatz` in `umlaufmenge_cg.db`. **Kandidaten** = Watchlist-Krypto mit CoinGecko-ID ohne Reihe in `umlaufmenge`, ohne Cash-Äquivalente; auch jeder künftige Coin außerhalb Binance. **Erstabruf** einmal 365 T (Zerlegung und Bündelfaktor wie der Vollabruf); Urteile `ok`, `verworfen` (< 300 Punkte), `stablecoin` (Median der täglichen Kursänderung < 0,2 %); ein Abruffehler ist **kein** Urteil, er wird wiederholt. **Tageswert** täglich in **einem** Bündelabruf (`/coins/markets`) |
+| Job | `scheduler/background.py`, Job `externe_reihen` (06:35, NB) | `pflege()` nach dem bestehenden Tagesjob; scheitert nie nach außen; Logzeile *„Umlauf-Zusatz: …“* |
+| Verwässerung | `agent/verwaesserung.py` | `alle_reihen` = Hauptreihe ∪ Zusatz (die Hauptreihe hat Vorrang). Zusatz-Coins tragen den Vermerk *„angewandt, nicht auf diesem Coin gemessen – außerhalb der Binance-Messmenge“*; exakt 0 % heißt *„laut CoinGecko unverändert“* |
+| B4-Lauf | `agent/spot_abbau.py` | Die Verwässerung wird mit Zusatz gerechnet, die **Klassen weiter nur aus `umlaufmenge`** |
+| Diagnose, Teilexport | `umlauf_zusatz` | Urteile, Zeitraum, Liste `ok` |
+
+**Prüfstand 8/8** (gestellter Abruf, NB-Lage):
+- Z1 Kandidaten: 14 Coins, ohne EURCV.
+- Z2 Menge = Marktwert/Preis exakt (Abweichung 2·10⁻¹⁶); alle Urteile; `umlaufmenge` und Marke bitgleich.
+- Z3 Kein zweiter Erstabruf; der Abruffehler wird wiederholt; der Tageswert kommt in einem Abruf und genau einmal je Tag.
+  - ⚠️ Erster Lauf: Der Tageswert-Weg war gar nicht durchlaufen, denn der Erstabruf liefert den heutigen Tag mit. Jetzt am Folgetag geprüft.
+- Z4 **B4 bitgleich** mit und ohne Zusatz (Fünftel, Lauf, Klassen). HYPE, XDC, KAS, BRETT und SUPRA bekommen eine Verwässerung.
+- Z5 **turnover-Messbasis bitgleich**.
+- Z6 `fakt` unabhängig gerechnet, beide Texte.
+- Z7 **Pfad:** Der echte Codeabschnitt aus dem Job läuft und füllt die Tabelle.
+  - Beim Bau fiel dabei auf: Im Scheduler gab es `get_watchlist` nicht; der Aufruf wäre still mit Warnung gescheitert. Korrigiert, bevor es lief.
+- Z8 `stand`, Produktion unverändert.
+
+**Gegenprobe mit echten CoinGecko-Daten** (Modul gegen den eigenen Abrufweg der Voranalyse): SUPRA +39,3 gegen +39,4 %, KAS +0,7 gegen +0,7 %, HYPE 0 gegen 0 %, also 3/3.
+
+**Suite:**
+- Das Paket `Verwaesserung` hat 13 Prüfungen, darunter neu: Die B4-Klassen und `marktrang` lesen die Zusatztabelle nie.
+- Eine ältere Prüfung suchte den alten Aufruf und wurde auf die neue Form nachgezogen. Die Wache hat also gegriffen.
+
+**Am NB:**
+- Pull und Neustart. Beim nächsten Lauf von `externe_reihen` (06:35) holt der Job die 14 Coins selbst; etwa 3 min, wegen der gemessenen Grenze von 5 Abrufen je Minute.
+- Kein Austauschordner, kein USB.
+- Kontrolle **K-UZ-1**.
