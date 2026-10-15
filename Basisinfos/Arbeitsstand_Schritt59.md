@@ -6,7 +6,7 @@
 
 **Stand 15.10.2026 (nachmittags, Bündel) – HIER ANFANGEN:**
 - ✔ **Bündel gebaut** (Schritt7 §23.54, E-113): Terminzeile in der REGEL0-Mail (O52), FOMC 2027, ⚠️ FRED-Fehler behoben (künftige Termine kamen nie), Prüfblock markiert *trennt nicht* (W1 a; das falsche *noch nicht gemessen* ist berichtigt), Entfernen aus der Watchlist mit Bestandssperre (O51). Prüfstand 10/10, Gegenprobe 3/3, Paket Termin 7/7.
-- ➤ **NB: Pull + Neustart**, danach **Diagnose** (K-TM-1; K-UZ-1 Tageswert, K-VW-1 laufen mit).
+- ✔ **NB auf fc46edda** (Diagnose 11:40, Neustart 11:35 ohne Fehler): `termine_vorschau` = Desktop (FOMC 28.10., Arbeitsmarkt 06.11., CPI 10.11.). Offen: erste REGEL0-Mail mit Terminzeile (K-TM-1), Tageswert Zusatz am 16.10. (K-UZ-1).
 - ✔ **O53 gemessen** (§23.56): Makro als Risiko-Bremse **nicht belegt**; die ATR trägt das Makro schon mit. ➤ **Vorschlag O54:** Makro-Zeile in jeder Handlungsmail, zur Abstimmung.
 
 **Stand 15.10.2026 (mittags) – HIER ANFANGEN:**
