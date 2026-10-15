@@ -3109,7 +3109,12 @@ def _messbasen() -> dict:
                     z["behalte_tage"] = _m.get("behalte_tage", _m.get("tage"))
                     z["mindest_kerzen"] = _m.get("mindest_kerzen")
                     z["marke_gebaut_am"] = _m.get("gebaut_am")
+                    # KORREKTUR 15.10.2026: der Hinweis je Datei - die Mengendatei schreibt der Job externe_reihen fort, nicht
+                    # der betriebsreihen_job (der Text stand fuer messdaten.db und wurde fuer jede Betriebskopie gezeigt)
                     z["hinweis"] = ("Sollzustand am Notebook - taeglich vom "
+                                    "Job `externe_reihen` fortgeschrieben (Umlaufmenge); "
+                                    "NICHT messen" if groesse == "turnover" else
+                                    "Sollzustand am Notebook - taeglich vom "
                                     "`betriebsreihen_job` nachgezogen. "
                                     "NICHT messen (Survivorship, fehlende "
                                     "Historie)")

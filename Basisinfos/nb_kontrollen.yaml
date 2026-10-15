@@ -282,6 +282,7 @@ kontrollen:
     nachweis: "Diagnose nach Pull+Neustart: messbasen -> turnover form 'betriebskopie' mit juengste_daten; Teilexport SPOT-ABBAU: 'Verwaesserung 90 T (P22): ...' (ohne USB-Ergaenzung bis 12/2026 'am NB ab 12/2026'); erste Mail danach: Zeile 'Verwaesserung' (ohne Historie: 'noch keine 90 Tage Mengenhistorie')"
     faellig_bis: "2026-11-04"
     status: offen
+    teilbeleg: "15.10. 06:42 Diagnose: Mengendatei LESBAR (messbasen turnover = betriebskopie, nicht mehr 'nicht lesbar'). Offen: die erste Mail mit Verwaesserungszeile (REGEL0/B1/B3 jederzeit, B4 am 02.11.) und der Teilexport nach dem B4-Stichtag 01.11."
   - id: K-UE-1
     titel: "P22 Ergaenzung der Mengendatei: 'python ergaenze_umlauf_nb.py' am NB einmal ausgefuehrt - meldet 'IN ORDNUNG', ~132.000 Zeilen eingefuegt, NB-Tage unberuehrt"
     seit: "2026-10-15"
@@ -290,7 +291,9 @@ kontrollen:
     art: manuell
     nachweis: "Weg: Austauschordner (Nutzer 15.10., nicht USB). Zuerst 'python ergaenze_umlauf_nb.py --nur-pruefen' -> BEREIT (Pruefsumme OK, Marke ja, erster NB-Tag 2026-09-08, wuerde ~132145 einfuegen); dann ohne --nur-pruefen -> IN ORDNUNG. Diagnose: austausch_eingang.umlauf_ergaenzung vorhanden + pruefsumme_ok; messbasen -> turnover aelteste_daten 2025-09-21, ergaenzung [1 Vermerk, eingefuegt ~132145]; Sicherung data/umlaufmenge_cg.vor_ergaenzung_*.db vorhanden. Danach die naechste REGEL0-/B1-/B3-Mail: Verwaesserungszeile mit Wert (Einordnung ab 01.11.)"
     faellig_bis: "2026-10-31"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-15"
+    beleg: "Diagnose 15.10. 06:42 (NB auf f470e018, keine lokalen Aenderungen): austausch_eingang.umlauf_ergaenzung vorhanden unter G:\\Meine Ablage\\Claude_Austauschordner, 132.145 Zeilen, Pruefsumme ok, Ziel-Marke ja, schon eingespielt; messbasen turnover: Form betriebskopie, aelteste_daten 2025-09-21, juengste 2026-10-15, 376 Symbole, 8,0 MB, Vermerk 2026-10-15 04:31 UTC angeboten 132.145 / eingefuegt 132.145, Sicherung umlaufmenge_cg.vor_ergaenzung_20261015_043159.db"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
