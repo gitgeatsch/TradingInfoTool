@@ -332,6 +332,7 @@ kontrollen:
     nachweis: "Log nach Start bzw. 06:35: 'Makro-Lage: lang Rueckenwind · kurz neutral · Stand <heute>' (ohne Fehler); Diagnose makro_lage: zustand ok, stand heute, datenstand je Reihe (M2SL ~2 Monate alt ist normal); Statusseite: Abschnitt 'Makro-Umfeld' ganz oben; naechste REGEL0-/Spot-Mail: Zeile 'Makro lang: ... · kurz: ...'"
     faellig_bis: "2026-10-22"
     status: offen
+    teilbeleg: "Diagnose 15.10. 18:30 (NB auf 8b974dd4, keine lokalen Aenderungen, Neustart 18:27 ohne Fehler): Log 18:28:08 'Makro-Lage: lang Rueckenwind · kurz neutral · Stand 2026-10-15'; Diagnose makro_lage zustand ok, alle 11 Reihen mit Datenstand (VIXCLS 14.10., M2SL 01.08.), Kanaele wie am Desktop (nur VIX lang neutral statt Rueckenwind - ein Tag neuere Reihe), Gesamt gleich. Offen: Statusseite-Abschnitt oben (Nutzerblick) und erste Mail mit Zeile 'Makro'"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

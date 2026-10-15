@@ -6,7 +6,7 @@
 
 **Stand 15.10.2026 (abends, O54) – HIER ANFANGEN:**
 - ✔ **O54 gebaut** (Schritt7 §23.58, E-114): Makro-Lage oben auf der Statusseite und als Zeile in REGEL0 und B1/B3/B4; Prüfstand 8/8, R-R11 bitgleich zur Messung. Stand heute: lang Rückenwind, kurz **neutral** (die erste Fassung meldete wegen zu kurzen Abrufs falsch *Gegenwind*, berichtigt).
-- ➤ **NB: Pull + Neustart**, danach Diagnose (K-ML-1; K-TM-1, K-UZ-1 laufen mit).
+- ✔ **NB auf 8b974dd4** (Diagnose 18:30, Neustart ohne Fehler): Makro-Lage am NB berechnet, lang Rückenwind · kurz neutral, gleich dem Desktop. Offen: Statusseite-Blick, erste Mails mit Termin-/Makro-Zeile (K-TM-1, K-ML-1), Tageswert Zusatz 16.10. (K-UZ-1).
 - GUI-Reiter *Regime* = alte Kette (14.08.); Umbau zu *Markt (Krypto)* mit GUI-Stufe 2 geplant, Makro-Lage dort als Abschnitt.
 
 **Stand 15.10.2026 (nachmittags, Bündel) – HIER ANFANGEN:**
