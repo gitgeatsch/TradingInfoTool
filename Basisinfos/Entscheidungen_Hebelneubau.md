@@ -1267,3 +1267,14 @@ Schritt7 §23.24.
   - Diagnose: zwei Lesefehler der Mengendatei behoben.
 - **Offen, zur Entscheidung:** USB-Ergänzung, P22c Freigabe-Rhythmus als Fakt, P22b Coins außerhalb Binance.
 - Nachweis: Spot §54.6/54.7, Schritt7 §23.49.
+
+# E-110 · Ergänzung der NB-Mengendatei und P22c Freigabe-Rhythmus gebaut (15.10.2026)
+
+**15.10.2026** · Nutzer: *„Ja, USB-Ergänzung bauen, P22c danach.“*
+- **Ergänzung:** Übertragung über den Drive-Austauschordner statt USB (öffentliche Daten, keine Geheimnisse; USB bleibt möglich). Am NB fügt der Einspieler nur ältere Tage in die markierte Betriebskopie ein und sichert vorher. Prüfstand 7/7.
+- **P22c:** Rhythmus der Freigaben als Fakt der Vergangenheit mit der rückgeprüften Trefferquote. Prüfstand 6/6.
+- **Eigene fachliche Festlegungen (berichtet):**
+  - Die Mail nennt die mit dem laufenden Code reproduzierte Quote (wöchentlich 77 % statt 74 % aus p55; Mindestlänge 30 T).
+  - Kein Satz ohne laufenden Rhythmus.
+  - „Fällig gewesen“ ab 3 T Überschreitung.
+- Nachweis: Spot §54.8, §55; K-UE-1.

@@ -3183,3 +3183,7 @@ Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
 - Am NB nach dem Pull einmal `python ergaenze_umlauf_nb.py` ausführen. Das Skript fügt nur die Tage vor dem 08.09.2026 ein und sichert vorher.
 - Ohne diesen Schritt kommen die Werte ab 07.12.2026.
 - Kontrolle **K-UE-1**.
+
+**Nachtrag 15.10. — P22c Freigabe-Rhythmus (Spot §55):**
+- Der Satz erscheint in denselben Mails wie P22 und auf der Statusseite. Er braucht die Ergänzung (K-UE-1), sonst ist die Reihe zu kurz.
+- Ein eigener Schalter ist dafür nicht nötig.

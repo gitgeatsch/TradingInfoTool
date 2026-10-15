@@ -543,7 +543,7 @@ def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None
                      " · außerhalb Binance: eingeordnet, nicht gemessen" if s in ausserhalb_binance else ""))
         if verw is not None:
             from agent import verwaesserung as VW
-            z.append("     " + VW.text_stichtag(*(verw.get(s) or (None, None))))
+            z.append("     " + VW.text_stichtag(*tuple(verw.get(s) or (None, None))[:3]))
     z += ["", "4  KONTEXT (keine Handlung)",
           "  Mitnahme ×3 (B1) und Upbit-Listing (B3) gelten weiter; kommt dort eine Mail, hat sie Vorrang (sie hat einen Termin).",
           *(["  " + __import__("agent.verwaesserung", fromlist=["MESSLAGE"]).MESSLAGE + "."] if verw is not None else []),
@@ -579,8 +579,16 @@ def stand(ordner: str) -> dict:
             from agent import verwaesserung as VW               # P22: Bestandscoins im staerksten Verwaesserungs-Fuenftel
             reihen = {r[0]: r[1] for r in c.execute("SELECT symbol, reihe FROM abbau_fuenftel WHERE stichtag=? AND reihe IS NOT NULL", (l[0],))}
             verw = VW.stand_bestand(ordner, reihen)
+        rhy = []
+        if l:
+            try:                                                 # P22c: naechste Freigaben (Rhythmus der Vergangenheit) im Bestand
+                from agent import verwaesserung as VW
+                reihen_b = {r[0]: r[1] for r in c.execute("SELECT symbol, reihe FROM abbau_fuenftel WHERE stichtag=? AND reihe IS NOT NULL", (l[0],))}
+                rhy = VW.rhythmus_bestand(ordner, reihen_b)
+            except Exception:                                    # noqa: BLE001
+                rhy = []
         return {"ablage": True, "laeufe": n, "letzter": tuple(l) if l else None, "stamm": st[0] or 0, "stamm_binance": st[1] or 0, "letzte": letzte,
-                "verw_staerkstes": verw}
+                "verw_staerkstes": verw, "verw_rhythmus": rhy}
     finally:
         c.close()
 
@@ -597,7 +605,15 @@ def verw_am_stichtag(ordner: str, t: str, liste: list) -> dict:
         w = {r[0]: (r[1], r[2]) for r in c.execute("SELECT symbol, verw90, fuenftel FROM verw_universum WHERE stichtag=?", (t,))}
     finally:
         c.close()
-    return {r[0]: w.get(r[1] or r[0], (None, None)) for r in liste}
+    aus = {r[0]: w.get(r[1] or r[0], (None, None)) for r in liste}
+    try:                                                     # P22c: Freigabe-Rhythmus (Vergangenheit) je Coin dazu
+        from agent import verwaesserung as VW
+        reihen = _umlauf(ordner)
+        heute = datetime.now(timezone.utc).date()
+        aus = {r[0]: tuple(aus[r[0]]) + (VW.rhythmus_text(VW.rhythmus(reihen.get(r[1] or r[0]), heute)),) for r in liste}
+    except Exception:                                        # noqa: BLE001
+        pass
+    return aus
 
 
 def letzte_fuenftel(ordner: str) -> dict:

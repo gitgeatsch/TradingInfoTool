@@ -814,6 +814,9 @@ function renderBetrieb(b) {
     // P22 (15.10.2026): Verwaesserung als Fakt - Bestandscoins im staerksten Fuenftel ihrer Klasse am Stichtag
     if (l && sa.verw_staerkstes) x += '<div class="unter">Verwässerung 90 T, stärkstes Fünftel (Bestand, Fakt): ' +
          (sa.verw_staerkstes.length ? esc(sa.verw_staerkstes.map(function (r) { return r[0] + " " + r[1] + " (" + r[2] + ")"; }).join(", ")) : "keiner") + "</div>";
+    // P22c: naechste Freigaben im Bestand nach dem Rhythmus der Vergangenheit (kein Kalender)
+    if (l && sa.verw_rhythmus && sa.verw_rhythmus.length) x += '<div class="unter">Freigabe-Rhythmus (Bestand, Vergangenheit): ' +
+         esc(sa.verw_rhythmus.map(function (r) { return r[0] + " " + r[1] + ", nächste um " + r[2] + " (" + r[3] + ")"; }).join(" · ")) + "</div>";
   }
   const na = b.neuaufnahme;
   x += '<div class="row" style="margin-top:6px"><strong>REGEL0-Neuaufnahme</strong><span>' + (na ? fmtStempel(na[0]) : "noch kein Lauf") + "</span></div>";

@@ -6783,3 +6783,43 @@ Nutzer 15.10.: *„Ja, USB-Ergänzung bauen, P22c danach.“*
 **Diagnose:** `messbasen → turnover` zeigt jetzt `aelteste_daten` und `ergaenzung`; daran ist der Erfolg ablesbar (K-UE-1).
 
 **Mail-Text bis zum ersten B4-Stichtag nach dem Pull (01.11.):** Wert ja, Einordnung *„ab dem nächsten B4-Stichtag“*. Die Fünftelgrenzen entstehen erst am Stichtag; der Lauf zum 01.10. ist schon vorbei.
+
+## 55. P22c Freigabe-Rhythmus als Fakt (15.10.2026; `p55_rhythmus_voranalyse.py`, `p22c_pruefstand.py` 6/6)
+
+Nutzer 15.10.:
+- *„Weiters ist diese nur in die Vergangenheit – gibt es keine Datenquelle, wo das nächste Datum der Ausgabe bekannt ist?“*
+- *„P22c danach.“*
+
+**Quelle für künftige Termine:** frei **keine** (§54.7). Die eigene Mengenreihe zeigt aber einen **Rhythmus der Vergangenheit**.
+
+**Regel** (vorab in p55 festgelegt und unverändert eingebaut):
+- **Ereignis:** Umlauf ≥ +1 % gegen den Vortag; Ereignistage mit ≤ 3 T Abstand zählen als eines.
+- **Rhythmus:** in 365 T ≥ 4 Ereignisse; ≥ 70 % der Abstände im Band (monatlich 26–35, vierteljährlich 80–100, wöchentlich 6–8 T); die letzten zwei Abstände im Band; das letzte Ereignis höchstens Band-Ende + 5 T zurück.
+- **Nächster Termin** = letztes Ereignis + Median-Abstand.
+
+**Rückschau ohne Vorgriff** (an jedem Ereignis nur die Daten bis dahin; Treffer = das nächste echte Ereignis liegt ±3 T am abgeleiteten Termin):
+
+| Rhythmus | Fälle | Treffer ±3 T | zum Vergleich: Zufallsdatum |
+|---|---|---|---|
+| monatlich | 76 | **88 %** | 21 % |
+| wöchentlich | 22 | **77 %** | 22 % |
+| vierteljährlich | 0 | nicht rückgeprüft | – |
+
+- ⚠️ p55 nannte für wöchentlich 74 % von 23. Der eingebaute Code verlangt mindestens 30 T Reihe; der eine Unterschied ist XUSD (ein Stablecoin) am 22. Datentag. **Die Mail nennt die mit dem eingebauten Code reproduzierte Zahl** (Prüfstand C2).
+- **Stand 22.09.:** 9 Coins mit laufendem Rhythmus: ACE, APT (um den 14.), AVA (vierteljährlich), ENA (um den 6.), ETHFI, GUN, IQ, MOVE, SAHARA. Bei 15 Coins ist ein früherer Rhythmus beendet oder unregelmäßig geworden (u. a. ARB, JUP, SUI, EIGEN); bei ihnen steht nichts.
+
+**Gebaut** (`agent/verwaesserung.py`, an die Verwässerung angehängt; überall dort, wo P22 steht):
+- Der Satz lautet zum Beispiel: *„Freigaben zuletzt monatlich (12 in 12 Monaten, je etwa +1,4 %), zuletzt am 14.09.2026; bei gleichem Rhythmus die nächste um den 14.10.2026 (rückgeschaut lag ein so abgeleiteter Termin in 88 % von 76 Fällen auf ±3 Tage richtig; Fakt aus der Vergangenheit, kein Kalender)“*.
+- Ist der Termin mehr als 3 T vorbei ohne neues Ereignis: *„wäre … fällig gewesen – noch keine sichtbar“*.
+- Ohne Rhythmus steht kein Satz.
+- Er erscheint in der B4-, B1-, B3- und REGEL0-Mail. Auf der Statusseite und im Teilexport stehen die Bestandscoins mit Rhythmus und nächstem Termin.
+
+**Prüfstand 6/6:**
+- C1: Modul = unabhängige Schleife = p55.
+- C2: Quoten mit dem Modulcode reproduziert.
+- C3: Texte (laufend, überfällig, ohne, nicht rückgeprüft).
+- C4: Mails mit und ohne Satz.
+- C5: Statusseite.
+- C6: Mengenreihe unverändert.
+
+⚠️ **Am NB** wirkt P22c erst mit der Ergänzung (§54.8), denn ein Rhythmus braucht mehrere Monate Mengenreihe.

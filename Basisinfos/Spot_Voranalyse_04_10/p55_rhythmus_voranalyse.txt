@@ -1,0 +1,18 @@
+P55 VORANALYSE Freigabe-Rhythmus · Mengenreihe 2025-09-21 bis 2026-09-22 · 375 Coins
+
+  monatlich        Faelle   76 · Treffer +-3 T  88 % (Zufallsdatum  21 %) · +-5 T  89 % ( 26 %) · Median-Fehler 1 T
+  vierteljaehrlich keine Faelle
+  woechentlich     Faelle   23 · Treffer +-3 T  74 % (Zufallsdatum  22 %) · +-5 T  74 % ( 43 %) · Median-Fehler 1 T
+
+STAND 2026-09-22: 9 Coins mit lebendem Rhythmus
+  AVA      vierteljaehrlich  4 Ereignisse in 12 M · je Freigabe Median +1.5 % · zuletzt 2026-08-07 · naechste etwa 2026-11-05
+  ETHFI    monatlich      11 Ereignisse in 12 M · je Freigabe Median +6.0 % · zuletzt 2026-08-18 · naechste etwa 2026-09-17 (Kalendertage 17,18)
+  SAHARA   monatlich      13 Ereignisse in 12 M · je Freigabe Median +4.0 % · zuletzt 2026-08-27 · naechste etwa 2026-09-26 (Kalendertage 26,27)
+  GUN      monatlich      11 Ereignisse in 12 M · je Freigabe Median +5.6 % · zuletzt 2026-09-01 · naechste etwa 2026-10-02 (Kalendertage 1,2,30)
+  ACE      monatlich      12 Ereignisse in 12 M · je Freigabe Median +3.2 % · zuletzt 2026-09-03 · naechste etwa 2026-10-03 (Kalendertage 3,4,5)
+  IQ       monatlich      13 Ereignisse in 12 M · je Freigabe Median +1.4 % · zuletzt 2026-09-03 · naechste etwa 2026-10-03 (Kalendertage 2,3,4)
+  ENA      monatlich      12 Ereignisse in 12 M · je Freigabe Median +3.2 % · zuletzt 2026-09-06 · naechste etwa 2026-10-07 (Kalendertage 6)
+  MOVE     monatlich      11 Ereignisse in 12 M · je Freigabe Median +4.3 % · zuletzt 2026-09-10 · naechste etwa 2026-10-11 (Kalendertage 10)
+  APT      monatlich      12 Ereignisse in 12 M · je Freigabe Median +1.4 % · zuletzt 2026-09-14 · naechste etwa 2026-10-14 (Kalendertage 14)
+
+Rhythmus frueher erkannt, heute nicht mehr (endete oder wurde unregelmaessig): 15 - ARB, CETUS, DOGE, EIGEN, HOME, HYPER, IOST, JUP, NIL, SAGA, SOPH, SPK, STRAX, SUI, XUSD

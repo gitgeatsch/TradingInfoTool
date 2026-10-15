@@ -478,6 +478,8 @@ def _inhalt() -> int:
                       " - am NB ab 12/2026 (90 T Mengenhistorie) oder nach USB-Ergaenzung"))
                 for r in _mit:
                     print("      %-8s Klasse %s · %+.1f %% · Fuenftel %s" % (r[0], r[1], 100 * (__import__("math").exp(r[2]) - 1), r[3] or "-"))
+                for r in sa.get("verw_rhythmus") or []:            # P22c
+                    print("      Rhythmus %-8s %s · naechste um %s · je Freigabe %s" % r)
             except Exception as _e22:                                  # noqa: BLE001
                 print("    Verwaesserung 90 T (P22): nicht lesbar (%s)" % type(_e22).__name__)
     except Exception as ex:                                      # noqa: BLE001

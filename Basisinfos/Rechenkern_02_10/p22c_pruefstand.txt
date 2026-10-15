@@ -1,0 +1,10 @@
+C1   bestanden 375 Coins · lebender Rhythmus 9 (ACE, APT, AVA, ENA, ETHFI, GUN, IQ, MOVE, SAHARA) · Abweichung Modul/Schleife 0 · gleich p55 True
+C2   bestanden Rueckschau mit Modulcode {'monatlich': (88, 76), 'wöchentlich': (77, 22)} · in der Mail genannt {'monatlich': (88, 76), 'wöchentlich': (77, 22)}
+C3   bestanden APT: Freigaben zuletzt monatlich (12 in 12 Monaten, je etwa +1,4 %), zuletzt am 14.09.2026; bei gleichem Rhythmus die nächste um den 14.10.2026 (rückgeschaut lag ein so abgeleiteter Termin in 88 % von 76 Fällen auf ±3 Tage richtig; Fakt aus der Vergangenheit, kein Kalender) | 20.10.: ...rmin in 88 % von 76 Fällen auf ±3 Tage richtig; Fakt aus der Vergangenheit, kein Kalender) | BTC: None | AVA: ...hmus ist nicht rückgeprüft; Fakt aus der Vergangenheit, kein Kalender)
+C4   bestanden B1 True · REGEL0 True · B4 APT mit Satz True, BTC ohne True
+C5   bestanden stand()['verw_rhythmus'] = [('APT', 'monatlich', '2026-10-14', '+1,4 %')] (Stand: heute, nicht der 22.09.)
+C6   bestanden Mengenreihe unveraendert
+
+Muster (C3): Freigaben zuletzt monatlich (12 in 12 Monaten, je etwa +1,4 %), zuletzt am 14.09.2026; bei gleichem Rhythmus die nächste um den 14.10.2026 (rückgeschaut lag ein so abgeleiteter Termin in 88 % von 76 Fällen auf ±3 Tage richtig; Fakt aus der Vergangenheit, kein Kalender)
+
+6 von 6 bestanden

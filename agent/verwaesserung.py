@@ -100,6 +100,70 @@ def _binance(symbol: str) -> str:
         return symbol
 
 
+# ══ P22c Freigabe-Rhythmus (15.10.2026, Spot §55) - Fakt ueber die VERGANGENHEIT, kein Kalender ═══════════════════════════════
+# Regel wie in der Rueckschau p55_rhythmus_voranalyse.py gemessen (nichts neu gewaehlt):
+SPRUNG = 0.01                             # Ereignis: Umlauf >= +1 % gegen den Vortag; Ereignistage mit <= 3 T Abstand = EIN Ereignis
+BAENDER = {"monatlich": (26, 35), "vierteljährlich": (80, 100), "wöchentlich": (6, 8)}
+# Rueckschau 15.10.2026 (Desktop-Reihe 09/2025-09/2026): naechster Termin = letztes Ereignis + Median-Abstand, Treffer +-3 T
+# KORREKTUR 15.10. (Pruefstand p22c C2): die Zahl stammt aus der Rueckschau MIT DIESEM CODE. Die Voranalyse p55 kannte die Mindestlaenge
+# von 30 T nicht und zaehlte einen Fall mehr (XUSD am 22. Datentag, woechentlich): 74 % von 23 -> hier 77 % von 22. Monatlich gleich.
+TREFFER = {"monatlich": (88, 76), "wöchentlich": (77, 22)}           # (Prozent, Faelle); Zufallsdatum 21 bzw. 22 % (p55)
+
+
+def ereignisse(r: pd.Series) -> pd.DatetimeIndex:
+    r = r.sort_index()
+    if not len(r):
+        return pd.DatetimeIndex([])
+    r = r.reindex(pd.date_range(r.index[0], r.index[-1], freq="D")).ffill(limit=3)
+    p = r.pct_change(fill_method=None)
+    t = p.index[(p >= SPRUNG).values]
+    if not len(t):
+        return pd.DatetimeIndex([])
+    return pd.DatetimeIndex([t[0]] + [b for a, b in zip(t[:-1], t[1:]) if (b - a).days > 3])
+
+
+def rhythmus(r: pd.Series | None, heute) -> dict | None:
+    """Lebender Rhythmus der Freigaben bis ``heute`` (nur Vergangenheit) - oder None."""
+    if r is None:
+        return None
+    heute = pd.Timestamp(heute)
+    r = r[r.index <= heute]
+    if len(r) < 30:
+        return None
+    ev = ereignisse(r)
+    e = ev[ev > heute - pd.Timedelta(days=365)]
+    if len(e) < 4:
+        return None
+    ab = np.diff(e.values).astype("timedelta64[D]").astype(int)
+    for name, (lo, hi) in BAENDER.items():
+        im = (ab >= lo) & (ab <= hi)
+        if im.mean() >= 0.7 and im[-2:].all() and (heute - e[-1]).days <= hi + 5:
+            med = int(np.median(ab[im]))
+            rr = r.sort_index()
+            rr = rr.reindex(pd.date_range(rr.index[0], rr.index[-1], freq="D")).ffill(limit=3)
+            g = rr.pct_change(fill_method=None).reindex(e)
+            return {"art": name, "n": int(len(e)), "abstand": med, "letzte": e[-1].date(), "naechste": (e[-1] + pd.Timedelta(days=med)).date(),
+                    "je_freigabe": float(np.nanmedian(g.values)), "heute": heute.date()}
+    return None
+
+
+def rhythmus_text(rh: dict | None) -> str | None:
+    if not rh:
+        return None
+    t = "Freigaben zuletzt %s (%d in 12 Monaten, je etwa %s), zuletzt am %s" % (
+        rh["art"], rh["n"], ("%+.1f %%" % (100 * rh["je_freigabe"])).replace(".", ","), rh["letzte"].strftime("%d.%m.%Y"))
+    if (rh["heute"] - rh["naechste"]).days > 3:
+        t += "; bei gleichem Rhythmus wäre die nächste um den %s fällig gewesen – noch keine sichtbar" % rh["naechste"].strftime("%d.%m.%Y")
+    else:
+        t += "; bei gleichem Rhythmus die nächste um den %s" % rh["naechste"].strftime("%d.%m.%Y")
+    tr = TREFFER.get(rh["art"])
+    if tr:
+        t += " (rückgeschaut lag ein so abgeleiteter Termin in %d %% von %d Fällen auf ±3 Tage richtig; Fakt aus der Vergangenheit, kein Kalender)" % tr
+    else:
+        t += " (dieser Rhythmus ist nicht rückgeprüft; Fakt aus der Vergangenheit, kein Kalender)"
+    return t
+
+
 def fakt(ordner: str, symbol: str, heute: date | None = None, reihen: dict | None = None) -> dict | None:
     """Die Verwaesserung eines Coins als Fakt: {'heute', 'fuenftel', 'klasse', 'stichtag', 'v_stichtag', 'q_stichtag', 'text'} oder
     {'text': Grund} wenn nichts da ist. ``symbol`` = Bestand- oder Binance-Symbol (Zuordnung wie B4). Scheitert nie."""
@@ -129,7 +193,11 @@ def fakt(ordner: str, symbol: str, heute: date | None = None, reihen: dict | Non
                             aus["fuenftel"] = _einordnen(v, json.loads(g[0]))
             finally:
                 c.close()
+        aus["rhythmus"] = rhythmus(r, heute)
         aus["text"] = text(aus)
+        rt = rhythmus_text(aus["rhythmus"])
+        if rt:
+            aus["text"] += " · " + rt
         return aus
     except Exception as exc:                                     # noqa: BLE001
         return {"symbol": symbol, "text": "Verwässerung nicht lesbar (%s)" % type(exc).__name__}
@@ -193,8 +261,23 @@ def stand_bestand(ordner: str, bestand_reihen: dict) -> list:
     return [r[1:] for r in sorted(aus, reverse=True)]
 
 
-def text_stichtag(v: float | None, q: int | None) -> str:
-    """Kurzform fuer die B4-Mail (Fakten am Stichtag)."""
+def text_stichtag(v: float | None, q: int | None, rh_text: str | None = None) -> str:
+    """Kurzform fuer die B4-Mail (Fakten am Stichtag); ``rh_text`` = P22c-Satz zum Freigabe-Rhythmus oder None."""
     if v is None:
-        return "Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie"
-    return "Verwässerung 90 T %s%s" % (_pct(v), (" (%s)" % WORT[q]) if q else "")
+        t = "Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie"
+    else:
+        t = "Verwässerung 90 T %s%s" % (_pct(v), (" (%s)" % WORT[q]) if q else "")
+    return t + (" · " + rh_text if rh_text else "")
+
+
+def rhythmus_bestand(ordner: str, bestand_reihen: dict, heute=None, reihen: dict | None = None) -> list:
+    """Statusseite/Teilexport (P22c): Bestandscoins mit lebendem Rhythmus -> [(Symbol, Art, naechste, je Freigabe %)] nach Termin."""
+    from agent import spot_abbau as SA
+    reihen = SA._umlauf(ordner) if reihen is None else reihen
+    heute = heute or datetime.now(timezone.utc).date()
+    aus = []
+    for s, b in bestand_reihen.items():
+        rh = rhythmus(reihen.get(b), heute)
+        if rh:
+            aus.append((s, rh["art"], rh["naechste"].isoformat(), ("%+.1f %%" % (100 * rh["je_freigabe"])).replace(".", ",")))
+    return sorted(aus, key=lambda x: x[2])
