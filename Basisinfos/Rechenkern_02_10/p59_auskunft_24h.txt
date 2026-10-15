@@ -1,0 +1,3 @@
+P59 AUSKUNFT: Termin-Ausschlag 2 h gegen 24 h (BTC, Mittel |log-Rendite|, Ersatz = selbe Uhrzeit ohne Termin)
+    2 h  Termin 1.11 % · ohne 0.61 % · Verhaeltnis 1.83
+   24 h  Termin 1.98 % · ohne 1.80 % · Verhaeltnis 1.10

@@ -1,0 +1,15 @@
+P59 GEGENPROBE
+
+  ✔ Stichtag CPI 2024-03-12 (Sommerzeit seit 10.03.) -> 12:30 UTC
+  ✔ Stichtag CPI 2024-02-13 (Winterzeit) -> 13:30 UTC
+  ✔ Stichtag FOMC 2024-11-07 (Winterzeit seit 03.11.) -> 19:00 UTC
+  ✔ Terminstunden beider Wege gleich - 127 Termine
+  ✔ Einstiege im Fenster gleich - Gegenprobe 778 · Vorpruefung 778
+  ✔ B24 Unterschied gleich - +6.07 Pp
+  ✔ A24 Unterschied gleich - +2.35 Pp
+  ✔ D24 Unterschied gleich - +6.49 Pp
+  ✔ BTC |2 h| cpi gleich - 1.185 % · n 36
+  ✔ BTC |2 h| nfp gleich - 0.971 % · n 36
+  ✔ BTC |2 h| fomc gleich - 1.193 % · n 25
+
+11 von 11 bestanden

@@ -1,0 +1,41 @@
+P59 VORPRUEFUNG · Makro-Termine und Hebeltrade (Stufe 1)
+
+Termine: cpi 48 · nfp 47 · fomc 32
+BTC stuendlich 2023-09-01 00:00:00 bis 2026-09-24 15:00:00
+
+F1 PRAEMISSE: BTC |Rendite| 2 h ab Termin gegen selbe Uhrzeit ohne Termin (10.000 Ziehungen)
+   cpi   n  36 · Termin 1.185 % · ohne 0.649 % · Verhaeltnis 1.83 · p 0.0001
+   nfp   n  36 · Termin 0.971 % · ohne 0.650 % · Verhaeltnis 1.49 · p 0.0134
+   fomc  n  25 · Termin 1.193 % · ohne 0.523 % · Verhaeltnis 2.28 · p 0.0001
+   alle  n  97 · Termin 1.108 % · ohne 0.614 % · Verhaeltnis 1.80 · p 0.0001
+
+F2 HAUPTFRAGE: 10732 REGEL0-Einstiege {2024: np.int64(2324), 2025: np.int64(4715), 2026: np.int64(3693)} · Basis B24 19.7 % · A24 28.3 % · D24 21.4 %
+   B24  im Fenster 25.3 % (n 778) · ohne 19.2 % · Unterschied +6.07 Pp · Nullband 5/95 -6.04/+10.85 · p 0.3920
+   A24  im Fenster 30.5 % (n 778) · ohne 28.1 % · Unterschied +2.35 Pp · Nullband 5/95 -7.10/+9.90 · p 0.7470
+   D24  im Fenster 27.4 % (n 778) · ohne 20.9 % · Unterschied +6.49 Pp · Nullband 5/95 -6.90/+11.31 · p 0.3750  (Auskunft)
+
+   je Art (Auskunft):
+     cpi   Einstiege im Fenster  230 · B24 -8.12 Pp · A24 +23.97 Pp · D24 -8.94 Pp
+     nfp   Einstiege im Fenster  401 · B24 +14.26 Pp · A24 -12.02 Pp · D24 +15.38 Pp
+     fomc  Einstiege im Fenster  147 · B24 +4.87 Pp · A24 +6.50 Pp · D24 +5.25 Pp
+   je Jahr (Auskunft, alle Termine):
+     2024  im Fenster  124 von  2324 · B24 -6.68 Pp · A24 +19.49 Pp · D24 -7.69 Pp
+     2025  im Fenster  371 von  4715 · B24 +2.00 Pp · A24 -0.02 Pp · D24 +1.97 Pp
+     2026  im Fenster  283 von  3693 · B24 +17.46 Pp · A24 -0.66 Pp · D24 +19.11 Pp
+
+SELBSTTEST (Ersatztermine als 'echt', 200 Laeufe gegen je 300 Nullziehungen):
+   B24  Anteil p < 0,05: 4.0 % (Sollband 1-10 %)
+   A24  Anteil p < 0,05: 6.5 % (Sollband 1-10 %)
+   Aufloesung B24 (Fundquote bei p < 0,025, 50 Laeufe je d):
+     +2 Pp  Fundquote 2 %
+     +4 Pp  Fundquote 2 %
+     +6 Pp  Fundquote 6 %
+     +8 Pp  Fundquote 18 %
+
+F3 AUSKUNFT: BTC 2 h ab CPI gegen Tagesaenderung DGS2 am CPI-Tag (Rangkorrelation, Vorzeichen: Rendite hoch = Ueberraschung inflationaer)
+   2023  n  4 · rho -0.80 · mittlere |BTC 2 h| 0.54 % · mittlere |dDGS2| 0.083 Pp
+   2024  n 12 · rho -0.66 · mittlere |BTC 2 h| 1.86 % · mittlere |dDGS2| 0.081 Pp
+   2025  n 11 · rho -0.35 · mittlere |BTC 2 h| 0.72 % · mittlere |dDGS2| 0.051 Pp
+   2026  n  9 · rho +0.18 · mittlere |BTC 2 h| 1.14 % · mittlere |dDGS2| 0.044 Pp
+   alle n 36 · rho -0.41
+   letzte CPI-Tage im Datenbestand: BTC +1.57 % / DGS2 -0.080 · BTC -0.62 % / DGS2 -0.020 · BTC +2.82 % / DGS2 +0.070

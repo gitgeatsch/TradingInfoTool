@@ -1296,3 +1296,20 @@ Schritt7 §23.24.
 **O51:** Watchlist-Assets entfernen statt nur ausmustern. Gemerkt, Voranalyse folgt.
 
 Nachweis: Spot §57.1, Schritt7 §23.50, K-UZ-1.
+
+# E-112 · Flughöhe: Termin als Fakt, Reihenfolge, W1 (a) (15.10.2026)
+
+**15.10.2026** · Nutzer:
+- *„Makro-Regime ist grundsätzlich für alle Assets relevant und sollte eine Rolle spielen.“*
+- *„CPI … als Terminangabe relativ sinnfrei ohne Werte.“*
+- *„W1 – warum sollten wir den Prüfblock jetzt aus der Mail entfernen?“*
+- *„Entscheide du.“*
+
+**Eigene Festlegungen (berichtet):**
+- **Reihenfolge:** zuerst *Termin mit Wert* (Hebel), dann *Makro als Risiko-Bremse*; O51, W1 und die Terminzeile gebündelt zum nächsten NB-Pull.
+- **W1:** Variante (a). Der Prüfblock bleibt, markiert *„gemessen: trennt nicht – nicht danach handeln“*. Er löst nichts aus, und die Messung im Betrieb läuft weiter.
+- **Makro:** nicht über die Richtung, sondern als Risiko-Bremse (ungleich: nur kleiner, nie größer). Die Stärke kommt aus der Messung.
+- **Ergebniserwartung durch ein LLM:** abgeraten. Die Prognosequellen werden nur auf eine freie Historie geprüft.
+- **Termin** (Vorprüfung §23.53): als Fakt mit gemessenem Ausschlag in die REGEL0-Mail, **nicht** als Gewicht. Bau nach Ja.
+
+Nachweis: Schritt7 §23.53, Plan O51–O53.

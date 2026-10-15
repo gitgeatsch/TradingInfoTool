@@ -3291,3 +3291,66 @@ Nutzer 15.10.: *„Die LLM-Rollen haben offenbar noch in keiner Form ein gutes E
 - **W2:** Wenn ein LLM, dann für **Information, die die Zahlen nicht haben**: Ereignisse und Text (E-79), in fester Form ausgelesen und **statistisch** bewertet, vorwärts. Beispiel: die Binance-Ankündigung (E-83). Vorher ein Datenquellen-Inventar.
 - **W3:** Der größere Hebel ist das **Regime** (Befund: das Regime ist zwölfmal wichtiger als die Lage). Bitcoin 7 T wechselt das Vorzeichen von 2025 auf 2026. ⇒ Voranalyse *Regime als Gewicht für REGEL0* (statistisch), mit vorab festgelegtem Messplan.
 - **W4:** Vor jeder neuen LLM-Messung die Messmenge auf die **Betriebsmenge** bringen (Ursache 6 klären) und groß genug wählen.
+
+### 23.53 Flughöhe: Makro-Regime, Termin und Lage – und die Vorprüfung „Termin mit Wert“ (15.10.2026; `p59_termine_inventur.py`, `p59_termin_vorpruefung.py`, `p59_gegenprobe.py`, `p59_auskunft_24h.py` → `.txt`)
+
+**Anlass:** Nutzer 15.10., zur Richtung W1–W4:
+- *„was wir jedenfalls benötigen ist die korrekte Flughöhe und Detailgrad … die CPI-Daten gestern waren schlechter als erwartet und BTC hat sofort reagiert … eine übergeordnete MAKRO-Regime-Sicht und in Kombination eine kurzfristige für die Hebeltrades“*;
+- dann: *„Makro-Regime ist grundsätzlich für alle Assets relevant und sollte eine Rolle spielen“*;
+- *„CPI … als Terminangabe relativ sinnfrei ohne Werte – was soll man bewerten, wenn man weiß, in 2 Tagen ist FOMC?“*;
+- *„Entscheide du“* (Reihenfolge).
+
+**Gliederung (Vorschlag, fachlich):**
+
+| Ebene | Zeitraum | Rolle |
+|---|---|---|
+| 1 Makro-Regime | Monate | für **alle** Assets – nicht über die Richtung (§51.7: nicht entscheidbar), sondern als **Risiko-Bremse**: bei Gegenwind Hebel/Einsatz kleiner, bei Rückenwind nicht größer; Stärke aus Messung (Punkt 2 der Reihenfolge) |
+| 2 Markt-Regime kurz | Tage–Wochen | BTC-Trend/-Schwankung als Gewicht für REGEL0 (W3; Vorzeichenwechsel BTC 7 T 2025/2026) |
+| 3 Termin | Stunden | CPI, Arbeitsmarkt, FOMC – **diese Vorprüfung** |
+| 4 Asset-Lage | 24 h | REGEL0, der einzige Auslöser |
+
+**Zur Ergebnis-Erwartung (Nutzerfrage):**
+- Die Richtung hängt an der **Überraschung** gegen die Erwartung, und die Erwartung steckt schon im Preis.
+- Konsens-Historie ist nicht frei.
+- Cleveland-Fed-Nowcast und Prognosemärkte (Kalshi, Polymarket) zeigen Wahrscheinlichkeiten; ob deren **Historie** frei ist, ist ungeprüft (offen).
+- LLM: kein Wissen über den kommenden Wert, das nicht schon in Nowcast und Markt steckt; dazu die eigenen Vorlieben aus N4/N5. ⇒ Abgeraten.
+
+**Datenlage (Inventur):**
+- CPI und Arbeitsmarkt kommen aus FRED (`release/dates` 10/50, 08:30 New York).
+  - Ausgeschlossen, weil keine Monatsveröffentlichung: CPI 2024-02-09, NFP 2024-01-10 und 2024-08-21.
+  - 2025 fehlen Termine wegen der Haushaltssperre (Oktober-CPI entfallen, Nachholtermine 24.10./18.12.).
+- **FOMC liefert FRED nicht:** release 101 ist täglich. Die Termine kommen deshalb vom Fed-Kalender (federalreserve.gov, 2023–2026, nur planmäßige Sitzungen; 22.08.2025 außerplanmäßig, ausgenommen).
+- Die Liste 2026 deckt sich mit `agent/cycles.FOMC_MEETING_DATES_2026`.
+- DGS2 täglich aus FRED.
+- BTC stündlich am Desktop: 01.09.2023 bis 24.09.2026, also **ohne den CPI vom 14.10.**
+- Referenz-Einstiege REGEL0 0.1, 2024–2026: 10.732.
+
+**Messplan:** steht vorab im Kopf von `p59_termin_vorpruefung.py`, zweiseitig.
+- Nullwelt: Ersatzzeitpunkte zur selben Uhrzeit an Werktagen ohne Termin.
+- Die wirksame Stichprobe ist die Zahl der **Termine**.
+
+**Ergebnis:**
+
+| | |
+|---|---|
+| **F1 Prämisse** BTC 2 h ab Termin | CPI **×1,83**, Arbeitsmarkt ×1,49, FOMC **×2,28**, alle ×1,80 (p < 0,001) – **bestätigt** |
+| ⚠️ dasselbe über **24 h** (Auskunft, nachträglich) | nur **×1,10** (1,98 % gegen 1,80 %) |
+| **F2** REGEL0-Einstiege mit Termin im 24-h-Fenster (778 von 10.732) | B24 +6,07 Pp (p 0,39), A24 +2,35 Pp (p 0,75), D24 +6,49 Pp (p 0,38) – **nicht belegt** |
+| Selbsttest | Fehlalarm B24 4,0 %, A24 6,5 % (Sollband 1–10 %) ✔ |
+| ⚠️ **Auflösung** | +8 Pp auf B24 werden nur zu 18 % gefunden ⇒ mit ~100 Terminen ist F2 **blind** unter etwa 10 Pp |
+| je Art / je Jahr (Auskunft) | CPI A24 +24 Pp, Arbeitsmarkt B24 +14 Pp; 2024 eher günstig, **2026 B24 +17 Pp**: das Vorzeichen wechselt, kein stabiles Muster |
+| **F3** BTC 2 h gegen ΔDGS2 am CPI-Tag | ρ 2023 −0,80 · 2024 −0,66 · 2025 −0,35 · **2026 +0,18** (n 4–12): Die Empfindlichkeit auf die Überraschung ist bis 2025 klar (Rendite hoch → BTC runter) und 2026 nicht mehr erkennbar |
+| Gegenprobe (anderer Rechenweg) | **11/11**, einschließlich Sommer- und Winterzeit an drei Stichtagen |
+
+**Was das heißt:**
+1. **Der Termin hat einen Wert, aber für die Stunden, nicht für den 24-h-Trade.** Der Ausschlag ist in 2 h fast doppelt so groß und verdünnt sich über 24 h auf +10 %. Das erklärt, warum F2 nichts Belastbares findet.
+2. **Als Gewicht (Hebel, Stop) für REGEL0 ist er derzeit nicht zu rechtfertigen:** nicht belegt, und die Datenlage ist zu dünn (blind unter ~10 Pp). Kein Gate, kein Gewicht.
+3. **Als Fakt mit Wert in der REGEL0-Mail ist er gerechtfertigt**, wenn der Termin **in den ersten Stunden** des Trades liegt. Inhalt: Termin, Uhrzeit MEZ, gemessener Ausschlag (×1,8 in 2 h, ×1,1 über 24 h). Handlungsbezug: Einstieg vor oder nach dem Termin. Das ist eine Information, kein Auslöser.
+4. **Die Empfindlichkeit wechselt mit dem Regime** (F3). Das passt zu W3 und gehört als Frage in die Regime-Messung (Ebene 2), nicht in eine Terminregel.
+5. **Offen:** FOMC-Liste ab 2027 (`agent/cycles` liefert ab Januar 2027 nichts); Historie von Nowcast und Prognosemärkten.
+
+**Reihenfolge (entschieden, „Entscheide du“):**
+- (1) diese Vorprüfung;
+- (2) Makro als Risiko-Bremse (Ebene 1);
+- (3) O51 Entfernen und die W1-Markierung, gebündelt mit der Terminzeile für den nächsten NB-Pull, **nach Ja**.
+- **W1:** Variante (a), der Block bleibt mit der Markierung *„gemessen: trennt nicht – nicht danach handeln“*.
