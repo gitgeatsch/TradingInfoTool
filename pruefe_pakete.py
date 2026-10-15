@@ -22325,6 +22325,15 @@ def paket_verwaesserung() -> None:
            "sa.verw_staerkstes" in _q["remote/server.py"] and "Verwaesserung 90 T (P22)" in _q["nb_teilexport_betriebsdaten.py"])
     pruefe(P, "der Messlage-Satz nennt beide Seiten und die Grenze (ein Jahr, ein Regime)",
            "+5,8" in _VW.MESSLAGE and "−3,8" in _VW.MESSLAGE and "nicht belegt" in _VW.MESSLAGE and "ein Marktregime" in _VW.MESSLAGE)
+    # USB-/Drive-Ergaenzung (15.10.2026): nur aeltere Tage, nur in die NB-Betriebskopie, nie in Messbasis oder Produktion
+    _qe = _quelltext("ergaenze_umlauf_nb.py")
+    pruefe(P, "Ergaenzung: Einspieler verlangt die Marke _nur_betrieb, sichert vorher, fuegt nur Tage VOR dem NB-Beginn ein (INSERT OR IGNORE)",
+           "_nur_betrieb" in _qe and "c.backup(b)" in _qe and "INSERT OR IGNORE" in _qe and "< erster_nb" in _qe and "tradinginfotool.db" in _qe)
+    _ru = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p22u_pruefstand.py")],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+    pruefe(P, "⚠️⚠️ Pruefstand Ergaenzung am Seiteneffekt: nur aeltere Zeilen, NB-Tage unberuehrt, idempotent, Schutz Messbasis/Produktion, "
+              "Wirkung, Diagnose", "7 von 7 bestanden" in (_ru.stdout or ""),
+           " | ".join(z for z in (_ru.stdout or "").splitlines() if " FEHLER " in z) or (_ru.stderr or "")[-300:])
     _sich = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
     if not _sich:
         pruefe(P, "Pruefstand p22 (braucht eine Prod-Sicherung im Austauschordner)", False, "keine Sicherung gefunden")

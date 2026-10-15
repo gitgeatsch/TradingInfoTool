@@ -3103,6 +3103,12 @@ def _messbasen() -> dict:
                     _mx = c.execute("SELECT MAX(%s) FROM %s"
                                     % (_sp, _t)).fetchone()[0]
                     z["juengste_daten"] = str(_mx)[:19] if _mx else None
+                    # P22 (15.10.2026): aeltester Tag und eingespielte Ergaenzung (K-UE-1: ab wann gibt es 90 T Mengenhistorie?)
+                    _mn = c.execute("SELECT MIN(%s) FROM %s" % (_sp, _t)).fetchone()[0]
+                    z["aelteste_daten"] = str(_mn)[:19] if _mn else None
+                    if c.execute("SELECT name FROM sqlite_master WHERE name='_ergaenzung_eingespielt'").fetchone():
+                        z["ergaenzung"] = [list(r) for r in c.execute("SELECT am, bis_exklusiv, angeboten, eingefuegt, sicherung "
+                                                                       "FROM _ergaenzung_eingespielt ORDER BY am")]
                     try:
                         z["datenalter_tage"] = (
                             heute - datetime.strptime(

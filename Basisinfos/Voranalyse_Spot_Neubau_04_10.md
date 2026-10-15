@@ -6759,3 +6759,27 @@ Nutzer 15.10.: *„Ja, hätte gerne immer die Verwässerung auch beim Kauf … P
   - Am NB fügt ein Skript sie **einmal** ein: nur Tage vor dem 08.09., *INSERT OR IGNORE*, vorher eine Sicherung der NB-Datei. Die Marke `_nur_betrieb` und alle NB-Tage bleiben unberührt.
 - **Wirkung:** Die Verwässerung gibt es ab dem nächsten Lauf statt ab 12/2026. Der B4-Stichtag 01.11. hätte sie schon.
 - **Ohne Ergänzung** kommt der Wert von selbst ab 07.12.2026 (B4: 01.01.2027). Die Mails sagen bis dahin *„noch keine 90 Tage Mengenhistorie“*.
+
+### 54.8 Ergänzung der NB-Mengendatei gebaut (15.10.2026; `p22u_pruefstand.py` 7/7)
+
+Nutzer 15.10.: *„Ja, USB-Ergänzung bauen, P22c danach.“*
+
+**Weg:** Der Stick ist nicht nötig. Die Datei trägt nur öffentliche CoinGecko-Mengen, keine Geheimnisse; deshalb geht sie über den **Google-Drive-Austauschordner** (am NB `G:`). Den USB-Weg gibt es weiter: `python ergaenze_umlauf_nb.py <Pfad>`.
+
+| Schritt | Wo | Was |
+|---|---|---|
+| 1 | Desktop, **erledigt 15.10.** | `baue_umlauf_ergaenzung.py` → `Claude_Austauschordner/umlauf_ergaenzung.db`: 132.145 Zeilen, 376 Symbole, 21.09.2025 bis 07.09.2026, 7,3 MB, Prüfsumme `6337f910…`; gegengeprüft |
+| 2 | NB | Pull (bringt `ergaenze_umlauf_nb.py` und P22) |
+| 3 | NB | `python ergaenze_umlauf_nb.py`, **einmal**; ein Neustart ist dafür nicht nötig |
+
+**Was der Einspieler tut** (geprüft am Seiteneffekt):
+- Er schreibt nur in eine Datei **mit der Marke `_nur_betrieb`**. An der Desktop-Messbasis (ohne Marke) und an `tradinginfotool.db` **bricht er ab**, die Datei bleibt bitgleich.
+- Er prüft die Prüfsumme der Ergänzung; eine beschädigte Datei lehnt er ab.
+- Vorher sichert er die Mengendatei per SQLite-Backup, sicher auch bei laufender App: `data/umlaufmenge_cg.vor_ergaenzung_<Zeit>.db`.
+- Er fügt in **einer** Transaktion nur Tage **vor** dem ersten NB-Tag ein (*INSERT OR IGNORE*). Die NB-Tage haben danach dieselbe Prüfsumme.
+- Den Vermerk schreibt er in `_ergaenzung_eingespielt`. Ein zweiter Lauf fügt 0 Zeilen ein.
+- **Wirkung:** TAO am 22.09. hat vorher keine Verwässerung 90 T, nachher +18,2 %.
+
+**Diagnose:** `messbasen → turnover` zeigt jetzt `aelteste_daten` und `ergaenzung`; daran ist der Erfolg ablesbar (K-UE-1).
+
+**Mail-Text bis zum ersten B4-Stichtag nach dem Pull (01.11.):** Wert ja, Einordnung *„ab dem nächsten B4-Stichtag“*. Die Fünftelgrenzen entstehen erst am Stichtag; der Lauf zum 01.10. ist schon vorbei.

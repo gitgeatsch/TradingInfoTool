@@ -119,6 +119,7 @@ def fakt(ordner: str, symbol: str, heute: date | None = None, reihen: dict | Non
             c = SM._ro(p)
             try:
                 if c.execute("SELECT 1 FROM sqlite_master WHERE name='verw_universum'").fetchone():
+                    aus["universum_da"] = bool(c.execute("SELECT 1 FROM verw_universum LIMIT 1").fetchone())
                     zeile = c.execute("SELECT stichtag, klasse, verw90, fuenftel FROM verw_universum WHERE symbol=? ORDER BY stichtag DESC LIMIT 1",
                                       (b,)).fetchone()
                     if zeile:
@@ -148,6 +149,8 @@ def text(f: dict) -> str:
         t = "Umlaufmenge %s in 90 Tagen" % _pct(f["heute"])
         if f.get("fuenftel"):
             t += " (%s der Klasse %s, Grenzen vom Stichtag %s)" % (WORT[f["fuenftel"]], f["klasse"], _de(f["stichtag"]))
+        elif f.get("klasse") is None and not f.get("universum_da"):
+            t += " (Einordnung in die Klasse ab dem nächsten B4-Stichtag)"
         elif f.get("klasse") is None:
             t += " (nicht im B4-Universum – ohne Einordnung)"
         return t

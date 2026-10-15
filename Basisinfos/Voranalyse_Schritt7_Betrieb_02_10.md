@@ -3178,3 +3178,8 @@ Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
 **Am NB:** Pull und Neustart. Die Werte erscheinen ab 07.12.2026 von selbst, mit USB-Ergänzung sofort. Kontrolle **K-VW-1**.
 
 **Schalter:** keiner. Die Zeile ist Information in Mails, die ohnehin laufen; ohne Mengenhistorie steht *„noch keine 90 Tage“*.
+
+**Nachtrag 15.10. — Ergänzung der Mengendatei (Spot §54.8):**
+- Am NB nach dem Pull einmal `python ergaenze_umlauf_nb.py` ausführen. Das Skript fügt nur die Tage vor dem 08.09.2026 ein und sichert vorher.
+- Ohne diesen Schritt kommen die Werte ab 07.12.2026.
+- Kontrolle **K-UE-1**.

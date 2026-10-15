@@ -282,6 +282,15 @@ kontrollen:
     nachweis: "Diagnose nach Pull+Neustart: messbasen -> turnover form 'betriebskopie' mit juengste_daten; Teilexport SPOT-ABBAU: 'Verwaesserung 90 T (P22): ...' (ohne USB-Ergaenzung bis 12/2026 'am NB ab 12/2026'); erste Mail danach: Zeile 'Verwaesserung' (ohne Historie: 'noch keine 90 Tage Mengenhistorie')"
     faellig_bis: "2026-11-04"
     status: offen
+  - id: K-UE-1
+    titel: "P22 Ergaenzung der Mengendatei: 'python ergaenze_umlauf_nb.py' am NB einmal ausgefuehrt - meldet 'IN ORDNUNG', ~132.000 Zeilen eingefuegt, NB-Tage unberuehrt"
+    seit: "2026-10-15"
+    paket: P22
+    commit: ""
+    art: manuell
+    nachweis: "Ausgabe des Skripts (Nutzer) und Diagnose: messbasen -> turnover aelteste_daten 2025-09-21, ergaenzung [1 Vermerk, eingefuegt ~132145]; Sicherung data/umlaufmenge_cg.vor_ergaenzung_*.db vorhanden. Danach die naechste REGEL0-/B1-/B3-Mail: Verwaesserungszeile mit Wert (Einordnung ab 01.11.)"
+    faellig_bis: "2026-10-31"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
