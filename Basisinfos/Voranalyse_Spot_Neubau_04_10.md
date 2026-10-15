@@ -6849,3 +6849,51 @@ Nutzer 15.10.:
 3. `python ergaenze_umlauf_nb.py --nur-pruefen` → BEREIT
 4. `python ergaenze_umlauf_nb.py` → IN ORDNUNG
 5. Diagnose
+
+## 56. P22b Vorbereitung: Mengenreihe für Coins außerhalb Binance (15.10.2026, Voranalyse noch NICHT gelaufen)
+
+Nutzer 15.10.: *„Ok, bereite alles vor für den nächsten Punkt P22b – alles in das Memory und die Pläne speichern“* (Desktop-Neustart wegen Updates).
+
+**Ziel:** Auch die Coins außerhalb der Binance-Messmenge bekommen eine Umlaufreihe, damit Verwässerung (P22) und Freigabe-Rhythmus (P22c) für sie in den Mails stehen. Heute steht bei ihnen *„keine Mengenreihe“*.
+
+**Fakten, gesammelt am 15.10.** Watchlist-Grundliste ohne Mengenreihe (15 von 46), alle mit CoinGecko-ID in `config.yaml`:
+
+| Symbol | CoinGecko-ID | in `abruf_symbol` |
+|---|---|---|
+| HYPE | hyperliquid | – (Bestand, B4-Erstliste) |
+| XDC | xdce-crowd-sale | – (Bestand, B4-Erstliste) |
+| KAS | kaspa | – |
+| ASTER | aster-2 | – |
+| AIOZ | aioz-network | – |
+| AKT | akash-network | – |
+| BRETT | based-brett | – |
+| CAT | simon-s-cat | – |
+| GRIFFAIN | griffain | – |
+| SUPRA | supra | – |
+| CANTON | canton-network | – |
+| MON | monad | – |
+| VSN | vision-3 | – |
+| BIO | bio-protocol | **verworfen** (Qualitätsprüfung des Vollabrufs) |
+| EURCV | societe-generale-forge-eurcv | – (Stablecoin, ausnehmen) |
+
+**Was die Voranalyse klären muss** (vor jedem Bau; Regel *Datenquellen und Abdeckung vor dem Bau*):
+
+1. **Datenquelle und Abdeckung:** Für jede ID 365 T `market_chart` frei abrufen (Marktwert/Preis, wie der Vollabruf). Dieselben drei Auflagen wie `hole_umlaufmenge_cg.py`: Plausibilität, Sprünge zählen, ohne ID ausweisen. Dazu Bündelfaktor und Spitzenfilter, damit es **dieselbe Größe** bleibt.
+2. ⚠️⚠️ **Grundgesamtheit (stehende Regel):** Die Mengendatei hat **vier Leser**: `marktrang` (turnover), `spot_abbau` (Marktwert-Klassen H/M/S), `verwaesserung` und `datenfrische`.
+   - Neue Symbole können die **B4-Klassen verschieben**: HYPE und XDC fallen heute mangels Umlauf auf die Umsatz-Klasse zurück. Mit Umlauf bekommen sie einen Marktwert-Rang, und andere Coins rücken in der H-Grenze (≤ 30) nach.
+   - ⇒ **Messen statt annehmen:** Wie viele Coins wechseln Klasse und Fünftel in B4? Gemessen wird gegen die Wegwerf-Kopie, beide Zustände (mit und ohne), wie `messe_grundgesamtheit.py`.
+   - Prüfen, ob `turnover` (marktrang) neue Symbole überhaupt liest oder nur die Messbasis-Symbole.
+3. **Wo geschrieben wird:**
+   - Am Desktop in die volle Reihe (Vollabruf, Messbasis);
+   - am NB über den Tagesjob `externe_reihen` (`hole_umlaufmenge_cg.taeglich` liest `abruf_symbol` mit `urteil='ok'` und `coingecko_id`). ⇒ Neue Zeilen in `abruf_symbol`, die Historie per Ergänzung (§54.8, derselbe Weg über den Austauschordner).
+   - ⚠️ Betriebskopie ≠ Messbasis: die Marke `_nur_betrieb` bleibt.
+4. **Messlage:** Die Verwässerung ist auf Binance-Coins gemessen (§54.1). Für Coins außerhalb gilt sie *„angewandt, nicht auf ihnen gemessen“*; dieser Vermerk gehört in die Zeile, wie bei B1.
+5. **CoinGecko-Grenze:** frei rund 30 Abrufe je Minute. 15 Coins × 1 Abruf sind unkritisch; der Tagesjob bündelt bereits.
+6. **Ausnahmen:** Stablecoins (EURCV) ausnehmen; BIO zuerst prüfen, warum es verworfen wurde.
+
+**Ablauf nach dem Neustart:**
+1. Voranalyse P22b (Abruf + Abdeckung + Grundgesamtheitsmessung, gegen Kopien);
+2. vorlegen;
+3. nach dem Ja bauen, prüfen und gegenprüfen;
+4. Ergänzung für das NB über den Austauschordner;
+5. Kontrolle.
