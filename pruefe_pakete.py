@@ -22297,6 +22297,35 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_makro() -> None:
+    """O54 (15.10.2026, Schritt7 §23.57): MAKRO-LAGE ALS FAKT - Statusseite oben, jede Handlungsmail, Diagnose.
+
+    Nutzer: *"Makro-Regime ist grundsaetzlich fuer alle Assets relevant und sollte eine Rolle spielen"* · *"Ja zu O54 auf der
+    Statusseite als Bereich oben"*. Geprueft: dieselbe Rechnung wie die Messung §51.7 (R-R11), ZWEI volle 5-J-Fenster (13 J Abruf),
+    kein Gate, drei Zustaende; der Pruefstand liest FRED live und schreibt nur Wegwerf-Dateien."""
+    P = "Makro"
+    import os as _os
+    import subprocess as _sp
+
+    import agent.makro_lage as _ML
+
+    _q = _quelltext("agent/makro_lage.py")
+    pruefe(P, "Abruf 13 Jahre (zwei 5-J-Fenster hintereinander) - mit acht Jahren stimmte das Gesamt nur an 16 von 23 Stichtagen",
+           "timedelta(days=13 * 365)" in _q)
+    pruefe(P, "kein Gate: die Zeile nennt 'nicht belegt' und die ATR, das Modul liest weder Stufe noch Einsatz",
+           "nicht belegt" in _ML.MESSUNG["kurz_gegen"] and "ATR" in _ML.MESSUNG["atr"] and "stufe" not in _q.lower().split("def mailteil")[1])
+    _qs, _qb, _qr = _quelltext("remote/server.py"), _quelltext("scheduler/background.py"), _quelltext("agent/regel0_mail.py")
+    pruefe(P, "Statusseite: Makro-Abschnitt VOR Betrieb & Lage; Job externe_reihen; REGEL0 und B1/B3/B4 bekommen die Zeile",
+           _qs.index('id="makro-kopf"') < _qs.index("section-header section-system") and "_ML.lauf()" in _qb
+           and 'makro=lambda r: __import__("agent.makro_lage"' in _qb and _qb.count('__import__("agent.makro_lage", fromlist=["zeile"]).zeile()') == 3
+           and "makro" in _qr.split("def _als_text")[0])
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "o54_pruefstand.py")],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+    pruefe(P, "⚠️⚠️ Pruefstand O54: R-R11 bitgleich zu p51, Abgleich mit der Messung, drei Zustaende, kaputter Abruf, Mails + Versand, "
+              "Statusseite, Job, Prod unveraendert", "8 von 8 bestanden" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_termin() -> None:
     """O52 + O51 + W1 (15.10.2026, Schritt7 §23.53, E-112): TERMIN ALS FAKT, ENTFERNEN MIT SPERRE, PRUEFBLOCK MARKIERT.
 
@@ -32913,7 +32942,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -1,0 +1,15 @@
+Makro-Lage nicht neu berechnet - alter Stand 2026-10-15 bleibt: ConnectionError: gestellt: kein Netz, api_key=*** (2026-10-15)
+Makro-Lage nicht neu berechnet - alter Stand None bleibt: ConnectionError: gestellt: kein Netz, api_key=*** (2026-10-15)
+REGEL0-Makro TAO gescheitert: RuntimeError: Makro-Lieferant gestellt kaputt
+M1   bestanden 20 Score-Reihen x 4745 Tage (2013-10-19 bis 2026-10-15) · abweichend keine · Verzug falsch keiner
+M2   bestanden FRED-API gegen fredgraph.csv vom 14.10. (Unterschied nur durch Datenrevisionen erwartet; Soll >= 95 %) - ab 2025-12-27: Gesamt lang 10 von 10 gleich · Gesamt kurz 10 von 10 gleich · ganze Historie ab 2011-04: Gesamt lang 167 von 175 · Gesamt kurz 173 von 175
+M3   bestanden heute lang 1.0 kurz 0.0 (p51: 1.0 / 0.0) · Treiber []
+M4   bestanden fehlt / veraltet / ok / Fehlervermerk: True / True / ok / True
+M5   bestanden alter Stand bleibt True · Vermerk 'ConnectionError: gestellt: kein Netz, api_key=*** (2026-10-1' · Schluessel verborgen True · ohne alten Stand: fehlt
+M6   bestanden REGEL0 Einschaetzung/Technik/HTML/ohne True · Versand kaputt -> Mail geht True, gut -> Zeile True · B1/B3/B4 mit Zeile und ohne bitgleich True
+M7   bestanden Makro-Abschnitt vor Betrieb & Lage True · Getter: Rückenwind / neutral · Render liest data.makro_lage True
+M8   bestanden Job ruft lauf() und faengt True · Desktop-Prod unveraendert True · echte Ablage unveraendert True
+
+Muster Zeile (heute): lang: Rückenwind · kurz: neutral – kurz ohne klare Richtung; die Hebelstufe berücksichtigt die Schwankung schon über die ATR · Stand 15.10.
+
+8 von 8 bestanden

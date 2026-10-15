@@ -3017,6 +3017,15 @@ def _log_zeilen_im_fenster(log_pfad: Path, stunden: int) -> list[str]:
     return ergebnis
 
 
+def _makro_lage() -> dict:
+    """O54 (15.10.2026, K-ML-1): die Makro-Lage so, wie Statusseite und Mails sie zeigen (agent.makro_lage.stand), nur lesend."""
+    try:
+        from agent import makro_lage as _ML
+        return _ML.stand()
+    except Exception as exc:                                             # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _termine_vorschau() -> dict:
     """O52 (15.10.2026, K-TM-1): die naechsten Makro-Termine so, wie die REGEL0-Mail sie sieht (agent.termin_fakt) - CPI und
     Arbeitsmarkt aus FRED, FOMC aus der festen Liste. Belegt am NB, dass FRED kuenftige Termine liefert (bis 15.10. kam nie einer)
@@ -4087,6 +4096,7 @@ def main() -> None:
         "austausch_eingang": _austausch_eingang(),         # P22 15.10.: liegt die Ergaenzung am NB vollstaendig bereit?
         "umlauf_zusatz": __import__("agent.umlauf_zusatz", fromlist=["stand"]).stand("data/umlaufmenge_cg.db"),   # P22b
         "termine_vorschau": _termine_vorschau(),           # O52 15.10.: Termine wie in der REGEL0-Mail (K-TM-1)
+        "makro_lage": _makro_lage(),                       # O54 15.10.: wie Statusseite/Mail (K-ML-1)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

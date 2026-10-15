@@ -3468,3 +3468,74 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 - Gewichten tust du; das System sperrt nichts.
 
 **Vor dem Bau:** Datenquellen-Inventar am NB, also ob die FRED-CSV-Reihen dort erreichbar sind und wie oft sie abgerufen werden. Die Nachmessung ab 10/2027 bleibt ohne Regeländerung.
+
+### 23.57 O54 Voranalyse: Makro-Lage auf der Statusseite (Bereich oben) und in jeder Handlungsmail (15.10.2026)
+
+**Nutzer 15.10.:**
+- *„Ja zu O54 auf der Statusseite als Bereich oben“*;
+- *„was ist mit der GUI im Bereich Regime, was ist hier geplant?“*
+
+**GUI-Reiter *Regime* – Befund:**
+- Er zeigt den **letzten Stand der alten Kette vom 14.08.2026** (*Bär*, Score 0,62, Liquidität *widersprüchlich*), gekennzeichnet als *aus der ALTEN Kette*.
+- Der Override wirkt auf nichts. REGEL0 und Spot lesen ihn nicht.
+- **Geplant** (Plan_Asset_Lebenszyklus G-K/G-L, 10.10., Nutzer-Ja): Aus *Regime* wird **Reiter 4 „Markt (Krypto)“** mit den gemessenen Marktfakten (Season-Ampel B1–B3, Breite, Dominanz-Spitze, BTC-Klima, Fear & Greed, Liquidität/Stablecoins), **ohne Override**. Der alte Stand geht ins **Archiv**; später kommt ein eigener Teil für Aktien (O39).
+- Bau mit GUI-Stufe 2. Noch nicht begonnen.
+- ⇒ **Vorschlag:** Die Makro-Lage aus O54 wird ein Abschnitt dieses Reiters. Dasselbe Modul liefert dann Statusseite, Mails und GUI.
+
+**Datenlage (Inventar, Desktop 15.10.):**
+- Alle 11 Reihen kommen über die **FRED-API mit Schlüssel** (`series/observations`): M2SL, WALCL, WTREGEN, RRPONTSYD, DFII10, DGS2, T10Y2Y, BAA10Y, NFCI, DTWEXBGS, VIXCLS. Je Reihe unter 2 s, Datenstand 01.08. (M2) bis 14.10.
+- **Am NB ist derselbe Weg nachgewiesen:** `termine_vorschau` in der Diagnose 11:40 lief über `api.stlouisfed.org` mit Schlüssel.
+- Die Analyse §51.7 holte über `fredgraph.csv`. Die Rechnung ist dieselbe, nur die Quelle ist eine andere ⇒ im Prüfstand R-R11 bitgleich nachweisen.
+
+**Bauform:**
+
+| Teil | Was |
+|---|---|
+| `agent/makro_lage.py` (neu) | dieselben Kanäle K1–K9 lang/kurz und *Gesamt* wie `p51_vorpruefung` (Verzug je Reihe, Drittel im 5-J-Fenster); `lauf()` holt und rechnet, `lade()` liest; Ablage `data/makro_lage.json` (nicht versioniert) mit Stand je Reihe; ein Fehlschlag behält den alten Stand **mit Vermerk** |
+| Job | `externe_reihen` (täglich 06:35 und beim Start), nach dem Umlauf-Zusatz; scheitert nie nach außen |
+| Statusseite | eigener Abschnitt **ganz oben**: lang / kurz als Rückenwind · neutral · Gegenwind, Stand, die gemessene Tendenz in einem Satz; Kanäle K1–K9 eingeklappt; ab 3 Tagen ohne neuen Stand: **veraltet** |
+| Mails | eine Zeile *Makro* in REGEL0 (Einschätzung) und B1/B3/B4: *„Makro lang: Rückenwind · kurz: Gegenwind (Treiber: …) – in kurzen Gegenwind-Phasen fiel BTC binnen 30 T im Mittel rund 7 % tiefer (Tendenz, nicht belegt); die Hebelstufe berücksichtigt die Schwankung schon über die ATR“*; **kein Gate, kein Gewicht** |
+| Diagnose | Schlüssel `makro_lage` (Stand, Zustände, Fehler) |
+
+**Prüfung (vorab festgelegt):**
+- **R-R11:** dieselben Rohreihen durch `makro_lage` und durch `p51_vorpruefung.kanaele/scores` ⇒ alle Scores an allen Monatsstichtagen gleich.
+- Abgleich gegen die gespeicherten Scores von §51.7, mit CSV-Herkunft (Auskunft: Datenrevisionen).
+- Drei Zustände in Mail und Seite (Wert / veraltet / nicht verfügbar).
+- Ein scheiternder Lieferant hält keine Mail auf.
+- Keine Produktions-DB berührt.
+
+### 23.58 O54 gebaut: Makro-Lage oben auf der Statusseite und in jeder Handlungsmail (15.10.2026; `o54_pruefstand.py` → `.txt`)
+
+**Gebaut:**
+
+| Teil | Was |
+|---|---|
+| `agent/makro_lage.py` (neu) | dieselbe Rechnung wie §51.7 (K1–K9 lang/kurz, *Gesamt*), Quelle FRED-API; Abruf **13 Jahre**; Ablage `data/makro_lage.json`; Fehlschlag ⇒ alter Stand mit Vermerk; Zeile mit Zustand, Treibern (Kanäle in Richtung des Gesamt), Messstand und ATR-Hinweis; drei Zustände ok / veraltet (> 3 T) / fehlt |
+| `scheduler/background.py` | Job `externe_reihen` (06:35 und beim Start) ruft `lauf()`; REGEL0 bekommt `makro=`, B1/B3/B4 `makro_text` – jeder Aufruf scheitert nie nach außen |
+| `agent/regel0_mail.py`, `spot_mitnahme.py`, `spot_upbit.py`, `spot_abbau.py` | Zeile *Makro* (REGEL0: Einschätzung + Technik; Spot: Abschnitt Kontext) |
+| `remote/status.py`, `remote/server.py` | eigener Abschnitt **„Makro-Umfeld“ ganz oben**, vor *Betrieb & Lage*: Kopf lang/kurz, Zeile, Kanäle und Datenstand eingeklappt |
+| `extract_notebook_diagnose.py` | Schlüssel `makro_lage` (K-ML-1) |
+| `pruefe_pakete.py` | Paket `Makro` (5) |
+
+**Prüfung – Prüfstand 8/8:**
+- **M1 R-R11:** 20 Score-Reihen × 4.745 Tage bitgleich zu `p51_vorpruefung` (Verzug je Reihe geprüft).
+- **M2 gegen die Messung:**
+  - mit vollem Fenster 10/10 und 10/10;
+  - über die ganze Historie ab 2011-04 lang **167/175**, kurz **173/175** (Rest: Datenrevisionen der API gegen die CSV vom 14.10.).
+- **M3** heutiger Stand gleich p51.
+- **M4** drei Zustände.
+- **M5** kaputter Abruf: Der alte Stand bleibt, der Schlüssel ist verborgen.
+- **M6** REGEL0 (Text, HTML, echter Versand mit kaputtem und gutem Lieferanten) und B1/B3/B4 mit Zeile; ohne Zeile bitgleich.
+- **M7** Statusseite.
+- **M8** Job; Prod unverändert.
+- **Statusseite im Browser** mit dem Live-Stand gerendert (Kopf, Zeile, Kanäle).
+
+⚠️ **Fehler im eigenen Bau, gefunden von M2:**
+- Die erste Fassung holte **acht Jahre**. Das Gesamt-Drittel rangt aber die Summe der Kanal-Scores in einem 5-J-Fenster, und jeder Kanal-Score braucht selbst 5 J. Mit acht Jahren war das Fenster abgeschnitten: nur 16/23 bzw. 17/21 Stichtage gleich.
+- Die erste Fassung zeigte deshalb heute *kurz: Gegenwind*. **Richtig ist *kurz: neutral*** (Realzins, Zinspfad 2 J und Dollar Gegenwind, Kreditaufschlag Rückenwind, Rest neutral ⇒ Summe im mittleren Drittel).
+- Die Zwischenmeldung an den Nutzer („kurz Gegenwind, passt zum CPI“) war damit falsch und ist berichtigt.
+- Zweiter Fund: `lade()` hielt den Pfad als Vorgabewert fest. Behoben (Pfad erst beim Aufruf).
+
+**Stand 15.10.:** lang **Rückenwind**, kurz **neutral**.
+
+**GUI:** Der Reiter *Regime* zeigt weiter den Stand der alten Kette vom 14.08. Geplant ist der Umbau zu *Markt (Krypto)* in GUI-Stufe 2 (§23.57); die Makro-Lage wird dort ein Abschnitt aus demselben Modul.

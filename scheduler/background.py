@@ -1728,6 +1728,8 @@ def _regel0_mails() -> None:
                          verwaesserung=lambda r: __import__("agent.verwaesserung", fromlist=["mailteil"]).mailteil(_NL.DATEN_VORGABE, r["symbol"]),
                          # O52 (15.10.2026): CPI/Arbeitsmarkt/FOMC im Trade-Fenster als Fakt mit gemessenem Wert (Schritt7 §23.53) - kein Gate
                          termin=lambda r: __import__("agent.termin_fakt", fromlist=["mailteil"]).mailteil(r),
+                         # O54 (15.10.2026): Makro-Lage lang/kurz als Fakt (Gewichtung beim Nutzer, Schritt7 §23.57) - kein Gate
+                         makro=lambda r: __import__("agent.makro_lage", fromlist=["mailteil"]).mailteil(),
                          # O45 (11.10.2026): Wochen- und Tageschart mit RSI/MACD als weitere Bilder in "2 · Chart" (Kontext, kein Ausloeser)
                          zusatzbilder=lambda r: _IC.bilder(_NL.DATEN_VORGABE, r["symbol"], r.get("bitpanda") or r["symbol"],
                                                            r.get("eur_je_usd"), praefix="regel0"))
@@ -1899,6 +1901,15 @@ def externe_reihen_job(conn_factory) -> None:
                     logger.warning("Umlauf-Zusatz nicht gepflegt: %s", exc)
         except Exception as exc:                             # noqa: BLE001
             logger.warning("Freier Umlauf nicht auffrischbar: %s", exc)
+
+        # O54 (15.10.2026): Makro-Lage K1-K9 lang/kurz wie die Messung §51.7 - Fakt fuer Statusseite und Mails (Schritt7 §23.57)
+        try:
+            import agent.makro_lage as _ML
+            _m = _ML.lauf()
+            logger.info("Makro-Lage: lang %s · kurz %s · Stand %s%s", _ML._wort(_m.get("gesamt_lang")), _ML._wort(_m.get("gesamt_kurz")),
+                        _m.get("stand"), (" · Fehler " + _m["fehler"]) if _m.get("fehler") else "")
+        except Exception as exc:                             # noqa: BLE001
+            logger.warning("Makro-Lage nicht berechnet: %s", exc)
 
         try:
             reihe = get_btc_exchange_flow_history(tage=800)
@@ -4340,7 +4351,11 @@ def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None
                         _vw = _VW.fakt(ordner, f["symbol"])["text"]
                     except Exception:                                # noqa: BLE001
                         _vw = None
-                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, _vw)
+                    try:                                             # O54: Makro-Lage als Fakt - scheitert nie nach aussen
+                        _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                    except Exception:                                # noqa: BLE001
+                        _mk = None
+                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, _vw, _mk)
                     try:
                         _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
                         bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
@@ -4402,8 +4417,12 @@ def spot_upbit_job(conn_factory, watchlist_provider, versand=None, jetzt=None, o
                         _vw = _VW.fakt(ordner, f["symbol"])["text"]
                     except Exception:                                # noqa: BLE001
                         _vw = None
+                    try:                                             # O54: Makro-Lage als Fakt - scheitert nie nach aussen
+                        _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                    except Exception:                                # noqa: BLE001
+                        _mk = None
                     b, t = _SU.mail(f, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, jetzt_usd, vor[-1] if vor else None,
-                                    _vw)
+                                    _vw, _mk)
                     try:
                         _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
                         bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
@@ -4466,7 +4485,11 @@ def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, o
                     _verw = _SA.verw_am_stichtag(ordner, fall["stichtag"], fall["liste"])
                 except Exception:                                    # noqa: BLE001
                     _verw = None
-                b, t = _SA.mail(fall, werte, draussen, _verw)
+                try:                                             # O54: Makro-Lage als Fakt - scheitert nie nach aussen
+                    _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                except Exception:                                # noqa: BLE001
+                    _mk = None
+                b, t = _SA.mail(fall, werte, draussen, _verw, _mk)
                 if bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, None)):
                     _SA.vermerke_mail(ordner, erg["stichtag"])
                     gemailt = True

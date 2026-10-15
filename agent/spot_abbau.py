@@ -515,7 +515,7 @@ def vermerke_mail(ordner: str, t: str) -> None:
 
 
 # ══ die Mail (E-91: Coin · was tun · wann · warum) ════════════════════════════════════════════════════════════════════════════
-def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None = None) -> tuple:
+def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None = None, makro_text: str | None = None) -> tuple:
     """``werte_eur``: {Symbol: Wert in EUR (frei + gestakt)}; Reihenfolge nach Wert - die Guete INNERHALB des Fuenftels ist nicht gemessen.
     ``verw`` (P22): {Symbol: (log-Wachstum 90 T, Fuenftel)} am Stichtag - Faktenzeile je Coin, kein Teil der Regel."""
     liste = sorted(fall["liste"], key=lambda r: -(werte_eur.get(r[0]) or 0))
@@ -548,6 +548,7 @@ def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None
     z += ["", "4  KONTEXT (keine Handlung)",
           "  Mitnahme ×3 (B1) und Upbit-Listing (B3) gelten weiter; kommt dort eine Mail, hat sie Vorrang (sie hat einen Termin).",
           *(["  " + __import__("agent.verwaesserung", fromlist=["MESSLAGE"]).MESSLAGE + "."] if verw is not None else []),
+          *(["  Makro " + makro_text + "."] if makro_text else []),               # O54 (15.10.2026): Fakt, Gewichtung beim Nutzer
           "  Der Erlös: Wohin er geht, ist nicht gemessen – in der Messung lag er still (Dollar).",
           "", "5  TECHNIK", "  Spot B4 · Stichtag %s · Wert ohne TVL (F1, F2, F8) · Fünftel je Klasse · Spot §43/§48." % fall["stichtag"]]
     return b, "\n".join(z)

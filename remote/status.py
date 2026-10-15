@@ -330,6 +330,7 @@ class RemoteStatus:
     kontingente: dict | None = None
     kontrollen: dict | None = None
     parameter_neu: list[dict] | None = None
+    makro_lage: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -366,6 +367,7 @@ class RemoteStatus:
             "kontingente": self.kontingente,
             "kontrollen": self.kontrollen,
             "parameter_neu": self.parameter_neu,
+            "makro_lage": self.makro_lage,
         }
 
 
@@ -493,6 +495,7 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         kontingente=_safe(_get_kontingente, conn),
         kontrollen=_safe(_get_kontrollen, conn),
         parameter_neu=_safe(_get_parameter_neu),
+        makro_lage=_safe(_get_makro_lage),
     )
 
 
@@ -1355,6 +1358,15 @@ def _get_bestand_lage(conn: sqlite3.Connection) -> dict:
                      "SUM(COALESCE(staked_quantity,0) > 0) FROM holdings").fetchone()
     m.update({"bestaende": r[0] or 0, "mit_menge": r[1] or 0, "davon_gestakt": r[2] or 0})
     return m
+
+
+@_gecacht_frist(300)
+def _get_makro_lage() -> dict:
+    """O54 (15.10.2026, Nutzer: *"auf der Statusseite als Bereich oben"*): Makro-Lage lang/kurz als FAKT aus data/makro_lage.json
+    (Job externe_reihen, taeglich 06:35). Nur lesend; drei Zustaende ok / veraltet / fehlt."""
+    from agent import makro_lage as ML
+
+    return ML.stand()
 
 
 @_gecacht_frist(300)

@@ -72,6 +72,8 @@ _INDEX_HTML = """<!doctype html>
   .section-group { border-left: 3px solid #2a323c; padding-left: 11px; margin-left: -14px; }
   .section-system { border-bottom-color: #5b8fd6; }
   .section-system .section-badge { background: #5b8fd6; }
+  .section-makro { border-bottom-color: #c9a227; }
+  .section-makro .section-badge { background: #c9a227; color: #1b1f24; }
   .group-system { border-left-color: #5b8fd6; }
   /* P9 (10.10.2026): die Gruppen A/B/C der alten Kette sind entfallen (G-N); ruhende Bereiche eingeklappt. */
   details.ruht { background: #161b21; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
@@ -96,6 +98,20 @@ _INDEX_HTML = """<!doctype html>
      dem Teilexport (agent/betriebslage.py). Entfallen (abgestimmt): Karte ALTE KETTE, Ueberschriften A/B/C, Regime-Karte,
      Parameter der alten Kette. Umgehaengt: Marktscan-Quote und Stop nachziehen in *Betrieb*, Themen/Absicherung in den
      eingeklappten Abschnitt *Multi-Asset (ruht)*. Die Getter bleiben im Code. -->
+<!-- O54 (15.10.2026, Nutzer: *"auf der Statusseite als Bereich oben"*): Makro-Lage als FAKT, Gewichtung beim Nutzer -->
+<div class="section-header section-makro">
+  <span class="section-badge">Makro</span>
+  <span class="section-title">Makro-Umfeld</span>
+  <span class="section-sub">Fakt, kein Signal &ndash; du gewichtest</span>
+</div>
+<div class="section-group group-makro">
+<div class="card">
+  <div class="row"><strong>lang / kurz</strong><span id="makro-kopf">-</span></div>
+  <div id="makro-body"></div>
+  <details><summary class="muted-text">Kanäle K1&ndash;K9 (lang / kurz) und Datenstand</summary><div id="makro-kanaele"></div></details>
+</div>
+</div>
+
 <div class="section-header section-system">
   <span class="section-badge">System</span>
   <span class="section-title">Betrieb &amp; Lage</span>
@@ -923,6 +939,18 @@ async function refreshStatus() {
       (rb.davon_hebel ?? 0) + " / " + (rb.davon_handlung ?? 0);
   }
 
+  if (data.makro_lage) {                                     // O54: Makro-Lage oben, drei Zustaende
+    const m = data.makro_lage;
+    const kopf = document.getElementById("makro-kopf");
+    kopf.textContent = m.zustand === "fehlt" ? "nicht verfügbar" : ("lang " + m.lang + " · kurz " + m.kurz +
+      (m.zustand === "veraltet" ? " · VERALTET" : ""));
+    kopf.className = m.zustand === "ok" ? (m.kurz === "Gegenwind" ? "stale" : "ok") : "err";
+    document.getElementById("makro-body").innerHTML = '<div class="unter">' + esc(m.zeile) + '</div>' +
+      (m.fehler ? '<div class="error-line">letzter Abruf: ' + esc(m.fehler) + '</div>' : '');
+    document.getElementById("makro-kanaele").innerHTML = (m.kanaele || []).map(function (k) {
+      return zeile(esc(k[0]), esc(k[1]) + " / " + esc(k[2]), ""); }).join("") +
+      '<div class="unter">Datenstand: ' + esc(Object.entries(m.datenstand || {}).map(function (e) { return e[0] + " " + e[1]; }).join(", ")) + '</div>';
+  }
   if (data.kontrollen) {
     const k = data.kontrollen;
     const kopf = document.getElementById("kontrollen-kopf");

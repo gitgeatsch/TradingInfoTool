@@ -1329,3 +1329,21 @@ Nachweis: Schritt7 §23.53, Plan O51–O53.
 - **Backup:** Die NB-Sicherungen im Austauschordner werden nur als Wegwerf-Kopie auf D: gelesen und danach gelöscht.
 
 Nachweis: Schritt7 §23.54, Plan O51/O52, K-TM-1.
+
+# E-114 · O54 Makro-Lage: Statusseite oben + jede Handlungsmail (15.10.2026)
+
+**15.10.2026** · Nutzer:
+- *„Ja zu O54 auf der Statusseite als Bereich oben“*;
+- *„was ist mit der GUI im Bereich Regime, was ist hier geplant?“*
+
+**Gebaut:**
+- Makro-Lage lang/kurz als **Fakt**, dieselbe Rechnung wie die Messung §51.7, kein Gate.
+- Ganz oben auf der Statusseite und als Zeile in REGEL0 und B1/B3/B4.
+
+**GUI:** Der Reiter *Regime* zeigt die alte Kette (Stand 14.08.); sein Override wirkt auf nichts. Geplant (10.10., Ja) ist *Markt (Krypto)* in GUI-Stufe 2. Die Makro-Lage kommt dort als Abschnitt hinzu.
+
+**Berichtet:**
+- Fehler im eigenen Bau: Ein zu kurzer Abruf zeigte *kurz Gegenwind*, richtig ist *neutral*.
+- Gefunden im Prüfstand, vor dem Commit.
+
+Nachweis: Schritt7 §23.57/§23.58, K-ML-1.

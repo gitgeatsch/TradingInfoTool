@@ -323,6 +323,15 @@ kontrollen:
     nachweis: "Nur wenn der Nutzer ein Asset entfernen WILL: Knopf bei einem Bestands-Asset -> Hinweis 'kann nicht entfernt werden: im Bestand'; bei einem Asset ohne Bestand -> nach Rueckfrage weg aus der Watchlist-Tabelle; Diagnose watchlist_stammdaten ohne das Symbol, watchlist_ergaenzung-Zeile mit entfernt=1"
     faellig_bis: ""
     status: offen
+  - id: K-ML-1
+    titel: "O54 Makro-Lage: Job externe_reihen berechnet sie taeglich, Statusseite zeigt sie oben, Mails tragen die Zeile"
+    seit: "2026-10-15"
+    paket: O54
+    commit: ""
+    art: manuell
+    nachweis: "Log nach Start bzw. 06:35: 'Makro-Lage: lang Rueckenwind · kurz neutral · Stand <heute>' (ohne Fehler); Diagnose makro_lage: zustand ok, stand heute, datenstand je Reihe (M2SL ~2 Monate alt ist normal); Statusseite: Abschnitt 'Makro-Umfeld' ganz oben; naechste REGEL0-/Spot-Mail: Zeile 'Makro lang: ... · kurz: ...'"
+    faellig_bis: "2026-10-22"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
