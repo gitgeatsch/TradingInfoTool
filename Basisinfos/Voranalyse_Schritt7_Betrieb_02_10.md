@@ -3199,3 +3199,38 @@ Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
 **Am NB:**
 - Pull und Neustart; der erste Lauf holt die 14 Coins selbst (etwa 3 min).
 - Kontrolle **K-UZ-1**.
+
+### 23.51 N5-Ergebnis: Fassung 0.2 trennt nicht – Minimum verfehlt (Auswertung 15.10.2026; Lauf beendet 10.10.)
+
+**Anlass:** Diagnose nach dem Pull 15.10. Nutzer: *„eine Prüfung sollte nach jedem größeren Pull erfolgen“*. N5 war für etwa 15.10. erwartet, ist aber schon am **10.10. 08:11** am vorab festgelegten Zwischenentscheid beendet worden:
+- `ENTSCHEID_T250`: **STOP-ANPASSEN**, *der Trader trennt erkennbar nicht* (z gepoolt −2,23);
+- ausgewertet war er noch nicht.
+- Durch den Desktop-Neustart wurde nichts unterbrochen; kein Läufer war aktiv.
+
+**Endbericht** (`n5_auswertung.py`, vorab festgelegt; `n5_bericht_T250.txt`), 249 Anker:
+
+| | 2025 | 2026 |
+|---|---|---|
+| Urteile (5 Stimmen, Mehrheit) | stützt 8 · dagegen 54 | stützt 7 · dagegen 52 |
+| **H** stützt − dagegen (24 h) | **−2,60 Pp** (Band −1,10) | **−3,95 Pp** (Band −0,28) |
+| Referenz (bessere Regel > 0, sonst Zufall) | Zufall | Zufall |
+| LLM gegen Referenz | p schlechter **0,003** | p schlechter 0,093 |
+| 0.2 gegen 0.1e gepaart (Auskunft) | −4,14 Pp | +2,07 Pp |
+
+- **M-1 nicht schlechter:** NICHT erfüllt. 2025 ist das LLM signifikant **schlechter als der Zufall**: Wo es *dagegen* sagt, lief es besser.
+- **M-2 kein Echo:** erfüllt (gleich F 43 %, gleich 20 T 37 %).
+- **M-3 Gegenmeinung:** NICHT erfüllt (47,9 % richtig, p 0,71).
+- **Ziel:** nicht erreicht. H trägt nicht.
+- Kontaminationsprobe K_a bestanden. Mit vertauschten Blöcken (R_v) ist das Mehrheitsurteil zu 66 % gleich.
+
+**Gegenprobe am echten Lauf** (`n5_gegenprobe_echt.py`, eigener Rechenweg aus den Rohstimmen): Mehrheit **249 von 249** gleich, Trennwerte −2,60 und −3,95 Pp gleich.
+
+**Was das heißt** (E-78: *Minimum für das Bleiben der Stufe: gleich oder etwas darüber, als Bestätigung oder Gegenmeinung*):
+- Die LLM-Stufe in Fassung 0.2 verfehlt das Minimum. Sie steht so seit E-80 im Betrieb, als Trader-Eingabe im Prüfblock der REGEL0-Mail.
+- Zusammen mit N4 (0.1e, ebenfalls STOP-ANPASSEN am 07.10.) ist das das **zweite** Mal.
+- ⇒ **H14** (Zeitgrenze im Prüfblock) wird damit zweitrangig: Die Ausfallsicherheit eines Blocks zu verbessern, der nicht trägt, lohnt erst, wenn er wieder tragen soll.
+- **Zur Entscheidung (Nutzer):**
+  - (a) Prüfblock bleibt in der Mail, sichtbar markiert *„gemessen: trennt nicht“*;
+  - (b) Prüfblock aus der Mail; ein Schatten im Protokoll läuft weiter, das spart Kontingent, H14 entfällt;
+  - (c) Anpassen (Fassung 0.3), aber nur mit **neuer** Information (E-79: Text- und Ereignisquellen; die Binance-Ankündigung E-83 ist die einzige vorhandene) und mit dem Entscheider-Neubau O22.
+  - **Vorschlag: (b), mit (c) als nächster Messung, sobald es neue Information gibt.**

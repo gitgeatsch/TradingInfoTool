@@ -303,6 +303,7 @@ kontrollen:
     nachweis: "Log nach 06:35: 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf HYPE ok, ... · Tageswert ...' (am Folgetag: Erstabruf -, Tageswert 13); Diagnose umlauf_zusatz: je_urteil ok 13 (BIO verworfen, MON evtl. verworfen wenn < 300 Punkte), von 2025-10, bis heute; Teilexport SPOT-ABBAU: 'Umlauf-Zusatz (P22b ...)'. Danach Mail zu HYPE/XDC: Verwaesserungszeile mit Vermerk 'angewandt, nicht auf diesem Coin gemessen'"
     faellig_bis: "2026-10-20"
     status: offen
+    teilbeleg: "Diagnose 15.10. 07:57 (NB auf a66bff7e): Log 07:49 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf AIOZ ok ... BIO verworfen ... XDC ok · Tageswert 0'; umlauf_zusatz je_urteil ok 13 / verworfen 1, 2025-10-16 bis 2026-10-15. Offen: Tageswert am Folgetag (naechste Diagnose)"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

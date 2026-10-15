@@ -1,0 +1,3 @@
+Mehrheit selbst gezaehlt: {'neutral': 120, 'spricht_dagegen': 106, 'stuetzt': 15, 'uneinig': 8} · gleich dem Bericht: 249 von 249
+  2025: stuetzt 8, dagegen 54 · Unterschied stuetzt - dagegen -2.60 Pp
+  2026: stuetzt 7, dagegen 52 · Unterschied stuetzt - dagegen -3.95 Pp
