@@ -1,0 +1,7 @@
+O53 AUSKUNFT roh (ohne Fortschreibung), ab 2013, N2-Bank - Abstand Rueckenwind - Gegenwind
+  log Schwankung naechste 30 T   Gesamt lang  n+  48 n-  61 · Abstand +0.0219 · p hoch 0.4456 tief 0.5554
+  log Schwankung naechste 30 T   Gesamt kurz  n+  57 n-  54 · Abstand -0.1580 · p hoch 0.8911 tief 0.1099
+  tiefster Stand naechste 30 T   Gesamt lang  n+  48 n-  61 · Abstand +0.0171 · p hoch 0.3327 tief 0.6683
+  tiefster Stand naechste 30 T   Gesamt kurz  n+  57 n-  54 · Abstand +0.0766 · p hoch 0.0100 tief 0.9910
+  log Schwankung LETZTE 30 T     Gesamt lang  n+  48 n-  61 · Abstand +0.0461 · p hoch 0.3946 tief 0.6064
+  log Schwankung LETZTE 30 T     Gesamt kurz  n+  57 n-  54 · Abstand -0.1147 · p hoch 0.8242 tief 0.1768

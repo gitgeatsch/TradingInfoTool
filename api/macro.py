@@ -178,7 +178,9 @@ def get_next_fred_release(
             "realtime_start": heute,
             "sort_order": "asc",
             "limit": 1,
-            "include_release_dates_with_no_data": "false",
+            # ⚠️ "true" (15.10.2026, O52-Gegenprobe G3): ein KUENFTIGER Termin hat noch keine Daten - mit "false" kam live immer eine
+            # leere Liste, also "kein Termin" (betraf auch anlass_kalender und die alte Pipeline). Live geprueft: true -> 10.11./10.12.2026
+            "include_release_dates_with_no_data": "true",
         },
         timeout=15,
     )

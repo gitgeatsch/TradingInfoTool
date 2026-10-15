@@ -1,0 +1,15 @@
+REGEL0-Termin TAO gescheitert: RuntimeError: Termin-Lieferant gestellt kaputt
+T1   bestanden US-Inflation (CPI) 14.10. 14:30 Uhr (30 min nach dem Einstieg) – BTC bewegt sich in den 2 h danach im Mittel 1,8× so stark wie sonst; über 24 h nur 1,1× – Einstieg vor oder nach dem Termin ist deine Wahl
+T2   bestanden 2026-03-11 -> US-Inflation (CPI) 11.03. 13:30 Uhr ✔ · 2026-10-28 -> US-Zinsentscheid (FOMC) 28.10. 19:00 Uhr ✔ · 2026-11-10 -> US-Inflation (CPI) 10.11. 14:30 Uhr ✔
+T3   bestanden 1 h davor: True · 3 h davor: True · Ausstieg davor: True
+T4   bestanden ohne Schluessel / FRED-Fehler / kein Termin / FOMC-Liste zu Ende: True / True / True / True
+T5   bestanden Abrufe 2 bei zwei Zeilen (CPI ok, Arbeitsmarkt gestellt 502 und gemerkt) · US-Inflation (CPI) 14.10. 14:30 Uhr (30 min nach dem Einstieg) – BTC bewegt sich in den 2 h danach im Mittel 1,8× so stark wie sonst; über 24 h nur 1,1× – Einstieg vor oder nach dem Termin ist deine Wahl · ⚠ NICHT ABGEFRAGT (kein Nein): US-Arbeitsmarkt
+T6   bestanden Einschaetzung True · Technik True · HTML True · ohne bitgleich True · versende: kaputter Lieferant -> Mail geht True, echter Lieferant -> Zeile in der versandten Mail True
+W1   bestanden Kurz[0] ('Messstand', 'gemessen: trennt nicht – nicht danach handeln (N4/N5, Schritt7 §23.51)') · Langfassung: Messstand: gemessen - trennt NICHT (N4 Fassung 0.1e am 07.10., N5 Fassung 0.2 am 10.10.; Schritt7 §23.51/§23.52). Nicht 
+E1   bestanden ETH: ETH kann nicht entfernt werden: im Bestand (frei 1.5, gestakt 0.0) · SOL: SOL kann nicht entfernt werden: im Bestand (frei 0.0, gestakt 2.0) · LINK: LINK kann nicht entfernt werden: 1 offene Hebelposition(en)
+E2   bestanden AVAX (Grundliste) und ZZTEST (Ergaenzung) entfernt · uebrige gleich True · Spot-Kreis gleich True [] · Rueckweg True
+E3   bestanden unbekanntes Symbol abgewiesen True · config.yaml unveraendert True · Desktop-Prod unveraendert True
+
+Muster REGEL0, Einschaetzung (T6): Termin          US-Inflation (CPI) 14.10. 14:30 Uhr (30 min nach dem Einstieg) – BTC bewegt
+
+10 von 10 bestanden

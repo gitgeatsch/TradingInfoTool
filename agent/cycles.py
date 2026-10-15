@@ -36,6 +36,28 @@ FOMC_MEETING_DATES_2026: list[tuple[date, date]] = [
     (date(2026, 12, 8), date(2026, 12, 9)),
 ]
 
+# 2027 nachgezogen am 15.10.2026 (Schritt7 §23.53, O52) - Quelle wie oben, abgerufen 15.10.2026. Die Fed nennt jeden Termin
+# "tentative until confirmed at the preceding meeting"; eine Verschiebung zeigt erst der Abgleich mit der Seite.
+FOMC_MEETING_DATES_2027: list[tuple[date, date]] = [
+    (date(2027, 1, 26), date(2027, 1, 27)),
+    (date(2027, 3, 16), date(2027, 3, 17)),
+    (date(2027, 4, 27), date(2027, 4, 28)),
+    (date(2027, 6, 8), date(2027, 6, 9)),
+    (date(2027, 7, 27), date(2027, 7, 28)),
+    (date(2027, 9, 14), date(2027, 9, 15)),
+    (date(2027, 10, 26), date(2027, 10, 27)),
+    (date(2027, 12, 7), date(2027, 12, 8)),
+]
+
+# ⚠️ ALLE bekannten Sitzungen. Hinter dem letzten Eintrag liefert jede Abfrage nichts - und das sieht aus wie "keine Sitzung".
+# Deshalb `fomc_liste_reicht_bis()`: wer Termine zeigt, zeigt auch, wie weit die Liste reicht.
+FOMC_MEETING_DATES: list[tuple[date, date]] = FOMC_MEETING_DATES_2026 + FOMC_MEETING_DATES_2027
+
+
+def fomc_liste_reicht_bis() -> date:
+    """Der letzte Tag, fuer den die feste FOMC-Liste Auskunft gibt (zweiter Sitzungstag der letzten Sitzung)."""
+    return FOMC_MEETING_DATES[-1][1]
+
 _CYCLE_YEAR_INFO = {
     1: (
         "Jahr 1 (Nachwahljahr)",
@@ -93,11 +115,11 @@ class UpcomingEvent:
 
 
 def get_upcoming_fomc_meetings(today: date | None = None, within_days: int = 30) -> list[UpcomingEvent]:
-    """Nur Termine aus `FOMC_MEETING_DATES_2026` - Jahresgrenze beachten, siehe
+    """Nur Termine aus `FOMC_MEETING_DATES` (2026 + 2027) - Jahresgrenze beachten (`fomc_liste_reicht_bis`), siehe
     Modul-Docstring zur jaehrlichen Aktualisierung."""
     today = today or date.today()
     events = []
-    for start, end in FOMC_MEETING_DATES_2026:
+    for start, end in FOMC_MEETING_DATES:
         days_until = (start - today).days
         if 0 <= days_until <= within_days:
             events.append(

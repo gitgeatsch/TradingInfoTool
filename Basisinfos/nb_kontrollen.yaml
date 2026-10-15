@@ -304,6 +304,24 @@ kontrollen:
     faellig_bis: "2026-10-20"
     status: offen
     teilbeleg: "Diagnose 15.10. 07:57 (NB auf a66bff7e): Log 07:49 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf AIOZ ok ... BIO verworfen ... XDC ok · Tageswert 0'; umlauf_zusatz je_urteil ok 13 / verworfen 1, 2025-10-16 bis 2026-10-15. Offen: Tageswert am Folgetag (naechste Diagnose)"
+  - id: K-TM-1
+    titel: "O52 Terminzeile: REGEL0-Mail nennt CPI/Arbeitsmarkt/FOMC im Trade-Fenster mit gemessenem Ausschlag; FRED liefert kuenftige Termine"
+    seit: "2026-10-15"
+    paket: O52
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose termine_vorschau: termine mit fomc 2026-10-28 18:00, nfp 2026-11-06 13:30, cpi 2026-11-10 13:30 (UTC), nicht_abgefragt leer, fomc_liste_bis 2027-12-08, schluessel_vorhanden true. Erste REGEL0-Mail: Zeile 'Termin' in der Einschaetzung (meist 'kein ... Termin im 24-h-Fenster'), Technik 'Fakt, nicht Teil der Regel (O52)'; Pruefblock beginnt mit 'Messstand  gemessen: trennt nicht'. Log ohne 'REGEL0-Termin ... gescheitert'"
+    faellig_bis: "2026-10-22"
+    status: offen
+  - id: K-WE-1
+    titel: "O51 Entfernen: GUI-Knopf 'Aus Watchlist entfernen' sperrt bei Bestand und entfernt ein Asset ohne Bestand (nur auf Wunsch des Nutzers)"
+    seit: "2026-10-15"
+    paket: O51
+    commit: ""
+    art: ereignis
+    nachweis: "Nur wenn der Nutzer ein Asset entfernen WILL: Knopf bei einem Bestands-Asset -> Hinweis 'kann nicht entfernt werden: im Bestand'; bei einem Asset ohne Bestand -> nach Rueckfrage weg aus der Watchlist-Tabelle; Diagnose watchlist_stammdaten ohne das Symbol, watchlist_ergaenzung-Zeile mit entfernt=1"
+    faellig_bis: ""
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

@@ -1313,3 +1313,19 @@ Nachweis: Spot §57.1, Schritt7 §23.50, K-UZ-1.
 - **Termin** (Vorprüfung §23.53): als Fakt mit gemessenem Ausschlag in die REGEL0-Mail, **nicht** als Gewicht. Bau nach Ja.
 
 Nachweis: Schritt7 §23.53, Plan O51–O53.
+
+# E-113 · Bündel O52/O51/W1 gebaut; Entfernen nur ohne Bestand (15.10.2026)
+
+**15.10.2026** · Nutzer:
+- *„OK“*.
+- *„Assets entfernen – ja, nur für Assets, welche nicht im Bestand sind und aus der Beobachtung fallen sollen.“*
+- *„Du hast ein DB-Backup, wenn dir Daten fehlen.“*
+
+**Festlegungen:**
+- **Entfernen:** gesperrt bei Bestand (frei + gestakt) und bei offener Hebelposition. Ist die DB nicht lesbar, wird ebenfalls gesperrt.
+- **Gelöscht wird nichts:** Signale, Kurse und Historie bleiben, und erneutes Hinzufügen hebt das Entfernen auf.
+- Die Terminzeile ist ein **Fakt mit Messwert, kein Gate**. Das Fenster beginnt 2 h vor dem Einstieg, weil der gemessene Ausschlag 2 h dauert.
+- **Fehler behoben (berichtet):** FRED lieferte bisher nie einen künftigen Termin.
+- **Backup:** Die NB-Sicherungen im Austauschordner werden nur als Wegwerf-Kopie auf D: gelesen und danach gelöscht.
+
+Nachweis: Schritt7 §23.54, Plan O51/O52, K-TM-1.

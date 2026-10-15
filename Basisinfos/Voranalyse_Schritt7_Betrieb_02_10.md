@@ -3354,3 +3354,117 @@ Nutzer 15.10.: *„Die LLM-Rollen haben offenbar noch in keiner Form ein gutes E
 - (2) Makro als Risiko-Bremse (Ebene 1);
 - (3) O51 Entfernen und die W1-Markierung, gebündelt mit der Terminzeile für den nächsten NB-Pull, **nach Ja**.
 - **W1:** Variante (a), der Block bleibt mit der Markierung *„gemessen: trennt nicht – nicht danach handeln“*.
+
+### 23.54 Bündel gebaut: Terminzeile (O52), Entfernen mit Sperre (O51), Prüfblock markiert (W1 a) (15.10.2026; `o52_pruefstand.py`, `o52_gegenprobe.py` → `.txt`)
+
+**Nutzer 15.10.:**
+- *„OK“* (Ja zum Bündel).
+- *„Hinweis: du hast ein DB-Backup, wenn dir Daten fehlen.“*
+- *„Assets entfernen – ja, nur für Assets, welche nicht im Bestand sind und aus der Beobachtung fallen sollen.“*
+
+**Nachtrag zu §23.53 – der CPI vom 14.10.** (aus der NB-Sicherung 15.10. 05:56, `price_cache`, CoinGecko alle 15 min; Kopie auf D:, nur gelesen, danach gelöscht):
+
+| UTC | BTC |
+|---|---|
+| 12:32 | 83.697 $ |
+| 12:47 | 82.796 $ (−1,1 % in 15 min) |
+| 14:17 | 82.030 $ |
+
+In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa das 1,7-Fache des mittleren CPI-Ausschlags (1,19 %) und passt zur Messung.
+
+**Gebaut:**
+
+| Teil | Was |
+|---|---|
+| `agent/termin_fakt.py` (neu) | CPI/Arbeitsmarkt (FRED 10/50, 08:30 New York) und FOMC (feste Liste, 14:00 New York) im Fenster **ab 2 h vor dem Einstieg bis zum Ausstieg**; Zeile mit Ortszeit, Abstand zum Einstieg und gemessenem Ausschlag (2 h: CPI 1,8× · Arbeitsmarkt 1,5× · FOMC 2,3×; 24 h: 1,1×). Drei Zustände (Termin / kein Termin / **NICHT ABGEFRAGT**); ein FRED-Abruf je Tag und Art. **Kein Gate, kein Gewicht.** |
+| `agent/regel0_mail.py`, `scheduler/background.py` | Parameter `termin` (Muster `verwaesserung`): Zeile in der Einschätzung, Vermerk in der Technik, Text und HTML; ein scheiternder Lieferant hält die Mail nicht auf |
+| `agent/cycles.py` | FOMC 2027 (Fed-Kalender, abgerufen 15.10.; „tentative“), `FOMC_MEETING_DATES` gesamt, `fomc_liste_reicht_bis()` |
+| ⚠️ `api/macro.py` | **Fehler behoben:** `get_next_fred_release` fragte mit `include_release_dates_with_no_data=false`. Ein künftiger Termin hat noch keine Daten ⇒ live kam **nie** ein Termin. Betraf auch `anlass_kalender` und die alte Pipeline: Dort stand nie ein CPI. Gefunden von der Gegenprobe G3. |
+| `agent/regel0_llm.py` | W1 (a): erste Kurzzeile *„Messstand: gemessen: trennt nicht – nicht danach handeln“*. ⚠️ Die Langfassung sagte seit dem 07.10. falsch *„noch nicht gemessen“*; berichtigt. |
+| `config.py`, `ui/app.py` | O51: `entfernen_gesperrt` (Bestand frei + gestakt, offene Hebelposition; DB nicht lesbar ⇒ gesperrt), `remove_watchlist_entry` (Vermerk `entfernt` in der Ergänzung; Grundliste unberührt, nichts gelöscht, erneutes Hinzufügen holt es zurück); GUI-Knopf *„Aus Watchlist entfernen …“* im Bearbeiten-Dialog, prüft zuerst die Sperre |
+| `extract_notebook_diagnose.py` | Schlüssel `termine_vorschau` (K-TM-1) |
+| `pruefe_pakete.py` | Paket `Termin` (7) |
+
+**Prüfung:**
+- **Prüfstand 10/10:**
+  - Zeile CPI 14.10.;
+  - Zeitumstellung (11.03.: USA schon Sommerzeit → 13:30 Ortszeit; FOMC 28.10. → 19:00; CPI 10.11. → 14:30);
+  - Fenster;
+  - drei Zustände;
+  - Abrufspeicher;
+  - Mail und **echter Versand** mit kaputtem und gutem Lieferanten;
+  - Markierung;
+  - Entfernen gesperrt (frei, nur gestakt, Hebel), erlaubt (Grundliste und Ergänzung), Rückweg, Spot-Kreis gleich;
+  - config.yaml und Desktop-Prod unverändert.
+- **Gegenprobe 3/3:**
+  - alle 103 Termine 2023–2026 (CPI 48, Arbeitsmarkt 47, FOMC ab 2026 8), Ortszeit unabhängig über pandas;
+  - FOMC-Liste = Fed-Kalender;
+  - **FRED live** liefert CPI 10.11. und Arbeitsmarkt 06.11.
+- ⚠️ Zwei Prüfstandfehler lagen am **Testaufbau** (zwei Mails im Versand; Ausstieg gleich Einstieg), nicht am Modul.
+
+**Bewusst nicht:**
+- FOMC 2023–2025 fehlen im Code: Der Betrieb schaut nur nach vorn.
+- *„Ausgemustert“* wirkt weiter nur im alten Ablauf. Das Entfernen ist das Werkzeug für *„aus der Beobachtung fallen“*.
+
+### 23.55 O53 Makro als Risiko-Bremse – Voranalyse und Messplan (15.10.2026; noch nichts gerechnet)
+
+**Frage:** Sagt das Makro-Regime das **Risiko** voraus, also Schwankung und Einbrüche? Die Richtung ist hier nicht gefragt; die war in §51.7 nicht entscheidbar.
+
+**Der entscheidende Punkt:** Die Hebelstufe der REGEL0 kommt schon heute aus der **ATR**, also aus der jüngsten Schwankung des Assets (K6, Befund 2.681). Eine Makro-Bremse ist nur dann etwas wert, wenn sie Risiko vorhersagt, **das die eigene jüngste Schwankung noch nicht zeigt**. Schwankung hält lange an; schon die Vorwoche sagt viel über die nächste. Die Messung muss deshalb **gegen diese Fortschreibung** laufen, nicht gegen null.
+
+**Bestand (wiederverwendet, R-R11):**
+- Kanäle K1–K9 lang/kurz und *Gesamt* aus `p51_vorpruefung` (Drittel im 5-J-Fenster, Zwischenspeicher `data/_spot/p51_eingang.pkl`);
+- BTC täglich (CoinMetrics) seit 2010;
+- Nullwelt N2 (gemeinsame Phasen-Randomisierung der Kanäle, R-R14) mit Selbsttest (§51.7).
+
+**Messplan Stufe 1 (Vorprüfung, vorab festgelegt, zweiseitig):**
+
+| | |
+|---|---|
+| Stichtage | Monatsanfang 2013-01 bis 2026-08 (ein Abstand von 30 T: Ziele überlappen nicht) |
+| Ziele | (a) BTC-Schwankung der **nächsten 30 T** (Standardabweichung der Tages-log-Renditen); (b) **tiefster Rückgang** in den nächsten 30 T |
+| Fortschreibung | Schwankung der **letzten 30 T**; Ziel = Rest von log(a) nach der Regression auf log(Fortschreibung), gerechnet **nur aus der Vergangenheit** (rollierend, ab 36 Stichtagen); für (b) analog |
+| Merkmal | nur *Gesamt lang* und *Gesamt kurz* (Gegenwind −1 / Mitte / Rückenwind +1) – 2 Tests, Bonferroni 0,025 je Test und Seite |
+| Größe | Abstand des Rests Gegenwind − Rückenwind |
+| Nullwelt | N2, 1.000 gemeinsame Surrogate der Kanäle |
+| Selbsttest | Fehlalarm auf 200 synthetischen Zielen (phasenrandomisierte BTC-Renditen) im Band nach der Stufung; Pflanzung als Auflösungskurve |
+| Auskunft | Epochen E1/E2/E3; Altkorb statt BTC |
+| ENTSCHEIDUNG | belegt **und** Selbsttest im Band ⇒ Stufe 2 (Form der Bremse: wie viel kleiner, gegen die ATR-Stufe der REGEL0). Sonst bleibt das Makro **Fakt** in den Mails, ohne Gewicht |
+
+**Erwartung, ehrlich:** Die wirksame Stichprobe ist die Zahl der Regimewechsel, nicht der Monate (2.599). Schwankung ist aber viel leichter vorherzusagen als Ertrag; deshalb lohnt dieser Versuch, obwohl die Richtung gescheitert ist.
+
+### 23.56 O53 Ergebnis: Makro als Risiko-Bremse – nicht belegt; was die ATR schon trägt (15.10.2026; `o53_vorpruefung.py`, `o53_auskunft_roh.py` → `.txt`)
+
+**Lauf nach dem Plan §23.55** (BTC, 156 Stichtage 2013–2026, N2-Bank 1.000, alpha 0,00625 je Test und Seite):
+
+| Ziel (Rest nach der eigenen 30-T-Schwankung) | Gesamt lang | Gesamt kurz |
+|---|---|---|
+| (a) Schwankung nächste 30 T | +0,065 (p 0,24) – Rückenwind schwankt eher **mehr** | −0,058 (p 0,26) – Gegenwind schwankt mehr |
+| (b) tiefster Stand nächste 30 T | +0,012 (p 0,33) | **+0,063 (p 0,013)** – Gegenwind fällt tiefer; E3 −0,008 |
+| Urteil | nicht belegt | nicht belegt |
+
+| Prüfung | |
+|---|---|
+| Selbsttest (200 Welten mit BTC-Ballung, ohne Makro) | Fehlalarm 0–4 je Seite, Band bis 4 ✔ |
+| Auflösung (Pflanzung auf die Schwankung) | +49 % mehr Schwankung bei Gegenwind wird nur zu **15 %** gefunden, +82 % zu 37 % |
+| Fortschreibung allein | Rangkorrelation 0,50 – die eigene jüngste Schwankung weiß schon viel |
+
+**Auskunft ohne Fortschreibung** (nachträglich, nicht im Plan):
+- *Gesamt kurz*, Gegenwind gegen Rückenwind:
+  - Schwankung **+17 %** (log 0,158, p 0,11);
+  - tiefster Stand **7,7 % tiefer** (log, p 0,010).
+- Die **letzte** 30-T-Schwankung zeigt den Unterschied schon zu etwa drei Vierteln (log 0,115).
+
+**Was das heißt (fachlich):**
+1. **Die ATR trägt das Makro schon mit, soweit es anhält.** Die Makro-Lage ändert sich langsam. Wirkt sie auf die Schwankung, steht das nach wenigen Wochen in der eigenen Schwankung des Assets, und genau aus dieser kommt die Hebelstufe der REGEL0. Das erklärt auch die schwache Auflösung: Die Fortschreibung schluckt den gepflanzten Effekt.
+2. **Was übrig bleibt, ist der Wechselmoment**, also die ersten Wochen nach einem Umschwung. Davon gibt es in 13 Jahren zu wenige (2.599).
+3. **Die Tendenz ist fachlich stimmig, aber nicht belegt:** kurzfristiger Gegenwind → tiefere Rückgänge in 30 T. E3 (ab 2024) zeigt sie nicht.
+4. ⇒ **Keine Bremse als Regel.** Das entspricht der Nutzervorgabe vom 01.10. (übergeordnete Kräfte nur gewichten): *„das muss ich dann in den laufenden Trades selbst bewerten“*.
+
+**Nutzerfrage 15.10.:** *„Makro-Regime ist grundsätzlich für alle Assets relevant und sollte eine Rolle spielen.“*
+
+**Vorschlag O54 (zur Abstimmung):** Das Makro spielt seine Rolle als **eine Zeile in jeder Handlungsmail** (REGEL0, B1/B3/B4) und auf der Statusseite, jeweils mit dem gemessenen Stand:
+- *„Makro lang: günstig · kurz: Gegenwind – in kurzen Gegenwind-Phasen fiel BTC binnen 30 T im Mittel rund 7 % tiefer (Tendenz, nicht belegt; die Hebelstufe berücksichtigt die Schwankung schon über die ATR)“*.
+- Gewichten tust du; das System sperrt nichts.
+
+**Vor dem Bau:** Datenquellen-Inventar am NB, also ob die FRED-CSV-Reihen dort erreichbar sind und wie oft sie abgerufen werden. Die Nachmessung ab 10/2027 bleibt ohne Regeländerung.

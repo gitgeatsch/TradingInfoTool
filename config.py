@@ -540,6 +540,52 @@ def _update_watchlist_field(symbol: str, field_name: str, new_value: str, herkun
     return True
 
 
+def entfernen_gesperrt(symbol: str) -> str | None:
+    """O51 (15.10.2026, Nutzer: *"nur fuer Assets, welche nicht im Bestand sind und aus der Beobachtung fallen sollen"*): warum ein
+    Asset NICHT entfernt werden darf - oder None. Liest die Produktions-DB nur (``mode=ro``).
+
+    ⚠️ Gesperrt bei Bestand (frei + gestakt, wie ``spot_mitnahme.kreis``) und bei offener Hebelposition: Fuehrung und Abbau (B3/B4)
+    holen ihre Bestaende ueber die Watchlist - ein entferntes Asset mit Bestand fiele dort still heraus. Ist die Datenbank nicht
+    lesbar, wird ebenfalls gesperrt: ohne Nachweis kein Entfernen."""
+    import sqlite3
+
+    p = Path(_db_pfad())
+    if not p.exists():
+        return "Datenbank nicht vorhanden - Bestand nicht prüfbar"
+    try:
+        c = sqlite3.connect("file:%s?mode=ro" % str(p).replace("\\", "/"), uri=True, timeout=5)
+        try:
+            q, st = c.execute("SELECT COALESCE(SUM(quantity), 0), COALESCE(SUM(staked_quantity), 0) FROM holdings WHERE symbol=?",
+                              (symbol,)).fetchone()
+            offen = c.execute("SELECT COUNT(*) FROM hebel_positions WHERE symbol=? AND geschlossen_am IS NULL", (symbol,)).fetchone()[0]
+        finally:
+            c.close()
+    except sqlite3.Error as exc:
+        return "Bestand nicht prüfbar (%s)" % exc
+    if float(q or 0) + float(st or 0) > 0:
+        return "im Bestand (frei %s, gestakt %s)" % (q, st)
+    if offen:
+        return "%d offene Hebelposition(en)" % offen
+    return None
+
+
+def remove_watchlist_entry(symbol: str, herkunft: str = "gui_entfernen") -> None:
+    """O51: nimmt ein Asset aus der Watchlist (Grundliste UND Ergaenzung) - als Vermerk ``entfernt`` in der Ergaenzung, die
+    Grundliste in config.yaml bleibt unberuehrt (P18b). Nichts wird geloescht: Signale, Kurse und Historie bleiben, und ein erneutes
+    Hinzufuegen (``add_watchlist_entry``) hebt den Vermerk wieder auf. Wirft ``WatchlistWriteError`` mit dem Grund, wenn gesperrt
+    (``entfernen_gesperrt``) oder das Asset nicht in der Watchlist steht."""
+    if _eintrag(symbol) is None:
+        raise WatchlistWriteError(f"{symbol} steht nicht in der Watchlist")
+    grund = entfernen_gesperrt(symbol)
+    if grund:
+        raise WatchlistWriteError(f"{symbol} kann nicht entfernt werden: {grund}")
+    _ergaenzung_schreiben(symbol, {}, herkunft, entfernt=True)
+    if _eintrag(symbol) is not None:
+        raise WatchlistWriteError(f"Validierung fehlgeschlagen: {symbol} steht weiter in der Watchlist")
+    global _config_cache
+    _config_cache = None
+
+
 def update_watchlist_coingecko_id(symbol: str, new_coingecko_id: str, herkunft: str = "gui_bearbeiten") -> bool:
     """Setzt/ergaenzt ``coingecko_id`` eines Watchlist-Eintrags - manuell vom Nutzer ausgeloest (GUI-Bearbeiten-Dialog, 2026-07-19:
     automatisch aus einer Hebel-Position ergaenzte Symbole bekommen bewusst KEINE coingecko_id, siehe importer/bitpanda_margin_positions.py).

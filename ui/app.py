@@ -1933,6 +1933,34 @@ class AssetEditDialog(tk.Toplevel):
         button_frame.grid(row=next_row, column=0, columnspan=3, sticky="e", pady=(10, 0))
         ttk.Button(button_frame, text="Abbrechen", command=self.destroy).pack(side="right", padx=(6, 0))
         ttk.Button(button_frame, text="Speichern", command=self._on_submit).pack(side="right")
+        # O51 (15.10.2026): ENTFERNEN statt nur ausmustern - nur ohne Bestand und ohne offene Hebelposition (config.entfernen_gesperrt)
+        ttk.Button(button_frame, text="Aus Watchlist entfernen …", command=self._on_entfernen).pack(side="left")
+
+    def _on_entfernen(self) -> None:
+        import config as config_module
+
+        grund = config_module.entfernen_gesperrt(self._asset.symbol)
+        if grund:
+            messagebox.showwarning("Aus Watchlist entfernen",
+                                   f"{self._asset.symbol} kann nicht entfernt werden: {grund}.\n\n"
+                                   "Entfernen geht nur ohne Bestand und ohne offene Hebelposition - "
+                                   "sonst fiele das Asset aus Führung und Abbau. Zum Stilllegen: Beobachtungsstatus 'ausgemustert'.",
+                                   parent=self)
+            return
+        if not messagebox.askyesno(
+                "Aus Watchlist entfernen",
+                f"{self._asset.symbol} aus der Watchlist entfernen?\n\n"
+                "Es verschwindet aus allen Watchlist-Auswertungen und Mails. Gelöscht wird nichts: Signale, Kurse und Historie "
+                "bleiben, und erneutes Hinzufügen holt es zurück.", parent=self):
+            return
+        try:
+            config_module.remove_watchlist_entry(self._asset.symbol)
+        except config_module.WatchlistWriteError as exc:
+            messagebox.showerror("Aus Watchlist entfernen", f"Fehlgeschlagen: {exc}", parent=self)
+            return
+        self.destroy()
+        if self._on_edited:
+            self._on_edited()
 
     def _on_search_coingecko_id(self) -> None:
         CoinSearchDialog(

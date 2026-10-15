@@ -1726,6 +1726,8 @@ def _regel0_mails() -> None:
                          ankuendigung=lambda r: _BA.mailteile_aus_ablage(_NL.DATEN_VORGABE, r),
                          # P22 (15.10.2026): Verwaesserung des Assets als Fakt - "beim Kauf" (Nutzer); liest Mengenreihe + Ablage nur
                          verwaesserung=lambda r: __import__("agent.verwaesserung", fromlist=["mailteil"]).mailteil(_NL.DATEN_VORGABE, r["symbol"]),
+                         # O52 (15.10.2026): CPI/Arbeitsmarkt/FOMC im Trade-Fenster als Fakt mit gemessenem Wert (Schritt7 §23.53) - kein Gate
+                         termin=lambda r: __import__("agent.termin_fakt", fromlist=["mailteil"]).mailteil(r),
                          # O45 (11.10.2026): Wochen- und Tageschart mit RSI/MACD als weitere Bilder in "2 · Chart" (Kontext, kein Ausloeser)
                          zusatzbilder=lambda r: _IC.bilder(_NL.DATEN_VORGABE, r["symbol"], r.get("bitpanda") or r["symbol"],
                                                            r.get("eur_je_usd"), praefix="regel0"))

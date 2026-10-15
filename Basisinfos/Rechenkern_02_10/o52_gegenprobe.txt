@@ -1,0 +1,5 @@
+G1   bestanden 103 Termine (CPI 48, Arbeitsmarkt 47, FOMC ab 2026 8) · Abweichungen 0
+G2   bestanden Code 8 · p59 8 · gleich True
+G3   bestanden FRED live ab 2026-10-15: CPI 2026-11-10 (Datei 2026-11-10) · Arbeitsmarkt 2026-11-06 (Datei 2026-11-06)
+
+3 von 3 bestanden

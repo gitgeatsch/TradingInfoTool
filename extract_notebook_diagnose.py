@@ -3017,6 +3017,25 @@ def _log_zeilen_im_fenster(log_pfad: Path, stunden: int) -> list[str]:
     return ergebnis
 
 
+def _termine_vorschau() -> dict:
+    """O52 (15.10.2026, K-TM-1): die naechsten Makro-Termine so, wie die REGEL0-Mail sie sieht (agent.termin_fakt) - CPI und
+    Arbeitsmarkt aus FRED, FOMC aus der festen Liste. Belegt am NB, dass FRED kuenftige Termine liefert (bis 15.10. kam nie einer)
+    und wie weit die FOMC-Liste reicht. Gibt KEINEN Schluessel aus."""
+    try:
+        import config as _cfg
+        from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+        from agent import termin_fakt as _TF
+
+        _cfg.load_env()
+        jetzt = _dt.now(_tz.utc)
+        d = _TF.termine(jetzt, jetzt + _td(days=40))
+        return {"termine": [{"art": e["art"], "utc": e["utc"].strftime("%Y-%m-%d %H:%M")} for e in d["termine"]],
+                "nicht_abgefragt": d["nicht_abgefragt"], "fomc_liste_bis": d["fomc_bis"].isoformat(),
+                "schluessel_vorhanden": bool(os.environ.get("FRED_API_KEY"))}
+    except Exception as exc:                                             # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _austausch_eingang() -> dict:
     """P22 (15.10.2026, Nutzer: *"pruefen wir, wie kommen die Daten auf das NB?"*): was liegt fuer DIESES Geraet im Austauschordner
     bereit - und ist es vollstaendig angekommen (Pruefsumme)? Nur lesend."""
@@ -4067,6 +4086,7 @@ def main() -> None:
         "messbasen": _messbasen(),
         "austausch_eingang": _austausch_eingang(),         # P22 15.10.: liegt die Ergaenzung am NB vollstaendig bereit?
         "umlauf_zusatz": __import__("agent.umlauf_zusatz", fromlist=["stand"]).stand("data/umlaufmenge_cg.db"),   # P22b
+        "termine_vorschau": _termine_vorschau(),           # O52 15.10.: Termine wie in der REGEL0-Mail (K-TM-1)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

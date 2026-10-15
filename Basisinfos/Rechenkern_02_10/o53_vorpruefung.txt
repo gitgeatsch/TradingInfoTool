@@ -1,0 +1,28 @@
+O53 VORPRUEFUNG · Makro gegen RISIKO (Rest nach der eigenen 30-T-Schwankung) · BTC · Stichtage 246 (mit Rest a: 156) · N2-Surrogate 1000 · alpha je Test und Seite 0.00625
+
+Fortschreibung allein (Rangkorrelation vor -> a): 0.50  - so viel weiss die eigene Schwankung schon
+
+Vorzeichen: Abstand = Rest(Rueckenwind) - Rest(Gegenwind). Bei (a) heisst NEGATIV: Gegenwind schwankt MEHR als die Fortschreibung sagt; bei (b) heisst POSITIV: Gegenwind faellt TIEFER.
+
+  (a) Schwankung 30 T      Gesamt lang  n+  45 n-  61 · Abstand +0.0651 · E1 +0.0868 E2 +0.1771 E3 +nan · p hoch 0.2448 tief 0.7562 · nicht belegt
+  (a) Schwankung 30 T      Gesamt kurz  n+  56 n-  49 · Abstand -0.0584 · E1 -0.0976 E2 +nan E3 +0.0882 · p hoch 0.7373 tief 0.2637 · nicht belegt
+  (b) tiefster Stand 30 T  Gesamt lang  n+  45 n-  61 · Abstand +0.0123 · E1 +0.0211 E2 -0.0088 E3 +nan · p hoch 0.3317 tief 0.6693 · nicht belegt
+  (b) tiefster Stand 30 T  Gesamt kurz  n+  56 n-  49 · Abstand +0.0629 · E1 +0.0900 E2 +nan E3 -0.0080 · p hoch 0.0130 tief 0.9880 · nicht belegt
+
+SELBSTTEST: 200 Welten ohne Makro-Bezug (Ballung und langsame Phasen wie BTC) gegen die echten Scores und die N2-Bank
+  ... 50 Welten (5 s)
+  ... 100 Welten (11 s)
+  ... 150 Welten (16 s)
+  ... 200 Welten (21 s)
+  a   Gesamt lang  Fehlalarm hoch 0 tief 0 von 200 (Soll 1.2 je Seite, Band bis 4) ✔
+  a   Gesamt kurz  Fehlalarm hoch 3 tief 4 von 200 (Soll 1.2 je Seite, Band bis 4) ✔
+  b   Gesamt lang  Fehlalarm hoch 0 tief 0 von 200 (Soll 1.2 je Seite, Band bis 4) ✔
+  b   Gesamt kurz  Fehlalarm hoch 0 tief 2 von 200 (Soll 1.2 je Seite, Band bis 4) ✔
+
+AUFLOESUNG (Pflanzung log sigma += beta * Gesamt lang, 40 Welten je beta, Fundquote Ziel a bei p tief <= alpha):
+  beta 0.05 (Gegen- gegen Rueckenwind 11 % mehr Schwankung)  Fundquote 0 %
+  beta 0.10 (Gegen- gegen Rueckenwind 22 % mehr Schwankung)  Fundquote 5 %
+  beta 0.20 (Gegen- gegen Rueckenwind 49 % mehr Schwankung)  Fundquote 15 %
+  beta 0.30 (Gegen- gegen Rueckenwind 82 % mehr Schwankung)  Fundquote 37 %
+
+Laufzeit 35 s

@@ -823,7 +823,7 @@ def mail_zeilen(ergebnis: dict, katalog: dict | None = None) -> list:
     if not katalog["rollen"].get("entscheider", {}).get("an"):
         # 0.1e (E-53): mit nur dem Trader als Eingang war er ein Echo (39 von 40) - ausgesetzt, nicht gestrichen
         z.append("  (Entscheider ausgesetzt: er wiederholte den Trader in 39 von 40 Faellen - E-53, Neupruefung mit dem Rueckspiel)")
-    z += ["", "  Messstand: noch nicht gemessen (Sofortfassung E-52/E-53; die gemessene Fassung folgt nach Rueckspiel und Bestaetigung)."]
+    z += ["", "  Messstand: " + MESSSTAND]
     return z
 
 
@@ -836,11 +836,18 @@ def _erster_satz(text: str, grenze: int = 220) -> str:
     return t if len(t) <= grenze else t[:grenze].rsplit(" ", 1)[0] + " …"
 
 
+# W1 (a), E-112 (15.10.2026): der Block bleibt in der Mail, aber MARKIERT - zweimal gemessen trennt er nicht (N4 0.1e, N5 0.2;
+# 2025 war "dagegen" sogar signifikant schlechter als Zufall). Vorher stand hier "noch nicht gemessen" - das war seit 07.10. falsch.
+MESSSTAND = ("gemessen - trennt NICHT (N4 Fassung 0.1e am 07.10., N5 Fassung 0.2 am 10.10.; Schritt7 §23.51/§23.52). "
+             "Nicht danach handeln; der Block laeuft weiter, damit der Betrieb mitgemessen wird.")
+MARKE = ("Messstand", "gemessen: trennt nicht – nicht danach handeln (N4/N5, Schritt7 §23.51)")
+
+
 def mail_teile(ergebnis: dict, katalog: dict | None = None) -> dict:
     """O25 (04.10.2026): die Rollen fuer die neue REGEL0-Mail getrennt in KURZ (eine Zeile je Rolle, Abschnitt Einschaetzung)
     und LANG (der ganze Block wie bisher, Abschnitt Begruendung). Ein Ausfall steht als *keine Auskunft*, nie als Zustimmung."""
     katalog = katalog or lade()
-    kurz, detail = [], []
+    kurz, detail = [MARKE], []
     for rolle, titel in (("trader", "Trader"), ("markt", "Umfeld"), ("entscheider", "Entscheider")):
         x = ergebnis.get(rolle)
         if x is None:

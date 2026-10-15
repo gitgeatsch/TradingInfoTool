@@ -22297,6 +22297,44 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_termin() -> None:
+    """O52 + O51 + W1 (15.10.2026, Schritt7 §23.53, E-112): TERMIN ALS FAKT, ENTFERNEN MIT SPERRE, PRUEFBLOCK MARKIERT.
+
+    Nutzer: *"CPI ... als Terminangabe relativ sinnfrei ohne Werte"* · *"Assets entfernen - ja nur fuer Assets, welche nicht im Bestand
+    sind und aus der Beobachtung fallen sollen"* · W1 Variante (a). Geprueft: die Terminzeile nennt den gemessenen Ausschlag und ist
+    kein Gate; FRED fragt kuenftige Termine MIT (sonst immer "kein Termin"); die FOMC-Liste reicht ueber das laufende Jahr; Entfernen
+    ist gesperrt bei Bestand und offener Hebelposition; der Pruefstand laeuft ohne Netz an Wegwerf-Dateien."""
+    P = "Termin"
+    import os as _os
+    import subprocess as _sp
+    from datetime import date as _d
+
+    import agent.cycles as _CY
+    import agent.regel0_llm as _LL
+    import agent.termin_fakt as _TF
+
+    _qm, _qb, _qt = _quelltext("api/macro.py"), _quelltext("scheduler/background.py"), _quelltext("agent/termin_fakt.py")
+    pruefe(P, "FRED release/dates fragt KUENFTIGE Termine mit (include_release_dates_with_no_data=true) - mit false kam live nie ein Termin",
+           '"include_release_dates_with_no_data": "true"' in _qm and '"include_release_dates_with_no_data": "false"' not in _qm)
+    pruefe(P, "REGEL0-Versand bekommt den Termin-Lieferanten; die Zeile ist Fakt, kein Gate (keine Wirkung auf Stufe/Einsatz)",
+           'termin=lambda r: __import__("agent.termin_fakt"' in _qb and "stufe" not in _qt.split("def mailteil")[1]
+           and _TF.FAKTOR_24H == 1.10 and set(_TF.FAKTOR_2H) == {"cpi", "nfp", "fomc"})
+    pruefe(P, "FOMC-Liste reicht bis ins naechste Jahr (sonst sieht ein fehlender Termin aus wie 'keine Sitzung')",
+           _CY.fomc_liste_reicht_bis().year > _d.today().year, "reicht bis %s" % _CY.fomc_liste_reicht_bis())
+    pruefe(P, "W1 (a): Pruefblock markiert 'trennt nicht', kein veraltetes 'noch nicht gemessen'",
+           _LL.MARKE[0] == "Messstand" and "trennt NICHT" in _LL.MESSSTAND and "noch nicht gemessen (Sofortfassung" not in _quelltext("agent/regel0_llm.py"))
+    _qc, _qu = _quelltext("config.py"), _quelltext("ui/app.py")
+    pruefe(P, "O51: Entfernen nur ueber entfernen_gesperrt (Bestand frei+gestakt, offene Hebelposition), GUI-Knopf fragt die Sperre zuerst",
+           "def entfernen_gesperrt" in _qc and "staked_quantity" in _qc.split("def entfernen_gesperrt")[1].split("def ")[0]
+           and "geschlossen_am IS NULL" in _qc.split("def entfernen_gesperrt")[1].split("def ")[0]
+           and "grund = entfernen_gesperrt(symbol)" in _qc and "entfernen_gesperrt(self._asset.symbol)" in _qu)
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "o52_pruefstand.py")],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+    pruefe(P, "⚠️⚠️ Pruefstand O52: Zeile, Zeitumstellung, Fenster, drei Zustaende, Abrufspeicher, Mail+Versand, Markierung, Entfernen gesperrt/"
+              "erlaubt/Rueckweg, config.yaml und Prod unveraendert", "10 von 10 bestanden" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_verwaesserung() -> None:
     """P22 (15.10.2026, Spot §53/§54): VERWAESSERUNG ALS FAKT IN MAIL UND STATUSSEITE.
 
@@ -32875,7 +32913,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,
