@@ -1,0 +1,47 @@
+P57 VORANALYSE P22b · Kandidaten 14 (ohne EURCV: Stablecoin) · Wegwerf D:\CLAUDE_Temp\TradingInfoTool\p57_u2gwio2t
+
+TEIL 1  Binance-Spot (USDT-Paar): HYPE TRADING · XDC - · KAS - · ASTER TRADING · AIOZ - · AKT - · BRETT - · CAT - · GRIFFAIN - · SUPRA - · CANTON - · MON - · VSN - · BIO TRADING
+        mit TRADING-Paar: HYPE, ASTER, BIO · davon schon in der Messbasis (Kurse): HYPE, BIO
+
+TEIL 2  Abruf CoinGecko market_chart 365 T (Zerlegung wie der Vollabruf, Mindestpunkte 300):
+        HYPE      ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  1 · groesster  12.2 %  (hyperliquid)
+        XDC       ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   4.4 %  (xdce-crowd-sale)
+        KAS       ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   1.3 %  (kaspa)
+        ASTER     ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   9.5 %  (aster-2)
+        AIOZ      ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   1.6 %  (aioz-network)
+        AKT       ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  1 · groesster  12.2 %  (akash-network)
+        BRETT     ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   1.3 %  (based-brett)
+        CAT       ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  7 · groesster  13.8 %  (simon-s-cat)
+        GRIFFAIN  ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   1.1 %  (griffain)
+        SUPRA     ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  1 · groesster  25.7 %  (supra)
+        CANTON    ok         Punkte 341 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   7.0 %  (canton-network)
+        MON       ok         Punkte 327 · ohne Wert   0 · Spruenge >=10 %  0 · groesster   9.2 %  (monad)
+        VSN       ok         Punkte 366 · ohne Wert   0 · Spruenge >=10 %  4 · groesster  17.6 %  (vision-3)
+        BIO       verworfen  Punkte 223 · ohne Wert 143 · Spruenge >=10 %  1 · groesster  21.2 %  (bio-protocol)
+        BIO im Vollabruf 21.09.: ('BIO', 'bio-protocol', 'TRADING', 223, 143, 1, 0.2121, 'verworfen', '2026-09-20T23:43:57.743822+00:00')
+
+TEIL 3  Grundgesamtheit B4, Stichtag 2026-09-01, NB-Lage (Universum heute 339, Variante A 339):
+        Variante A - Klasse gewechselt: 5 (1000CHEEMS M->S, BAT M->S, GLM M->S, KAS S->M, XDC S->M)
+        Variante A - B4-Fuenftel gewechselt: 3 von 339 (0.9 %) · im BESTAND: 0 (-)
+        Variante A - Verwaesserungs-Fuenftel gewechselt: 6 · B4 unteres Fuenftel heute HYPE,MORPHO,PLUME,SUI,TAO,TURBO,XDC / Variante A HYPE,MORPHO,PLUME,SUI,TAO,TURBO,XDC
+        Variante B (Zusatztabelle, B4 liest sie nicht): B4 bitgleich zu heute PER BAU - Klassen der neuen Coins bleiben die Umsatz-Klasse
+        Kandidaten im B4-Universum: HYPE, XDC, KAS, BRETT, SUPRA, BIO (Klasse heute HYPE M, XDC S, KAS S, BRETT S, SUPRA S, BIO M)
+
+TEIL 4  turnover: live_groesse umschlag_frei · Leser von raenge(): nur agent/rollen_lauf.py (Rollen-Kette, angehalten seit 05.10., E-67)
+        Variante A: Messbasis turnover = Symbolliste der Mengendatei -> + 2 Symbole mit Binance-USDT-Paar (HYPE, ASTER) - aendert die Raenge ALLER Coins, sobald die Kette wieder laeuft
+
+TEIL 5  Vorschau zum 2026-10-15 (Verwaesserung 90 T · Freigabe-Rhythmus):
+        HYPE      +0.0 %
+        XDC       +0.0 %
+        KAS       +0.7 %
+        ASTER     +1.1 %
+        AIOZ      +1.5 %
+        AKT       +1.1 %
+        BRETT     +0.0 %
+        CAT       -7.3 %
+        GRIFFAIN  -0.0 %
+        SUPRA     +39.4 %
+        CANTON    +2.0 %
+        MON       +0.0 %
+        VSN       +2.1 %
+        BIO       -

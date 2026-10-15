@@ -6897,3 +6897,57 @@ Nutzer 15.10.: *„Ok, bereite alles vor für den nächsten Punkt P22b – alles
 3. nach dem Ja bauen, prüfen und gegenprüfen;
 4. Ergänzung für das NB über den Austauschordner;
 5. Kontrolle.
+
+## 57. Voranalyse P22b: Ergebnis (15.10.2026; `p57_p22b_voranalyse.py` → `.txt`)
+
+Nutzer 15.10.: *„Ja, Voranalyse P22b vorbereiten, prüfen und gegenprüfen.“*
+
+**Teil 1 – Binance-Spot:**
+- HYPE, ASTER und BIO haben heute ein USDT-Paar (TRADING); die übrigen elf nicht.
+- HYPE und BIO stehen schon in der Messbasis (Kurse, als Übernahme).
+
+**Teil 2 – Abruf und Abdeckung** (CoinGecko `market_chart` 365 T, frei; dieselbe Zerlegung wie der Vollabruf, mit Bündelfaktor):
+- **13 von 14 brauchbar:** 366 Punkte, außer CANTON 341 und MON 327 (jünger), keine Lücken.
+- **BIO erneut verworfen:** 223 Punkte, 143 ohne Wert, also wie beim Vollabruf 21.09. Die CoinGecko-Reihe ist lückenhaft. ⇒ bleibt draußen; die Mail sagt *„keine verlässliche Mengenreihe“*.
+- EURCV als Stablecoin ausgenommen.
+
+**Teil 3 – Grundgesamtheit B4** (stehende Regel; Stichtag 01.09.2026, NB-Lage, Prod-Sicherung 15.10. 04:42):
+
+| | Variante A: neue Coins in **derselben** Tabelle | Variante B: **eigene Zusatztabelle** |
+|---|---|---|
+| Klasse gewechselt | **5**: KAS S→M, XDC S→M und dadurch **drei andere** M→S (1000CHEEMS, BAT, GLM) | 0 (per Bau) |
+| B4-Fünftel gewechselt | 3 von 339 (0,9 %), im **Bestand 0**, unteres Fünftel gleich | 0 |
+| Verwässerungs-Fünftel gewechselt | 6 | nur die neuen Coins kommen hinzu |
+| turnover-Messbasis | **+2 Symbole** (HYPE, ASTER mit Binance-Paar), sobald die Rollen-Kette wieder läuft | unverändert |
+
+- Kandidaten im B4-Universum: HYPE, XDC, KAS, BRETT, SUPRA, BIO. Sie kommen über den Bestand außerhalb Binance hinein und haben heute die **Umsatz-Klasse** als Ersatz.
+
+**Teil 4 – turnover:**
+- `live_groesse` = `umschlag_frei`.
+- `raenge()` liest **nur** `agent/rollen_lauf.py`, also die Rollen-Kette, angehalten seit 05.10. (E-67). Heute wirkt eine Änderung dort nicht, nach dem Wiedereinschalten schon: Die Messbasis von turnover ist die Symbolliste der Mengendatei.
+
+**Teil 5 – Vorschau** (Verwässerung 90 T bis 15.10.):
+- **SUPRA +39,4 %**, CAT −7,3 % (die Menge sinkt), VSN +2,1 %, CANTON +2,0 %, AIOZ +1,5 %, ASTER +1,1 %, AKT +1,1 %, KAS +0,7 %.
+- **HYPE, XDC, BRETT, MON, GRIFFAIN 0,0 %**.
+- Kein laufender Freigabe-Rhythmus bei den neuen Coins.
+
+**Gegenprobe der 0 %:**
+- In der ganzen Reihe zeigen **125 von 373** Binance-Coins (34 %) in 90 T exakt 0 %. Keiner steht das ganze Jahr still; CoinGecko führt also nach, nur in Schüben.
+- Wo eine zweite freie Quelle existiert (Coin Metrics, 42 ältere Coins), zeigt CoinGecko 10-mal 0 %, und Coin Metrics sieht bei **keinem** davon Wachstum über 0,5 %. Dort ist 0 % echt.
+- ⚠️ Für die neuen Token (HYPE, XDC …) gibt es **keine** zweite freie Quelle. Ihr 0 % ist **nicht gegenprüfbar**.
+  - ⇒ **Vorschlag:** Bei genau 0 % heißt die Zeile *„Umlaufmenge laut CoinGecko unverändert“*, nicht *„+0,0 %“*.
+  - Rangkorrelation beider Quellen über alle 42: 0,26. Das ist erwartbar schwach, weil es zwei verschiedene Größen sind: Free Float gegen Ledger-Menge.
+
+**Empfehlung: Variante B.**
+- **Warum:** B4 ist auf der heutigen Grundgesamtheit gemessen (§43, §54.1). Variante A verschiebt drei **unbeteiligte** Coins in eine andere Klasse und ändert die turnover-Messbasis. Klein, aber genau das, was die Regel *Die Grundgesamtheit ist keine Stellschraube* ausschließt.
+- **Bau B:**
+  - **Speicher:** In `umlaufmenge_cg.db` kommen zwei eigene Tabellen, `umlaufmenge_zusatz` (symbol, datum, wert) und `abruf_zusatz` (symbol, coingecko_id, urteil). Gelesen werden sie **nur** von `agent/verwaesserung.py` (Wert, Rhythmus) und von der Verwässerungsrechnung im B4-Lauf, nie von den Marktwert-Klassen oder von turnover.
+  - **Desktop:** ein Erstabruf (13 Abrufe, rund 3 min wegen der gemessenen Grenze von 5 je Minute).
+  - **NB:**
+    - Der Tagesjob `externe_reihen` schreibt die Zusatztabelle mit fort (dieselben IDs, ein Bündelabruf).
+    - Fehlt einem Zusatz-Coin die Historie, holt der Job sie **einmal** selbst (365 T). Damit sind weder Austauschordner noch USB nötig.
+  - **Zeile:** für diese Coins mit dem Vermerk *„angewandt, nicht auf ihnen gemessen“*; bei exakt 0 % *„laut CoinGecko unverändert“*.
+  - **Neue Watchlist-Coins:** Wer künftig außerhalb Binance in die Watchlist kommt, wird mit seiner CoinGecko-ID automatisch Zusatz-Coin.
+- **Prüfung:**
+  - Prüfstand am Seiteneffekt: B4 bitgleich, turnover-Messbasis unverändert, Zusatzwerte unabhängig nachgerechnet, Mailtexte, Tagesjob mit gestelltem Abruf, Erstabruf einmalig.
+  - Dazu die Suite und eine NB-Kontrolle.
