@@ -1,0 +1,49 @@
+P58 URSACHENANALYSE LLM-Rollen · 249 Anker (dieselben in N4 0.1e und N5 0.2) · Modell gemini-3.5-flash-lite
+
+A  BASISLAGE (24-h-Ertrag nach dem Einstieg; die REGEL0 kauft JEDEN dieser Anker)
+   Ertrag aller Anker: Mittel -0.38 % · Anteil > 0: 42 % · je Jahr 2025 -0.24 % · 2026 -0.51 %
+   0.1e (N4)  Verteilung {'spricht_dagegen': 130, 'neutral': 100, 'stuetzt': 16, 'uneinig': 3}
+              Ertrag je Urteil: stuetzt n 16 -2.08 % · neutral n 100 -0.76 % · spricht_dagegen n 130 +0.17 % · uneinig n 3 -1.91 %
+   0.2 (N5)   Verteilung {'neutral': 120, 'spricht_dagegen': 106, 'stuetzt': 15, 'uneinig': 8}
+              Ertrag je Urteil: stuetzt n 15 -3.27 % · neutral n 120 -0.26 % · spricht_dagegen n 106 -0.06 % · uneinig n 8 -1.00 %
+
+B/C  WORAUF REAGIERT DAS LLM - und WAS TRAEGT? (Rangkorrelationen; Vorzeichen: + = hoeher Wert -> 'stuetzt' bzw. hoeherer Ertrag)
+   Merkmal                         LLM 0.1e   LLM 0.2 | Ertr.2025 Ertr.2026 | Regel 2024 | Befund
+   Umsatz 24 h (log)                  +0.23     +0.13 |     -0.08     -0.17 |    -0.0028 | VERKEHRT: LLM liest es andersherum
+   Fall 6 h                           -0.09     -0.26 |     -0.07     +0.11 |    +0.0012 | LLM stuetzt sich darauf, traegt aber nicht
+   Fall 24 h                          -0.14     -0.23 |     +0.02     +0.10 |    -0.0071 | VERKEHRT: LLM liest es andersherum
+   Docht                              -0.00     -0.05 |     +0.04     -0.05 |    +0.0023 | 
+   Kapitulation (log)                 +0.17     +0.08 |     -0.25     -0.21 |    +0.0090 | 
+   Praemie                            +0.09     +0.21 |     -0.12     +0.08 |    +0.0003 | LLM stuetzt sich darauf, traegt aber nicht
+   Bitcoin 24 h                       -0.11     +0.04 |     -0.01     +0.19 |    +0.0016 | 
+   Bitcoin 7 T                        +0.06     +0.20 |     -0.11     +0.35 |    -0.0034 | 
+   Struktur tiefere Hochs/Tiefs       -0.47     -0.35 |     +0.11     +0.03 |       +nan | VERKEHRT: LLM liest es andersherum
+   unter 200-Tage-Schnitt             -0.24     -0.17 |     -0.02     -0.08 |       +nan | LLM stuetzt sich darauf, traegt aber nicht
+   Unterstuetzung durchbrochen        -0.04     -0.02 |     +0.03     +0.10 |       +nan | 
+   Lauf 60 T                          +0.32     +0.27 |     +0.09     +0.10 |       +nan | 
+
+D  DIE BEGRUENDUNGEN (Fassung 0.2): Belege je Art und Richtung - und der Ertrag der Anker, bei denen die Art 'dagegen' zaehlte
+   Belege gesamt 7275 (5.8 je Stimme)
+   Bitcoin                                dagegen   56 · dafuer    8 | Anker mit 'dagegen'  33: Ertrag +1.17 % (uebrige -0.61 %)
+   Docht / Schluss nahe Tief              dagegen  139 · dafuer  663 | Anker mit 'dagegen'  70: Ertrag -0.59 % (uebrige -0.29 %)
+   Fall 6 h / 24 h (Rueckgang)            dagegen  947 · dafuer 1475 | Anker mit 'dagegen' 206: Ertrag -0.28 % (uebrige -0.83 %)
+   Praemie / Funding                      dagegen    0 · dafuer    0 | Anker mit 'dagegen'   0: Ertrag +nan % (uebrige -0.38 %)
+   Schwankungsbreite                      dagegen   41 · dafuer   86 | Anker mit 'dagegen'  28: Ertrag -1.25 % (uebrige -0.27 %)
+   Struktur tiefere Hochs / Abwaertstrend dagegen  505 · dafuer   50 | Anker mit 'dagegen' 148: Ertrag -0.33 % (uebrige -0.44 %)
+   Umsatz / Volumen                       dagegen  195 · dafuer  158 | Anker mit 'dagegen'  90: Ertrag +0.09 % (uebrige -0.64 %)
+   Unterstuetzung durchbrochen / tiefer   dagegen  169 · dafuer  138 | Anker mit 'dagegen'  55: Ertrag -0.12 % (uebrige -0.45 %)
+   Widerstand oberhalb                    dagegen   77 · dafuer    6 | Anker mit 'dagegen'  38: Ertrag -0.07 % (uebrige -0.43 %)
+   lange Sicht / 200-Tage-Schnitt         dagegen  462 · dafuer  113 | Anker mit 'dagegen' 181: Ertrag -0.21 % (uebrige -0.81 %)
+   sonstiges                              dagegen  494 · dafuer  442 | Anker mit 'dagegen' 172: Ertrag -0.16 % (uebrige -0.86 %)
+
+E  STABILITAET
+   0.1e (N4)  5 von 5 gleich: 45 % der Anker · 3 von 5 oder weniger: 24 % · R_v (Bloecke vertauscht) gleiches Urteil 62 %
+   0.2 (N5)   5 von 5 gleich: 34 % der Anker · 3 von 5 oder weniger: 37 % · R_v (Bloecke vertauscht) gleiches Urteil 66 %
+
+ZUSAMMENFASSUNG DER BEFUNDE (aus B/C):
+   - Umsatz 24 h (log): VERKEHRT: LLM liest es andersherum (LLM +0.18 · Ertrag 2025 -0.08 / 2026 -0.17)
+   - Fall 6 h: LLM stuetzt sich darauf, traegt aber nicht (LLM -0.17 · Ertrag 2025 -0.07 / 2026 +0.11)
+   - Fall 24 h: VERKEHRT: LLM liest es andersherum (LLM -0.19 · Ertrag 2025 +0.02 / 2026 +0.10)
+   - Praemie: LLM stuetzt sich darauf, traegt aber nicht (LLM +0.15 · Ertrag 2025 -0.12 / 2026 +0.08)
+   - Struktur tiefere Hochs/Tiefs: VERKEHRT: LLM liest es andersherum (LLM -0.41 · Ertrag 2025 +0.11 / 2026 +0.03)
+   - unter 200-Tage-Schnitt: LLM stuetzt sich darauf, traegt aber nicht (LLM -0.20 · Ertrag 2025 -0.02 / 2026 -0.08)

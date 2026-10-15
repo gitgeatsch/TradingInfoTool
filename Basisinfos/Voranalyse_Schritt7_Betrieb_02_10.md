@@ -3234,3 +3234,60 @@ Den Stash erst löschen, wenn K-WL-1 erfüllt ist.
   - (b) Prüfblock aus der Mail; ein Schatten im Protokoll läuft weiter, das spart Kontingent, H14 entfällt;
   - (c) Anpassen (Fassung 0.3), aber nur mit **neuer** Information (E-79: Text- und Ereignisquellen; die Binance-Ankündigung E-83 ist die einzige vorhandene) und mit dem Entscheider-Neubau O22.
   - **Vorschlag: (b), mit (c) als nächster Messung, sobald es neue Information gibt.**
+
+### 23.52 Ursachenanalyse: Warum trennen die LLM-Rollen nicht? (15.10.2026; `p58_llm_ursachen.py`, `p58_gegenprobe.py` → `.txt`)
+
+Nutzer 15.10.: *„Die LLM-Rollen haben offenbar noch in keiner Form ein gutes Ergebnis geliefert … mir fehlt hierbei immer eine Begründung und Analyse – technisch und fachlich: wo sind wir falsch gelegen, wo könnten die Ursachen sein? Neue Information ist eine Seite, aber wir müssen wissen, wohin wir uns bewegen müssen.“*
+
+**Daten:**
+- dieselben 249 Anker in N4 (0.1e) und N5 (0.2), mit allen Rohstimmen und **7.275 Begründungsbelegen** (Fakt und Richtung);
+- die Zahlen der Lage zur Signalstunde, gerechnet wie der Regel-Arm F;
+- **Gegenprobe** auf 3 × 1.200 echten REGEL0-Einstiegen 2024, 2025 und 2026.
+
+**Ursache 1 – Der Trader urteilt nach allgemeinen Chartregeln, die für die 24-h-Gegenbewegung nichts tragen** (belegt):
+- Seine stärksten Treiber, als Rangkorrelation mit dem Urteil:
+  - Struktur *tiefere Hochs* −0,47 / −0,35 (0.1e / 0.2);
+  - Lauf 60 T +0,32 / +0,27;
+  - unter dem 200-Tage-Schnitt −0,24 / −0,17.
+- Gegen den Ertrag liegen dieselben Merkmale bei +0,11 / +0,03, +0,09 / +0,10 und −0,02 / −0,08, also nahe null.
+- In den Begründungen: *Abwärtsstruktur* 505-mal *dagegen*, 50-mal *dafür*; *lange Sicht* 462-mal *dagegen*.
+- **Die Anweisung nennt die Wette** („Kauf auf eine Gegenbewegung nach einem Rückgang“), **sagt aber nicht, wie die Fakten für diese Wette zu lesen sind** (*„Gewichte die Angaben selbst“*). Das Modell füllt die Lücke mit Lehrbuch-Trendlogik.
+
+**Ursache 2 – Schieflage zum Pessimismus** (belegt):
+- *spricht dagegen* bei 43–52 % der Anker, *stützt* bei 6 %.
+- Die wenigen *stützt* lagen am schlechtesten (−2,1 % / −3,3 %, n 16 / 15). Wo es *dagegen* sagte: +0,17 % / −0,06 %.
+
+**Ursache 3 – Die Eingangszahlen tragen selbst kaum, und ihre Richtung wechselt mit dem Regime** (belegt auf den vollen Einstiegen):
+- Alle |ρ| ≤ 0,15.
+- **Bitcoin 7 T:** 2024 −0,07, **2025 −0,15** (z −5,2), **2026 +0,10** (z +3,6), also ein Vorzeichenwechsel.
+- **Fall 24 h:** 2025 −0,14 (tiefer gefallen → besser), 2026 −0,02.
+- Umsatz −0,08 / −0,07 / −0,01; Prämie 2025 −0,08.
+- ⇒ Auch eine Regel auf denselben Zahlen (Regel F, geschätzt auf 2024) liegt 2025/26 unter dem Zufall. **Der Engpass ist der Informationsgehalt der Eingänge, nicht allein das Modell.**
+- Das LLM liest **Umsatz** (+0,23 / +0,13, *hoher Umsatz stützt*) und **Prämie** (0.2: +0,21) gegen ihre gemessene Richtung. Bei **Fall 24 h** liest es richtig (−0,14 / −0,23: tiefer gefallen → *stützt*).
+  - ⚠️ Das Analyseskript markiert Fall 24 h als *verkehrt*, weil es nur gegen die 249 Anker vergleicht. Auf allen Einstiegen ist die Richtung des LLM hier richtig. Die Deutung ist hiermit berichtigt.
+
+**Ursache 4 – Das Urteil ist zu einem großen Teil Rauschen** (belegt, technisch):
+- 5 von 5 Stimmen gleich nur bei 45 % / 34 % der Anker.
+- Bei vertauschten Blöcken (R_v) wechselt das Mehrheitsurteil bei 38 % / 34 %.
+- Je Stimme 5,8 Belege: Das Modell zählt die Fakten auf, statt sie zu gewichten.
+
+**Ursache 5 – Modell und Rahmen** (technisch, nicht einzeln gemessen):
+- `gemini-3.5-flash-lite` ist das kleinste Modell der Reihe; Grund war das freie Kontingent (Projektregel *nur kostenfrei*).
+- Ein größeres Modell würde Ursache 3 nicht beheben.
+
+**Ursache 6 – Die Messmenge ist nicht die Betriebsmenge** (Methodik, belegt):
+- Die N4/N5-Anker (Entwicklungsmenge) hatten im Mittel **−0,38 %** in 24 h, nur 42 % über null.
+- Die echten REGEL0-Einstiege dagegen: **+0,82 / +0,92 / +0,32 %** (2024/25/26).
+- Mit 249 Ankern sind einzelne Merkmalsbefunde Zufall. Beispiel: Kapitulation lag auf den Ankern bei −0,25 / −0,21, auf allen Einstiegen bei −0,03 / −0,03.
+- **Warum die Anker so viel schlechter liefen, ist zu klären**, bevor man noch einmal auf ihnen misst.
+
+**Wo wir falsch lagen:**
+1. Wir haben angenommen, ein Sprachmodell könne aus **denselben Zahlen**, die eine Regel auch hat, ein besseres Urteil bilden. Die Zahlen tragen aber selbst kaum und wechseln die Richtung mit dem Regime. Das LLM bringt dazu eigene, falsche Vorlieben ein.
+2. Wir haben die Wette **genannt**, aber nicht **übersetzt**.
+3. Wir haben auf einer Menge gemessen, die nicht der Betrieb ist.
+
+**Wohin (Vorschlag, zur Abstimmung):**
+- **W1:** Kein LLM-**Urteil** über Kurs- und Volumenzahlen mehr. Diese Zahlen gehören in die Statistik (Regel, Gewicht). Prüfblock (b): aus der Mail, Schatten weiter.
+- **W2:** Wenn ein LLM, dann für **Information, die die Zahlen nicht haben**: Ereignisse und Text (E-79), in fester Form ausgelesen und **statistisch** bewertet, vorwärts. Beispiel: die Binance-Ankündigung (E-83). Vorher ein Datenquellen-Inventar.
+- **W3:** Der größere Hebel ist das **Regime** (Befund: das Regime ist zwölfmal wichtiger als die Lage). Bitcoin 7 T wechselt das Vorzeichen von 2025 auf 2026. ⇒ Voranalyse *Regime als Gewicht für REGEL0* (statistisch), mit vorab festgelegtem Messplan.
+- **W4:** Vor jeder neuen LLM-Messung die Messmenge auf die **Betriebsmenge** bringen (Ursache 6 klären) und groß genug wählen.
