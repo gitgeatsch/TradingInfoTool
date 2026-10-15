@@ -22332,7 +22332,7 @@ def paket_verwaesserung() -> None:
     _ru = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p22u_pruefstand.py")],
                   capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     pruefe(P, "⚠️⚠️ Pruefstand Ergaenzung am Seiteneffekt: nur aeltere Zeilen, NB-Tage unberuehrt, idempotent, Schutz Messbasis/Produktion, "
-              "Wirkung, Diagnose", "7 von 7 bestanden" in (_ru.stdout or ""),
+              "Wirkung, Diagnose, Trockenlauf, echte Datei", "9 von 9 bestanden" in (_ru.stdout or ""),
            " | ".join(z for z in (_ru.stdout or "").splitlines() if " FEHLER " in z) or (_ru.stderr or "")[-300:])
     # P22c (15.10.2026): Freigabe-Rhythmus als Fakt - die in der Mail genannte Trefferquote stammt aus der Rueckschau MIT dem Modulcode
     pruefe(P, "P22c: Rhythmus-Satz nennt die Rueckschau und sagt 'kein Kalender' (die Quote selbst reproduziert der Pruefstand, C2)",

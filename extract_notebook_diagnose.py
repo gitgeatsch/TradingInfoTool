@@ -3017,6 +3017,25 @@ def _log_zeilen_im_fenster(log_pfad: Path, stunden: int) -> list[str]:
     return ergebnis
 
 
+def _austausch_eingang() -> dict:
+    """P22 (15.10.2026, Nutzer: *"pruefen wir, wie kommen die Daten auf das NB?"*): was liegt fuer DIESES Geraet im Austauschordner
+    bereit - und ist es vollstaendig angekommen (Pruefsumme)? Nur lesend."""
+    aus = {}
+    try:
+        import ergaenze_umlauf_nb as _EN
+        q = _EN.finde_quelle()
+        if q is None:
+            return {"umlauf_ergaenzung": {"vorhanden": False}}
+        p = _EN.pruefen(q)
+        aus["umlauf_ergaenzung"] = {"vorhanden": True, "pfad": p["quelle"], "mb": p["quelle_mb"], "zeilen": p["zeilen"],
+                                    "pruefsumme_ok": p["pruefsumme_ok"], "bis_exklusiv": p["bis_exklusiv"],
+                                    "ziel_marke": p.get("marke"), "erster_nb": p.get("erster_nb"),
+                                    "schon_eingespielt": p.get("schon_eingespielt"), "wuerde_einfuegen": p.get("wuerde_einfuegen")}
+    except Exception as exc:                                     # noqa: BLE001
+        aus["umlauf_ergaenzung"] = {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+    return aus
+
+
 def _messbasen() -> dict:
     """In welcher FORM liegt jede Messbasis an DIESEM Geraet?
 
@@ -4041,6 +4060,7 @@ def main() -> None:
         "job_fehlschlaege": job_fehlschlaege,
         "marktrang_ausfaelle": _marktrang_ausfaelle(log_zeilen),
         "messbasen": _messbasen(),
+        "austausch_eingang": _austausch_eingang(),         # P22 15.10.: liegt die Ergaenzung am NB vollstaendig bereit?
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

@@ -6823,3 +6823,29 @@ Nutzer 15.10.:
 - C6: Mengenreihe unverändert.
 
 ⚠️ **Am NB** wirkt P22c erst mit der Ergänzung (§54.8), denn ein Rhythmus braucht mehrere Monate Mengenreihe.
+
+### 54.9 Weg der Ergänzung: Austauschordner, nicht USB (15.10.2026)
+
+**Nutzer 15.10.:**
+- *„Pull, Neustart mache ich, aber prüfen wir: Wie kommen die Daten auf das NB?“*
+- *„Ok, das reicht mir, also über den Austauschordner und nicht über USB.“*
+
+**Belegt vom Desktop aus:**
+- Der Ordner `Claude_Austauschordner` wird am NB synchronisiert. Die NB-Diagnose schreibt das NB dorthin (`G:`), sie kommt am Desktop (`K:`) an.
+- Desktop → NB ist über denselben Ordner schon gelaufen (Messbasis-Paket 02.09., Mengendatei 22.09.).
+- Die Pfadsuche (G/K/H/E/F × „My Drive“/„Meine Ablage“) läuft am NB bereits in der Diagnose.
+
+**Nicht vom Desktop belegbar:** dass genau diese Datei am NB vollständig angekommen ist. Deshalb wird das **am Zielgerät** nachgewiesen:
+- `python ergaenze_umlauf_nb.py --nur-pruefen` (Trockenlauf, schreibt nichts) nennt Fundort, Größe, Prüfsumme, Marke, ersten NB-Tag und die Zahl der Zeilen, die neu wären. Er endet mit **BEREIT** oder **NICHT bereit**.
+- Die NB-Diagnose hat dafür einen neuen Abschnitt **`austausch_eingang.umlauf_ergaenzung`** (vorhanden, Prüfsumme, erster NB-Tag, schon eingespielt, würde einfügen).
+- Prüfstand `p22u` 9/9:
+  - U8: Trockenlauf bitgleich, erkennt eine beschädigte Datei;
+  - U9: die echte Datei im Austauschordner, so wie das NB sie findet.
+- **Gegenprobe am Desktop:** Der Trockenlauf meldet *NICHT bereit*, weil die Desktop-Datei keine Marke `_nur_betrieb` trägt, und die Messbasis bleibt bitgleich. So muss es sein: Nur am NB ist das Ziel die Betriebskopie.
+
+**Ablauf am NB:**
+1. Pull
+2. Neustart
+3. `python ergaenze_umlauf_nb.py --nur-pruefen` → BEREIT
+4. `python ergaenze_umlauf_nb.py` → IN ORDNUNG
+5. Diagnose

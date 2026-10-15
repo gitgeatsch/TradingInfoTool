@@ -288,7 +288,7 @@ kontrollen:
     paket: P22
     commit: ""
     art: manuell
-    nachweis: "Ausgabe des Skripts (Nutzer) und Diagnose: messbasen -> turnover aelteste_daten 2025-09-21, ergaenzung [1 Vermerk, eingefuegt ~132145]; Sicherung data/umlaufmenge_cg.vor_ergaenzung_*.db vorhanden. Danach die naechste REGEL0-/B1-/B3-Mail: Verwaesserungszeile mit Wert (Einordnung ab 01.11.)"
+    nachweis: "Weg: Austauschordner (Nutzer 15.10., nicht USB). Zuerst 'python ergaenze_umlauf_nb.py --nur-pruefen' -> BEREIT (Pruefsumme OK, Marke ja, erster NB-Tag 2026-09-08, wuerde ~132145 einfuegen); dann ohne --nur-pruefen -> IN ORDNUNG. Diagnose: austausch_eingang.umlauf_ergaenzung vorhanden + pruefsumme_ok; messbasen -> turnover aelteste_daten 2025-09-21, ergaenzung [1 Vermerk, eingefuegt ~132145]; Sicherung data/umlaufmenge_cg.vor_ergaenzung_*.db vorhanden. Danach die naechste REGEL0-/B1-/B3-Mail: Verwaesserungszeile mit Wert (Einordnung ab 01.11.)"
     faellig_bis: "2026-10-31"
     status: offen
   - id: K-ALARM-2

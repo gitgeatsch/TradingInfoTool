@@ -1,9 +1,11 @@
 U1   bestanden NB-Beginn 2026-09-08 · Ergaenzung 132145 Zeilen (2025-09-21 bis 2026-09-07), 7.3 MB · Tabellen ['_ergaenzung', 'umlaufmenge'] · Quelle unveraendert True
-U2   bestanden eingefuegt 132145 von 132145 · Zeilen 13809 -> 145954 · fruehester Tag 2025-09-21 · NB-Tage unberuehrt True · Sicherung umlaufmenge_cg.vor_ergaenzung_20261015_033145.db · Vermerk (1, 132145)
+U2   bestanden eingefuegt 132145 von 132145 · Zeilen 13809 -> 145954 · fruehester Tag 2025-09-21 · NB-Tage unberuehrt True · Sicherung umlaufmenge_cg.vor_ergaenzung_20261015_035959.db · Vermerk (1, 132145)
 U3   bestanden zweiter Lauf: neu 0, angeboten 0 (erster NB-Tag jetzt 2025-09-21) · Zeilen 145954 · Vermerke 2 · Sicherung = Vorzustand True
+U8   bestanden vorher: Ziel bitgleich True, wuerde 132145 einfuegen, erster NB-Tag 2026-09-08 · nachher: schon eingespielt True, wuerde 0 · beschaedigt erkannt True
 U4   bestanden ohne Marke abgebrochen True, Messbasis bitgleich True · beschaedigt abgebrochen True, Ziel bitgleich True
 U5   bestanden Ziel tradinginfotool.db abgebrochen True, bitgleich True · kein Produktionspfad im Quelltext True
 U6   bestanden TAO Verwaesserung 90 T am 22.09.: vorher None · nachher +18.2 %
 U7   bestanden turnover form betriebskopie · aelteste 2025-09-21 · juengste 2026-10-14 · Vermerke 2
+U9   bestanden gefunden K:\My Drive\Claude_Austauschordner\umlauf_ergaenzung.db · 132145 Zeilen · Pruefsumme True · bis vor 2026-09-08 · Diagnose austausch_eingang: vorhanden True, Pruefsumme True
 
-7 von 7 bestanden
+9 von 9 bestanden

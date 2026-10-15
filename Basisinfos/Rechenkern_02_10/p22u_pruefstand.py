@@ -13,6 +13,10 @@ NB-Lage: Ziel = Kopie der USB-Mengendatei vom 22.09. (Marke _nur_betrieb, 08.09.
   U5  Schutz: das Skript oeffnet die Produktion nie (Quelltext + Name tradinginfotool.db -> Abbruch)
   U6  Wirkung: nach dem Einspielen hat TAO am 22.09. eine Verwaesserung 90 T, vorher nicht (agent.verwaesserung.wert)
   U7  Diagnose: messbasen turnover zeigt aelteste_daten 2025-09 und den Vermerk der Ergaenzung
+  U8  Trockenlauf --nur-pruefen: schreibt NICHTS (Ziel bitgleich), nennt Fundort, Pruefsumme, ersten NB-Tag und die Zahl der Zeilen,
+      die neu waeren; erkennt eine beschaedigte Datei; nach dem Einspielen "schon eingespielt", 0 neu
+  U9  Die ECHTE Datei im Austauschordner (so, wie das NB sie findet): Pruefsumme ok, nur Tage vor dem NB-Beginn; Diagnose-Abschnitt
+      austausch_eingang meldet sie
 """
 import hashlib
 import os
@@ -89,6 +93,11 @@ def tao_wert(p):
 v_vor = tao_wert(ZIEL)
 vor_ziel = summe(ZIEL)
 
+# ══ U8 Trockenlauf (vor dem Einspielen) ══════════════════════════════════════════════════════════════════════════════════════
+t8 = EN.pruefen(Path(info["datei"]), ZIEL)
+u8_vor_ok = (summe(ZIEL) == vor_ziel and t8["pruefsumme_ok"] and t8["ziel_ok"] and t8["erster_nb"] == nb_beginn
+             and t8["wuerde_einfuegen"] == n_e and not t8["schon_eingespielt"])
+
 # ══ U2 Einspielen ════════════════════════════════════════════════════════════════════════════════════════════════════════════
 r = EN.einspielen(Path(info["datei"]), ZIEL)
 sich = Path(r["sicherung"])
@@ -113,6 +122,9 @@ pruefe("U3", r2["ok"] and r2["eingefuegt"] == 0 and r2["zeilen_nach"] == r["zeil
        "zweiter Lauf: neu %d, angeboten %d (erster NB-Tag jetzt %s) · Zeilen %d · Vermerke %d · Sicherung = Vorzustand %s" % (
            r2["eingefuegt"], r2["angeboten"], r2["erster_nb"], r2["zeilen_nach"], verm2, gleich_sich))
 
+t8b = EN.pruefen(Path(info["datei"]), ZIEL)
+u8_nach_ok = t8b["schon_eingespielt"] and t8b["wuerde_einfuegen"] == 0
+
 # ══ U4 Schutz ════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 messbasis = T / "desktop" / "data" / "umlaufmenge_cg.db"
 messbasis.parent.mkdir(parents=True)
@@ -135,6 +147,10 @@ try:
     ab2 = False
 except SystemExit as x:
     ab2 = "Pruefsumme" in str(x)
+t8k = EN.pruefen(kaputt, ZIEL)
+pruefe("U8", u8_vor_ok and u8_nach_ok and not t8k["pruefsumme_ok"],
+       "vorher: Ziel bitgleich %s, wuerde %d einfuegen, erster NB-Tag %s · nachher: schon eingespielt %s, wuerde %d · beschaedigt erkannt %s" % (
+           summe(ZIEL) == z_vor, t8["wuerde_einfuegen"], t8["erster_nb"], t8b["schon_eingespielt"], t8b["wuerde_einfuegen"], not t8k["pruefsumme_ok"]))
 pruefe("U4", ab1 and summe(messbasis) == m_vor and ab2 and summe(ZIEL) == z_vor,
        "ohne Marke abgebrochen %s, Messbasis bitgleich %s · beschaedigt abgebrochen %s, Ziel bitgleich %s" % (
            ab1, summe(messbasis) == m_vor, ab2, summe(ZIEL) == z_vor))
@@ -170,5 +186,13 @@ except Exception:                                               # noqa: BLE001
 pruefe("U7", z7.get("form") == "betriebskopie" and str(z7.get("aelteste_daten", ""))[:7] == "2025-09" and len(z7.get("ergaenzung") or []) == 2,
        "turnover form %s · aelteste %s · juengste %s · Vermerke %d%s" % (z7.get("form"), z7.get("aelteste_daten"), z7.get("juengste_daten"),
                                                                        len(z7.get("ergaenzung") or []), "" if z7 else " · " + (r7.stderr or "")[-300:]))
+# ══ U9 die echte Datei, wie das NB sie findet ════════════════════════════════════════════════════════════════════════════════
+echt = EN.finde_quelle()
+t9 = EN.pruefen(echt, ZIEL) if echt else {}
+ae = __import__("extract_notebook_diagnose")._austausch_eingang().get("umlauf_ergaenzung", {})
+pruefe("U9", echt is not None and "Claude_Austauschordner" in str(echt) and t9.get("pruefsumme_ok") and t9.get("bis_exklusiv") == nb_beginn
+       and ae.get("vorhanden") and ae.get("pruefsumme_ok"),
+       "gefunden %s · %s Zeilen · Pruefsumme %s · bis vor %s · Diagnose austausch_eingang: vorhanden %s, Pruefsumme %s" % (
+           echt, t9.get("zeilen"), t9.get("pruefsumme_ok"), t9.get("bis_exklusiv"), ae.get("vorhanden"), ae.get("pruefsumme_ok")))
 wegwerf.aufraeumen(str(T))
 print("\n%d von %d bestanden" % (sum(ERG), len(ERG)))

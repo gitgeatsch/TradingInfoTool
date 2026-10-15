@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """NOTEBOOK: die aelteren Tage der Umlaufmenge EINMAL in die Betriebskopie einfuegen (P22, 15.10.2026; Spot §54.8).
 
+    python ergaenze_umlauf_nb.py --nur-pruefen     # ZUERST: findet die Datei, prueft sie und das Ziel - schreibt NICHTS
     python ergaenze_umlauf_nb.py [Pfad zu umlauf_ergaenzung.db]
 
 Ohne Pfad: die Datei im Google-Drive-Austauschordner (G:/K:, "My Drive"/"Meine Ablage"), sonst ``data/umlauf_ergaenzung.db``.
@@ -45,6 +46,33 @@ def finde_quelle() -> Path | None:
                 return p
     p = WURZEL / "data" / NAME
     return p if p.exists() else None
+
+
+def pruefen(quelle: Path, ziel: Path = ZIEL_VORGABE) -> dict:
+    """Trockenlauf (Nutzer 15.10.: *"pruefen wir, wie kommen die Daten auf das NB?"*): liest beide Dateien NUR (mode=ro) und sagt, was
+    ein Einspielen taete - Fundort, Groesse, Pruefsumme, Marke, erster NB-Tag, Zahl der Zeilen, die neu waeren."""
+    aus = {"quelle": str(quelle), "quelle_mb": round(quelle.stat().st_size / 1024 ** 2, 1), "ziel": str(ziel)}
+    q = sqlite3.connect("file:%s?mode=ro" % quelle.as_posix(), uri=True)
+    try:
+        info = q.execute("SELECT bis_exklusiv, zeilen, pruefsumme, von FROM _ergaenzung").fetchone()
+        zeilen = q.execute("SELECT symbol, datum, wert FROM umlaufmenge ORDER BY symbol, datum").fetchall()
+    finally:
+        q.close()
+    aus.update(von=info[3], bis_exklusiv=info[0], zeilen=len(zeilen), pruefsumme_ok=(len(zeilen) == info[1] and _pruefsumme(zeilen) == info[2]))
+    if not ziel.exists():
+        aus.update(ziel_ok=False, grund="Ziel fehlt")
+        return aus
+    c = sqlite3.connect("file:%s?mode=ro" % ziel.as_posix(), uri=True)
+    try:
+        marke = bool(c.execute("SELECT name FROM sqlite_master WHERE name='_nur_betrieb'").fetchone())
+        erster, letzter, n = c.execute("SELECT MIN(datum), MAX(datum), COUNT(*) FROM umlaufmenge").fetchone()
+        schon = c.execute("SELECT name FROM sqlite_master WHERE name='_ergaenzung_eingespielt'").fetchone()
+    finally:
+        c.close()
+    erster = str(erster)[:10] if erster else "9999-12-31"
+    aus.update(ziel_ok=marke and ziel.name != "tradinginfotool.db", marke=marke, erster_nb=erster, letzter_nb=str(letzter)[:10], zeilen_nb=n,
+               schon_eingespielt=bool(schon), wuerde_einfuegen=sum(1 for z in zeilen if str(z[1])[:10] < erster))
+    return aus
 
 
 def einspielen(quelle: Path, ziel: Path = ZIEL_VORGABE, jetzt: dt.datetime | None = None) -> dict:
@@ -105,10 +133,30 @@ def einspielen(quelle: Path, ziel: Path = ZIEL_VORGABE, jetzt: dt.datetime | Non
 
 
 def main() -> int:
-    quelle = Path(sys.argv[1]) if len(sys.argv) > 1 else finde_quelle()
+    nur = "--nur-pruefen" in sys.argv
+    pfade = [a for a in sys.argv[1:] if not a.startswith("--")]
+    quelle = Path(pfade[0]) if pfade else finde_quelle()
     if not quelle or not quelle.exists():
         print("⛔ %s nicht gefunden (Austauschordner oder data/) - bitte den Pfad angeben" % NAME)
         return 2
+    if nur:
+        p = pruefen(quelle)
+        print("=" * 78)
+        print("TROCKENLAUF - es wird NICHTS geschrieben")
+        print("=" * 78)
+        print("  Datei gefunden    %s (%.1f MB)" % (p["quelle"], p["quelle_mb"]))
+        print("  Inhalt            %d Zeilen, %s bis vor %s · Pruefsumme %s" % (p["zeilen"], p["von"], p["bis_exklusiv"],
+                                                                                "OK" if p["pruefsumme_ok"] else "FALSCH (Datei unvollstaendig?)"))
+        if p.get("grund"):
+            print("  Ziel              %s" % p["grund"])
+        else:
+            print("  Ziel              %s · Marke _nur_betrieb %s · NB-Reihe %s bis %s (%d Zeilen)%s" % (
+                p["ziel"], "ja" if p["marke"] else "NEIN", p["erster_nb"], p["letzter_nb"], p["zeilen_nb"],
+                " · schon einmal eingespielt" if p["schon_eingespielt"] else ""))
+            print("  wuerde einfuegen  %d Zeilen (nur Tage vor %s)" % (p["wuerde_einfuegen"], p["erster_nb"]))
+        ok = p["pruefsumme_ok"] and p.get("ziel_ok")
+        print("  => %s" % ("BEREIT - jetzt ohne --nur-pruefen ausfuehren" if ok else "⛔ NICHT bereit - bitte melden"))
+        return 0 if ok else 1
     e = einspielen(quelle)
     print("=" * 78)
     print("UMLAUFMENGE AM NB ERGAENZT" if e["eingefuegt"] else "UMLAUFMENGE: NICHTS NEU (schon eingespielt)")
