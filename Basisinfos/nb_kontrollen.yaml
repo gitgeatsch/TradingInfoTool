@@ -302,7 +302,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach 06:35: 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf HYPE ok, ... · Tageswert ...' (am Folgetag: Erstabruf -, Tageswert 13); Diagnose umlauf_zusatz: je_urteil ok 13 (BIO verworfen, MON evtl. verworfen wenn < 300 Punkte), von 2025-10, bis heute; Teilexport SPOT-ABBAU: 'Umlauf-Zusatz (P22b ...)'. Danach Mail zu HYPE/XDC: Verwaesserungszeile mit Vermerk 'angewandt, nicht auf diesem Coin gemessen'"
     faellig_bis: "2026-10-20"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-16"
+    beleg: "Diagnose 16.10. 07:43 (NB auf b343806b): Log 06:35:56 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf - · Tageswert 13 · ohne Wert 0' - der Tageswert-Weg laeuft am Folgetag fuer alle 13; umlauf_zusatz je_urteil ok 13 / verworfen 1 (BIO), bis 2026-10-16"
     teilbeleg: "Diagnose 15.10. 07:57 (NB auf a66bff7e): Log 07:49 'Umlauf-Zusatz: 14 Kandidaten · Erstabruf AIOZ ok ... BIO verworfen ... XDC ok · Tageswert 0'; umlauf_zusatz je_urteil ok 13 / verworfen 1, 2025-10-16 bis 2026-10-15. Offen: Tageswert am Folgetag (naechste Diagnose) · 15.10. 11:36 nach Neustart: 'Erstabruf - · Tageswert 0 · ohne Wert 0' - richtig, alle 13 tragen den 15.10. schon aus dem Erstabruf; der Tageswert-Weg zeigt sich erst am 16.10. nach 06:35"
   - id: K-TM-1
     titel: "O52 Terminzeile: REGEL0-Mail nennt CPI/Arbeitsmarkt/FOMC im Trade-Fenster mit gemessenem Ausschlag; FRED liefert kuenftige Termine"
@@ -342,6 +344,7 @@ kontrollen:
     nachweis: "Log nach dem Neustart: 'Hebelfuehrung: 1 offen · BTC HALTEN Abstand ~25 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH'; keine Mail 'LIQUIDATION NAHE ETH' mehr; Statusseite Hebel: ETH 'LAUT BITPANDA GESCHLOSSEN', BTC mit Grund 'Gespeicherte Position weicht von Bitpanda ab (Wallet 0.01141097 ...)'"
     faellig_bis: "2026-10-18"
     status: offen
+    teilbeleg: "Diagnose 16.10. 07:43 (NB auf b343806b, keine lokalen Aenderungen, Neustart 07:36 ohne Fehler): Log 07:36:56 'Hebelfuehrung: 1 offen · BTC HALTEN Abstand 24.9 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH · gemeldet 0' - wie im Pruefstand (24,8 %). Offen: bis 18.10. keine Mail 'LIQUIDATION NAHE ETH' mehr; Statusseite ETH 'LAUT BITPANDA GESCHLOSSEN' (Nutzerblick)"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

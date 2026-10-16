@@ -6,7 +6,7 @@
 
 **Stand 16.10.2026 (vormittags, P11c) – HIER ANFANGEN:**
 - ✔ **P11c gebaut** (Schritt7 §23.59, E-115): Die Hebelführung folgt dem Wallet-Abgleich. Keine falsche *LIQUIDATION NAHE ETH* mehr (ETH am 15.10. ausgestoppt und geschlossen); BTC wird mit Wallet-Menge und Wallet-Kredit geführt. Prüfstand 8/8 an der NB-Sicherung.
-- ➤ **NB: Pull + Neustart**, danach Diagnose (K-HF-W1; K-UZ-1 Tageswert, K-TM-1, K-ML-1 laufen mit).
+- ✔ **NB auf b343806b** (Diagnose 07:43): Hebelführung *1 offen · BTC HALTEN 24,9 % · laut Bitpanda geschlossen: ETH* (K-HF-W1 Teilbeleg); ✔ **K-UZ-1 erfüllt** (Tageswert 13 um 06:35). Offen: K-TM-1/K-ML-1 (erste Mail mit Termin-/Makro-Zeile).
 - ➤ **Nächster Bau-Punkt: Voranalyse P11b** – Importer je Teilposition (Bitpanda führt jede Eröffnung als eigene Teilposition; Prüffall die Rohbuchungen vom 14./15.10.).
 
 **Stand 15.10.2026 (abends, O54) – HIER ANFANGEN:**
