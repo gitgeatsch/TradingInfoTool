@@ -1380,3 +1380,16 @@ Nachweis: Schritt7 §23.59, K-HF-W1.
 - Eine unvollständige erste Historie stellt **nicht** um.
 
 Nachweis: Schritt7 §23.60/§23.61, K-HB-1, Paket Hebelbuch.
+
+# E-117 · W3 Regime kurz als Gewicht für REGEL0: Vorprüfung NEIN, bleibt Auskunft (16.10.2026)
+
+**16.10.2026** · Nutzer: *„ja alle vier Zeilen sind in der Mail, weiter mit W3“*.
+
+**Eigene Festlegungen (berichtet):**
+- **Keine neue Vollmessung.** BTC 24/72/120 h (2.670) und 30 T (2.686) sind schon gemessen; dazu gilt die Abbruchregel vom 29.09. (W2 ist die letzte Wettermessung). 7 T liegt dazwischen.
+- **Stattdessen eine Vorprüfung als Auskunft**, vorab festgelegt und committet (§23.62): ein Merkmal (BTC 7 T), vier Mengen, zweiseitig, Tagesblock.
+- **Ergebnis:** 0 von 4 Mengen über der Weiter-Schwelle ⇒ **NEIN**. Das Vorzeichen wechselt von 2025 auf 2026 (Gegenprobe 3/3 gleich). Keine Umkehr ⇒ keine Sperre.
+- **Berichtigt:** Die z-Werte in §23.52 waren naiv (−5,2 / +3,6). Mit Tagesblöcken sind es −1,8 / +1,3.
+- **Folge:** Flughöhe Ebene 2 bleibt **Auskunft**. REGEL0 unverändert, keine Mail-Zeile, kein NB-Pull. Weiter mit P19 und der Hauptlinie.
+
+Nachweis: Schritt7 §23.62, `p60_w3_vorpruefung.txt`, `p60_gegenprobe.txt`.

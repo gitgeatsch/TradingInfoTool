@@ -1,0 +1,14 @@
+P60 GEGENPROBE · W3-Vorpruefung auf einem zweiten Weg
+
+bestand       G1 Summe Q 922 bei 10732 Einstiegen (Mittel +0.0859)
+              G2 Q(BTC 7 T >= 0) - Q(< 0): 2024 +0.0129 (n 1368/956) · 2025 -0.0164 (n 2343/2372) · 2026 +0.1069 (n 1840/1853)
+              G3 D zur Einstiegsstunde t+1: 2024 -0.0171 · 2025 -0.0109 · 2026 +0.1241
+unverzerrt_1  G1 Summe Q 786 bei 11177 Einstiegen (Mittel +0.0703)
+              G2 Q(BTC 7 T >= 0) - Q(< 0): 2024 +0.0484 (n 1251/800) · 2025 -0.0933 (n 2493/2833) · 2026 +0.0953 (n 1926/1874)
+              G3 D zur Einstiegsstunde t+1: 2024 +0.0298 · 2025 -0.0908 · 2026 +0.1115
+unverzerrt_2  G1 Summe Q 697 bei 10481 Einstiegen (Mittel +0.0665)
+              G2 Q(BTC 7 T >= 0) - Q(< 0): 2024 +0.0175 (n 1190/706) · 2025 -0.0869 (n 2560/2662) · 2026 +0.0726 (n 1876/1487)
+              G3 D zur Einstiegsstunde t+1: 2024 +0.0071 · 2025 -0.0855 · 2026 +0.1118
+unverzerrt_3  G1 Summe Q 757 bei 10793 Einstiegen (Mittel +0.0701)
+              G2 Q(BTC 7 T >= 0) - Q(< 0): 2024 +0.0197 (n 1169/704) · 2025 -0.0779 (n 2422/2666) · 2026 +0.0942 (n 1976/1856)
+              G3 D zur Einstiegsstunde t+1: 2024 -0.0064 · 2025 -0.1153 · 2026 +0.1064

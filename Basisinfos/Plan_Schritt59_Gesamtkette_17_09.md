@@ -2553,3 +2553,8 @@ Schritt7 §23.24.
 - **Bitpanda-Umstellung Stufe 3 umgesetzt:** `hebel_positions` kommt aus `/v1/operations`, eine Zeile je Lebenszyklus, Liquidationen ausdrücklich (E-116).
 - Die 191 alten Zeilen sind gesichert; der alte Importer ist nur noch Rückfall vor der Umstellung.
 - **M1-Kriterium 2 (Hebel):** Die Positionsführung stimmt jetzt mit Bitpanda überein (Prüfstand: Wallet-Abgleich ok). Der Befund 2.679 ist im Betrieb behoben, sobald am NB umgestellt ist.
+
+**Nachtrag 16.10.2026 (42) — W3 Markt-Regime kurz (Flughöhe Ebene 2):**
+- **Gemessen** (Schritt7 §23.62, E-117): BTC 7 T als Gewicht auf die REGEL0-Einstiege, Vorprüfung vorab festgelegt, vier Mengen. **NEIN** (0 von 4); das Vorzeichen wechselt zwischen 2025 und 2026, keine Umkehr.
+- **Folge:** Ebene 2 bleibt Auskunft. REGEL0 unverändert. Die naiven z-Werte aus §23.52 sind berichtigt (Tagesblock −1,8 / +1,3).
+- **M1:** unverändert. Der Gegenwind 2025 bleibt das offene Thema (K_IG, Teil B zurückgestellt, E-33).

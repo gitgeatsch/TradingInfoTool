@@ -3260,6 +3260,7 @@ Nutzer 15.10.: *„Die LLM-Rollen haben offenbar noch in keiner Form ein gutes E
 **Ursache 3 – Die Eingangszahlen tragen selbst kaum, und ihre Richtung wechselt mit dem Regime** (belegt auf den vollen Einstiegen):
 - Alle |ρ| ≤ 0,15.
 - **Bitcoin 7 T:** 2024 −0,07, **2025 −0,15** (z −5,2), **2026 +0,10** (z +3,6), also ein Vorzeichenwechsel.
+  - ⚠️ **Berichtigt 16.10. (§23.62):** Diese z-Werte rechnen jeden Einstieg als unabhängig. Alle Einstiege eines Tages sehen aber dasselbe BTC. Mit Tagesblöcken: −0,9 / **−1,8** / **+1,3**, keiner jenseits von 2. Der Vorzeichenwechsel ist damit **nicht gesichert**.
 - **Fall 24 h:** 2025 −0,14 (tiefer gefallen → besser), 2026 −0,02.
 - Umsatz −0,08 / −0,07 / −0,01; Prämie 2025 −0,08.
 - ⇒ Auch eine Regel auf denselben Zahlen (Regel F, geschätzt auf 2024) liegt 2025/26 unter dem Zufall. **Der Engpass ist der Informationsgehalt der Eingänge, nicht allein das Modell.**
@@ -3741,3 +3742,49 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 | **Gegenprüfung der Prämisse** | dieselben drei Korrelationen mit **Tagesblock**-Unsicherheit statt 1/√n. Dazu die Zahl der Tage und der **Wetterlagen** (Wechsel des Drittels) je Jahr |
 | **Was NICHT folgt** | Kein Betrieb, kein Gewicht, keine Sperre. Ein *Weiter* ist nur eine Vorlage für eine Vollmessung (Surrogat-Nullwelt nach R-R14, Selbsttest in beide Richtungen, Leiter) |
 | **bei Nein** | W3 ist beendet. Das kurzfristige Regime bleibt **Auskunft** (nicht widerlegt, ab 2024 nicht nachweisbar). Weiter mit P19 und der Hauptlinie |
+
+**Ergebnis (16.10.2026, `p60_w3_vorpruefung.txt`, 48 s; Gegenprobe `p60_gegenprobe.txt`):**
+
+**R-R11:** (1) Das Merkmal ist bitgleich zu `signal_werte` → btc168 (30 von 30). (2) Die Korrelationen aus §23.52 sind reproduziert (−0,065 / −0,150 / +0,104).
+
+**Gegenprüfung der Prämisse (§23.52):**
+
+| Jahr | ρ (BTC 7 T, 24-h-Ertrag) | z naiv | **z Tagesblock** | Tage |
+|---|---|---|---|---|
+| 2024 | −0,065 | −2,2 | **−0,9** | 154 |
+| 2025 | −0,150 | −5,2 | **−1,8** | 209 |
+| 2026 | +0,104 | +3,6 | **+1,3** | 188 |
+
+➤ Die naiven z-Werte waren um den Faktor 2,5 bis 3 zu groß. Kein Jahr liegt für sich jenseits des Zufalls. §23.52 ist berichtigt.
+
+**Hauptgröße D = Q(hoch) − Q(tief)** (Q = +1 wenn +5 % zuerst, −1 wenn −5 % zuerst, sonst 0; Tagesblock 2.000, 95 %):
+
+| Menge | D gesamt [95 %] | 2024 / 2025 / 2026 | W-a | W-b |
+|---|---|---|---|---|
+| bestand | +0,030 [−0,079, +0,135] | −0,037 / −0,035 / +0,132 | – | – |
+| unverzerrt:1 | +0,016 [−0,094, +0,130] | +0,029 / −0,102 / +0,109 | – | – |
+| unverzerrt:2 | +0,002 [−0,116, +0,123] | +0,009 / −0,100 / +0,100 | – | – |
+| unverzerrt:3 | +0,005 [−0,109, +0,118] | +0,005 / −0,124 / +0,100 | – | – |
+
+➤ **Weiter-Schwelle: 0 von 4 Mengen ⇒ NEIN.** W3 ist beendet.
+
+**Umkehr (Auskunft zur Form):** In keinem Drittel liegt Q in zwei von drei Jahren bei oder unter null.
+- Q ist fast überall positiv. Ausnahme: 2025, Drittel *hoch* und *mitte*, in den unverzerrten Mengen (−0,045 bis −0,008), jeweils nur in diesem einen Jahr.
+- Q über alle Einstiege: 2024 +0,14 bis +0,17 · **2025 +0,03 bis +0,04** · 2026 +0,06 bis +0,11.
+
+**Wetterlagen** (Läufe desselben Drittels, Tageszustand): 98 / 110 / 80 je Jahr, also weit mehr als bei W2 (5–31). ⇒ Hier ist nicht allein die Fallzahl die Grenze. **Die Richtung selbst wechselt:**
+- 2025 liefen Einstiege in starken BTC-Wochen **schlechter** (unverzerrt −0,10 bis −0,12),
+- 2026 **besser** (+0,10 bis +0,13).
+
+**Gegenprobe auf einem zweiten Weg** (csv-Modul, eigene Auswertung von `t_u`/`t_d`):
+- **G1:** Die Zielgröße ist gleich (bestand Summe Q 922 bei 10.732 Einstiegen = +0,0859, wie p60).
+- **G2:** Absolute Teilung BTC 7 T < 0 gegen ≥ 0, gleiches Muster in 4 von 4 Mengen: 2025 −0,016 bis −0,093, 2026 +0,073 bis +0,107.
+- **G3:** Zustand zur Einstiegsstunde t+1, gleiches Muster.
+- ⇒ Das NEIN hängt nicht an der Drittelbildung und nicht am Zeitpunkt.
+
+**Einordnung:**
+1. Das kurzfristige BTC-Regime **wirkt, aber jedes Jahr anders**. Ein Gewicht, dessen Vorzeichen man erst hinterher kennt, ist vorab nicht verwertbar. Das ist 2.599, jetzt auch auf 7 T und in der Betriebsform.
+2. **Keine Umkehr ⇒ keine Sperre.** REGEL0 bleibt unbedingt (Regel *Zustandsschalter nur bei Umkehr*).
+3. Der Jahresunterschied (2025 schwach in **jedem** Drittel) ist der **Gegenwind** aus 2.694/2.697. Das ist das Thema K_IG (Teil B zurückgestellt, E-33), nicht BTC 7 T.
+4. **Flughöhe Ebene 2 bleibt Auskunft.** Keine neue Mail-Zeile, denn es ist ein Fakt ohne gemessene Handlung (Regel *jede Mail eine Handlung*). Keine Betriebsänderung, kein NB-Pull nötig.
+5. Namensgleichheit: Dieses W3 (§23.52, Regime als Gewicht) ist **nicht** der Messarm W3 *Kern-Short* aus E-32.

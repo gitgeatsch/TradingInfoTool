@@ -2132,6 +2132,17 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 16.10.2026 — Flughöhe: was welche Ebene darf
+
+| Ebene | Zeitskala | Rolle | belegt durch |
+|---|---|---|---|
+| 1 Makro | Monate | **Fakt** (Statusseite oben, Zeile in jeder Handlungsmail); keine Bremse | O53 nicht belegt (die ATR trägt es mit), O54 |
+| 2 Markt-Regime kurz | Tage–Wochen | **Auskunft**; kein Gewicht, keine Sperre | 2.670 (24–120 h), 2.686 (30 T), §23.62 (7 T: Vorzeichen wechselt je Jahr) |
+| 3 Termin | Stunden | **Fakt mit Messwert** in der REGEL0-Mail | O52 (×1,8 in 2 h, für REGEL0 nicht belegt) |
+| 4 Asset-Lage | Signalstunde | **einziger Auslöser** (REGEL0) | 2.688 ff. |
+
+⚠️ Eine Regime-Größe darf nur dann Gewicht oder Sperre werden, wenn ihr Vorzeichen **vorab** feststeht (in jedem Jahr gleich) und sie in einem Zustand **umkehrt** (Sperre) oder deutlich abschwächt (Gewicht). Die Prüfung läuft immer mit **Tagesblöcken**: Einstiege desselben Tages sehen dasselbe Regime.
+
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading
 
 **Zweck (2026-07-11, Nutzer-Fund):** eine Nachfrage zur Cash-Reserve-Anzeige

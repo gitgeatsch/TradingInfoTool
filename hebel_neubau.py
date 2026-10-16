@@ -917,6 +917,9 @@ NEUESTER_STAND = (
                "(§23.53): BTC 2 h ab CPI/FOMC x1,8, 24 h x1,1, fuer REGEL0 nicht belegt -> Fakt-Zeile (O52). Makro als "
                "Risiko-Bremse nicht belegt - die ATR der Hebelstufe traegt es schon mit (O53, §23.56); Makro-Lage als "
                "Fakt oben auf der Statusseite und in den Mails (O54). REGEL0 selbst UNVERAENDERT"),
+    ("16.10.", "W3 (§23.62, O55): das kurzfristige BTC-Regime (7 T) ist als Gewicht fuer REGEL0 NICHT verwertbar - Vorpruefung "
+               "vorab festgelegt, 0 von 4 Mengen, das Vorzeichen wechselt 2025/2026, keine Umkehr; die naiven z-Werte aus "
+               "§23.52 sind berichtigt (Tagesblock -1,8 / +1,3). Flughoehe Ebene 2 bleibt Auskunft. REGEL0 UNVERAENDERT"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "
