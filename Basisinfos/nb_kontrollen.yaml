@@ -364,7 +364,9 @@ kontrollen:
     art: ereignis
     nachweis: "beim naechsten echten Halt > 45 min: Mail '... STUNDEN STILLSTAND' (bis heute kein Halt - nicht pruefbar)"
     faellig_bis: ""
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-16"
+    beleg: "Stillstand des NB 16.10. 11:24-18:24 (Nutzer bestaetigt): nach dem Neustart 18:39:25 'LAUFZEITLUECKE: die Anwendung war 7.3 Stunden nicht in Betrieb', 18:39:26 Mail 'TradingInfoTool: 7.3 STUNDEN STILLSTAND - die Anwendung war weg' zugestellt (Diagnose 19:34). Nebenbefund: die REGEL0-Rechnung holte 08/11/12/13 UTC nach und meldete das als Mail 'Job regel0_rechnung fehlgeschlagen' - kein Fehler, nur irrefuehrender Betreff (Fix vorgemerkt)"
   - id: K-LLM-1
     titel: "REGEL0-Signalmail zeigt die Rollen sichtbar: Abschnitt 3 Einschaetzung (Trader-Zeile) und 4 Begruendung der Rollen (Fassung, Hinweise) - seit O25 (04.10.) statt des frueheren Blocks PRUEFUNG"
     seit: "2026-10-03"

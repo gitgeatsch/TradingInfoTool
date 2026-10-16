@@ -234,6 +234,7 @@ Nutzer 10.10.: *„3. ja, mit Statusseite starten – prüfe vorher, ob der Bau 
 | 13e | **O54** | Betrieb | **Makro-Lage** ganz oben auf der Statusseite und als Zeile in REGEL0 und B1/B3/B4 | K-ML-1 · ✔ **gebaut 15.10.** (8b974dd4, E-114), NB ✔ (lang Rückenwind, kurz neutral) | Flughöhe Ebene 1; O53 Bremse nicht belegt |
 | 13f | **P11c** | Hebel | **Hebelführung folgt dem Wallet-Abgleich**: laut Wallet geschlossene Positionen werden nicht geführt und nicht gemeldet, abweichende Mengen kommen aus dem Wallet (nur bei frischem Wallet-Stand) | K-HF-W1 · ✔ **gebaut 16.10.** (E-115, Schritt7 §23.59); ➤ **P11b** Importer je Teilposition als Nächstes | Anlass: falsche *LIQUIDATION NAHE ETH* nach Stop und Schließung |
 | 13g | **P11b** | Hebel | **Importer als Buch je Symbol** aus der neuen Schnittstelle; `hebel_positions` eine Zeile je Lebenszyklus, Liquidation ausdrücklich; alte Zeilen gesichert, alter Sync aus | ✔ **Voranalyse 16.10.** (§23.60) · ✔ **gebaut 16.10.** (§23.61, E-116): Prüfstand 9/9, Gegenprobe 3/3 (38 Lebenszyklen gleich), Abdeckungsprüfung Code und Doku · ➤ NB-Pull, K-HB-1 | 191 alte Zeilen gegen 38 echte Lebenszyklen |
+| 13h | **P11d** (klein) | Betrieb | Betreff der REGEL0-Frische-Meldung: *„nachgeholt“* statt *„Job 'regel0_rechnung' fehlgeschlagen“* (16.10. nach Stillstand: Rechnung lief erfolgreich) | ins nächste Bündel | irreführender Alarm |
 | später | — | Multi-Asset | **O39** (Bestand automatisch, Markt für den Aktienmarkt, Synthese wieder an) | — | nach dem Krypto-Bau |
 
 **Parallel am Desktop (keine NB-Änderung):**
