@@ -3600,3 +3600,53 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
   - ETH steht zweimal im Bitpanda-Katalog.
 
 **Nächster Schritt:** Voranalyse **P11b** (Importer je Teilposition), mit diesen Buchungen als Prüffall.
+
+### 23.60 P11b Voranalyse: Hebelpositionen als Buch je Symbol aus der neuen Bitpanda-Schnittstelle (16.10.2026; `p11b_voranalyse.py` → `.txt`)
+
+**Nutzer 16.10.:** *„ja“* (Voranalyse P11b) · *„prüfen und gegenprüfen und Doku“*.
+
+**Daten:**
+- `nb_bitpanda_buchungen_roh.py --voll` (neu: alle Seiten, ungekürzt als JSON; am Desktop gelaufen, nur lesend, Schlüssel aus `.env`): 5.926 Vorgänge 01.01.2025–16.10.2026, davon **1.242 Margin-Vorgänge** ab dem ersten am 22.09.2025.
+  - Aufteilung: 923 Eröffnungen, 312 Schließungen, **7 als `margin_trading_liquidation_long` gekennzeichnet**.
+- Dazu eine Wegwerf-Kopie der NB-Sicherung 16.10. 04:34 (Katalog, alte `hebel_positions`, Wallet-Salden).
+- Die alte Tabelle beginnt ebenfalls am 22.09.2025 ⇒ die Historie ist vollständig.
+
+**Aufbau der Vorgänge** (keine Kennung je Teilposition; Bitpanda führt **einen Topf je Symbol**):
+
+| Vorgang | Buchungen |
+|---|---|
+| Eröffnung | Kredit-Wallet (EURCV) OUTGOING *k* · eigenes Geld verkauft · Margin-Wallet INCOMING *q* zum Kurs *r* |
+| Schließung / Liquidation | Margin-Wallet: Gebühr · Verkauf (Erlös = Tilgung) · **Rest als Coin ins Spot-Wallet** (das Eigenkapital) · Kredit-Wallet INCOMING (Tilgung) |
+
+⇒ **Warum der alte Importer scheitert:** Er sucht einen Verkauf über die ganze Menge. Bei einer gehebelten Schließung wird aber nur der Kreditanteil verkauft; der Rest geht als Coin zurück. Dasselbe Muster beschreibt Befund 2.679 (HYPE/NEAR, 26./27.07.).
+
+**Das Buch:**
+- Je Symbol werden Menge (Saldo des Margin-Wallets), Kredit (Summe der Kreditbuchungen) und Kosten (Menge × Kurs, bei Abgängen anteilig) geführt.
+- Ein **Lebenszyklus** reicht von Saldo 0 bis wieder 0.
+- Eine **Liquidation** ist der ausdrückliche Vorgangstyp.
+
+**Prüfung und Gegenprobe:**
+
+| | Ergebnis |
+|---|---|
+| **G1** Menge aus den Bewegungen = Saldo danach | **0 von 1.242** Abweichungen |
+| **G2** Summe der Symbol-Kredite = −Kredit-Wallet | **0 von 1.139** Abweichungen (> 2 ct) |
+| **G3** Tilgung bei Teilschließung anteilig zur Menge | **282 von 282**; Vollschließungen 37, Restkredit danach 0,00 € ⇒ Bitpanda tilgt anteilig (Fall ETH 15.10.: 1.800 × 0,896/1,031 = 1.565,28 €) |
+| **G4** offen heute = Wallets der Sicherung | **gleich**: BTC 0,01141097, Kredit 560,00 €, Einstand 73.613,33 € (= gespeicherter Einstand), seit 09.10. |
+| **G5** Liquidationen | **7** ausdrücklich (MORPHO, AVAX, TAO 10.10.2025 · LINK 11.10. · TAO 22.10. · SUI 03.11. · TAO 21.11.2025); die alte Erkennung fand **4** – genau die drei von Befund 2.679 fehlten (MORPHO, AVAX 10.10., TAO 21.11.) |
+| **G6** Lebenszyklen | Buch **37 geschlossen + 1 offen** gegen alte Tabelle **191 Zeilen** (2 offen). Gleich viele bei 6 von 11 Symbolen; abweichend BTC 12/7, ETH 17/9, LINK 37/5, SUI 35/4, TAO 84/7 – die alte Tabelle zerlegt einen Lebenszyklus bei jedem Teilverkauf |
+
+**Bauvorschlag P11b (zur Abstimmung):**
+1. **Quelle:** die neue Schnittstelle, die der Bestands-Job ohnehin stündlich liest (`aktualisiere_wallet_salden` liefert die Vorgänge).
+   - Neue Tabelle `hebel_buch_vorgang`: Margin-Vorgänge mit Symbol, Typ, Mengen- und Kreditänderung, Kurs, Saldo danach.
+   - Einmal voll befüllt, danach fortgeschrieben.
+2. **Dieselbe Tabelle `hebel_positions` richtig füllen**, eine Zeile je Lebenszyklus (Menge, Kredit, Kosten, Einstand, Hebel, Eröffnung, Schließung, Status *liquidiert* aus dem Vorgangstyp).
+   - **Begründung:** über 30 Leser, 2 Schreiber; die Leser bleiben unverändert.
+3. **Die 191 alten Zeilen werden nicht gelöscht**, sondern in `hebel_positions_alt_bis_16_10` gesichert (Regel *Rücksprache vor dem Entfernen*).
+4. Der **alte Positions-Sync** (alte Schnittstelle) schreibt danach nicht mehr; sonst überschriebe er das Buch.
+5. **P11c bleibt** als Sicherung: Der Wallet-Abgleich muss danach *ok* zeigen.
+6. **Prüfstand:**
+   - das Buch gegen dieselben G1–G6;
+   - Leser gegen das neue Buch: Hebelführung, Statusseite, GUI, Deckel, Backward-Tracking;
+   - Wegwerf-Kopie;
+   - am NB K-Kontrolle *Wallet-Abgleich ok*.

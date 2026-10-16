@@ -1,0 +1,18 @@
+P11b VORANALYSE · 1242 Margin-Vorgaenge 2025-09-22 bis 2026-10-15 (Datei nb_bitpanda_buchungen_voll_9900K.json, 2025-01-01T00:00:00Z)
+
+G1 Menge = Saldo danach bei jedem Vorgang: 0 von 1242 Abweichungen 
+G2 Summe Symbol-Kredite = -Kredit-Wallet: 0 von 1139 Vorgaengen mit Kreditbuchung weichen ab (> 2 ct) 
+G3 Tilgung bei TEILschliessung anteilig zur Menge: 282 von 282 (Vollschliessungen 37: Rest-Kredit danach max 0.00 EUR)
+
+G4 offen heute (Buch): BTC Menge 0.01141097, Kredit 560.00, Einstand 73613.33, seit 2026-10-09T04:38 · Kredit-Summe 560.00 EUR
+   Sicherung (Wallets): {'BTC': 0.01141097} · Kredit 560.00 EUR
+   -> GLEICH
+
+G5 Liquidationen ausdruecklich: 7 · MORPHO 2025-10-10, AVAX 2025-10-10, TAO 2025-10-10, LINK 2025-10-11, TAO 2025-10-22, SUI 2025-11-03, TAO 2025-11-21
+   alte Erkennung (Gebuehren-Anomalie): 4 · LINK 2025-10-11, SUI 2025-11-03, TAO 2025-10-10, TAO 2025-10-22
+   davon von der alten Erkennung gefunden: 4 von 7
+
+G6 Lebenszyklen: Buch 37 geschlossen + 1 offen · alte hebel_positions 191 Zeilen (2 offen)
+   Symbole mit gleicher Zahl an Lebenszyklen: 6 von 11
+   je Symbol (alt / Buch): BTC 12/7 · ETH 17/9 · LINK 37/5 · SUI 35/4 · TAO 84/7
+   Vorgaenge je Lebenszyklus: Median 4, max 240

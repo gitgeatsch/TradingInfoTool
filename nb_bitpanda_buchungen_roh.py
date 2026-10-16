@@ -2,6 +2,7 @@
 """K-BP-2 (10.10.2026, Schritt7 Par. 23.36): ROHE Bitpanda-Buchungen eines Zeitfensters ansehen - NUR LESEND.
 
     python nb_bitpanda_buchungen_roh.py [von] [bis]        (ISO, Vorgabe 2026-10-09T08:25:00Z bis 2026-10-09T08:35:00Z)
+    python nb_bitpanda_buchungen_roh.py --voll [von] [bis] (P11b, 16.10.: alle Seiten, ungekuerzt als JSON in den Austauschordner)
 
 WOZU: Nach dem Importer-Fix (0995cc3) meldet der Abgleich fuer EURCV *"Buchungen ergeben Spot 696,04 / Hebel -2600, Bitpanda
 meldet 296,04 + -2600"*. Die Differenz ist genau das Eigenkapital (400) der ETH-Position, eroeffnet 09.10. 08:29:58 UTC. Vermutung:
@@ -40,7 +41,57 @@ def drive_wurzel():
     return None
 
 
+def voll(k, von, bis):
+    """P11b-Voranalyse (16.10.2026): ALLE Vorgaenge des Fensters VOLLSTAENDIG (Vorgangs- UND Buchungsfelder, ungekuerzt) als JSON.
+    Seitenweise ueber Datumsfenster wie api.bitpanda_public.hole_buchungen_mit_stand (`to` wandert auf den aeltesten Zeitpunkt der
+    Seite, eine Millisekunde zurueck, wenn nichts Neues kam). Nur lesend; die Antwort enthaelt keinen Schluessel."""
+    from datetime import datetime, timedelta
+    vorgaenge, grenze = {}, bis
+    for _ in range(500):
+        r = requests.get(URL, headers={"X-Api-Key": k}, params={"page_size": 100, "from": von, "to": grenze}, timeout=60)
+        if r.status_code != 200:
+            raise RuntimeError("Bitpanda antwortete %d: %s" % (r.status_code, r.text[:200].replace(k, "***")))
+        seite = r.json().get("data") or []
+        neu = 0
+        for o in seite:
+            if o.get("operation_id") and o["operation_id"] not in vorgaenge:
+                vorgaenge[o["operation_id"]] = o
+                neu += 1
+        zeiten = [t.get("credited_at") for o in seite for t in o.get("transactions") or [] if t.get("credited_at")]
+        if not seite or not zeiten:
+            break
+        aeltest = min(zeiten)
+        if neu == 0:
+            d = datetime.fromisoformat(aeltest.replace("Z", "+00:00")) - timedelta(milliseconds=1)
+            aeltest = d.isoformat().replace("+00:00", "Z")
+        if aeltest == grenze:
+            break
+        grenze = aeltest
+        if len(seite) < 100 and neu:
+            break
+    return list(vorgaenge.values())
+
+
 def main():
+    if "--voll" in sys.argv:
+        argv = [x for x in sys.argv[1:] if x != "--voll"]
+        von = argv[0] if argv else "2025-01-01T00:00:00Z"
+        bis = argv[1] if len(argv) > 1 else "2030-01-01T00:00:00Z"
+        k = schluessel()
+        if not k:
+            print("BITPANDA_API_KEY nicht in .env - Abbruch"); return 1
+        ops = voll(k, von, bis)
+        w = drive_wurzel()
+        ziel = os.path.join(w or ".", "Claude_Austauschordner", "Notebook_Analysedaten",
+                            "nb_bitpanda_buchungen_voll_%s.json" % platform.node()) if w else "nb_bitpanda_buchungen_voll.json"
+        with open(ziel, "w", encoding="utf-8") as f:
+            json.dump({"von": von, "bis": bis, "geraet": platform.node(), "vorgaenge": ops}, f, ensure_ascii=False)
+        typen = {}
+        for o in ops:
+            typen[o.get("operation_type")] = typen.get(o.get("operation_type"), 0) + 1
+        print("K-BP-2 VOLL %s bis %s - %d Vorgaenge · %s" % (von, bis, len(ops), ", ".join("%s %d" % kv for kv in sorted(typen.items()))))
+        print("-> geschrieben nach %s" % ziel)
+        return 0
     von = sys.argv[1] if len(sys.argv) > 1 else "2026-10-09T08:25:00Z"
     bis = sys.argv[2] if len(sys.argv) > 2 else "2026-10-09T08:35:00Z"
     k = schluessel()
