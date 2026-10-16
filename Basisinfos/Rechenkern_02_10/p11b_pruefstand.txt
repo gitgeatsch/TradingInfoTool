@@ -1,0 +1,14 @@
+Hebel-Buch: erste Historie unvollstaendig (2963 Vorgaenge) - NICHT umgestellt, der alte Weg bleibt
+Hebel-Buch: erste Historie unvollstaendig (2963 Vorgaenge) - NICHT umgestellt, der alte Weg bleibt
+Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)
+B1   bestanden gesichert 191 von 191 (inhaltsgleich True) · neu {'geschlossen': 30, 'liquidiert': 7, 'offen': 1} · BTC Menge 0.01141097 Kredit 560.00 Einstand 73613.33 Hebel 3.000 seit 2026-10-09T04:38:53+00:00 · liquidiert True
+B2   bestanden Wallet-Abgleich nach der Umstellung: Hebel-Wallet-Abgleich: BTC ok · Kredit ok
+B3   bestanden Fuehrung: ['BTC HALTEN'] · Hebel 3.0000 · Liquidation 54956.68 (ohne Wallet-Korrektur gleich True) · kein Hinweis True
+B4   bestanden Erstlauf bis 01.10., dann der Rest: Zeilen gleich True (38) · zweiter Lauf ohne Umstellung True
+B5   bestanden dritter Lauf: Zeilen gleich, Buch 1242 Vorgaenge, neu 0
+B6   bestanden nicht umgestellt True · alte Tabelle unberuehrt True · keine Sicherungstabelle True · alter Weg gelaufen True
+B7   bestanden Ergebnis fuer die Logzeile: 5926 geladen, ['BTC', 'ETH'], 1 neu geschlossen · Fehler nach der Umstellung an den Aufrufer True, kein alter Weg True
+B8   bestanden Liquidationspreis des Jobs 54970.67 (Fuehrung 54956.68) · Statusseite ['BTC HALTEN'] · Fehler keine
+B9   bestanden Desktop-Prod True · Sicherung True · JSON True unveraendert
+
+9 von 9 bestanden

@@ -1,0 +1,5 @@
+K1   bestanden Lebenszyklen eigen 38 / Modul 38 · gleich True
+K2   bestanden offen Modul [('BTC', 0.01141097, 560.0)] · eigener Kredit 560.00 · Wallet Menge {'BTC': 0.01141097}, Kredit 560.00
+K3   bestanden Kredit nach jeder Vollschliessung: max 0.0000 EUR ueber 37 Lebenszyklen
+
+3 von 3 bestanden

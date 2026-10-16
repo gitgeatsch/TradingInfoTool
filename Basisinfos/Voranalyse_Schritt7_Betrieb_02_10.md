@@ -3650,3 +3650,52 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
    - Leser gegen das neue Buch: Hebelführung, Statusseite, GUI, Deckel, Backward-Tracking;
    - Wegwerf-Kopie;
    - am NB K-Kontrolle *Wallet-Abgleich ok*.
+
+### 23.61 P11b gebaut: Hebelpositionen als Buch je Symbol – mit Abdeckungsprüfung über Code und Doku (16.10.2026; `p11b_pruefstand.py`, `p11b_gegenprobe.py` → `.txt`)
+
+**Nutzer 16.10.:** *„Ja, mach noch zur Sicherheit eine Prüfung, ob alle Stellen im Code und laut Doku abgedeckt sind“*.
+
+**Abdeckungsprüfung (vor dem Bau):**
+
+| Bereich | Stellen | Ergebnis |
+|---|---|---|
+| **Schreiber** `hebel_positions` | `importer/bitpanda_margin_positions.sync_hebel_positions` (Importer), `scheduler/background._refresh_hebel_position_liquidation_prices` (Liquidationspreis), `auto_add_unknown_hebel_symbols` (liest nur) | Der Importer wird ersetzt, Name und Rückgabe bleiben (Job, Log und die AST-Prüfungen der Suite hängen daran). Der Liquidationspreis rechnet unverändert aus `positionswert/positionsmenge/hebel/eroeffnet_am`, die jetzt richtig gefüllt sind |
+| **Leser** (30 Stellen in 21 Dateien) | alle über `get_open_hebel_positions`, `status='offen'` oder `geschlossen_am IS NULL`, Felder Menge, Wert, Kredit, Eigenkapital, Hebel | Bedeutung unverändert ⇒ keine Änderung. Statuswerte: Nur der alte Importer kannte `wahrscheinlich_liquidiert`; neu `liquidiert` (ausdrücklich), kein Leser filtert darauf |
+| **IDs** | `position_id` nur flüchtig (Meldungsschlüssel der Hebelführung, Deckel) | keine gespeicherten Verweise auf alte IDs |
+| **Stempel** | `hebel_positions_synced_at` (Frische, setzt der Job nach Erfolg), `hebel_position_last_synced_unix` (P11c-Vertrauen, alte Wasserlinie) | Der erste bleibt im Job; der zweite kommt jetzt aus dem Buch (jüngster Margin-Vorgang) |
+| **Bitpanda-Inventur** (Stufe 3 geplant: *„auf /v1/operations, Tabelle in Bedeutung unverändert; Stempel vom neuen Sync; die 9 Leser gegenprüfen“*) | Wache `BitpandaInventur` | **schlug an** (neue Datei fehlte im Blatt) ⇒ Blatt ergänzt, Wache grün |
+| **Schlüsselwache** (Inventur: *„dann auch deren 401 melden“*) | dieselbe Schnittstelle und derselbe Schlüssel wie der Bestands-Job | Ein 401 meldet der Bestands-Job binnen einer Stunde; im Hebel-Job wird er zum Abgleich-Ausfall (Mail nach 1 h) |
+| **Doku** | `docs/hebel_positionsformel.md`, Regelwerksmanual (Positionsverfolgung), Spezifikation, Landkarte, Inventur, Pläne | nachgezogen (unten) |
+
+**Gebaut:**
+
+| Teil | Was |
+|---|---|
+| `importer/hebel_buch.py` (neu) | `sync()`: Vorgänge holen (erster Lauf ganze Historie, dann ab Stand − 10 min), Margin-Vorgänge in `hebel_buch_vorgang` (idempotent, Rohdaten mit), **einmalig** die alten Zeilen nach `hebel_positions_alt_bis_16_10` **sichern und prüfen**, erst dann leeren; das ganze Buch neu durchrechnen; eine Zeile je Lebenszyklus (offen: aktuelle Werte; geschlossen: Werte vor dem letzten Abgang), alles in **einer** Transaktion. Unvollständige erste Historie ⇒ keine Umstellung |
+| `importer/bitpanda_margin_positions.py` | `sync_hebel_positions` führt über das Buch; der alte Weg (`_sync_alt`) ist nur bis zur Umstellung Rückfall, danach nie mehr |
+| `database/models.py` | Status `liquidiert` dokumentiert |
+| `nb_bitpanda_buchungen_roh.py` | `--voll` (ungekürzt, alle Seiten) |
+| `pruefe_pakete.py` | Paket `Hebelbuch` (5) |
+| `Bitpanda_Umstellung_Inventur.md` | Zeile `importer/hebel_buch.py`, Stufe 3 umgesetzt |
+
+**Prüfung:**
+- **Prüfstand 9/9** an Wegwerf-Kopien der NB-Sicherung 16.10. 04:34, Abruf aus der echten JSON gestellt:
+  - **B1** 191 alte Zeilen inhaltsgleich gesichert; neu 30 geschlossen + **7 liquidiert** (die Liste aus §23.60) + 1 offen (BTC 0,01141097, 560 €, Einstand 73.613,33, Hebel 3,0, seit 09.10. 04:38:53);
+  - **B2** Wallet-Abgleich danach **ok**;
+  - **B3** Hebelführung ohne Korrektur-Hinweis, gleiche Zahlen;
+  - **B4** inkrementell = auf einmal;
+  - **B5** idempotent;
+  - **B6** unvollständige Historie stellt nicht um, der alte Weg läuft;
+  - **B7** Pfad des Jobs liefert das Ergebnis für die Logzeile; ein Fehler nach der Umstellung geht an den Job (kein Rückfall);
+  - **B8** Leser laufen (Liquidationspreis des Jobs, Statusseite, Deckel, Frische, Diagnose- und Tracking-Abfrage);
+  - **B9** Prod, Sicherung und JSON unverändert.
+- **Gegenprobe 3/3** auf einem zweiten Weg (nur die von Bitpanda gemeldeten Salden):
+  - alle **38 Lebenszyklen gleich**;
+  - der offene gleich dem Wallet;
+  - Kredit nach jeder Vollschließung 0,00.
+- **Suite-Pakete:** Hebelbuch 5, BitpandaInventur 6, BitpandaZugang 10, Hebelführung 35, HebelAbgleich 16, WalletFuehrung 4, Aggregat-Deckel 22 – grün.
+
+**Am NB nach dem Pull** (K-HB-1):
+- Der erste Lauf liest die ganze Historie und stellt um. Im Log steht *„Hebel-Buch: UMGESTELLT – 191 alte Zeilen … gesichert, 38 Positionen aus dem Buch (offen: BTC)“*.
+- Danach meldet der Wallet-Abgleich *„BTC ok · Kredit ok“*.
+- P11c bleibt als Sicherung.

@@ -313,7 +313,33 @@ class HebelPositionSyncResult:
 
 
 def sync_hebel_positions(conn: sqlite3.Connection, api_key: str) -> HebelPositionSyncResult:
-    """1) (neue) Transaktionen laden - Netzwerk zuerst, kein DB-Write vorher
+    """P11b (16.10.2026, Bitpanda-Umstellung Stufe 3): die Positionen kommen aus dem BUCH JE SYMBOL der neuen Schnittstelle
+    (``importer.hebel_buch``). Name und Rueckgabe bleiben - Job, Log und Pruefungen haengen daran.
+
+    Bis zur ersten erfolgreichen Umstellung (vollstaendige Historie) ist der alte Weg (``_sync_alt``, alte Schnittstelle) die
+    Rueckfallebene: scheitert der neue Abruf oder ist die Historie unvollstaendig, laeuft er wie bisher. NACH der Umstellung nie
+    mehr - er wuerde das Buch mit seinem Fehler (Befund 2.679) ueberschreiben; ein Fehler geht dann an den Job (Abgleich-Ausfall)."""
+    from importer import hebel_buch as HB
+
+    if HB.umgestellt(conn):
+        e = HB.sync(conn, api_key)
+    else:
+        try:
+            e = HB.sync(conn, api_key)
+        except Exception:                                    # noqa: BLE001
+            logger.exception("Hebel-Buch: erster Lauf gescheitert - der alte Weg bleibt bis zur Umstellung")
+            return _sync_alt(conn, api_key)
+        if not HB.umgestellt(conn):
+            return _sync_alt(conn, api_key)
+        logger.warning("Hebel-Buch: UMGESTELLT - %d alte Zeilen nach %s gesichert, %d Positionen aus dem Buch (offen: %s)",
+                       e["gesichert"], HB.ALT, len(conn.execute("SELECT 1 FROM hebel_positions").fetchall()), ", ".join(e["offen"]) or "-")
+    return HebelPositionSyncResult(positionen_aktualisiert=list(e["positionen"]), neu_geschlossen=e["geschlossen_neu"],
+                                   total_transactions_fetched=e["geladen"], incremental=not e["umgestellt"])
+
+
+def _sync_alt(conn: sqlite3.Connection, api_key: str) -> HebelPositionSyncResult:
+    """DER ALTE WEG (bis 16.10.2026), nur noch Rueckfallebene vor der Umstellung auf das Buch (P11b).
+    1) (neue) Transaktionen laden - Netzwerk zuerst, kein DB-Write vorher
     (Atomaritaetsprinzip wie importer/bitpanda_sync.py/bitpanda_avg_cost.py). 2)
     offene Positionen aus der DB als `existing`-Akkumulator reconstruieren. 3)
     reconstruct_margin_positions() aufrufen. 4) Ergebnisse upserten, Watermark

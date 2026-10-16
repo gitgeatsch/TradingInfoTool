@@ -22297,6 +22297,37 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_hebelbuch() -> None:
+    """P11b (16.10.2026, Bitpanda-Umstellung Stufe 3): HEBELPOSITIONEN ALS BUCH JE SYMBOL aus /v1/operations.
+
+    Nutzer 16.10.: *"Ja, mach noch zur Sicherheit eine Pruefung, ob alle Stellen im Code und laut Doku abgedeckt sind"*. Geprueft: die
+    Umstellung sichert die alten Zeilen vollstaendig, das Buch trifft die Bitpanda-Wallets, Lebenszyklen auf einem zweiten Weg gleich,
+    inkrementell = auf einmal, idempotent, unvollstaendige Historie stellt NICHT um, der Pfad des Jobs bleibt; Leser laufen."""
+    P = "Hebelbuch"
+    import glob as _gl
+    import os as _os
+    import subprocess as _sp
+
+    _qm, _qb = _quelltext("importer/bitpanda_margin_positions.py"), _quelltext("importer/hebel_buch.py")
+    pruefe(P, "sync_hebel_positions fuehrt ueber das Buch; der alte Weg nur vor der Umstellung",
+           "from importer import hebel_buch as HB" in _qm and "if HB.umgestellt(conn):" in _qm and "return _sync_alt(conn, api_key)" in _qm)
+    pruefe(P, "Umstellung sichert zuerst und prueft die Sicherung, bevor geleert wird; Liquidation aus dem Vorgangstyp",
+           _qb.index("INSERT INTO %s SELECT * FROM hebel_positions") < _qb.index("DELETE FROM hebel_positions")
+           and "Sicherung unvollstaendig" in _qb and 'typ == "margin_trading_liquidation_long"' in _qb)
+    _js = sorted(_gl.glob("K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/nb_bitpanda_buchungen_voll_*.json"))
+    _gz = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
+    if not _js or not _gz:
+        pruefe(P, "Pruefstand p11b (braucht Buchungen voll + Prod-Sicherung im Austauschordner)", False, "fehlt: %s" % ("JSON" if not _js else "Sicherung"))
+        return
+    for _skript, _soll, _text in (("p11b_pruefstand.py", "9 von 9 bestanden", "Umstellung, Wallet ok, Fuehrung, inkrementell, idempotent, "
+                                   "unvollstaendig stellt nicht um, Pfad des Jobs, Leser, Prod unveraendert"),
+                                  ("p11b_gegenprobe.py", "3 von 3 bestanden", "Lebenszyklen auf einem zweiten Weg (nur Salden), offener = Wallet, Kredit 0 nach Vollschluss")):
+        _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", _skript), _js[-1], _gz[-1]],
+                     capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
+        pruefe(P, "⚠️⚠️ %s: %s" % (_skript, _text), _soll in (_r.stdout or ""),
+               " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_wallet_fuehrung() -> None:
     """P11c (16.10.2026): DIE HEBELFUEHRUNG FOLGT DEM WALLET-ABGLEICH.
 
@@ -32971,7 +33002,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "WalletFuehrung": paket_wallet_fuehrung,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

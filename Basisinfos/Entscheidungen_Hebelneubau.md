@@ -1366,3 +1366,17 @@ Nachweis: Schritt7 §23.57/§23.58, K-ML-1.
 **Nächster Schritt:** Voranalyse P11b. Bitpanda führt jede Eröffnung als eigene Teilposition (Rohbuchungen 14./15.10.).
 
 Nachweis: Schritt7 §23.59, K-HF-W1.
+
+# E-116 · P11b Hebelpositionen als Buch je Symbol gebaut (16.10.2026)
+
+**16.10.2026** · Nutzer: *„Ja, mach noch zur Sicherheit eine Prüfung, ob alle Stellen im Code und laut Doku abgedeckt sind“* · *„prüfen und gegenprüfen und Doku“*.
+
+**Gebaut:** `hebel_positions` wird aus dem Buch je Symbol der neuen Bitpanda-Schnittstelle gefüllt, eine Zeile je Lebenszyklus. Die alten 191 Zeilen sind gesichert (`hebel_positions_alt_bis_16_10`); der alte Importer läuft nur noch, solange nicht umgestellt ist.
+
+**Eigene Festlegungen (berichtet):**
+- Das ganze Buch wird bei jedem Lauf neu durchgerechnet (deterministisch, ohne Zustandsfehler).
+- Geschlossene Zeilen tragen die Werte vor dem letzten Abgang.
+- Der Status heißt `liquidiert`, weil er ausdrücklich von Bitpanda kommt; die alten Zeilen behalten `wahrscheinlich_liquidiert`.
+- Eine unvollständige erste Historie stellt **nicht** um.
+
+Nachweis: Schritt7 §23.60/§23.61, K-HB-1, Paket Hebelbuch.

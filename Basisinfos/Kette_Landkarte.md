@@ -18,6 +18,12 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 16.10.2026 (8) — Hebelpositionen aus dem Buch je Symbol (P11b)
+>
+> | Hier fehlt | Stand seit 16.10.2026 |
+> |---|---|
+> | Quelle `hebel_positions` | `importer/hebel_buch.py` über `sync_hebel_positions` (Job `hebel_screening_job`, 15 min): `/v1/operations` → `hebel_buch_vorgang` → eine Zeile je Lebenszyklus; alte Zeilen in `hebel_positions_alt_bis_16_10` |
+>
 > ## ⚠️ NACHTRAG 16.10.2026 (7) — Hebelführung gegen die Bitpanda-Wallets (P11c)
 >
 > | Hier fehlt | Stand seit 16.10.2026 |

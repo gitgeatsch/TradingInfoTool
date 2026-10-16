@@ -1824,6 +1824,8 @@ Jede Handlungsmail trägt Fakten, die **nichts auslösen und nichts sperren** (V
 
 **Drei Zustände überall:** Wert · kein Wert · **NICHT ABGEFRAGT / NICHT VERFÜGBAR**. Der dritte sieht nie wie der zweite aus. Ein scheiternder Lieferant hält keine Mail auf.
 
+**Hebelpositionen seit 16.10. (P11b):** Sie kommen aus dem Buch je Symbol der neuen Bitpanda-Schnittstelle (eine Zeile je Lebenszyklus, Liquidation ausdrücklich). Der Wallet-Abgleich muss danach *ok* zeigen.
+
 **Hebelführung (H15) seit 16.10. (P11c):** Sie führt gegen die Bitpanda-Wallets. Eine laut Wallet geschlossene Position erzeugt keine Mail mehr (Statusseite: *LAUT BITPANDA GESCHLOSSEN*). Weicht die Menge ab, steht ein Hinweis vorn, und Menge und Kredit kommen aus dem Wallet. Das gilt nur, wenn der Wallet-Stand mindestens so jung ist wie die letzte Hebelbuchung.
 
 ## 13. Remote-Steuer-Seite — Status + Aktionen von unterwegs über Tailscale
@@ -2264,6 +2266,7 @@ ein Sicherheitsabstand bleibt (15-20 %) — ein weiter Stop-Loss erlaubt also
 automatisch nur einen niedrigeren Hebel.
 
 **Automatische Positions-Verfolgung (statt manueller Bestätigung) — gebaut:**
+⭐ **Seit 16.10.2026 (P11b):** Die Positionen kommen aus dem **Buch je Symbol** der neuen Bitpanda-Schnittstelle (`importer/hebel_buch.py`, `/v1/operations`), eine Zeile je Lebenszyklus. Liquidationen sind ausdrücklich gekennzeichnet; die Rekonstruktion aus `/wallets/transactions` unten ist abgelöst (Befund 2.679). Die alten Zeilen stehen in `hebel_positions_alt_bis_16_10`.
 Sobald eine Hebel-Position wirklich offen ist, erkennt die App das
 **automatisch** aus deinen echten Bitpanda-Transaktionen (`importer/
 bitpanda_margin_positions.py`, alle 15 Min huckepack auf dem Hebel-

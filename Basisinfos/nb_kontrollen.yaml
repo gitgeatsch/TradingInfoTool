@@ -345,6 +345,15 @@ kontrollen:
     faellig_bis: "2026-10-18"
     status: offen
     teilbeleg: "Diagnose 16.10. 07:43 (NB auf b343806b, keine lokalen Aenderungen, Neustart 07:36 ohne Fehler): Log 07:36:56 'Hebelfuehrung: 1 offen · BTC HALTEN Abstand 24.9 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH · gemeldet 0' - wie im Pruefstand (24,8 %). Offen: bis 18.10. keine Mail 'LIQUIDATION NAHE ETH' mehr; Statusseite ETH 'LAUT BITPANDA GESCHLOSSEN' (Nutzerblick)"
+  - id: K-HB-1
+    titel: "P11b Hebel-Buch: erster Lauf stellt um (alte Zeilen gesichert), danach Wallet-Abgleich ok"
+    seit: "2026-10-16"
+    paket: P11b
+    commit: ""
+    art: manuell
+    nachweis: "Log im ersten hebel_screening_job nach dem Neustart: 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (Zahlen koennen um neue Vorgaenge abweichen); danach 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok' und 'Hebelfuehrung: 1 offen · BTC HALTEN' ohne 'laut Bitpanda geschlossen'; Diagnose hebel_positions: Status offen 1, geschlossen ~30, liquidiert 7"
+    faellig_bis: "2026-10-18"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

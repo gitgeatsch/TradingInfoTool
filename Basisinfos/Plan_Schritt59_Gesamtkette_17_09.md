@@ -2548,3 +2548,8 @@ Schritt7 §23.24.
 - **Gebaut:** Mail, Statusseite, GUI und Deckel führen gegen die Bitpanda-Wallets, nur bei frischem Wallet-Stand (E-115).
 - **Als Nächstes P11b:** Importer je Teilposition. Bitpanda führt jede Eröffnung einzeln.
 - **M1-Kriterium 2 (Hebel):** Die Positionsführung stützt sich jetzt auf die Bitpanda-Wallets; die gespeicherten Positionen bleiben bis P11b fehlerhaft.
+
+**Nachtrag 16.10.2026 (41) — P11b Hebelpositionen als Buch je Symbol:**
+- **Bitpanda-Umstellung Stufe 3 umgesetzt:** `hebel_positions` kommt aus `/v1/operations`, eine Zeile je Lebenszyklus, Liquidationen ausdrücklich (E-116).
+- Die 191 alten Zeilen sind gesichert; der alte Importer ist nur noch Rückfall vor der Umstellung.
+- **M1-Kriterium 2 (Hebel):** Die Positionsführung stimmt jetzt mit Bitpanda überein (Prüfstand: Wallet-Abgleich ok). Der Befund 2.679 ist im Betrieb behoben, sobald am NB umgestellt ist.

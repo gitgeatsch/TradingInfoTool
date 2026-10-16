@@ -750,7 +750,7 @@ class HebelPosition:
     Fehlerquelle ohne Mehrwert."""
     symbol: str
     richtung: str  # 'LONG' - Bitpanda fuehrt aktuell kein Short aus
-    status: str  # 'offen'|'geschlossen'|'wahrscheinlich_liquidiert'
+    status: str  # 'offen'|'geschlossen'|'liquidiert' (seit P11b 16.10.2026 ausdruecklich aus /v1/operations); bis dahin 'wahrscheinlich_liquidiert' (Archiv)
     eroeffnet_am: str
     letzte_transaktion_unix_timestamp: int
     id: int | None = None

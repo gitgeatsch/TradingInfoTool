@@ -11,6 +11,30 @@ Hebel-Empfehlungen laufen vollautomatisch im 15-Min-Takt UND sind jetzt
 erstmals in der App selbst sichtbar. Nichts mehr offen aus der ursprünglichen
 Roadmap.
 
+## ⭐ STAND 16.10.2026 – die Positionen kommen aus dem BUCH JE SYMBOL der neuen Schnittstelle (P11b)
+
+Die Rekonstruktion unten (`reconstruct_margin_positions`, alte Schnittstelle `/wallets/transactions`) ist **abgelöst**. Sie ist nur noch Rückfall bis zur ersten Umstellung. Grund: Befund 2.679 und der Fall vom 15.10.2026 (ETH ausgestoppt und geschlossen, gespeichert blieb sie *offen*).
+
+- **Quelle:** `/v1/operations`, Vorgänge `margin_trading_open_long`, `margin_trading_close_long`, `margin_trading_liquidation_long` (`importer/hebel_buch.py`).
+- **Wie Bitpanda bucht** (1.242 Vorgänge ab 22.09.2025 geprüft):
+  - **ein Topf je Symbol**;
+  - Tilgung bei Teilschließung **anteilig zur Menge** (282/282);
+  - beim Schließen wird nur der Kreditanteil verkauft, der **Rest geht als Coin ins Spot-Wallet**;
+  - Liquidationen sind **ausdrücklich** gekennzeichnet (7; die Gebühren-Anomalie unten fand 4).
+- **Eine Zeile `hebel_positions` je Lebenszyklus** (Saldo 0 → > 0 → 0):
+
+  | Feld | Inhalt |
+  |---|---|
+  | `positionsmenge` | Margin-Saldo |
+  | `kreditbetrag_eur` | Summe der Kreditbuchungen |
+  | `positionswert_eur` | Kosten zum Kaufkurs, bei Abgängen anteilig |
+  | `eigenkapital_eur` | Kosten − Kredit |
+  | `hebel_effektiv` | Kosten / Eigenkapital |
+  | `status` | `offen` / `geschlossen` / `liquidiert` |
+
+- Die Zeilen bis 16.10.2026 stehen unverändert in `hebel_positions_alt_bis_16_10`.
+- **Prüfung:** Schritt7 §23.60/§23.61, Prüfstand `p11b_pruefstand.py`, Gegenprobe `p11b_gegenprobe.py`, Suite-Paket `Hebelbuch`.
+
 ## Bugfix (2026-07-26): Teilverkauf ließ die Position komplett verschwinden
 
 **Echter Fund:** Nutzer verringerte die NEAR-Hebel-Position per TEILVERKAUF

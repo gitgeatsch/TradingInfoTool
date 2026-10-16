@@ -1330,3 +1330,8 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 - **Statusseite, Karte Hebel:** Eine laut Bitpanda geschlossene Position steht als *LAUT BITPANDA GESCHLOSSEN* mit dem Grund *gespeicherte Position veraltet*. Eine abweichende Position zeigt den Wallet-Hinweis als Grund. Die Zeile *Abgleich mit Bitpanda (Wallets)* bleibt.
 - **GUI, Hebel-Tab und Bestand-Tab:** Sie lesen `hebelfuehrung.lade` und sehen damit dieselben, gegen das Wallet geführten Zahlen.
 - **Offen bis P11b:** Die gespeicherten Positionen (`hebel_positions`) selbst sind weiter fehlerhaft.
+
+### G-Z14 P11b – die Hebelpositionen stimmen (16.10.2026)
+
+- Statusseite (Karte Hebel), GUI (Hebel-Tab, Bestand-Tab), Mail und Deckel lesen dieselbe Tabelle; sie ist jetzt eine Zeile je echter Position aus den Bitpanda-Buchungen.
+- **Erwartung nach der Umstellung:** Der Abgleich mit Bitpanda zeigt *stimmt*, und der Hinweis *gespeicherte Position weicht ab* (P11c) verschwindet.
