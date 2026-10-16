@@ -1294,3 +1294,33 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 | Hinweis-Text der App | *„Änderung gespeichert (config.yaml dieses Geräts)“* → *Watchlist-Ergänzung in der Datenbank, config.yaml unverändert* |
 | **Prüfstand p15** | **26/26**: P22 (Grund B4 im Mouseover); P23–P26 auf einer zweiten Wegwerf-Kopie:<br>• Zeile mit Rolle, Menge und Wert; Staub und Symbole aus der Watchlist fehlen.<br>• Aufteilung *nicht in Watchlist* 50,00, Gesamtwert +50,00.<br>• Doppelklick liefert den Vorschlag (Klasse krypto, Preis je Stück).<br>• Nach der Aufnahme ist die Zeile weg |
 | Suite-Paket **AssetAufnahme** | **7/7**: Zeilen (ohne Staub, Watchlist und Bestand; Wert anteilig), Klassen-Vorschlag, kaputte Ablage, Preisabgleich (passt / falscher Coin / nicht prüfbar), Importer-Satz und Ablage, Verdrahtung. Mutationen *Staub nicht gefiltert* und *Preis immer ok* werden gefunden |
+
+### G-Z12 Statusseite, Mails und GUI nach dem 15.10.2026 (P22, O51–O54)
+
+**Nutzer 15.10.:**
+- *„die GUI nutze ich nur zur Wartung, der Rest kommt per E-Mail“*;
+- *„Ja zu O54 auf der Statusseite als Bereich oben“*;
+- *„Assets entfernen – nur für Assets, welche nicht im Bestand sind und aus der Beobachtung fallen sollen“*.
+
+**Statusseite (Hauptwerkzeug), jetzt:**
+
+| Bereich | neu | Quelle |
+|---|---|---|
+| **Makro-Umfeld (ganz oben)** | lang/kurz als Rückenwind · neutral · Gegenwind, Zeile mit gemessener Tendenz, Kanäle K1–K9 und Datenstand eingeklappt; *veraltet* nach 3 T | `agent/makro_lage.py`, Job `externe_reihen` |
+| Betrieb & Lage – B4-Karte | Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus | `spot_abbau.stand()` (P22/P22c) |
+
+**Mails (Handlung + Fakten):**
+
+| Mail | neue Fakt-Zeilen |
+|---|---|
+| REGEL0 Hebel | *Termin* (CPI/Arbeitsmarkt/FOMC im Trade-Fenster mit gemessenem Ausschlag), *Makro*, *Verwässerung*; Prüfblock beginnt mit *„Messstand: gemessen: trennt nicht – nicht danach handeln“* |
+| Spot B1 / B3 / B4 | *Verwässerung* (B4 je Coin), *Makro* |
+
+**GUI (Wartung):**
+- **Bearbeiten-Dialog der Watchlist:** Knopf *„Aus Watchlist entfernen …“* (O51). Gesperrt bei Bestand (frei + gestakt) oder offener Hebelposition. Nichts wird gelöscht; erneutes Hinzufügen holt das Asset zurück.
+- **Reiter *Regime*:** zeigt weiter die alte Kette (Stand 14.08.). Im Zielbild G2 wird er zu **Reiter 4 *Markt (Krypto)***. ➕ **Neu dazu:** Abschnitt *Makro-Lage* aus `agent/makro_lage.py`, damit Statusseite, Mail und GUI dieselben Zahlen zeigen. Bau mit GUI-Stufe 2.
+- **Meine Assets (O40):** Das Entfernen gehört dorthin, sobald der Tab gebaut wird (heute im Watchlist-Dialog).
+
+**Prüfung:**
+- Prüfstände o52 (10/10), o54 (8/8), p22/p22b/p22c.
+- Pakete *Termin*, *Makro*, *Verwaesserung* in der Suite.

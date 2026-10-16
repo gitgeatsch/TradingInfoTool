@@ -2500,3 +2500,45 @@ Schritt7 §23.24.
 - Die GUI zeigt den Bestand mit Rolle und B1-Stand; der alte Portfolio-Tab ist abgelöst und gekennzeichnet.
 - Spot B3 (Upbit-Verkaufsanlass) läuft mit Schalter aus.
 - Spot-Führung damit: B1 an, B3 gebaut, B4 als Nächstes (P18).
+
+**Nachtrag 13./14.10.2026 (37) — Spot B4, Watchlist am NB, Makro gemessen:**
+- **P18 Spot B4** Abbau-Reihenfolge (Spot §48.7): Job 07:25, eingeschaltet am 14.10. (Erstliste 8 Coins, K-SP-3).
+- **P18b/P18c:** Die Watchlist besteht jetzt aus der Grundliste (Repo) und der Ergänzung (NB-Datenbank); kein Schreibweg ändert mehr die versionierte `config.yaml`. Positionen ohne Watchlist-Eintrag sind sichtbar, die Aufnahme ist vorausgefüllt.
+- **P21:** Git-Stand des NB in der Diagnose.
+- **P15d–h:** Bestand-Tab nachgebessert.
+- **Makro-Umfeld gemessen** (E-104–E-106): nicht entscheidbar (0 von 60). Die Nullwelt N1 ist bei trägen Reihen zu eng ⇒ Regel R-R14.
+  - Maßstab *gewinnbringend* in Euro gegen HICP, €STR und BTC.
+  - Keine Spot-Regel liegt über der Inflation ⇒ Umdenken: Schutz statt Auswahl.
+- M1-Kriterien unverändert.
+
+**Nachtrag 15.10.2026 (38) — Spot: Schutz belegt, Verwässerung als Fakt:**
+- **Ordnung × Regime** (E-107): Die Ordnung kippt mit dem Regime nicht. Der Schutz (unteres Fünftel meiden) ist belegt; ein Regimeschalter wird nicht gebraucht.
+- **S2 Verwässerung** (E-108–E-111):
+  - Frei ab 2024 nicht voll messbar; die Vorprüfung zeigt sie deutlich.
+  - ⇒ **P22** Verwässerung als **Fakt** in B1/B3/B4 und REGEL0 und auf der Statusseite.
+  - **P22c** Freigabe-Rhythmus als Fakt.
+  - **P22b** Zusatztabelle für 13 Coins außerhalb Binance; B4-Klassen und turnover bleiben unberührt.
+  - Die NB-Mengendatei wurde über den Austauschordner ergänzt.
+- **Arbeitsweise:** Wegwerf-Dateien liegen auf D: (`wegwerf.py`; C: war voll). Nach jedem größeren Pull folgt eine Diagnose.
+- M1-Kriterien unverändert.
+
+**Nachtrag 15.10.2026 (39) — LLM-Ursachen, Flughöhe, Termin und Makro als Fakt:**
+- **N5 ausgewertet** (Schritt7 §23.51): Fassung 0.2 trennt nicht, das Minimum M-1/M-3 ist verfehlt.
+- **Ursachenanalyse** (§23.52):
+  - Lehrbuch-Trendlogik statt Wette;
+  - Pessimismus;
+  - die Eingangszahlen tragen kaum und wechseln mit dem Regime;
+  - Rauschen;
+  - Messmenge ≠ Betrieb.
+  - Richtung W1–W4. Der Nutzer wählt W1 (a): Der Prüfblock bleibt, markiert *„trennt nicht“* (E-112).
+- **Flughöhe** (§23.53): vier Ebenen – Makro (Monate) · Markt-Regime kurz · Termin (Stunden) · Asset-Lage (REGEL0, der einzige Auslöser).
+- **O52 Termin mit Wert:**
+  - Der BTC-Ausschlag ist in den 2 h ab CPI/FOMC/Arbeitsmarkt ×1,8, über 24 h nur ×1,1.
+  - Für REGEL0 ist kein Effekt belegt ⇒ Terminzeile als Fakt in der REGEL0-Mail.
+  - FOMC 2027 nachgetragen.
+  - **FRED-Fehler behoben:** Künftige Termine kamen nie.
+- **O51:** Watchlist-Assets entfernen, gesperrt bei Bestand und offener Hebelposition (E-113).
+- **O53 Makro als Risiko-Bremse** (§23.56): nicht belegt. Die ATR trägt das Makro schon mit, soweit es anhält.
+- **O54 Makro-Lage** (§23.58, E-114): **ganz oben auf der Statusseite** und als Zeile in REGEL0 und B1/B3/B4, bitgleich zur Messung §51.7. Stand 15.10.: lang Rückenwind, kurz neutral.
+- **NB:** auf 8b974dd4, Termine und Makro dort nachgewiesen (K-TM-1, K-ML-1 Teilbelege).
+- **M1:** Kriterium 4 (LLM gemessen) ist **erfüllt im Sinne von gemessen**: Ergebnis *trennt nicht*, der Block bleibt markiert und läuft im Betrieb mit. Die übrigen Kriterien sind unverändert.

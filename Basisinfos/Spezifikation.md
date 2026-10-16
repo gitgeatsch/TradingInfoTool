@@ -806,6 +806,17 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **GUI-Tab Bestand** (P15): Alle Bestände mit Rolle (Kern/L/Cash), frei/gestakt, Einstand, B1-Stand, Upbit KRW, dazu die Hebelpositionen kurz und eine Summe mit Hebel-Eigenkapital. Ersetzt den Portfolio-Tab.
 - **Ruhend:** Thesen-Abgleich/-Synthese (`thesen_pausiert`, E-96) bis zum Multi-Asset-Umbau (O39); die Rollen-Kette (`spot_kette_angehalten`).
 
+### Stand 15.10.2026 — Spot B4, Fakten in den Mails, Makro-Lage
+
+- **Spot B4 Abbau-Reihenfolge** (P18): Am Monatsersten bekommst du die Liste der gehaltenen Coins im unteren Fünftel ihrer Klasse; das ist eine Reihenfolge für den nächsten Abbau, kein Verkaufssignal (eingeschaltet 14.10.).
+- **Fakt-Zeilen** (lösen nichts aus):
+  - **Verwässerung** und **Freigabe-Rhythmus** in B1/B3/B4/REGEL0 (P22);
+  - **Termin** (CPI/Arbeitsmarkt/FOMC mit gemessenem Ausschlag) in REGEL0 (O52);
+  - **Makro-Lage** lang/kurz in REGEL0 und B1/B3/B4 (O54).
+- **Statusseite:** Ganz oben steht das **Makro-Umfeld** (O54).
+- **LLM-Prüfblock:** bleibt in der REGEL0-Mail, markiert *„gemessen: trennt nicht“* (N4/N5).
+- **Watchlist:** Grundliste im Repo plus Ergänzung am NB; Assets ohne Bestand lassen sich **entfernen** (O51).
+
 ## 11. Roadmap & Erweiterbarkeit
 
 1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist,

@@ -912,6 +912,11 @@ NEUESTER_STAND = (
     ("2.708", "REGEL0.1: die Schrumpfung griff in der Messung innerhalb des Monats vor; kausal (Vormonat) sind die Einstiege in 3 von 4 "
               "Mengen und in der Betriebsreferenz BITGLEICH, in unverzerrt:3 zu 98,7 % (Rohvorteil +0,350 gegen +0,345 %). Nebenbefund: tau2 ist "
               "in 31 von 33 Monaten null - das Normal ist in der Bewertung fast immer die Marktmitte"),
+    ("15.10.", "SCHRITT 7 IM BETRIEB (seit 03.10. stehen die Befunde in Voranalyse_Schritt7 §23, nicht mehr als 2.7xx): "
+               "N5 - LLM-Fassung 0.2 trennt nicht, Ursachen belegt (§23.51/§23.52), Pruefblock markiert (W1 a). Termin "
+               "(§23.53): BTC 2 h ab CPI/FOMC x1,8, 24 h x1,1, fuer REGEL0 nicht belegt -> Fakt-Zeile (O52). Makro als "
+               "Risiko-Bremse nicht belegt - die ATR der Hebelstufe traegt es schon mit (O53, §23.56); Makro-Lage als "
+               "Fakt oben auf der Statusseite und in den Mails (O54). REGEL0 selbst UNVERAENDERT"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

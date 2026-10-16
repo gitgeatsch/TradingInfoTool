@@ -18,6 +18,17 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 15.10.2026 (6) — Spot B4, Fakt-Zeilen, Makro-Lage, Entfernen
+>
+> | Hier fehlt | Stand seit |
+> |---|---|
+> | Spot B4 Abbau-Reihenfolge | `spot_abbau`-Job 07:25, Monatsstichtag; eingeschaltet **14.10.** (P18) |
+> | Watchlist | Grundliste `config.yaml` (Repo) + Tabelle `watchlist_ergaenzung` (NB-DB); Vermerk `entfernt` = aus der Watchlist (O51, gesperrt bei Bestand/offener Hebelposition) – **14./15.10.** |
+> | Verwässerung, Freigabe-Rhythmus | Fakt in B1/B3/B4/REGEL0 + Statusseite; Zusatztabelle für Coins außerhalb Binance, gepflegt im Job `externe_reihen` (P22/P22b/P22c) – **15.10.** |
+> | Termin | `agent/termin_fakt.py`: CPI/Arbeitsmarkt (FRED), FOMC (feste Liste bis 12/2027) als Fakt in der REGEL0-Mail (O52) – **15.10.** |
+> | Makro-Lage | `agent/makro_lage.py` im Job `externe_reihen`: oben auf der Statusseite, Zeile in REGEL0 und B1/B3/B4 (O54) – **15.10.** |
+> | LLM-Prüfblock | bleibt, markiert *„gemessen: trennt nicht“* (N4/N5, W1 a) – **15.10.** |
+>
 > ## ⚠️ NACHTRAG 12.10.2026 (5) — Spot B3 Upbit und Bestand-Tab
 >
 > | Hier fehlt | Stand seit 12.10.2026 |

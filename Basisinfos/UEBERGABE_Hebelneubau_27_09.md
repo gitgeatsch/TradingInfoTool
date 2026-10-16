@@ -1,5 +1,12 @@
 # Übergabe an die nächste Session — Hebelneubau
 
+> ⭐ **NACHTRAG 15.10.2026:** Der Hebel läuft seit 03.10. als **REGEL0 am NB** (Schritt 7). Der laufende Stand steht nicht mehr hier, sondern in `Basisinfos/Arbeitsstand_Schritt59.md` (HIER-ANFANGEN-Block) und `Voranalyse_Schritt7_Betrieb_02_10.md` §23. Neu bis 15.10.:
+> - LLM-Prüfblock trennt nicht, er bleibt markiert;
+> - Termin- und Makro-Zeile als Fakt;
+> - Makro-Bremse nicht belegt.
+>
+> Die zehn Antworten unten gelten für den Messteil weiter.
+
 **Stand 27.09.2026 abends.** Zehn Fragen, zehn Antworten.
 
 > ⚠️⚠️ **Jede Antwort nennt den Befehl, mit dem du sie selbst prüfst.**

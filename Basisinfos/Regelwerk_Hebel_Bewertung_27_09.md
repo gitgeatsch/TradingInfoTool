@@ -10,6 +10,19 @@ Faktenteil: `python hebel_neubau.py`
 
 ---
 
+# ⭐⭐⭐ NACHTRAG STAND 15.10.2026 — vor allen älteren lesen
+
+**Die REGEL0 ist unverändert** (Einstieg, Hebelstufe aus der ATR, 24 h). Neu gemessen und als Regel festgehalten ist nur, was **nicht** in die Bewertung darf:
+
+| Kandidat | Messung | Folge für das Regelwerk |
+|---|---|---|
+| LLM-Prüfblock (Fassung 0.1e / 0.2) | N4/N5: trennt nicht, 2025 schlechter als Zufall (Schritt7 §23.51/§23.52) | **kein Gewicht**; bleibt markiert in der Mail und läuft im Betrieb mit (W1 a) |
+| Makro-Termin (CPI, FOMC, Arbeitsmarkt) | BTC 2 h ×1,8, 24 h ×1,1; für REGEL0-Einstiege nicht belegt, blind unter ~10 Pp (§23.53) | **kein Gewicht, kein Gate**; Fakt-Zeile mit Messwert |
+| Makro als Risiko-Bremse | nicht belegt; die eigene 30-T-Schwankung trägt den anhaltenden Teil schon (§23.56) | **die ATR-Stufe bleibt die einzige Risikogröße**; Makro-Lage nur als Fakt |
+| Nullwelt bei trägen Reihen | Zeitverschiebung zu eng (Regelwerksmanual R-R14) | Phasen-Randomisierung N2 |
+
+**Prüffrage bleibt:** *Ist das eine BEWERTUNG oder ein FAKT?* Termin und Makro sind gemessen worden und bleiben **Fakt**. Gewichten tut der Nutzer (Vorgabe 01.10.).
+
 # ⭐⭐⭐ NACHTRAG STAND 02.10.2026 — vor allen älteren lesen
 
 | | Stand 02.10.2026 (Befunde 2.696–2.707) |

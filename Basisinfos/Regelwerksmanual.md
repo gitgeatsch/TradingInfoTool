@@ -1811,6 +1811,19 @@ unabhängig von der Anzahl betroffener Assets. `api/yfinance_history.py`
 
 ---
 
+### Stand 15.10.2026 — Fakt-Zeilen in den Handlungsmails
+
+Jede Handlungsmail trägt Fakten, die **nichts auslösen und nichts sperren** (Vorgabe: Information nie nur in die GUI, jede Mail eine Handlung):
+
+| Zeile | in | Inhalt | Messstand |
+|---|---|---|---|
+| **Termin** | REGEL0 | CPI, Arbeitsmarkt, FOMC ab 2 h vor dem Einstieg bis zum Ausstieg, Ortszeit, Abstand | BTC 2 h ×1,8 (CPI) / ×1,5 / ×2,3 (FOMC), 24 h ×1,1; für REGEL0 nicht belegt (Schritt7 §23.53) |
+| **Makro** | REGEL0, B1, B3, B4 | lang/kurz, Treiber, Tendenz, Hinweis auf die ATR | Richtung und Risiko-Bremse nicht belegt (§51.7, Schritt7 §23.56) |
+| **Verwässerung** | REGEL0, B1, B3, B4 | Umlaufmenge 90 T, Fünftel, Rhythmus | Spot §54–§57 |
+| **Prüfblock** | REGEL0 | erste Zeile *„gemessen: trennt nicht – nicht danach handeln“* | N4/N5 (Schritt7 §23.51) |
+
+**Drei Zustände überall:** Wert · kein Wert · **NICHT ABGEFRAGT / NICHT VERFÜGBAR**. Der dritte sieht nie wie der zweite aus. Ein scheiternder Lieferant hält keine Mail auf.
+
 ## 13. Remote-Steuer-Seite — Status + Aktionen von unterwegs über Tailscale
 
 **Zweck (2026-07-11, direkter Anschluss an Abschnitt 12):** löst zwei der dort
@@ -2106,6 +2119,14 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **Laufzeit:** warm 0,02 s am Desktop; Warnungen am NB nur noch beim Start und zu den Job-Zeitpunkten (CPU-Konkurrenz). Ausführlich: Plan_Asset_Lebenszyklus G-N bis G-R, E-95.
 
 ---
+
+### Stand 15.10.2026 — Makro-Umfeld ganz oben (O54)
+
+- **Abschnitt *Makro-Umfeld*** steht vor *Betrieb & Lage*. Er zeigt lang/kurz (Rückenwind · neutral · Gegenwind) und eine Zeile mit der gemessenen Tendenz; Kanäle K1–K9 und Datenstand sind eingeklappt.
+- Ohne neuen Stand seit 3 Tagen erscheint *VERALTET*. Schlägt der letzte Abruf fehl, gibt es einen Vermerk, und der alte Stand bleibt.
+- **Quelle:** `agent/makro_lage.py`, Job `externe_reihen` (06:35 und beim Start). Die Rechnung ist bitgleich zur Messung §51.7, die Quelle ist die FRED-API (13 J Abruf, zwei 5-J-Fenster).
+- **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
+- Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
 ## 14. Portfolio-Vollständigkeit — Cash-Sperren, Staking, Margin-Trading
 
