@@ -333,6 +333,15 @@ kontrollen:
     faellig_bis: "2026-10-22"
     status: offen
     teilbeleg: "Diagnose 15.10. 18:30 (NB auf 8b974dd4, keine lokalen Aenderungen, Neustart 18:27 ohne Fehler): Log 18:28:08 'Makro-Lage: lang Rueckenwind · kurz neutral · Stand 2026-10-15'; Diagnose makro_lage zustand ok, alle 11 Reihen mit Datenstand (VIXCLS 14.10., M2SL 01.08.), Kanaele wie am Desktop (nur VIX lang neutral statt Rueckenwind - ein Tag neuere Reihe), Gesamt gleich. Offen: Statusseite-Abschnitt oben (Nutzerblick) und erste Mail mit Zeile 'Makro'"
+  - id: K-HF-W1
+    titel: "P11c Hebelfuehrung folgt dem Wallet: keine LIQUIDATION-NAHE-Mail mehr fuer die geschlossene ETH-Position, BTC mit Wallet-Menge"
+    seit: "2026-10-16"
+    paket: P11c
+    commit: ""
+    art: manuell
+    nachweis: "Log nach dem Neustart: 'Hebelfuehrung: 1 offen · BTC HALTEN Abstand ~25 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH'; keine Mail 'LIQUIDATION NAHE ETH' mehr; Statusseite Hebel: ETH 'LAUT BITPANDA GESCHLOSSEN', BTC mit Grund 'Gespeicherte Position weicht von Bitpanda ab (Wallet 0.01141097 ...)'"
+    faellig_bis: "2026-10-18"
+    status: offen
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

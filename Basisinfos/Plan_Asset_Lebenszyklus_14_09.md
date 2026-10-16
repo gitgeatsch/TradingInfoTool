@@ -1324,3 +1324,9 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 **Prüfung:**
 - Prüfstände o52 (10/10), o54 (8/8), p22/p22b/p22c.
 - Pakete *Termin*, *Makro*, *Verwaesserung* in der Suite.
+
+### G-Z13 P11c – Hebel-Anzeige folgt dem Wallet (16.10.2026)
+
+- **Statusseite, Karte Hebel:** Eine laut Bitpanda geschlossene Position steht als *LAUT BITPANDA GESCHLOSSEN* mit dem Grund *gespeicherte Position veraltet*. Eine abweichende Position zeigt den Wallet-Hinweis als Grund. Die Zeile *Abgleich mit Bitpanda (Wallets)* bleibt.
+- **GUI, Hebel-Tab und Bestand-Tab:** Sie lesen `hebelfuehrung.lade` und sehen damit dieselben, gegen das Wallet geführten Zahlen.
+- **Offen bis P11b:** Die gespeicherten Positionen (`hebel_positions`) selbst sind weiter fehlerhaft.

@@ -1,0 +1,12 @@
+H1   bestanden gespeichert ETH 0.18596404 / BTC 0.01496441 · Wallet BTC 0.01141097, Kredit 560.00 · geschlossen ['ETH'] · BTC Hebel 3.000 (eigen 3.000), Liquidation 54947.57 (eigen 54947.57), Abstand 24.8 % · Wallet-Stand 2026-10-15T14:03 >= Buchung 2026-10-15T14:03
+     vorher: ETH LIQUIDATION NAHE Abstand 10.3 % · BTC HALTEN Abstand 24.8 %
+     jetzt:  BTC HALTEN Abstand 24.8 %
+H2   bestanden Lauf: geschlossen ['ETH'] · Mails keine · Log: Hebelfuehrung: 1 offen · BTC HALTEN Abstand 24.8 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH · gemeldet 0
+H3   bestanden Wallet-Stand 14.10. < Buchung -> ETH bleibt True, BTC gespeichert 0.01496441, Hinweis: Bitpanda-Wallet (2026-10-14T00:00) ist noch nicht auf dem Stand der letzten Hebelbuchung (
+H4   bestanden SOL eroeffnet nach dem Wallet-Stand -> in der Fuehrung True, nichts als geschlossen gewertet True
+H5   bestanden ETH-Wallet 0,1 und BTC abweichend -> Kredit anteilig: ETH 174.63, BTC 560.00 (nicht 560)
+H6   bestanden ohne Wallet: Liquidationen [1949.14, 54947.54] = gespeicherte Rechnung
+H7   bestanden Statusseite ETH: LAUT BITPANDA GESCHLOSSEN · BTC grund: ⚠ Gespeicherte Position weicht von Bitpanda ab (Wallet 0.01141097 / ge · Deckel ohne ETH True
+H8   bestanden Desktop-Prod unveraendert True · Sicherung unveraendert True
+
+8 von 8 bestanden

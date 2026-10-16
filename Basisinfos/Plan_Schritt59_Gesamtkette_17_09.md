@@ -2542,3 +2542,9 @@ Schritt7 §23.24.
 - **O54 Makro-Lage** (§23.58, E-114): **ganz oben auf der Statusseite** und als Zeile in REGEL0 und B1/B3/B4, bitgleich zur Messung §51.7. Stand 15.10.: lang Rückenwind, kurz neutral.
 - **NB:** auf 8b974dd4, Termine und Makro dort nachgewiesen (K-TM-1, K-ML-1 Teilbelege).
 - **M1:** Kriterium 4 (LLM gemessen) ist **erfüllt im Sinne von gemessen**: Ergebnis *trennt nicht*, der Block bleibt markiert und läuft im Betrieb mit. Die übrigen Kriterien sind unverändert.
+
+**Nachtrag 16.10.2026 (40) — P11c Hebelführung folgt dem Wallet:**
+- **Anlass:** falsche *LIQUIDATION NAHE ETH*, nachdem die Position am 15.10. ausgestoppt und geschlossen war. Der Importer (Befund 2.679) hatte verkleinert statt geschlossen.
+- **Gebaut:** Mail, Statusseite, GUI und Deckel führen gegen die Bitpanda-Wallets, nur bei frischem Wallet-Stand (E-115).
+- **Als Nächstes P11b:** Importer je Teilposition. Bitpanda führt jede Eröffnung einzeln.
+- **M1-Kriterium 2 (Hebel):** Die Positionsführung stützt sich jetzt auf die Bitpanda-Wallets; die gespeicherten Positionen bleiben bis P11b fehlerhaft.

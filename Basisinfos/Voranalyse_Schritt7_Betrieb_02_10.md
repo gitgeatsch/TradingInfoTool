@@ -3539,3 +3539,64 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 **Stand 15.10.:** lang **Rückenwind**, kurz **neutral**.
 
 **GUI:** Der Reiter *Regime* zeigt weiter den Stand der alten Kette vom 14.08. Geplant ist der Umbau zu *Markt (Krypto)* in GUI-Stufe 2 (§23.57); die Makro-Lage wird dort ein Abschnitt aus demselben Modul.
+
+### 23.59 P11c: Die Hebelführung folgt dem Wallet-Abgleich – und was der Export für den Importer-Fix P11b zeigt (16.10.2026; `p11c_pruefstand.py` → `.txt`)
+
+**Anlass:**
+- Nutzer 16.10., mit Bild der Mail *„Hebelfuehrung: LIQUIDATION NAHE ETH“* (02:13 und 05:42): *„die Hebelführung funktioniert nicht korrekt, ETH ist bereits geschlossen und BTC verringert worden“*.
+- Danach: *„ETH wurde vorgestern in der Nacht ausgestoppt und BTC gestern Nachmittag“*.
+- Auf die Voranalyse: *„Ja, Schritt 1 bauen“*.
+
+**Befund (Diagnose 16.10. 06:34):**
+- **Der Wallet-Abgleich (P11) wusste es seit 15.10. 20:12** und mailte *„passt nicht zu Bitpanda“*.
+
+  | | Wallet | gespeichert |
+  |---|---|---|
+  | BTC | 0,01141097 | 0,01496441 |
+  | ETH | 0 | 0,18596404 |
+  | Kredit | 560 € | 1.059,13 € |
+
+- **Der Importer hat die Buchungen geladen** (15.10. 16:04: *14 Transaktionen, 2 Positionen aktualisiert, 0 neu geschlossen*) und ETH **verkleinert statt geschlossen**. Das ist Befund 2.679.
+- **Die Hebelführung (H15) las nur `hebel_positions`.** Sie meldete LIQUIDATION NAHE für eine Position, die es nicht mehr gab.
+
+**Rohbuchungen** (`nb_bitpanda_buchungen_roh.py 2026-10-14T00:00Z 2026-10-16T06:00Z`, NB, nur lesend): **Bitpanda führt jede Eröffnung als eigene Teilposition.**
+
+| Zeit (UTC) | Vorgang | Margin-Wallet danach |
+|---|---|---|
+| 14.10. 13:04 | ETH Nachkauf 0,13441459 (200 € Kredit) | ETH 1,0307783 |
+| 14.10. 15:17 | BTC Nachkauf 0,00243653 (120 € Kredit) | BTC 0,02282194 |
+| **15.10. 02:15** | **ETH-Stop**: schließt die Teilposition vom 09.10. (0,00963611 + 0,73191466 + 0,15481294), Kredit 1.565,28 € zurück | ETH **0,13441459** = genau der Nachkauf |
+| 15.10. 13:59 | ETH Rest geschlossen (0,0015431 + 0,1128996 + 0,01997189), Kredit 234,72 € zurück | ETH **0** |
+| 15.10. 14:01 | BTC teilweise (0,00011809 + 0,00785753 + 0,00343535), Kredit 560 € zurück | BTC **0,01141097**, Kredit −560 |
+
+⇒ Für **P11b**:
+- Der Importer muss die Teilpositionen je Eröffnung führen, oder je Symbol als Buch (Code in `messe_k7_abgleich.py`).
+- Ein Schließvorgang besteht aus drei Wallet-Bewegungen je Teilposition: Eigenkapital-Verkauf, Kreditrückzahlung und Gebühr.
+
+**Gebaut (Schritt 1, P11c):**
+
+| Teil | Was |
+|---|---|
+| `agent/hebelfuehrung.py` | `wallet_lage()` liest den Wallet-Abgleich und prüft das **Vertrauen**: Die Wallet-Salden (`bitpanda_buchungen_stand`) müssen mindestens so jung sein wie die jüngste Hebelbuchung (`hebel_position_last_synced_unix`), Toleranz 120 s. `laut_bitpanda_geschlossen()` liefert die Positionen mit leerem Wallet. `lade(..., wallet=True)`: Geschlossene fallen heraus; bei einer abweichenden Menge kommt die Menge aus dem Wallet; der Kredit kommt aus dem Wallet, wenn nur eine Position offen bleibt, sonst anteilig; der Einstand bleibt der gespeicherte. Ein Hinweis steht vorn |
+| `scheduler/background.py` | Log der Hebelführung: *„laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH“* |
+| `agent/betriebslage.py` | Statusseite: geschlossene Positionen als *LAUT BITPANDA GESCHLOSSEN*, Wallet-Hinweis als Grund |
+| alle Leser von `lade` | Mail, Statusseite, GUI (Hebel-Tab, Bestand-Tab) und Aggregat-Deckel sehen dieselben Zahlen |
+
+⚠️ **Die gespeicherten Positionen bleiben unverändert.** Schritt 1 ändert nur Führung und Anzeige; die Datenkorrektur kommt mit P11b.
+
+**Prüfung:**
+- **Prüfstand 8/8** an einer Wegwerf-Kopie der NB-Sicherung 16.10. 04:34:
+  - echter Fall: ETH fällt heraus; BTC Hebel 3,000, Liquidation 54.947,57 €, unabhängig nachgerechnet; vorher *ETH LIQUIDATION NAHE 10,3 %*, jetzt nur *BTC HALTEN 24,8 %*;
+  - keine ETH-Mail im echten Lauf;
+  - ist das Wallet älter als die letzte Buchung, wird nichts korrigiert;
+  - eine neue Position nach dem Wallet-Stand bleibt in der Führung;
+  - bei zwei abweichenden Positionen wird der Kredit anteilig verteilt;
+  - `wallet=False` = alte Rechnung;
+  - Statusseite und Deckel;
+  - Prod und Sicherung unverändert.
+- **Suite:** Hebelführung 35, Aggregat-Deckel 22, HebelAbgleich 16, Hebelstufen 12, neues Paket *WalletFuehrung* 4, alle bestanden.
+- ⚠️ **Zwei Prüfstandfehler lagen am Test:**
+  - Pflichtfeld `letzte_transaktion_unix_timestamp` fehlte;
+  - ETH steht zweimal im Bitpanda-Katalog.
+
+**Nächster Schritt:** Voranalyse **P11b** (Importer je Teilposition), mit diesen Buchungen als Prüffall.

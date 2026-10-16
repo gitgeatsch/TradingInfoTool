@@ -1824,6 +1824,8 @@ Jede Handlungsmail trägt Fakten, die **nichts auslösen und nichts sperren** (V
 
 **Drei Zustände überall:** Wert · kein Wert · **NICHT ABGEFRAGT / NICHT VERFÜGBAR**. Der dritte sieht nie wie der zweite aus. Ein scheiternder Lieferant hält keine Mail auf.
 
+**Hebelführung (H15) seit 16.10. (P11c):** Sie führt gegen die Bitpanda-Wallets. Eine laut Wallet geschlossene Position erzeugt keine Mail mehr (Statusseite: *LAUT BITPANDA GESCHLOSSEN*). Weicht die Menge ab, steht ein Hinweis vorn, und Menge und Kredit kommen aus dem Wallet. Das gilt nur, wenn der Wallet-Stand mindestens so jung ist wie die letzte Hebelbuchung.
+
 ## 13. Remote-Steuer-Seite — Status + Aktionen von unterwegs über Tailscale
 
 **Zweck (2026-07-11, direkter Anschluss an Abschnitt 12):** löst zwei der dort

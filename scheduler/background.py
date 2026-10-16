@@ -4588,6 +4588,10 @@ def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
         conn = conn_factory()
         try:
             trades = _HF.lade(conn, nahe_grenze=werte["liquidations_warnung_abstand"])
+            try:                                                 # P11c: laut Bitpanda geschlossen - keine Fuehrung, nur Protokoll
+                _zu = _HF.laut_bitpanda_geschlossen(conn)
+            except Exception:                                    # noqa: BLE001
+                _zu = []
             neu = _HF.neue_meldungen(conn, trades)
             stand = None
             try:
@@ -4623,13 +4627,14 @@ def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
                 if zugestellt:
                     _HF.vermerke(conn, neu)
                     conn.commit()
-            logger.info("Hebelfuehrung: %d offen%s · gemeldet %d%s", len(trades),
+            logger.info("Hebelfuehrung: %d offen%s%s · gemeldet %d%s", len(trades),
                         "".join(" · %s %s Abstand %s" % (x["symbol"], x.get("empfehlung"),
                                                         ("%.1f %%" % (100 * x["abstand_liquidation"])) if x.get("abstand_liquidation") is not None else "?")
                                 for x in trades),
+                        (" · laut Bitpanda geschlossen (gespeicherte Position veraltet): " + ", ".join(_zu)) if _zu else "",
                         len(neu) if zugestellt else 0, "" if not mail else (" (Mail %s, Charts %d)" % ("zugestellt" if zugestellt else "NICHT zugestellt",
                                                                                          len(bilder))))
-            aus.update(gelaufen=True, offen=len(trades), neu=len(neu), mail=mail, zugestellt=zugestellt,
+            aus.update(gelaufen=True, offen=len(trades), neu=len(neu), mail=mail, zugestellt=zugestellt, laut_bitpanda_geschlossen=_zu,
                        empfehlungen=[(x["symbol"], x.get("empfehlung"), x.get("abstand_liquidation"), x.get("nahe_stufe")) for x in trades])
         finally:
             conn.close()

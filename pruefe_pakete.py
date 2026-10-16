@@ -22297,6 +22297,35 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_wallet_fuehrung() -> None:
+    """P11c (16.10.2026): DIE HEBELFUEHRUNG FOLGT DEM WALLET-ABGLEICH.
+
+    Nutzer 16.10.: *"die Hebelfuehrung funktioniert nicht korrekt, ETH ist bereits geschlossen und BTC verringert"*. Geprueft: laut
+    Wallet geschlossene Positionen werden nicht mehr gefuehrt und nicht gemeldet; abweichende Mengen kommen aus dem Wallet; ohne
+    frischen Wallet-Stand wird NICHTS korrigiert (eine eben eroeffnete Position darf nicht verschwinden). Pruefstand an einer
+    Wegwerf-Kopie der juengsten NB-Sicherung."""
+    P = "WalletFuehrung"
+    import glob as _gl
+    import os as _os
+    import subprocess as _sp
+
+    _q = _quelltext("agent/hebelfuehrung.py")
+    pruefe(P, "lade() fuehrt gegen das Wallet (Vorgabe an) und braucht dafuer einen Wallet-Stand >= juengste Hebelbuchung",
+           "wallet: bool = True" in _q and "WALLET_ZEIT_TOLERANZ_S" in _q and "bitpanda_buchungen_stand" in _q
+           and "hebel_position_last_synced_unix" in _q)
+    pruefe(P, "LAUT BITPANDA GESCHLOSSEN loest keine Mail aus (nicht in MELDEN)",
+           __import__("agent.hebelfuehrung", fromlist=["x"]).LAUT_BITPANDA_GESCHLOSSEN not in __import__("agent.hebelfuehrung", fromlist=["x"]).MELDEN)
+    _sich = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
+    if not _sich:
+        pruefe(P, "Pruefstand p11c (braucht eine Prod-Sicherung im Austauschordner)", False, "keine Sicherung gefunden")
+        return
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p11c_pruefstand.py"), _sich[-1]],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
+    pruefe(P, "⚠️⚠️ Pruefstand P11c: echter Fall, keine ETH-Meldung, ohne frisches Wallet keine Korrektur, neue Position bleibt, "
+              "Kredit anteilig, ohne Wallet = alte Rechnung, Statusseite + Deckel, Prod unveraendert", "8 von 8 bestanden" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_makro() -> None:
     """O54 (15.10.2026, Schritt7 §23.57): MAKRO-LAGE ALS FAKT - Statusseite oben, jede Handlungsmail, Diagnose.
 
@@ -32942,7 +32971,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "WalletFuehrung": paket_wallet_fuehrung,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

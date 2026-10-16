@@ -99,7 +99,16 @@ def hebel_fuehrung_jetzt(conn) -> list[dict]:
                     "kurs_eur": t.get("kurs_eur"), "liquidation_eur": t.get("liquidation_eur"),
                     "abstand": t.get("abstand_liquidation"), "empfehlung": t.get("empfehlung"), "stufe": t.get("nahe_stufe"),
                     "eigenkapital_eur": t.get("eigenkapital_eur"), "positionswert_eur": t.get("positionswert_eur"),
-                    "eroeffnet_am": t.get("eroeffnet_am"), "grund": ((t.get("gruende") or [""])[0] or "")[:200]})
+                    "eroeffnet_am": t.get("eroeffnet_am"),
+                    "grund": (t.get("wallet_hinweis") or (t.get("gruende") or [""])[0] or "")[:240]})
+    # P11c (16.10.2026): laut Bitpanda-Wallet geschlossene Positionen sichtbar machen - sie werden nicht mehr gefuehrt
+    try:
+        for s in HF.laut_bitpanda_geschlossen(conn):
+            aus.append({"symbol": s, "richtung": None, "hebel": None, "kurs_eur": None, "liquidation_eur": None, "abstand": None,
+                        "empfehlung": HF.LAUT_BITPANDA_GESCHLOSSEN, "stufe": None, "eigenkapital_eur": None, "positionswert_eur": None,
+                        "eroeffnet_am": None, "grund": "gespeicherte Position veraltet (Importer, Befund 2.679) - wird nicht gefuehrt"})
+    except Exception:                                            # noqa: BLE001
+        pass
     return aus
 
 

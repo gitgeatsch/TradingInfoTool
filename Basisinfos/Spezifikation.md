@@ -816,6 +816,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **Statusseite:** Ganz oben steht das **Makro-Umfeld** (O54).
 - **LLM-Prüfblock:** bleibt in der REGEL0-Mail, markiert *„gemessen: trennt nicht“* (N4/N5).
 - **Watchlist:** Grundliste im Repo plus Ergänzung am NB; Assets ohne Bestand lassen sich **entfernen** (O51).
+- **Hebelführung gegen Bitpanda** (P11c, 16.10.): Eine laut Bitpanda-Wallet geschlossene Position wird nicht mehr geführt und nicht gemeldet; weicht die Menge ab, rechnet die Führung mit der Wallet-Menge.
 
 ## 11. Roadmap & Erweiterbarkeit
 

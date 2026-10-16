@@ -1347,3 +1347,22 @@ Nachweis: Schritt7 §23.54, Plan O51/O52, K-TM-1.
 - Gefunden im Prüfstand, vor dem Commit.
 
 Nachweis: Schritt7 §23.57/§23.58, K-ML-1.
+
+# E-115 · P11c Hebelführung folgt dem Wallet-Abgleich; P11b als Nächstes (16.10.2026)
+
+**16.10.2026** · Nutzer:
+- *„die Hebelführung funktioniert nicht korrekt, ETH ist bereits geschlossen und BTC verringert worden“*;
+- *„Ja, Schritt 1 bauen“*;
+- *„ETH wurde vorgestern in der Nacht ausgestoppt und BTC gestern Nachmittag“*.
+
+**Gebaut:** Die Hebelführung (Mail, Statusseite, GUI, Deckel) führt die Positionen gegen die Bitpanda-Wallets. Laut Wallet geschlossene werden nicht mehr gemeldet; abweichende Mengen kommen aus dem Wallet.
+
+**Eigene Festlegungen (berichtet):**
+- Korrigiert wird **nur bei frischem Wallet-Stand**, also nie gegen eine eben eröffnete Position, die das Wallet noch nicht kennt.
+- Der **Kredit** kommt aus dem Wallet, wenn nur eine Position offen bleibt, sonst anteilig.
+- Der **Einstand** bleibt der gespeicherte.
+- Die gespeicherten Positionen werden **nicht** verändert; die Datenkorrektur gehört zu P11b.
+
+**Nächster Schritt:** Voranalyse P11b. Bitpanda führt jede Eröffnung als eigene Teilposition (Rohbuchungen 14./15.10.).
+
+Nachweis: Schritt7 §23.59, K-HF-W1.

@@ -78,6 +78,12 @@ LIQUIDIERT = "LIQUIDATION ERREICHT"
 LIQ_NAHE = "LIQUIDATION NAHE"
 HEBEL_SENKEN = "HEBEL SENKEN"
 KURS_FEHLT = "KURS FEHLT"
+# P11c (16.10.2026): die gespeicherte Position ist laut Bitpanda-Wallet geschlossen - KEINE Meldung (nicht in MELDEN)
+LAUT_BITPANDA_GESCHLOSSEN = "LAUT BITPANDA GESCHLOSSEN"
+# Die Wallet-Salden (neue Schnittstelle, Bestands-Job) muessen mindestens so jung sein wie die juengste Hebelbuchung (alte
+# Schnittstelle, Positions-Sync). Toleranz fuer den Versatz derselben Buchung zwischen beiden Schnittstellen (Sekundenbruchteile,
+# gemessen 15.10.: 13:59:16,931 gegen die volle Sekunde) - kein Marktwert, nur Uhrzeit.
+WALLET_ZEIT_TOLERANZ_S = 120
 
 # Dringlichkeit, nicht Wichtigkeit - dieselbe Ordnung wie in der
 # Ausstiegsrechnung: was die Position beendet, steht vor dem, was sie aendert.
@@ -418,8 +424,79 @@ def _rang(t: dict) -> tuple:
     return (stufe, -(t.get("positionswert_eur") or 0.0))
 
 
-def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze: float | None = None) -> list:
+def wallet_lage(conn) -> dict | None:
+    """P11c (16.10.2026): der Wallet-Abgleich (P11) als Grundlage der Fuehrung - oder None, wenn er nicht pruefbar ist.
+
+    Anlass (Nutzer 16.10.: *"die Hebelfuehrung funktioniert nicht korrekt, ETH ist bereits geschlossen und BTC verringert"*):
+    ETH wurde am 15.10. 02:15 UTC ausgestoppt (die Teilposition vom 09.10.) und 13:59 UTC ganz geschlossen, BTC 14:01 UTC teilweise.
+    Der Importer (Befund 2.679) verkleinerte ETH statt zu schliessen; die Fuehrung rechnete weiter mit der gespeicherten Position und
+    meldete LIQUIDATION NAHE fuer eine Position, die es nicht mehr gab. Der Wallet-Abgleich wusste es seit 15.10. 20:12.
+
+    ``vertrauen``: die Wallet-Salden sind mindestens so jung wie die juengste bekannte Hebelbuchung. Sonst koennte eine eben eroeffnete
+    Position, die das Wallet noch nicht kennt, als 'geschlossen' verschwinden - deshalb wird dann NICHTS korrigiert. Liest nur."""
+    try:
+        from agent import hebel_wallet_abgleich as HW
+        erg = HW.pruefe(conn)
+    except Exception as exc:                                   # noqa: BLE001
+        logger.warning("Hebelfuehrung: Wallet-Abgleich nicht lesbar - Fuehrung ohne Abgleich: %s", exc)
+        return None
+    if erg.get("fehlt"):
+        return None
+    try:
+        r = conn.execute("SELECT value FROM meta WHERE key = 'hebel_position_last_synced_unix'").fetchone()
+        wm = int(r[0]) if r and r[0] is not None else None
+        r = conn.execute("SELECT value FROM meta WHERE key = 'bitpanda_buchungen_stand'").fetchone()
+        st = _zeit(r[0]) if r and r[0] else None
+    except Exception as exc:                                   # noqa: BLE001
+        logger.warning("Hebelfuehrung: Stand der Wallet-Salden nicht lesbar: %s", exc)
+        wm, st = None, None
+    vertrauen = st is not None and (wm is None or st.timestamp() >= wm - WALLET_ZEIT_TOLERANZ_S)
+    return {"zeilen": {z["symbol"]: z for z in erg.get("zeilen") or []}, "kredit_wallet": (erg.get("kredit") or {}).get("wallet"),
+            "vertrauen": vertrauen, "buchungen_stand": st.isoformat() if st else None,
+            "position_stand": datetime.fromtimestamp(wm, timezone.utc).isoformat() if wm else None}
+
+
+def laut_bitpanda_geschlossen(conn, lage: dict | None = None) -> list:
+    """Symbole, deren gespeicherte offene Position laut Bitpanda-Wallet geschlossen ist (nur bei ``vertrauen``)."""
+    lage = wallet_lage(conn) if lage is None else lage
+    if not lage or not lage["vertrauen"]:
+        return []
+    return sorted(s for s, z in lage["zeilen"].items() if z.get("art") == "Position ohne Wallet")
+
+
+def _nach_wallet(p, lage: dict | None, einzige: bool) -> tuple:
+    """(menge, positionswert, kredit, eigenkapital, hebel, hinweis) - die gespeicherten Werte, bei bestaetigter Abweichung auf die
+    Wallet-Menge gebracht. Einstand bleibt der gespeicherte; der Kredit kommt aus dem Wallet, wenn nur EINE Position offen bleibt
+    (dann gehoert ihr der ganze Wallet-Kredit), sonst anteilig zur Menge."""
+    m, pw, kr, ek, L = p.positionsmenge, p.positionswert_eur, p.kreditbetrag_eur, p.eigenkapital_eur, p.hebel_effektiv
+    z = (lage or {}).get("zeilen", {}).get(p.symbol)
+    if not z or z.get("art") == "ok":
+        return m, pw, kr, ek, L, None
+    if not lage["vertrauen"]:
+        return m, pw, kr, ek, L, ("Bitpanda-Wallet (%s) ist noch nicht auf dem Stand der letzten Hebelbuchung (%s) - die gespeicherte "
+                                  "Position ist ungeprueft" % (str(lage.get("buchungen_stand"))[:16], str(lage.get("position_stand"))[:16]))
+    if z.get("art") != "Menge weicht ab" or z.get("positionen") != 1 or not m or not pw or not z.get("wallet"):
+        return m, pw, kr, ek, L, "Gespeicherte Position weicht von Bitpanda ab (%s) - Zahlen aus der gespeicherten Position" % z.get("art")
+    w = float(z["wallet"])
+    pw2 = float(pw) / float(m) * w
+    kw = lage.get("kredit_wallet")
+    if einzige and kw is not None:
+        kr2, quelle = -float(kw), "Kredit aus dem Bitpanda-Wallet"
+    else:
+        kr2, quelle = (float(kr) * w / float(m)) if kr is not None else None, "Kredit anteilig zur Menge"
+    ek2 = (pw2 - kr2) if kr2 is not None else None
+    L2 = (pw2 / ek2) if ek2 and ek2 > 0 else L
+    return w, pw2, kr2, ek2, L2, ("⚠ Gespeicherte Position weicht von Bitpanda ab (Wallet %.8g / gespeichert %.8g): Menge aus dem "
+                                  "Bitpanda-Wallet, %s, Einstand aus der gespeicherten Position (Importer-Fix P11b folgt)"
+                                  % (w, float(m), quelle))
+
+
+def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze: float | None = None, wallet: bool = True) -> list:
     """Alle OFFENEN Hebelpositionen, gefuehrt - dringendste zuerst.
+
+    P11c (16.10.2026): ``wallet`` (Vorgabe an) - die Positionen werden gegen die Bitpanda-Wallets gefuehrt (``wallet_lage``): laut
+    Wallet geschlossene fallen heraus (``laut_bitpanda_geschlossen``), abweichende Mengen werden auf das Wallet gebracht. Alle Leser
+    (Mail, Statusseite, GUI, Aggregat-Deckel) sehen dieselben Zahlen.
 
     ⚠️ `conn` wird uebergeben, nie hier geoeffnet (dieselbe Regel wie
     `positionsfuehrung.lade`)."""
@@ -427,10 +504,15 @@ def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze
     from database import db as DBM
 
     filt = {str(s).upper() for s in (symbole or ())}
+    lage = wallet_lage(conn) if wallet else None
+    zu = set(laut_bitpanda_geschlossen(conn, lage)) if lage else set()
+    offen = [p for p in DBM.get_open_hebel_positions(conn) if p.symbol not in zu]
+    einzige = len({p.symbol for p in offen}) == 1
     aus = []
-    for p in DBM.get_open_hebel_positions(conn):
+    for p in offen:
         if filt and str(p.symbol).upper() not in filt:
             continue
+        menge, pw, kr, ek, L, hinweis = _nach_wallet(p, lage, einzige)
         kurs, stand = PF.kurs_mit_stand(conn, p.symbol)
         plan = None
         try:
@@ -440,14 +522,18 @@ def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze
             # Liquidation braucht ihn nicht. Aber der Ausfall steht im Log.
             logger.warning("Plan zu Hebelposition %s nicht lesbar: %s",
                            p.symbol, exc)
-        aus.append(fuehre(
+        t = fuehre(
             symbol=p.symbol, richtung=p.richtung,
-            eroeffnet_am=p.eroeffnet_am, hebel=p.hebel_effektiv,
-            positionswert_eur=p.positionswert_eur,
-            kreditbetrag_eur=p.kreditbetrag_eur,
-            eigenkapital_eur=p.eigenkapital_eur,
-            positionsmenge=p.positionsmenge, kurs_eur=kurs, kurs_stand=stand,
-            jetzt=jetzt, plan=plan, marge=marge, position_id=p.id, nahe_grenze=nahe_grenze))
+            eroeffnet_am=p.eroeffnet_am, hebel=L,
+            positionswert_eur=pw,
+            kreditbetrag_eur=kr,
+            eigenkapital_eur=ek,
+            positionsmenge=menge, kurs_eur=kurs, kurs_stand=stand,
+            jetzt=jetzt, plan=plan, marge=marge, position_id=p.id, nahe_grenze=nahe_grenze)
+        if hinweis:                                              # P11c: der Abgleich steht VOR allen anderen Hinweisen
+            t["hinweise"] = [hinweis] + list(t.get("hinweise") or [])
+            t["wallet_hinweis"] = hinweis
+        aus.append(t)
     return sorted(aus, key=_rang)
 
 

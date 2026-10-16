@@ -18,6 +18,12 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 16.10.2026 (7) — Hebelführung gegen die Bitpanda-Wallets (P11c)
+>
+> | Hier fehlt | Stand seit 16.10.2026 |
+> |---|---|
+> | Hebelführung (H15) | `hebelfuehrung.lade(wallet=True)` führt gegen den Wallet-Abgleich: laut Wallet geschlossene Positionen werden nicht geführt, abweichende Mengen kommen aus dem Wallet – nur bei Wallet-Stand ≥ jüngste Hebelbuchung. `hebel_positions` bleibt bis P11b fehlerhaft (Befund 2.679) |
+>
 > ## ⚠️ NACHTRAG 15.10.2026 (6) — Spot B4, Fakt-Zeilen, Makro-Lage, Entfernen
 >
 > | Hier fehlt | Stand seit |
