@@ -6032,6 +6032,52 @@ Nutzer 14.10.: *„die Kalibrierung auf 2020 und 2021 ist ein Problem – wenn w
 - Fällt der Holdout durch, wird Fassung n+1 mit Ursachenbegründung abgestimmt (Regel *Hypothesen nicht starr*).
 
 
+### 49.5 Stand-Prüfung vor dem Bau (17.10.2026)
+
+Nutzer 16.10.: *„ok weiter mit P19 – hast du alles geprüft und gegengeprüft?“* Die Voranalyse ist vom 14.10. Vor dem Bau habe ich geprüft, was sich seitdem geändert hat (Regel *Stand prüfen vor der Umsetzung*). Grundlage: dieselben Skripte, neu gelaufen gegen die NB-Sicherung vom 16.10. 17:34 (Wegwerf-Kopie auf D:, unverändert laut SHA-256).
+
+| Prüfung | 14.10. | 17.10. |
+|---|---|---|
+| Teil 0 Nachbau gegen die Kalibrierung | 2.639 / 2.639 | **2.639 / 2.639**, bitgleich |
+| Teil 1 Breite eigener Weg / NB-Universum | bitgleich / 1 von 628 | **unverändert** |
+| Gegenprobe G1–G4 | 4 / 4 | **4 / 4** |
+| Teil 2 M2 (FRED) frisch gegen Kalibrierung | 0 Abweichungen | **0** |
+| Teil 2 **Stablecoins (DefiLlama)** frisch gegen Kalibrierung | 0 Abweichungen | ⚠️ **654 Tage über 0,001, höchstens 0,0091**; Stand an **8 Tagen** anders |
+| Ampel heute | 14.10.: 2 von 3, *ungewohnt* | 16.10.: B1 +28,7 % an · B2 +5,7 % an · B3 +1,6 % aus · **2 von 3, *ungewohnt*** |
+
+**⚠️ Neu: DefiLlama hat die Stablecoin-Reihe rückwirkend geändert** (zwischen 14. und 17.10.):
+- betroffen ab 05/2024; die 91-T-Rate weicht 2024 um höchstens 0,5, 2025 um 0,7 und 2026 um 0,9 Pp ab;
+- der Stand wechselt an 8 Tagen, alle an der Kante 10 % (zum Beispiel 2024-06-14: 10,10 → 9,89 %);
+- **die Stufe ändert sich an keinem der 2.639 Tage**, und die Season-Anteile je Stufe bleiben gleich;
+- die Summe heute: 305,2 Mrd USD (am 15.10. noch 311,2 Mrd), also eine Änderung der Höhe, nicht nur des letzten Tages.
+
+➤ **Folge für den Bau** (technisch, meine Festlegung):
+1. Die Reihe wird bei jedem Lauf **ganz** geholt, nicht fortgeschrieben.
+2. Die Mail löst nur aus, wenn die **geltende Stufe heute** von der **zuletzt gemeldeten** abweicht (gespeichert), nicht aus einer neu gerechneten Vergangenheit. So erzeugt eine Revision keinen Scheinwechsel.
+3. Jeder Lauf hält die größte Revision gegen den Vortag fest (Statusseite, Teilexport).
+4. Die Kalibrierung bleibt gültig, denn der Prüfstand rechnet Teil 0 auf ihren **eingefrorenen** Spalten.
+
+**Neu seit 14.10.: Die Makro-Lage (O54) holt M2SL, WALCL, WTREGEN und RRPONTSYD schon am NB** (FRED-API mit Schlüssel, derselbe Verzug wie hier, bitgleich zur Messung laut `o54_pruefstand`).
+➤ D1 braucht dafür **keinen eigenen** fredgraph-Nachlader. Die Ampel holt die vier Reihen über `makro_lage.hole_reihe` (derselbe Code), DefiLlama bleibt der einzige neue Abruf.
+- Nachweis am NB: `api_health.defillama` ok (letzter Erfolg 16.10. 16:25, Host `stablecoins.llama.fi`, derselbe wie `stablecoincharts/all`). FRED-API: Diagnose 15.10. 11:40 (O54).
+
+**Angeglichen an die abgestimmte GUI (G2, Plan_Asset_Lebenszyklus, 10.10.):**
+- §49.3 nannte *einen* Tab *Spot-Markt*. G2 hat dafür **zwei**: **Reiter 4 *Markt (Krypto)*** (Ampel B1–B3 mit Wert, Schwelle, Stufe, Verlauf 12 Monate; Breite; Fear & Greed; Liquidität und Stablecoins; dazu die Makro-Lage, G-Z12) und **Reiter 3 *Spot*** (Einstiegs-Kandidaten).
+- Der Reiter *Regime* bleibt, bis GUI-5 ihn ins Archiv nimmt (Regel *Rücksprache vor dem Entfernen*).
+
+**Mail-Zeile:** Sie zeigt die Ampel (Stufe, B1–B3), **ohne** die Netto-Liquidität. Diese steht schon als Kanal K2 in der Makro-Zeile (O54) direkt darüber.
+
+**Kandidatenliste A3 am NB:** B4 rechnet einmal je Monat. Das ganze Universum liegt also erst ab dem nächsten Stichtag (02.11.) vor; bis dahin zeigt der Reiter *Spot* „ab dem nächsten B4-Stichtag“.
+
+**H14** ist seit N5 zweitrangig (§23.51) und hält P19 nicht mehr auf.
+
+**Was gleich bleibt:**
+- der Bauumfang §49.3 (C1-1 bis C1-4, A3, GUI, O43, Betrieb, Prüfung);
+- Mail-Schalter **aus**, bis O47 Schritt 2 vorliegt (§49.4);
+- Haltezeit 7 T, Ende-Regel 90 T, B1 aus der Betriebskopie.
+
+Belege: `p19_voranalyse.txt` und `p19_gegenprobe.txt` (14.10.) gegen die Läufe vom 17.10. (nur Wegwerf, inhaltlich oben; die Revision einzeln nachgerechnet).
+
 ## 50. Hypothese H-SEL — keine große Altseason mehr, aber gewinnbringende Auswahl (14.10.2026, O48)
 
 Nutzer 14.10.: *„Ich rede nicht von mehr Daten, sondern von der Hypothese, dass es keine Altseason in dieser Größenordnung mehr geben wird, man aber dennoch gewinnbringend über selektive Altcoins investiert.“*
