@@ -3699,3 +3699,45 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 - Der erste Lauf liest die ganze Historie und stellt um. Im Log steht *„Hebel-Buch: UMGESTELLT – 191 alte Zeilen … gesichert, 38 Positionen aus dem Buch (offen: BTC)“*.
 - Danach meldet der Wallet-Abgleich *„BTC ok · Kredit ok“*.
 - P11c bleibt als Sicherung.
+
+### 23.62 W3 Voranalyse: Kurzfristiges BTC-Regime als Gewicht für REGEL0 – was schon gemessen ist, und eine Vorprüfung mit vorab festgelegter Weiter-Schwelle (16.10.2026; `p60_w3_vorpruefung.py` → `.txt`)
+
+**Auftrag (Nutzer 16.10.):** *„weiter mit W3“*. W3 stammt aus §23.52: Der größere Hebel sei das **Regime**, und Bitcoin 7 T wechsle auf den REGEL0-Einstiegen das Vorzeichen (2025 −0,15, 2026 +0,10). In der Flughöhe (§23.53) ist das **Ebene 2**: Markt-Regime kurz, Tage bis Wochen.
+
+**Was schon gemessen ist (Regel: zuerst das Bestehende; R-R11):**
+
+| Befund | gemessen | Ergebnis |
+|---|---|---|
+| **2.599** | Marktzustand (btc_trend u. a.) vorab, alle Anker | nicht vorab erkennbar. Die effektive Stichprobe ist die Zahl der **Regimewechsel** |
+| **2.670** (K3) | BTC-Rendite **24 / 72 / 120 h** × Dominanz als **Kontext** auf q5 | kein tragendes Feld; die Anlage sieht Kontext erst ab etwa +0,06 bis +0,08 |
+| **2.686** (W2) | BTC **30 T** als **Gewicht** auf rsi, Betriebsform, Urteil ab 2024 | nicht nachweisbar (G +0,029 gegen P90 +0,112), die Leiter löst +0,12 nicht auf. ⛔ **Abbruchregel des Nutzers (29.09.):** W2 ist die **letzte** Wettermessung; das Wetter bleibt Auskunft |
+| **2.697** (M1-2) | Informationsgewinn K_IG < 1 als Regime-Kontext | Auskunft „wahrscheinlich stumpf im Gegenwind“. Teil B (vorwärts) ist **zurückgestellt** (E-33) |
+| **2.688 / 2.695** | REGEL0-Kern je Zeitraum | stark regimeabhängig; das 2. Halbjahr 2025 ist negativ |
+
+➤ **Einordnung:** 7 T liegt **zwischen** zwei schon gemessenen Fenstern (120 h und 30 T), die beide nichts zeigten. Ein Zwischenwert zweier Nullbefunde ist kein neuer Ansatz, sondern **Mehrfachtesten**. Die Grenze ist dieselbe wie in 2.599: die Zahl der Wetterlagen. Rechenzeit ändert daran nichts.
+
+**Was trotzdem offen ist:**
+1. **Die eigene Prämisse.** Die z-Werte in §23.52 (−5,2 / +3,6) rechnen jeden Einstieg als unabhängig. Alle Einstiege eines Tages sehen aber **dasselbe** BTC. Ist der Vorzeichenwechsel mit Tagesblöcken gerechnet überhaupt jenseits des Zufalls?
+2. **Die Hebelfrage in der Betriebsform.** W2 hat den **Zuwachs** der rsi-Auswahl über alle Anker gemessen. Für den Hebel zählt der **Ausgang des Handels selbst**. Gibt es einen BTC-Zustand, in dem die REGEL0-Einstiege **umkehren** (Trefferbilanz ≤ 0)? Nur dann wäre eine Sperre ein Kandidat; ohne Umkehr wäre es höchstens ein Gewicht (Regel *Zustandsschalter nur bei Umkehr*).
+
+**Entscheidung (fachlich, berichtet):** Keine neue Vollmessung. Die Abbruchregel gilt. Stattdessen eine **Vorprüfung (Stufe 1)**:
+- als **Auskunft**, nur lesend, Laufzeit Sekunden bis wenige Minuten;
+- mit einer **vorab** festgelegten Weiter-Schwelle;
+- nur wenn sie **alle** Bedingungen erfüllt, lege ich eine Vollmessung vor, und zwar mit der ausdrücklichen Frage, ob die Abbruchregel für diesen Fall aufgehoben wird.
+
+**Vorab festgelegt (vor dem ersten Aufruf):**
+
+| | |
+|---|---|
+| **Einstiege** | REGEL0 in Betriebsform, alle **vier** Mengen (`kern48jbz_einstiege_bestand`, `_unverzerrt_1..3`), 2024-01 bis 2026-08. Bestand allein ist überlebensverzerrt, und in M1-2 kippte gerade bestand |
+| **Merkmal** | **ein** Merkmal: BTC-Rendite 7 T bis zur Signalstunde, `btc[t] / btc[t−168] − 1` (wie `regel0_llm.signal_werte` → btc168). Zustand = **Drittel nach Rang** gegen die eigenen letzten 12 Monate, kausal (`rolling(8760, min_periods=4000)`), wie W1/W2 |
+| **Zielgröße** | **Trefferbilanz Q** je Einstieg: +1, wenn +5 % vor −5 % binnen 24 h; −1, wenn −5 % zuerst; sonst 0 (`t_u`/`t_d` der Referenz, wie `regel0_rechnung` A24/B24). Das ist der **absolute** Ausgang des Handels, nicht der Zuwachs über das Normal |
+| **Hauptgröße** | **D = Q(hoch) − Q(tief)**, 2024–2026 gemeinsam |
+| **Richtung** | fachlich **nicht** vorgegeben: §23.52 zeigt beide Vorzeichen. Darum **zweiseitig** |
+| **Unsicherheit** | **Tagesblock-Bootstrap** (Tage ziehen, nicht Einstiege), 2.000 Ziehungen, 95-%-Intervall |
+| **Weiter-Schwelle** | **W-a:** Das Intervall von D schließt 0 aus. **W-b:** D hat in 2024, 2025 **und** 2026 dasselbe Vorzeichen. **W-c:** W-a und W-b gelten in mindestens **3 von 4** Mengen. Weiter nur bei W-a **und** W-b **und** W-c |
+| **Umkehr (Auskunft zur Form)** | Q je Drittel und Jahr. Liegt Q in einem Drittel in **≥ 2 von 3 Jahren** in allen vier Mengen ≤ 0? |
+| **R-R11** | (1) Das Merkmal ist **bitgleich** mit `signal_werte` → btc168 (Stichprobe 30 Einstiege). (2) Die Rangkorrelationen aus §23.52 (Saat 58, je Jahr 1.200, gegen den 24-h-Ertrag) werden **reproduziert**: −0,065 / −0,150 / +0,104 |
+| **Gegenprüfung der Prämisse** | dieselben drei Korrelationen mit **Tagesblock**-Unsicherheit statt 1/√n. Dazu die Zahl der Tage und der **Wetterlagen** (Wechsel des Drittels) je Jahr |
+| **Was NICHT folgt** | Kein Betrieb, kein Gewicht, keine Sperre. Ein *Weiter* ist nur eine Vorlage für eine Vollmessung (Surrogat-Nullwelt nach R-R14, Selbsttest in beide Richtungen, Leiter) |
+| **bei Nein** | W3 ist beendet. Das kurzfristige Regime bleibt **Auskunft** (nicht widerlegt, ab 2024 nicht nachweisbar). Weiter mit P19 und der Hauptlinie |
