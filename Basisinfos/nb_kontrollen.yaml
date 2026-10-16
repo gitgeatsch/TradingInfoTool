@@ -353,7 +353,9 @@ kontrollen:
     art: manuell
     nachweis: "Log im ersten hebel_screening_job nach dem Neustart: 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (Zahlen koennen um neue Vorgaenge abweichen); danach 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok' und 'Hebelfuehrung: 1 offen · BTC HALTEN' ohne 'laut Bitpanda geschlossen'; Diagnose hebel_positions: Status offen 1, geschlossen ~30, liquidiert 7"
     faellig_bis: "2026-10-18"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-16"
+    beleg: "Diagnose 16.10. 19:34 (NB auf 6767197b, keine lokalen Aenderungen): Log 18:26:16 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (8.111 Vorgaenge gelesen); 18:26:18 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok'; Hebelfuehrung '1 offen · BTC HALTEN Abstand 24,3 %' ohne Wallet-Hinweis; hebel_positions 38 (geschlossen 30, liquidiert 7, offen 1: BTC 0,01141097 / 560 EUR / Hebel 3,0) - exakt wie Pruefstand B1; Folgelaeufe alle 15 min ok, keine Job-Fehler"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"

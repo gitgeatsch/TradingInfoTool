@@ -6,7 +6,7 @@
 
 **Stand 16.10.2026 (mittags, P11b) – HIER ANFANGEN:**
 - ✔ **P11b gebaut** (Schritt7 §23.61, E-116): Hebelpositionen als Buch je Symbol aus der neuen Bitpanda-Schnittstelle, eine Zeile je Lebenszyklus, 7 Liquidationen ausdrücklich; alte 191 Zeilen gesichert. Abdeckungsprüfung über Code und Doku (Inventur-Wache schlug an, nachgezogen). Prüfstand 9/9, Gegenprobe 3/3.
-- ➤ **NB: Pull + Neustart**, danach Diagnose (K-HB-1: *UMGESTELLT*, Wallet-Abgleich ok).
+- ✔ **NB auf 6767197b, K-HB-1 erfüllt** (Diagnose 19:34): umgestellt, 38 Positionen, Wallet-Abgleich *BTC ok · Kredit ok*. ⚠️ Laufzeitlücke 16.10. 11:24–18:24 (Log endet ohne Fehler – Ursache am NB offen, vermutlich Ruhezustand/Neustart).
 
 **Stand 16.10.2026 (vormittags, P11c) – HIER ANFANGEN:**
 - ✔ **P11c gebaut** (Schritt7 §23.59, E-115): Die Hebelführung folgt dem Wallet-Abgleich. Keine falsche *LIQUIDATION NAHE ETH* mehr (ETH am 15.10. ausgestoppt und geschlossen); BTC wird mit Wallet-Menge und Wallet-Kredit geführt. Prüfstand 8/8 an der NB-Sicherung.
