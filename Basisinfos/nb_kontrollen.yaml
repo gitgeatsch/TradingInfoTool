@@ -281,7 +281,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach Pull+Neustart: messbasen -> turnover form 'betriebskopie' mit juengste_daten; Teilexport SPOT-ABBAU: 'Verwaesserung 90 T (P22): ...' (ohne USB-Ergaenzung bis 12/2026 'am NB ab 12/2026'); erste Mail danach: Zeile 'Verwaesserung' (ohne Historie: 'noch keine 90 Tage Mengenhistorie')"
     faellig_bis: "2026-11-04"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-16"
+    beleg: "Nutzer 16.10. abends: REGEL0-Mail ONDO (19:10) traegt die Zeile 'Verwaesserung'"
     teilbeleg: "15.10. 06:42 Diagnose: Mengendatei LESBAR (messbasen turnover = betriebskopie, nicht mehr 'nicht lesbar'). Offen: die erste Mail mit Verwaesserungszeile (REGEL0/B1/B3 jederzeit, B4 am 02.11.) und der Teilexport nach dem B4-Stichtag 01.11."
   - id: K-UE-1
     titel: "P22 Ergaenzung der Mengendatei: 'python ergaenze_umlauf_nb.py' am NB einmal ausgefuehrt - meldet 'IN ORDNUNG', ~132.000 Zeilen eingefuegt, NB-Tage unberuehrt"
@@ -314,7 +316,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose termine_vorschau: termine mit fomc 2026-10-28 18:00, nfp 2026-11-06 13:30, cpi 2026-11-10 13:30 (UTC), nicht_abgefragt leer, fomc_liste_bis 2027-12-08, schluessel_vorhanden true. Erste REGEL0-Mail: Zeile 'Termin' in der Einschaetzung (meist 'kein ... Termin im 24-h-Fenster'), Technik 'Fakt, nicht Teil der Regel (O52)'; Pruefblock beginnt mit 'Messstand  gemessen: trennt nicht'. Log ohne 'REGEL0-Termin ... gescheitert'"
     faellig_bis: "2026-10-22"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-16"
+    beleg: "Nutzer 16.10. abends: REGEL0-Mail 'Hebel LONG ONDO 3x' (19:10) traegt die Zeile 'Termin'; Diagnose 19:34 termine_vorschau wie Desktop"
     teilbeleg: "Diagnose 15.10. 11:40 (NB auf fc46edda, keine lokalen Aenderungen, Neustart 11:35 ohne Fehler): termine_vorschau fomc 2026-10-28 18:00, nfp 2026-11-06 13:30, cpi 2026-11-10 13:30 UTC, nicht_abgefragt leer, fomc_liste_bis 2027-12-08, schluessel_vorhanden true - gleich der Desktop-Rechnung. Offen: erste REGEL0-Mail mit Zeile 'Termin' und Markierung 'trennt nicht' (die Mails 02:09-06:09 liefen noch auf altem Code)"
   - id: K-WE-1
     titel: "O51 Entfernen: GUI-Knopf 'Aus Watchlist entfernen' sperrt bei Bestand und entfernt ein Asset ohne Bestand (nur auf Wunsch des Nutzers)"
@@ -333,7 +337,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach Start bzw. 06:35: 'Makro-Lage: lang Rueckenwind · kurz neutral · Stand <heute>' (ohne Fehler); Diagnose makro_lage: zustand ok, stand heute, datenstand je Reihe (M2SL ~2 Monate alt ist normal); Statusseite: Abschnitt 'Makro-Umfeld' ganz oben; naechste REGEL0-/Spot-Mail: Zeile 'Makro lang: ... · kurz: ...'"
     faellig_bis: "2026-10-22"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-16"
+    beleg: "Nutzer 16.10. abends: REGEL0-Mail ONDO (19:10) traegt die Zeile 'Makro'; Log 'Makro-Lage: lang Rueckenwind · kurz neutral' taeglich, Diagnose makro_lage ok"
     teilbeleg: "Diagnose 15.10. 18:30 (NB auf 8b974dd4, keine lokalen Aenderungen, Neustart 18:27 ohne Fehler): Log 18:28:08 'Makro-Lage: lang Rueckenwind · kurz neutral · Stand 2026-10-15'; Diagnose makro_lage zustand ok, alle 11 Reihen mit Datenstand (VIXCLS 14.10., M2SL 01.08.), Kanaele wie am Desktop (nur VIX lang neutral statt Rueckenwind - ein Tag neuere Reihe), Gesamt gleich. Offen: Statusseite-Abschnitt oben (Nutzerblick) und erste Mail mit Zeile 'Makro'"
   - id: K-HF-W1
     titel: "P11c Hebelfuehrung folgt dem Wallet: keine LIQUIDATION-NAHE-Mail mehr fuer die geschlossene ETH-Position, BTC mit Wallet-Menge"
