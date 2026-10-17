@@ -366,7 +366,7 @@ kontrollen:
     titel: "M1/B1: naechste REGEL0-Signalmail hat 'Messstand im Betrieb deine gemailten Signale ...' und 'Deine Hebel-Trades seit 03.10.: ...' (Ergebnis zum Schlusskurs, Hinweis EURCV)"
     seit: "2026-10-17"
     paket: O21
-    commit: ""
+    commit: 651efb34
     art: manuell
     nachweis: "Mail: beide Zeilen im Abschnitt Einschaetzung, kein 'realisiert'; Diagnose regel0_messstand: gemailt (n/Tage), trades_zeile, trade_summen seit_start (2 Trades, ETH -127,41 / BTC Teil -35,17) und seit_beginn (~38 Trades, ~-6.900 EUR), nicht_berechnet 0; Statusseite REGEL0-Bereich 'Deine Hebel-Trades'"
     faellig_bis: "2026-10-31"
