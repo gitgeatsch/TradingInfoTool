@@ -1,0 +1,2 @@
+G1  Schleife (Teil 2) gegen die Referenz 2026: 3693 von 3693 Einstiegen t_u und t_d gleich -> GLEICH
+G2  cluster-robust: Mittel +0.545 %, Halbbreite 95 % 0.50 Pp ueber 497 Tage (Bootstrap in p61: 0,49) · hochgerechnet auf 365 Tage 0.58 Pp

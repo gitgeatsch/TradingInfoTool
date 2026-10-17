@@ -1,0 +1,33 @@
+P61 / O21 VORPRUEFUNG - laufende Ergebnismessung der REGEL0-Signale
+
+TEIL 0 R-R11 Mess-Definition: t_u/t_d aus den REGEL0-Stundenkursen mit E2.ergebnisse gegen die Referenz: 10732 von 10732 Einstiegen gleich  ✔ BITGLEICH
+   ohne Reihe am Desktop: -
+
+TEIL 1 AUSSAGEKRAFT (Referenz bestand 2025-01..2026-08: 8408 Einstiege an 497 Tagen, 16.9 je Tag)
+   24-h-Ertrag: Mittel +0.545 %, Streuung 5.65 % je Einstieg · Tagesblock-95 %: [+0.070, +1.041] % · Trefferbilanz Q +0.071
+   Klumpung: Tagesblock-Halbbreite 0.49 Pp gegen 0.12 Pp bei unabhaengigen Einstiegen -> Faktor 16 auf die Varianz, also effektiv etwa 1.0 unabhaengige Beobachtung(en) je Tag (alle Einstiege eines Tages sehen denselben Markt)
+   Halbe Breite des 95-%%-Intervalls des Mittels nach N Betriebstagen (Tage aus der Referenz gezogen, gleiche Klumpung):
+       14 Tage: +-2.99 Pp
+       30 Tage: +-2.02 Pp
+       60 Tage: +-1.34 Pp
+       90 Tage: +-1.18 Pp
+      180 Tage: +-0.82 Pp
+      365 Tage: +-0.58 Pp
+
+TEIL 2 BETRIEB 2026-10-03 02:00 bis 2026-10-14 03:00: 559 Signale (441 Assets), Kerzen geholt 440 Reihen in 2 s, Fehler 2 (AIOT spot AIOTUSDT: HTTPError; ELSA spot ELSAUSDT: HTTPError)
+   mit vollem 24-h-Ausgang: 532 an 12 Tagen · Signalkurs gegen Schluss der Einstiegsstunde: Median +0.000 %, |Abw.| > 1 % bei 93 von 532 · gegen Schluss der SIGNALstunde: Median +0.000 %, |Abw.| > 1 % bei 0 von 532
+   24-h-Ertrag: Mittel +0.737 % · Tagesblock-95 % [-1.691, +1.810] % · Q +0.094 · Anteil +5 % zuerst 24.8 %, -5 % zuerst 15.4 %
+   Referenz 2025-26 zum Vergleich: Mittel +0.545 %, Q +0.071
+     Hebel-Schalter an  n  22 · Tage  6 · Mittel +3.793 % · Q +0.091
+     Schalter aus/ohne  n 510 · Tage 12 · Mittel +0.606 % · Q +0.094
+     Stufe 5            n 181 · Tage 12 · Mittel -0.077 % · Q +0.006
+     Stufe 3            n 336 · Tage 12 · Mittel +1.602 % · Q +0.149
+     Stufe 2            n  13 · Tage  9 · Mittel -9.213 % · Q +0.000
+     Zusatz-Assets      n 432 · Tage 12 · Mittel +0.354 % · Q +0.086
+     ohne 09./10.10.    n 238 · Tage 10 · Mittel -0.756 % · Q -0.029
+   je Tag: 10-03 24 +1.27% · 10-04 44 +2.11% · 10-05 24 -2.27% · 10-06 26 -3.01% · 10-07 39 -3.69% · 10-08 30 +2.69% · 10-09 199 +2.43% · 10-10 95 +0.94% · 10-11 8 -1.51% · 10-12 14 +1.58% · 10-13 22 -2.65% · 10-14 7 -8.38%
+
+TEIL 3 ECHTE TRADES ab 03.10. (Hebel-Buch der NB-Sicherung): 2 Lebenszyklen
+   ⚠️ Das Ergebnis eines echten Trades steht NICHT direkt in den Vorgaengen: Bitpanda bucht Eigenkapital, Kredit, Teilverkauf (nur der Kreditanteil) und Uebertrag ins Spot-Wallet als eigene Transaktionen - hier nur Signalbezug, Verzug und Haltedauer
+   ETH    auf 2026-10-09T08:29 UTC · zu 2026-10-15T13:59 · Haltedauer 149 h (Regel 24 h) · REGEL0-Signal 2026-10-09 06:00, Stufe 5, Schalter 1, Eroeffnung 1.5 h nach dem gemessenen Einstieg; 24-h-Ertrag des Signals -0.36 %
+   BTC    auf 2026-10-09T04:38 UTC · zu offen · Haltedauer offen (Regel 24 h) · KEIN REGEL0-Signal in den 26 h davor (eigene Entscheidung)

@@ -3788,6 +3788,7 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 3. Der Jahresunterschied (2025 schwach in **jedem** Drittel) ist der **Gegenwind** aus 2.694/2.697. Das ist das Thema K_IG (Teil B zurückgestellt, E-33), nicht BTC 7 T.
 4. **Flughöhe Ebene 2 bleibt Auskunft.** Keine neue Mail-Zeile, denn es ist ein Fakt ohne gemessene Handlung (Regel *jede Mail eine Handlung*). Keine Betriebsänderung, kein NB-Pull nötig.
 5. Namensgleichheit: Dieses W3 (§23.52, Regime als Gewicht) ist **nicht** der Messarm W3 *Kern-Short* aus E-32.
+6. ⚠️ **Nachtrag 17.10. (§23.64, Teil 0):** In der Referenz `kern48jbz_einstiege_*.csv` ist `stunde` die **Einstiegsstunde** (Signal + 1 h), nicht die Signalstunde. p58 und p60 haben sie als Signalstunde gelesen; BTC 7 T und der 24-h-Ertrag liegen damit eine Stunde später. Am Urteil ändert das nichts, denn G3 (Zustand eine Stunde später) zeigt dasselbe Muster.
 
 ### 23.63 P11d: 'nachgeholt' ist kein Fehler (17.10.2026; `p11d_pruefstand.py`, `p11d_gegenprobe.py` → `.txt`)
 
@@ -3802,3 +3803,42 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 - **Gegenprobe:** alle 66 REGEL0-Läufe aus dem NB-Export gegen eine eigene Textregel – 0 Abweichungen. ⚠️ Darin ist nur **ein** Lauf mit Meldung (der 16.10.); die Fehlerfälle sind nur im Prüfstand gestellt.
 
 **Am NB** (im Pull mit P19): wirkt beim nächsten Nachholen. Kontrolle **K-NG-1** (Ereignis).
+
+### 23.64 O21 Stufe 1 Voranalyse: laufende Ergebnismessung der REGEL0-Signale (17.10.2026; `p61_o21_vorpruefung.py`, `p61_gegenprobe.py` → `.txt`)
+
+**Auftrag (Nutzer 17.10.):** *„ja, mit Punkt 1 starten – Voranalyse“*. Punkt 1 ist O21 Stufe 1: jedes REGEL0-Signal nach 24 h messen, dazu die echten Trades gegen ihr Signal.
+
+**Was es schon gibt (zuerst das Bestehende):**
+- `pruefe_testwoche.py` prüft den **Betrieb**: Stunden, Mails, Laufzeit. Ergebnisse misst es nicht.
+- `ausstieg_verfolgung` und `trefferbilanz` gehören zur **alten** Kette.
+- Für die REGEL0 gibt es **keine** laufende Ergebnismessung. Die Zusage aus W1 (a), die Messung des Prüfblocks laufe im Betrieb weiter, ist bisher **nicht** eingelöst.
+- Am NB liegen die Stundenkurse aller Signal-Assets schon vor: die REGEL0-Dateien, aus denen auch gerechnet wird. ⇒ **Keine neue Datenquelle nötig.**
+
+**Vorprüfung (Desktop, nur lesend):** NB-Kopie der Ablage vom 14.10., NB-Sicherung 17.10. 05:29 (Wegwerf), Binance-Stundenkerzen frei.
+
+| Teil | Frage | Ergebnis |
+|---|---|---|
+| **0 R-R11** | Misst der Betrieb dasselbe wie die Messung? `t_u`/`t_d` mit `E2.ergebnisse` aus den REGEL0-Stundenkursen nachgerechnet | **10.732 / 10.732 bitgleich.** Definition: Schluss der **Einstiegsstunde** (Signal + 1 h), Hoch und Tief der Folgestunden, ±5 % |
+| **1 Aussagekraft** | Wie genau wird ein Mittel aus dem Betrieb? | Referenz 2025–26: 24-h-Ertrag **+0,55 %**, Streuung 5,65 % je Einstieg, Q +0,071. ⚠️⚠️ **Alle Einstiege eines Tages sehen denselben Markt:** Die Tagesblock-Breite ist 0,49 statt 0,12 Pp, also Varianz ×16. Das sind **effektiv ~1 unabhängige Beobachtung je Tag**, egal wie viele Signale. Halbe Breite des 95-%-Intervalls nach N Betriebstagen: 30 T ±2,0 · 90 T ±1,2 · 180 T ±0,8 · **365 T ±0,6 Pp** |
+| **2 Betrieb 03.–14.10.** | Was haben die 559 Signale bisher gebracht? | 532 mit vollem Ausgang an 12 Tagen: Mittel **+0,74 %**, Tagesblock-95 % **[−1,7; +1,8] %**, Q +0,094 – **im Band der Messung**. Signalkurs gegen Schluss der Signalstunde: 0 von 532 über 1 % (Zuordnung stimmt). Auskunft je Gruppe, ⚠️ 12 Tage ≈ 12 Beobachtungen: Schalter an n 22 +3,8 % · Stufe 3 +1,6 % · Stufe 5 −0,1 % · Stufe 2 (n 13) −9,2 % · ohne 09./10.10. −0,8 % |
+| **3 Echte Trades** | Welche Trades gehören zu welchem Signal? | Ab 03.10. **2 Lebenszyklen**: **ETH** 09.10. 08:29, 1,5 h nach dem gemessenen Einstieg des Signals 06:00 (Stufe 5, Schalter an), gehalten **149 h** statt 24 h, ausgestoppt 15.10. · **BTC** 09.10. 04:38 **ohne** REGEL0-Signal davor (eigene Entscheidung), offen. ⚠️ Das Ergebnis eines echten Trades steht **nicht** direkt in den Vorgängen: Bitpanda bucht Eigenkapital, Kredit, Teilverkauf und Übertrag ins Spot-Wallet getrennt. Eine erste Rechnung (−2.300 EUR) war deshalb falsch und ist verworfen |
+
+**Gegenprobe** (zweiter Weg): G1: Die Schleifen-Rechnung aus Teil 2 trifft auf der Referenz 2026 **3.693 / 3.693**. G2: Die geschlossene, cluster-robuste Formel ergibt ±0,50 Pp über 497 Tage (Bootstrap ±0,49), auf 365 Tage ±0,58.
+
+**Was daraus folgt (fachlich, meine Einordnung):**
+1. ⛔ **Die Kostenfrage (Rohvorteil gegen 0,48 %) ist vorwärts nicht in absehbarer Zeit zu entscheiden.** Die Lücke beträgt 0,1–0,3 Pp; auf ±0,2 Pp genau wird das Mittel erst nach mehreren Jahren. Ein Messstand darf das nicht versprechen.
+2. ✔ **Entscheidbar ist, ob der Betrieb im Band der Messung läuft:** Liegt das Referenzmittel im Tagesblock-Intervall des Betriebs? Das erkennt grobe Brüche (falsche Daten, falsche Zuordnung, ein Regime, das die Regel umkehrt) nach Wochen bis Monaten. Das ist der Wert von Stufe 1: eine **Betriebs-Kontrolle mit Messwert**, keine Wirtschaftlichkeitsprüfung.
+3. ✔ **Die Daten sammeln sich:** für den Vorwärtstest K_IG (M1-2 Teil B), für Stufe/ATR (Auskunft: Stufe 2 und 5 auffällig, n klein) und für den LLM-Prüfblock (W1 a).
+4. ⚠️ **Echte Trades:** Mit 2 Trades in 14 Tagen ist keine Erfolgsmessung möglich. Messbar und sofort nützlich ist die **Ausführung**: Signal ja/nein, Verzug zum Einstieg, Haltedauer gegen die Regel 24 h (ETH 149 h). Das Ergebnis in EUR braucht eine eigene Ableitung aus den Transaktionen (Stufe 1b).
+
+**Bauvorschlag Stufe 1 (zur Abstimmung):**
+
+| # | Teil |
+|---|---|
+| A1 | `agent/regel0_messstand.py`: täglich (z. B. 06:50) für jedes Signal, dessen 24 h vorbei sind: Ausgang mit **`E2.ergebnisse`** aus denselben Stundenkursen (R-R11 bitgleich), Tabelle `ausgang` in `regel0_signale.db` (24-h-Ertrag, `t_u`/`t_d`, Q, MFE 24 h). Ohne lückenlose Kurse *„ohne Ausgang (Kurse fehlen)“*, nie still. Schreibt nur die Ablage |
+| A2 | **Messstand**: seit 03.10. und rollierend 90 T: n, Tage, Mittel, Q, Tagesblock-95 %; je Schalter an/aus und Stufe; daneben die Referenz 2025–26 und der Befund ***im Band der Messung / außerhalb***; dazu fest der Satz zur Aussagekraft (±x Pp nach N Tagen, Kosten nicht entscheidbar) |
+| A3 | **Echte Trades**: je Lebenszyklus aus dem Hebel-Buch das Signal (oder *eigene Entscheidung*), Verzug und Haltedauer gegen 24 h, als **Fakt** |
+| A4 | **LLM-Prüfblock** gegen den Ausgang (Urteil gegen Ertrag, Tagesblock), Auskunft – die Zusage aus W1 (a) |
+| A5 | Anzeige: Statusseite (Karte *REGEL0-Messstand* in Betrieb & Lage), Teilexport, Diagnose. **Keine** eigene Mail (Information ohne Handlung). **Option:** eine Zeile *Messstand im Betrieb* in der REGEL0-Signalmail als Fakt neben der Handlung |
+| A6 | Prüfstand am Seiteneffekt, Gegenprobe zweiter Weg, Suite-Paket, NB-Kontrolle; kein Eingriff in REGEL0 selbst |
+| später | Stufe 1b: Ergebnis echter Trades in EUR aus den Transaktionen · Stufe 2 (O21): Champion/Herausforderer im Schatten |
