@@ -22530,6 +22530,7 @@ def paket_messstand() -> None:
         for i in range(40):
             c.execute("INSERT INTO signal (symbol, signalstunde, einstieg, ausstieg, stufe, hebel_schalter) VALUES (?,?,?,?,?,?)",
                       ("X%d" % (i % 4), "2026-10-%02d 05:00" % (4 + i // 4), "2026-10-%02d 06:00" % (4 + i // 4), "", 3, int(i % 2 == 0)))
+        c.execute("UPDATE signal SET mail_signal_am='2026-10-04 06:10' WHERE hebel_schalter=1")   # M1: gemailt = mail_signal_am
         c.commit()
         c.close()
         k = _sq.connect(_os.path.join(_T, "stundenkurse_alle.db"))
@@ -22550,7 +22551,7 @@ def paket_messstand() -> None:
         z = _MS.zeile(st)
         pruefe(P, "Lauf in Wegwerf-Ablage: misst, idempotent, Stand mit Gruppen, Zeile mit Tagen und Spanne",
                e1["ok"] > 0 and e2["neu"] == 0 and e2["ok"] == 0 and st["gesamt"]["n"] == e1["ok"] and "Tagen" in z and "Spanne 99 %" in z
-               and st["gruppen"]["Hebel-Schalter an"]["n"] > 0, "lauf %s · %s" % (e1, z[:120]))
+               and st["gruppen"]["gemailt"]["n"] > 0 and z.startswith("deine gemailten Signale seit"), "lauf %s · %s" % (e1, z[:120]))
     finally:
         __import__("wegwerf").aufraeumen(_T)
     _qb, _qm, _qs = _quelltext("scheduler/background.py"), _quelltext("agent/regel0_mail.py"), _quelltext("remote/server.py")
@@ -22561,12 +22562,20 @@ def paket_messstand() -> None:
            and "_ms = messstand(r)" in _qm and "renderMessstand(data.regel0_messstand)" in _qs
            and '"regel0_messstand": _regel0_messstand()' in _quelltext("extract_notebook_diagnose.py")
            and "REGEL0-MESSSTAND (O21)" in _quelltext("nb_teilexport_betriebsdaten.py"))
+    pruefe(P, "M1: zwei Sichten - 'gemailt' ueber mail_signal_am (nicht den Schalter), die Zeile beginnt mit den gemailten Signalen; B1: "
+              "Hebel-Trades mit Ergebnis zum Schlusskurs, Wache P1-P4 (bei Verstoss KEIN Ergebnis), nie 'realisiert', Hinweis EURCV",
+           "s.mail_signal_am FROM ausgang" in _q and '"deine gemailten Signale seit %s' in _q and "alle REGEL0-Signale (Prüfung der Regel)" in _q
+           and all(x in _q for x in ('"P1 %s"', '"P2"', '"P3 %s"', '"P4 %s"', "ergebnis\"] if ok else None", "beim EURCV"))
+           and "realisiert" not in _q.split("def trade_text")[1].split("def trade_summen")[0].replace("'realisiert'", "")
+           and 'ein_z += [tuple(x) for x in (messstand.get("zusatz") or [])]' in _qm)
     pruefe(P, "Textmail: ein Label ab 16 Zeichen bekommt einen Abstand zum Wert (vorher 'Messstand im BetriebZEILE')",
            'kopf = ("  %-16s" % k) if len(k) < 16 else ("  %s " % k)' in _qm)
     _t = {n: _quelltext(_os.path.join("Basisinfos", "Rechenkern_02_10", n)) for n in ("o21_pruefstand.txt", "o21_gegenprobe.txt",
                                                                                       "p61_o21_vorpruefung.txt", "p61_gegenprobe.txt")}
-    pruefe(P, "Belege: Pruefstand 9/9, Selbsttest Befund im Rahmen, Vorpruefung R-R11 bitgleich, Gegenprobe gleich",
-           "9 von 9 bestanden" in _t["o21_pruefstand.txt"] and "GLEICH (Fehlalarm im Rahmen)" in _t["o21_gegenprobe.txt"]
+    pruefe(P, "Belege: Pruefstand 13/13 (mit M1/B1), Selbsttest Befund im Rahmen, Vorpruefung R-R11 bitgleich, Gegenprobe gleich, "
+              "Voranalyse 1b: P1-P4 ohne Abweichung, Gegenprobe 37/37",
+           "13 von 13 bestanden" in _t["o21_pruefstand.txt"] and "37 von 37 geschlossenen Lebenszyklen gleich" in _quelltext(
+               "Basisinfos/Rechenkern_02_10/s1b_gegenprobe.txt") and _quelltext("Basisinfos/Rechenkern_02_10/s1b_voranalyse.txt").count("✔ 0 Abweichungen") == 4 and "GLEICH (Fehlalarm im Rahmen)" in _t["o21_gegenprobe.txt"]
            and "10732 von 10732 Einstiegen gleich" in _t["p61_o21_vorpruefung.txt"] and "GLEICH" in _t["p61_gegenprobe.txt"])
 
 

@@ -81,6 +81,8 @@ def regel0_messstand(daten: str = DATEN, c_prod=None) -> dict:
     d["zeile"] = MS.zeile(d)
     try:
         d["trades"] = [MS.trade_text(t) for t in MS.trades(c_prod, daten)] if c_prod is not None else None
+        d["trade_summen"] = MS.trade_summen(c_prod, daten) if c_prod is not None else None
+        d["trades_zeile"] = MS.trades_zeile(c_prod, daten) if c_prod is not None else None
     except Exception as exc:                                 # noqa: BLE001
         d["trades"] = ["nicht lesbar: %s" % type(exc).__name__]
     return d

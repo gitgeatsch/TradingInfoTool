@@ -15,6 +15,10 @@ in stundenkurse_alle.db - der Ordner hat wie am NB zwei Kursdateien) und einer W
   S7  echte Trades: ETH -> Signal 09.10. 06:00, Verzug 1,5 h, 149 h; BTC ohne Signal (wie p61 Teil 3)
   S8  Job: mit Wegwerf-Ordner fehlerfrei, Logzeilen; Statusseite, Teilexport, Diagnose lesen den Stand
   S9  kein Seiteneffekt: Quelle der Ablage, Wegwerf-Produktion und die Desktop-Kursdateien unveraendert
+  S10 M1 (17.10.): gemailte Signale zuerst - Gruppe ueber mail_signal_am (22 bis 14.10.), Zeile beginnt mit ihnen, dann alle als Pruefung
+  S11 B1: Ergebnis in EUR je geschlossenem Lebenszyklus = s1b_voranalyse auf den Cent (37); ETH -127,41, BTC Teil -35,17; nie "realisiert"
+  S12 B1-Wache: eine verfaelschte Buchung -> dieser Zyklus OHNE Ergebnis ("NICHT berechnet"), die Summe zaehlt ihn als nicht berechnet
+  S13 Mail: zweite Zeile "Deine Hebel-Trades" mit Summe seit 03.10. und dem Hinweis auf den Kreditanteil
 """
 import gzip
 import hashlib
@@ -74,7 +78,7 @@ T = tempfile.mkdtemp(prefix="o21_")
 O = os.path.join(T, "daten")
 os.makedirs(O)
 shutil.copy(QUELLE, os.path.join(O, "regel0_signale.db"))
-PROD = os.path.join(T, "prod.db")
+PROD = os.path.join(O, "tradinginfotool.db")            # im Daten-Ordner, damit mailteil() sie findet (wie am NB)
 with gzip.open(SICHERUNG, "rb") as f, open(PROD, "wb") as g:
     shutil.copyfileobj(f, g)
 vor_prod = summe(PROD)
@@ -206,7 +210,7 @@ zeile = mt["ein"]
 qb = open("scheduler/background.py", encoding="utf-8").read()
 qm = open("agent/regel0_mail.py", encoding="utf-8").read()
 _flach = " ".join(t_mit.split())
-pruefe("S6", "Messstand im Betrieb seit" in _flach and zeile in _flach and "Tagen" in zeile and "Spanne 99 %" in zeile and "0,48 %" in zeile and "Messstand im Betrieb" not in t_ohne
+pruefe("S6", "Messstand im Betrieb deine gemailten Signale seit" in _flach and zeile in _flach and "Tagen" in zeile and "Spanne 99 %" in zeile and "0,48 %" in zeile and "Messstand im Betrieb" not in t_ohne
        and 'messstand=lambda r: __import__("agent.regel0_messstand"' in qb and "_ms = messstand(r)" in qm and "except Exception as exc" in qm.split("_ms = messstand(r)")[1][:200],
        "Zeile: '%s'" % zeile)
 
@@ -232,6 +236,71 @@ pruefe("S8", j["gelaufen"] and any(x.startswith("REGEL0-Messstand: neu") for x i
        and bl["vorhanden"] and bl["zeile"] == zeile and len(bl["trades"]) == 2 and "renderMessstand(data.regel0_messstand)" in qs
        and '"regel0_messstand": _regel0_messstand()' in qd and "REGEL0-MESSSTAND (O21)" in qt,
        "Job %s · Log: %s" % ({k_: j[k_] for k_ in ("gelaufen", "neu", "ok", "befund")}, [x for x in LOG if "Messstand" in x][:1]))
+
+# ── S10 M1: gemailte Signale zuerst ───────────────────────────────────────────────────────────────────────────────────────────
+st10 = MS.stand(O, JETZT)
+z10 = MS.zeile(st10)
+k10 = sqlite3.connect("file:%s?mode=ro" % os.path.join(O, "regel0_signale.db").replace("\\", "/"), uri=True)
+n_mail = k10.execute("SELECT COUNT(*) FROM signal s JOIN ausgang a ON a.symbol=s.symbol AND a.signalstunde=s.signalstunde WHERE "
+                     "a.status='ok' AND s.mail_signal_am IS NOT NULL").fetchone()[0]
+k10.close()
+pruefe("S10", st10["gemailt"]["n"] == n_mail == 22 and z10.startswith("deine gemailten Signale seit 03.10.: 22 an")
+       and "alle REGEL0-Signale (Prüfung der Regel): 558 an 12 Tagen" in z10 and st10["gruppen"]["gemailt"]["n"] == 22
+       and sum(v["n"] for v in st10["gruppen_gemailt"].values()) == 22,
+       "gemailt %d (Ablage %d) · Stufen gemailt %s · Zeile: '%s'" % (st10["gemailt"]["n"], n_mail,
+                                                                   {k_: v["n"] for k_, v in st10["gruppen_gemailt"].items()}, z10[:150]))
+
+# ── S11 B1: Ergebnis in EUR = Voranalyse s1b auf den Cent ─────────────────────────────────────────────────────────────────────
+import re  # noqa: E402
+soll = {}
+for z_ in open(os.path.join("Basisinfos", "Rechenkern_02_10", "s1b_voranalyse.txt"), encoding="utf-8"):
+    m_ = re.match(r"\s+(\S+)\s+(\d{4}-\d\d-\d\d \d\d:\d\d) (\d{4}-\d\d-\d\d \d\d:\d\d) \S+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([+-][\d.]+)", z_)
+    if m_:
+        soll[(m_.group(1), m_.group(2))] = float(m_.group(4))
+cp = sqlite3.connect("file:%s?mode=ro" % PROD.replace("\\", "/"), uri=True)
+alle_tr = MS.trades(cp, O, seit="2000-01-01 00:00")
+tr11 = {t_["symbol"]: t_ for t_ in MS.trades(cp, O)}
+su = MS.trade_summen(cp, O)
+cp.close()
+zu11 = [t_ for t_ in alle_tr if t_["zu"]]
+gl11 = sum(1 for t_ in zu11 if (t_["symbol"], t_["auf"]) in soll and abs(soll[(t_["symbol"], t_["auf"])] - t_["ergebnis"]) < 0.011)
+txt_eth, txt_btc = MS.trade_text(tr11["ETH"]), MS.trade_text(tr11["BTC"])
+pruefe("S11", gl11 == len(zu11) == len(soll) == 37 and "Ergebnis -127,41 €" in txt_eth and "aus Teilschließungen zum Schlusskurs -35,17 €" in txt_btc
+       and abs(su["seit_beginn"]["ergebnis"] - sum(soll.values()) + 35.17) < 0.05 and "realisiert" not in txt_eth + txt_btc,
+       "geschlossen %d / Voranalyse %d, gleich auf den Cent %d · seit 03.10.: %s · seit Beginn: Ergebnis %+.2f · ETH: '%s'" % (
+           len(zu11), len(soll), gl11, {k_: (round(v, 2) if isinstance(v, float) else v) for k_, v in su["seit_start"].items()},
+           su["seit_beginn"]["ergebnis"], txt_eth[-110:]))
+
+# ── S12 B1-Wache: eine verfaelschte Buchung -> KEIN Ergebnis fuer diesen Zyklus ─────────────────────────────────────────────────
+import json as _js  # noqa: E402
+P12 = os.path.join(T, "falsch.db")
+shutil.copy(PROD, P12)
+c12 = sqlite3.connect(P12)
+oid, roh = c12.execute("SELECT operation_id, roh FROM hebel_buch_vorgang WHERE typ='margin_trading_close_long' AND zeit >= '2026-10-15' "
+                       "ORDER BY zeit LIMIT 1").fetchone()
+r12 = _js.loads(roh)
+for x_ in r12["transactions"]:
+    if x_.get("transaction_type") == "transfer" and x_.get("wallet_owner") == "shared-default":
+        x_["asset_amount"]["value"] = str(float(x_["asset_amount"]["value"]) * 2)
+c12.execute("UPDATE hebel_buch_vorgang SET roh=? WHERE operation_id=?", (_js.dumps(r12), oid))
+c12.commit()
+t12 = {t_["symbol"]: t_ for t_ in MS.trades(c12, O)}
+s12 = MS.trade_summen(c12, O)
+c12.close()
+pruefe("S12", t12["ETH"]["ergebnis"] is None and t12["ETH"]["pruefung"] and "NICHT berechnet" in MS.trade_text(t12["ETH"])
+       and s12["seit_start"]["nicht_berechnet"] == 1,
+       "verfaelschter Uebertrag ETH 15.10.: %s · Summe seit 03.10.: nicht berechnet %d" % (MS.trade_text(t12["ETH"])[-80:], s12["seit_start"]["nicht_berechnet"]))
+
+# ── S13 Mail: zweite Zeile 'Deine Hebel-Trades' ───────────────────────────────────────────────────────────────────────────────
+mt13 = MS.mailteil(O)
+_b13, t13 = RM.signal_mail(r6, r6["stufe"], False, GR.rechne(r6["stufe"], 0, w6), w6, JETZT.replace(tzinfo=timezone.utc), messstand=mt13)
+f13 = " ".join(t13.split())
+# ⚠️ KORREKTUR 17.10. (erster Lauf rot - Fehler im TEST): erwartet war -162,58 (-127,41 + -35,17 aus den gerundeten Teilen); die Summe
+# ist -162,574 und richtig auf -162,57 gerundet - jetzt gegen die Summe des Moduls selbst (S11 prueft die Teile auf den Cent)
+pruefe("S13", "Deine Hebel-Trades seit 03.10.: 2 Trades (1 offen)" in f13 and ("Ergebnis zum Schlusskurs %s" % MS._eur(su["seit_start"]["ergebnis"])) in f13
+       and "beim EURCV" in f13
+       and "nur den Kreditanteil" in f13 and "Hebel-Ergebnis" in f13 and "realisiert" not in f13,
+       "Zeile: '%s'" % [z_ for z_ in mt13["zusatz"]][0][1][:170])
 
 # ── S9 kein Seiteneffekt ──────────────────────────────────────────────────────────────────────────────────────────────────────
 nach_desk = {n: (os.path.getsize(os.path.join("data", n)), os.path.getmtime(os.path.join("data", n))) for n in MS.KURSE}

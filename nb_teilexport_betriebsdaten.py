@@ -509,8 +509,16 @@ def _inhalt() -> int:
             for k21, v21 in (m21.get("llm") or {}).items():
                 if v21.get("n"):
                     print("    Pruefblock %-14s n %4d · Tage %3d · Mittel %+.2f %%" % (k21, v21["n"], v21["tage"], 100 * v21["mittel"]))
+            for k21, v21 in (m21.get("gruppen_gemailt") or {}).items():
+                if v21.get("n"):
+                    print("    gemailt %-10s n %4d · Tage %3d · Mittel %+.2f %%" % (k21, v21["n"], v21["tage"], 100 * v21["mittel"]))
             for t21 in m21.get("trades") or []:
                 print("    Trade: %s" % t21)
+            if m21.get("trades_zeile"):
+                print("    Deine Hebel-Trades: %s" % m21["trades_zeile"])
+            for k21, v21 in (m21.get("trade_summen") or {}).items():
+                print("    Summe %-11s %d Trades (%d offen, %d nicht berechnet) · Eigenkapital %.2f · Ergebnis zum Schlusskurs %+.2f · Gebuehren %.2f EUR"
+                      % (k21, v21["n"], v21["offen"], v21["nicht_berechnet"], v21["eigenkapital"], v21["ergebnis"], v21["kosten"]))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Messstand nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P19 Spot C1 (17.10.2026): Season-Ampel - Stufe, Bedingungen, letzter Lauf, Meldungen, Kandidaten (data/spot_betrieb.db, nur lesend; K-SP-4)

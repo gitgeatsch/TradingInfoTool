@@ -2570,3 +2570,5 @@ Schritt7 §23.24.
 - **Gebaut** (Schritt7 §23.64/§23.65, E-120): jedes REGEL0-Signal wird nach 24 h gemessen wie die Referenz; Messstand mit Spanne über Tage auf der Statusseite und als Zeile in jeder Signalmail.
 - ⚠️ **Grenze, gemessen:** Ein Betriebstag zählt wie eine Beobachtung. Der Messstand zeigt, ob der Betrieb im Band der Messung läuft; ob der Vorteil die Kosten schlägt, ist vorwärts erst nach Jahren entscheidbar.
 - **M1:** Kriterium „Betrieb = Messung“ hat jetzt eine laufende Messung (bisher nur die Testwoche).
+
+**Nachtrag 17.10.2026 (46) — M1 und Stufe 1b:** Der Messstand zeigt zuerst die **gemailten** Signale (was ankommt), dann alle als Prüfung der Regel. Jeder echte Hebel-Trade bekommt sein **Ergebnis in EUR zum Schlusskurs** (aus den Bitpanda-Buchungen, Gegenprobe 37/37 auf den Cent) – in der Signalmail, auf der Statusseite und im Teilexport (Schritt7 §23.66/§23.67, E-121).

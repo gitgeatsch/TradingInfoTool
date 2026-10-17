@@ -180,6 +180,7 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     # FAKT mit Spanne und Tagen, kein Gate, keine Wirkung auf Stufe oder Einsatz (Schritt7 §23.64)
     if isinstance(messstand, dict) and messstand.get("ein"):
         ein_z.append(("Messstand im Betrieb", messstand["ein"]))   # nicht "Messstand" - so heisst die Zeile des Pruefblocks
+        ein_z += [tuple(x) for x in (messstand.get("zusatz") or [])]   # B1: "Deine Hebel-Trades" (Ergebnis zum Schlusskurs)
     ein_z.append(("Gefahr je Stufe", "2x %s · 3x %s · 5x %s binnen 24 h (Grenze 2 %%)" % (
         _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5")))))
 

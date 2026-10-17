@@ -1348,4 +1348,4 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 - **Statusseite, REGEL0-Bereich:** neuer Block *Messstand im Betrieb* (Befund, Zeile mit Tagen und Spanne 99 %, rollierend 90 T, Gruppen, Prüfblock, echte Trades gegen ihr Signal).
 - **REGEL0-Signalmail:** Zeile *Messstand im Betrieb* im Abschnitt Einschätzung, dazu eine Technikzeile.
 - **GUI:** unverändert; der Hebel-Reiter zeigt die Signalmail als Detail und damit auch die Zeile.
-
+- **17.10. abends (M1/B1/B2):** Der Block beginnt mit den **gemailten** Signalen; dazu *Deine Hebel-Trades* (Ergebnis in EUR zum Schlusskurs, Summe seit Beginn, je Trade) – auf der Statusseite und als zweite Zeile in der Signalmail.

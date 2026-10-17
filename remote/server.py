@@ -780,7 +780,16 @@ function renderMessstand(m) {
     const v = m.llm[k];
     if (v.n) x += '<div class="unter">Prüfblock „' + esc(k) + "“: n " + v.n + " · Tage " + v.tage + " · Mittel " + pz(v.mittel) + "</div>";
   });
+  if (m.trades_zeile) x += '<div class="unter"><b>Deine Hebel-Trades</b> ' + esc(m.trades_zeile) + "</div>";
+  const ts = (m.trade_summen || {}).seit_beginn;
+  if (ts && ts.n) x += '<div class="unter muted-text">seit Beginn des Buchs: ' + ts.n + " Trades · Ergebnis zum Schlusskurs " +
+       (ts.ergebnis >= 0 ? "+" : "") + ts.ergebnis.toFixed(2) + " € auf " + ts.eigenkapital.toFixed(2) + " € Eigenkapital · Gebühren " +
+       ts.kosten.toFixed(2) + " €" + (ts.nicht_berechnet ? " · " + ts.nicht_berechnet + " nicht berechnet" : "") + "</div>";
   (m.trades || []).forEach(function (t) { x += '<div class="unter">Trade: ' + esc(t) + "</div>"; });
+  Object.keys(m.gruppen_gemailt || {}).forEach(function (k) {
+    const v = m.gruppen_gemailt[k];
+    if (v.n) x += '<div class="unter">gemailt ' + esc(k) + ": n " + v.n + " · Tage " + v.tage + " · Mittel " + pz(v.mittel) + "</div>";
+  });
   x += '<div class="unter muted-text">offen ' + (m.offen ?? 0) + " · ohne Kurse " + (m.ohne_kurse ?? 0) + " · zuletzt " + fmtStempel(String(m.zuletzt || "").slice(0, 16)) + "</div>";
   return x;
 }

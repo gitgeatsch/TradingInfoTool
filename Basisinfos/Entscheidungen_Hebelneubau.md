@@ -1437,3 +1437,16 @@ Nachweis: `p11d_pruefstand.txt` 7/7 (darunter der echte Fall vom 16.10. 18:30), 
 - Echte Trades nur als Fakt (Signal, Verzug, Haltedauer); das Ergebnis in EUR ist Stufe 1b.
 
 Nachweis: Schritt7 §23.64/§23.65, `o21_pruefstand.txt` 9/9, `o21_gegenprobe.txt`, Paket Messstand; K-O21-1.
+
+# E-121 · M1 und B1/B2: gemailte Signale zuerst, Hebel-Ergebnis in EUR in der Mail – Wert zum Schlusskurs, nie „realisiert“ (17.10.2026)
+
+**17.10.2026** · Nutzer: *„ja M1 und B1/B2 bauen, EUR-Ergebnis auch in die Mail – bei Hebel Vorsicht … der Verlust wird in Ö erst bei Verkauf in Fiat realisiert“* und das Bild *EURCV Gesamtverlust −50,64 %*.
+
+**Gebaut:** Messstand mit den gemailten Signalen zuerst (M1); je echtem Hebel-Trade Eigenkapital, Wert zum Schlusskurs, Gebühr und Ergebnis in EUR mit den Wachen P1–P4 (B1); Statusseite, Teilexport und eine zweite Zeile *Deine Hebel-Trades* in der REGEL0-Signalmail (B2).
+
+**Eigene Festlegungen (berichtet):**
+- Das Ergebnis heißt **„Ergebnis zum Schlusskurs“**; das Wort *realisiert* kommt nicht vor, eine steuerliche Einordnung auch nicht.
+- Die Zeile sagt, warum Bitpanda das Minus beim **EURCV** zeigt: Das Eigenkapital ging als EURCV hinaus, der Rest kam als Coin zurück.
+- Ein Zyklus, dessen Buchungen die Wachen verletzen, bekommt **kein** Ergebnis (*NICHT berechnet*).
+
+Nachweis: Schritt7 §23.66/§23.67, `o21_pruefstand.txt` 13/13, Paket Messstand; K-O21-2.

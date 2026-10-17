@@ -2138,6 +2138,8 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **Befund:** *im Band der Messung* · *UNTER der Messung* (dann prüfen: Daten, Zuordnung, Regime) · *über der Messung* · *zu wenige Tage für ein Urteil* (unter 10 Tagen).
 - ⚠️ **Lesart:** Ein Tag zählt wie eine Beobachtung, weil alle Signale eines Tages denselben Markt sehen. Der Messstand sagt, ob der Betrieb tut, was gemessen wurde – **nicht**, ob der Vorteil die Kosten schlägt.
 - **Echte Trades** (Statusseite): je Trade das REGEL0-Signal oder *eigene Entscheidung*, Verzug und Haltedauer gegen die Regel 24 h.
+- **Seit 17.10. (M1):** Die Zeile beginnt mit **deinen gemailten Signalen**, danach *alle REGEL0-Signale (Prüfung der Regel)*.
+- **Deine Hebel-Trades** (Mail und Statusseite, B1/B2): je Trade Eigenkapital, **Wert zum Schlusskurs**, Gebühr und Ergebnis in EUR; Summe seit 03.10. und seit Beginn. ⚠️ Beim Schließen verkauft Bitpanda nur den Kreditanteil; der Rest liegt als Coin im Spot-Wallet. Das Eigenkapital ging als EURCV hinaus, darum zeigt die Bitpanda-Ansicht das Minus beim **EURCV**. Eine steuerliche Einordnung ist nicht Teil der Rechnung. Passt eine Buchung nicht, steht *NICHT berechnet*.
 
 ### Stand 17.10.2026 — Mails nach einer Unterbrechung (P11d)
 

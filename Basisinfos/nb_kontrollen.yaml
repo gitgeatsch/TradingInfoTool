@@ -362,6 +362,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-16"
     beleg: "Diagnose 16.10. 19:34 (NB auf 6767197b, keine lokalen Aenderungen): Log 18:26:16 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (8.111 Vorgaenge gelesen); 18:26:18 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok'; Hebelfuehrung '1 offen · BTC HALTEN Abstand 24,3 %' ohne Wallet-Hinweis; hebel_positions 38 (geschlossen 30, liquidiert 7, offen 1: BTC 0,01141097 / 560 EUR / Hebel 3,0) - exakt wie Pruefstand B1; Folgelaeufe alle 15 min ok, keine Job-Fehler"
+  - id: K-O21-2
+    titel: "M1/B1: naechste REGEL0-Signalmail hat 'Messstand im Betrieb deine gemailten Signale ...' und 'Deine Hebel-Trades seit 03.10.: ...' (Ergebnis zum Schlusskurs, Hinweis EURCV)"
+    seit: "2026-10-17"
+    paket: O21
+    commit: ""
+    art: manuell
+    nachweis: "Mail: beide Zeilen im Abschnitt Einschaetzung, kein 'realisiert'; Diagnose regel0_messstand: gemailt (n/Tage), trades_zeile, trade_summen seit_start (2 Trades, ETH -127,41 / BTC Teil -35,17) und seit_beginn (~38 Trades, ~-6.900 EUR), nicht_berechnet 0; Statusseite REGEL0-Bereich 'Deine Hebel-Trades'"
+    faellig_bis: "2026-10-31"
+    status: offen
   - id: K-O21-1
     titel: "O21 Messstand: Job regel0_messstand misst seit 03.10. (erster Lauf ~900 Signale), Statusseite zeigt den Messstand, die naechste REGEL0-Signalmail traegt die Zeile 'Messstand im Betrieb'"
     seit: "2026-10-17"

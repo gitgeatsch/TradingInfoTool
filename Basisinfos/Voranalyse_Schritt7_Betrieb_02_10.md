@@ -3900,3 +3900,29 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 - **B2:** Anzeige auf der Statusseite (Trades) und im Teilexport; in der Mail nur, wenn du es willst.
 - **B3:** **Außenprobe durch dich:** zeigt die Bitpanda-App für ETH 09.–15.10. etwa −127 € und für die BTC-Teilschließung 15.10. etwa −35 €? Das ist die einzige Prüfung gegen Bitpanda selbst.
 - Zusammen mit **M1** (gemailte Signale zuerst) in einem Pull.
+
+### 23.67 M1 und B1/B2 gebaut: gemailte Signale zuerst, Ergebnis echter Hebel-Trades in EUR – auch in der Mail (17.10.2026; `o21_pruefstand.py` 13/13)
+
+**Nutzer 17.10.:** *„ja M1 und B1/B2 bauen, EUR-Ergebnis auch in die Mail – bei Hebel Vorsicht, Standard ist Fiat bei Verkauf, und ich swappe oft in Stable EURCV, da der Verlust in Ö erst bei Verkauf in Fiat realisiert wird. So ist der Verlust steuertechnisch noch nicht realisiert.“* Dazu ein Bild aus der Bitpanda-App: **EURCV 714,71 €, „Gesamtverlust −50,64 %“** – *„normalerweise haben Stablecoins keinen Verlust“*.
+
+**Was das Bild zeigt (an den Buchungen erklärt, §23.66):**
+- Bei der **Eröffnung** geht das Eigenkapital als **EURCV** hinaus: EURCV (eigenes Geld und Kredit) → EUR → Coin.
+- Beim **Schließen** wird nur der **Kreditanteil** des Coins in EUR verkauft und sofort als EURCV getilgt. Der **Rest kommt als Coin** ins Spot-Wallet zurück, nicht als EURCV.
+- ⇒ Die Bitpanda-Ansicht verbucht den Verlust aus den Hebel-Trades beim **Stablecoin**. Die Coin-Reste bekommen eine eigene Ansicht.
+- Eine steuerliche Einordnung ist **nicht** Teil der Rechnung. Gezeigt wird der **Wert zum Schlusskurs**, nie *„realisiert“*.
+
+| Teil | Stand |
+|---|---|
+| **M1** | Gruppe **gemailt** über `mail_signal_am` (nicht über den Schalter). Die Zeile *Messstand im Betrieb* beginnt mit **deinen gemailten Signalen** (n, Tage, Mittel, Spanne 99 %, Befund), danach *alle REGEL0-Signale (Prüfung der Regel)*. Stufen getrennt (`gruppen_gemailt` / `gruppen`) |
+| **B1** | `regel0_messstand.buch`: dieselbe Rechnung wie `s1b_voranalyse` (Eigenkapital = EUR-Kauf − Kredit; Rückfluss = Rest-Coin × Verkaufskurs; Gebühr in Coin), Lebenszyklen je Symbol über alle Asset-IDs. **Wachen P1–P4 im Code:** Bei einem Verstoß bekommt der Zyklus **kein** Ergebnis (*„NICHT berechnet“*), nie eine falsche Zahl. `trades` mit Eigenkapital, Wert zum Schlusskurs, Gebühr, Ergebnis; `trade_summen` seit 03.10. und seit Beginn |
+| **B2 + Mail** | Statusseite (REGEL0-Bereich: *Deine Hebel-Trades*, Summe seit Beginn, je Trade), Teilexport. **Zweite Zeile in der REGEL0-Signalmail: *Deine Hebel-Trades*** mit Summe seit 03.10., dem jüngsten Trade und dem Hinweis *„Wert zum Schlusskurs … das Eigenkapital ging als EURCV hinaus – darum steht das Minus in der Bitpanda-Ansicht beim EURCV“*; Technikzeile *Hebel-Ergebnis* (keine steuerliche Einordnung) |
+| **Prüfstand 13/13** | neu: S10 gemailt 22 (Ablage 22), Zeile beginnt mit ihnen · S11 **37/37 Zyklen auf den Cent** gleich der Voranalyse; ETH −127,41 €, BTC Teil −35,17 € · S12 Wache: verfälschter Übertrag ⇒ *NICHT berechnet*, Summe zählt ihn · S13 Mail mit beiden Zeilen, nie *realisiert* |
+| Fehler im **Test** (nicht im Modul) | S13 erwartete −162,58 € (aus den gerundeten Teilen); die Summe ist −162,574 € und richtig −162,57 € |
+| Statusseite im Browser | Prüfserver: Messstand mit gemailten Signalen zuerst, *Deine Hebel-Trades*, Summe seit Beginn, je Trade mit EUR; keine JS-Fehler. Eine doppelte Zeile *gemailt* entfernt |
+| Suite | Messstand 8/8 (Test auf die neue Gruppe angepasst); Mail, Mailgliederung, Lesbar, Mailabschnitte, Regel0Betrieb, NurLesend, Laufzeit, StandardDB grün |
+
+**So sieht es mit den Daten bis 14.10. aus:**
+- *Messstand im Betrieb:* deine gemailten Signale seit 03.10.: 22 an 6 Tagen, 24-h-Ertrag im Mittel +3,79 % (Spanne 99 %: −2,89 bis +10,47 %) – zu wenige Tage für ein Urteil · alle REGEL0-Signale (Prüfung der Regel): 558 an 12 Tagen, +0,77 % … – im Band der Messung.
+- *Deine Hebel-Trades:* seit 03.10.: 2 Trades (1 offen) · Ergebnis zum Schlusskurs **−162,57 €** auf 1.060 € Eigenkapital · Gebühren 32,23 € · zuletzt ETH −127,41 € (149 h, Regel 24 h).
+
+**Am NB:** Pull und Neustart. Kontrolle **K-O21-2** (nächste REGEL0-Signalmail mit beiden Zeilen).

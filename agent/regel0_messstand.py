@@ -173,7 +173,11 @@ def _befund(k: dict) -> str:
 
 
 def stand(ordner: str, jetzt: datetime | None = None) -> dict:
-    """A2 (+A4): Messstand seit START und rollierend FENSTER_T Tage, je Gruppe; dazu der LLM-Pruefblock gegen den Ausgang."""
+    """A2 (+A4): Messstand seit START und rollierend FENSTER_T Tage, je Gruppe; dazu der LLM-Pruefblock gegen den Ausgang.
+
+    M1 (17.10.2026, Nutzer: *"wir hatten keine 471 Signale - sollten wir nicht die eMail-Signale rechnen?"*): zwei Sichten -
+    ``gemailt`` (``mail_signal_am`` gesetzt = was beim Nutzer ankam) und ``alle`` (die ganze Datenbasis = Pruefung der REGEL);
+    die Stufen je Sicht getrennt (``gruppen_gemailt``, ``gruppen``)."""
     from agent import regel0_ablage as AB
     p = os.path.join(ordner, AB.ABLAGE_NAME)
     jetzt = jetzt or datetime.now(timezone.utc).replace(tzinfo=None)
@@ -184,7 +188,7 @@ def stand(ordner: str, jetzt: datetime | None = None) -> dict:
     try:
         if not c.execute("SELECT 1 FROM sqlite_master WHERE name='ausgang'").fetchone():
             return aus
-        rows = c.execute("SELECT a.signalstunde, a.e24, a.q, s.hebel_schalter, s.stufe, s.zusatz FROM ausgang a JOIN signal s "
+        rows = c.execute("SELECT a.signalstunde, a.e24, a.q, s.hebel_schalter, s.stufe, s.zusatz, s.mail_signal_am FROM ausgang a JOIN signal s "
                          "ON s.symbol = a.symbol AND s.signalstunde = a.signalstunde WHERE a.status='ok' ORDER BY a.signalstunde").fetchall()
         ohne = c.execute("SELECT COUNT(*) FROM ausgang WHERE status='ohne_kurse'").fetchone()[0]
         offen = c.execute("SELECT COUNT(*) FROM signal s WHERE s.signalstunde >= ? AND NOT EXISTS (SELECT 1 FROM ausgang a WHERE "
@@ -199,12 +203,15 @@ def stand(ordner: str, jetzt: datetime | None = None) -> dict:
     grenze = (jetzt - timedelta(days=FENSTER_T)).strftime(FMT)
     z = [(r[0][:10], r[1], r[2]) for r in rows]
     gesamt = _kennzahl(z)
+    gemailt = _kennzahl([x for x, r in zip(z, rows) if r[6]])
+    stufen = (("Stufe 5", lambda r: r[4] == 5), ("Stufe 3", lambda r: r[4] == 3), ("Stufe 2", lambda r: r[4] == 2))
     aus.update(vorhanden=True, seit=rows[0][0][:10] if rows else None, zuletzt=zuletzt, ohne_kurse=ohne, offen=offen,
-               gesamt=gesamt, befund=_befund(gesamt),
+               gesamt=gesamt, befund=_befund(gesamt), gemailt=gemailt, befund_gemailt=_befund(gemailt),
                fenster=_kennzahl([x for x, r in zip(z, rows) if r[0] >= grenze]),
                gruppen={name: _kennzahl([x for x, r in zip(z, rows) if f(r)]) for name, f in (
-                   ("Hebel-Schalter an", lambda r: r[3] == 1), ("Schalter aus", lambda r: r[3] != 1), ("Stufe 5", lambda r: r[4] == 5),
-                   ("Stufe 3", lambda r: r[4] == 3), ("Stufe 2", lambda r: r[4] == 2), ("Zusatz-Assets", lambda r: r[5] == 1))},
+                   ("gemailt", lambda r: bool(r[6])), ("nicht gemailt", lambda r: not r[6])) + stufen + (
+                   ("Zusatz-Assets", lambda r: r[5] == 1),)},
+               gruppen_gemailt={name: _kennzahl([x for x, r in zip(z, rows) if r[6] and f(r)]) for name, f in stufen},
                llm={u: _kennzahl([(r[1][:10], r[2], r[3]) for r in llm if r[0] == u]) for u in sorted({r[0] for r in llm})},
                referenz={"mittel": REF_MITTEL, "q": REF_Q, "halb": REF_HALB, "quelle": "Messung 2025-01..2026-08 (bestand, 497 Tage)"})
     return aus
@@ -214,65 +221,213 @@ def _pp(x: float) -> str:
     return ("%+.2f %%" % (100 * x)).replace(".", ",")
 
 
+def _spanne(k: dict) -> str:
+    return ("%s bis %s" % (_pp(k["mittel"] - k["halb"]), _pp(k["mittel"] + k["halb"]))) if k.get("halb") == k.get("halb") else "–"
+
+
 def zeile(st: dict | None = None, ordner: str | None = None) -> str:
-    """Die EINE Zeile fuer Mail, Statusseite und Teilexport - mit Spanne und Tagen, damit sie nicht genauer wirkt, als sie ist."""
+    """Die EINE Zeile fuer Mail, Statusseite und Teilexport - ZUERST die gemailten Signale (M1), dann alle als Pruefung der Regel; mit
+    Spanne und Tagen, damit sie nicht genauer wirkt, als sie ist."""
     if st is None:
         from agent import regel0_nachlader as NL
         st = stand(ordner or NL.DATEN_VORGABE)
     g = (st or {}).get("gesamt") or {}
     if not g.get("n"):
-        return "Messstand im Betrieb: noch keine abgeschlossenen 24-h-Ausgänge"
-    sp = ("%s bis %s" % (_pp(g["mittel"] - g["halb"]), _pp(g["mittel"] + g["halb"]))) if g["halb"] == g["halb"] else "–"
-    an = (st.get("gruppen") or {}).get("Hebel-Schalter an") or {}
-    return ("seit %s %d Signale an %d Tagen: 24-h-Ertrag im Mittel %s (Spanne 99 %%: %s), Messung %s – %s%s. Ein Tag zählt wie eine "
-            "Beobachtung; ob der Vorteil die Kosten (0,48 %%) schlägt, ist so erst nach Jahren entscheidbar") % (
-        _t(st["seit"] + " 00:00").strftime("%d.%m."), g["n"], g["tage"], _pp(g["mittel"]), sp, _pp(REF_MITTEL), st.get("befund"),
-        (" · Schalter an: %d an %d Tagen, %s" % (an["n"], an["tage"], _pp(an["mittel"]))) if an.get("n") else "")
+        return "noch keine abgeschlossenen 24-h-Ausgänge"
+    m = st.get("gemailt") or {}
+    seit = _t(st["seit"] + " 00:00").strftime("%d.%m.")
+    deine = ("deine gemailten Signale seit %s: %d an %d Tagen, 24-h-Ertrag im Mittel %s (Spanne 99 %%: %s) – %s" % (
+        seit, m["n"], m["tage"], _pp(m["mittel"]), _spanne(m), st.get("befund_gemailt"))) if m.get("n") else \
+        "deine gemailten Signale: noch keine mit 24-h-Ausgang"
+    alle = "alle REGEL0-Signale (Prüfung der Regel): %d an %d Tagen, im Mittel %s (Spanne 99 %%: %s), Messung %s – %s" % (
+        g["n"], g["tage"], _pp(g["mittel"]), _spanne(g), _pp(REF_MITTEL), st.get("befund"))
+    return "%s · %s. Ein Tag zählt wie eine Beobachtung; ob der Vorteil die Kosten (0,48 %%) schlägt, ist so erst nach Jahren entscheidbar" % (
+        deine, alle)
 
 
 def mailteil(ordner: str | None = None) -> dict:
-    """Fuer die REGEL0-Signalmail (Muster ``termin``/``makro``): {'ein': Zeile, 'technik': [(k, v)]}."""
-    return {"ein": zeile(ordner=ordner), "technik": [("Messstand im Betrieb", "Fakt, nicht Teil der Regel (O21) · gemessen wie die Referenz "
-                                                                  "(Einstiegsstunde, 24 h, ±5 %); Spanne über Tage (Schritt7 §23.64)")]}
+    """Fuer die REGEL0-Signalmail (Muster ``termin``/``makro``): {'ein': Zeile, 'zusatz': [(Label, Text)], 'technik': [(k, v)]}.
+    B1 (17.10.2026, Nutzer: *"EUR-Ergebnis auch in die Mail"*): die echten Hebel-Trades als zweite Zeile - Wert zum Schlusskurs."""
+    from agent import regel0_nachlader as NL
+    ordner = ordner or NL.DATEN_VORGABE
+    aus = {"ein": zeile(ordner=ordner), "zusatz": [],
+           "technik": [("Messstand im Betrieb", "Fakt, nicht Teil der Regel (O21) · gemessen wie die Referenz (Einstiegsstunde, 24 h, ±5 %); "
+                                                "Spanne über Tage (Schritt7 §23.64)")]}
+    try:
+        p = os.path.join(ordner, "tradinginfotool.db")
+        if os.path.exists(p):
+            c = _ro(p)
+            try:
+                txt = trades_zeile(c, ordner)
+            finally:
+                c.close()
+            if txt:
+                aus["zusatz"].append(("Deine Hebel-Trades", txt))
+                aus["technik"].append(("Hebel-Ergebnis", "Wert zum Schlusskurs aus den Bitpanda-Buchungen (Eigenkapital = EUR-Kauf − Kredit; "
+                                                         "Rückfluss = Rest-Coin × Verkaufskurs); keine steuerliche Einordnung (Schritt7 §23.66)"))
+    except Exception as exc:                                  # noqa: BLE001
+        logger.warning("Messstand: Hebel-Trades nicht lesbar: %s: %s", type(exc).__name__, exc)
+    return aus
 
 
-# ══ A3: echte Trades ═══════════════════════════════════════════════════════════════════════════════════════════════════════
-def trades(conn_prod, ordner: str) -> list:
-    """Je Lebenszyklus aus dem Hebel-Buch ab START: das REGEL0-Signal desselben Assets (Eroeffnung 1-26 h nach der Signalstunde)
-    oder 'eigene Entscheidung', Verzug zum gemessenen Einstieg, Haltedauer gegen die Regel 24 h. FAKT - kein Ergebnis in EUR
-    (Bitpanda bucht Eigenkapital, Kredit, Teilverkauf und Uebertrag getrennt; Stufe 1b)."""
+# ══ A3 + B1: echte Trades, Ergebnis in EUR ═════════════════════════════════════════════════════════════════════════════════
+EUR_FIAT = "b88b8466-efe3-11eb-b56f-0691764446a7"   # Bitpanda-Waehrung EUR (Fiat) in /v1/operations
+
+
+def buch(conn_prod) -> list:
+    """B1 (Schritt7 §23.66, s1b_voranalyse - dieselbe Rechnung, Gegenprobe 37/37 auf den Cent): Lebenszyklen je Symbol aus
+    ``hebel_buch_vorgang.roh`` mit Eigenkapital, Rueckfluss, Gebuehr und Ergebnis zum Schlusskurs. Die Wachen P1-P4 laufen mit;
+    ein Zyklus mit Verstoss traegt ``pruefung`` (Liste) und KEIN Ergebnis - nie eine falsche Zahl."""
+    import json as _json
+    import importer.hebel_buch as HB
+    kat = dict(conn_prod.execute("SELECT asset_id, symbol FROM bitpanda_katalog").fetchall())
+    ops = conn_prod.execute("SELECT zeit, typ, asset_id, zugang, abgang, kredit_aenderung, roh FROM %s ORDER BY zeit, operation_id"
+                            % HB.TABELLE).fetchall()
+    f = lambda x: float(x or 0)                                   # noqa: E731
+    stand_, aus = {}, []
+    for zeit, typ, aid, zu, ab, kd, roh in ops:
+        s = kat.get(aid)
+        if not s or "short" in typ or not roh:
+            continue
+        tx = _json.loads(roh).get("transactions") or []
+        t = datetime.fromisoformat(zeit.replace("Z", "")[:19])
+        b = stand_.get(s)
+        if typ == "margin_trading_open_long":
+            eur_kauf = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("currency_id") == EUR_FIAT and x.get("flow") == "OUTGOING"
+                           and x.get("transaction_type") == "buy")
+            kredit = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("wallet_owner") == "margin-trading-credit" and x.get("flow") == "OUTGOING")
+            verk = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("transaction_type") == "sell" and x.get("flow") == "OUTGOING"
+                       and x.get("wallet_owner") == "shared-default")
+            if b is None or b["menge"] <= HB.TOL:
+                b = stand_[s] = {"symbol": s, "auf": t, "zu": None, "menge": 0.0, "ek": 0.0, "ek_summe": 0.0, "kredit": 0.0, "tilgung": 0.0,
+                                 "rueck": 0.0, "kosten": 0.0, "ergebnis": 0.0, "liquidiert": False, "pruefung": [], "rest_coin": 0.0,
+                                 "letzte_auf": t}
+            if abs(eur_kauf - verk) > 0.005 or abs(kredit - f(kd)) > 0.005:
+                b["pruefung"].append("P3 %s" % zeit[:16])
+            b["menge"] += f(zu)
+            b["ek"] += eur_kauf - kredit
+            b["ek_summe"] += eur_kauf - kredit
+            b["kredit"] += kredit
+            b["letzte_auf"] = t
+            continue
+        if b is None or b["menge"] <= HB.TOL:
+            continue
+        fee = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("transaction_type") == "fee" and x.get("asset_id") == aid)
+        verk = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("transaction_type") == "sell" and x.get("asset_id") == aid)
+        rate = next((f(x["trade"]["rate"]) for x in tx if x.get("transaction_type") == "sell" and x.get("asset_id") == aid and x.get("trade")), 0.0)
+        eur_ein = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("currency_id") == EUR_FIAT and x.get("flow") == "INCOMING"
+                      and x.get("transaction_type") == "sell")
+        tilg = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("wallet_owner") == "margin-trading-credit" and x.get("flow") == "INCOMING")
+        uebertrag = sum(f(x["asset_amount"]["value"]) for x in tx if x.get("asset_id") == aid and x.get("wallet_owner") == "shared-default"
+                        and x.get("flow") == "INCOMING" and x.get("transaction_type") == "transfer")
+        if abs(f(ab) - (verk + fee + uebertrag)) > 1e-8:
+            b["pruefung"].append("P1 %s" % zeit[:16])
+        if abs(verk * rate - eur_ein) > 0.011:
+            b["pruefung"].append("P4 %s" % zeit[:16])
+        anteil = min(f(ab) / b["menge"], 1.0)
+        ek_anteil = b["ek"] * anteil
+        rueck = uebertrag * rate + (eur_ein - tilg)
+        b["rueck"] += rueck
+        b["kosten"] += fee * rate
+        b["ergebnis"] += rueck - ek_anteil
+        b["ek"] -= ek_anteil
+        b["tilgung"] += tilg
+        b["rest_coin"] += uebertrag
+        b["menge"] = max(b["menge"] - f(ab), 0.0)
+        b["liquidiert"] |= typ == "margin_trading_liquidation_long"
+        if b["menge"] <= HB.TOL:
+            b["zu"] = t
+            if abs(b["tilgung"] - b["kredit"]) > 0.01:
+                b["pruefung"].append("P2")
+            aus.append(b)
+            del stand_[s]
+    return aus + list(stand_.values())
+
+
+def trades(conn_prod, ordner: str, seit: str = START) -> list:
+    """Je Lebenszyklus ab ``seit``: das REGEL0-Signal desselben Assets (Eroeffnung 1-26 h nach der Signalstunde) oder 'eigene
+    Entscheidung', Verzug zum gemessenen Einstieg, Haltedauer gegen die Regel 24 h - und (B1) Eigenkapital, Wert zum Schlusskurs,
+    Gebuehr, Ergebnis in EUR. ⚠️ Kein 'realisiert': beim Schliessen verkauft Bitpanda nur den Kreditanteil in EUR (zur Tilgung, sofort
+    wieder EURCV), der Rest liegt als Coin im Spot-Wallet - die steuerliche Einordnung ist nicht Teil der Rechnung."""
     from agent import regel0_ablage as AB
     import importer.hebel_buch as HB
+    if conn_prod is None or not conn_prod.execute("SELECT 1 FROM sqlite_master WHERE name=?", (HB.TABELLE,)).fetchone():
+        return []
     p = os.path.join(ordner, AB.ABLAGE_NAME)
-    if conn_prod is None or not os.path.exists(p):
-        return []
-    if not conn_prod.execute("SELECT 1 FROM sqlite_master WHERE name=?", (HB.TABELLE,)).fetchone():
-        return []
-    zy = [z for z in HB.lebenszyklen(conn_prod) if str(z["auf"])[:16].replace("T", " ") >= START]
-    c = _ro(p)
-    try:
-        sig = c.execute("SELECT COALESCE(bitpanda, symbol), signalstunde, einstieg, stufe, hebel_schalter FROM signal WHERE signalstunde >= ?",
-                        (START,)).fetchall()
-    finally:
-        c.close()
+    sig = []
+    if os.path.exists(p):
+        c = _ro(p)
+        try:
+            sig = c.execute("SELECT COALESCE(bitpanda, symbol), signalstunde, einstieg, stufe, hebel_schalter FROM signal WHERE signalstunde >= ?",
+                            (START,)).fetchall()
+        finally:
+            c.close()
+    jetzt = datetime.now(timezone.utc).replace(tzinfo=None)
     aus = []
-    for z in zy:
-        auf = datetime.fromisoformat(str(z["auf"]).replace("Z", "")[:19])
-        zu = datetime.fromisoformat(str(z["zu"]).replace("Z", "")[:19]) if z.get("zu") else None
+    for z in buch(conn_prod):
+        auf, zu = z["auf"], z["zu"]
+        if auf.strftime(FMT) < seit:
+            continue
         kand = [s for s in sig if str(s[0]).upper() == z["symbol"].upper() and 1 <= (auf - _t(s[1])).total_seconds() / 3600 <= 26]
         s = kand[-1] if kand else None
+        ok = not z["pruefung"]
         aus.append({"symbol": z["symbol"], "auf": auf.strftime(FMT), "zu": zu.strftime(FMT) if zu else None,
-                    "status": "liquidiert" if z.get("liquidiert") else ("geschlossen" if zu else "offen"),
-                    "dauer_h": ((zu or datetime.now(timezone.utc).replace(tzinfo=None)) - auf).total_seconds() / 3600,
+                    "status": "liquidiert" if z["liquidiert"] else ("geschlossen" if zu else "offen"),
+                    "dauer_h": ((zu or jetzt) - auf).total_seconds() / 3600,
                     "signal": s[1] if s else None, "stufe": s[3] if s else None, "schalter": s[4] if s else None,
-                    "verzug_h": ((auf - _t(s[2])).total_seconds() / 3600) if s else None})
+                    "verzug_h": ((auf - _t(s[2])).total_seconds() / 3600) if s else None,
+                    "eigenkapital": z["ek_summe"], "rueckfluss": z["rueck"] if ok else None, "kosten": z["kosten"] if ok else None,
+                    "ergebnis": z["ergebnis"] if ok else None, "ek_offen": z["ek"] if not zu else 0.0, "rest_coin": z["rest_coin"],
+                    "pruefung": z["pruefung"]})
     return aus
+
+
+def _eur(x: float) -> str:
+    return ("%+.2f €" % x).replace(".", ",") if x is not None else "–"
 
 
 def trade_text(t: dict) -> str:
     d = "%.0f h%s" % (t["dauer_h"], "" if t["status"] != "offen" else " bisher")
-    if t["signal"]:
-        return "%s %s → %s · %s · REGEL0-Signal %s (Stufe %s), eröffnet %.1f h nach dem gemessenen Einstieg · Haltedauer %s (Regel 24 h)" % (
-            t["symbol"], t["auf"], t["zu"] or "offen", t["status"], t["signal"], t["stufe"], t["verzug_h"], d)
-    return "%s %s → %s · %s · ohne REGEL0-Signal in den 26 h davor (eigene Entscheidung) · Haltedauer %s" % (
-        t["symbol"], t["auf"], t["zu"] or "offen", t["status"], d)
+    kopf = ("%s %s → %s · %s · REGEL0-Signal %s (Stufe %s), eröffnet %.1f h nach dem gemessenen Einstieg · Haltedauer %s (Regel 24 h)" % (
+        t["symbol"], t["auf"], t["zu"] or "offen", t["status"], t["signal"], t["stufe"], t["verzug_h"], d)) if t["signal"] else \
+        "%s %s → %s · %s · ohne REGEL0-Signal in den 26 h davor (eigene Entscheidung) · Haltedauer %s" % (
+            t["symbol"], t["auf"], t["zu"] or "offen", t["status"], d)
+    if "eigenkapital" not in t:
+        return kopf
+    if t.get("pruefung"):
+        return kopf + " · Ergebnis NICHT berechnet (Buchung passt nicht: %s)" % ", ".join(t["pruefung"])
+    if t["status"] == "offen":
+        return kopf + " · Eigenkapital %s € · aus Teilschließungen zum Schlusskurs %s · offen noch %s € Eigenkapital" % (
+            ("%.2f" % t["eigenkapital"]).replace(".", ","), _eur(t["ergebnis"]), ("%.2f" % t["ek_offen"]).replace(".", ","))
+    return kopf + " · Eigenkapital %s € · Wert zum Schlusskurs %s € · Ergebnis %s (%s auf das Eigenkapital) · Gebühr %s €" % (
+        ("%.2f" % t["eigenkapital"]).replace(".", ","), ("%.2f" % t["rueckfluss"]).replace(".", ","), _eur(t["ergebnis"]),
+        _pp(t["ergebnis"] / t["eigenkapital"]) if t["eigenkapital"] else "–", ("%.2f" % t["kosten"]).replace(".", ","))
+
+
+def trade_summen(conn_prod, ordner: str) -> dict:
+    """Summen seit START (REGEL0-Betrieb) und seit Beginn des Buchs: Zahl, Eigenkapital, Ergebnis zum Schlusskurs, Gebuehr."""
+    def s_(lst):
+        ok = [t for t in lst if t["ergebnis"] is not None]
+        return {"n": len(lst), "offen": sum(1 for t in lst if t["status"] == "offen"), "nicht_berechnet": len(lst) - len(ok),
+                "eigenkapital": sum(t["eigenkapital"] for t in ok), "ergebnis": sum(t["ergebnis"] for t in ok),
+                "kosten": sum(t["kosten"] for t in ok)}
+    return {"seit_start": s_(trades(conn_prod, ordner)), "seit_beginn": s_(trades(conn_prod, ordner, seit="2000-01-01 00:00"))}
+
+
+def trades_zeile(conn_prod, ordner: str) -> str | None:
+    """B1: die Zeile 'Deine Hebel-Trades' fuer die Signalmail - Summe seit START, dazu der juengste geschlossene Trade."""
+    tr = trades(conn_prod, ordner)
+    if not tr:
+        return None
+    s = trade_summen(conn_prod, ordner)["seit_start"]
+    zu = [t for t in tr if t["zu"] and t["ergebnis"] is not None]
+    letzter = max(zu, key=lambda t: t["zu"]) if zu else None
+    # Nutzer 17.10. (Bild: EURCV "Gesamtverlust -50,64 %"): das Eigenkapital geht bei der Eroeffnung als EURCV hinaus, beim Schliessen
+    # kommt nur der Rest als COIN zurueck - darum zeigt Bitpanda das Minus beim Stablecoin. Wert zum Schlusskurs, keine steuerliche Aussage
+    return ("seit %s: %d Trades (%d offen) · Ergebnis zum Schlusskurs %s auf %s € Eigenkapital · Gebühren %s €%s · ⚠ Wert zum Schlusskurs: "
+            "beim Schließen verkauft Bitpanda nur den Kreditanteil, der Rest bleibt als Coin im Spot-Wallet; das Eigenkapital ging als "
+            "EURCV hinaus – darum steht das Minus in der Bitpanda-Ansicht beim EURCV") % (
+        _t(START).strftime("%d.%m."), s["n"], s["offen"], _eur(s["ergebnis"]), ("%.2f" % s["eigenkapital"]).replace(".", ","),
+        ("%.2f" % s["kosten"]).replace(".", ","),
+        (" · zuletzt %s %s (%.0f h%s)" % (letzter["symbol"], _eur(letzter["ergebnis"]), letzter["dauer_h"],
+                                          ", ohne REGEL0-Signal" if not letzter["signal"] else ", Regel 24 h")) if letzter else "")

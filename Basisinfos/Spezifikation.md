@@ -824,6 +824,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **Season-Ampel** (Spot C1): Drei Bedingungen (BTC 91 T, Geldmenge M2, Stablecoin-Angebot) ergeben eine Stufe von *kalt* bis *Ende*. Du siehst sie oben auf der Statusseite unter dem Makro-Umfeld, als Zeile in den Spot-Mails B1/B3/B4 und im neuen GUI-Reiter *Markt (Krypto)*. Sie löst nichts aus; die Mail beim Stufenwechsel ist gebaut, aber aus, weil die Schwellen nur auf einem Zyklus belegt sind (O47).
 - **Einstiegs-Kandidaten** (A3): Reiter *Spot* und Statusseite zeigen das obere Fünftel je Klasse, bei Bitpanda handelbar. Die Liste ordnet den Fortbestand; ein Einstieg je Asset ist nicht belegt.
 - **Marktscan** der alten Kette ruht (O43).
+- **Deine Hebel-Trades** (17.10.): Die REGEL0-Signalmail und die Statusseite nennen das Ergebnis deiner echten Hebel-Trades in EUR zum Schlusskurs, mit dem Hinweis, warum Bitpanda das Minus beim EURCV zeigt. Der Messstand beginnt mit deinen gemailten Signalen.
 - **Messstand im Betrieb** (O21): Jede REGEL0-Signalmail sagt, wie die bisherigen Signale nach 24 h liefen – mit Tagen, Spanne und dem Vergleich zur Messung. Das ist eine Kontrolle, ob der Betrieb tut, was gemessen wurde; über die Kosten entscheidet sie nicht.
 - **Nach einer Unterbrechung** (P11d): Hat die REGEL0-Rechnung nur verpasste Stunden nachgeholt, heißt die Mail *„REGEL0 nachgeholt – Rechnung erfolgreich“*; *„fehlgeschlagen“* kommt nur noch bei einem echten Fehler.
 
