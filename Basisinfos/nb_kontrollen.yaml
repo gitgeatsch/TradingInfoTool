@@ -366,7 +366,7 @@ kontrollen:
     titel: "Spot-Mails B1/B3/B4: Wortlaut 'verkaufen oder in EURCV tauschen'"
     seit: "2026-10-17"
     paket: Spot-EURCV
-    commit: ""
+    commit: c4e3d8a3
     art: ereignis
     nachweis: "naechste B1-, B3- oder B4-Mail: Betreff bzw. Handlungssatz mit 'verkaufen oder in EURCV tauschen' (B4: 'verkaufe oder tausche in EURCV zuerst') und der Satz 'Ob in Euro (Fiat) oder in den Stablecoin EURCV, ist deine Wahl'"
     faellig_bis: "2026-11-30"
