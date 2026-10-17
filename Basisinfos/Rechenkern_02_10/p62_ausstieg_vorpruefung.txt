@@ -1,0 +1,68 @@
+P62 PUNKT 2 · Ausstieg und Haltedauer auf den REGEL0-Einstiegen · vorab §23.68 · Kosten 0,30 % + 0,18 %/Tag · Band 99 %
+
+======================================================================================================================
+bestand: 10725 Einstiege mit 168 h (von 10732), Urteil 2025-26 8401 an 497 Tagen
+   Zelle       brutto      netto   gepaart netto - H24 (2025-26, 99 %) 2025                       2026                       Urteil
+   H24        +0.545%    +0.065%   (Bezug)
+   H48        +0.153%    -0.507%   -0.57 [-1.18; +0.03]               -0.81 [-1.68; +0.06]       -0.27 [-1.08; +0.54]       nicht unterscheidbar
+   H72        -0.373%    -1.213%   -1.28 [-2.11; -0.45]               -1.63 [-2.81; -0.45]       -0.83 [-1.97; +0.32]       nicht unterscheidbar
+   H120       -0.849%    -2.049%   -2.11 [-3.44; -0.79]               -2.75 [-4.88; -0.63]       -1.29 [-2.64; +0.05]       nicht unterscheidbar
+   H168       -0.870%    -2.430%   -2.50 [-4.01; -0.98]               -3.50 [-5.80; -1.20]       -1.21 [-2.98; +0.56]       nicht unterscheidbar
+   S5_24      +0.454%    -0.009%   -0.07 [-0.32; +0.17]               -0.11 [-0.53; +0.30]       -0.02 [-0.17; +0.12]       nicht unterscheidbar
+   S8_24      +0.548%    +0.073%   +0.01 [-0.07; +0.09]               +0.03 [-0.11; +0.17]       -0.01 [-0.05; +0.02]       nicht unterscheidbar
+   S8_168     -0.923%    -2.111%   -2.18 [-3.35; -1.00]               -2.92 [-4.74; -1.09]       -1.23 [-2.53; +0.08]       nicht unterscheidbar
+   Auskunft Tief <= -20 % / -33 %: binnen 24 h 0.4 / 0.2 % der Einstiege · binnen 168 h 11.9 / 2.0 %
+   netto je Haltedauer 24/48/72/120/168 h: +0.065 % / -0.507 % / -1.213 % / -2.049 % / -2.430 %  -> je weiterem Tag im Mittel -0.416 % (24 -> 168 h)
+   R-R11 H24 brutto 2025-26 +0.545 % (p61: +0,545 % auf allen Einstiegen mit 24 h; hier nur mit 168 h)
+   Auskunft 2024: brutto H24 +0.954 % · H168 +3.405 % · S8_168 +2.279 % · netto H24 +0.474 % · H168 +1.845 %
+======================================================================================================================
+unverzerrt_1: 11151 Einstiege mit 168 h (von 11177), Urteil 2025-26 9100 an 527 Tagen
+   Zelle       brutto      netto   gepaart netto - H24 (2025-26, 99 %) 2025                       2026                       Urteil
+   H24        +0.304%    -0.176%   (Bezug)
+   H48        +0.065%    -0.595%   -0.42 [-1.03; +0.19]               -0.60 [-1.50; +0.29]       -0.16 [-0.92; +0.60]       nicht unterscheidbar
+   H72        -0.302%    -1.142%   -0.97 [-1.84; -0.09]               -1.01 [-2.33; +0.30]       -0.90 [-1.95; +0.14]       nicht unterscheidbar
+   H120       -0.794%    -1.994%   -1.82 [-3.17; -0.46]               -2.15 [-4.32; +0.01]       -1.35 [-2.55; -0.14]       nicht unterscheidbar
+   H168       -0.644%    -2.204%   -2.03 [-3.67; -0.38]               -2.40 [-4.96; +0.17]       -1.51 [-3.17; +0.14]       nicht unterscheidbar
+   S5_24      +0.271%    -0.191%   -0.01 [-0.29; +0.26]               -0.03 [-0.48; +0.43]       +0.00 [-0.14; +0.15]       nicht unterscheidbar
+   S8_24      +0.338%    -0.137%   +0.04 [-0.09; +0.17]               +0.06 [-0.16; +0.28]       +0.00 [-0.05; +0.06]       nicht unterscheidbar
+   S8_168     -0.797%    -1.974%   -1.80 [-3.03; -0.56]               -2.10 [-4.04; -0.16]       -1.37 [-2.57; -0.17]       schlechter
+   Auskunft Tief <= -20 % / -33 %: binnen 24 h 0.6 / 0.4 % der Einstiege · binnen 168 h 12.7 / 3.2 %
+   netto je Haltedauer 24/48/72/120/168 h: -0.176 % / -0.595 % / -1.142 % / -1.994 % / -2.204 %  -> je weiterem Tag im Mittel -0.338 % (24 -> 168 h)
+   Auskunft 2024: brutto H24 +1.354 % · H168 +3.637 % · S8_168 +2.850 % · netto H24 +0.874 % · H168 +2.077 %
+======================================================================================================================
+unverzerrt_2: 10447 Einstiege mit 168 h (von 10481), Urteil 2025-26 8551 an 528 Tagen
+   Zelle       brutto      netto   gepaart netto - H24 (2025-26, 99 %) 2025                       2026                       Urteil
+   H24        +0.312%    -0.168%   (Bezug)
+   H48        -0.026%    -0.686%   -0.52 [-1.18; +0.14]               -0.78 [-1.74; +0.17]       -0.11 [-0.86; +0.65]       nicht unterscheidbar
+   H72        -0.342%    -1.182%   -1.01 [-1.90; -0.13]               -1.24 [-2.55; +0.06]       -0.66 [-1.69; +0.38]       nicht unterscheidbar
+   H120       -1.018%    -2.218%   -2.05 [-3.49; -0.60]               -2.54 [-4.79; -0.29]       -1.28 [-2.47; -0.09]       schlechter
+   H168       -0.930%    -2.490%   -2.32 [-3.96; -0.68]               -2.90 [-5.39; -0.41]       -1.42 [-3.05; +0.21]       nicht unterscheidbar
+   S5_24      +0.285%    -0.176%   -0.01 [-0.29; +0.27]               -0.00 [-0.46; +0.45]       -0.01 [-0.14; +0.11]       nicht unterscheidbar
+   S8_24      +0.343%    -0.132%   +0.04 [-0.11; +0.18]               +0.08 [-0.15; +0.31]       -0.03 [-0.09; +0.03]       nicht unterscheidbar
+   S8_168     -0.775%    -1.955%   -1.79 [-3.05; -0.53]               -2.20 [-4.11; -0.28]       -1.15 [-2.37; +0.07]       nicht unterscheidbar
+   Auskunft Tief <= -20 % / -33 %: binnen 24 h 0.5 / 0.3 % der Einstiege · binnen 168 h 12.5 / 3.7 %
+   netto je Haltedauer 24/48/72/120/168 h: -0.168 % / -0.686 % / -1.182 % / -2.218 % / -2.490 %  -> je weiterem Tag im Mittel -0.387 % (24 -> 168 h)
+   Auskunft 2024: brutto H24 +1.261 % · H168 +4.203 % · S8_168 +2.980 % · netto H24 +0.781 % · H168 +2.643 %
+======================================================================================================================
+unverzerrt_3: 10767 Einstiege mit 168 h (von 10793), Urteil 2025-26 8894 an 527 Tagen
+   Zelle       brutto      netto   gepaart netto - H24 (2025-26, 99 %) 2025                       2026                       Urteil
+   H24        +0.310%    -0.170%   (Bezug)
+   H48        +0.081%    -0.579%   -0.41 [-0.99; +0.17]               -0.55 [-1.41; +0.31]       -0.22 [-0.94; +0.51]       nicht unterscheidbar
+   H72        -0.386%    -1.226%   -1.06 [-1.91; -0.20]               -1.12 [-2.43; +0.18]       -0.97 [-1.98; +0.04]       nicht unterscheidbar
+   H120       -0.828%    -2.028%   -1.86 [-3.18; -0.53]               -2.24 [-4.39; -0.09]       -1.35 [-2.55; -0.16]       schlechter
+   H168       -0.514%    -2.074%   -1.90 [-3.51; -0.30]               -2.29 [-4.81; +0.23]       -1.39 [-3.06; +0.28]       nicht unterscheidbar
+   S5_24      +0.254%    -0.207%   -0.04 [-0.29; +0.22]               -0.08 [-0.52; +0.36]       +0.02 [-0.12; +0.16]       nicht unterscheidbar
+   S8_24      +0.315%    -0.159%   +0.01 [-0.10; +0.12]               +0.01 [-0.18; +0.20]       +0.01 [-0.05; +0.07]       nicht unterscheidbar
+   S8_168     -0.692%    -1.869%   -1.70 [-2.91; -0.48]               -1.98 [-3.92; -0.04]       -1.32 [-2.50; -0.14]       schlechter
+   Auskunft Tief <= -20 % / -33 %: binnen 24 h 0.5 / 0.2 % der Einstiege · binnen 168 h 12.5 / 2.9 %
+   netto je Haltedauer 24/48/72/120/168 h: -0.170 % / -0.579 % / -1.226 % / -2.028 % / -2.074 %  -> je weiterem Tag im Mittel -0.317 % (24 -> 168 h)
+   Auskunft 2024: brutto H24 +1.297 % · H168 +4.341 % · S8_168 +2.906 % · netto H24 +0.817 % · H168 +2.781 %
+
+URTEIL JE ZELLE ueber die vier Mengen (vorab: >= 3 von 4):
+   H48     nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar -> nicht unterscheidbar
+   H72     nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar -> nicht unterscheidbar
+   H120    nicht unterscheidbar · nicht unterscheidbar · schlechter · schlechter -> nicht unterscheidbar
+   H168    nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar -> nicht unterscheidbar
+   S5_24   nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar -> nicht unterscheidbar
+   S8_24   nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar · nicht unterscheidbar -> nicht unterscheidbar
+   S8_168  nicht unterscheidbar · schlechter · nicht unterscheidbar · schlechter -> nicht unterscheidbar

@@ -3958,3 +3958,35 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 | **Auskunft** | Anteil der Einstiege, deren Tief innerhalb der Haltedauer −20 % bzw. −33 % erreicht (Liquidationsnähe bei 5x bzw. 3x); Kosten je weiterem Tag |
 | **R-R11** | 24 h ohne Stop brutto = 24-h-Ertrag aus p61 (bestand 2025–26 **+0,545 %**) |
 | **Was NICHT folgt** | Keine neue Regel ohne eigene Wahl- und Bestätigungsrunde. Ergebnis ist ein **Fakt für die Positionsführung**, etwa in der Ausstiegserinnerung: *„jeder weitere Tag kostete 2025–26 im Mittel …“* |
+
+**Ergebnis (18.10.2026, `p62_ausstieg_vorpruefung.txt`, 15 s; Gegenprobe `p62_gegenprobe.txt`):**
+
+**R-R11:** H24 brutto 2025–26 bestand **+0,545 %** = p61. **Gegenprobe** (eigene Schleife über ein Stunden-Wörterbuch): n 8.401, H24 / H72 / H168 / S8_168 und Tief ≤ −20 % **auf drei Stellen gleich**.
+
+**Gepaart netto gegen 24 h, 2025–26** (Prozentpunkte je Handel auf den Positionswert, 99 %, Tagesblock):
+
+| Zelle | bestand | unverzerrt:1 | unverzerrt:2 | unverzerrt:3 |
+|---|---|---|---|---|
+| H48 | −0,57 [−1,18; +0,03] | −0,42 [−1,03; +0,19] | −0,52 [−1,18; +0,14] | −0,41 [−0,99; +0,17] |
+| H72 | −1,28 [−2,11; −0,45] | −0,97 [−1,84; −0,09] | −1,01 [−1,90; −0,13] | −1,06 [−1,91; −0,20] |
+| H120 | −2,11 [−3,44; −0,79] | −1,82 [−3,17; −0,46] | −2,05 [−3,49; −0,60] | −1,86 [−3,18; −0,53] |
+| H168 | −2,50 [−4,01; −0,98] | −2,03 [−3,67; −0,38] | −2,32 [−3,96; −0,68] | −1,90 [−3,51; −0,30] |
+| S5_24 | −0,07 | −0,01 | −0,01 | −0,04 (alle Intervalle um 0) |
+| S8_24 | +0,01 | +0,04 | +0,04 | +0,01 (alle um 0) |
+| S8_168 | −2,18 [−3,35; −1,00] | −1,80 [−3,03; −0,56] | −1,79 [−3,05; −0,53] | −1,70 [−2,91; −0,48] |
+
+- **Vorab-Urteil** (beide Jahre einzeln, ≥ 3/4 Mengen): durchweg *nicht unterscheidbar*, weil 2026 allein das Intervall nicht von null trennt. Die Richtung ist in **jedem** Jahr und **jeder** Menge gleich (2025 größer, 2026 kleiner).
+- **Über 2025–26 zusammen** liegt das 99-%-Intervall für H72, H120, H168 und S8_168 in **allen vier Mengen unter null**. Das ist Auskunft neben dem Vorab-Urteil, nicht an seiner Stelle.
+- **Je weiterem Tag** netto im Mittel **−0,32 bis −0,42 %** (24 → 168 h).
+- **Liquidationsnähe:** Ein Tief von −20 % (bei 5x die Liquidation) erreichten binnen 24 h **0,4–0,6 %** der Einstiege, binnen 7 Tagen **11,9–12,7 %**; −33 % (3x): 0,2–0,4 % gegen 2,0–3,7 %.
+- **2024 (Auskunft, Aufwärtsjahr): umgekehrt.** H168 brutto +3,4 bis +4,3 % gegen H24 +0,95 bis +1,35 %. **Das Vorzeichen des längeren Haltens hängt am Regime.**
+
+**Einordnung (fachlich, meine):**
+1. **Die offene Frage aus 2.702 ist beantwortet:** Es ist die **Haltedauer**, nicht der Stop. Der Stop −8 % ändert über 24 h nichts (Unterschied ≈ 0), und über 7 Tage rettet er das längere Halten nicht (S8_168 ≈ H168).
+2. **Keine REGEL1-Änderung:** 24 h bleibt; kein Stop ist besser als keiner. Eine längere Haltedauer wäre eine Wette auf ein Aufwärtsregime – und das ist vorab nicht erkennbar (2.599, W3 §23.62).
+3. **Für die Positionsführung ist das ein starker Fakt:** Halten über die Regel hinaus kostete 2025–26 im Mittel 0,3–0,4 % je Tag, und das Risiko einer Liquidation steigt binnen einer Woche etwa um den Faktor 20–25.
+
+**Vorschlag zur Abstimmung:**
+- **E1:** Die Ausstiegserinnerung (24 h, nur bei offener Position) bekommt diese gemessene Zeile als Fakt neben der Handlung *„schließen“*.
+- **E2 (Option):** Ist eine REGEL0-Position nach **72 h** noch offen, kommt **einmal** eine zweite Erinnerung mit der Haltedauer, dem Liquidationsabstand (H15) und derselben Zeile – keine tägliche Wiederholung.
+- **E3:** Die Hebelführung (Statusseite/Mail H15) nennt je offener Position *„seit n h offen (Regel 24 h)“*; für Trades ohne REGEL0-Signal (BTC seit 09.10.) steht *„eigene Entscheidung“*.
