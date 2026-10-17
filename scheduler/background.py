@@ -4611,7 +4611,8 @@ def season_ampel_job(conn_factory, versand=None, heute=None, ordner=None, http=N
 
 
 def regel0_messstand_job(conn_factory=None, ordner=None, jetzt=None) -> dict:
-    """O21 Stufe 1 (17.10.2026, Schritt7 §23.64): misst die 24-h-Ausgaenge der REGEL0-Signale - taeglich 06:50 und beim Start.
+    """O21 Stufe 1 (17.10.2026, Schritt7 §23.64): misst die 24-h-Ausgaenge der REGEL0-Signale - taeglich 06:50; beim Start nur, wenn er
+    heute noch nicht lief (Nachholer wie die anderen Tagesjobs, Diagnose 17.10.: ein Lauf je Tag, der Messstand gilt bis zum naechsten Morgen).
 
     Schreibt NUR die REGEL0-Ablage (Tabelle ``ausgang``); liest die Stundenkurse nur. Keine Mail. Nur am Betriebsgeraet (wie der
     Stundenjob), von Hand mit ``ordner`` auf einer Kopie. Scheitert nie nach aussen."""

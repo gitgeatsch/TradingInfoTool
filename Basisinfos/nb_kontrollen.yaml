@@ -380,7 +380,7 @@ kontrollen:
     nachweis: "Mail: beide Zeilen im Abschnitt Einschaetzung, kein 'realisiert'; Diagnose regel0_messstand: gemailt (n/Tage), trades_zeile, trade_summen seit_start (2 Trades, ETH -127,41 / BTC Teil -35,17) und seit_beginn (~38 Trades, ~-6.900 EUR), nicht_berechnet 0; Statusseite REGEL0-Bereich 'Deine Hebel-Trades'"
     faellig_bis: "2026-10-31"
     status: offen
-    teilbeleg: "Diagnose 17.10. 12:31 (NB auf dc17e3cc): gemailt 27 an 8 Tagen, Zeile beginnt mit den gemailten Signalen; trades_zeile -162,57 EUR seit 03.10., seit Beginn 38 Trades -6.922,69 EUR, nicht berechnet 0; Statusseite-Daten vorhanden. Offen: naechste REGEL0-Signalmail nach dem Neustart 12:25 mit beiden Zeilen"
+    teilbeleg: "Diagnose 17.10. 12:31 (NB auf dc17e3cc): gemailt 27 an 8 Tagen, Zeile beginnt mit den gemailten Signalen; trades_zeile -162,57 EUR seit 03.10., seit Beginn 38 Trades -6.922,69 EUR, nicht berechnet 0; Statusseite-Daten vorhanden. Offen: naechste REGEL0-Signalmail nach dem Neustart 12:25 mit beiden Zeilen · Diagnose 18:22 (NB auf 8db1a7d9): seit 12:25 keine REGEL0-Signalmail; Messstand-Job laeuft einmal je Tag (09:12), naechster Lauf 18.10. 06:50"
   - id: K-O21-1
     titel: "O21 Messstand: Job regel0_messstand misst seit 03.10. (erster Lauf ~900 Signale), Statusseite zeigt den Messstand, die naechste REGEL0-Signalmail traegt die Zeile 'Messstand im Betrieb'"
     seit: "2026-10-17"
@@ -432,8 +432,9 @@ kontrollen:
     art: manuell
     nachweis: "Log 04:00 und 16:00: 'Marktscan deaktiviert (config.yaml marktscan.aktiv=false) - übersprungen'; Diagnose schalter.marktscan_aktiv = false; keine Mail 'Marktscan' und keine neue Watchlist-Zeile aus MS-1 nach dem Pull"
     faellig_bis: "2026-10-20"
-    status: offen
-    teilbeleg: "Diagnose 17.10. 10:11: kein Marktscan seit dem Pull (letzter 04:01 auf altem Code) - erster Nachweis 16:00"
+    status: erfuellt
+    erfuellt_am: "2026-10-17"
+    beleg: "Diagnose 17.10. 18:22 (NB auf 8db1a7d9): Log 16:00:00 'Marktscan deaktiviert (config.yaml marktscan.aktiv=false) - uebersprungen', keine Marktscan-Mail, kein Fehler. Die Erfolgsmessung (07:00) liest denselben Schalter und meldet ab morgen ebenfalls deaktiviert"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
