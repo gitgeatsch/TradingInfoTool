@@ -366,7 +366,7 @@ kontrollen:
     titel: "O21 Messstand: Job regel0_messstand misst seit 03.10. (erster Lauf ~900 Signale), Statusseite zeigt den Messstand, die naechste REGEL0-Signalmail traegt die Zeile 'Messstand im Betrieb'"
     seit: "2026-10-17"
     paket: O21
-    commit: ""
+    commit: 4164dc8b
     art: manuell
     nachweis: "Log nach Start bzw. 06:50: 'REGEL0-Messstand: neu <~900> · gemessen ... · ohne Kurse <wenige> · gesamt <n> Signale an <~14> Tagen, Mittel ... · <Befund>' und Zeilen 'REGEL0-Messstand Trade: ETH ... / BTC ...'; Diagnose regel0_messstand: vorhanden, gesamt n/tage, befund, trades; Statusseite REGEL0-Bereich 'Messstand im Betrieb'; naechste REGEL0-Signalmail: Zeile 'Messstand im Betrieb seit 03.10. ...'"
     faellig_bis: "2026-10-24"
