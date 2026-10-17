@@ -7051,3 +7051,18 @@ Nutzer 15.10.: *„Ja, Variante B bauen, prüfen und gegenprüfen.“*
 - Pull und Neustart. Beim nächsten Lauf von `externe_reihen` (06:35) holt der Job die 14 Coins selbst; etwa 3 min, wegen der gemessenen Grenze von 5 Abrufen je Minute.
 - Kein Austauschordner, kein USB.
 - Kontrolle **K-UZ-1**.
+
+## 58. Spot-Mails: „verkaufen oder in EURCV tauschen“ (17.10.2026)
+
+**Nutzer 17.10.:** *„ich swappe oft in Stable EURCV, da der Verlust in Ö erst bei Verkauf in Fiat realisiert wird“* · *„ja zu deinem Vorschlag zum Verkauf“*.
+
+| Mail | vorher | jetzt |
+|---|---|---|
+| **B1** Mitnahme ×3 | Betreff *Spot: Hälfte von X verkaufen*; *die HÄLFTE verkaufen – heute* | Betreff *Spot: Hälfte von X verkaufen oder in EURCV tauschen*; *die HÄLFTE verkaufen oder in EURCV tauschen – heute*, dazu der Satz *„Ob in Euro (Fiat) oder in den Stablecoin EURCV, ist deine Wahl – gemessen ist der Ausstieg aus dem Coin.“* |
+| **B3** Upbit | *Spot: X verkaufen (Upbit-Listing)*; *die GANZE Position verkaufen* | *Spot: X verkaufen oder in EURCV tauschen (Upbit-Listing)*; *… verkaufen oder in EURCV tauschen*, derselbe Satz |
+| **B4** Abbau | *verkaufe zuerst: …* | *verkaufe oder tausche in EURCV zuerst: …* |
+| gestakt | *wie Spot verkaufbar* | *wie Spot verkauf- und tauschbar* |
+
+- Die **Regeln** sind unverändert. Gemessen ist der Ausstieg aus dem Coin in Dollar; ob der Erlös in Fiat oder in EURCV landet, ändert die Messung nicht. Eine steuerliche Aussage machen die Mails nicht.
+- **Geprüft:** Prüfstände P14 10/10, P16 12/12, P18 13/13 neu gelaufen (P14 liest den Betreff – an den neuen Wortlaut angepasst); Suite SpotMitnahme 9, SpotUpbit 8, SpotAbbau 11, Mailabschnitte, Lesbar grün.
+- **Am NB:** wirkt mit dem nächsten Pull. Kontrolle **K-SP-5** (nächste Spot-Mail mit neuem Wortlaut, Ereignis).

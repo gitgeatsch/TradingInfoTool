@@ -130,7 +130,7 @@ for i in range(123, 420):
     job(i)
 mail = {}
 for t, b, txt in post:
-    mail.setdefault(b.split(": ")[-1].replace("Hälfte von ", "").replace(" verkaufen", ""), []).append((t, txt))
+    mail.setdefault(b.split(": ")[-1].replace("Hälfte von ", "").replace(" verkaufen oder in EURCV tauschen", "").replace(" verkaufen", ""), []).append((t, txt))
 pruefe("S2", len(mail.get("AAA", [])) == 1 and mail["AAA"][0][0] == 200 and "5 Stück von 10" in mail["AAA"][0][1]
        and len(mail.get("BBB", [])) == 1 and "5 Stück von 10" in mail["BBB"][0][1] and "gestakt" in mail["BBB"][0][1],
        "AAA %s · BBB %s" % ([t for t, _ in mail.get("AAA", [])], [t for t, _ in mail.get("BBB", [])]))

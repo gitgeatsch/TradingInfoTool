@@ -362,6 +362,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-16"
     beleg: "Diagnose 16.10. 19:34 (NB auf 6767197b, keine lokalen Aenderungen): Log 18:26:16 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (8.111 Vorgaenge gelesen); 18:26:18 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok'; Hebelfuehrung '1 offen · BTC HALTEN Abstand 24,3 %' ohne Wallet-Hinweis; hebel_positions 38 (geschlossen 30, liquidiert 7, offen 1: BTC 0,01141097 / 560 EUR / Hebel 3,0) - exakt wie Pruefstand B1; Folgelaeufe alle 15 min ok, keine Job-Fehler"
+  - id: K-SP-5
+    titel: "Spot-Mails B1/B3/B4: Wortlaut 'verkaufen oder in EURCV tauschen'"
+    seit: "2026-10-17"
+    paket: Spot-EURCV
+    commit: ""
+    art: ereignis
+    nachweis: "naechste B1-, B3- oder B4-Mail: Betreff bzw. Handlungssatz mit 'verkaufen oder in EURCV tauschen' (B4: 'verkaufe oder tausche in EURCV zuerst') und der Satz 'Ob in Euro (Fiat) oder in den Stablecoin EURCV, ist deine Wahl'"
+    faellig_bis: "2026-11-30"
+    status: offen
   - id: K-O21-2
     titel: "M1/B1: naechste REGEL0-Signalmail hat 'Messstand im Betrieb deine gemailten Signale ...' und 'Deine Hebel-Trades seit 03.10.: ...' (Ergebnis zum Schlusskurs, Hinweis EURCV)"
     seit: "2026-10-17"
@@ -371,6 +380,7 @@ kontrollen:
     nachweis: "Mail: beide Zeilen im Abschnitt Einschaetzung, kein 'realisiert'; Diagnose regel0_messstand: gemailt (n/Tage), trades_zeile, trade_summen seit_start (2 Trades, ETH -127,41 / BTC Teil -35,17) und seit_beginn (~38 Trades, ~-6.900 EUR), nicht_berechnet 0; Statusseite REGEL0-Bereich 'Deine Hebel-Trades'"
     faellig_bis: "2026-10-31"
     status: offen
+    teilbeleg: "Diagnose 17.10. 12:31 (NB auf dc17e3cc): gemailt 27 an 8 Tagen, Zeile beginnt mit den gemailten Signalen; trades_zeile -162,57 EUR seit 03.10., seit Beginn 38 Trades -6.922,69 EUR, nicht berechnet 0; Statusseite-Daten vorhanden. Offen: naechste REGEL0-Signalmail nach dem Neustart 12:25 mit beiden Zeilen"
   - id: K-O21-1
     titel: "O21 Messstand: Job regel0_messstand misst seit 03.10. (erster Lauf ~900 Signale), Statusseite zeigt den Messstand, die naechste REGEL0-Signalmail traegt die Zeile 'Messstand im Betrieb'"
     seit: "2026-10-17"
@@ -379,8 +389,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach Start bzw. 06:50: 'REGEL0-Messstand: neu <~900> · gemessen ... · ohne Kurse <wenige> · gesamt <n> Signale an <~14> Tagen, Mittel ... · <Befund>' und Zeilen 'REGEL0-Messstand Trade: ETH ... / BTC ...'; Diagnose regel0_messstand: vorhanden, gesamt n/tage, befund, trades; Statusseite REGEL0-Bereich 'Messstand im Betrieb'; naechste REGEL0-Signalmail: Zeile 'Messstand im Betrieb seit 03.10. ...'"
     faellig_bis: "2026-10-24"
-    status: offen
-    teilbeleg: "Diagnose 17.10. 10:11: Log 09:12:07 'REGEL0-Messstand: neu 732 · gemessen 732 · offen 226 · ohne Kurse 0 · endgueltig 563 · gesamt 732 Signale an 14 Tagen, Mittel +0.80 % · im Band der Messung', beide Trade-Zeilen (ETH/BTC); Diagnose regel0_messstand vorhanden, keine Fehler. Offen: Zeile in der naechsten REGEL0-Signalmail; offen 226 muss beim Lauf morgen 06:50 sinken"
+    status: erfuellt
+    erfuellt_am: "2026-10-17"
+    beleg: "Diagnose 17.10. 10:11 + 12:31: Job 09:12 hat 732 Signale gemessen (ohne Kurse 0), Diagnose regel0_messstand vorhanden, im Band, Trade-Zeilen ETH/BTC; REGEL0-Mail 11:10 (1 Signal) mit der Zeile der ersten Fassung; ab dc17e3cc die Fassung M1 -> weiter unter K-O21-2"
   - id: K-NG-1
     titel: "P11d: nach einer Unterbrechung kommt 'REGEL0 nachgeholt (n Std.) - Rechnung erfolgreich' statt 'Job regel0_rechnung fehlgeschlagen'"
     seit: "2026-10-17"

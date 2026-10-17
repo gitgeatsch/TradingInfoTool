@@ -6,7 +6,7 @@ S3   bestanden Schalter an: Mails 1 · Betreff TradingInfoTool: Spot: Abbau-Reih
 S4   bestanden 2026-09-01 Modul gegen Bezug: 339 von 339 Coins gleiches Fuenftel · Mengen gleich · neue Binance-Abrufe 0 (Stammsatz fortgeschrieben)
 S4b  bestanden Stammsaetze fortgeschrieben 343 · neue Abrufe 0
 S5   bestanden 01.09.: unten ['HYPE', 'MORPHO', 'PLUME', 'SUI', 'TAO', 'TURBO', 'XDC'] · neu ['HYPE'] (erwartet ['HYPE']) · Mails 1
-S9   bestanden stand: Laeufe 2, letzter ('2026-09-01', '2026-10-17 00:07', 'fertig'), Stammsaetze 367 · letzte_fuenftel 29 Coins
+S9   bestanden stand: Laeufe 2, letzter ('2026-09-01', '2026-10-17 10:31', 'fertig'), Stammsaetze 367 · letzte_fuenftel 29 Coins
 S10  bestanden Wegwerf-Produktion und Betriebskopie unveraendert
 S6   bestanden am 3.: wartet (fehlend ['XDC']) · am 5.: fertig · XDC: ohne Kurs am Stichtag
 S7   bestanden KAIA: Zuordnung unsicher (KAIA bei Binance ist ein anderer Kurs)
@@ -14,7 +14,7 @@ S8   bestanden am 4.: wartet (['Stammsatz SUI']) · am 5.: fertig · Protokoll [
 
 Muster der Mail (S3):
 1  WAS ZU TUN IST
-  Wenn du Spot-Bestände abbaust, verkaufe zuerst: TAO, SUI, MORPHO, KAIA, XDC, PLUME, TURBO.
+  Wenn du Spot-Bestände abbaust, verkaufe oder tausche in EURCV zuerst: TAO, SUI, MORPHO, KAIA, XDC, PLUME, TURBO.
   Kein Termin: Es ist eine Reihenfolge für den nächsten Abbau, kein Verkaufssignal für heute.
   Das ist die Erstliste: alle gehaltenen Coins, die am 01.08.2026 im unteren Fünftel stehen.
 
@@ -24,19 +24,19 @@ Muster der Mail (S3):
   Nicht gemessen ist, welcher Coin INNERHALB des Fünftels schlechter ist – die Liste ist nach deinem Wert in Euro geordnet, nicht nach Güte.
 
 3  JE COIN (Fakten am Stichtag)
-  TAO: Klasse H · 73 % unter dem Allzeithoch · Hoch vor 601 Tagen · Daten seit 842 Tagen · Perzentil 0,04 · Wert 946 EUR · Kosten je Seite 0,36 %
+  TAO: Klasse H · 73 % unter dem Allzeithoch · Hoch vor 601 Tagen · Daten seit 842 Tagen · Perzentil 0,04 · Wert 957 EUR · Kosten je Seite 0,36 %
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
-  SUI: Klasse H · 87 % unter dem Allzeithoch · Hoch vor 574 Tagen · Daten seit 1186 Tagen · Perzentil 0,12 · Wert 833 EUR · Kosten je Seite 0,36 %
+  SUI: Klasse H · 87 % unter dem Allzeithoch · Hoch vor 574 Tagen · Daten seit 1186 Tagen · Perzentil 0,12 · Wert 843 EUR · Kosten je Seite 0,36 %
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
-  MORPHO: Klasse M · 51 % unter dem Allzeithoch · Hoch vor 561 Tagen · Daten seit 618 Tagen · Perzentil 0,10 · Wert 791 EUR · Kosten je Seite 0,88 % · außerhalb Binance: eingeordnet, nicht gemessen
+  MORPHO: Klasse M · 51 % unter dem Allzeithoch · Hoch vor 561 Tagen · Daten seit 618 Tagen · Perzentil 0,10 · Wert 810 EUR · Kosten je Seite 0,88 % · außerhalb Binance: eingeordnet, nicht gemessen
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
-  KAIA: Klasse M · 93 % unter dem Allzeithoch · Hoch vor 607 Tagen · Daten seit 639 Tagen · Perzentil 0,19 · Wert 630 EUR · Kosten je Seite 0,88 %
+  KAIA: Klasse M · 93 % unter dem Allzeithoch · Hoch vor 607 Tagen · Daten seit 639 Tagen · Perzentil 0,19 · Wert 634 EUR · Kosten je Seite 0,88 %
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
-  XDC: Klasse S · 82 % unter dem Allzeithoch · Hoch vor 561 Tagen · Daten seit 940 Tagen · Perzentil 0,17 · Wert 448 EUR · Kosten je Seite 3,20 % · außerhalb Binance: eingeordnet, nicht gemessen
+  XDC: Klasse S · 82 % unter dem Allzeithoch · Hoch vor 561 Tagen · Daten seit 940 Tagen · Perzentil 0,17 · Wert 451 EUR · Kosten je Seite 3,20 % · außerhalb Binance: eingeordnet, nicht gemessen
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
-  PLUME: Klasse S · 95 % unter dem Allzeithoch · Hoch vor 445 Tagen · Daten seit 465 Tagen · Perzentil 0,11 · Wert 179 EUR · Kosten je Seite 3,20 % · außerhalb Binance: eingeordnet, nicht gemessen
+  PLUME: Klasse S · 95 % unter dem Allzeithoch · Hoch vor 445 Tagen · Daten seit 465 Tagen · Perzentil 0,11 · Wert 186 EUR · Kosten je Seite 3,20 % · außerhalb Binance: eingeordnet, nicht gemessen
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
-  TURBO: Klasse S · 94 % unter dem Allzeithoch · Hoch vor 598 Tagen · Daten seit 684 Tagen · Perzentil 0,18 · Wert 127 EUR · Kosten je Seite 3,20 %
+  TURBO: Klasse S · 94 % unter dem Allzeithoch · Hoch vor 598 Tagen · Daten seit 684 Tagen · Perzentil 0,18 · Wert 129 EUR · Kosten je Seite 3,20 %
      Verwässerung 90 T: keine Mengenreihe oder noch keine 90 Tage Historie
 
 4  KONTEXT (keine Handlung)

@@ -577,7 +577,7 @@ def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None
     namen = ", ".join(r[0] for r in liste)
     b = "Spot: Abbau-Reihenfolge – zuerst %s" % namen
     z = ["1  WAS ZU TUN IST",
-         ("  Wenn du Spot-Bestände abbaust, verkaufe zuerst: %s." % namen),
+         ("  Wenn du Spot-Bestände abbaust, verkaufe oder tausche in EURCV zuerst: %s." % namen),   # Nutzer 17.10.
          "  Kein Termin: Es ist eine Reihenfolge für den nächsten Abbau, kein Verkaufssignal für heute.",
          ("  Das ist die Erstliste: alle gehaltenen Coins, die am %s im unteren Fünftel stehen." % _de(fall["stichtag"])
           if fall["art"] == "erstliste" else

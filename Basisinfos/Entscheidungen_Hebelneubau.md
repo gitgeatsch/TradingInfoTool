@@ -1450,3 +1450,11 @@ Nachweis: Schritt7 §23.64/§23.65, `o21_pruefstand.txt` 9/9, `o21_gegenprobe.tx
 - Ein Zyklus, dessen Buchungen die Wachen verletzen, bekommt **kein** Ergebnis (*NICHT berechnet*).
 
 Nachweis: Schritt7 §23.66/§23.67, `o21_pruefstand.txt` 13/13, Paket Messstand; K-O21-2.
+
+# E-122 · Spot-Mails: „verkaufen oder in EURCV tauschen“ (17.10.2026)
+
+**17.10.2026** · Nutzer: *„ja zu deinem Vorschlag zum Verkauf“* (er tauscht oft in EURCV statt in Fiat zu verkaufen).
+
+**Gebaut:** B1, B3 und B4 nennen beide Wege, *verkaufen oder in EURCV tauschen*, mit dem Satz, dass die Wahl beim Nutzer liegt und gemessen der Ausstieg aus dem Coin ist. Die Regeln sind unverändert, eine steuerliche Aussage gibt es nicht.
+
+Nachweis: Spot §58; P14 10/10, P16 12/12, P18 13/13; K-SP-5.

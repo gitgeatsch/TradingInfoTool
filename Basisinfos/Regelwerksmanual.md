@@ -2132,6 +2132,10 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 17.10.2026 — Spot-Mails: verkaufen oder in EURCV tauschen
+
+- B1 (*Hälfte*), B3 (*ganze Position*) und B4 (*Reihenfolge*) nennen beide Wege: **verkaufen oder in EURCV tauschen**. Die Wahl liegt bei dir; gemessen ist der Ausstieg aus dem Coin. Keine steuerliche Aussage.
+
 ### Stand 17.10.2026 — Messstand im Betrieb (O21)
 
 - **Zeile *Messstand im Betrieb*** in jeder REGEL0-Signalmail und im REGEL0-Bereich der Statusseite: seit 03.10. so viele Signale an so vielen **Tagen**, 24-h-Ertrag im Mittel mit **Spanne 99 %**, daneben die Messung 2025–26 (+0,55 %) und der Befund.

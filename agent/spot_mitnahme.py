@@ -35,6 +35,10 @@ BELEG = ("Gemessen ab 2024 auf dem ganzen Bestandskreis (7.819 Positionen): Die 
 
 
 # ══ die Regel - EINE Funktion, dieselbe wie in der Messung (Gegenprobe Teil 0) ═════════════════════════════════════════════
+# Nutzer 17.10.2026: *"ja zu deinem Vorschlag zum Verkauf"* - der Nutzer tauscht oft in den Stablecoin EURCV statt in Fiat zu verkaufen
+EURCV_SATZ = "Ob in Euro (Fiat) oder in den Stablecoin EURCV, ist deine Wahl – gemessen ist der Ausstieg aus dem Coin."
+
+
 def verkaufstag(x) -> int | None:
     """``x``: Tagesschluesse der Tage 1..n NACH dem Start, geteilt durch den Startkurs (wie ``fb_messung``). -> Index des
     Verkaufstags (Folgetag des ersten Schlusses >= 3), oder None. Treffer am letzten Tag des Fensters -> None."""
@@ -199,12 +203,13 @@ def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool =
     s = fall["symbol"]
     x = fall["ausloese_kurs"] / fall["startkurs_usd"]
     haelfte = fall["menge"] / 2.0
-    b = "Spot: Hälfte von %s verkaufen" % s
+    b = "Spot: Hälfte von %s verkaufen oder in EURCV tauschen" % s   # Nutzer 17.10.: tauscht oft in EURCV statt in Fiat
     z = ["1  WAS ZU TUN IST",
-         "  %s: die HÄLFTE verkaufen – heute (%s Stück von %s)." % (s, _menge(haelfte), _menge(fall["menge"])),
+         "  %s: die HÄLFTE verkaufen oder in EURCV tauschen – heute (%s Stück von %s)." % (s, _menge(haelfte), _menge(fall["menge"])),
+         "  %s" % EURCV_SATZ,
          "  Den Rest weiter halten; das laufende Fenster endet am %s." % _de(fall["ende"])]
     if gestakt:
-        z.append("  Davon gestakt: %s Stück – bei Bitpanda wie Spot verkaufbar." % _menge(gestakt))
+        z.append("  Davon gestakt: %s Stück – bei Bitpanda wie Spot verkauf- und tauschbar." % _menge(gestakt))
     z += ["", "2  WARUM",
           "  Der Kurs hat sich seit dem Start am %s verdreifacht: Tagesschluss %s USD am %s = %s × Startkurs %s USD." % (
               _de(fall["start"]), _zahl(fall["ausloese_kurs"]), _de(fall["ausloese_tag"]), ("%.2f" % x).replace(".", ","),

@@ -2572,3 +2572,5 @@ Schritt7 §23.24.
 - **M1:** Kriterium „Betrieb = Messung“ hat jetzt eine laufende Messung (bisher nur die Testwoche).
 
 **Nachtrag 17.10.2026 (46) — M1 und Stufe 1b:** Der Messstand zeigt zuerst die **gemailten** Signale (was ankommt), dann alle als Prüfung der Regel. Jeder echte Hebel-Trade bekommt sein **Ergebnis in EUR zum Schlusskurs** (aus den Bitpanda-Buchungen, Gegenprobe 37/37 auf den Cent) – in der Signalmail, auf der Statusseite und im Teilexport (Schritt7 §23.66/§23.67, E-121).
+
+**Nachtrag 17.10.2026 (47) — Spot-Mails mit EURCV:** B1, B3 und B4 sagen *„verkaufen oder in EURCV tauschen“* (Nutzer tauscht oft in den Stablecoin); die Regeln sind unverändert (Spot §58, E-122).

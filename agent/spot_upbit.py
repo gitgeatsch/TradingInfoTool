@@ -178,11 +178,12 @@ def mail(fall: dict, ausserhalb_binance: bool = False, gestakt: float | None = N
          kurs_vorher_usd: float | None = None, verw_text: str | None = None, makro_text: str | None = None,
          ampel_text: str | None = None) -> tuple:
     s = fall["symbol"]
-    b = "Spot: %s verkaufen (Upbit-Listing)" % s
+    b = "Spot: %s verkaufen oder in EURCV tauschen (Upbit-Listing)" % s   # Nutzer 17.10.
     z = ["1  WAS ZU TUN IST",
-         "  %s: die GANZE Position verkaufen – in den nächsten Stunden (%s Stück)." % (s, _SM._menge(fall["menge"]))]
+         "  %s: die GANZE Position verkaufen oder in EURCV tauschen – in den nächsten Stunden (%s Stück)." % (s, _SM._menge(fall["menge"])),
+         "  " + _SM.EURCV_SATZ]
     if gestakt:
-        z.append("  Davon gestakt: %s Stück – bei Bitpanda wie Spot verkaufbar." % _SM._menge(gestakt))
+        z.append("  Davon gestakt: %s Stück – bei Bitpanda wie Spot verkauf- und tauschbar." % _SM._menge(gestakt))
     z += ["", "2  WARUM",
           "  Upbit hat %s für den Handel in Won (KRW) angekündigt: %s UTC, vor %s Stunden." % (
               fall["kuerzel"] if fall["kuerzel"] == s else "%s (%s)" % (s, fall["kuerzel"]), fall["utc"][:16], ("%.1f" % fall["alter_h"]).replace(".", ",")),

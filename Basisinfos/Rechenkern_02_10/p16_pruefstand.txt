@@ -1,6 +1,6 @@
 S1   bestanden erster Lauf: Startmarke True · Faelle 0 · Mails 0
-S9   bestanden Kreis ohne KRW 12 (abgeleitet 12) · BEAMX drin, ALGO nicht, CANTON drin
-S2   bestanden Mail 1 · Betreff TradingInfoTool: Spot: BEAMX verkaufen (Upbit-Listing) · Menge 166248,58072538
+S9   bestanden Kreis ohne KRW 14 (abgeleitet 14) · BEAMX drin, ALGO nicht, CANTON drin
+S2   bestanden Mail 1 · Betreff TradingInfoTool: Spot: BEAMX verkaufen oder in EURCV tauschen (Upbit-Listing) · Menge 166248,58072538
 S2b  bestanden zweiter Lauf: Mails BEAMX weiter 1
 S3   bestanden XYZQ (nicht im Bestand) und BTC (Kern): Faelle 0, neue Mails 0
 S4   bestanden Faelle ['CANTON'] · Mail CANTON (CC) True
@@ -13,7 +13,8 @@ S11  bestanden Wegwerf-Produktion unveraendert
 
 Muster der Mail (S2):
 1  WAS ZU TUN IST
-  BEAMX: die GANZE Position verkaufen – in den nächsten Stunden (166248,58072538 Stück).
+  BEAMX: die GANZE Position verkaufen oder in EURCV tauschen – in den nächsten Stunden (166248,58072538 Stück).
+  Ob in Euro (Fiat) oder in den Stablecoin EURCV, ist deine Wahl – gemessen ist der Ausstieg aus dem Coin.
 
 2  WARUM
   Upbit hat BEAMX für den Handel in Won (KRW) angekündigt: 2026-10-12 09:00 UTC, vor 1,0 Stunden.
@@ -29,11 +30,15 @@ Muster der Mail (S2):
   Hinweis: Gemessen ist auf Coins mit Binance-Spot; BEAMX liegt außerhalb – angewandt, nicht auf ihm gemessen.
 
 3  KONTEXT (keine Handlung)
-  Kurs gegen den letzten Tagesschluss vor der Meldung: +0,0 %.
+  Kurs gegen den letzten Tagesschluss vor der Meldung: +7,5 %.
   Kosten bei Bitpanda je Seite nach Klasse: H 0,36 % · M 0,88 % · S 3,20 % (nur Information).
   Wiedereinstieg und Erlös: nicht gemessen.
   Meldung: https://upbit.com/service_center/notice?id=901
   Titel: 빔엑스(BEAMX) 신규 거래지원 안내 (KRW, USDT 마켓)
+  Verwässerung 90 T: für BEAMX gibt es keine Mengenreihe (CoinGecko-Umlauf nicht erfasst).
+  (Verwässerung = wie stark die Umlaufmenge in 90 Tagen gewachsen ist (Freigaben, Ausgabe). Fakt, nicht Teil der Regel. Gemessen 01–06/2026: das geringste Fünftel lag 90 Tage später +5,8 Prozentpunkte über seiner Klasse (belegt), das stärkste −3,8 (nicht belegt) – ein Jahr, ein Marktregime.)
+  Makro Makro-Lage NICHT VERFÜGBAR (noch nicht berechnet oder FRED nicht erreicht) – kein Urteil.
+  Season-Ampel Season-Ampel NICHT VERFÜGBAR (noch nicht berechnet) – kein Urteil.
 
 4  TECHNIK
   Spot B3 Upbit-Verkaufsanlass · Regel wie die Messung C2-b · Mail nur bis 6 h nach der Meldung.
