@@ -22482,6 +22482,28 @@ def paket_season_ampel() -> None:
            "12 von 12 bestanden" in _txt["p19_pruefstand.txt"] and "3 von 3 gleich" in _txt["p19_bau_gegenprobe.txt"])
 
 
+def paket_nachgeholt() -> None:
+    """P11d (17.10.2026, Plan_Hebel 13h): 'nachgeholt' allein ist KEIN Fehler - eigener Betreff; veraltet / nicht nachholbar bleibt
+    'Job regel0_rechnung fehlgeschlagen'. Anlass: am 16.10. nach 7 h NB-Stillstand kam 'fehlgeschlagen', obwohl die Rechnung lief."""
+    P = "Nachgeholt"
+    import os as _os
+    import subprocess as _sp
+
+    import scheduler.background as _BG
+
+    pruefe(P, "Einordnung: nur nachgeholt -> 'nachgeholt'; veraltet oder NICHT nachholbar -> 'fehler'; alte Ausgabe aus dem Text",
+           _BG.regel0_meldung_art({"meldung": "nachgeholt: a", "nachgeholt": ["a"], "veraltet_gemeldet": False, "nachholen_ausgelassen": []}) == "nachgeholt"
+           and _BG.regel0_meldung_art({"meldung": "x veraltet · nachgeholt: a", "nachgeholt": ["a"], "veraltet_gemeldet": True,
+                                        "nachholen_ausgelassen": []}) == "fehler"
+           and _BG.regel0_meldung_art({"meldung": "nachgeholt: a · NICHT nachholbar (Modellpaket fehlt): b"}) == "fehler"
+           and _BG.regel0_meldung_art({"meldung": "nachgeholt: a, b"}) == "nachgeholt" and _BG.regel0_meldung_art({"meldung": ""}) == "keine")
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p11d_pruefstand.py")],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    pruefe(P, "⚠️ Pruefstand P11d am echten Job-Pfad: echter Fall 16.10., neue Ausgabe, veraltet, nicht nachholbar, ohne Meldung, Rueckgabe, "
+              "Spam-Schutz je Art, Stundenlauf-Felder", "7 von 7 bestanden" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
 def paket_termin() -> None:
     """O52 + O51 + W1 (15.10.2026, Schritt7 §23.53, E-112): TERMIN ALS FAKT, ENTFERNEN MIT SPERRE, PRUEFBLOCK MARKIERT.
 
@@ -33098,7 +33120,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

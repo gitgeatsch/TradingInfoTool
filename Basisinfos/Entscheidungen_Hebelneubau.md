@@ -1409,3 +1409,17 @@ Nachweis: Schritt7 §23.62, `p60_w3_vorpruefung.txt`, `p60_gegenprobe.txt`.
 - **O43:** `marktscan.aktiv: false` (Nutzer 10.10.: *„JA“*).
 
 Nachweis: Spot §49.5/§49.6, `p19_pruefstand.txt` 12/12, `p19_bau_gegenprobe.txt` 3/3, `p18_pruefstand.txt` 13/13, Paket SeasonAmpel; K-SP-4, K-GUI-7, K-MS-1.
+
+# E-119 · P11d: 'nachgeholt' ist kein Fehler – eigener Betreff (17.10.2026)
+
+**17.10.2026** · Nutzer: *„ja P11d noch bauen und mit in den Pull“*.
+
+**Gebaut:**
+- Der Stundenlauf gibt die **Art** der Meldung mit aus (`veraltet_gemeldet`, `nachholen_ausgelassen`, `nachgeholt_signale`).
+- Hat die Rechnung nach einer Unterbrechung **nur** Stunden nachgeholt, heißt die Mail *„REGEL0 nachgeholt (n Std.) – Rechnung erfolgreich“* und nennt Stunden und Signale.
+- **Datenbasis veraltet** oder eine **nicht nachholbare** Stunde bleiben *„Job 'regel0_rechnung' fehlgeschlagen“*, auch gemischt mit *nachgeholt*.
+- Der Spam-Schutz gilt je Art getrennt: Eine Nachgeholt-Mail hält einen echten Fehler nicht zurück.
+
+**Eigene Festlegung (berichtet):** Die Mail bleibt, wie geplant, aber als Auskunft. Die Handlung bei einem Stillstand kommt aus der Stillstandsmail (K-ALARM-2).
+
+Nachweis: `p11d_pruefstand.txt` 7/7 (darunter der echte Fall vom 16.10. 18:30), `p11d_gegenprobe.txt` (66 NB-Läufe, 0 Abweichungen); Paket Nachgeholt; K-NG-1.

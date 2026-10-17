@@ -824,6 +824,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **Season-Ampel** (Spot C1): Drei Bedingungen (BTC 91 T, Geldmenge M2, Stablecoin-Angebot) ergeben eine Stufe von *kalt* bis *Ende*. Du siehst sie oben auf der Statusseite unter dem Makro-Umfeld, als Zeile in den Spot-Mails B1/B3/B4 und im neuen GUI-Reiter *Markt (Krypto)*. Sie löst nichts aus; die Mail beim Stufenwechsel ist gebaut, aber aus, weil die Schwellen nur auf einem Zyklus belegt sind (O47).
 - **Einstiegs-Kandidaten** (A3): Reiter *Spot* und Statusseite zeigen das obere Fünftel je Klasse, bei Bitpanda handelbar. Die Liste ordnet den Fortbestand; ein Einstieg je Asset ist nicht belegt.
 - **Marktscan** der alten Kette ruht (O43).
+- **Nach einer Unterbrechung** (P11d): Hat die REGEL0-Rechnung nur verpasste Stunden nachgeholt, heißt die Mail *„REGEL0 nachgeholt – Rechnung erfolgreich“*; *„fehlgeschlagen“* kommt nur noch bei einem echten Fehler.
 
 ## 11. Roadmap & Erweiterbarkeit
 

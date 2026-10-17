@@ -2563,3 +2563,5 @@ Schritt7 §23.24.
 - **Gebaut** (Spot §49.6, E-118): Season-Ampel B1–B3 mit Stufe und Haltezeit, Statusseite unter dem Makro-Umfeld, Zeile in B1/B3/B4, GUI-Reiter *Spot* und *Markt (Krypto)*. Die Mail beim Stufenwechsel ist gebaut, ihr Schalter bleibt aus bis O47 Schritt 2 (ein Zyklus kalibriert).
 - **O43:** Marktscan ruht. Der Krypto-Einstieg kommt aus dem Spot-Bereich; die Kandidaten (A3) aus dem B4-Universum ab 02.11.
 - **M1:** unverändert. Spot hat damit Führung (B1/B3/B4) und den Markt als Fakt; der Einstieg je Asset bleibt nicht belegt (E-102).
+
+**Nachtrag 17.10.2026 (44) — P11d Betreff 'nachgeholt':** Nach einer Unterbrechung meldet die REGEL0-Rechnung nachgeholte Stunden nicht mehr als *fehlgeschlagen*, sondern als *„REGEL0 nachgeholt – Rechnung erfolgreich“*; veraltete Daten und nicht nachholbare Stunden bleiben Fehler (Schritt7 §23.63, E-119).

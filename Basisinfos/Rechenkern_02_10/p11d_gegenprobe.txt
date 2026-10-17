@@ -1,0 +1,4 @@
+P11d GEGENPROBE · 66 verschiedene REGEL0-Laeufe aus dem NB-Export: {'keine': 65, 'nachgeholt': 1, 'fehler': 0}
+   2026-10-16 16:00  nachgeholt: 2026-10-16 08:00, 2026-10-16 11:00, 2026-10-16 12:00, 2026-10-16 13:00 -> nachgeholt
+Abweichungen gegen die eigene Textregel: 0 []
+GLEICH

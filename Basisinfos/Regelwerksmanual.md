@@ -2132,6 +2132,11 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 17.10.2026 — Mails nach einer Unterbrechung (P11d)
+
+- *„REGEL0 nachgeholt (n Std.) – Rechnung erfolgreich“*: kein Fehler. Die Rechnung hat verpasste Stunden nachgerechnet; die Mail nennt Stunden und Signale. Die Handlung (NB prüfen) kommt aus der Stillstandsmail.
+- *„Job 'regel0_rechnung' fehlgeschlagen“*: echter Fehler – Datenbasis veraltet, eine Stunde nicht nachholbar, oder der Lauf selbst brach ab.
+
 ### Stand 17.10.2026 — Krypto-Markt (Season-Ampel) unter dem Makro-Umfeld (P19)
 
 - **Abschnitt *Krypto-Markt (Season-Ampel)*** steht direkt unter dem Makro-Umfeld: Stufe und Stand (x von 3), je Bedingung Wert, ✔/✗ und Schwelle (BTC 91 T > +20 %, M2 J/J > +5 %, Stablecoins 91 T > +10 %), vor 30 und 90 Tagen, Breite, Netto-Liquidität, Fear & Greed; eingeklappt die Einstiegs-Kandidaten (A3) und der letzte Lauf mit der Revision der Stablecoins.

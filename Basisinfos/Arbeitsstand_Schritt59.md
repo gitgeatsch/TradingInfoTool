@@ -8,6 +8,7 @@
 - ✔ **P19 gebaut** (Spot §49.5/§49.6, E-118): Season-Ampel als Fakt (Statusseite, B1/B3/B4, Reiter *Spot* und *Markt (Krypto)*), Mail-Schalter aus; A3 Kandidaten aus dem B4-Universum; O43 Marktscan ruht. Prüfstand 12/12, Gegenprobe 3/3, P18-Regression 13/13, Paket SeasonAmpel 8/8.
 - **Stand-Prüfung:** DefiLlama ändert die Vergangenheit (Stand an 8 Tagen, Stufe an keinem) → Wechsel nur gegen die zuletzt gemeldete Stufe.
 - ➤ **NB:** Pull und Neustart (Dienst und GUI), dann Diagnose: K-SP-4, K-GUI-7, K-MS-1. Im selben Bündel nachziehen: P11d (Betreff *nachgeholt*).
+- ✔ **P11d gebaut** (Schritt7 §23.63, E-119): Betreff *REGEL0 nachgeholt – Rechnung erfolgreich*, wenn sonst nichts gemeldet ist. Prüfstand 7/7 (echter Fall 16.10.), Gegenprobe 66 NB-Läufe. ➤ im selben Pull; Kontrolle K-NG-1 (beim nächsten Nachholen).
 
 **Stand 16.10.2026 (abends, W3) – HIER ANFANGEN:**
 - ✔ **K-TM-1, K-ML-1, K-VW-1 erfüllt** (Nutzer: alle vier Zeilen in der Mail).

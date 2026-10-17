@@ -3788,3 +3788,17 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 3. Der Jahresunterschied (2025 schwach in **jedem** Drittel) ist der **Gegenwind** aus 2.694/2.697. Das ist das Thema K_IG (Teil B zurückgestellt, E-33), nicht BTC 7 T.
 4. **Flughöhe Ebene 2 bleibt Auskunft.** Keine neue Mail-Zeile, denn es ist ein Fakt ohne gemessene Handlung (Regel *jede Mail eine Handlung*). Keine Betriebsänderung, kein NB-Pull nötig.
 5. Namensgleichheit: Dieses W3 (§23.52, Regime als Gewicht) ist **nicht** der Messarm W3 *Kern-Short* aus E-32.
+
+### 23.63 P11d: 'nachgeholt' ist kein Fehler (17.10.2026; `p11d_pruefstand.py`, `p11d_gegenprobe.py` → `.txt`)
+
+**Anlass:** Am 16.10. kam nach 7 h NB-Stillstand *„Job 'regel0_rechnung' fehlgeschlagen“*. Laut NB-Log (18:30:10) lief die Rechnung aber erfolgreich und meldete nur *„nachgeholt: 08:00, 11:00, 12:00, 13:00“*.
+
+**Ursache:** `regel0_stundenlauf` schreibt *nachgeholt* in dasselbe Feld `meldung` wie *Datenbasis veraltet* und *NICHT nachholbar*; der Job schickte jede Meldung als Fehler.
+
+**Gebaut** (E-119): Der Stundenlauf gibt die Art mit aus; `regel0_meldung_art` ordnet ein (ältere Ausgabe aus dem Text). Nur *nachgeholt* → eigener Betreff *„REGEL0 nachgeholt (n Std.) – Rechnung erfolgreich“*; alles andere bleibt *fehlgeschlagen*. `_notify_job_failure` hat dafür einen optionalen Betreff; der Spam-Schutz zählt je Art.
+
+**Prüfung:**
+- **Prüfstand 7/7** am echten Job-Pfad (Unterprozess und Versand gestellt): D1 der echte Fall vom 16.10. → *nachgeholt (4 Std.)*; D2 neue Ausgabe mit 3 Signalen; D3 veraltet mit und ohne nachgeholt → *fehlgeschlagen*; D4 nicht nachholbar (neue und alte Ausgabe) → *fehlgeschlagen*; D5 ohne Meldung keine Mail, Rückgabe ≠ 0 unverändert; D6 Spam-Schutz je Art; D7 Felder im Stundenlauf.
+- **Gegenprobe:** alle 66 REGEL0-Läufe aus dem NB-Export gegen eine eigene Textregel – 0 Abweichungen. ⚠️ Darin ist nur **ein** Lauf mit Meldung (der 16.10.); die Fehlerfälle sind nur im Prüfstand gestellt.
+
+**Am NB** (im Pull mit P19): wirkt beim nächsten Nachholen. Kontrolle **K-NG-1** (Ereignis).

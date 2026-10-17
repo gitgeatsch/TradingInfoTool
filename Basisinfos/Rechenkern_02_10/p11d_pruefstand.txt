@@ -1,0 +1,19 @@
+REGEL0-Rechnung: nachgeholt: 2026-10-16 08:00, 2026-10-16 11:00, 2026-10-16 12:00, 2026-10-16 13:00
+REGEL0-Rechnung: nachgeholt: 2026-10-17 01:00, 2026-10-17 02:00
+REGEL0-Rechnung: 40 von 637 aktiven Assets ohne die Stunde 2026-10-17 02:00 - Datenbasis veraltet (Nachlader?) · nachgeholt: 2026-10-17 01:00
+REGEL0-Rechnung: 40 von 637 aktiven Assets ohne die Stunde 2026-10-17 02:00 - Datenbasis veraltet (Nachlader?)
+REGEL0-Rechnung: nachgeholt: 2026-10-17 01:00 · NICHT nachholbar (Modellpaket fehlt): 2026-10-17 00:00
+REGEL0-Rechnung: nachgeholt: - · NICHT nachholbar (Modellpaket fehlt): 2026-10-17 00:00
+REGEL0-Rechnung: Rueckgabe 1 nach 0 s - Traceback ... kaputt
+REGEL0-Rechnung: nachgeholt: 2026-10-17 01:00, 2026-10-17 02:00
+REGEL0-Rechnung: 40 von 637 aktiven Assets ohne die Stunde 2026-10-17 02:00 - Datenbasis veraltet (Nachlader?)
+REGEL0-Rechnung: 40 von 637 aktiven Assets ohne die Stunde 2026-10-17 02:00 - Datenbasis veraltet (Nachlader?)
+D1  bestanden echter Fall 16.10. 18:30: TradingInfoTool: REGEL0 nachgeholt (4 Std.) - Rechnung erfolgreich
+D2  bestanden neue Ausgabe: TradingInfoTool: REGEL0 nachgeholt (2 Std.) - Rechnung erfolgreich
+D3  bestanden veraltet mit/ohne nachgeholt: ["TradingInfoTool: Job 'regel0_rechnung' fehlgeschlagen", "TradingInfoTool: Job 'regel0_rechnung' fehlgeschlagen"]
+D4  bestanden nicht nachholbar (neu/alt): ["TradingInfoTool: Job 'regel0_rechnung' fehlgeschlagen", "TradingInfoTool: Job 'regel0_rechnung' fehlgeschlagen"]
+D5  bestanden ohne Meldung: 0 Mails Â· Rueckgabe 1: TradingInfoTool: Job 'regel0_rechnung' fehlgeschlagen
+D6  bestanden nachgeholt, dann zweimal veraltet: ['TradingInfoTool: REGEL0 nachgeholt (2 Std.) - Rechnung erfolgreich', "TradingInfoTool: Job 'regel0_rechnung' fehlgeschlagen"] (der zweite Fehler im Spam-Schutz)
+D7  bestanden Stundenlauf gibt veraltet_gemeldet, nachholen_ausgelassen, nachgeholt_signale aus
+
+7 von 7 bestanden

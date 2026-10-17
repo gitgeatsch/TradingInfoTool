@@ -189,7 +189,9 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
     markt = _kurs_markt(ordner)
     paare = _kurs_paar(ordner)
     meldung = ""
+    veraltet_gemeldet = False                   # P11d (17.10.2026): die ART der Meldung geht mit - 'nachgeholt' allein ist kein Fehler
     if fr["aktiv"] and len(fr["veraltet"]) / fr["aktiv"] > VERALTET_MELDEN_AB:
+        veraltet_gemeldet = True
         meldung = "%d von %d aktiven Assets ohne die Stunde %s - Datenbasis veraltet (Nachlader?)" % (
             len(fr["veraltet"]), fr["aktiv"], _stunde_txt(jetzt - 1))
     c = _ablage(ordner_ablage)
@@ -232,7 +234,9 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
                 nachgeholt=B.get("nachgeholt_stunden") or [],
                 neu_schalter_an=sum(1 for x in B["neu"] if (zu_bp.get(x["symbol"], x["symbol"]) or "") and
                                     schalter.get(zu_bp.get(x["symbol"], x["symbol"]).upper())),
-                aktiv=fr["aktiv"], frisch=fr["frisch"], veraltet=len(fr["veraltet"]), trainiert=neu_trainiert, meldung=meldung)
+                aktiv=fr["aktiv"], frisch=fr["frisch"], veraltet=len(fr["veraltet"]), trainiert=neu_trainiert, meldung=meldung,
+                veraltet_gemeldet=veraltet_gemeldet, nachholen_ausgelassen=list(B.get("nachholen_ausgelassen") or []),
+                nachgeholt_signale=len(B.get("nachgeholt") or []))
     ausgabe("REGEL0-ERGEBNIS " + json.dumps(zus_, ensure_ascii=False))
     return zus_
 

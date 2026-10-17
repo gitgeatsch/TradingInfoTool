@@ -362,6 +362,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-16"
     beleg: "Diagnose 16.10. 19:34 (NB auf 6767197b, keine lokalen Aenderungen): Log 18:26:16 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (8.111 Vorgaenge gelesen); 18:26:18 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok'; Hebelfuehrung '1 offen · BTC HALTEN Abstand 24,3 %' ohne Wallet-Hinweis; hebel_positions 38 (geschlossen 30, liquidiert 7, offen 1: BTC 0,01141097 / 560 EUR / Hebel 3,0) - exakt wie Pruefstand B1; Folgelaeufe alle 15 min ok, keine Job-Fehler"
+  - id: K-NG-1
+    titel: "P11d: nach einer Unterbrechung kommt 'REGEL0 nachgeholt (n Std.) - Rechnung erfolgreich' statt 'Job regel0_rechnung fehlgeschlagen'"
+    seit: "2026-10-17"
+    paket: P11d
+    commit: ""
+    art: ereignis
+    nachweis: "beim naechsten Nachholen (Neustart ueber einen Stundenwechsel oder Stillstand): Log 'REGEL0-Rechnung: nachgeholt: ...', Mail mit Betreff 'TradingInfoTool: REGEL0 nachgeholt (n Std.) - Rechnung erfolgreich', Text 'Kein Fehler'; KEINE Mail 'Job regel0_rechnung fehlgeschlagen' im selben Lauf. REGEL0-ERGEBNIS traegt veraltet_gemeldet / nachholen_ausgelassen / nachgeholt_signale"
+    faellig_bis: "2026-11-15"
+    status: offen
   - id: K-SP-4
     titel: "P19 Season-Ampel: Job season_ampel laeuft taeglich 07:30 fehlerfrei, Stufe heute 'ungewohnt', KEINE Mail (Schalter aus); Zeile in B1/B3/B4"
     seit: "2026-10-17"

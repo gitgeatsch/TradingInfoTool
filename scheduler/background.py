@@ -1786,7 +1786,34 @@ def _regel0_rechnung_starten() -> None:
         erg = {}
     if erg.get("meldung"):
         logger.warning("REGEL0-Rechnung: %s", erg["meldung"])
-        _notify_job_failure("regel0_rechnung", erg["meldung"])
+        art = regel0_meldung_art(erg)
+        if art == "nachgeholt":
+            _notify_job_failure("regel0_nachgeholt", _regel0_nachgeholt_text(erg),
+                                betreff="TradingInfoTool: REGEL0 nachgeholt (%d Std.) - Rechnung erfolgreich" % len(erg.get("nachgeholt") or []))
+        else:
+            _notify_job_failure("regel0_rechnung", erg["meldung"])
+
+
+def regel0_meldung_art(erg: dict) -> str:
+    """P11d (17.10.2026, Plan_Hebel 13h): 'nachgeholt' = die Rechnung lief und hat nach einer Unterbrechung verpasste Stunden
+    nachgerechnet, sonst nichts - KEIN Fehler. 'fehler' = Datenbasis veraltet oder eine Stunde NICHT nachholbar (oder beides).
+    Ohne die neuen Felder (aelterer Stundenlauf) aus dem Text: nur 'nachgeholt: ...' ohne 'NICHT nachholbar' und ohne 'veraltet'."""
+    m = erg.get("meldung") or ""
+    if not m:
+        return "keine"
+    if "veraltet_gemeldet" in erg:
+        nur = bool(erg.get("nachgeholt")) and not erg.get("veraltet_gemeldet") and not erg.get("nachholen_ausgelassen")
+    else:
+        nur = m.startswith("nachgeholt:") and "NICHT nachholbar" not in m and "veraltet" not in m
+    return "nachgeholt" if nur else "fehler"
+
+
+def _regel0_nachgeholt_text(erg: dict) -> str:
+    st = erg.get("nachgeholt") or []
+    return ("Kein Fehler: Die REGEL0-Rechnung der Stunde %s (UTC) ist gelaufen und hat nach einer Unterbrechung %d Stunde(n) nachgerechnet:\n  %s\n"
+            "Signale in diesen Stunden: %d (stehen in der Ablage; der Mail-Lauf entscheidet wie immer, ob eine Signalmail noch "
+            "rechtzeitig ist).\n\nDie Unterbrechung selbst meldet die Stillstandsmail (K-ALARM-2). Keine Handlung nötig."
+            % (erg.get("jetzt") or "?", len(st), ", ".join(st) or "-", int(erg.get("nachgeholt_signale") or 0)))
 
 
 def externe_reihen_job(conn_factory) -> None:
@@ -2708,7 +2735,7 @@ def force_release_lock(job_name: str) -> bool:
 _last_failure_email_sent: dict[str, float] = {}
 
 
-def _notify_job_failure(job_id: str, fehler_text: str) -> None:
+def _notify_job_failure(job_id: str, fehler_text: str, betreff: str | None = None) -> None:
     """E-Mail-Benachrichtigung bei Job-Fehlschlag, mit Cooldown (U-8, 2026-07-12).
 
     WICHTIGER FUND beim Bauen: der globale EVENT_JOB_ERROR-Listener (siehe
@@ -2745,7 +2772,7 @@ def _notify_job_failure(job_id: str, fehler_text: str) -> None:
         return
 
     if send_notification_email(
-        f"TradingInfoTool: Job '{job_id}' fehlgeschlagen",
+        betreff or f"TradingInfoTool: Job '{job_id}' fehlgeschlagen",       # P11d: eigener Betreff, wenn es kein Fehler ist
         f"{fehler_text}\n\nWeitere Meldungen für denselben Job werden für "
         f"{cooldown_minuten} Minuten unterdrückt (Spam-Schutz).",
         empfaenger,
