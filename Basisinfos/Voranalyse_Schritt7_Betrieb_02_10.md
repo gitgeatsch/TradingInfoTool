@@ -3926,3 +3926,35 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 - *Deine Hebel-Trades:* seit 03.10.: 2 Trades (1 offen) · Ergebnis zum Schlusskurs **−162,57 €** auf 1.060 € Eigenkapital · Gebühren 32,23 € · zuletzt ETH −127,41 € (149 h, Regel 24 h).
 
 **Am NB:** Pull und Neustart. Kontrolle **K-O21-2** (nächste REGEL0-Signalmail mit beiden Zeilen).
+
+### 23.68 Punkt 2 Voranalyse: Ausstieg und Haltedauer – was kostet es, länger als 24 h zu halten? Messplan VORAB (18.10.2026; `p62_ausstieg_vorpruefung.py` → `.txt`)
+
+**Auftrag (Nutzer 17.10.):** *„ja, Punkt 2 Voranalyse starten“*. Anlass: Der ETH-Trade wurde 149 h statt 24 h gehalten und ausgestoppt (−127,41 € zum Schlusskurs). Die BTC-Position ist seit 09.10. offen.
+
+**Was der Betrieb heute schon tut (NB-Kopie bis 14.10.):** Die Ausstiegserinnerung kam für ETH am 10.10. um 08:09, 24 h nach dem Einstieg. Für 19 der 22 gemailten Signale ist sie *entfallen*, weil keine offene Position bestand. ⇒ Die Erinnerung funktioniert; das Halten darüber hinaus war eine eigene Entscheidung.
+
+**Was schon gemessen ist:**
+
+| Befund | gemessen | Ergebnis |
+|---|---|---|
+| **2.690** | 48 Zellen (Haltedauer 6/24/72 h, Ziele, Grenze), Wahl 2024 | 24 h ohne Ziel am besten; Ziele +3/+5 % in jeder Haltedauer schlechter; 72 h Spot besser als jeder Hebel |
+| **2.702** | A: 72 h, nachgezogener Stop 1,5 ATR | 0 von 4 Mengen besser; **offen: ob die Haltedauer 72 h oder der Stop den Vorteil zerstört** |
+| **2.694** | Wucht-Einstiege | große Bewegungen kehren binnen 24 h um |
+| **2.700** | REGEL0 auf der Hebel-Liste | nach Kosten positiv (Rückschau-Vorbehalt) |
+
+➤ **Neu und offen** ist die Trennung aus 2.702 und die Frage aus dem Betrieb: **Was kostet jeder weitere Tag?** Das ist eine Messung auf festen Haltedauern, keine Suche nach einer neuen Regel.
+
+**Vorab festgelegt:**
+
+| | |
+|---|---|
+| **Einstiege** | REGEL0-Referenz (`kern48jbz_einstiege_*`), vier Mengen; Einstieg = Schluss der Einstiegsstunde (wie die Messung, §23.64 Teil 0) |
+| **Zeitraum** | Urteil 2025-01 bis 2026-08; 2024 nur Auskunft. Nur Einstiege mit lückenlosen 168 h danach (gleiche Menge in jeder Zelle) |
+| **Zellen** | **H** = Haltedauer 24 / 48 / 72 / 120 / 168 h ohne Stop · **S** = Stop −5 % und −8 % über 24 h sowie −8 % über 168 h („bis zum Stop, höchstens 7 Tage“ – der ETH-Fall). Stop = erste Stunde mit Tief ≤ Einstieg × (1 − s), Ausstieg zum Stopkurs (Kurslücken nicht modelliert – das schont den Stop) |
+| **Kosten** | je Handel 0,30 % Gebühr + 0,18 % je Tag Finanzierung auf den Positionswert (2.690, am echten Buch bestätigt); Ausweis **brutto und netto** |
+| **Hauptgröße** | **gepaarter Unterschied netto: Zelle − 24 h ohne Stop**, je Einstieg, Mittel über alle |
+| **Unsicherheit** | Tagesblock, cluster-robust über Einstiegstage, **99 %** (sieben Zellen, Mehrfachtesten; dasselbe Niveau wie der Messstand, Selbsttest §23.65) |
+| **Urteil je Zelle** | *besser als 24 h*: Intervall > 0 in beiden Jahren und in ≥ 3 von 4 Mengen · *schlechter*: Intervall < 0 ebenso · sonst *nicht unterscheidbar* |
+| **Auskunft** | Anteil der Einstiege, deren Tief innerhalb der Haltedauer −20 % bzw. −33 % erreicht (Liquidationsnähe bei 5x bzw. 3x); Kosten je weiterem Tag |
+| **R-R11** | 24 h ohne Stop brutto = 24-h-Ertrag aus p61 (bestand 2025–26 **+0,545 %**) |
+| **Was NICHT folgt** | Keine neue Regel ohne eigene Wahl- und Bestätigungsrunde. Ergebnis ist ein **Fakt für die Positionsführung**, etwa in der Ausstiegserinnerung: *„jeder weitere Tag kostete 2025–26 im Mittel …“* |
