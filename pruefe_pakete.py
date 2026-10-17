@@ -22504,6 +22504,72 @@ def paket_nachgeholt() -> None:
            " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_messstand() -> None:
+    """O21 Stufe 1 (17.10.2026, Schritt7 §23.64): REGEL0-MESSSTAND IM BETRIEB - Ausgang wie die Referenz, Befund ehrlich, Zeile in der Mail.
+
+    Nutzer: *"ja A1 bis A6 bauen, finde die Zeile fuer den Messstand sollte sofort vorhanden sein"*. Geprueft synthetisch und ohne Netz;
+    der volle Pruefstand (o21_pruefstand.py 9/9, NB-Lage mit Binance-Kerzen) und der Selbsttest der Befund-Regel (o21_gegenprobe.py)
+    stehen als .txt daneben."""
+    P = "Messstand"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    from datetime import datetime as _dt
+
+    import agent.regel0_ablage as _AB
+    import agent.regel0_messstand as _MS
+
+    _q = _quelltext("agent/regel0_messstand.py")
+    pruefe(P, "Ausgang mit E2.ergebnisse (wie die Referenz, R-R11 bitgleich in p61/o21), Einstieg = Einstiegsstunde, fertig erst nach 25 h",
+           "E2.ergebnisse(h, lo, cc, HMAX" in _q and "timedelta(hours=25)" in _q and _MS.HMAX == 72)
+    pruefe(P, "Befund auf dem 99-%-Band ab 10 Tagen (Selbsttest: Fehlalarm <= 5 %), angezeigt dasselbe Band; Kostenhinweis in der Zeile",
+           _MS.NIVEAU == 0.99 and _MS.MIN_TAGE == 10 and "Spanne 99 %%" in _q and "0,48 %%" in _q)
+    _T = _tf.mkdtemp(prefix="messst_")
+    try:
+        c = _AB.oeffne(_T)
+        for i in range(40):
+            c.execute("INSERT INTO signal (symbol, signalstunde, einstieg, ausstieg, stufe, hebel_schalter) VALUES (?,?,?,?,?,?)",
+                      ("X%d" % (i % 4), "2026-10-%02d 05:00" % (4 + i // 4), "2026-10-%02d 06:00" % (4 + i // 4), "", 3, int(i % 2 == 0)))
+        c.commit()
+        c.close()
+        k = _sq.connect(_os.path.join(_T, "stundenkurse_alle.db"))
+        k.execute("CREATE TABLE stundenkurse (symbol TEXT, stunde TEXT, open REAL, high REAL, low REAL, close REAL, volumen REAL)")
+        from datetime import timedelta as _td
+        for s in range(4):
+            p = 100.0
+            t0 = _dt(2026, 10, 3)
+            for h in range(24 * 20):
+                p *= 1.0005 if (h // 24 + s) % 3 else 0.9995
+                k.execute("INSERT INTO stundenkurse VALUES (?,?,?,?,?,?,?)", ("X%d" % s, (t0 + _td(hours=h)).strftime("%Y-%m-%d %H:%M"), p, p * 1.001,
+                                                                             p * 0.999, p, 1.0))
+        k.commit()
+        k.close()
+        e1 = _MS.lauf(_T, _dt(2026, 10, 20, 12))
+        e2 = _MS.lauf(_T, _dt(2026, 10, 20, 12))
+        st = _MS.stand(_T, _dt(2026, 10, 20, 12))
+        z = _MS.zeile(st)
+        pruefe(P, "Lauf in Wegwerf-Ablage: misst, idempotent, Stand mit Gruppen, Zeile mit Tagen und Spanne",
+               e1["ok"] > 0 and e2["neu"] == 0 and e2["ok"] == 0 and st["gesamt"]["n"] == e1["ok"] and "Tagen" in z and "Spanne 99 %" in z
+               and st["gruppen"]["Hebel-Schalter an"]["n"] > 0, "lauf %s · %s" % (e1, z[:120]))
+    finally:
+        __import__("wegwerf").aufraeumen(_T)
+    _qb, _qm, _qs = _quelltext("scheduler/background.py"), _quelltext("agent/regel0_mail.py"), _quelltext("remote/server.py")
+    pruefe(P, "Betrieb: Job regel0_messstand 06:50 mit Nachholer; REGEL0-Mail bekommt den Lieferanten (scheitert nie, Label 'Messstand im "
+              "Betrieb' - nicht 'Messstand' wie der Pruefblock); Statusseite im REGEL0-Bereich; Diagnose und Teilexport",
+           'id="regel0_messstand"' in _qb and '**_nachholen("regel0_messstand", 360, stunde=6, minute=50)' in _qb
+           and 'messstand=lambda r: __import__("agent.regel0_messstand"' in _qb and '("Messstand im Betrieb", messstand["ein"])' in _qm
+           and "_ms = messstand(r)" in _qm and "renderMessstand(data.regel0_messstand)" in _qs
+           and '"regel0_messstand": _regel0_messstand()' in _quelltext("extract_notebook_diagnose.py")
+           and "REGEL0-MESSSTAND (O21)" in _quelltext("nb_teilexport_betriebsdaten.py"))
+    pruefe(P, "Textmail: ein Label ab 16 Zeichen bekommt einen Abstand zum Wert (vorher 'Messstand im BetriebZEILE')",
+           'kopf = ("  %-16s" % k) if len(k) < 16 else ("  %s " % k)' in _qm)
+    _t = {n: _quelltext(_os.path.join("Basisinfos", "Rechenkern_02_10", n)) for n in ("o21_pruefstand.txt", "o21_gegenprobe.txt",
+                                                                                      "p61_o21_vorpruefung.txt", "p61_gegenprobe.txt")}
+    pruefe(P, "Belege: Pruefstand 9/9, Selbsttest Befund im Rahmen, Vorpruefung R-R11 bitgleich, Gegenprobe gleich",
+           "9 von 9 bestanden" in _t["o21_pruefstand.txt"] and "GLEICH (Fehlalarm im Rahmen)" in _t["o21_gegenprobe.txt"]
+           and "10732 von 10732 Einstiegen gleich" in _t["p61_o21_vorpruefung.txt"] and "GLEICH" in _t["p61_gegenprobe.txt"])
+
+
 def paket_termin() -> None:
     """O52 + O51 + W1 (15.10.2026, Schritt7 §23.53, E-112): TERMIN ALS FAKT, ENTFERNEN MIT SPERRE, PRUEFBLOCK MARKIERT.
 
@@ -33120,7 +33186,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

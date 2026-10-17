@@ -3026,6 +3026,23 @@ def _makro_lage() -> dict:
         return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
 
 
+def _regel0_messstand() -> dict:
+    """O21 Stufe 1 (17.10.2026, K-O21-1): Messstand der REGEL0 im Betrieb wie Statusseite und Mail, dazu die echten Trades - nur lesend."""
+    try:
+        import sqlite3 as _sq
+        from agent import betriebslage as _BL
+        from agent import regel0_nachlader as _NL
+        p = os.path.join(_NL.DATEN_VORGABE, "tradinginfotool.db")
+        c = _sq.connect("file:%s?mode=ro" % p.replace("\\", "/"), uri=True, timeout=10) if os.path.exists(p) else None
+        try:
+            return _BL.regel0_messstand(_NL.DATEN_VORGABE, c)
+        finally:
+            if c is not None:
+                c.close()
+    except Exception as exc:                                             # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _season_ampel() -> dict:
     """P19 (17.10.2026, K-SP-4): die Season-Ampel so, wie Statusseite und Mails sie zeigen (agent.season_ampel.uebersicht), dazu die
     letzten Laeufe, die Meldungen und die Einstiegs-Kandidaten (A3) - nur lesend."""
@@ -4123,6 +4140,7 @@ def main() -> None:
         "termine_vorschau": _termine_vorschau(),           # O52 15.10.: Termine wie in der REGEL0-Mail (K-TM-1)
         "makro_lage": _makro_lage(),                       # O54 15.10.: wie Statusseite/Mail (K-ML-1)
         "season_ampel": _season_ampel(),                   # P19 17.10.: wie Statusseite/Mail (K-SP-4)
+        "regel0_messstand": _regel0_messstand(),           # O21 17.10.: wie Statusseite/Mail (K-O21-1)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

@@ -1342,3 +1342,10 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 - **Statusseite:** Abschnitt *Krypto-Markt (Season-Ampel)* direkt unter dem Makro-Umfeld; Schalter *Season-Ampel (C1) – Mail beim Stufenwechsel* (aus).
 - **Mails:** Zeile *Season-Ampel* in B1/B3/B4 (Fakt).
 - **Offen aus G2:** im Reiter *Spot* der Teil *Bestand führen* (B1-Fenster, B4-Fünftel) – steht heute im Reiter *Bestand*; mit GUI-Stufe 2.
+
+### G-Z16 O21 – Messstand im Betrieb auf Statusseite und in der Signalmail (17.10.2026)
+
+- **Statusseite, REGEL0-Bereich:** neuer Block *Messstand im Betrieb* (Befund, Zeile mit Tagen und Spanne 99 %, rollierend 90 T, Gruppen, Prüfblock, echte Trades gegen ihr Signal).
+- **REGEL0-Signalmail:** Zeile *Messstand im Betrieb* im Abschnitt Einschätzung, dazu eine Technikzeile.
+- **GUI:** unverändert; der Hebel-Reiter zeigt die Signalmail als Detail und damit auch die Zeile.
+

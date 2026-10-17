@@ -1423,3 +1423,17 @@ Nachweis: Spot §49.5/§49.6, `p19_pruefstand.txt` 12/12, `p19_bau_gegenprobe.tx
 **Eigene Festlegung (berichtet):** Die Mail bleibt, wie geplant, aber als Auskunft. Die Handlung bei einem Stillstand kommt aus der Stillstandsmail (K-ALARM-2).
 
 Nachweis: `p11d_pruefstand.txt` 7/7 (darunter der echte Fall vom 16.10. 18:30), `p11d_gegenprobe.txt` (66 NB-Läufe, 0 Abweichungen); Paket Nachgeholt; K-NG-1.
+
+# E-120 · O21 Stufe 1 gebaut: Messstand im Betrieb, Zeile sofort in der Signalmail (17.10.2026)
+
+**17.10.2026** · Nutzer: *„ja A1 bis A6 bauen, finde die Zeile für den Messstand sollte sofort vorhanden sein“*.
+
+**Gebaut:** laufende Ergebnismessung jedes REGEL0-Signals (gleiche Rechnung wie die Messung), Messstand mit Spanne über Tage, echte Trades gegen ihr Signal, Prüfblock gegen den Ausgang; Statusseite, Teilexport, Diagnose; **Zeile *Messstand im Betrieb* in jeder REGEL0-Signalmail**.
+
+**Eigene Festlegungen (berichtet):**
+- **Befund und Anzeige auf dem 99-%-Band**, Befund erst ab 10 Tagen. Grund: Selbsttest – mit 95 % meldete der Befund bei einem Betrieb genau wie die Messung zu oft eine Abweichung (10 T 12,5 %); mit 99 % höchstens 4,9 %.
+- Die Zeile nennt immer Signale, **Tage**, Spanne und den Satz *„ob der Vorteil die Kosten (0,48 %) schlägt, ist so erst nach Jahren entscheidbar“*, damit sie nicht genauer wirkt, als sie ist.
+- Label *Messstand im Betrieb* (nicht *Messstand* – so heißt die Zeile des Prüfblocks).
+- Echte Trades nur als Fakt (Signal, Verzug, Haltedauer); das Ergebnis in EUR ist Stufe 1b.
+
+Nachweis: Schritt7 §23.64/§23.65, `o21_pruefstand.txt` 9/9, `o21_gegenprobe.txt`, Paket Messstand; K-O21-1.

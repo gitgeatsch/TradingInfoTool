@@ -3842,3 +3842,26 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 | A5 | Anzeige: Statusseite (Karte *REGEL0-Messstand* in Betrieb & Lage), Teilexport, Diagnose. **Keine** eigene Mail (Information ohne Handlung). **Option:** eine Zeile *Messstand im Betrieb* in der REGEL0-Signalmail als Fakt neben der Handlung |
 | A6 | Prüfstand am Seiteneffekt, Gegenprobe zweiter Weg, Suite-Paket, NB-Kontrolle; kein Eingriff in REGEL0 selbst |
 | später | Stufe 1b: Ergebnis echter Trades in EUR aus den Transaktionen · Stufe 2 (O21): Champion/Herausforderer im Schatten |
+
+### 23.65 O21 Stufe 1 gebaut: REGEL0-Messstand im Betrieb – mit Zeile in der Signalmail (17.10.2026; `o21_pruefstand.py`, `o21_gegenprobe.py` → `.txt`)
+
+**Nutzer 17.10.:** *„ja A1 bis A6 bauen, finde die Zeile für den Messstand sollte sofort vorhanden sein“*.
+
+| Teil | Stand |
+|---|---|
+| `agent/regel0_messstand.py` (A1) | `ausgang`: Einstiegsstunde, `E2.ergebnisse` (72 h), 24-h-Ertrag, A24/B24/Q, MFE 24 h aus **denselben** Stundenkursen wie die Rechnung; fertig nach 25 h, `t_u`/`t_d` endgültig nach 72 h; ohne lückenlose Kurse *ohne_kurse*. `lauf` schreibt nur die Tabelle `ausgang` der REGEL0-Ablage, idempotent |
+| A2 Messstand | seit 03.10. und rollierend 90 T; Gruppen Schalter an/aus, Stufe 2/3/5, Zusatz-Assets; Referenz 2025–26 (+0,55 %); Spanne cluster-robust über **Tage**, mit Korrektur für wenige Tage (t-Quantil, √(T/(T−1))). ⚠️ **Befund auf dem 99-%-Band ab 10 Tagen** (siehe unten) |
+| A3 echte Trades | je Lebenszyklus des Hebel-Buchs: Signal oder *eigene Entscheidung*, Verzug zum gemessenen Einstieg, Haltedauer gegen 24 h – Fakt, kein EUR-Ergebnis (Stufe 1b) |
+| A4 Prüfblock | Urteil der Trader-Rolle gegen den Ausgang, je Urteil n, Tage, Mittel – Auskunft |
+| A5 Anzeige | Statusseite im REGEL0-Bereich (Befund, Zeile, 90 T, Gruppen, Prüfblock, Trades); Teilexport *REGEL0-MESSSTAND (O21)*; Diagnose `regel0_messstand`. **Zeile *Messstand im Betrieb* in jeder REGEL0-Signalmail** (Nutzer: sofort) – Fakt mit Tagen und Spanne, kein Gate |
+| Job | `regel0_messstand` täglich 06:50 und beim Start (Nachholer); nur am Betriebsgerät |
+| ⚠️ **Fehler im Bau, im Prüfstand gefunden** | (1) **Namensgleichheit:** Der Prüfblock führt schon eine Zeile *Messstand*; die neue heißt *Messstand im Betrieb*. (2) **Textmail:** Ein Label ab 16 Zeichen lief ohne Abstand in den Wert – der Formatierer gibt jetzt einen Abstand (alle bisherigen Labels sind kürzer, ihre Texte unverändert; Pakete Mail/Mailgliederung/Lesbar/Mailabschnitte grün). (3) **Spanne bei wenigen Tagen zu eng** (12 T: 1,46 gegen Bootstrap 1,75 Pp) – Korrektur für kleine Gruppenzahl |
+| ⚠️⚠️ **Selbsttest der Befund-Regel** (`o21_gegenprobe`) | Läuft der Betrieb **genau** wie die Messung, darf der Befund höchstens in 5 % der Fälle *über/unter der Messung* melden. Mit 95 % waren es 10 T **12,5 %**, 30 T 9,2 %, 180 T 5,7 % – Tage mit großen Marktbewegungen machen die Tagesmittel dickschwänzig. Mit **99 %**: 10 T 4,9 % · 12 T 3,5 % · 30 T 2,5 % · 90 T 1,0 % · 180 T 1,8 %. ⇒ Befund und Anzeige auf **99 %** (meine Festlegung, berichtet) |
+| Fehler im **Prüfstand** (nicht im Modul) | S2 verglich zuerst mit den festen Zahlen der Vorprüfung (532); dort war der Abruf von AIOT und ELSA gescheitert, hier nicht (558) – jetzt je Signal gegen die Schleife aus p61 auf denselben Kursen. S6: Zeitzone und Zeilenumbruch |
+| **Prüfstand** `o21_pruefstand.py` | **9/9**: S1 Referenz 2026 3.693/3.693 (t_u, t_d, Q) · S2 Oktober 558/558 je Signal gleich, 1 ohne Kurse beidseits · S3 idempotent, Zeitreise (offen nicht geschrieben) · S4 nach 20 h offen, 30 h fertig, 80 h endgültig, e24 gleich · S5 Befund (zu wenige Tage / UNTER bei −10 %) · S6 Mail mit Zeile, ohne sie unverändert, Lieferant scheitert nie · S7 Trades ETH (Signal 06:00, 1,5 h, 149 h) / BTC (eigene Entscheidung) · S8 Job und Anzeige · S9 kein Seiteneffekt |
+| Statusseite im Browser | Prüfserver gegen Wegwerf-Ablage: REGEL0-Bereich zeigt Befund, Zeile, 90 T, Gruppen, Prüfblock, Trades; Konsole ohne Fehler |
+| Suite | neues Paket **Messstand**; Mail, Mailgliederung, Lesbar, Mailabschnitte, Regel0Betrieb, Termin, Makro, Verwässerung, NurLesend, Laufzeit, GuiKette, StandardDB grün |
+
+**Stand mit den Oktober-Daten (Prüfstand, NB-Kopie bis 14.10.):** 558 Signale an 12 Tagen, Mittel **+0,77 %** (Spanne 99 %: −1,64 bis +3,18 %), Messung +0,55 % → **im Band der Messung**.
+
+**Am NB** (Pull und Neustart): Der erste Lauf misst alle Signale seit 03.10. (rund 900), danach täglich 06:50. Die nächste REGEL0-Signalmail trägt die Zeile. Kontrolle **K-O21-1**.

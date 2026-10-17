@@ -761,6 +761,29 @@ function renderHebel(h) {
   return x;
 }
 
+// O21 Stufe 1 (17.10.2026): Messstand der REGEL0 im Betrieb - Fakt mit Spanne und Tagen
+function renderMessstand(m) {
+  if (!m || !m.vorhanden) return '<div class="unter">Messstand im Betrieb: noch kein Lauf (Job regel0_messstand, täglich 06:50)</div>';
+  const pz = function (v) { return v == null ? "-" : ((v >= 0 ? "+" : "") + (100 * v).toFixed(2) + " %"); };
+  const g = m.gesamt || {};
+  let x = '<div class="row" style="margin-top:6px"><strong>Messstand im Betrieb</strong><span class="' +
+          (String(m.befund).indexOf("UNTER") === 0 ? "err" : "ok") + '">' + esc(m.befund || "-") + "</span></div>";
+  x += '<div class="unter">' + esc(m.zeile || "") + "</div>";
+  const f = m.fenster || {};
+  if (f.n) x += '<div class="unter">rollierend 90 T: ' + f.n + " Signale an " + f.tage + " Tagen, Mittel " + pz(f.mittel) +
+               " (±" + (100 * (f.halb || 0)).toFixed(2) + " Pp), Q " + (f.q ?? 0).toFixed(3) + "</div>";
+  Object.keys(m.gruppen || {}).forEach(function (k) {
+    const v = m.gruppen[k];
+    if (v.n) x += '<div class="unter">' + esc(k) + ": n " + v.n + " · Tage " + v.tage + " · Mittel " + pz(v.mittel) + " · Q " + v.q.toFixed(3) + "</div>";
+  });
+  Object.keys(m.llm || {}).forEach(function (k) {
+    const v = m.llm[k];
+    if (v.n) x += '<div class="unter">Prüfblock „' + esc(k) + "“: n " + v.n + " · Tage " + v.tage + " · Mittel " + pz(v.mittel) + "</div>";
+  });
+  (m.trades || []).forEach(function (t) { x += '<div class="unter">Trade: ' + esc(t) + "</div>"; });
+  x += '<div class="unter muted-text">offen ' + (m.offen ?? 0) + " · ohne Kurse " + (m.ohne_kurse ?? 0) + " · zuletzt " + fmtStempel(String(m.zuletzt || "").slice(0, 16)) + "</div>";
+  return x;
+}
 function renderRegel0(r) {
   const h = r.heute || {};
   if (!h.ablage) return zeile("regel0_signale.db", "fehlt - noch kein Lauf", "err");
@@ -1012,7 +1035,7 @@ async function refreshStatus() {
   if (data.regel0_lage) {
     const l = (data.regel0_lage.heute || {}).letzter_lauf;
     document.getElementById("regel0-kopf").textContent = l ? "Lauf " + fmtStempel(l[0]) : "-";
-    document.getElementById("regel0-body").innerHTML = renderRegel0(data.regel0_lage);
+    document.getElementById("regel0-body").innerHTML = renderRegel0(data.regel0_lage) + renderMessstand(data.regel0_messstand);
   }
   if (data.betrieb) {
     const jobs = data.betrieb.jobs || [];

@@ -332,6 +332,7 @@ class RemoteStatus:
     parameter_neu: list[dict] | None = None
     makro_lage: dict | None = None
     season_ampel: dict | None = None
+    regel0_messstand: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -370,6 +371,7 @@ class RemoteStatus:
             "parameter_neu": self.parameter_neu,
             "makro_lage": self.makro_lage,
             "season_ampel": self.season_ampel,
+            "regel0_messstand": self.regel0_messstand,
         }
 
 
@@ -499,6 +501,7 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         parameter_neu=_safe(_get_parameter_neu),
         makro_lage=_safe(_get_makro_lage),
         season_ampel=_safe(_get_season_ampel),
+        regel0_messstand=_safe(_get_regel0_messstand, conn),
     )
 
 
@@ -1361,6 +1364,14 @@ def _get_bestand_lage(conn: sqlite3.Connection) -> dict:
                      "SUM(COALESCE(staked_quantity,0) > 0) FROM holdings").fetchone()
     m.update({"bestaende": r[0] or 0, "mit_menge": r[1] or 0, "davon_gestakt": r[2] or 0})
     return m
+
+
+@_gecacht_frist(300)
+def _get_regel0_messstand(conn: sqlite3.Connection) -> dict:
+    """O21 Stufe 1 (17.10.2026): Messstand der REGEL0 im Betrieb - taeglich vom Job regel0_messstand geschrieben, hier nur gelesen."""
+    from agent import betriebslage as BL
+
+    return BL.regel0_messstand(_daten_ordner(), conn)
 
 
 @_gecacht_frist(300)

@@ -1,0 +1,11 @@
+S1  bestanden Referenz 2026: 3693 von 3693 gemessen, t_u/t_d gleich 3693, Q gleich 3693
+S2  bestanden Lauf {'neu': 559, 'ok': 558, 'offen': 0, 'ohne_kurse': 1, 'endgueltig': 558} · je Signal gegen die Schleife aus p61 Teil 2: 558 von 558 gleich (e24 und Q), ohne Kurse beidseits 1 · gesamt n 558 an 12 Tagen, Mittel +0.774 %, Q +0.099, Halbbreite 2.41 Pp · Befund 'im Band der Messung'
+S3  bestanden zweiter Lauf {'neu': 0, 'ok': 0, 'offen': 0, 'ohne_kurse': 1, 'endgueltig': 0} · Lauf am 10.10.: {'neu': 204, 'ok': 203, 'offen': 355, 'ohne_kurse': 1, 'endgueltig': 143}, Ausgaenge nach Einstieg 08.10. 23:00 geschrieben: 0
+S4  bestanden LUMIA Einstieg 2026-10-03 03:00: nach 20 h offen · nach 30 h e24 +0.0263 endgueltig 0 · nach 80 h e24 +0.0263 endgueltig 1 (t_u 999 / 53)
+S5  bestanden 5 Tage: 'zu wenige Tage für ein Urteil (5, ab 10)' · um -10 % verschoben: 'UNTER der Messung' · echt (Tage auf 12 gesetzt): 'im Band der Messung'
+S6  bestanden Zeile: 'seit 03.10. 558 Signale an 12 Tagen: 24-h-Ertrag im Mittel +0,77 % (Spanne 99 %: -1,64 % bis +3,18 %), Messung +0,55 % – im Band der Messung · Schalter an: 22 an 6 Tagen, +3,79 %. Ein Tag zählt wie eine Beobachtung; ob der Vorteil die Kosten (0,48 %) schlägt, ist so erst nach Jahren entscheidbar'
+S7  bestanden ETH 2026-10-09 08:29 → 2026-10-15 13:59 · geschlossen · REGEL0-Signal 2026-10-09 06:00 (Stufe 5), eröffnet 1.5 h nach dem gemessenen Einstieg · Haltedauer 149 h (Regel 24 h) | BTC 2026-10-09 04:38 → offen · offen · ohne REGEL0-Signal in den 26 h davor (eigene Entscheidung) · Haltedauer 194 h bisher
+S8  bestanden Job {'gelaufen': True, 'neu': 0, 'ok': 0, 'befund': 'im Band der Messung'} · Log: ['REGEL0-Messstand: neu 0 · gemessen 0 · offen 0 · ohne Kurse 1 · endgueltig 0 · gesamt 558 Signale an 12 Tagen, Mittel +0.77 % · im Band der Messung']
+S9  bestanden Quelle der Ablage, Wegwerf-Produktion und Desktop-Kursdateien unveraendert
+
+9 von 9 bestanden

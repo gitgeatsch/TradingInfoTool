@@ -72,6 +72,20 @@ def spot_abbau(daten: str = DATEN) -> dict:
     return SA.stand(daten)
 
 
+def regel0_messstand(daten: str = DATEN, c_prod=None) -> dict:
+    """O21 Stufe 1: Messstand der REGEL0 im Betrieb (Ausgaenge seit 03.10., rollierend 90 T, Gruppen, Pruefblock) und die echten
+    Trades gegen ihr Signal - nur lesend."""
+    from agent import regel0_messstand as MS
+
+    d = MS.stand(daten)
+    d["zeile"] = MS.zeile(d)
+    try:
+        d["trades"] = [MS.trade_text(t) for t in MS.trades(c_prod, daten)] if c_prod is not None else None
+    except Exception as exc:                                 # noqa: BLE001
+        d["trades"] = ["nicht lesbar: %s" % type(exc).__name__]
+    return d
+
+
 def season_ampel(daten: str = DATEN) -> dict:
     """P19 Spot C1: Season-Ampel (Stufe, Bedingungen, Lauf) und die Einstiegs-Kandidaten aus dem B4-Universum (nur lesend)."""
     from agent import season_ampel as SA

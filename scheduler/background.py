@@ -1730,6 +1730,8 @@ def _regel0_mails() -> None:
                          termin=lambda r: __import__("agent.termin_fakt", fromlist=["mailteil"]).mailteil(r),
                          # O54 (15.10.2026): Makro-Lage lang/kurz als Fakt (Gewichtung beim Nutzer, Schritt7 §23.57) - kein Gate
                          makro=lambda r: __import__("agent.makro_lage", fromlist=["mailteil"]).mailteil(),
+                         # O21 (17.10.2026): Messstand der REGEL0 im Betrieb als Fakt mit Spanne und Tagen (Schritt7 §23.64) - kein Gate
+                         messstand=lambda r: __import__("agent.regel0_messstand", fromlist=["mailteil"]).mailteil(_NL.DATEN_VORGABE),
                          # O45 (11.10.2026): Wochen- und Tageschart mit RSI/MACD als weitere Bilder in "2 · Chart" (Kontext, kein Ausloeser)
                          zusatzbilder=lambda r: _IC.bilder(_NL.DATEN_VORGABE, r["symbol"], r.get("bitpanda") or r["symbol"],
                                                            r.get("eur_je_usd"), praefix="regel0"))
@@ -4608,6 +4610,46 @@ def season_ampel_job(conn_factory, versand=None, heute=None, ordner=None, http=N
     return aus
 
 
+def regel0_messstand_job(conn_factory=None, ordner=None, jetzt=None) -> dict:
+    """O21 Stufe 1 (17.10.2026, Schritt7 §23.64): misst die 24-h-Ausgaenge der REGEL0-Signale - taeglich 06:50 und beim Start.
+
+    Schreibt NUR die REGEL0-Ablage (Tabelle ``ausgang``); liest die Stundenkurse nur. Keine Mail. Nur am Betriebsgeraet (wie der
+    Stundenjob), von Hand mit ``ordner`` auf einer Kopie. Scheitert nie nach aussen."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.regel0_messstand as _MS
+        import agent.regel0_nachlader as _NL
+
+        if ordner is None:
+            ordner = _NL.DATEN_VORGABE
+            erlaubt, grund = _NL.betrieb_erlaubt(ordner)
+            if not erlaubt:
+                logger.info("REGEL0-Messstand: uebersprungen - %s", grund)
+                aus["grund"] = grund
+                return aus
+        erg = _MS.lauf(ordner, jetzt)
+        st = _MS.stand(ordner, jetzt)
+        g = st.get("gesamt") or {}
+        logger.info("REGEL0-Messstand: neu %d · gemessen %d · offen %d · ohne Kurse %d · endgueltig %d · gesamt %s Signale an %s Tagen, "
+                    "Mittel %s · %s", erg["neu"], erg["ok"], erg["offen"], erg["ohne_kurse"], erg["endgueltig"], g.get("n", 0),
+                    g.get("tage", 0), ("%+.2f %%" % (100 * g["mittel"])) if g.get("n") else "-", st.get("befund"))
+        if conn_factory is not None:
+            try:
+                conn = conn_factory()
+                try:
+                    for t in _MS.trades(conn, ordner):
+                        logger.info("REGEL0-Messstand Trade: %s", _MS.trade_text(t))
+                finally:
+                    conn.close()
+            except Exception:                                    # noqa: BLE001
+                logger.exception("REGEL0-Messstand: echte Trades nicht lesbar")
+        aus.update(gelaufen=True, **erg, befund=st.get("befund"))
+    except Exception:                                            # noqa: BLE001
+        logger.exception("REGEL0-Messstand: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
 HEBEL_WALLET_SPERRE_STUNDEN = 6.0
 
 
@@ -5883,6 +5925,16 @@ def build_scheduler(
         args=[db_conn_factory, watchlist_provider],
         id="spot_abbau",
         **_nachholen("spot_abbau", 300, stunde=7, minute=25),
+    )
+    # O21 Stufe 1 (17.10.2026): REGEL0-Messstand - taeglich 06:50 (vor den Spot-Jobs, nach der Betriebskopie), nur die REGEL0-Ablage
+    scheduler.add_job(
+        regel0_messstand_job,
+        "cron",
+        hour=6,
+        minute=50,
+        args=[db_conn_factory],
+        id="regel0_messstand",
+        **_nachholen("regel0_messstand", 360, stunde=6, minute=50),
     )
     # P19 Spot C1 (17.10.2026): Season-Ampel - taeglich 07:30 (NACH der Betriebskopie 03:30, dem Umlauf 06:35 und B4 07:25), Fakt;
     # die Mail beim Wechsel der geltenden Stufe nur mit Schalter season_ampel_aktiv (Vorgabe AUS)

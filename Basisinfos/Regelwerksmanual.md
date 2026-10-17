@@ -2132,6 +2132,13 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 17.10.2026 — Messstand im Betrieb (O21)
+
+- **Zeile *Messstand im Betrieb*** in jeder REGEL0-Signalmail und im REGEL0-Bereich der Statusseite: seit 03.10. so viele Signale an so vielen **Tagen**, 24-h-Ertrag im Mittel mit **Spanne 99 %**, daneben die Messung 2025–26 (+0,55 %) und der Befund.
+- **Befund:** *im Band der Messung* · *UNTER der Messung* (dann prüfen: Daten, Zuordnung, Regime) · *über der Messung* · *zu wenige Tage für ein Urteil* (unter 10 Tagen).
+- ⚠️ **Lesart:** Ein Tag zählt wie eine Beobachtung, weil alle Signale eines Tages denselben Markt sehen. Der Messstand sagt, ob der Betrieb tut, was gemessen wurde – **nicht**, ob der Vorteil die Kosten schlägt.
+- **Echte Trades** (Statusseite): je Trade das REGEL0-Signal oder *eigene Entscheidung*, Verzug und Haltedauer gegen die Regel 24 h.
+
 ### Stand 17.10.2026 — Mails nach einer Unterbrechung (P11d)
 
 - *„REGEL0 nachgeholt (n Std.) – Rechnung erfolgreich“*: kein Fehler. Die Rechnung hat verpasste Stunden nachgerechnet; die Mail nennt Stunden und Signale. Die Handlung (NB prüfen) kommt aus der Stillstandsmail.

@@ -110,7 +110,7 @@ def _prozent(x: float) -> str:
 
 
 def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
-                  ankuendigung=None, verwaesserung=None, termin=None, makro=None) -> dict:
+                  ankuendigung=None, verwaesserung=None, termin=None, makro=None, messstand=None) -> dict:
     """O25 (Nutzer 04.10.2026: *nicht die bisherige Form uebernehmen*; M-a bis M-f): EINE Gliederung fuer Text und HTML.
 
     Reihenfolge M-a: (1) was zu tun ist - (2) Chart - (3) Einschaetzung - (4) Begruendung der Rollen - (5) Technik.
@@ -176,6 +176,10 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     # O54 (15.10.2026): Makro-Lage lang/kurz als FAKT - Gewichtung beim Nutzer, kein Gate (Schritt7 §23.57)
     if isinstance(makro, dict) and makro.get("ein"):
         ein_z.append(("Makro", makro["ein"]))
+    # O21 (17.10.2026, Nutzer: *"die Zeile fuer den Messstand sollte sofort vorhanden sein"*): wie die REGEL0 im Betrieb bisher lief -
+    # FAKT mit Spanne und Tagen, kein Gate, keine Wirkung auf Stufe oder Einsatz (Schritt7 §23.64)
+    if isinstance(messstand, dict) and messstand.get("ein"):
+        ein_z.append(("Messstand im Betrieb", messstand["ein"]))   # nicht "Messstand" - so heisst die Zeile des Pruefblocks
     ein_z.append(("Gefahr je Stufe", "2x %s · 3x %s · 5x %s binnen 24 h (Grenze 2 %%)" % (
         _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5")))))
 
@@ -198,6 +202,8 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
         technik += list(termin.get("technik") or [])
     if isinstance(makro, dict):
         technik += list(makro.get("technik") or [])
+    if isinstance(messstand, dict):
+        technik += list(messstand.get("technik") or [])
     technik += [("Regel", "REGEL0.1 (rsi-Ersteintritt, v-dach %s, Schwelle +0,035, Ruhe 48 h; Hebel aus dem ATR-Modell, Grenze 2 %%)" % (
                     ("%+.4f" % r["vh"]).replace(".", ",") if r.get("vh") is not None else "-")),
                 ("Einsatz", "Startwerte in regel0_betrieb.yaml; die Hebelstufen je Asset bei Bitpanda sind noch nicht als Daten hinterlegt (D2)")]
@@ -213,7 +219,9 @@ def _als_text(t: dict) -> str:
     def blk(titel, paare):
         z = ["", titel]
         for k, v in paare:
-            z += textwrap.wrap(v, 96, initial_indent="  %-16s" % k, subsequent_indent=" " * 18) or ["  %-16s" % k]
+            # O21 (17.10.2026): ein Label ab 16 Zeichen lief ohne Abstand in den Wert ("Messstand im BetriebZEILE") - dann mit Leerzeichen
+            kopf = ("  %-16s" % k) if len(k) < 16 else ("  %s " % k)
+            z += textwrap.wrap(v, 96, initial_indent=kopf, subsequent_indent=" " * 18) or [kopf]
         return z
     z = [t["kopf"]]
     z += blk("1  WAS ZU TUN IST", t["tun"])
@@ -262,16 +270,17 @@ def _als_html(t: dict, bilder: int = 0) -> str:
 
 
 def signal_mail(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
-                ankuendigung=None, verwaesserung=None, termin=None, makro=None) -> tuple:
+                ankuendigung=None, verwaesserung=None, termin=None, makro=None, messstand=None) -> tuple:
     """-> (Betreff, Text). Der Text ist auch das Detail im Hebel-Tab (eine Quelle). Aufbau O25: ``_signal_teile``."""
-    t = _signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung, verwaesserung, termin, makro)
+    t = _signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung, verwaesserung, termin, makro, messstand)
     return t["betreff"], _als_text(t)
 
 
 def signal_html(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, jetzt: datetime, pruefung=None, spot=None,
-                bilder: int = 0, ankuendigung=None, verwaesserung=None, termin=None, makro=None) -> str:
+                bilder: int = 0, ankuendigung=None, verwaesserung=None, termin=None, makro=None, messstand=None) -> str:
     """Die HTML-Fassung derselben Gliederung (O25 M-d)."""
-    return _als_html(_signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung, verwaesserung, termin, makro),
+    return _als_html(_signal_teile(r, stufe, vorlaeufig, groesse, werte, jetzt, pruefung, spot, ankuendigung, verwaesserung, termin, makro,
+                                   messstand),
                      bilder)
 
 
@@ -328,7 +337,7 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
 
 def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
              bild=None, pruefung=None, position=None, spot=None, senden_html=None, ankuendigung=None, zusatzbilder=None,
-             verwaesserung=None, termin=None, makro=None) -> dict:
+             verwaesserung=None, termin=None, makro=None, messstand=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
@@ -450,7 +459,14 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                 except Exception as exc:                        # noqa: BLE001
                     __import__("logging").getLogger(__name__).warning("REGEL0-Makro %s gescheitert: %s: %s", r.get("symbol"),
                                                                       type(exc).__name__, exc)
-            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, _an, _vw, _tm, _mk)
+            _ms = None
+            if messstand is not None:                         # O21: scheitert nie - ohne Zeile geht die Mail trotzdem (P-8)
+                try:
+                    _ms = messstand(r)
+                except Exception as exc:                        # noqa: BLE001
+                    __import__("logging").getLogger(__name__).warning("REGEL0-Messstand %s gescheitert: %s: %s", r.get("symbol"),
+                                                                      type(exc).__name__, exc)
+            b, t = signal_mail(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, _an, _vw, _tm, _mk, _ms)
             bilder = None
             if bild is not None:
                 try:
@@ -471,7 +487,7 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                     bilder = (bilder or []) + _zb
             if senden_html is not None:
                 try:
-                    _h = signal_html(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, len(bilder or []), _an, _vw, _tm, _mk)
+                    _h = signal_html(r, stufe, r["stufe"] is None, g, werte, jetzt, _pr, _sp, len(bilder or []), _an, _vw, _tm, _mk, _ms)
                 except Exception:                               # noqa: BLE001
                     _h = None
                 _ok = senden_html(b, t, _h, bilder)

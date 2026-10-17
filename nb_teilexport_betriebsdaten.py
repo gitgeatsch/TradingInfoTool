@@ -488,6 +488,31 @@ def _inhalt() -> int:
                 print("    Verwaesserung 90 T (P22): nicht lesbar (%s)" % type(_e22).__name__)
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Spot-Abbau nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # O21 Stufe 1 (17.10.2026): REGEL0-Messstand im Betrieb - Ausgaenge, Befund, Gruppen, Pruefblock, echte Trades (nur lesend; K-O21-1)
+    print()
+    print("-" * 100)
+    try:
+        c21 = ro(prod) if os.path.exists(prod) else None
+        try:
+            m21 = BL.regel0_messstand(DATEN, c21)
+        finally:
+            if c21 is not None:
+                c21.close()
+        if not m21.get("vorhanden"):
+            print("REGEL0-MESSSTAND (O21): noch kein Lauf")
+        else:
+            print("REGEL0-MESSSTAND (O21): %s · %s" % (m21.get("befund"), m21.get("zeile")))
+            print("    offen %s · ohne Kurse %s · zuletzt %s" % (m21.get("offen"), m21.get("ohne_kurse"), m21.get("zuletzt")))
+            for k21, v21 in (m21.get("gruppen") or {}).items():
+                if v21.get("n"):
+                    print("    %-18s n %4d · Tage %3d · Mittel %+.2f %% · Q %+.3f" % (k21, v21["n"], v21["tage"], 100 * v21["mittel"], v21["q"]))
+            for k21, v21 in (m21.get("llm") or {}).items():
+                if v21.get("n"):
+                    print("    Pruefblock %-14s n %4d · Tage %3d · Mittel %+.2f %%" % (k21, v21["n"], v21["tage"], 100 * v21["mittel"]))
+            for t21 in m21.get("trades") or []:
+                print("    Trade: %s" % t21)
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ REGEL0-Messstand nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P19 Spot C1 (17.10.2026): Season-Ampel - Stufe, Bedingungen, letzter Lauf, Meldungen, Kandidaten (data/spot_betrieb.db, nur lesend; K-SP-4)
     print()
     print("-" * 100)

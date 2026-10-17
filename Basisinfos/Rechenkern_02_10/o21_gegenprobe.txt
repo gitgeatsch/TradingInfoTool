@@ -1,0 +1,7 @@
+O21 GEGENPROBE · Referenz 8408 Einstiege an 497 Tagen, Mittel +0.545 % (MS.REF_MITTEL +0.545 %)
+    10 Tage: Fehlalarm 4.9 % (Soll <= 5 %) · Halbbreite im Mittel 3.99 Pp
+    12 Tage: Fehlalarm 3.5 % (Soll <= 5 %) · Halbbreite im Mittel 3.74 Pp
+    30 Tage: Fehlalarm 2.5 % (Soll <= 5 %) · Halbbreite im Mittel 2.47 Pp
+    90 Tage: Fehlalarm 1.0 % (Soll <= 5 %) · Halbbreite im Mittel 1.49 Pp
+   180 Tage: Fehlalarm 1.8 % (Soll <= 5 %) · Halbbreite im Mittel 1.08 Pp
+GLEICH (Fehlalarm im Rahmen)

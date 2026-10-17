@@ -2565,3 +2565,8 @@ Schritt7 §23.24.
 - **M1:** unverändert. Spot hat damit Führung (B1/B3/B4) und den Markt als Fakt; der Einstieg je Asset bleibt nicht belegt (E-102).
 
 **Nachtrag 17.10.2026 (44) — P11d Betreff 'nachgeholt':** Nach einer Unterbrechung meldet die REGEL0-Rechnung nachgeholte Stunden nicht mehr als *fehlgeschlagen*, sondern als *„REGEL0 nachgeholt – Rechnung erfolgreich“*; veraltete Daten und nicht nachholbare Stunden bleiben Fehler (Schritt7 §23.63, E-119).
+
+**Nachtrag 17.10.2026 (45) — O21 Stufe 1 REGEL0-Messstand im Betrieb:**
+- **Gebaut** (Schritt7 §23.64/§23.65, E-120): jedes REGEL0-Signal wird nach 24 h gemessen wie die Referenz; Messstand mit Spanne über Tage auf der Statusseite und als Zeile in jeder Signalmail.
+- ⚠️ **Grenze, gemessen:** Ein Betriebstag zählt wie eine Beobachtung. Der Messstand zeigt, ob der Betrieb im Band der Messung läuft; ob der Vorteil die Kosten schlägt, ist vorwärts erst nach Jahren entscheidbar.
+- **M1:** Kriterium „Betrieb = Messung“ hat jetzt eine laufende Messung (bisher nur die Testwoche).
