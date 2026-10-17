@@ -4355,7 +4355,11 @@ def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None
                         _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
                     except Exception:                                # noqa: BLE001
                         _mk = None
-                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, _vw, _mk)
+                    try:                                             # P19: Season-Ampel als Fakt - scheitert nie nach aussen
+                        _am = __import__("agent.season_ampel", fromlist=["zeile"]).zeile(ordner)
+                    except Exception:                                # noqa: BLE001
+                        _am = None
+                    b, t = _SM.mail(f, bf, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, _vw, _mk, _am)
                     try:
                         _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
                         bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
@@ -4421,8 +4425,12 @@ def spot_upbit_job(conn_factory, watchlist_provider, versand=None, jetzt=None, o
                         _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
                     except Exception:                                # noqa: BLE001
                         _mk = None
+                    try:                                             # P19: Season-Ampel als Fakt - scheitert nie nach aussen
+                        _am = __import__("agent.season_ampel", fromlist=["zeile"]).zeile(ordner)
+                    except Exception:                                # noqa: BLE001
+                        _am = None
                     b, t = _SU.mail(f, f["symbol"] not in mit_binance, float(st[0]) if st and st[0] else None, jetzt_usd, vor[-1] if vor else None,
-                                    _vw, _mk)
+                                    _vw, _mk, _am)
                     try:
                         _k = preise.get(f["symbol"]).price_eur if preise.get(f["symbol"]) else None
                         bilder = _IC.bilder_hebel(ordner, f["symbol"], _k)
@@ -4489,7 +4497,11 @@ def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, o
                     _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
                 except Exception:                                # noqa: BLE001
                     _mk = None
-                b, t = _SA.mail(fall, werte, draussen, _verw, _mk)
+                try:                                                 # P19: Season-Ampel als Fakt - scheitert nie nach aussen
+                    _am = __import__("agent.season_ampel", fromlist=["zeile"]).zeile(ordner)
+                except Exception:                                    # noqa: BLE001
+                    _am = None
+                b, t = _SA.mail(fall, werte, draussen, _verw, _mk, _am)
                 if bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, None)):
                     _SA.vermerke_mail(ordner, erg["stichtag"])
                     gemailt = True
@@ -4504,6 +4516,67 @@ def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, o
             conn.close()
     except Exception:                                                # noqa: BLE001
         logger.exception("Spot-Abbau: Lauf fehlgeschlagen")
+        aus["grund"] = "Ausnahme"
+    return aus
+
+
+def season_ampel_job(conn_factory, versand=None, heute=None, ordner=None, http=None, quellen=None) -> dict:
+    """P19 Spot C1 (17.10.2026, Spot §49): Season-Ampel als FAKT - taeglich 07:30 und beim Start (idempotent).
+
+    Schreibt NUR ``data/spot_betrieb.db`` (ampel_tag, ampel_lauf, ampel_meldung); liest Betriebskopie, B4-Stammsatz und die Produktion
+    (Fear & Greed) nur. Abrufe: FRED (M2SL, WALCL, WTREGEN, RRPONTSYD ueber ``makro_lage.hole_reihe``) und DefiLlama (ganze Reihe).
+    MAIL nur mit Schalter ``season_ampel_aktiv`` (Vorgabe AUS bis O47 Schritt 2) und nur am Betriebsgeraet; je Wechsel der GELTENDEN
+    Stufe in eine Stufe mit Handlung genau einmal (vermerkt nur bei Zustellung). Mit Schalter aus wird der Wechsel protokolliert und
+    NICHT nachgeholt. Scheitert nie nach aussen. ``versand``/``http``/``quellen`` (Pruefstand): Ersatz fuer Versand bzw. Abrufe."""
+    aus = {"gelaufen": False}
+    try:
+        import agent.regel0_groesse as _G
+        import agent.regel0_nachlader as _NL
+        import agent.season_ampel as _SA
+
+        ordner = ordner or _NL.DATEN_VORGABE
+        if versand is None:
+            erlaubt, grund = _NL.betrieb_erlaubt(ordner)
+            if not erlaubt:
+                logger.info("Season-Ampel: uebersprungen - %s", grund)
+                aus["grund"] = grund
+                return aus
+        conn = conn_factory()
+        try:
+            erg = _SA.lauf(ordner, conn, heute=heute, http=http, quellen=quellen)
+        finally:
+            conn.close()
+        an = _G.season_ampel_aktiv()
+        gemailt = False
+        fall = erg.get("faellig")
+        if fall:
+            if an:
+                try:                                                 # A3: Kandidaten aus dem B4-Universum - scheitert nie nach aussen
+                    import agent.spot_abbau as _AB
+                    _kand = _AB.kandidaten(ordner)
+                except Exception:                                    # noqa: BLE001
+                    _kand = None
+                try:                                                 # O54: Makro-Lage als Fakt - scheitert nie nach aussen
+                    _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                except Exception:                                    # noqa: BLE001
+                    _mk = None
+                b, t = _SA.mail(fall, _SA.lade(ordner), (_kand or {}).get("kurz"), _mk)
+                if bool((versand or _sende_hinweismail)("TradingInfoTool: " + b, t, None)):
+                    _SA.vermerke_mail(ordner, fall["stufe"])
+                    gemailt = True
+            else:
+                _SA.vermerke_ohne_mail(ordner, fall["stufe"])
+        logger.info("Season-Ampel: %s · Stufe %s seit %s (Tag %s, %d Tage)%s%s · gemailt %s%s",
+                    erg["status"], erg.get("stufe"), erg.get("seit"), erg.get("letzter_tag"), erg.get("tage") or 0,
+                    (" · Revision B3 %.4f" % erg["revision_b3"]) if erg.get("revision_b3") else "",
+                    (" · Wechsel %s -> %s" % (erg["wechsel"]["von"], erg["wechsel"]["nach"])) if erg.get("wechsel") else "",
+                    "ja" if gemailt else "nein", "" if an else " (Schalter aus - nur Anzeige)")
+        if erg["status"] == "fehler":
+            logger.warning("Season-Ampel: Abruf/Rechnung gescheitert - %s", erg.get("fehler"))
+        aus.update(gelaufen=True, schalter=an, gemailt=gemailt, **{k: erg.get(k) for k in ("status", "stufe", "seit", "letzter_tag", "faellig",
+                                                                                            "wechsel", "fehler", "revision_b3", "tage")})
+    except Exception:                                                # noqa: BLE001
+        logger.exception("Season-Ampel: Lauf fehlgeschlagen")
         aus["grund"] = "Ausnahme"
     return aus
 
@@ -5783,6 +5856,17 @@ def build_scheduler(
         args=[db_conn_factory, watchlist_provider],
         id="spot_abbau",
         **_nachholen("spot_abbau", 300, stunde=7, minute=25),
+    )
+    # P19 Spot C1 (17.10.2026): Season-Ampel - taeglich 07:30 (NACH der Betriebskopie 03:30, dem Umlauf 06:35 und B4 07:25), Fakt;
+    # die Mail beim Wechsel der geltenden Stufe nur mit Schalter season_ampel_aktiv (Vorgabe AUS)
+    scheduler.add_job(
+        season_ampel_job,
+        "cron",
+        hour=7,
+        minute=30,
+        args=[db_conn_factory],
+        id="season_ampel",
+        **_nachholen("season_ampel", 330, stunde=7, minute=30),
     )
     scheduler.add_job(
         ausstiegs_job,

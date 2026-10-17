@@ -237,6 +237,53 @@ def _zuordnung() -> dict:
     return aus
 
 
+def _universum_ablegen(c, conn_prod, t: str, z: pd.DataFrame, gehalten: set) -> int:
+    """P19 A3: je Coin des Universums Klasse, Perzentil und Fuenftel am Stichtag, dazu Bitpanda-Kuerzel und -Handelbarkeit (Katalog der
+    Produktion, nur lesend) und ob gehalten (O41: markiert, nicht bevorzugt). ``z``: Ergebnis von ``Wert.fuenftel`` (Index = Reihe)."""
+    c.execute("CREATE TABLE IF NOT EXISTS abbau_universum (stichtag TEXT, reihe TEXT, bitpanda TEXT, klasse TEXT, perzentil REAL, "
+              "fuenftel INTEGER, handelbar INTEGER, gehalten INTEGER, PRIMARY KEY (stichtag, reihe))")
+    bp_von = {bn: bp for bp, (bn, _f) in _zuordnung().items()}
+    kat = {str(s).upper() for s in pd.read_sql("SELECT symbol FROM bitpanda_katalog WHERE gruppe IN ('coin','token') AND symbol IS NOT NULL",
+                                                conn_prod).symbol}
+    c.execute("DELETE FROM abbau_universum WHERE stichtag=?", (t,))
+    n = 0
+    for s, r in z.iterrows():
+        if r.q != r.q:
+            continue
+        bp = bp_von.get(s, s)
+        c.execute("INSERT INTO abbau_universum VALUES (?,?,?,?,?,?,?,?)", (t, s, bp, r.kl, float(r.p), int(r.q), int(bp.upper() in kat),
+                                                                         int(s in gehalten)))
+        n += 1
+    return n
+
+
+def kandidaten(ordner: str, je_klasse: int = 10) -> dict | None:
+    """P19 A3: Einstiegs-Kandidaten = oberes Fuenftel des Watchlist-Werts am letzten Stichtag, bei Bitpanda handelbar; H alle, M und S die
+    besten ``je_klasse`` nach Perzentil. Belegstufe: ORDNET den Fortbestand (Spot §25.6/§39.9), ein Einstieg je Asset ist NICHT belegt
+    (E-102). -> {'stichtag', 'liste': {Klasse: [(Bitpanda, Perzentil, gehalten)]}, 'kurz': {Klasse: [Text]}, 'anzahl'} oder None"""
+    p = os.path.join(ordner, ABLAGE)
+    if not os.path.exists(p):
+        return None
+    c = sqlite3.connect("file:%s?mode=ro" % p.replace("\\", "/"), uri=True, timeout=10)
+    try:
+        if not c.execute("SELECT 1 FROM sqlite_master WHERE name='abbau_universum'").fetchone():
+            return None
+        t = c.execute("SELECT MAX(stichtag) FROM abbau_universum").fetchone()[0]
+        if not t:
+            return None
+        rows = c.execute("SELECT bitpanda, klasse, perzentil, gehalten FROM abbau_universum WHERE stichtag=? AND fuenftel=5 AND handelbar=1 "
+                         "ORDER BY perzentil DESC, bitpanda", (t,)).fetchall()
+        alle = c.execute("SELECT COUNT(*) FROM abbau_universum WHERE stichtag=? AND fuenftel=5", (t,)).fetchone()[0]
+    finally:
+        c.close()
+    liste = {}
+    for bp, kl, pz, geh in rows:
+        liste.setdefault(kl, []).append((bp, pz, bool(geh)))
+    liste = {kl: (v if kl == "H" else v[:je_klasse]) for kl, v in liste.items()}
+    kurz = {kl: ["%s%s" % (bp, " (gehalten)" if geh else "") for bp, _p, geh in v] for kl, v in liste.items()}
+    return {"stichtag": t, "liste": liste, "kurz": kurz, "anzahl": len(rows), "oben_gesamt": alle}
+
+
 def _prod_reihe(conn_prod, symbol: str) -> pd.Series:
     d = pd.read_sql("SELECT date, close, volume FROM price_history_ohlc WHERE symbol=? AND currency='USD' AND close IS NOT NULL "
                     "AND COALESCE(quelle, '') != 'rekonstruiert' ORDER BY date", conn_prod, params=(symbol,))
@@ -418,6 +465,13 @@ def lauf(conn_prod, ordner: str, watchlist: list, heute: date | None = None, htt
         except Exception as exc:                             # noqa: BLE001
             erg["verw"] = None
             c.execute("INSERT INTO protokoll VALUES (?,?,?,?)", (jt, "-", "verwaesserung fehler", ("%s: %s" % (type(exc).__name__, exc))[:300]))
+        # P19 A3 (17.10.2026, Spot §49.3): das GANZE Universum je Stichtag - daraus die Einstiegs-Kandidaten (oberes Fuenftel); eigene
+        # Tabelle, die Regel B4 oben bleibt unberuehrt; scheitert nie (ohne Ablage laeuft B4 wie vorher)
+        try:
+            erg["kandidaten_abgelegt"] = _universum_ablegen(c, conn_prod, t.isoformat(), z, set(reihe_von.values()))
+        except Exception as exc:                             # noqa: BLE001
+            erg["kandidaten_abgelegt"] = None
+            c.execute("INSERT INTO protokoll VALUES (?,?,?,?)", (jt, "-", "universum fehler", ("%s: %s" % (type(exc).__name__, exc))[:300]))
         erg["universum"] = int(z.q.notna().sum())
         zellen = {k: int((z.kl == k).sum()) for k in ("H", "M", "S")}
         # ---- je gehaltenem Coin
@@ -515,7 +569,8 @@ def vermerke_mail(ordner: str, t: str) -> None:
 
 
 # ══ die Mail (E-91: Coin · was tun · wann · warum) ════════════════════════════════════════════════════════════════════════════
-def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None = None, makro_text: str | None = None) -> tuple:
+def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None = None, makro_text: str | None = None,
+         ampel_text: str | None = None) -> tuple:
     """``werte_eur``: {Symbol: Wert in EUR (frei + gestakt)}; Reihenfolge nach Wert - die Guete INNERHALB des Fuenftels ist nicht gemessen.
     ``verw`` (P22): {Symbol: (log-Wachstum 90 T, Fuenftel)} am Stichtag - Faktenzeile je Coin, kein Teil der Regel."""
     liste = sorted(fall["liste"], key=lambda r: -(werte_eur.get(r[0]) or 0))
@@ -549,6 +604,7 @@ def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None
           "  Mitnahme ×3 (B1) und Upbit-Listing (B3) gelten weiter; kommt dort eine Mail, hat sie Vorrang (sie hat einen Termin).",
           *(["  " + __import__("agent.verwaesserung", fromlist=["MESSLAGE"]).MESSLAGE + "."] if verw is not None else []),
           *(["  Makro " + makro_text + "."] if makro_text else []),               # O54 (15.10.2026): Fakt, Gewichtung beim Nutzer
+          *(["  Season-Ampel " + ampel_text + "."] if ampel_text else []),        # P19 (17.10.2026): Fakt, loest nichts aus
           "  Der Erlös: Wohin er geht, ist nicht gemessen – in der Messung lag er still (Dollar).",
           "", "5  TECHNIK", "  Spot B4 · Stichtag %s · Wert ohne TVL (F1, F2, F8) · Fünftel je Klasse · Spot §43/§48." % fall["stichtag"]]
     return b, "\n".join(z)

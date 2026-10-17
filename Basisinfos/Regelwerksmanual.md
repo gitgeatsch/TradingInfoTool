@@ -2132,6 +2132,14 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 17.10.2026 — Krypto-Markt (Season-Ampel) unter dem Makro-Umfeld (P19)
+
+- **Abschnitt *Krypto-Markt (Season-Ampel)*** steht direkt unter dem Makro-Umfeld: Stufe und Stand (x von 3), je Bedingung Wert, ✔/✗ und Schwelle (BTC 91 T > +20 %, M2 J/J > +5 %, Stablecoins 91 T > +10 %), vor 30 und 90 Tagen, Breite, Netto-Liquidität, Fear & Greed; eingeklappt die Einstiegs-Kandidaten (A3) und der letzte Lauf mit der Revision der Stablecoins.
+- **Was die Stufen bedeuten:** *kalt* keine Season-Lage · *ungewohnt* BTC läuft, das Geld fehlt (seit 2019 nie da gewesen) · *Vorlauf* das Geld ist da, BTC noch nicht · *Season-Klima* alle drei erfüllt · *Überhitzung* alle drei und die Breite hoch · *Ende* alle drei waren in 90 T erfüllt, jetzt nicht mehr. Eine neue Stufe **gilt** erst am 7. Tag in Folge.
+- ⚠️ **Fakt, kein Signal:** kalibriert auf **einem** Zyklus (2020/21). Die Mail beim Stufenwechsel (Handlung: *Vorlauf* → erste kleine Tranche möglich; *Season-Klima* → L aufbauen; *Überhitzung/Ende* → kein Neuaufbau) kommt nur mit `season_ampel_aktiv: true` und ist aus, bis O47 Schritt 2 vorliegt.
+- **Quelle:** `agent/season_ampel.py`, Job `season_ampel` (07:30 und beim Start); Diagnose-Schlüssel `season_ampel`, Teilexport *SEASON-AMPEL (C1)*.
+- **Marktscan (O43):** ruht seit P19 (`marktscan.aktiv: false`).
+
 ### Stand 16.10.2026 — Flughöhe: was welche Ebene darf
 
 | Ebene | Zeitskala | Rolle | belegt durch |

@@ -20,6 +20,7 @@ from importer.excel_import import EXPORT_XLSX_PATH, export_holdings, import_hold
 from ui.formatting import format_money, format_price_age, format_zeitpunkt_lokal, is_price_stale
 from ui.heading_tooltip import add_heading_tooltips
 from ui.hebel_tab import HebelTab
+from ui.markt_tab import MarktKryptoTab, SpotTab   # P19 (17.10.2026): Reiter 3 Spot und 4 Markt (Krypto) nach G2
 from ui.marktscan_view import MarktscanView
 from ui.bestand_tab import BestandTab   # P15 (12.10.2026): ERSETZT den Tab Portfolio (ui/portfolio.py ist ABGELOEST, nicht mehr eingehaengt)
 from ui.regime_view import RegimeView
@@ -191,6 +192,13 @@ class TradingInfoToolApp(tk.Tk):
         self._hebel_view = HebelTab(notebook, db_conn_factory, watchlist)
         notebook.add(self._hebel_view, text="Hebel")
 
+        # P19 (17.10.2026, G2 / Spot §49.5): Reiter 3 *Spot* (Einstiegs-Kandidaten A3) und 4 *Markt (Krypto)* (Season-Ampel + Makro-Lage),
+        # alles als Fakt. Der alte Reiter *Regime* bleibt bis GUI-5 (Archiv; Ruecksprache vor dem Entfernen).
+        self._spot_tab = SpotTab(notebook, notebook)
+        notebook.add(self._spot_tab, text="Spot")
+        self._markt_tab = MarktKryptoTab(notebook, notebook)
+        notebook.add(self._markt_tab, text="Markt (Krypto)")
+
         self._regime_view = RegimeView(notebook, db_conn_factory)
         notebook.add(self._regime_view, text="Regime")
 
@@ -208,14 +216,14 @@ class TradingInfoToolApp(tk.Tk):
             "auto_scan_intervall_minuten", 60
         )
         add_notebook_tab_tooltips(notebook, {
-            4: (
+            notebook.index(self._screener_view): (
                 f"Screener: sucht automatisch alle {screener_intervall_minuten} Minuten "
                 "(+ jederzeit manuell) neue Aktien-/ETF-Kandidaten, die noch nicht in der "
                 "Watchlist stehen. Kein Automatismus bei der Uebernahme: jede Aufnahme in "
                 "die Watchlist braucht eine manuelle Bestaetigung, keine Bewertung/kein "
                 "Score hier - das passiert erst danach ueber die normale Signal-Pipeline."
             ),
-            7: (
+            notebook.index(self._thesen_view): (   # P19: Index aus dem Reiter, nicht fest (zwei Reiter davor neu)
                 "Schwerpunkte: manuelle Verwaltung von Kategorie-Thesen (Übergewichten/"
                 "Neutral/Meiden je Hauptgruppe/Unterkategorie). Wirkt sich NUR auf "
                 "Hervorhebung/Sortierung in Watchlist, Portfolio und Screener aus "
@@ -864,6 +872,8 @@ class TradingInfoToolApp(tk.Tk):
         self._refresh_watchlist_from_db()
         self._portfolio_view.refresh()
         self._hebel_view.refresh()
+        self._spot_tab.refresh()            # P19: lesen nur, wenn sichtbar (hoechstens alle 60 s)
+        self._markt_tab.refresh()
         # 2026-07-16, Nutzer-Fund: Signale/Marktscan hatten (anders als Hebel
         # hier schon immer) KEINEN periodischen Refresh - der automatische
         # Scheduler (budget_allocator, alle 15 Min) schreibt neue Signale/

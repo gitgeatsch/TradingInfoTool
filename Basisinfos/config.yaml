@@ -1114,7 +1114,10 @@ datenquellen:
 
 # --- Marktscan: Entdeckung neuer Assets (siehe Spezifikation Kap. 13) ---
 marktscan:
-  aktiv: true
+  aktiv: false                         # O43 RUHT seit P19 (17.10.2026; Nutzer 10.10. zu G2 (b): *"JA"* - weiterlaufen, bis der Spot-Tab steht,
+                                       # dann entfallen). Mit ihm ruhen: Watchlist-Auto-Aufnahme MS-1, Marktscan-Mails, die Erfolgsmessung
+                                       # (marktscan_backward_tracking) und die Regime-Bestimmung der ALTEN Kette (2.369). Das neue System
+                                       # (REGEL0, Spot B1-B4, C1) liest keines davon. Wieder an: true, Neustart
   quelle: trending_gainers_vorfilter   # CoinGecko Trending/Top-Gainers als Vorfilter, dann Fundamentalcheck
   zeiten: ["04:00", "16:00"]           # 2x taeglich (Watchlist-Scan); weitere Funktionen [OFFEN]
   auto_watchlist: true                 # Kandidat automatisch als status: watchlist aufnehmen (MS-1)

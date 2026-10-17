@@ -1393,3 +1393,19 @@ Nachweis: Schritt7 §23.60/§23.61, K-HB-1, Paket Hebelbuch.
 - **Folge:** Flughöhe Ebene 2 bleibt **Auskunft**. REGEL0 unverändert, keine Mail-Zeile, kein NB-Pull. Weiter mit P19 und der Hauptlinie.
 
 Nachweis: Schritt7 §23.62, `p60_w3_vorpruefung.txt`, `p60_gegenprobe.txt`.
+
+# E-118 · P19 Season-Ampel als Fakt gebaut, Marktscan ruht (17.10.2026)
+
+**17.10.2026** · Nutzer: *„ok weiter mit P19 – hast du alles geprüft und gegengeprüft?“*. Abgestimmt war der Bauumfang am 14.10. (*„Ja passt vorerst“*, Spot §49.3).
+
+**Stand-Prüfung vor dem Bau** (Spot §49.5): Voranalyse und Gegenprobe gelten weiter. Neu: DefiLlama ändert die Stablecoin-Reihe rückwirkend (Stand an 8 Tagen anders, Stufe an keinem). Die Makro-Lage (O54) holt M2 und die Netto-Liquidität schon am NB.
+
+**Eigene Festlegungen (berichtet):**
+- Die Stablecoin-Reihe wird je Lauf ganz geholt. Ein Wechsel zählt nur gegen die zuletzt **gemeldete** Stufe, sodass eine Revision keinen Scheinwechsel erzeugt.
+- FRED über `makro_lage.hole_reihe` statt eines eigenen fredgraph-Nachladers.
+- GUI nach dem abgestimmten Zielbild G2: Reiter **Spot** und **Markt (Krypto)**; *Regime* bleibt bis GUI-5.
+- Mail-Zeile ohne Netto-Liquidität (steht als K2 schon in der Makro-Zeile).
+- Mail beim Stufenwechsel gebaut, Schalter `season_ampel_aktiv` **aus**, bis O47 Schritt 2 vorliegt (§49.4). Mit Schalter aus wird ein Wechsel protokolliert und beim Einschalten **nicht** nachgeholt.
+- **O43:** `marktscan.aktiv: false` (Nutzer 10.10.: *„JA“*).
+
+Nachweis: Spot §49.5/§49.6, `p19_pruefstand.txt` 12/12, `p19_bau_gegenprobe.txt` 3/3, `p18_pruefstand.txt` 13/13, Paket SeasonAmpel; K-SP-4, K-GUI-7, K-MS-1.

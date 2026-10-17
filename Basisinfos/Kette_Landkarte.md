@@ -18,6 +18,14 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 17.10.2026 (9) — Season-Ampel als Fakt, Marktscan ruht (P19)
+>
+> | Hier fehlt | Stand seit |
+> |---|---|
+> | Season-Ampel (Spot C1) | `agent/season_ampel.py`, Job `season_ampel` 07:30: Statusseite unter dem Makro-Umfeld, Zeile in B1/B3/B4, Reiter *Markt (Krypto)*; Mail-Schalter `season_ampel_aktiv` aus – **17.10.** |
+> | Einstiegs-Kandidaten (A3) | B4 legt je Stichtag das ganze Universum ab (`abbau_universum`); Reiter *Spot*, Statusseite – ab Stichtag **02.11.** |
+> | Marktscan (alte Kette) | ruht (`marktscan.aktiv: false`, O43) – mit ihm Auto-Aufnahme MS-1, Marktscan-Mails, Erfolgsmessung und die Regime-Bestimmung der alten Kette – **17.10.** |
+>
 > ## ⚠️ NACHTRAG 16.10.2026 (8) — Hebelpositionen aus dem Buch je Symbol (P11b)
 >
 > | Hier fehlt | Stand seit 16.10.2026 |

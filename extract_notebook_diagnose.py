@@ -3026,6 +3026,31 @@ def _makro_lage() -> dict:
         return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
 
 
+def _season_ampel() -> dict:
+    """P19 (17.10.2026, K-SP-4): die Season-Ampel so, wie Statusseite und Mails sie zeigen (agent.season_ampel.uebersicht), dazu die
+    letzten Laeufe, die Meldungen und die Einstiegs-Kandidaten (A3) - nur lesend."""
+    try:
+        import sqlite3 as _sq
+        from agent import season_ampel as _SA
+        from agent import spot_abbau as _AB
+        from agent import regel0_nachlader as _NL
+        d = _SA.uebersicht()
+        d["kandidaten"] = _AB.kandidaten(_NL.DATEN_VORGABE)
+        p = os.path.join(_NL.DATEN_VORGABE, _SA.ABLAGE)
+        if os.path.exists(p):
+            c = _sq.connect("file:%s?mode=ro" % p.replace("\\", "/"), uri=True, timeout=10)
+            try:
+                if c.execute("SELECT 1 FROM sqlite_master WHERE name='ampel_lauf'").fetchone():
+                    d["laeufe"] = c.execute("SELECT am, status, fehler, letzter_tag, stufe, seit, tage, revision_b3 FROM ampel_lauf "
+                                            "ORDER BY am DESC LIMIT 5").fetchall()
+                    d["meldungen"] = c.execute("SELECT am, stufe, seit, art, mail_am FROM ampel_meldung ORDER BY am DESC LIMIT 5").fetchall()
+            finally:
+                c.close()
+        return d
+    except Exception as exc:                                             # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _termine_vorschau() -> dict:
     """O52 (15.10.2026, K-TM-1): die naechsten Makro-Termine so, wie die REGEL0-Mail sie sieht (agent.termin_fakt) - CPI und
     Arbeitsmarkt aus FRED, FOMC aus der festen Liste. Belegt am NB, dass FRED kuenftige Termine liefert (bis 15.10. kam nie einer)
@@ -4097,6 +4122,7 @@ def main() -> None:
         "umlauf_zusatz": __import__("agent.umlauf_zusatz", fromlist=["stand"]).stand("data/umlaufmenge_cg.db"),   # P22b
         "termine_vorschau": _termine_vorschau(),           # O52 15.10.: Termine wie in der REGEL0-Mail (K-TM-1)
         "makro_lage": _makro_lage(),                       # O54 15.10.: wie Statusseite/Mail (K-ML-1)
+        "season_ampel": _season_ampel(),                   # P19 17.10.: wie Statusseite/Mail (K-SP-4)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }

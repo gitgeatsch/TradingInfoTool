@@ -35,6 +35,8 @@ spot_upbit_aktiv: true         # EINGESCHALTET 13.10.2026 (Nutzer-Ja, K-UB-2) - 
                                # der Meldung); das Protokoll laeuft immer. Einschalten erst nach K-UB-1 und Nutzer-Ja (Spot §47)
 spot_abbau_aktiv: true         # EINGESCHALTET 14.10.2026 (Nutzer-Ja, K-SP-3 erfuellt) - P18 Spot B4 (13.10.2026): Abbau-Reihenfolge - am Monatsersten das untere Fuenftel des Watchlist-Werts je Klasse; Mail
                                # "Wenn du abbaust: zuerst X" (Erstliste, danach nur Neue). Protokoll laeuft immer. Einschalten nach K-SP-3 + Nutzer-Ja (Spot §48)
+season_ampel_aktiv: false      # P19 Spot C1 (17.10.2026): Season-Ampel - Anzeige laeuft immer (Statusseite, Reiter Markt (Krypto), Zeile in B1/B3/B4); MAIL beim
+                               # Wechsel der geltenden Stufe nur mit true. AUS, bis O47 Schritt 2 vorliegt (kalibriert auf einem Zyklus, Spot §49.4)
 spot_kette_angehalten: true    # GESETZT 05.10.2026 (Nutzer: *Schalter A setzen*, E-67) - true = die Rollen-Kette (Spot, alle Gruppen) laeuft NICHT - der alte Weg bleibt trotzdem aus (aktiv_fuer
                                # unveraendert). Es entstehen keine Spot-Signale, keine Spot-/Bestands-Verkaufsmails, keine Lagebilder; die
                                # REGEL0 (Rechnung, Mails, LLM-Block) und der Ausstiegsjob (Stop-Nachzieh-Sammelmail) laufen weiter.

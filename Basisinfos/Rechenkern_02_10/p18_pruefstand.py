@@ -17,6 +17,8 @@ Umlaufregel - unabhaengiger Rechenweg (volle Geschichte statt Stammsatz + Fenste
   S8  Binance-Abruf scheitert fuer einen Coin -> Protokoll 'Stammsatz nicht abrufbar', bis zum 4. 'wartet', am 5. gerechnet, kein Abbruch
   S9  stand() und letzte_fuenftel() fuer Statusseite, Teilexport, Bestand-Tab
   S10 Wegwerf-Produktion und Betriebskopie unveraendert (Pruefsumme)
+  S2u P19 A3 (17.10.2026): der Erstlauf legt das GANZE Universum ab (abbau_universum = Universum, Fuenftel je Coin wie die Tabelle);
+      kandidaten() = oberes Fuenftel, bei Bitpanda handelbar
 """
 import hashlib
 import os
@@ -193,6 +195,16 @@ pruefe("S2", e1["art"] == "erstliste" and sorted(e1["neu"]) == sorted(e1["unten"
        "Erstliste 01.08.: unten %s (Bezug %s)" % (e1["unten"], unten_ref))
 j = BG.spot_abbau_job(cf, lambda: WL, versand=lambda b, t, bi=None: POST.append((b, t)) or True, heute=date(2026, 8, 20), ordner=O, http=http)
 pruefe("S2b", j["status"] == "schon" and not POST and j["schalter"] is False, "Job Schalter aus: Status %s, Mails %d" % (j["status"], len(POST)))
+_ku = sqlite3.connect(os.path.join(O, SA.ABLAGE))
+_uv = dict(_ku.execute("SELECT reihe, fuenftel FROM abbau_universum WHERE stichtag='2026-08-01'").fetchall())
+_ku.close()
+_tab = e1["_tabelle"]
+_soll = {s: int(q) for s, q in zip(_tab.sym, _tab.q) if q == q}
+_kd = SA.kandidaten(O)
+_n_oben = sum(1 for q in _soll.values() if q == 5)
+pruefe("S2u", _uv == _soll and len(_uv) == e1["universum"] and _kd is not None and _kd["oben_gesamt"] == _n_oben and 0 < _kd["anzahl"] <= _n_oben,
+       "abbau_universum %d Coins = Universum %d, Fuenftel gleich der Tabelle %s · Kandidaten: oberes Fuenftel %s, handelbar %s" % (
+           len(_uv), e1["universum"], _uv == _soll, (_kd or {}).get("oben_gesamt"), (_kd or {}).get("anzahl")))
 # S3
 SCHALTER["an"] = True
 n_vor = zaehl["n"]

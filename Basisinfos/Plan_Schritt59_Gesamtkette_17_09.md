@@ -2558,3 +2558,8 @@ Schritt7 §23.24.
 - **Gemessen** (Schritt7 §23.62, E-117): BTC 7 T als Gewicht auf die REGEL0-Einstiege, Vorprüfung vorab festgelegt, vier Mengen. **NEIN** (0 von 4); das Vorzeichen wechselt zwischen 2025 und 2026, keine Umkehr.
 - **Folge:** Ebene 2 bleibt Auskunft. REGEL0 unverändert. Die naiven z-Werte aus §23.52 sind berichtigt (Tagesblock −1,8 / +1,3).
 - **M1:** unverändert. Der Gegenwind 2025 bleibt das offene Thema (K_IG, Teil B zurückgestellt, E-33).
+
+**Nachtrag 17.10.2026 (43) — P19 Season-Ampel als Fakt:**
+- **Gebaut** (Spot §49.6, E-118): Season-Ampel B1–B3 mit Stufe und Haltezeit, Statusseite unter dem Makro-Umfeld, Zeile in B1/B3/B4, GUI-Reiter *Spot* und *Markt (Krypto)*. Die Mail beim Stufenwechsel ist gebaut, ihr Schalter bleibt aus bis O47 Schritt 2 (ein Zyklus kalibriert).
+- **O43:** Marktscan ruht. Der Krypto-Einstieg kommt aus dem Spot-Bereich; die Kandidaten (A3) aus dem B4-Universum ab 02.11.
+- **M1:** unverändert. Spot hat damit Führung (B1/B3/B4) und den Markt als Fakt; der Einstieg je Asset bleibt nicht belegt (E-102).

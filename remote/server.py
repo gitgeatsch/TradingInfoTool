@@ -111,6 +111,19 @@ _INDEX_HTML = """<!doctype html>
   <details><summary class="muted-text">Kanäle K1&ndash;K9 (lang / kurz) und Datenstand</summary><div id="makro-kanaele"></div></details>
 </div>
 </div>
+<!-- P19 (17.10.2026, Spot §49): Season-Ampel als FAKT (kalibriert auf einem Zyklus), dazu die Einstiegs-Kandidaten aus B4 (A3) -->
+<div class="section-header section-makro">
+  <span class="section-badge">Markt</span>
+  <span class="section-title">Krypto-Markt (Season-Ampel)</span>
+  <span class="section-sub">Fakt, löst nichts aus &ndash; kalibriert auf einem Zyklus</span>
+</div>
+<div class="section-group group-makro">
+<div class="card">
+  <div class="row"><strong>Stufe</strong><span id="ampel-kopf">-</span></div>
+  <div id="ampel-body"></div>
+  <details><summary class="muted-text">Einstiegs-Kandidaten (oberes Fünftel, Bitpanda) und Lauf</summary><div id="ampel-kandidaten"></div></details>
+</div>
+</div>
 
 <div class="section-header section-system">
   <span class="section-badge">System</span>
@@ -855,6 +868,7 @@ const SCHALTER_TEXT = {
   spot_mitnahme_aktiv: ["Spot-Mitnahme ×3 (B1) – Mail", "an", "aus (nur Protokoll)"],
   spot_upbit_aktiv: ["Spot-Upbit-Verkaufsanlass (B3) – Mail", "an", "aus (nur Protokoll)"],
   spot_abbau_aktiv: ["Spot-Abbau-Reihenfolge (B4) – Mail", "an", "aus (nur Protokoll)"],
+  season_ampel_aktiv: ["Season-Ampel (C1) – Mail beim Stufenwechsel", "an", "aus (nur Anzeige)"],
 };
 function renderSchalter(sch) {
   return Object.keys(sch).map(function (k) {
@@ -950,6 +964,34 @@ async function refreshStatus() {
     document.getElementById("makro-kanaele").innerHTML = (m.kanaele || []).map(function (k) {
       return zeile(esc(k[0]), esc(k[1]) + " / " + esc(k[2]), ""); }).join("") +
       '<div class="unter">Datenstand: ' + esc(Object.entries(m.datenstand || {}).map(function (e) { return e[0] + " " + e[1]; }).join(", ")) + '</div>';
+  }
+  if (data.season_ampel) {                                   // P19: Season-Ampel unter dem Makro-Umfeld, drei Zustaende
+    const s = data.season_ampel;
+    const kopf = document.getElementById("ampel-kopf");
+    kopf.textContent = s.zustand === "fehlt" ? "nicht verfügbar" : (s.stufe_name + " · " + s.stand + " von 3" +
+      (s.zustand === "veraltet" ? " · VERALTET" : ""));
+    kopf.className = s.zustand === "ok" ? "ok" : "err";
+    let h = '<div class="unter">' + esc(s.zeile) + '</div>';
+    if (s.bedingungen) {
+      h += s.bedingungen.map(function (c) {
+        return zeile(esc(c[0]), esc(c[1]) + " " + (c[2] ? "✔" : "✗") + " (" + esc(c[3]) + ")", ""); }).join("");
+      const v = function (r) { return r ? (r.stand + " von 3, " + r.stufe) : "-"; };
+      h += '<div class="unter">vor 30 T: ' + esc(v(s.vor30)) + " · vor 90 T: " + esc(v(s.vor90)) +
+           (s.breite != null ? " · Breite " + Number(s.breite).toFixed(2) : "") +
+           (s.netto13 != null ? " · Netto-Liquidität 13 W " + (100 * s.netto13).toFixed(1) + " %" : "") +
+           (s.fg != null ? " · Fear &amp; Greed " + Math.round(s.fg) : "") + "</div>";
+      if (s.bedeutung) h += '<div class="unter muted-text">' + esc(s.bedeutung) + "</div>";
+    }
+    document.getElementById("ampel-body").innerHTML = h;
+    const k = s.kandidaten;
+    let kh = k ? '<div class="unter">Stichtag ' + esc(k.stichtag) + " · " + k.anzahl + " handelbar (von " + k.oben_gesamt +
+                 " im oberen Fünftel) · ordnet den Fortbestand, Einstieg je Asset nicht belegt</div>" +
+                 ["H", "M", "S"].map(function (kl) { return (k.kurz || {})[kl] ? zeile(kl, esc(k.kurz[kl].join(", ")), "") : ""; }).join("")
+               : '<div class="unter">Kandidaten ab dem nächsten B4-Stichtag</div>';
+    const l = s.lauf;
+    if (l) kh += '<div class="unter' + (l.status === "fehler" ? " err" : "") + '">Lauf ' + fmtStempel(String(l.am).slice(0, 16)) + " · " + esc(l.status) +
+                 (l.fehler ? " · " + esc(l.fehler) : "") + (l.revision_b3 ? " · Revision Stablecoins " + (100 * l.revision_b3).toFixed(2) + " Pp" : "") + "</div>";
+    document.getElementById("ampel-kandidaten").innerHTML = kh;
   }
   if (data.kontrollen) {
     const k = data.kontrollen;

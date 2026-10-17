@@ -44,7 +44,10 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                spot_upbit_aktiv=False,
                # P18 Spot B4 (13.10.2026): Abbau-Reihenfolge (unteres Fuenftel des Watchlist-Werts) - das Protokoll laeuft immer, die
                # MAIL (Erstliste, danach nur Neue) nur mit Schalter. Vorgabe AUS: eingeschaltet nach K-SP-3 mit Nutzer-Ja (Muster B1/B3)
-               spot_abbau_aktiv=False)
+               spot_abbau_aktiv=False,
+               # P19 Spot C1 (17.10.2026): Season-Ampel - die Anzeige (Statusseite, Reiter, Zeile in B1/B3/B4) laeuft immer, die MAIL beim
+               # Wechsel der geltenden Stufe nur mit Schalter. Vorgabe AUS: kalibriert auf einem Zyklus, eingeschaltet erst nach O47 Schritt 2
+               season_ampel_aktiv=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -78,6 +81,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: spot_upbit_aktiv muss true oder false sein")
     if not isinstance(werte["spot_abbau_aktiv"], bool):
         raise ValueError("regel0_betrieb.yaml: spot_abbau_aktiv muss true oder false sein")
+    if not isinstance(werte["season_ampel_aktiv"], bool):
+        raise ValueError("regel0_betrieb.yaml: season_ampel_aktiv muss true oder false sein")
     if not (0 < float(werte["liquidations_warnung_abstand"]) < 1):
         raise ValueError("regel0_betrieb.yaml: liquidations_warnung_abstand als Anteil zwischen 0 und 1 (z. B. 0.15)")
     werte["liquidations_warnung_abstand"] = float(werte["liquidations_warnung_abstand"])
@@ -100,6 +105,14 @@ def spot_abbau_aktiv(werte: dict | None = None) -> bool:
     """Spot B4 Abbau-Mail an? (P18) - im Zweifel (Datei unlesbar) NEIN: dann laeuft nur das Protokoll."""
     try:
         return bool((werte if werte is not None else lade())["spot_abbau_aktiv"])
+    except Exception:                                          # noqa: BLE001
+        return False
+
+
+def season_ampel_aktiv(werte: dict | None = None) -> bool:
+    """Spot C1 Season-Ampel-Mail an? (P19) - im Zweifel (Datei unlesbar) NEIN: dann laeuft nur die Anzeige."""
+    try:
+        return bool((werte if werte is not None else lade())["season_ampel_aktiv"])
     except Exception:                                          # noqa: BLE001
         return False
 

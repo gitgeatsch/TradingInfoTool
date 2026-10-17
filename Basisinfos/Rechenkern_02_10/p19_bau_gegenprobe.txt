@@ -1,0 +1,5 @@
+G1  gleich     409 Tage: Stand gleich 409, Stufe roh gleich 409 · B2 aus fredgraph.csv gegen FRED-API groesste Abweichung 0.0e+00 · Breite eigener Weg groesste 0.0e+00
+G2  gleich     geltende Stufe je Tag gleich 409 von 409 · Wechsel 2025-08-08 kalt · 2026-09-08 ungewohnt
+G3  gleich     52 Laeufe: Wechsel [(datetime.date(2026, 9, 9), 'kalt', 'ungewohnt', '2026-09-08')] (erwartet geltend seit ['2026-09-08'], gemeldet am Folgetag, weil der Tag erst dann abgeschlossen ist) · faellig [] · Mails 0 · Meldungen [('kalt', '2025-08-08', 'startmarke'), ('ungewohnt', '2026-09-08', 'wechsel')]
+
+3 von 3 gleich

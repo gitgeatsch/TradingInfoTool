@@ -488,6 +488,26 @@ def _inhalt() -> int:
                 print("    Verwaesserung 90 T (P22): nicht lesbar (%s)" % type(_e22).__name__)
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ Spot-Abbau nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
+    # P19 Spot C1 (17.10.2026): Season-Ampel - Stufe, Bedingungen, letzter Lauf, Meldungen, Kandidaten (data/spot_betrieb.db, nur lesend; K-SP-4)
+    print()
+    print("-" * 100)
+    try:
+        sa19 = BL.season_ampel(DATEN)
+        import agent.regel0_groesse as _G19
+        print("SEASON-AMPEL (C1): Schalter %s · %s" % ("AN" if _G19.season_ampel_aktiv() else "aus", sa19.get("zeile")))
+        l19 = sa19.get("lauf") or {}
+        if l19:
+            print("    letzter Lauf %s · %s%s · Tage %s · Revision Stablecoins %s · Quellen %s" % (
+                l19.get("am"), l19.get("status"), (" · " + str(l19.get("fehler"))) if l19.get("fehler") else "", l19.get("tage"),
+                ("%.4f" % l19["revision_b3"]) if l19.get("revision_b3") is not None else "-", l19.get("quellen")))
+        print("    roh heute %s · vor 30 T %s · vor 90 T %s · Breite %s · Fear & Greed %s" % (
+            sa19.get("roh_heute"), (sa19.get("vor30") or {}).get("stufe"), (sa19.get("vor90") or {}).get("stufe"), sa19.get("breite"),
+            sa19.get("fg")))
+        k19 = sa19.get("kandidaten")
+        print("    Kandidaten (A3): %s" % (("Stichtag %s · %d handelbar · %s" % (k19["stichtag"], k19["anzahl"], " | ".join(
+            "%s: %s" % (kl, ", ".join(v)) for kl, v in sorted(k19["kurz"].items())))) if k19 else "ab dem naechsten B4-Stichtag"))
+    except Exception as ex:                                      # noqa: BLE001
+        print("  ⛔ Season-Ampel nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P9 (10.10.2026, G-O): die NB-Kontrollen aus Basisinfos/nb_kontrollen.yaml - automatische live ausgewertet, dieselbe Quelle wie
     # die Statusseite (Karte "Offene NB-Kontrollen"). Nur die offenen; die Historie steht in der Datei.
     print()

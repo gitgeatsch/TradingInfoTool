@@ -195,7 +195,7 @@ def vermerke_mail(ordner: str, symbol: str, start: str) -> None:
 
 # ══ die Mail (E-91: Coin · was tun · bis wann · warum) ══════════════════════════════════════════════════════════════════════
 def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool = False, gestakt: float | None = None,
-         verw_text: str | None = None, makro_text: str | None = None) -> tuple:
+         verw_text: str | None = None, makro_text: str | None = None, ampel_text: str | None = None) -> tuple:
     s = fall["symbol"]
     x = fall["ausloese_kurs"] / fall["startkurs_usd"]
     haelfte = fall["menge"] / 2.0
@@ -224,6 +224,8 @@ def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool =
         z.append("  (" + _VW.MESSLAGE + ".)")
     if makro_text:                                               # O54 (15.10.2026): Makro-Lage als Fakt, Gewichtung beim Nutzer
         z.append("  Makro " + makro_text + ".")
+    if ampel_text:                                               # P19 (17.10.2026): Season-Ampel als Fakt, loest nichts aus
+        z.append("  Season-Ampel " + ampel_text + ".")
     z += ["", "4  TECHNIK", "  Spot B1 Mitnahme ×3 · Fenster %s bis %s · Dollar-Tagesschluss (price_history_ohlc) · Verkauf am Folgetag wie gemessen." % (
         fall["start"], fall["ende"])]
     return b, "\n".join(z)

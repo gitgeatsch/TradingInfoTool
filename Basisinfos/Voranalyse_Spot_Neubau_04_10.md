@@ -6078,6 +6078,25 @@ Nutzer 16.10.: *„ok weiter mit P19 – hast du alles geprüft und gegengeprüf
 
 Belege: `p19_voranalyse.txt` und `p19_gegenprobe.txt` (14.10.) gegen die Läufe vom 17.10. (nur Wegwerf, inhaltlich oben; die Revision einzeln nachgerechnet).
 
+### 49.6 Gebaut (17.10.2026, Nutzer: *„ok weiter mit P19“*; Bauumfang §49.3, abgeglichen in §49.5)
+
+| Teil | Stand |
+|---|---|
+| `agent/season_ampel.py` | Regel = `stand`/`muster`/`stufe`/`stufen`/`breite`/`taeglich` (derselbe Code wie der Nachbau `p19_voranalyse`); `geltend` = Haltezeit 7 T (Lauflängen-Form wie `p19_gegenprobe` G2); Daten: B1 aus der Betriebskopie, M2SL/WALCL/WTREGEN/RRPONTSYD über `makro_lage.hole_reihe`, DefiLlama bei **jedem** Lauf ganz, Fear & Greed aus der Produktion; Ablage `ampel_tag`, `ampel_lauf` (mit `revision_b3`), `ampel_meldung` in `spot_betrieb.db`; Mail-Lage nur gegen die zuletzt **gemeldete** Stufe; `zeile`, `mail`, `uebersicht` |
+| A3 in `agent/spot_abbau.py` | B4 legt je Stichtag das **ganze** Universum in `abbau_universum` ab (Klasse, Perzentil, Fünftel, Bitpanda-Kürzel und -Handelbarkeit, gehalten); `kandidaten()` = oberes Fünftel, handelbar, H alle, M/S die besten 10. Die Regel B4 bleibt unberührt |
+| Betrieb | Job `season_ampel` täglich 07:30 und beim Start; Schalter `season_ampel_aktiv` **aus** (bis O47 Schritt 2); Zeile *Season-Ampel* in B1/B3/B4 (unter der Makro-Zeile, ohne Netto-Liquidität); Statusseite: Abschnitt **Krypto-Markt (Season-Ampel)** direkt unter dem Makro-Umfeld (Bedingungen, vor 30/90 T, Kontext, Kandidaten, Lauf); Schalter beschriftet; Teilexport *SEASON-AMPEL (C1)*; Diagnose `season_ampel` |
+| GUI (G2) | Reiter **Spot** (Einstiegs-Kandidaten mit Ampel-Kopf) und **Markt (Krypto)** (Ampel mit Wert/Schwelle/vor 30 und 90 T, Kontext, Grafik 12 Monate, Makro-Lage K1–K9) hinter *Hebel*; Mouseover je Spalte; lesen nur, wenn sichtbar (60 s). Reiter *Regime* bleibt bis GUI-5 |
+| **O43** | `config.yaml` `marktscan.aktiv: false`. Mit ihm ruhen die Auto-Aufnahme MS-1, die Marktscan-Mails, die Erfolgsmessung und die Regime-Bestimmung der **alten** Kette (2.369); das neue System liest keines davon. Der Knopf *Scan* im alten Reiter *Marktscan* läuft weiter von Hand |
+| **Prüfstand** `p19_pruefstand.py` | **12/12** an der NB-Lage (Betriebskopie 500 T je Reihe ohne Übernahmen, Wegwerf-Produktion 16.10. 17:34, FRED und DefiLlama einmal echt): S1 Regel 2.639/2.639 und 18 Wechsel · S2 B1/B2 bitgleich zur Kalibrierung (319 gemeinsame Tage), B3 nur Revision (0,0091), Breite 500 T gegen voll: an 1 Tag andere Seite von 0,6, Stufe roh 319/319, heute *ungewohnt* 2 von 3 · S3 Startmarke · S4 5 T Vorlauf nicht geltend · S5 10 T → fällig *Vorlauf* mit Handlung, Schalter aus → nicht nachgeholt · S6 genau eine Mail, Versandfehler → nächster Lauf · S7 Revision ohne Scheinwechsel · S8 Fehler → alter Stand mit Vermerk · S9 B1/B3/B4 mit Zeile, ohne sie unverändert · S10 Kandidaten = Voranalyse Teil 4 (69/67, H ETC LTC ADA DOGE ICP UNI) · S11 Anzeige, Statusseite, Reiter · S12 kein Seiteneffekt |
+| **Gegenprobe** `p19_bau_gegenprobe.py` | **3/3** auf dem zweiten Weg: G1 Nachbau `p19_voranalyse` mit **fredgraph.csv** statt FRED-API, 409/409 Tage Stand und Stufe gleich (B2 bitgleich) · G2 Haltezeit mit der alten Zustandsmaschine 409/409 · G3 Tag für Tag 01.08.–21.09. (52 Läufe): genau ein Wechsel *kalt → ungewohnt* am 09.09. (geltend seit 08.09.), nie fällig, keine Mail |
+| **Regression** `p18_pruefstand.py` | **13/13** (neu S2u: `abbau_universum` 347 Coins = Universum, Fünftel gleich der Tabelle, Kandidaten 70/67) |
+| ⚠️ Fehler im **Prüfstand** (nicht im Modul) | (1) Das erste Szenario für S5/S6 nahm an, B1 bleibe über 20 %. Am 11.–16.09. fiel B1 darunter, die Rohstufe wechselte *Season-Klima ↔ Ende*, und die Haltezeit hielt die geltende Stufe richtig fest. Szenario auf den 31.07. gelegt (B1 aus, B2 an → *Vorlauf*). (2) Der B3-Testfall hatte zu wenige Felder |
+| ⚠️ Fehler im **Modul**, im Prüfstand gefunden | (1) Die Mail zeigte *„Makro-Lage: Makro-Lage NICHT VERFÜGBAR“*, Vorsilbe korrigiert. (2) Die Wache des Pakets SpotAbbau verbietet `conn_prod.execute(`; der Bitpanda-Katalog wird jetzt mit `read_sql` gelesen |
+| Suite | neues Paket **SeasonAmpel** 8/8 (synthetisch, ohne Netz); Makro 5/5 (Zählung 4 Makro-Zeilen: B1, B3, B4, C1), GuiKette 60/60 (Mouseover der neuen Reiter), SpotAbbau 11/11, SpotMitnahme 9/9, SpotUpbit 8/8, Verwässerung 13/13, Kontrollen, NurLesend, Laufzeit grün |
+
+**Am NB:** Pull und Neustart (Dienst und GUI). Der erste Lauf rechnet sofort die ganze Betriebskopie (~410 Tage), setzt die Startmarke *ungewohnt* und mailt nichts. Kontrollen **K-SP-4** (Ampel), **K-GUI-7** (Reiter), **K-MS-1** (Marktscan ruht). Die Kandidaten erscheinen ab dem B4-Stichtag **02.11.**
+
+
 ## 50. Hypothese H-SEL — keine große Altseason mehr, aber gewinnbringende Auswahl (14.10.2026, O48)
 
 Nutzer 14.10.: *„Ich rede nicht von mehr Daten, sondern von der Hypothese, dass es keine Altseason in dieser Größenordnung mehr geben wird, man aber dennoch gewinnbringend über selektive Altcoins investiert.“*

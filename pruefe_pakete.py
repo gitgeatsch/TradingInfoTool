@@ -22225,9 +22225,14 @@ def paket_guikette() -> None:
         ("Bestand Spot", _BT15.SPALTEN, _BT15.TIPP), ("Bestand Hebel", _BT15.HEBEL_SPALTEN, _BT15.HEBEL_TIPP),
         ("Bestand Aufteilung nach Rolle", _BT15.AUF_SPALTEN, _BT15.AUF_TIPP),
         ("Hebel Signale", _HT12.SIGNAL_SPALTEN, _HT12.SIGNAL_TIPP), ("Hebel Positionen", _HT12.POS_SPALTEN, _HT12.POS_TIPP),
-        ("Hebel Freigabe", _HT12.FREI_SPALTEN, _HT12.FREI_TIPP))}
-    pruefe(P, "⚠️ P15b: JEDE Spalte in Bestand- und Hebel-Tab hat eine Erklaerung im Mouseover - und jede Tabelle ruft add_heading_tooltips",
-           not any(_ohne15b.values()) and _bt15.count("add_heading_tooltips(") >= 3 and _ht12.count("add_heading_tooltips(") >= 3,
+        ("Hebel Freigabe", _HT12.FREI_SPALTEN, _HT12.FREI_TIPP),
+        # P19 (17.10.2026): Reiter Markt (Krypto) und Spot
+        ("Markt Ampel", __import__("ui.markt_tab", fromlist=["x"]).AMPEL_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).AMPEL_TIPP),
+        ("Markt Makro", __import__("ui.markt_tab", fromlist=["x"]).MAKRO_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).MAKRO_TIPP),
+        ("Spot Kandidaten", __import__("ui.markt_tab", fromlist=["x"]).KAND_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).KAND_TIPP))}
+    pruefe(P, "⚠️ P15b: JEDE Spalte in Bestand-, Hebel-, Markt- und Spot-Tab hat eine Erklaerung im Mouseover - und jede Tabelle ruft add_heading_tooltips",
+           not any(_ohne15b.values()) and _bt15.count("add_heading_tooltips(") >= 3 and _ht12.count("add_heading_tooltips(") >= 3
+           and _quelltext("ui/markt_tab.py").count("add_heading_tooltips(self.") == 3,
            "%s" % {k_: v_ for k_, v_ in _ohne15b.items() if v_})
     import ui.heading_tooltip as _TT15
     pruefe(P, "⚠️ P15c: Mouseover nie ausserhalb des Bildschirms - am rechten Rand links vom Zeiger (Spaltenkopf und Zeile)",
@@ -22375,15 +22380,106 @@ def paket_makro() -> None:
     pruefe(P, "kein Gate: die Zeile nennt 'nicht belegt' und die ATR, das Modul liest weder Stufe noch Einsatz",
            "nicht belegt" in _ML.MESSUNG["kurz_gegen"] and "ATR" in _ML.MESSUNG["atr"] and "stufe" not in _q.lower().split("def mailteil")[1])
     _qs, _qb, _qr = _quelltext("remote/server.py"), _quelltext("scheduler/background.py"), _quelltext("agent/regel0_mail.py")
-    pruefe(P, "Statusseite: Makro-Abschnitt VOR Betrieb & Lage; Job externe_reihen; REGEL0 und B1/B3/B4 bekommen die Zeile",
+    pruefe(P, "Statusseite: Makro-Abschnitt VOR Betrieb & Lage; Job externe_reihen; REGEL0, B1/B3/B4 und C1 (P19) bekommen die Zeile",
            _qs.index('id="makro-kopf"') < _qs.index("section-header section-system") and "_ML.lauf()" in _qb
-           and 'makro=lambda r: __import__("agent.makro_lage"' in _qb and _qb.count('__import__("agent.makro_lage", fromlist=["zeile"]).zeile()') == 3
+           and 'makro=lambda r: __import__("agent.makro_lage"' in _qb and _qb.count('__import__("agent.makro_lage", fromlist=["zeile"]).zeile()') == 4
            and "makro" in _qr.split("def _als_text")[0])
     _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "o54_pruefstand.py")],
                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     pruefe(P, "⚠️⚠️ Pruefstand O54: R-R11 bitgleich zu p51, Abgleich mit der Messung, drei Zustaende, kaputter Abruf, Mails + Versand, "
               "Statusseite, Job, Prod unveraendert", "8 von 8 bestanden" in (_r.stdout or ""),
            " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
+def paket_season_ampel() -> None:
+    """P19 (17.10.2026, Spot §49): SEASON-AMPEL ALS FAKT - Statusseite, Reiter Markt (Krypto)/Spot, Zeile in B1/B3/B4, Mail nur mit Schalter.
+
+    Nutzer 14.10.: *"Ja passt vorerst"* (Bauumfang §49.3) · 16.10.: *"hast du alles geprueft und gegengeprueft?"* (Stand-Pruefung §49.5).
+    Geprueft: dieselbe Regel wie die Kalibrierung (R-R11), Haltezeit 7 T, Mail-Lage nur gegen die zuletzt GEMELDETE Stufe (Revisionen,
+    §49.5), Schalter Vorgabe AUS, Marktscan ruht (O43). Synthetisch und ohne Netz; der volle Pruefstand (p19_pruefstand.py, 12/12) und
+    die Gegenprobe (p19_bau_gegenprobe.py, 3/3) laufen gegen die NB-Sicherung bzw. live und stehen als .txt daneben."""
+    P = "SeasonAmpel"
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+    from datetime import date as _d
+
+    import numpy as _np
+    import pandas as _pd
+
+    import agent.regel0_groesse as _G
+    import agent.season_ampel as _SA
+    import config as _C
+
+    _Z = _pd.read_csv(_os.path.join("data", "_spot", "am_kalibrierung.csv"), sep=";", parse_dates=["date"]).set_index("date")
+    _st = _np.array([_SA.stand(a, b, c) for a, b, c in zip(_Z.B1, _Z.B2, _Z.B3)])
+    _qv = _quelltext("Basisinfos/Spot_Voranalyse_04_10/p19_voranalyse.py")
+    _g = _SA.geltend(_SA.stufen(_Z))
+    pruefe(P, "R-R11: Stand an allen Kalibrierungstagen gleich (2.639), Stufe nach §36.5, Haltezeit 7 T = 18 Wechsel (p19_gegenprobe G2)",
+           (_st == _Z.stand.values).all() and len(_Z) == 2639 and int((_g != _g.shift(1)).iloc[1:].sum()) == 18
+           and "def stufe(b1, b2, b3, breite, dreivon3_in_ende_t: bool) -> str:" in _qv and _SA.SCHWELLE == {"B1": 0.20, "B2": 0.05, "B3": 0.10}
+           and _SA.HALTE_T == 7 and _SA.ENDE_T == 90)
+    _qb, _qs, _qy = _quelltext("scheduler/background.py"), _quelltext("remote/server.py"), _quelltext("Basisinfos/regel0_betrieb.yaml")
+    pruefe(P, "Schalter season_ampel_aktiv Vorgabe AUS und in regel0_betrieb.yaml false (Mail erst nach O47 Schritt 2)",
+           _G.VORGABE["season_ampel_aktiv"] is False and "season_ampel_aktiv: false" in _qy and _G.season_ampel_aktiv() is False)
+    pruefe(P, "Job season_ampel 07:30 mit Nachholer; B1/B3/B4 bekommen die Ampel-Zeile (3x); Statusseite: Abschnitt nach dem Makro-Umfeld, "
+              "vor Betrieb & Lage; Schalter beschriftet",
+           'id="season_ampel"' in _qb and '**_nachholen("season_ampel", 330, stunde=7, minute=30)' in _qb
+           and _qb.count('__import__("agent.season_ampel", fromlist=["zeile"]).zeile(ordner)') == 3
+           and _qs.index('id="makro-kopf"') < _qs.index('id="ampel-kopf"') < _qs.index("section-header section-system")
+           and "season_ampel_aktiv:" in _qs)
+    _qd, _qt, _qa = _quelltext("extract_notebook_diagnose.py"), _quelltext("nb_teilexport_betriebsdaten.py"), _quelltext("ui/app.py")
+    pruefe(P, "Diagnose season_ampel, Teilexport SEASON-AMPEL, Reiter Spot + Markt (Krypto) hinter Hebel, Reiter Regime bleibt (GUI-5)",
+           '"season_ampel": _season_ampel()' in _qd and "SEASON-AMPEL (C1)" in _qt and 'text="Markt (Krypto)"' in _qa and 'text="Spot"' in _qa
+           and 'text="Regime"' in _qa and _qa.index('text="Hebel"') < _qa.index('text="Spot"') < _qa.index('text="Regime"'))
+    pruefe(P, "O43: Marktscan ruht (config.yaml marktscan.aktiv false) - der Job prueft den Schalter je Lauf",
+           _C.load_config()["marktscan"]["aktiv"] is False and 'if not config_dict["marktscan"].get("aktiv", True):' in _qb)
+    # ---- Mail-Lage synthetisch: Startmarke, Haltezeit, Schalter aus = nicht nachgeholt, Revision ohne Scheinwechsel
+    _T = _tf.mkdtemp(prefix="sampel_")
+    try:
+        _k = _sq.connect(_os.path.join(_T, _SA.KOPIE))
+        _k.execute("CREATE TABLE price_history_ohlc (symbol TEXT, assetklasse TEXT, currency TEXT, date TEXT, close REAL, volume REAL)")
+        _rng = _np.random.default_rng(19)
+        _tage = _pd.date_range("2025-01-01", "2026-06-30", freq="D")
+        for _s in ["BTC"] + ["A%02d" % i for i in range(30)]:
+            _x = _np.cumprod(1 + _rng.normal(0, 0.01 if _s != "BTC" else 0.0001, len(_tage)))
+            _k.executemany("INSERT INTO price_history_ohlc VALUES (?,?,?,?,?,?)",
+                           [(_s, "krypto", "USD", d.strftime("%Y-%m-%d"), float(v), 1000.0) for d, v in zip(_tage, _x)])
+        _k.commit()
+        _k.close()
+        _m = _pd.date_range("2021-01-01", "2026-06-01", freq="MS")
+        _fr = {"M2SL": _pd.Series(1.005 ** _np.arange(len(_m)), index=_m), "WALCL": _pd.Series(7e6, index=_m),
+               "WTREGEN": _pd.Series(7e5, index=_m), "RRPONTSYD": _pd.Series(100.0, index=_m)}
+        _sb = _pd.Series(100.0, index=_pd.date_range("2024-01-01", "2026-07-01", freq="D"))
+
+        def _q(boost=0):
+            s = _sb.copy()
+            if boost:
+                s[s.index > _pd.Timestamp("2026-06-01") - _pd.Timedelta(days=boost + 1)] *= 1.15
+            return {"fred": _fr, "stb": s}
+        _e1 = _SA.lauf(_T, None, heute=_d(2026, 6, 1), quellen=_q())
+        _e2 = _SA.lauf(_T, None, heute=_d(2026, 6, 1), quellen=_q(5))
+        _e3 = _SA.lauf(_T, None, heute=_d(2026, 6, 1), quellen=_q(10))
+        _SA.vermerke_ohne_mail(_T, "Vorlauf")
+        _e4 = _SA.lauf(_T, None, heute=_d(2026, 6, 1), quellen=_q(10))
+        _s2 = _q(10)
+        _s2["stb"][(_s2["stb"].index > "2025-10-01") & (_s2["stb"].index < "2025-11-01")] *= 0.98
+        _e5 = _SA.lauf(_T, None, heute=_d(2026, 6, 1), quellen=_s2)
+        _c = _sq.connect(_os.path.join(_T, _SA.ABLAGE))
+        _mel = _c.execute("SELECT stufe, art FROM ampel_meldung ORDER BY rowid").fetchall()
+        _c.close()
+        pruefe(P, "Mail-Lage: Startmarke kalt, 5 T Vorlauf noch nicht geltend, 10 T -> faellig 'Vorlauf' mit Handlung, Schalter aus -> "
+                  "nicht nachgeholt, Revision der Vergangenheit -> kein Scheinwechsel",
+               _e1["stufe"] == "kalt" and _e1["faellig"] is None and _e2["faellig"] is None and (_e3["faellig"] or {}).get("stufe") == "Vorlauf"
+               and "Tranche" in (_e3["faellig"] or {}).get("handlung", "") and _e4["faellig"] is None and _e5["faellig"] is None
+               and (_e5["revision_b3"] or 0) > 0.01 and _mel == [("kalt", "startmarke"), ("Vorlauf", "ohne_mail")],
+               "e1 %s %s · e2 %s · e3 %s · e5 Revision %s · Meldungen %s" % (_e1["stufe"], _e1.get("fehler"), _e2["faellig"], _e3["faellig"],
+                                                                            _e5["revision_b3"], _mel))
+    finally:
+        __import__("wegwerf").aufraeumen(_T)
+    _txt = {n: _quelltext(_os.path.join("Basisinfos", "Rechenkern_02_10", n)) for n in ("p19_pruefstand.txt", "p19_bau_gegenprobe.txt")}
+    pruefe(P, "Belege: Pruefstand 12/12 gegen die NB-Sicherung, Gegenprobe 3/3 auf dem zweiten Weg (fredgraph.csv, eigener Code)",
+           "12 von 12 bestanden" in _txt["p19_pruefstand.txt"] and "3 von 3 gleich" in _txt["p19_bau_gegenprobe.txt"])
 
 
 def paket_termin() -> None:
@@ -33002,7 +33098,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -1,0 +1,30 @@
+Season-Ampel nicht neu berechnet - alter Stand bleibt: RuntimeError: kein FRED-Schluessel
+S1   bestanden Stand 2639/2639 gleich der Kalibrierung, gleich p19 2639/2639 · Stufe gleich p19 2639/2639 · Haltezeit 7 T: 18 Wechsel (Soll 18)
+S2   bestanden Lauf ok, 409 Tage ab 2025-08-08 · gemeinsam mit der Kalibrierung 319 Tage: B1 9.7e-17 · B2 8.3e-17 · B3 0.0091 (Revision) · Breite 500 T gegen voll: mittel 0.0190, groesste 0.0400, andere Seite von 0,6 an 1 Tagen · Stufe roh gleich 319/319 (wo die Breite dieselbe Seite hat: 318/318) · heute 2026-09-20 ungewohnt, 2 von 3
+S3   bestanden erster Lauf: [('ungewohnt', 'startmarke')], faellig None · zweiter Lauf: Meldungen [('ungewohnt', 'startmarke')], faellig None
+S4   bestanden 31.07. ohne Boost: kalt (1 von 3) · B3 5 Tage > 10 %: roh Vorlauf, geltend kalt, faellig None
+S5   bestanden B3 10 Tage: faellig Vorlauf (Handlung 'L-Kandidaten bereit, erste kleine Tranche möglich') · Schalter aus: Mails 0, Meldung ('Vorlauf', 'ohne_mail') · naechster Lauf faellig None
+S6   bestanden Versand scheitert: Versuche 1, gemailt False · naechster Lauf gemailt True · dritter False · Mails gesamt 2 · Betreff 'TradingInfoTool: Season-Ampel Vorlauf – L-Kandidaten bereit, erste kleine Tranche möglich'
+     Mailtext S6:
+       | L-Kandidaten bereit, erste kleine Tranche möglich
+       | 
+       | Die Season-Ampel steht seit 27.07.2026 auf Vorlauf (das Geld ist da, BTC noch nicht).
+       | 
+       | Makro-Lage NICHT VERFÜGBAR (noch nicht berechnet oder FRED nicht erreicht) – kein Urteil.
+       | 
+       | Bedingungen am 30.07.2026:
+       |   BTC 91 T           -15,2 %  nicht erfüllt  (Schwelle > +20 %)
+       |   M2 J/J              +5,3 %  erfüllt  (Schwelle > +5 %)
+       |   Stablecoins 91 T   +10,1 %  erfüllt  (Schwelle > +10 %)
+       |   Breite                0,44  (Überhitzung ab 0,60)
+       | 
+       | ⚠ Kalibriert auf einem Zyklus (2020/21) – Fakt, löst nichts aus. Die Haltezeit von 7 Tagen ist schon abgewartet.
+       | Ausführung manuell über die Bitpanda-App.
+S7   bestanden Revision Stablecoins Dez./Jan. -1 %: revision_b3 0.0109, Wechsel None, Meldungen 1
+S8   bestanden ohne Schluessel: fehler (RuntimeError: kein FRED-Schluessel) · Tageswert unveraendert True · Zeile: ', löst nichts aus · Stand 20.09. · letzter Abruf gescheitert'
+S9   bestanden mit Zeile, ohne sie wie vorher: {'B1': 'ok', 'B3': 'ok', 'B4': 'ok'} · Zeile: 'ungewohnt seit 08.09.2026 (2 von 3: BTC 91 T +27,2 % ✔ · M2 J/J +5,7 % ✔ · Stablecoins 91 T -1,2 % ✗) – kalibriert auf einem Zyklus (2020/21) – Fakt, löst nichts aus · Stand 20.09.'
+S10  bestanden Universum 332 abgelegt · oberes Fuenftel 69, handelbar 67 (p19 Teil 4: 69 / 67) · H ETC, LTC, ADA, DOGE, ICP, UNI · M NEO, SNX, IOTA, THETA
+S11  bestanden uebersicht ok/ungewohnt · Statusseite ungewohnt · Schalter season_ampel_aktiv False · Bedingungszeilen 3 · Reiter: Season-Ampel: ungewohnt · 2 von 3 · seit 08.09.2026 · VERALTET · Spot: Einstiegs-Kandidaten · ab dem nächsten B4-Stichtag
+S12  bestanden Wegwerf-Produktion, Betriebskopie und Desktop-data\spot_betrieb.db unveraendert
+
+12 von 12 bestanden

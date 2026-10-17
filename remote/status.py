@@ -331,6 +331,7 @@ class RemoteStatus:
     kontrollen: dict | None = None
     parameter_neu: list[dict] | None = None
     makro_lage: dict | None = None
+    season_ampel: dict | None = None
 
     def to_dict(self) -> dict:
         return {
@@ -368,6 +369,7 @@ class RemoteStatus:
             "kontrollen": self.kontrollen,
             "parameter_neu": self.parameter_neu,
             "makro_lage": self.makro_lage,
+            "season_ampel": self.season_ampel,
         }
 
 
@@ -496,6 +498,7 @@ def _build_status_roh(conn: sqlite3.Connection, watchlist: list, log_path: Path,
         kontrollen=_safe(_get_kontrollen, conn),
         parameter_neu=_safe(_get_parameter_neu),
         makro_lage=_safe(_get_makro_lage),
+        season_ampel=_safe(_get_season_ampel),
     )
 
 
@@ -1358,6 +1361,21 @@ def _get_bestand_lage(conn: sqlite3.Connection) -> dict:
                      "SUM(COALESCE(staked_quantity,0) > 0) FROM holdings").fetchone()
     m.update({"bestaende": r[0] or 0, "mit_menge": r[1] or 0, "davon_gestakt": r[2] or 0})
     return m
+
+
+@_gecacht_frist(300)
+def _get_season_ampel() -> dict:
+    """P19 (17.10.2026, Spot §49): Season-Ampel als FAKT aus data/spot_betrieb.db (Job season_ampel, taeglich 07:30). Nur lesend;
+    drei Zustaende ok / veraltet / fehlt; dazu die Einstiegs-Kandidaten aus dem B4-Universum (A3)."""
+    from agent import season_ampel as SA
+    from agent import spot_abbau as AB
+
+    d = SA.uebersicht(_daten_ordner())
+    try:
+        d["kandidaten"] = AB.kandidaten(_daten_ordner())
+    except Exception:                                        # noqa: BLE001
+        d["kandidaten"] = None
+    return d
 
 
 @_gecacht_frist(300)

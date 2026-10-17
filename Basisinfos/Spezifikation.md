@@ -819,6 +819,12 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **Hebelpositionen aus dem Buch je Symbol** (P11b, 16.10.): Sie kommen aus den Bitpanda-Buchungen der neuen Schnittstelle, eine Position je Lebenszyklus, Liquidationen ausdrücklich. Die alten Zeilen sind gesichert.
 - **Hebelführung gegen Bitpanda** (P11c, 16.10.): Eine laut Bitpanda-Wallet geschlossene Position wird nicht mehr geführt und nicht gemeldet; weicht die Menge ab, rechnet die Führung mit der Wallet-Menge.
 
+### Stand 17.10.2026 — Season-Ampel als Fakt (P19)
+
+- **Season-Ampel** (Spot C1): Drei Bedingungen (BTC 91 T, Geldmenge M2, Stablecoin-Angebot) ergeben eine Stufe von *kalt* bis *Ende*. Du siehst sie oben auf der Statusseite unter dem Makro-Umfeld, als Zeile in den Spot-Mails B1/B3/B4 und im neuen GUI-Reiter *Markt (Krypto)*. Sie löst nichts aus; die Mail beim Stufenwechsel ist gebaut, aber aus, weil die Schwellen nur auf einem Zyklus belegt sind (O47).
+- **Einstiegs-Kandidaten** (A3): Reiter *Spot* und Statusseite zeigen das obere Fünftel je Klasse, bei Bitpanda handelbar. Die Liste ordnet den Fortbestand; ein Einstieg je Asset ist nicht belegt.
+- **Marktscan** der alten Kette ruht (O43).
+
 ## 11. Roadmap & Erweiterbarkeit
 
 1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist,
