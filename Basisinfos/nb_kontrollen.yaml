@@ -380,6 +380,7 @@ kontrollen:
     nachweis: "Log nach Start bzw. 07:30: 'Season-Ampel: ok · Stufe ungewohnt seit <Datum> (Tag <gestern>, ~380 Tage) · gemailt nein (Schalter aus - nur Anzeige)'; Diagnose season_ampel: zustand ok, Bedingungen B1 an / B2 an / B3 aus (Stand 2 von 3, wie Desktop 16.10.), laeufe ohne fehler, meldungen = 1 Startmarke; Teilexport Abschnitt SEASON-AMPEL; Statusseite: Abschnitt 'Krypto-Markt (Season-Ampel)' unter dem Makro-Umfeld; naechste Spot-Mail B1/B3/B4: Zeile 'Season-Ampel ungewohnt ...'"
     faellig_bis: "2026-10-24"
     status: offen
+    teilbeleg: "Diagnose 17.10. ~07:28 (NB auf c5b1b8f1, keine lokalen Aenderungen, Neustart 07:06 ohne WARNING/ERROR): Code aktiv, Ampel noch NICHT gelaufen - zu Recht: der Job laeuft 07:30, die Diagnose lag davor (Nachholer greift nur nach 07:30). Offen: Lauf/Log/Statusseite"
   - id: K-GUI-7
     titel: "P19 GUI: Reiter 'Spot' (Kandidaten, bis 02.11. 'ab dem naechsten B4-Stichtag') und 'Markt (Krypto)' (Ampel, Verlauf, Makro-Lage) oeffnen ohne Fehler"
     seit: "2026-10-17"
@@ -389,6 +390,7 @@ kontrollen:
     nachweis: "NB-GUI nach Neustart: beide Reiter hinter 'Hebel'; Markt (Krypto) zeigt Kopf 'Season-Ampel: ungewohnt · 2 von 3 · seit ...', drei Bedingungszeilen, Grafik 12 Monate, Makro-Kanaele K1-K9; Mouseover je Spalte; Reiter 'Regime' unveraendert vorhanden; keine Fehler im Log 'MarktKryptoTab'/'SpotTab'"
     faellig_bis: "2026-10-24"
     status: offen
+    teilbeleg: "Diagnose 17.10. ~07:28: keine Log-Zeile MarktKryptoTab/SpotTab (keine Ausnahme); der Blick auf die Reiter steht aus"
   - id: K-MS-1
     titel: "O43 Marktscan ruht: Jobs 04:00/16:00 und die Erfolgsmessung melden 'deaktiviert', keine Marktscan-Mail, keine Auto-Aufnahme"
     seit: "2026-10-17"
@@ -398,6 +400,7 @@ kontrollen:
     nachweis: "Log 04:00 und 16:00: 'Marktscan deaktiviert (config.yaml marktscan.aktiv=false) - übersprungen'; Diagnose schalter.marktscan_aktiv = false; keine Mail 'Marktscan' und keine neue Watchlist-Zeile aus MS-1 nach dem Pull"
     faellig_bis: "2026-10-20"
     status: offen
+    teilbeleg: "Diagnose 17.10. ~07:28: letzter Marktscan 04:01 lief noch auf dem ALTEN Code (Pull 07:06) - erwartet; erster Nachweis ist der Lauf 16:00"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
