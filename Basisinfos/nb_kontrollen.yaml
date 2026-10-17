@@ -366,7 +366,7 @@ kontrollen:
     titel: "P11d: nach einer Unterbrechung kommt 'REGEL0 nachgeholt (n Std.) - Rechnung erfolgreich' statt 'Job regel0_rechnung fehlgeschlagen'"
     seit: "2026-10-17"
     paket: P11d
-    commit: ""
+    commit: 475f25e8
     art: ereignis
     nachweis: "beim naechsten Nachholen (Neustart ueber einen Stundenwechsel oder Stillstand): Log 'REGEL0-Rechnung: nachgeholt: ...', Mail mit Betreff 'TradingInfoTool: REGEL0 nachgeholt (n Std.) - Rechnung erfolgreich', Text 'Kein Fehler'; KEINE Mail 'Job regel0_rechnung fehlgeschlagen' im selben Lauf. REGEL0-ERGEBNIS traegt veraltet_gemeldet / nachholen_ausgelassen / nachgeholt_signale"
     faellig_bis: "2026-11-15"
