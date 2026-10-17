@@ -371,6 +371,7 @@ kontrollen:
     nachweis: "Log nach Start bzw. 06:50: 'REGEL0-Messstand: neu <~900> · gemessen ... · ohne Kurse <wenige> · gesamt <n> Signale an <~14> Tagen, Mittel ... · <Befund>' und Zeilen 'REGEL0-Messstand Trade: ETH ... / BTC ...'; Diagnose regel0_messstand: vorhanden, gesamt n/tage, befund, trades; Statusseite REGEL0-Bereich 'Messstand im Betrieb'; naechste REGEL0-Signalmail: Zeile 'Messstand im Betrieb seit 03.10. ...'"
     faellig_bis: "2026-10-24"
     status: offen
+    teilbeleg: "Diagnose 17.10. 10:11: Log 09:12:07 'REGEL0-Messstand: neu 732 · gemessen 732 · offen 226 · ohne Kurse 0 · endgueltig 563 · gesamt 732 Signale an 14 Tagen, Mittel +0.80 % · im Band der Messung', beide Trade-Zeilen (ETH/BTC); Diagnose regel0_messstand vorhanden, keine Fehler. Offen: Zeile in der naechsten REGEL0-Signalmail; offen 226 muss beim Lauf morgen 06:50 sinken"
   - id: K-NG-1
     titel: "P11d: nach einer Unterbrechung kommt 'REGEL0 nachgeholt (n Std.) - Rechnung erfolgreich' statt 'Job regel0_rechnung fehlgeschlagen'"
     seit: "2026-10-17"
@@ -388,8 +389,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach Start bzw. 07:30: 'Season-Ampel: ok · Stufe ungewohnt seit <Datum> (Tag <gestern>, ~380 Tage) · gemailt nein (Schalter aus - nur Anzeige)'; Diagnose season_ampel: zustand ok, Bedingungen B1 an / B2 an / B3 aus (Stand 2 von 3, wie Desktop 16.10.), laeufe ohne fehler, meldungen = 1 Startmarke; Teilexport Abschnitt SEASON-AMPEL; Statusseite: Abschnitt 'Krypto-Markt (Season-Ampel)' unter dem Makro-Umfeld; naechste Spot-Mail B1/B3/B4: Zeile 'Season-Ampel ungewohnt ...'"
     faellig_bis: "2026-10-24"
-    status: offen
-    teilbeleg: "Diagnose 17.10. ~07:28 (NB auf c5b1b8f1, keine lokalen Aenderungen, Neustart 07:06 ohne WARNING/ERROR): Code aktiv, Ampel noch NICHT gelaufen - zu Recht: der Job laeuft 07:30, die Diagnose lag davor (Nachholer greift nur nach 07:30). Offen: Lauf/Log/Statusseite"
+    status: erfuellt
+    erfuellt_am: "2026-10-17"
+    beleg: "Diagnose 17.10. 10:11 (NB auf e878eb9f, keine lokalen Aenderungen): Log 07:30:16 'Season-Ampel: ok · Stufe ungewohnt seit 2026-09-08 (Tag 2026-10-16, 409 Tage) · gemailt nein (Schalter aus - nur Anzeige)'; Diagnose zustand ok, 2 von 3 (BTC +27,7 an, M2 +5,7 an, Stablecoins +1,6 aus) wie Desktop, 1 Lauf ok, Meldung = Startmarke. Die Mailzeile in B1/B3/B4 erscheint beim naechsten Spot-Ereignis (Code im Pruefstand S9 belegt)"
   - id: K-GUI-7
     titel: "P19 GUI: Reiter 'Spot' (Kandidaten, bis 02.11. 'ab dem naechsten B4-Stichtag') und 'Markt (Krypto)' (Ampel, Verlauf, Makro-Lage) oeffnen ohne Fehler"
     seit: "2026-10-17"
@@ -411,7 +413,7 @@ kontrollen:
     nachweis: "Log 04:00 und 16:00: 'Marktscan deaktiviert (config.yaml marktscan.aktiv=false) - übersprungen'; Diagnose schalter.marktscan_aktiv = false; keine Mail 'Marktscan' und keine neue Watchlist-Zeile aus MS-1 nach dem Pull"
     faellig_bis: "2026-10-20"
     status: offen
-    teilbeleg: "Diagnose 17.10. ~07:28: letzter Marktscan 04:01 lief noch auf dem ALTEN Code (Pull 07:06) - erwartet; erster Nachweis ist der Lauf 16:00"
+    teilbeleg: "Diagnose 17.10. 10:11: kein Marktscan seit dem Pull (letzter 04:01 auf altem Code) - erster Nachweis 16:00"
   - id: K-ALARM-2
     titel: "Stillstandsmail bei einem Halt ueber 45 min kommt an"
     seit: "2026-10-02"
