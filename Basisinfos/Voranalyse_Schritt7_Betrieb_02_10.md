@@ -3865,3 +3865,38 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 **Stand mit den Oktober-Daten (Prüfstand, NB-Kopie bis 14.10.):** 558 Signale an 12 Tagen, Mittel **+0,77 %** (Spanne 99 %: −1,64 bis +3,18 %), Messung +0,55 % → **im Band der Messung**.
 
 **Am NB** (Pull und Neustart): Der erste Lauf misst alle Signale seit 03.10. (rund 900), danach täglich 06:50. Die nächste REGEL0-Signalmail trägt die Zeile. Kontrolle **K-O21-1**.
+
+### 23.66 Welche Signale zählt der Messstand? – und Stufe 1b Voranalyse: Ergebnis echter Trades in EUR (17.10.2026; `s1b_voranalyse.py`, `s1b_gegenprobe.py` → `.txt`)
+
+**Nutzer 17.10.:** *„ja, Stufe 1b Voranalyse starten – vorher noch zu Stufe 2 und Signale bzw. generell: Wie hast du das gerechnet? Wir hatten keine 471 Signale – sollten wir nicht die E-Mail-Signale rechnen?“*
+
+**Was der Messstand zählt (geprüft an der NB-Kopie bis 14.10.):**
+- Die REGEL0 rechnet für die **ganze Datenbasis** (rund 640 Binance-Assets). Bis 14.10. waren es 559 Signale auf 441 Assets; am NB heute 732 gemessene.
+- **Gemailt** wird nur für die Assets mit Hebel-Schalter an: bis 14.10. **21 Assets, 22 Signale, alle 22 gemailt**, keines gesperrt oder verpasst. Am NB heute 27.
+- Die Gruppe *Hebel-Schalter an* ist damit praktisch gleich *gemailt*. Die Zahlen je Stufe (471 Stufe 3 usw.) gelten aber für **alle** Signale.
+- **Stufe 2** (der niedrigste Hebel, also die schwankungsstärksten Assets): 13 bzw. 15 Signale, **keines davon gemailt**. Das Minus betrifft keinen deiner Trades; die Spanne (−17 bis +1,6 %) schließt null ein ⇒ Auskunft.
+- **Warum beides:** Alle Signale prüfen die **Regel** (dieselbe Menge wie die Messung, mehr Tage). Die gemailten zeigen, was **bei dir ankommt**. Die Zeile in der Mail stellte bisher die Regelprüfung voran – für dich ist die falsche Zahl zuerst gestanden.
+- ➤ **Vorschlag M1:** Gruppe *gemailt* ausdrücklich über `mail_signal_am` (nicht über den Schalter); die Mail-Zeile beginnt mit **deinen gemailten Signalen**, danach *alle REGEL0-Signale (Prüfung der Regel)*; Gruppen je Stufe getrennt für *gemailt* und *alle*.
+
+**Stufe 1b – Aufbau eines Vorgangs** (gelesen an ETH/BTC 09.–15.10. und der Liquidation TAO 21.11.2025):
+
+| Vorgang | Transaktionen |
+|---|---|
+| Eröffnung | Kredit kommt als EURCV aus `margin-trading-credit`; EURCV → EUR (eigenes Geld + Kredit); EUR → Coin ins Hebel-Wallet. **Eigenkapital = EUR-Kauf − Kredit** |
+| Schließung / Liquidation | Gebühr in Coin; Coin → EUR in Höhe des Kreditanteils → EURCV zurück (Tilgung); der **Rest des Coins** geht als Übertrag ins Spot-Wallet. **Rückfluss = Rest × Verkaufskurs** |
+| Ergebnis | je Abgang Rückfluss − anteiliges Eigenkapital (Anteil = Abgang / Menge davor) |
+
+**Prüfung** (alle 1.242 Vorgänge): P1 Mengen (Abgang = verkauft + Gebühr + Übertrag) **0 Abweichungen** · P2 Tilgung = Kredit je Lebenszyklus **0** · P3 EUR-Kauf = EURCV-Verkauf, Kredit = Buchung **0** · P4 verkaufte Menge × Kurs = EUR-Eingang **0**.
+**Gegenprobe** (zweiter Weg, Lebenszyklen aus P11b, brutto mit Kredit-Saldo): **37 / 37 auf den Cent gleich**. Erst rot, weil die Gegenprobe ein Symbol nur einer Asset-ID zuordnete (SUI, SEI, HYPE haben mehrere wie ETH) – korrigiert.
+
+**Ergebnis (Auskunft):**
+- **ETH 09.–15.10.** (REGEL0-Signal, 149 h gehalten, ausgestoppt): Eigenkapital 500 €, Rückfluss 372,59 €, **−127,41 €** (−25,5 %), Gebühr 23,82 €.
+- **BTC ab 09.10.** (ohne Signal): Teilschließung 15.10. **−35,17 €** realisiert, die Hälfte offen.
+- Alle 37 geschlossenen Lebenszyklen seit 09/2025: eingesetztes Eigenkapital 62.412 €, **Ergebnis −6.888 € (−11,0 %)**, davon Gebühren in Coin 2.037 €. Die großen Verluste liegen im Oktober/November 2025 (Liquidationen MORPHO, LINK, AVAX, TAO; SUI −1.765 €, BTC −1.087 €).
+- Gebühr: Bei Abgängen unter 12 h im Median **0,35 %** des Werts (Handelsgebühr); bei längeren wächst sie mit den Tagen (Finanzierung). Die Tagesrechnung ist grob, weil Aufstockungen den Zeitpunkt verschieben ⇒ Auskunft.
+
+**Bauvorschlag 1b (zur Abstimmung):**
+- **B1:** `regel0_messstand.trades` bekommt je Lebenszyklus Eigenkapital, Rückfluss, Gebühr und **Ergebnis in EUR** (dieselbe Rechnung wie hier, mit P1–P4 als Wache im Code); Summen seit 03.10. (REGEL0-Betrieb) und seit Beginn.
+- **B2:** Anzeige auf der Statusseite (Trades) und im Teilexport; in der Mail nur, wenn du es willst.
+- **B3:** **Außenprobe durch dich:** zeigt die Bitpanda-App für ETH 09.–15.10. etwa −127 € und für die BTC-Teilschließung 15.10. etwa −35 €? Das ist die einzige Prüfung gegen Bitpanda selbst.
+- Zusammen mit **M1** (gemailte Signale zuerst) in einem Pull.
