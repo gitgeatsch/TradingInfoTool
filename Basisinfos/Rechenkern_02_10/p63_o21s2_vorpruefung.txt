@@ -1,0 +1,27 @@
+P63 O21 STUFE 2 VORPRUEFUNG · Trennschaerfe eines Schattenvergleichs · Referenz 2025-26: 8408 Einstiege mit 24-h-Ertrag (von 8408) an 497 Tagen
+
+V0 DATENMENGE: je Jahr Tage mit Signal / Kalendertage · Signale je Tag Median (5 %..95 %)
+   2025: 284 von 365 Tagen (78 %) · 6 (1..67) je Tag
+   2026: 213 von 243 Tagen (88 %) · 11 (1..49) je Tag
+   Auskunft Betrieb (NB-Ablage 03.-14.10.): 559 Signale an 12 Tagen, gemailt 22 an 6 Tagen (3.7 je Tag mit Mail)
+
+V1 NIVEAU (Champion allein, Mittel 24-h-Ertrag +0.545 %)
+   Mittel aller Signale                           SE 0.254 Pp (497 Tage) -> MDE 99 %/80 %: 90 T 2.04 Pp · 180 T 1.44 Pp · 365 T 1.01 Pp · 730 T 0.72 Pp
+
+V2 FILTER-HERAUSFORDERER (Teilmenge derselben Signale - alle; Nullmodell Zufallsteilmenge, 1.000 Tagesblock-Ziehungen)
+   Teilmenge 50 % der Signale                     SE 0.061 Pp (497 Tage) -> MDE 99 %/80 %: 90 T 0.49 Pp · 180 T 0.35 Pp · 365 T 0.24 Pp · 730 T 0.17 Pp
+   Teilmenge 25 % der Signale                     SE 0.105 Pp (497 Tage) -> MDE 99 %/80 %: 90 T 0.85 Pp · 180 T 0.60 Pp · 365 T 0.42 Pp · 730 T 0.30 Pp
+   Teilmenge 10 % der Signale                     SE 0.191 Pp (497 Tage) -> MDE 99 %/80 %: 90 T 1.53 Pp · 180 T 1.08 Pp · 365 T 0.76 Pp · 730 T 0.54 Pp
+
+V3 AUSSTIEGS-HERAUSFORDERER (dieselben Einstiege, 48 h statt 24 h; Unterschied je Einstieg)
+   48 h - 24 h (brutto, Mittel -0.393 %)          SE 0.234 Pp (497 Tage) -> MDE 99 %/80 %: 90 T 1.88 Pp · 180 T 1.33 Pp · 365 T 0.93 Pp · 730 T 0.66 Pp
+
+V4 DISJUNKTER HERAUSFORDERER (andere Signale an denselben Tagen; zwei Zufallshaelften)
+   Haelfte A - Haelfte B                          SE 0.127 Pp (497 Tage) -> MDE 99 %/80 %: 90 T 1.02 Pp · 180 T 0.72 Pp · 365 T 0.51 Pp · 730 T 0.36 Pp
+
+V5 NUR DIE GEHANDELTEN (21 Schalter-Assets): 1352 Einstiege an 328 Tagen (66 % der Tage), Mittel +0.846 %
+   Niveau (gehandelt)                             SE 0.272 Pp (328 Tage) -> MDE 99 %/80 %: 90 T 1.77 Pp · 180 T 1.25 Pp · 365 T 0.88 Pp · 730 T 0.62 Pp
+   Filter 50 % (gehandelt)                        SE 0.147 Pp (328 Tage) -> MDE 99 %/80 %: 90 T 0.96 Pp · 180 T 0.68 Pp · 365 T 0.47 Pp · 730 T 0.34 Pp
+   Disjunkt (gehandelt)                           SE 0.279 Pp (328 Tage) -> MDE 99 %/80 %: 90 T 1.82 Pp · 180 T 1.29 Pp · 365 T 0.90 Pp · 730 T 0.64 Pp
+
+Einordnung der Groessen (Bestand, nicht hier gemessen): Kostenluecke 0,1-0,3 Pp (§23.64) · Halten je weiterem Tag -0,3..-0,4 % (§23.68) · LLM-Pruefblock trennt nicht (N5)

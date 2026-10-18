@@ -1,0 +1,8 @@
+P63 GEGENPROBE · 8408 Einstiege an 497 Tagen
+
+  OK    G1 Niveau +0,545 % und 95 %-Halbbreite +-0,50 Pp wie p61  (Mittel +0.5446 %, Halbbreite 0.498 Pp)
+  OK    G2 Filter 50 %: SE bei festen Tagen innerhalb 20 % von p63  (fest 0.0615 Pp gegen Bootstrap 0.0610 Pp)
+  OK    G3 Ausstieg 48-24 h: Bootstrap-SE innerhalb 10 % der Formel  (Bootstrap 0.2329 Pp gegen Formel 0.2340 Pp)
+  OK    G4 Schalter-Assets in der Referenz 2025-26  (21 von 21, fehlen: keine)
+
+4 Pruefungen, ALLE BESTANDEN

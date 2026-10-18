@@ -4028,3 +4028,65 @@ Beide sind behoben, bevor etwas ans NB ging.
 **Einordnung:** Der ETH-Trade vom 09.10. lief 149 h und endete mit −127,41 € (−25,5 % auf das Eigenkapital). Mit E2 wäre am 12.10. die Mail mit dem Fakt und dem Liquidationsabstand gekommen. Ob das die Entscheidung geändert hätte, ist nicht messbar. Die Information wäre aber da gewesen.
 
 **Am NB:** Pull und Neustart. Kontrolle **K-HD-1**: E3 sofort in Diagnose und Statusseite, E1/E2 als Ereignis.
+
+### 23.70 O21 Stufe 2 Voranalyse: Was kann ein Champion/Herausforderer-Vergleich im Schatten entscheiden? (18.10.2026; `p63_o21s2_vorpruefung.py`, `p63_gegenprobe.py` → `.txt`)
+
+**Nutzer 18.10.:** *„ja, O21 Stufe 2 Voranalyse starten“*.
+
+**Was Stufe 2 ist (Plan O21):**
+- Selbstanpassung **nur** zwischen **vorab registrierten** Fassungen.
+- Champion (die laufende REGEL0) und Herausforderer werden im Schatten auf **frischen Vorwärtsdaten** verglichen, mit fester Entscheidungsregel. Die Umstellung gibt der Nutzer frei.
+- ⛔ Kein Prompt, der sich aus eigenen Ergebnissen umschreibt, und kein Vorgängertrade im Prompt.
+
+**Bestand (zuerst das Bestehende):**
+- Für die REGEL0 ist **kein** Herausforderer registriert (das Kandidatenregister stammt aus der alten Kette).
+- Im Schatten läuft heute nur der **LLM-Prüfblock** (Urteile in `pruefung`, nur für gemailte Signale: 19 Trader- und 8 Markt-Urteile bis 14.10.). Sein Messstand steht in O21 Stufe 1 (A4).
+- Die Ablage speichert je Signal den Vorhersagewert `vh` und `p2`/`p3`/`p5`. Ein Herausforderer mit **höherer** Schwelle wäre damit im Schatten rechenbar. Für eine **niedrigere** müsste die Rechnung zusätzliche Signale ablegen.
+
+**Gemessen: die Trennschärfe, nicht ein Effekt.** Referenz-Einstiege 2025–26, 24-h-Ertrag, Tagescluster (ein Tag ist ein Markt). MDE = kleinster Unterschied, der mit 80 % Trefferquote bei 99 % zweiseitig erkannt wird; T = Tage **mit Signal**.
+
+| Art des Herausforderers | Beispiel | MDE nach 90 T | 180 T | **365 T** | 730 T |
+|---|---|---|---|---|---|
+| V1 Niveau (Champion allein, zum Vergleich) | – | 2,04 Pp | 1,44 | **1,01** | 0,72 |
+| V2 **Filter**, 50 % der Signale bleiben | Prüffilter, höhere Schwelle | 0,49 | 0,35 | **0,24** | 0,17 |
+| V2 Filter, 25 % bleiben | | 0,85 | 0,60 | **0,42** | 0,30 |
+| V2 Filter, 10 % bleiben | | 1,53 | 1,08 | **0,76** | 0,54 |
+| V3 **Ausstieg** (dieselben Einstiege) | 48 h statt 24 h | 1,88 | 1,33 | **0,93** | 0,66 |
+| V4 **Disjunkt** (andere Signale, gleiche Tage) | neuer Einstiegstyp (REGEL1) | 1,02 | 0,72 | **0,51** | 0,36 |
+| V5 nur die **21 gehandelten** Assets: Niveau / Filter 50 % / Disjunkt | | 1,77 / 0,96 / 1,82 | | **0,88 / 0,47 / 0,90** | 0,62 / 0,34 / 0,64 |
+
+- **Datenmenge:** Signale an 78 % (2025) bzw. 88 % (2026) der Kalendertage, Median 6 bzw. 11 je Tag. Die 21 Schalter-Assets haben nur an **66 %** der Signaltage ein Signal: 365 Signaltage sind dort **fast zwei Kalenderjahre**. Im Betrieb (03.–14.10.) wurden 22 von 559 Signalen gemailt, an 6 von 12 Tagen.
+- **Gegenprobe** (andere Rechenwege) **4/4**:
+  - Niveau und Streuung gleich p61 (+0,545 %, ±0,50 Pp);
+  - Filter-Rauschen mit festen Tagen gleich dem Tages-Bootstrap (0,0615 / 0,0610 Pp);
+  - Ausstieg Bootstrap gleich Formel (0,233 / 0,234 Pp);
+  - 21/21 Schalter-Assets in der Referenz.
+
+**Was daraus folgt (fachlich, meine Einordnung):**
+1. **Gepaart ist viel stärker als das Niveau:** Ein Filter auf denselben Signalen hebt den gemeinsamen Markt heraus, bei 50 % ist er viermal schärfer. Ein anderer **Ausstieg** gewinnt dagegen kaum, weil 24 h und 48 h verschiedene Märkte sehen.
+2. **Was ein Schatten in einem bis zwei Jahren entscheiden kann:**
+   - Filter mit **≥ 0,25–0,5 Pp** Wirkung je Handel;
+   - neue Einstiegstypen oder andere Ausstiege mit **≥ 0,5–1 Pp**.
+3. **Was er nicht entscheiden kann:**
+   - die **Kostenlücke** (0,1–0,3 Pp, §23.64);
+   - den **Halte-Effekt** aus Punkt 2 (48 h gegen 24 h brutto −0,39 Pp gegen eine MDE von 0,93 Pp/365 T; vorwärts erst nach rund fünf Jahren).
+   - ⇒ Solche Fragen entscheidet die **Messbasis** (wie in Punkt 2), nicht der Schatten.
+4. **Die Rolle von Stufe 2 ist damit:**
+   - **Wache** gegen große Verschlechterungen;
+   - **Vorwärtsbestätigung** von Kandidaten, die auf der Messbasis einen großen Effekt gezeigt haben.
+   - Feinjustierung ist das nicht.
+5. **Bisher hat kein Kandidat einen solchen Effekt:**
+   - LLM-Prüfblock: N5, trennt nicht;
+   - höhere Schwelle: die Wahl +0,035 lag auf einem Plateau (2.699);
+   - Ausstieg: gemessen in Punkt 2, ohne REGEL1-Änderung.
+   - Ein Schatten ohne Kandidaten mit Aussicht wäre Infrastruktur ohne Frage.
+
+**Vorschlag (zur Abstimmung):**
+- **S2-A (Empfehlung):** **Regel statt Bau.**
+  - Ein Herausforderer kommt nur in den Schatten, wenn er auf der Messbasis (2025–26, Tagesblock, R-R11) einen Effekt **≥ der MDE für 365 Signaltage** seiner Art zeigt (Tabelle oben). Dann wird er registriert: Fassung, Art, MDE, Entscheidungsregel *Herausforderer besser, 99 % zweiseitig, frühestens nach T Tagen*, Nutzer-Ja für die Umstellung.
+  - Die MDE-Tabelle kommt ins Regelwerksmanual.
+  - Der nächste Arbeitsschritt geht auf die **Messbasis**: REGEL1-Kandidaten (O13: Fortsetzung als eigener Einstiegstyp) und H14.
+- **S2-B:** kleiner Bau.
+  - Eine Register-Datei für Herausforderer und eine allgemeine Schatten-Auswertung im Messstand, mit *„entscheidbar ab ~N Tagen“*.
+  - Erster Eintrag wäre der LLM-Prüfblock, dessen Daten schon fließen; ehrlich als *Auskunft, bis die MDE erreicht ist*.
+- **S2-C:** voller Bau mit mehreren Herausforderern (Schwellen- und Stufen-Varianten) im Schatten. Davon rate ich ab: viele Vergleiche mit wenig Aussicht, und Mehrfachtesten.
