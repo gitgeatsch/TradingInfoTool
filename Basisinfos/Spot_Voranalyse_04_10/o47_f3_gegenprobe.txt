@@ -1,0 +1,12 @@
+O47 F3 GEGENPROBE Holdout (zweiter Weg)
+
+  OK    G1 Wahrheit je Holdout-Sonntag gleich  (118 Sonntage, Season 30)
+  OK    G1 Breite je Sonntag gleich  (groesste Abweichung 1.1e-16)
+  OK    G2 B1 je Tag gleich (< 1e-9)  (groesste 4.4e-16, fehlend 0)
+  OK    G2 B2 je Tag gleich (< 1e-9)  (groesste 9.7e-17, fehlend 0)
+  OK    G2 B3 je Tag gleich (< 1e-9)  (groesste 4.4e-16, fehlend 0)
+  OK    G3 geltende Stufe je Tag gleich  (912 von 912)
+  Episoden >= 28 T: 2017-01-01..2017-05-21 · 2017-10-08..2017-12-17 · H1 True · H2 Season-Klima 0.0 % -> True
+  OK    G4 Urteil neu: TRAEGT (H1 und H2)
+
+7 Pruefungen, ALLE BESTANDEN

@@ -7304,3 +7304,58 @@ Festgelegt **vor** dem ersten Lauf auf dem Holdout (dieser Commit). Auf 2017/18 
 - **Gegenprobe:** zweiter Weg für die Holdout-Ampel (B1/B2/B3 per asof aus den Rohquellen, Stufe aus dem Wortlaut, Haltezeit als Zähler, Breite neu) und für die Holdout-Wahrheit (Langformat). Verglichen werden die Stufe je Tag, die Wahrheit je Sonntag und H1/H2.
 - **Folge:** *trägt* → Vorschlag, die Ampel-Mail einzuschalten (Nutzer-Ja). Sonst bleibt die Ampel Fakt-Anzeige. **O47 endet dann**, denn ein weiterer Holdout aus freien Daten ist nicht vorhanden (2013/14 hat zu wenige Coins, §49.4).
 
+### 59.11 Ergebnis Fassung 3: der Holdout 2017/18 TRÄGT, mit drei Einschränkungen (18.10.2026; `o47_f3.py`, `o47_f3_gegenprobe.py` → `.txt`)
+
+**Urteil (vorab §59.7/§59.10): TRÄGT.** H1 ist in beiden Episoden erfüllt, H2 ebenfalls. Die Gegenrechnung mit Ausfall 0 % kommt zum selben Urteil.
+
+| | Holdout 2017-01 bis 2019-03 (118 Sonntage, Season-Wochen 25,4 %) |
+|---|---|
+| Season-Episoden (Wochenkorb) | 2017-01-01 bis 2017-05-21 (140 T) · 2017-10-08 bis 2017-12-17 (70 T) |
+| geltende Stufe | 06.01.2017 Season-Klima · 29.03. Ende · 13.04. Überhitzung · **19.08. Season-Klima** · 12.12. Ende · **12.03.2018 kalt** (bis zum Ende) |
+| **H1** Episode 1 | erfüllt: Vorlauf 17 T (Oktober 2016), Season-Klima ab 06.01.2017 |
+| **H1** Episode 2 | erfüllt: Season-Klima ab 19.08.2017, **50 T vor** dem Start |
+| **H2** Ruhe 2018-02 bis 2019-03 | Season-Klima an **0 %** der Tage, keine Fehlalarm-Blöcke |
+| **H3** Stand 0 / 1 / 2 / 3 von 3 | 0 % / 0 % / 25 % / **57 %** Season-Wochen (Ordnung hält) |
+| **H4** je Stufe | Season-Klima **75,9 %** [57,9–87,8] · Überhitzung 27,8 % · Ende 13,3 % · **kalt 0 %** [0–6,5] |
+| Ausfälle | 73 von 7.750 Coin-Wochen (0,94 %), 66 davon mit −100 % (2017 sterben mehr Coins) |
+| täglicher CoinMetrics-Korb 2018-01 bis 2019-03 | 95,4 % gleich mit dem Wochenkorb. Wenig aussagekräftig, denn in diesem Zeitraum gibt es kaum Seasons |
+
+**Gegenprobe** (zweiter Weg; M2 über die FRED-API statt fredgraph, weil fredgraph am 18.10. nicht antwortete) **7/7**: Wahrheit an 118 Sonntagen, Breite, B1/B2/B3 an jedem Tag, geltende Stufe an 912 von 912 Tagen, Urteil.
+
+**⚠️ Drei Einschränkungen (nach dem Lauf geprüft, sie ändern das Urteil nicht, gehören aber dazu):**
+1. **Episode 1 war links abgeschnitten.** Der Wochenkorb zeigt Season schon ab dem **18.12.2016** (+40 Pp). Season-Klima galt erst **19 T danach**. Davor lagen Vorlauf (Oktober 2016), dann *kalt*, dann ab 14.11. *ungewohnt* (BTC + M2, keine Stablecoins). H1 ist auch mit dem echten Start erfüllt (+19 T liegt im Fenster bis +30 T). **Vorab erkannt** wurde diese Season aber nicht.
+2. **Die Trennung kam vor allem aus dem Marktregime:** B1 an 96 % der Tage 2017 gegen 14 % 2018, B2 an 93 % gegen 0 %. **B3 war 2017 an jedem Tag an** und trennte nicht (wie vorab benannt: winziger Sockel). Belegt ist, dass die Ampel *Season-fähige Phase gegen Bärenmarkt* trennt. Nicht belegt ist, dass die Stablecoin-Bedingung dazu beiträgt.
+3. **Zwei Zyklen bleiben wenig.** 2017 und 2020/21 stimmen in der Richtung überein, statistische Sicherheit ist das nicht.
+
+**Auskunft:**
+- Die Stufe *ungewohnt* (BTC + M2, keine Stablecoins), **die heutige**, gab es 2019–2026 nie. Im Holdout lag sie Mitte November bis Ende Dezember 2016 **unmittelbar vor** einer Season.
+- Das ist **ein** Fall, und 2016 war der Stablecoin-Markt winzig. Es ist kein Beleg, dass *ungewohnt* heute eine Season ankündigt.
+
+### 59.12 Die Ampel und der Hebel (Nutzer 18.10.: *„hast du die Ampel nicht auch für Hebel geprüft?“*)
+
+**Nein, und im Messzeitraum des Hebels ist es nicht messbar:**
+- Alle **10.732** REGEL0-Einstiege 2024–2026 (Menge *bestand*) fallen in die Stufe **kalt**.
+- Die Ampel stand von 2023 bis 2026-06 an jedem Tag auf *kalt*, seit 09/2026 auf *ungewohnt*.
+- Ein Filter, der nie umschaltet, trennt nichts.
+
+**Dazu:**
+- Die **Zeitskalen** passen nicht: Die Ampel schaut 90 T voraus und wechselt ein- bis zweimal im Jahr, die REGEL0 ist ein 24-h-Handel.
+- Frühere Messungen fanden für den Hebel keinen nutzbaren Marktzustand: 2.599 (Marktzustand vorab nicht erkennbar), W3/Ebene 2 (16.10.), O53 (ATR trägt das Makro).
+
+**Erlaubt wäre es** (Marktkontext, kein Asset-Rang, Regel 3).
+
+**Option für später:** Schaltet die Ampel künftig um, kann der Messstand (O21) die REGEL0-Ergebnisse je Ampelstufe **vorwärts** als Auskunft ausweisen. Kein Bau jetzt.
+
+### 59.13 Folge und Vorschlag (zur Abstimmung)
+
+**O47 ist abgeschlossen** (§59.10: kein weiterer Holdout aus freien Daten).
+
+**Vorschlag E-124:**
+1. **Mail-Schalter `season_ampel_aktiv` einschalten.** Die Stufenwechsel-Mail mit ihrer Handlung ist gebaut: *Vorlauf* → erste kleine Tranche · *Season-Klima* → L aufbauen · *Überhitzung/Ende* → kein Neuaufbau. Gestützt ist das so:
+   - Season-Klima ging in **beiden** Zyklen mit Season einher (2019–26 30 %, 2017/18 76 % der Wochen);
+   - *kalt* fast nie (1,6 % / 0 %);
+   - im Absturz 2018 blieb die Ampel ruhig.
+2. **Vorbehalt in Mail, Statusseite und GUI neu fassen:** statt *„kalibriert auf einem Zyklus (2020/21)“* nun *„geprüft an zwei Zyklen (2017/18 außerhalb der Kalibrierung, 2020/21); trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab“*.
+3. **§36.4 K4 berichtigen:** Vorlauf vor 2020-04 nur 28 T. Bei vollständigen Stablecoins trägt B3 vor 2021 nichts Eigenes bei.
+
+**Am NB:** Es ändert sich der Schalter in `Basisinfos/regel0_betrieb.yaml` plus der Vorbehalt-Text. Ein Pull genügt. Heute steht die Ampel auf *ungewohnt*, eine Mail käme erst beim nächsten Wechsel in eine Stufe mit Handlung.

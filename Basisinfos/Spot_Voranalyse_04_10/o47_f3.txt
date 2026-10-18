@@ -1,0 +1,34 @@
+O47 FASSUNG 3 (F3) · Messplan §59.10 (vorab 82a0bd9a) · A1 nur Auskunft, Entscheid am Holdout
+
+A1 TOR · 2019-04..2026-06 · 377 Sonntage · Wahrheit = Wochenkorb (o47_schritt1.csv), Season-Wochen 5.8 %
+   K2: 0 von 3: 105 So, Season 1.0 % (Lift 0.16) · 1 von 3: 103 So, Season 2.9 % (Lift 0.50) · 2 von 3: 110 So, Season 2.7 % (Lift 0.47) · 3 von 3: 59 So, Season 25.4 % (Lift 4.36)
+   Ordnung 0 < 1 < 2 < 3: NEIN · Lift 3 von 3 = 4.36 (>= 2) -> A1 STOPP
+   (Auskunft, dieselben Fragen im Kalibrierungszeitraum; Ruhe = Baerenmarkt 2021-06..2023-06)
+   H1 Episode 2020-12-20..2021-03-28 (98 T): Vorlauf 0 · Season-Klima 96 · Ueberhitzung 17 Tage im Fenster -> ERFUELLT (erster Tag -65 T zum Start)
+   H2 Season-Klima an 10.4 % der Ruhe-Tage (<= 10 %) · Bloecke >= 30 T: 2021-08-26..2021-11-12 -> ohne Season danach: 0
+   (A1 ist in F3 nur Auskunft und entscheidet nicht)
+
+A2 HOLDOUT · 2017-01-01..2019-03-31 · Wochenkorb 118 Sonntage (Season-Wochen 30 = 25.4 %) · Ausfaelle 73 von 7750 Coin-Wochen (0.94 %), davon mit CoinMetrics-Kurs 7, -100 % 66
+   Season-Episoden: 2017-01-01..2017-05-21 (140 T) · 2017-10-08..2017-12-17 (70 T) (davon >= 28 T: 2)
+   geltende Stufe (Wechsel): 2017-01-01 ungewohnt · 2017-01-06 Season-Klima · 2017-03-29 Ende · 2017-04-13 Ueberhitzung · 2017-08-19 Season-Klima · 2017-12-12 Ende · 2018-03-12 kalt
+   H1 Episode 2017-01-01..2017-05-21 (140 T): Vorlauf 17 · Season-Klima 26 · Ueberhitzung 0 Tage im Fenster -> ERFUELLT (erster Tag -92 T zum Start)
+   H1 Episode 2017-10-08..2017-12-17 (70 T): Vorlauf 0 · Season-Klima 81 · Ueberhitzung 70 Tage im Fenster -> ERFUELLT (erster Tag -50 T zum Start)
+   H2 Season-Klima an 0.0 % der Ruhe-Tage (<= 10 %) · Bloecke >= 30 T: keine -> ohne Season danach: 0
+   H3 (Auskunft) K2 an 118 Sonntagen: 0 von 3: 28 So, Season 0.0 % · 1 von 3: 31 So, Season 0.0 % · 2 von 3: 12 So, Season 25.0 % · 3 von 3: 47 So, Season 57.4 %
+
+   Lage der Bedingungen (Auskunft) 30 T vor und am Start jeder Episode: 2017-01-01: B1 +34/+63 % · B2 +7.3/+7.2 % · B3 +0/+43 % | 2017-10-08: B1 +55/+84 % · B2 +5.5/+5.3 % · B3 +190/+82 %
+   Gegenrechnung Ausfall 0 %: Season-Wochen 32, Episoden >= 28 T 2017-01-01..2017-05-21 · 2017-10-08..2017-12-17 · H1 ja · H2 ja
+
+URTEIL A2 (vorab §59.7): TRAEGT
+
+H4 (Auskunft) Season-Anteil je geltender Stufe an 118 Holdout-Sonntagen (Basis 25.4 %):
+   Ende           15 So · Season  2 =  13.3 % [95 %: 3.7..37.9]
+   Season-Klima   29 So · Season 22 =  75.9 % [95 %: 57.9..87.8]
+   Ueberhitzung   18 So · Season  5 =  27.8 % [95 %: 12.5..50.9]
+   kalt           55 So · Season  0 =   0.0 % [95 %: 0.0..6.5]
+   ungewohnt       1 So · Season  1 = 100.0 % [95 %: 20.7..100.0]
+   -> Season-Klima + Ueberhitzung 57.4 % (47 So) gegen kalt 0.0 % (55 So): hoeher
+
+Auskunft: taeglicher CoinMetrics-Korb (Top 50 Marktwert) gegen den Wochenkorb, 2018-01..2019-03, 65 Sonntage: gleich 95.4 % · Season-Wochen CM 3, Wochenkorb 0
+
+URTEIL F3 (allein am Holdout, §59.7/§59.10): TRAEGT
