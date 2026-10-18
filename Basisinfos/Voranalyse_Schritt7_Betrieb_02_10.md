@@ -4090,3 +4090,68 @@ Beide sind behoben, bevor etwas ans NB ging.
   - Eine Register-Datei für Herausforderer und eine allgemeine Schatten-Auswertung im Messstand, mit *„entscheidbar ab ~N Tagen“*.
   - Erster Eintrag wäre der LLM-Prüfblock, dessen Daten schon fließen; ehrlich als *Auskunft, bis die MDE erreicht ist*.
 - **S2-C:** voller Bau mit mehreren Herausforderern (Schwellen- und Stufen-Varianten) im Schatten. Davon rate ich ab: viele Vergleiche mit wenig Aussicht, und Mehrfachtesten.
+
+### 23.71 LLM neu als Ausnahme- und Risikoprüfer (L-C): Voranalyse der Ereignisdaten 2025–26 (18.10.2026; `p64_lc_voranalyse.py`, `p64_gegenprobe.py` → `.txt`)
+
+**Nutzer 18.10.:**
+- *„ja L-C, Voranalyse Ereignisdaten 2025-26 starten“*;
+- zuvor: *„die LLM-Komponente sollte selbst neu dimensioniert sein oder werden, damit diese trägt“* · *„eine Lösung in 2 Jahren ist keine“*.
+
+**L-C heißt:** Der LLM beurteilt nicht mehr, ob die Gegenbewegung trägt. Dieselben Zahlen wie die Regel geben dafür zu wenig her (Ursache 3, §23.52). Er fragt: **„Gibt es einen Grund, der genau diesen Handel gefährlich macht?“**, aus Information, die die Zahlen nicht sehen.
+- ⇒ Er muss im **Rückspiel** auf 2025–26 prüfbar sein (Tage, nicht Jahre). Dafür braucht es Ereignisse mit **Veröffentlichungszeit vor dem Einstieg**.
+- ⚠️ In diesem Schritt wird **kein** Ereignis gegen ein Ergebnis gerechnet. Das bleibt der vorab festgelegten Messung.
+
+**Bestand:**
+- Ereignisquellen-Inventar 07.10. (§23.22).
+- E-1 (§23.23): Strukturierte Binance-Ereignisse brauchen **keinen LLM** und sind als Fakt messbar. SCHWER trug nach der Vorabregel nicht; Token-Delisting war am linken Ende deutlich (Verlust ≥ 10 % +15 bis +33 Pp), aber mit 17–24 Fällen zu selten.
+
+**T0 Zielgröße: das linke Ende** (REGEL0-Einstiege 2025–26):
+
+| | bestand | unverzerrt_1 |
+|---|---|---|
+| 24-h-Ertrag ≤ −10 % | 146 (1,74 %), 77 Tage | 196 (2,15 %), 93 Tage |
+| **Tief binnen 24 h ≤ −10 %** | **319 (3,79 %), 136 Tage, 112 Assets** | **398 (4,36 %), 159 Tage, 124 Assets** |
+| Tief binnen 24 h ≤ −20 % (Liquidation bei 5x) | 34 (0,40 %), 22 Tage | 56 (0,61 %), 27 Tage |
+| auf den 21 gehandelten: Tief ≤ −10 % | 29 von 1.352 (2,14 %) | 18 von 710 (2,54 %) |
+
+⇒ **Tief ≤ −10 %** ist häufig genug für eine Messung. ≤ −20 % ist zu selten (22–27 Tage).
+
+**T1 Strukturierte Ereignisse 2025–26:**
+- **Binance:** 1.009 Ereignisse (paar_entfernt 548, margin 301, futures_delist 57, token_delist 52, monitoring 51). Nur **2,1–2,4 %** der Einstiege haben eines in den 7 T davor.
+- **DefiLlama-Hacks:** 446 Vorfälle, nur tagesgenau, Protokollnamen. Nur 7 tragen den Namen eines der 21 gehandelten Assets, und das teils nur zum Schein („QuantMaster“, „Bitcoin Mission“).
+- ⇒ Selten und ohne LLM messbar. **Kein Feld für L-C.**
+
+**T2 Textarchive** (hier hätte der LLM einen eigenen Vorteil):
+
+| Quelle | Ergebnis |
+|---|---|
+| GDELT DOC 2.0 | weiter gedrosselt (429) |
+| CryptoCompare-News (Archiv nach Zeit) | **Schlüssel nötig** (401). Ein kostenfreier Schlüssel müsste vom Nutzer selbst angelegt werden |
+| **Wayback-Archiv der RSS-Feeds** | ✔ **kostenfrei, ohne Schlüssel, echte Veröffentlichungszeit:** CoinDesk an **478 Tagen** 2025–26 (41.913 Aufnahmen), Cointelegraph an 299 Tagen; je Aufnahme 25–30 Meldungen. Stichproben: 6 bzw. 12 Meldungen nennen eines der 21 Assets |
+
+**Gegenprobe** (zweite Wege) **5/5**:
+- G1: 478 Tage ohne Zusammenfassung gezählt, kein Monat ausgefallen;
+- G2: in 150 Meldungen aus 6 Aufnahmen **kein** Veröffentlichungszeitpunkt nach der Aufnahme, also kein Vorgriff;
+- G4: Binance-Anteil per merge_asof gleich (176);
+- G5: Zielgröße per rolling gleich (319).
+
+Auskunft G3: Je Aufnahme reichen die Meldungen im Median 24–58 h zurück. Es gibt 37 Lücken über 2 T, die größte 19 T.
+
+⚠️ **Eigene Fehler, vor der Bewertung behoben:**
+- Die erste Fassung der Gegenprobe stieß an die Abfrage-Obergrenze von 20.000. Danach ließ sie bei abgewiesenen Verbindungen (Drosselung) still Monate aus.
+- Sie fragt jetzt monatsweise mit Wartezeiten ab und weist Ausfälle aus.
+
+**Was daraus folgt (fachlich, meine Einordnung):**
+1. **L-C ist im Rückspiel grundsätzlich prüfbar.** Es gibt ein kostenfreies Nachrichtenarchiv 2025–26 mit Veröffentlichungszeit ohne Vorgriff. Die Lösung muss also nicht erst vorwärts wachsen.
+2. **Offen und entscheidend ist die Abdeckung:** Die Schlagzeilen nennen vor allem große Coins. Das linke Ende verteilt sich auf 112–124 Assets, viele klein. Werden sie in den 7 T vor dem Einstieg überhaupt genannt? Wenn nicht, kann auch ein starker LLM nichts finden.
+3. **Kontamination** muss der Messplan auffangen: Ein Modell, das 2025er-Nachrichten liest, kann den Ausgang aus seinem Training kennen. Gegenmittel, je vorab festzulegen:
+   - Namen in den Meldungen anonymisieren;
+   - Zeitraum nach dem Wissensstand des Modells;
+   - beides im Vergleich.
+4. **Weitere Quellen:** CryptoCompare/CoinDesk-Data mit kostenfreiem Schlüssel hätte ein lückenloses Archiv; dafür müsstest du selbst ein Konto anlegen. GDELT später erneut prüfen.
+
+**Nächster Schritt (eine Frage zur Abstimmung):** **Vorprüfung Nennungsabdeckung.**
+- Das Wayback-Archiv beider Feeds 2025–26 einmal laden: Titel, Veröffentlichungszeit, Link, gedrosselt, Ablage `data/_lc/`.
+- Den REGEL0-Assets zuordnen (Kürzel und Name).
+- Zählen, wie viele Einstiege und wie viele **Tief-≤-−10-%-Einstiege** in den 7 T davor eine Meldung zum Asset haben.
+- Wieder kein Ergebnisvergleich. Erst danach ein Messplan für das LLM-Rückspiel.

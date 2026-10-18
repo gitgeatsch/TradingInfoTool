@@ -1,0 +1,9 @@
+P64 GEGENPROBE
+
+  OK    G1 CoinDesk-Aufnahmetage ohne collapse gleich p64 (478), kein Monat ausgefallen  (41913 Aufnahmen an 478 Tagen, ausgefallene Monate keine)
+  OK    G2 kein pubDate nach dem Aufnahmezeitpunkt (6 Aufnahmen)  (150 Meldungen, nach der Aufnahme 0)
+  G3 groesste Luecke zwischen zwei Aufnahmetagen: 19 T (Auskunft) · eine Aufnahme reicht im Median 58 h zurueck · Tage mit Luecke > 2 T: 37
+  OK    G4 Binance 7 T davor (merge_asof) gleich p64 (176)  (176 von 8408)
+  OK    G5 Tief 24 h <= -10 % (rolling) gleich p64 (319 von 8408)  (319 von 8408)
+
+5 Pruefungen, ALLE BESTANDEN

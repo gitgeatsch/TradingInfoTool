@@ -1,0 +1,27 @@
+P64 L-C VORANALYSE · Ereignisdaten 2025-26 · nur Datenlage, keine Ereignis-Ergebnis-Rechnung
+
+T0 ZIELGROESSE: linkes Ende der REGEL0-Einstiege 2025-26
+   bestand       24 h <= -10 %                         146 von  8408 Einstiegen (1.74 %) an  77 Tagen,  84 Assets
+   bestand       Tief 24 h <= -10 %                    319 von  8408 Einstiegen (3.79 %) an 136 Tagen, 112 Assets
+   bestand       Tief 24 h <= -20 % (5x-Liquidation)    34 von  8408 Einstiegen (0.40 %) an  22 Tagen,  28 Assets
+   bestand       gehandelte 21: Tief 24 h <= -10 %: 29 von 1352 (2.14 %)
+   unverzerrt_1  24 h <= -10 %                         196 von  9124 Einstiegen (2.15 %) an  93 Tagen,  98 Assets
+   unverzerrt_1  Tief 24 h <= -10 %                    398 von  9124 Einstiegen (4.36 %) an 159 Tagen, 124 Assets
+   unverzerrt_1  Tief 24 h <= -20 % (5x-Liquidation)    56 von  9124 Einstiegen (0.61 %) an  27 Tagen,  42 Assets
+   unverzerrt_1  gehandelte 21: Tief 24 h <= -10 %: 18 von 710 (2.54 %)
+
+T1 STRUKTURIERTE EREIGNISSE 2025-26
+   Binance (E-1, geladen bis 2026-10-01): 2025-26 1009 Ereignisse · je Art {'paar_entfernt': np.int64(548), 'margin': np.int64(301), 'futures_delist': np.int64(57), 'token_delist': np.int64(52), 'monitoring': np.int64(51)}
+   DefiLlama-Hacks: Abruf 200 · 2025-26: 446 Vorfaelle (Tag, Protokollname) · groesste: Bybit 2025-02-21, Bitget 2026-09-24, Liquid Network 2026-09-06, Drift Trade 2026-04-01, Kelp 2026-04-18
+   davon mit Namen eines der 21 gehandelten Assets im Protokollnamen: 7 (QuantMaster, Quant, Hyperliquid Malaysia, Verus-Ethereum Bridge, Bitcoin Mission, NEAR Intents, Verus-Ethereum Bridge)
+   Umlaufmenge (CoinGecko, P22): Tabellen ['umlaufmenge', 'abruf_symbol', '_quelle']
+   bestand       Einstiege mit Binance-Ereignis (jede Art) in den 7 T davor: 176 von 8408 (2.09 %)
+   unverzerrt_1  Einstiege mit Binance-Ereignis (jede Art) in den 7 T davor: 214 von 9124 (2.35 %)
+
+T2 TEXTARCHIVE (die eigentliche LLM-Frage: unstrukturierter Text mit Veroeffentlichungszeit, 2025-26)
+   GDELT DOC 2.0 'solana' 01.-07.03.2025: Abruf 429 · Artikel None
+   CryptoCompare-News lTs=07.03.2025: Abruf 401 · None
+   Wayback Cointelegraph RSS 2025-26: Abruf 200 · Tage mit Aufnahme 299 (20250113 .. 20261013)
+      Stichprobe 20260117: 30 Meldungen mit pubDate (Fri, 16 Jan 2026 06:14:25 +0000 .. Fri, 16 Jan 2026 22:07:45 +0000), davon 12 nennen eines der 21 Assets
+   Wayback CoinDesk RSS 2025-26: Abruf 200 · Tage mit Aufnahme 478 (20250101 .. 20261016)
+      Stichprobe 20251207: 25 Meldungen mit pubDate (Fri, 05 Dec 2025 15:07:51 +0000 .. Sat, 06 Dec 2025 22:56:32 +0000), davon 6 nennen eines der 21 Assets

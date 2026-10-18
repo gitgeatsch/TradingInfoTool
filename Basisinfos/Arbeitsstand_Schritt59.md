@@ -6,7 +6,8 @@
 
 **Stand 18.10.2026 (nachmittags) – HIER ANFANGEN:**
 - ✔ NB auf c2736201 (Diagnose 13:11): E-124 wirksam, K-SP-6 Teilbeleg (Log 19.10. 07:30). ✔ O47 abgeschlossen (Spot §59).
-- ✔ **O21 Stufe 2 Voranalyse** (Schritt7 §23.70): Ein Schatten entscheidet nur große Unterschiede (Filter ≥ 0,25–0,5 Pp, Ausstieg/neuer Einstieg ≥ 0,5–1 Pp in ein bis zwei Jahren). ➤ **Vorschlag S2-A** zur Abstimmung: Regel statt Bau, weiter auf der Messbasis (O13 REGEL1, H14).
+- ✔ **O21 Stufe 2 Voranalyse** (Schritt7 §23.70): Ein Schatten entscheidet nur große Unterschiede (Filter ≥ 0,25–0,5 Pp, Ausstieg/neuer Einstieg ≥ 0,5–1 Pp in ein bis zwei Jahren). O21 Stufe 2 **zurückgestellt** (Nutzer: erst die LLM-Komponente neu dimensionieren, keine 2-Jahres-Lösung).
+- ✔ **L-C Voranalyse** (Schritt7 §23.71): Ziel Tief 24 h ≤ −10 % (3,8–4,4 % der Einstiege); strukturierte Ereignisse nur ~2 %, ohne LLM; **kostenfreies Nachrichtenarchiv 2025–26** (Wayback RSS, ohne Vorgriff, Gegenprobe 5/5). ➤ **Frage:** Vorprüfung Nennungsabdeckung.
 
 **Stand 18.10.2026 (Diagnose 07:35, E1–E3 am NB) – HIER ANFANGEN:**
 - ✔ **NB auf 02aeff17** (Neustart 07:19, keine Job-Fehler): **E3 wirkt** – BTC *„seit 217 h offen · eigene Entscheidung“*. **K-HF-W1 erfüllt**. K-HD-1 offen für E1/E2 (erster E2-Fall am 19.10. gegen 23 Uhr).
