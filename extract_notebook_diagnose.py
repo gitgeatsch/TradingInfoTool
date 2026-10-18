@@ -3053,6 +3053,7 @@ def _season_ampel() -> dict:
         from agent import spot_abbau as _AB
         from agent import regel0_nachlader as _NL
         d = _SA.uebersicht()
+        d["schalter_mail"] = __import__("agent.regel0_groesse", fromlist=["x"]).season_ampel_aktiv()   # E-124 (18.10.2026), K-SP-6
         d["kandidaten"] = _AB.kandidaten(_NL.DATEN_VORGABE)
         p = os.path.join(_NL.DATEN_VORGABE, _SA.ABLAGE)
         if os.path.exists(p):
