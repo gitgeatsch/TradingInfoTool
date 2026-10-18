@@ -7242,3 +7242,49 @@ Festgelegt **vor** dem ersten Lauf (dieser Commit). Die Daten sind schon geladen
 - *teilweise* / *trägt nicht* / A1 Stopp → Fakt-Anzeige, Fassung n+1 nur mit neuer Ursache;
 - ⚠️ Benannt vorab: B3 hatte 2016/17 einen winzigen Sockel, und das Geld kam 2017 über ETH/ICOs. Ein Fehlschlag kann daran liegen.
 
+### 59.8 Ergebnis Fassung 2 (F2-A): A1 STOPP — der Holdout bleibt ungesehen (18.10.2026; `o47_f2a.py`, `o47_f2a_gegenprobe.py` → `.txt`)
+
+**A1 Tor** (2019-04 bis 2026-06, 377 Sonntage, Wahrheit = Wochenkorb aus Schritt 1, Season-Wochen 5,8 %):
+
+| Stand | Sonntage | Season-Wochen | Anteil [95 %] | Lift |
+|---|---|---|---|---|
+| 0 von 3 | 105 | 1 | 1,0 % [0,2–5,2] | 0,16 |
+| 1 von 3 | 103 | 3 | **2,9 %** [1,0–8,2] | 0,50 |
+| 2 von 3 | 110 | 3 | **2,7 %** [0,9–7,7] | 0,47 |
+| 3 von 3 | 59 | 15 | **25,4 %** [16,1–37,8] | **4,36** |
+
+- **Urteil (vorab: 0 < 1 < 2 < 3 und Lift 3/3 ≥ 2): STOPP.** Die Ordnung bricht zwischen 1 und 2 von 3, bei einem Gleichstand von je 3 Season-Wochen. Der Lift bei 3 von 3 ist mit 4,36 höher als in der Kalibrierung (3,45).
+- **Der Holdout 2017/18 ist nicht gerechnet** und bleibt ungesehen.
+- **Gegenprobe** (zweiter Weg aus den Rohspalten) **3/3**: Stand an 377 von 377 Sonntagen gleich, dieselben Zahlen, derselbe Bruch.
+
+**Auskunft (ändert das Urteil nicht):**
+- **Was die Ampel meldet, sind Stufen, nicht der Stand.** Je geltender Stufe:
+
+  | Stufe | Sonntage | Season-Anteil | Lift |
+  |---|---|---|---|
+  | Season-Klima | 43 | **30,2 %** | **5,2** |
+  | Vorlauf | 19 | 15,8 % | 2,7 |
+  | Überhitzung | 21 | 9,5 % | 1,6 |
+  | kalt | 245 | 1,6 % | 0,28 |
+  | Ende | 49 | 0 % | 0 |
+
+  Der Stand 1 von 3 und 2 von 3 fällt in der Ampel ohnehin meist unter *kalt*.
+- **H1/H2 im Kalibrierungszeitraum:**
+  - H1 erfüllt für die große Season 2020-12 (Season-Klima ab 65 T vor dem Wochenkorb-Start).
+  - H2 würde **knapp reißen**: Season-Klima an **10,4 %** der Bärenmarkt-Tage 2021-06 bis 2023-06, gefordert sind ≤ 10 %. Ursache ist der bekannte Fehlalarm der Spätphase 2021-08 bis 2021-11 (§36.4 K5).
+  - ⇒ Die Ruhe-Hürde des Holdouts wäre schon in der Stichprobe nicht sicher erfüllt.
+
+**Einordnung:**
+- Das Tor hat an einem **Stellvertreter** entschieden (Ordnung über den Stand). Den nutzt die Ampel selbst nicht, und er bricht an einem Gleichstand von 3 gegen 3 Wochen.
+- Die Stufen, die die Ampel tatsächlich meldet, ordnen gegen die neue Wahrheit deutlich.
+- Das ist ein **Befund über die Prüfregel**, keiner über die Ampel. Er darf das Urteil nachträglich nicht ändern.
+
+### 59.9 Vorschlag (zur Abstimmung)
+
+**F3 (mit Ursachenbegründung):** Das Tor A1 fällt als Bedingung weg. A1 ist ohnehin eine Stichprobe, und ein dort gewähltes Tor wäre nach Sicht der Zahlen gewählt. Es bleibt Auskunft (§59.8). Entschieden wird **allein am Holdout**, der weiter ungesehen ist, mit den Fragen aus §59.7 (H1, H2, H3) und einer Ergänzung, festgelegt **vor** dem Lauf:
+- **H4:** Season-Anteil *Season-Klima* höher als *kalt*, Auskunft mit Intervall. Die Ampel meldet Stufen, also wird die Stufe geprüft.
+- ⚠️ **Offen benannt:** H2 (≤ 10 %) wäre schon in der Stichprobe mit 10,4 % knapp gerissen. Die Hürde bleibt trotzdem wie vorab, keine Nachjustierung. Fällt H2 im Holdout, ist das kein Zufall, sondern dieselbe bekannte Spätphasen-Schwäche.
+
+**F2-C:** O47 beenden. Die Ampel bleibt Fakt-Anzeige, die Mail bleibt aus. §36.4 K4 wird mit Schritt 0 berichtigt.
+
+**Meine Empfehlung: F3.** Der Holdout ist der eigentliche Nachweis, und er ist noch unberührt. Ein weiterer Stopp an einem Stellvertreter brächte keine neue Erkenntnis.

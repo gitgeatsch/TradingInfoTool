@@ -1,0 +1,10 @@
+O47 FASSUNG 2 (F2-A) · Messplan §59.7 (vorab 02dae307)
+
+A1 TOR · 2019-04..2026-06 · 377 Sonntage · Wahrheit = Wochenkorb (o47_schritt1.csv), Season-Wochen 5.8 %
+   K2: 0 von 3: 105 So, Season 1.0 % (Lift 0.16) · 1 von 3: 103 So, Season 2.9 % (Lift 0.50) · 2 von 3: 110 So, Season 2.7 % (Lift 0.47) · 3 von 3: 59 So, Season 25.4 % (Lift 4.36)
+   Ordnung 0 < 1 < 2 < 3: NEIN · Lift 3 von 3 = 4.36 (>= 2) -> A1 STOPP
+   (Auskunft, dieselben Fragen im Kalibrierungszeitraum; Ruhe = Baerenmarkt 2021-06..2023-06)
+   H1 Episode 2020-12-20..2021-03-28 (98 T): Vorlauf 0 · Season-Klima 96 · Ueberhitzung 17 Tage im Fenster -> ERFUELLT (erster Tag -65 T zum Start)
+   H2 Season-Klima an 10.4 % der Ruhe-Tage (<= 10 %) · Bloecke >= 30 T: 2021-08-26..2021-11-12 -> ohne Season danach: 0
+
+URTEIL: A1 STOPP - die eingefrorene Ampel ordnet gegen die Wochenkorb-Wahrheit nicht. Holdout NICHT gerechnet (bleibt ungesehen).
