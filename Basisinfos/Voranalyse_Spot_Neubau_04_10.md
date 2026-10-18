@@ -7288,3 +7288,19 @@ Festgelegt **vor** dem ersten Lauf (dieser Commit). Die Daten sind schon geladen
 **F2-C:** O47 beenden. Die Ampel bleibt Fakt-Anzeige, die Mail bleibt aus. §36.4 K4 wird mit Schritt 0 berichtigt.
 
 **Meine Empfehlung: F3.** Der Holdout ist der eigentliche Nachweis, und er ist noch unberührt. Ein weiterer Stopp an einem Stellvertreter brächte keine neue Erkenntnis.
+
+### 59.10 Messplan Fassung 3 (F3) — VORAB festgelegt (18.10.2026, Nutzer: *„ja F3, prüfen, gegenprüfen und doku“*)
+
+Festgelegt **vor** dem ersten Lauf auf dem Holdout (dieser Commit). Auf 2017/18 ist bis hierher **nichts** gerechnet.
+
+- **A1** (2019–2026) wird mitgerechnet, aber **nur als Auskunft** (§59.8). Es entscheidet nicht.
+- **A2 Holdout** genau wie §59.7: Zeitraum, Daten, Wahrheit (Wochenkorb), eingefrorene Ampel, H1, H2, H3, Urteilsregel *trägt / teilweise / trägt nicht / nur Ruhe geprüft*. **Keine** Änderung an den Hürden; H2 bleibt bei ≤ 10 %, obwohl es in der Stichprobe 10,4 % wären.
+- **Neu H4 (Auskunft mit 95-%-Intervall, kein Urteilsteil):** an den Holdout-Sonntagen der Season-Anteil je **geltender Stufe**, und zwar ob *Season-Klima* (mit *Überhitzung*) höher liegt als *kalt*.
+- **Auskunft wie §59.7:**
+  - Gegenrechnung Ausfall 0 %;
+  - Ausfälle mit und ohne CoinMetrics-Kurs;
+  - Lage der Bedingungen vor jeder Episode;
+  - **täglicher CoinMetrics-Korb** (Top 50 nach Marktwert, ohne BTC und Stablecoins, gleich gewichtet, monatlich neu, 90 T ≥ 25 Pp) von 2018-01 bis 2019-03 gegen den Wochenkorb an denselben Sonntagen.
+- **Gegenprobe:** zweiter Weg für die Holdout-Ampel (B1/B2/B3 per asof aus den Rohquellen, Stufe aus dem Wortlaut, Haltezeit als Zähler, Breite neu) und für die Holdout-Wahrheit (Langformat). Verglichen werden die Stufe je Tag, die Wahrheit je Sonntag und H1/H2.
+- **Folge:** *trägt* → Vorschlag, die Ampel-Mail einzuschalten (Nutzer-Ja). Sonst bleibt die Ampel Fakt-Anzeige. **O47 endet dann**, denn ein weiterer Holdout aus freien Daten ist nicht vorhanden (2013/14 hat zu wenige Coins, §49.4).
+
