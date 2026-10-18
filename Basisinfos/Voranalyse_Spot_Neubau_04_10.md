@@ -7066,3 +7066,73 @@ Nutzer 15.10.: *„Ja, Variante B bauen, prüfen und gegenprüfen.“*
 - Die **Regeln** sind unverändert. Gemessen ist der Ausstieg aus dem Coin in Dollar; ob der Erlös in Fiat oder in EURCV landet, ändert die Messung nicht. Eine steuerliche Aussage machen die Mails nicht.
 - **Geprüft:** Prüfstände P14 10/10, P16 12/12, P18 13/13 neu gelaufen (P14 liest den Betreff – an den neuen Wortlaut angepasst); Suite SpotMitnahme 9, SpotUpbit 8, SpotAbbau 11, Mailabschnitte, Lesbar grün.
 - **Am NB:** wirkt mit dem nächsten Pull. Kontrolle **K-SP-5** (nächste Spot-Mail mit neuem Wortlaut, Ereignis).
+
+## 59. Voranalyse O47: Season-Ampel Fassung 2, Holdout 2017/18 (18.10.2026; `o47_voranalyse.py`, `o47_gegenprobe.py` → `.txt`)
+
+**Nutzer 18.10.:** *„ja, O47 Holdout Voranalyse starten“*.
+
+**Wozu:** Die Ampel ist auf **einem** Zyklus kalibriert (§36.4: Leave-one-out bricht). Ihre Mail beim Stufenwechsel (eine Handlung: *Vorlauf* → erste kleine Tranche, *Season-Klima* → L aufbauen) ist gebaut, ihr Schalter `season_ampel_aktiv` bleibt aber **aus, bis O47 Schritt 2 vorliegt** (§49.4, §49.6). O47 entscheidet also, ob die Ampel je etwas auslösen darf. §50 hatte vorgeschlagen, O47 zurückzustellen. Danach hat der Bau von P19 den Schalter an O47 gebunden, und die Reihenfolge Punkt 1–3 hast du angenommen.
+
+⚠️ **Der Holdout bleibt ungesehen:** Diese Voranalyse rechnet auf 2017/18 weder die Ampel noch die Wahrheit. Sie prüft nur die Datenlage. Sonst wäre der Messplan nicht mehr vorab.
+
+### 59.1 Datenlage (alle Quellen frei)
+
+| | Ergebnis |
+|---|---|
+| **V1 CoinMetrics Community** | 1.138 Assets mit Tageskurs; vor 2017-01: **23**, vor 2017-10: **59**, vor 2019-01: 123; mit Marktwert vor 2017-10: 42 |
+| **V2 Grundgesamtheit** (CMC-Top-50 ohne BTC/Stablecoins: wie viel hat CoinMetrics?) | 2017-01: **17 von 50** (88 % des Marktwerts) · 2017-10: **30** (91 %) · 2018-01-07: 34 (93 %) · 2018-06: 41 (94 %) · 2019-01: 42 (97 %). Es fehlen u. a. IOTA, Bitconnect, Bytecoin, Stratis, Ark, Komodo, NANO, VeChain, also zum Teil genau die später **toten** Coins |
+| **V4 Korb aus CoinMetrics** | Alts mit Kurs **und** Marktwert: 2016-10 **13** · 2017-07 19 · 2017-10 39 · 2018-01 53. **15 von 34 Monaten unter 50** |
+| **G3 CMC-Wochenaufnahmen** (`coinmarketcap.com/historical/JJJJMMTT/`) | lückenlos wöchentlich, je **200 Coins mit Kurs, Marktwert und Umsatz**, auch 2016/17, **auch die später toten** |
+| **V5 B1 / B2** | BTC-Kurs (CoinMetrics) 912 Tage ohne Lücke · M2SL (FRED) 2015-06 bis 2019-03 vollständig |
+
+⇒ **Ein Korb nur aus CoinMetrics ist für 2017 nicht tragfähig:** zu wenige Coins, und er ist überlebensverzerrt (Regel *Grundgesamtheit keine Stellschraube*). Er würde die Alts 2017/18 zu gut aussehen lassen, weil die gescheiterten fehlen. Die CMC-Wochenaufnahmen haben diesen Fehler nicht, und sie haben einen **Umsatz**. Der Korb lässt sich also nach Umsatz bilden wie S1.
+
+### 59.2 Neu: Die Stablecoin-Reihe der Kalibrierung ist 2019/20 unvollständig
+
+| Stichtag | DefiLlama Summe | CoinMetrics Summe | darin USDT (CM) | DefiLlama USDT einzeln |
+|---|---|---|---|---|
+| 2019-04-01 | 0,62 Mrd | 3,29 Mrd | 2,58 Mrd | **0,06 Mrd** |
+| 2019-10-01 | 2,95 Mrd | 5,35 Mrd | 4,24 Mrd | 2,08 Mrd |
+| 2020-04-01 | 5,50 Mrd | 8,34 Mrd | 6,74 Mrd | 4,28 Mrd |
+| 2020-10-01 | 19,22 Mrd | 20,52 Mrd | 15,92 Mrd | 14,43 Mrd |
+| 2021-04-01 | 62,76 Mrd | 63,79 Mrd | 43,74 Mrd | 42,21 Mrd |
+
+- **Ursache (Gegenprobe G1, dritter Weg):** DefiLlama erfasst USDT auf Ethereum ab 11/2017 und auf Tron ab 04/2019, auf **Omni erst ab 05/2022**. Auf Omni lief USDT bis 2019 fast ganz. Die frühe DefiLlama-Reihe wächst deshalb zum Teil, **weil Ketten dazukommen**, nicht weil Geld zufließt.
+- **B3 (91 T > 10 %) je Jahr** (G2):
+  - 2019: CM an 76 %, DL an 95 % der Tage (gleich an 81 %);
+  - 2020: CM 82 %, DL 100 % (gleich 82 %);
+  - 2021–2023 gleich bis auf wenige Tage;
+  - 2024: gleich 90 %, 2025: gleich 80 %.
+- **Umgekehrt** fehlen CoinMetrics ab 2024 neuere Stablecoins (Verhältnis CM/DL 2025 0,89, 2026 0,87). **Keine Quelle ist überall vollständig.**
+- **Für den Betrieb heute ändert das nichts:** Die Ampel rechnet live mit DefiLlama, und das ist seit 2021 vollständig für die USDT-Ketten. Die Lücke 2024+ liegt bei CoinMetrics.
+- ⚠️ **Für die Kalibrierung schon:** Der *Vorlauf* 2020 („Stablecoins 574 T vor dem Start an“, §36.4 K4) und das Muster *nur Geld* stützen sich auf B3 2019/20, also genau auf den unvollständigen Teil. Ob die Einteilung §36.5 auf einer vollständigen Reihe hält, ist **nicht** gemessen. Das gehört vor den Holdout (Schritt 0), denn der Holdout muss mit derselben Art Reihe rechnen wie die Kalibrierung, die er prüft.
+
+### 59.3 Was die Datenlage schon über den Holdout verrät (ohne Ampel, ohne Wahrheit)
+
+- **B3 hatte 2016/17 einen winzigen Sockel:** 7 Mio USD (10/2016), 820 Mio (12/2017), 3,2 Mrd (12/2018). Eine 91-T-Rate über 10 % ist bei diesem Wachstum fast selbstverständlich. Im Holdout wird B3 deshalb kaum trennen.
+- **2017 kam das Geld anders herein:** ICOs liefen über ETH, nicht über Stablecoins. Fällt der Holdout durch, kann das an dieser Strukturverschiebung liegen. Das wird dann so benannt (§49.4), und es ist eine Erklärung, keine Messung.
+
+### 59.4 Messplan O47 Fassung 1 — Vorschlag, wird nach deinem Ja VORAB festgelegt
+
+| Schritt | Frage | Festlegung | Urteil (zweiseitig, vorab) |
+|---|---|---|---|
+| **0 B3-Quelle** | Hält die Einteilung §36.5 auf einer vollständigen Stablecoin-Reihe? | B3 = CoinMetrics-Summe bis 2020-12-31, ab 2021-01-01 DefiLlama, **verkettet** am Übergangstag (die 91-T-Rate bleibt stetig); Schwellen, Stufen, Haltezeit 7 T **unverändert**; Zeitraum wie §36.4 (2019-04 bis 2026-06) | *hält*: Stufe an ≥ 95 % der Tage gleich **und** die Ordnung von K2 (Season-Anteil steigt von 0 bis 3 von 3) bleibt · *verschiebt sich*: sonst. **Beides wird berichtet**, der Holdout läuft so oder so mit den eingefrorenen Schwellen |
+| **1 Brücke Korb** | Findet ein Korb aus den CMC-Wochenaufnahmen dieselben Seasons wie S1? | Top 50 nach Umsatz (Mittel der letzten 4 Wochen ≈ 30 T), ohne BTC und Stablecoins, gleich gewichtet, monatlich neu; Wochenrenditen von Sonntag zu Sonntag; Wahrheit = Korb schlägt BTC in den folgenden **13 Wochen** um ≥ 25 Pp; Zeitraum 2019-04 bis 2026-06, verglichen an denselben Sonntagen mit S1 | **zulässig**: Season ja/nein gleich an ≥ 90 % der Sonntage **und** beide großen S1-Episoden (2020-04, 2020-11) mit einer Korb-Episode, Start ± 4 Wochen **und** keine zusätzliche Episode ≥ 4 Wochen außerhalb ± 30 T · sonst **unzulässig**: Stopp, kein Holdout, Fassung n+1 |
+| | fällt ein Coin binnen einer Woche aus den Top 200 | Rendite aus CoinMetrics, wenn vorhanden, sonst **−100 %** (vorsichtig) | Anteil ausgewiesen; Gegenrechnung mit 0 % |
+| **2 Holdout** 2017-01 bis 2019-03 | Erkennt die **eingefrorene** Ampel die Season 2017/18 vorab, und bleibt sie im Absturz ruhig? | B1 BTC 91 T (CoinMetrics) · B2 M2 J/J +35 T (FRED) · B3 CoinMetrics-Summe · Breite aus dem Wochenkorb · Stufen §36.5 · Haltezeit 7 T · Ende-Regel 90 T; Wahrheit wie Schritt 1 (Kurse bis 2019-06) | **H1 Vorlauf:** je Holdout-Episode ≥ 4 Wochen war *Vorlauf* oder *Season-Klima* in [Start − 120 T, Start + 30 T] geltend · **H2 Ruhe:** 2018-02 bis 2019-03 *Season-Klima* an ≤ 10 % der Tage und kein Block ≥ 30 T ohne Season in den folgenden 90 T · **H3** (Auskunft) Season-Anteil je Stand 0–3 |
+| | | | **trägt**: H1 in jeder Episode **und** H2 · **teilweise**: eines davon · **trägt nicht**: keines · ohne Episode ≥ 4 Wochen: *nur Ruhe geprüft* (H2 allein) |
+| **3** | Leave-one-cycle-out | erst nach Schritt 2, mit zwei Zyklen | – |
+| **Gegenprobe** | zweiter Weg je Schritt | Schritt 0: eigene Zustandsmaschine (wie `p19_bau_gegenprobe` G2); Schritt 1/2: Wahrheit zusätzlich aus einem **täglichen** CoinMetrics-Korb, wo ≥ 50 Coins da sind (2018-01 bis 2019-03), als Auskunft über die Wochenkörnung | – |
+
+**Folge:**
+- *trägt* → Vorschlag, den Mail-Schalter `season_ampel_aktiv` einzuschalten. Das entscheidest du.
+- *teilweise* oder *trägt nicht* → die Ampel bleibt **Fakt-Anzeige**, und Fassung n+1 wird mit Ursachenbegründung abgestimmt (Regel *Hypothesen nicht starr*).
+- Schritt 0 gilt unabhängig davon: *Verschiebt sich* die Einteilung, wird §36.5 mit der vollständigen Reihe neu ausgewiesen und vorgelegt, nicht still ersetzt.
+
+**Aufwand:** etwa 510 Wochenseiten (2016-10 bis 2026-07, mit 2 s Pause rund 30 Minuten, einmalig, Ablage `data/_spot/o47_cm.db`), dann Rechnung am Desktop, nur lesend. Das NB ist nicht betroffen.
+
+**Fachliche Festlegungen (meine, nicht zur Wahl):**
+- Wochenkorb nach **Umsatz**, weil S1 nach Umsatz rangt (die Brücke prüft genau das).
+- 13 Wochen statt 90 T, weil die Körnung wöchentlich ist.
+- −100 % für Coins ohne Folgekurs, weil das Gegenteil (0 %) die Alts schönrechnet.
+- Die Verkettung bei 2021-01-01, weil dort beide Reihen bis auf 1 % gleich sind.

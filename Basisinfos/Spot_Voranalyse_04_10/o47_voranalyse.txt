@@ -1,0 +1,25 @@
+O47 VORANALYSE Season-Ampel Holdout 2017/18 · nur Datenlage (Ampel und Wahrheit auf dem Holdout NICHT gerechnet)
+
+V1 KATALOG CoinMetrics Community (1d): 1138 Assets mit PriceUSD · vor 2017-01: 23 · vor 2017-10: 59 · vor 2019-01: 123
+   davon mit Marktwert (CapMrktCurUSD) vor 2017-10: 42
+
+V2 GRUNDGESAMTHEIT: CMC-Top-50 ohne BTC und Stablecoins - wie viel davon hat CoinMetrics (Kurs bis zum Stichtag)?
+   2017-01-01: 17 von 50 · Marktwert-Anteil 88 % · fehlen u. a.: ICN, FCT, DGD, GAME, EDC, SCN, ARDR, XAUR, NLG, SDC, STRAT, NEO, GNT, EMC, SJCX, NXT, IOC, SNGLS, PPC, LMC, RBY, XCP, YBC, SYS, BCY
+   2017-10-01: 30 von 50 · Marktwert-Anteil 91 % · fehlen u. a.: MIOTA, BCC, STRAT, PAY, ARK, HC, BCN, BAT, SALT, KMD, ARDR, MTL, PIVX, DGD, FCT, GAME, GBYTE, VERI, ICN, BTCD
+   2018-01-07: 34 von 50 · Marktwert-Anteil 93 % · fehlen u. a.: MIOTA, NANO, BCN, BCC, DCN, KCS, STRAT, VEN, KMD, HC, KIN, ETN, VGX, VERI, ARK, XP
+   2018-06-03: 41 von 50 · Marktwert-Anteil 94 % · fehlen u. a.: MIOTA, VEN, BCN, NANO, RHOC, WAN, BTCP, STRAT, HC
+   2019-01-06: 42 von 50 · Marktwert-Anteil 97 % · fehlen u. a.: MIOTA, BCN, NANO, R, STRAT, KMD, BCZERO, NPXS
+
+V3 STABLECOINS: CoinMetrics SplyCur (Summe usdt/usdc/pax/tusd/gusd/busd/dai/husd/usdk/sai) gegen DefiLlama peggedUSD
+   Erster Wert CoinMetrics-Summe: 2014-10-06 (0 Mio USD) · im Holdout-Beginn 2016-10: 7 Mio · 2017-12: 820 Mio · 2018-12: 3225 Mio
+   2019-04..heute: Verhaeltnis CM/DL Median 0.989 (5 %: 0.866, 95 %: 2.113) · B3 (91 T > 10 %) gleich an 2431 von 2666 Tagen (91.2 %) · 91-T-Rate Abweichung Median 2.52 Pp, 95 % 50.88 Pp
+   Anteil USDT an der CM-Summe: 2017-12 100 % · 2018-12 80 %
+
+V4 KORB-TAUGLICHKEIT 2016-10..2019-03 (CoinMetrics-Alts ohne BTC und Stablecoins, mit Kurs UND Marktwert am Monatsersten)
+   2016-10 13 · 2017-01 15 · 2017-04 16 · 2017-07 19 · 2017-10 39 · 2018-01 53 · 2018-04 55 · 2018-07 55 · 2018-10 58 · 2019-01 62 · 2019-04 66 · 2019-07 64
+   Monate mit < 50 Alts: 15 von 34 (erster Monat mit >= 50: 2018-01)
+   ⚠️ Kein Boersenumsatz in der Community-Schnittstelle -> Korb nach MARKTWERT (Bruecke V-B noetig, s. Messplan)
+
+V5 B1 / B2 ueber den Holdout
+   BTC PriceUSD: 912 Tage, Luecken 0
+   M2SL (FRED, monatlich): 46 Monate 2015-06-01..2019-03-01, fehlend 0

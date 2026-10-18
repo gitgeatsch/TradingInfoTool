@@ -1,0 +1,28 @@
+O47 GEGENPROBE der Voranalyse (Holdout nicht beruehrt)
+
+G1 USDT einzeln, DefiLlama ab 2017-11-29 · Ketten frueh erfasst: Ethereum 2017-11-29, Tron 2019-04-16, Polygon 2020-09-28, BSC 2020-11-11 · Omni erfasst: 2022-05-12
+   2017-12-01  DefiLlama-USDT   0.00 Mrd · CoinMetrics usdt   0.82 Mrd
+   2018-06-01  DefiLlama-USDT   0.06 Mrd · CoinMetrics usdt   2.83 Mrd
+   2019-04-01  DefiLlama-USDT   0.06 Mrd · CoinMetrics usdt   2.58 Mrd
+   2019-10-01  DefiLlama-USDT   2.08 Mrd · CoinMetrics usdt   4.24 Mrd
+   2020-04-01  DefiLlama-USDT   4.28 Mrd · CoinMetrics usdt   6.74 Mrd
+   2020-10-01  DefiLlama-USDT  14.43 Mrd · CoinMetrics usdt  15.92 Mrd
+   2021-04-01  DefiLlama-USDT  42.21 Mrd · CoinMetrics usdt  43.74 Mrd
+
+G2 B3 (91 T > 10 %) je Jahr: CoinMetrics-Summe gegen DefiLlama-Summe
+   2019  gleich  81.1 % · an CM  76.4 % · an DL  95.3 % · Verhaeltnis CM/DL Median 2.11
+   2020  gleich  81.7 % · an CM  81.7 % · an DL 100.0 % · Verhaeltnis CM/DL Median 1.06
+   2021  gleich 100.0 % · an CM 100.0 % · an DL 100.0 % · Verhaeltnis CM/DL Median 0.99
+   2022  gleich  95.6 % · an CM  24.7 % · an DL  29.0 % · Verhaeltnis CM/DL Median 0.99
+   2023  gleich 100.0 % · an CM   0.0 % · an DL   0.0 % · Verhaeltnis CM/DL Median 1.03
+   2024  gleich  89.9 % · an CM  29.5 % · an DL  39.6 % · Verhaeltnis CM/DL Median 0.94
+   2025  gleich  80.0 % · an CM  51.0 % · an DL  67.1 % · Verhaeltnis CM/DL Median 0.89
+   2026  gleich 100.0 % · an CM   0.0 % · an DL   0.0 % · Verhaeltnis CM/DL Median 0.87
+
+G3 CMC-Wochenaufnahmen
+   20161002  200 Coins, mit Umsatz 200, mit Marktwert 200
+   20170507  200 Coins, mit Umsatz 200, mit Marktwert 200
+   20170514  200 Coins, mit Umsatz 200, mit Marktwert 200
+   20170521  200 Coins, mit Umsatz 200, mit Marktwert 200
+   20190407  200 Coins, mit Umsatz 200, mit Marktwert 200
+   20230604  200 Coins, mit Umsatz 200, mit Marktwert 200
