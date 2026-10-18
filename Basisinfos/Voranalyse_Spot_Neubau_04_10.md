@@ -7112,7 +7112,12 @@ Nutzer 15.10.: *„Ja, Variante B bauen, prüfen und gegenprüfen.“*
 - **B3 hatte 2016/17 einen winzigen Sockel:** 7 Mio USD (10/2016), 820 Mio (12/2017), 3,2 Mrd (12/2018). Eine 91-T-Rate über 10 % ist bei diesem Wachstum fast selbstverständlich. Im Holdout wird B3 deshalb kaum trennen.
 - **2017 kam das Geld anders herein:** ICOs liefen über ETH, nicht über Stablecoins. Fällt der Holdout durch, kann das an dieser Strukturverschiebung liegen. Das wird dann so benannt (§49.4), und es ist eine Erklärung, keine Messung.
 
-### 59.4 Messplan O47 Fassung 1 — Vorschlag, wird nach deinem Ja VORAB festgelegt
+### 59.4 Messplan O47 Fassung 1 — VORAB festgelegt (18.10.2026, Nutzer: *„ja, Messplan so festlegen, Schritt 0 und 1 starten, prüfen und gegenprüfen“*)
+
+Festgelegt **vor** dem ersten Lauf von Schritt 0 und 1 (dieser Commit). Ergänzungen, die sich aus der Umsetzung ergeben, stehen in §59.5 und sind dort als solche gekennzeichnet.
+- **Schritt 0, Bezug:** Verglichen wird die geltende Stufe aus den **eingefrorenen** Spalten der Kalibrierung (`am_kalibrierung.csv`, R-R11 wie P19 Teil 0) mit derselben Rechnung, in der nur B3 durch die verkettete Reihe ersetzt ist. Zur Trennung von Revision und Quelle läuft DefiLlama frisch als dritte Fassung mit (Auskunft).
+- **Schritt 1, Rangliste:** Die Wochenaufnahme enthält die Top 200 nach Marktwert. Der Umsatz-Rang wird **innerhalb** dieser 200 gebildet; Coins werden über die CMC-**ID** geführt, nicht über das Kürzel (Kürzel sind nicht eindeutig). Stablecoins: Kürzelliste und Wochenrendite im Median betragsmäßig < 0,5 %.
+
 
 | Schritt | Frage | Festlegung | Urteil (zweiseitig, vorab) |
 |---|---|---|---|
