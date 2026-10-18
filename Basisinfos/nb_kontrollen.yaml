@@ -349,8 +349,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach dem Neustart: 'Hebelfuehrung: 1 offen · BTC HALTEN Abstand ~25 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH'; keine Mail 'LIQUIDATION NAHE ETH' mehr; Statusseite Hebel: ETH 'LAUT BITPANDA GESCHLOSSEN', BTC mit Grund 'Gespeicherte Position weicht von Bitpanda ab (Wallet 0.01141097 ...)'"
     faellig_bis: "2026-10-18"
-    status: offen
-    teilbeleg: "Diagnose 16.10. 07:43 (NB auf b343806b, keine lokalen Aenderungen, Neustart 07:36 ohne Fehler): Log 07:36:56 'Hebelfuehrung: 1 offen · BTC HALTEN Abstand 24.9 % · laut Bitpanda geschlossen (gespeicherte Position veraltet): ETH · gemeldet 0' - wie im Pruefstand (24,8 %). Offen: bis 18.10. keine Mail 'LIQUIDATION NAHE ETH' mehr; Statusseite ETH 'LAUT BITPANDA GESCHLOSSEN' (Nutzerblick)"
+    status: erfuellt
+    erfuellt_am: "2026-10-18"
+    beleg: "Diagnose 18.10. 07:35 (NB auf 02aeff17): letzte Mail LIQUIDATION NAHE ETH 16.10. 05:42, danach keine; seit P11b (16.10. abends) jede Hebelfuehrung '1 offen · BTC HALTEN Abstand ~24 % · gemeldet 0', hebel_positions offen nur BTC 0,01141097 (= Wallet). Die erwartete Zeile 'laut Bitpanda geschlossen: ETH' erscheint nicht mehr, weil P11b die Positionen aus dem Buch fuehrt und ETH dort geschlossen ist - das Ziel (keine ETH-Meldung, BTC mit Wallet-Menge) ist erreicht"
   - id: K-HB-1
     titel: "P11b Hebel-Buch: erster Lauf stellt um (alte Zeilen gesichert), danach Wallet-Abgleich ok"
     seit: "2026-10-16"
@@ -371,6 +372,7 @@ kontrollen:
     nachweis: "sofort nach Pull+Neustart: Diagnose hebelfuehrung[].haltedauer_text fuer BTC 'seit ~2xx h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)', Statusseite Hebel-Karte mit derselben Zeile, keine Job-Fehler (hebel_screening, regel0_mails); als Ereignis: naechste REGEL0-Ausstiegserinnerung mit 'Fakt: Gemessen auf den REGEL0-Einstiegen 2025-26' und ohne 'O13'; eine 72-h-Erinnerung nur, wenn eine REGEL0-Position nach 72 h noch offen ist (sonst erinnerung72_entfallen_am mit Grund)"
     faellig_bis: "2026-11-30"
     status: offen
+    teilbeleg: "Diagnose 18.10. 07:35 (NB auf 02aeff17, Neustart 07:19): E3 ERFUELLT - paket_b.hebelfuehrung BTC haltedauer_text 'seit 217 h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)' (09.10. 04:38 UTC + 217 h = Diagnosezeit), Hebelfuehrung 07:19/07:34 ok, keine Job-Fehler seit 17.10. 18:20, REGEL0-Laeufe 07:25 ok. Offen als Ereignis: E1 (naechste 24-h-Erinnerung mit Fakt) und E2 - erster Kandidat ist die Erinnerung vom 17.10. 23:09 (Einstieg 16.10. ~20:00 UTC): am 19.10. gegen 23 Uhr entweder 72-h-Mail oder erinnerung72_entfallen mit Grund"
   - id: K-SP-5
     titel: "Spot-Mails B1/B3/B4: Wortlaut 'verkaufen oder in EURCV tauschen'"
     seit: "2026-10-17"
