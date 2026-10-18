@@ -377,7 +377,7 @@ kontrollen:
     titel: "E-124: Season-Ampel-Mail eingeschaltet, Vorbehalt 'zwei Zyklen'"
     seit: "2026-10-18"
     paket: SeasonAmpel
-    commit: ""
+    commit: ff11b775
     art: manuell
     nachweis: "sofort nach Pull+Neustart: Log 'Season-Ampel: ok · Stufe ungewohnt ... · gemailt nein' OHNE '(Schalter aus - nur Anzeige)'; KEINE Season-Ampel-Mail (einzige Meldung ist die Startmarke ungewohnt vom 17.10.); Statusseite Schalter 'Season-Ampel (C1) - Mail beim Stufenwechsel: an', Untertitel 'gepr\u00fcft an zwei Zyklen'; Diagnose season_ampel.zeile mit 'zwei Zyklen'; Teilexport 'SEASON-AMPEL (C1): Schalter AN'. Als Ereignis: beim naechsten Wechsel der geltenden Stufe in Vorlauf/Season-Klima/Ueberhitzung/Ende genau EINE Mail 'Season-Ampel <Stufe> - <Handlung>'"
     faellig_bis: "2026-10-25"
