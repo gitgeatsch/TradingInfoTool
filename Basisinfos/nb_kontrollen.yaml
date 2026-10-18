@@ -366,7 +366,7 @@ kontrollen:
     titel: "E1-E3: Haltedauer je Hebelposition (Diagnose/Statusseite), Fakt in der 24-h-Erinnerung, einmalige 72-h-Erinnerung"
     seit: "2026-10-18"
     paket: Haltedauer
-    commit: ""
+    commit: 57d545f9
     art: manuell
     nachweis: "sofort nach Pull+Neustart: Diagnose hebelfuehrung[].haltedauer_text fuer BTC 'seit ~2xx h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)', Statusseite Hebel-Karte mit derselben Zeile, keine Job-Fehler (hebel_screening, regel0_mails); als Ereignis: naechste REGEL0-Ausstiegserinnerung mit 'Fakt: Gemessen auf den REGEL0-Einstiegen 2025-26' und ohne 'O13'; eine 72-h-Erinnerung nur, wenn eine REGEL0-Position nach 72 h noch offen ist (sonst erinnerung72_entfallen_am mit Grund)"
     faellig_bis: "2026-11-30"
