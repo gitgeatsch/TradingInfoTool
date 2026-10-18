@@ -373,6 +373,15 @@ kontrollen:
     faellig_bis: "2026-11-30"
     status: offen
     teilbeleg: "Diagnose 18.10. 07:35 (NB auf 02aeff17, Neustart 07:19): E3 ERFUELLT - paket_b.hebelfuehrung BTC haltedauer_text 'seit 217 h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)' (09.10. 04:38 UTC + 217 h = Diagnosezeit), Hebelfuehrung 07:19/07:34 ok, keine Job-Fehler seit 17.10. 18:20, REGEL0-Laeufe 07:25 ok. Offen als Ereignis: E1 (naechste 24-h-Erinnerung mit Fakt) und E2 - erster Kandidat ist die Erinnerung vom 17.10. 23:09 (Einstieg 16.10. ~20:00 UTC): am 19.10. gegen 23 Uhr entweder 72-h-Mail oder erinnerung72_entfallen mit Grund"
+  - id: K-SP-6
+    titel: "E-124: Season-Ampel-Mail eingeschaltet, Vorbehalt 'zwei Zyklen'"
+    seit: "2026-10-18"
+    paket: SeasonAmpel
+    commit: ""
+    art: manuell
+    nachweis: "sofort nach Pull+Neustart: Log 'Season-Ampel: ok · Stufe ungewohnt ... · gemailt nein' OHNE '(Schalter aus - nur Anzeige)'; KEINE Season-Ampel-Mail (einzige Meldung ist die Startmarke ungewohnt vom 17.10.); Statusseite Schalter 'Season-Ampel (C1) - Mail beim Stufenwechsel: an', Untertitel 'gepr\u00fcft an zwei Zyklen'; Diagnose season_ampel.zeile mit 'zwei Zyklen'; Teilexport 'SEASON-AMPEL (C1): Schalter AN'. Als Ereignis: beim naechsten Wechsel der geltenden Stufe in Vorlauf/Season-Klima/Ueberhitzung/Ende genau EINE Mail 'Season-Ampel <Stufe> - <Handlung>'"
+    faellig_bis: "2026-10-25"
+    status: offen
   - id: K-SP-5
     titel: "Spot-Mails B1/B3/B4: Wortlaut 'verkaufen oder in EURCV tauschen'"
     seit: "2026-10-17"

@@ -1475,3 +1475,21 @@ Nachweis: Spot §58; P14 10/10, P16 12/12, P18 13/13; K-SP-5.
 - Zuordnung wie `trades()`, sekundengenau.
 
 Nachweis: Schritt7 §23.69; `e123_pruefstand.txt` 39/39, `e123_gegenprobe.txt` 15/15 (echte NB-Kopien); Paket Haltedauer; K-HD-1.
+
+# E-124 · Season-Ampel: Mail beim Stufenwechsel eingeschaltet, Vorbehalt „zwei Zyklen“ (18.10.2026)
+
+**18.10.2026** · Nutzer: *„ja E-124 umsetzen“*, nach O47 (Spot §59).
+
+**Grundlage:** Der Holdout 2017/18 trägt (Season-Klima 76 % Season-Wochen, kalt 0 %, Ruhe im Absturz 2018). Einschränkungen:
+- Der Beginn wird nicht genau vorab erkannt (2016/17: 19 T danach).
+- Die Trennung kommt vor allem aus dem Regime.
+- B3 trägt vor 2021 nichts Eigenes bei.
+
+**Umgesetzt:**
+- Schalter `season_ampel_aktiv` an (`regel0_betrieb.yaml`).
+- Vorbehalt *„geprüft an zwei Zyklen (2017/18, 2020/21) – trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab“* in Zeile, Mail, Statusseite und Reiter.
+- §36.4 K4 berichtigt.
+
+**Nicht:** keine Ampel in den REGEL0-Mails (für den Hebel nicht messbar, §59.12).
+
+Nachweis: Spot §59.14; `p19_pruefstand.txt` 14/14, `p19_bau_gegenprobe.txt` 3/3; K-SP-6.

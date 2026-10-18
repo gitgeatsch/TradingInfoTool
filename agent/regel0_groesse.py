@@ -46,7 +46,7 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                # MAIL (Erstliste, danach nur Neue) nur mit Schalter. Vorgabe AUS: eingeschaltet nach K-SP-3 mit Nutzer-Ja (Muster B1/B3)
                spot_abbau_aktiv=False,
                # P19 Spot C1 (17.10.2026): Season-Ampel - die Anzeige (Statusseite, Reiter, Zeile in B1/B3/B4) laeuft immer, die MAIL beim
-               # Wechsel der geltenden Stufe nur mit Schalter. Vorgabe AUS: kalibriert auf einem Zyklus, eingeschaltet erst nach O47 Schritt 2
+               # Wechsel der geltenden Stufe nur mit Schalter. Vorgabe AUS (sicher); EINGESCHALTET in regel0_betrieb.yaml seit E-124 (18.10.2026)
                season_ampel_aktiv=False)
 
 

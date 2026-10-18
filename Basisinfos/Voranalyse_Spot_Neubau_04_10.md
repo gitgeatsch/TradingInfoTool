@@ -4311,6 +4311,7 @@ Zeitraum 2019-04 bis 2026-06: 2.639 Tage, davon 7,5 % Season-Tage, in 4 Episoden
   - Der Stand fiel erst im Mai 2021; die Breite am Ende lag bei 0,82.
 - **2020-04:** Stand 2 am Start (Geld an, BTC nach dem Corona-Crash noch schwach), BTC kam 58 T später dazu. Breite am Ende 0,60.
 - ⇒ ***Start Altseason (ca.)*** = **das Geld ist seit Monaten an, und BTC-Stärke kommt dazu** (Wechsel auf 3 von 3).
+- ⚠️ **BERICHTIGT 18.10.2026 (O47 Schritt 0, §59.5):** Mit vollständigen Stablecoins (DefiLlama fehlt vor 2020-10 die Omni-Kette) war B3 vor 2020-04 nur **28 T** an (nicht 357 T) und vor 2020-11 **244 T** (nicht 573 T). Der Vorlauf vor 2020-04 entstand erst nach dem Corona-Crash. *„Seit Monaten“* gilt nur für 2020-11.
 - ⇒ ***Ende*** = Breite ≥ 0,6–0,8 (Überhitzung). Danach kann 3 von 3 noch Monate an bleiben (2021-08 bis 11: Fehlalarm in der Spätphase).
 
 **K5 Fehlalarme (3/3 ≥ 14 T ohne Season):**
@@ -7359,3 +7360,27 @@ Festgelegt **vor** dem ersten Lauf auf dem Holdout (dieser Commit). Auf 2017/18 
 3. **§36.4 K4 berichtigen:** Vorlauf vor 2020-04 nur 28 T. Bei vollständigen Stablecoins trägt B3 vor 2021 nichts Eigenes bei.
 
 **Am NB:** Es ändert sich der Schalter in `Basisinfos/regel0_betrieb.yaml` plus der Vorbehalt-Text. Ein Pull genügt. Heute steht die Ampel auf *ungewohnt*, eine Mail käme erst beim nächsten Wechsel in eine Stufe mit Handlung.
+
+### 59.14 E-124 umgesetzt: Ampel-Mail eingeschaltet, Vorbehalt neu (18.10.2026, Nutzer: *„ja E-124 umsetzen, prüfen, gegenprüfen und doku“*)
+
+**Nutzer zugleich:** *„Die Ampel und die Stufen sollen einfach in den E-Mails, der Übersichtsseite und der GUI verfügbar sein – das ist bereits geplant, oder?“*
+Ja, das ist seit P19 (17.10.) gebaut: Zeile *Season-Ampel* in den Spot-Mails B1/B3/B4, Abschnitt *Krypto-Markt (Season-Ampel)* auf der Statusseite, Reiter *Markt (Krypto)* und *Spot* in der GUI. **Nicht** in den REGEL0-Mails (Hebel): dort ist die Ampel nicht messbar (§59.12).
+
+| Teil | Änderung |
+|---|---|
+| Schalter | `Basisinfos/regel0_betrieb.yaml` `season_ampel_aktiv: true`. Die Code-Vorgabe in `regel0_groesse.VORGABE` bleibt **aus** (sichere Rückfallstellung, falls der Eintrag fehlt) |
+| Vorbehalt | `season_ampel.VORBEHALT` = *„geprüft an zwei Zyklen (2017/18, 2020/21) – trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab“*: in der Zeile B1/B3/B4, in der Stufenwechsel-Mail, im Untertitel der Statusseite und im Reiter *Markt (Krypto)* (dort mit dem Schalter). Docstrings und Kommentare nachgezogen; *„einem Zyklus“* steht in keiner der drei Oberflächen mehr |
+| §36.4 K4 | berichtigt (Vorlauf vor 2020-04 nur 28 T) |
+| Mail | unverändert: nur beim Wechsel der **geltenden** Stufe in eine Stufe mit Handlung, genau einmal. Ein Wechsel aus der Zeit mit Schalter aus (vermerkt *ohne Mail*) wird **nicht** nachgeholt |
+
+**Geprüft:**
+- **P19-Prüfstand 14/14** (neu): S6 mit dem neuen Vorbehalt in der Mail, S11 Schalter an. Neu dazu:
+  - **S13**: Ein Vorlauf, der bei Schalter aus fällig war, löst nach dem Einschalten keine Mail aus.
+  - **S14**: Der echte Schalter aus der Datei ist an, die Code-Vorgabe aus, die Zeile trägt den neuen Vorbehalt.
+- **Ohne Seiteneffekt:** Wegwerf-Produktion, Betriebskopie und Desktop-Ablage sind unverändert.
+- **Gegenprobe:**
+  - P19-Bau-Gegenprobe 3/3 (eigener Nachbau, 52 Tagesläufe ohne Mail);
+  - **NB-Zustand aus der Diagnose 18.10.:** einzige Meldung ist die Startmarke *ungewohnt* vom 17.10. ⇒ Nach dem Pull ist nichts fällig, und es kommt **keine** Mail, bis die Ampel in *Vorlauf*, *Season-Klima*, *Überhitzung* oder *Ende* wechselt.
+- **Suite:** SeasonAmpel 8, Makro 5, GuiKette 60, SpotMitnahme 9, SpotUpbit 8, SpotAbbau 11, Mailabschnitte 18, NurLesend 22 grün.
+
+**Am NB:** Pull und Neustart. Kontrolle **K-SP-6**.

@@ -22405,7 +22405,7 @@ def paket_season_ampel() -> None:
 
     Nutzer 14.10.: *"Ja passt vorerst"* (Bauumfang §49.3) · 16.10.: *"hast du alles geprueft und gegengeprueft?"* (Stand-Pruefung §49.5).
     Geprueft: dieselbe Regel wie die Kalibrierung (R-R11), Haltezeit 7 T, Mail-Lage nur gegen die zuletzt GEMELDETE Stufe (Revisionen,
-    §49.5), Schalter Vorgabe AUS, Marktscan ruht (O43). Synthetisch und ohne Netz; der volle Pruefstand (p19_pruefstand.py, 12/12) und
+    §49.5), Schalter Vorgabe AUS (in regel0_betrieb.yaml seit E-124 AN), Marktscan ruht (O43). Synthetisch und ohne Netz; der volle Pruefstand (p19_pruefstand.py, 14/14) und
     die Gegenprobe (p19_bau_gegenprobe.py, 3/3) laufen gegen die NB-Sicherung bzw. live und stehen als .txt daneben."""
     P = "SeasonAmpel"
     import os as _os
@@ -22429,8 +22429,12 @@ def paket_season_ampel() -> None:
            and "def stufe(b1, b2, b3, breite, dreivon3_in_ende_t: bool) -> str:" in _qv and _SA.SCHWELLE == {"B1": 0.20, "B2": 0.05, "B3": 0.10}
            and _SA.HALTE_T == 7 and _SA.ENDE_T == 90)
     _qb, _qs, _qy = _quelltext("scheduler/background.py"), _quelltext("remote/server.py"), _quelltext("Basisinfos/regel0_betrieb.yaml")
-    pruefe(P, "Schalter season_ampel_aktiv Vorgabe AUS und in regel0_betrieb.yaml false (Mail erst nach O47 Schritt 2)",
-           _G.VORGABE["season_ampel_aktiv"] is False and "season_ampel_aktiv: false" in _qy and _G.season_ampel_aktiv() is False)
+    pruefe(P, "E-124 (18.10.2026): Schalter season_ampel_aktiv in regel0_betrieb.yaml AN (Holdout 2017/18 traegt), Code-Vorgabe bleibt AUS (sicher); "
+              "Vorbehalt 'zwei Zyklen ... Beginn nicht genau vorab' in Modul, Statusseite und Reiter, kein 'einem Zyklus' mehr",
+           _G.VORGABE["season_ampel_aktiv"] is False and "season_ampel_aktiv: true" in _qy and _G.season_ampel_aktiv() is True
+           and "zwei Zyklen" in __import__("agent.season_ampel", fromlist=["x"]).VORBEHALT and "Beginn nicht genau vorab" in _quelltext("remote/server.py")
+           and "zwei Zyklen" in _quelltext("ui/markt_tab.py")
+           and not any("einem Zyklus" in _quelltext(f) for f in ("agent/season_ampel.py", "remote/server.py", "ui/markt_tab.py")))
     pruefe(P, "Job season_ampel 07:30 mit Nachholer; B1/B3/B4 bekommen die Ampel-Zeile (3x); Statusseite: Abschnitt nach dem Makro-Umfeld, "
               "vor Betrieb & Lage; Schalter beschriftet",
            'id="season_ampel"' in _qb and '**_nachholen("season_ampel", 330, stunde=7, minute=30)' in _qb
@@ -22488,7 +22492,7 @@ def paket_season_ampel() -> None:
         __import__("wegwerf").aufraeumen(_T)
     _txt = {n: _quelltext(_os.path.join("Basisinfos", "Rechenkern_02_10", n)) for n in ("p19_pruefstand.txt", "p19_bau_gegenprobe.txt")}
     pruefe(P, "Belege: Pruefstand 12/12 gegen die NB-Sicherung, Gegenprobe 3/3 auf dem zweiten Weg (fredgraph.csv, eigener Code)",
-           "12 von 12 bestanden" in _txt["p19_pruefstand.txt"] and "3 von 3 gleich" in _txt["p19_bau_gegenprobe.txt"])
+           "14 von 14 bestanden" in _txt["p19_pruefstand.txt"] and "3 von 3 gleich" in _txt["p19_bau_gegenprobe.txt"])
 
 
 def paket_nachgeholt() -> None:

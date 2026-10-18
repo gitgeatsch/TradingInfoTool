@@ -173,6 +173,7 @@ pruefe("S4", d40["tag"]["stufe"] == "kalt" and d4["tag"]["stufe_roh"] == "Vorlau
            d40["tag"]["stufe"], d40["tag"]["stand"], d4["tag"]["stufe_roh"], d4["tag"]["stufe"], e4["faellig"]))
 POST = []
 SCH = {"an": False}
+_SCHALTER_ECHT = G.season_ampel_aktiv
 G.season_ampel_aktiv = lambda werte=None: SCH["an"]
 versand = lambda b, t, bi=None: POST.append((b, t)) or True                  # noqa: E731
 j5 = BG.season_ampel_job(cf, versand=versand, heute=HEUTE_V, ordner=O4, quellen=mit_b3(10))
@@ -197,7 +198,7 @@ jb = BG.season_ampel_job(cf, versand=versand2, heute=HEUTE_V, ordner=O6, quellen
 jc = BG.season_ampel_job(cf, versand=versand2, heute=HEUTE_V, ordner=O6, quellen=mit_b3(10))
 txt = POST[-1][1] if POST else ""
 pruefe("S6", n_fehl == 1 and not ja["gemailt"] and jb["gemailt"] and not jc["gemailt"] and len(POST) == 2 and meldungen(O6)[-1][1] == "gemailt"
-       and "Season-Ampel Vorlauf" in POST[-1][0] and "BTC 91 T" in txt and "Stablecoins 91 T" in txt and "kalibriert auf einem zyklus" in txt.lower()
+       and "Season-Ampel Vorlauf" in POST[-1][0] and "BTC 91 T" in txt and "Stablecoins 91 T" in txt and "zwei zyklen" in txt.lower() and "beginn nicht genau vorab" in txt.lower()
        and "L-Kandidaten bereit" in txt,
        "Versand scheitert: Versuche %d, gemailt %s · naechster Lauf gemailt %s · dritter %s · Mails gesamt %d · Betreff '%s'" % (
            n_fehl, ja["gemailt"], jb["gemailt"], jc["gemailt"], len(POST), POST[-1][0] if POST else "-"))
@@ -290,10 +291,24 @@ try:
 except Exception as ex:                                                       # noqa: BLE001
     tk_txt = "%s: %s" % (type(ex).__name__, ex)
 pruefe("S11", u["zustand"] == "ok" and u["stufe"] == "ungewohnt" and gs.get("stufe") == "ungewohnt"
-       and sch.get("season_ampel_aktiv") is False and 'id="ampel-kopf"' in html and len(zl) == 3 and tk_ok,
+       and sch.get("season_ampel_aktiv") is True and 'id="ampel-kopf"' in html and len(zl) == 3 and tk_ok,
        "uebersicht %s/%s · Statusseite %s · Schalter season_ampel_aktiv %s · Bedingungszeilen %d · Reiter: %s" % (
            u["zustand"], u.get("stufe"), gs.get("stufe"), sch.get("season_ampel_aktiv"), len(zl), tk_txt))
 c.close()
+
+# ── S13 / S14 (E-124, 18.10.2026): der Uebergang am NB - Schalter von aus auf an ────────────────────────────────────────────────
+POST.clear()
+SCH["an"] = True                                                              # O4: Vorlauf war faellig, mit Schalter aus 'ohne_mail' vermerkt (S5)
+j13 = BG.season_ampel_job(cf, versand=versand, heute=HEUTE_V, ordner=O4, quellen=mit_b3(10))
+pruefe("S13", not POST and not j13.get("faellig") and not j13.get("gemailt") and meldungen(O4)[-1][1] == "ohne_mail",
+       "nach dem Einschalten: faellig %s, gemailt %s, Mails %d, letzte Meldung %s (nicht nachgeholt)" % (
+           j13.get("faellig"), j13.get("gemailt"), len(POST), meldungen(O4)[-1]))
+SCH["an"] = False
+G.season_ampel_aktiv = _SCHALTER_ECHT                                         # der echte Schalter aus Basisinfos/regel0_betrieb.yaml
+z14 = SA.zeile(O, SA.lade(O), heute=HEUTE)
+pruefe("S14", G.season_ampel_aktiv() is True and G.VORGABE["season_ampel_aktiv"] is False and "zwei Zyklen" in z14
+       and "Beginn nicht genau vorab" in z14 and "einem Zyklus" not in z14,
+       "regel0_betrieb.yaml season_ampel_aktiv %s (Code-Vorgabe %s) · Zeile: '...%s'" % (G.season_ampel_aktiv(), G.VORGABE["season_ampel_aktiv"], z14[-110:]))
 
 # ── S12 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 pruefe("S12", summe(PROD) == vor_prod and summe(os.path.join(O, SA.KOPIE)) == vor_kopie and summe(DESK_ABLAGE) == vor_desk,

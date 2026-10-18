@@ -4567,7 +4567,7 @@ def season_ampel_job(conn_factory, versand=None, heute=None, ordner=None, http=N
 
     Schreibt NUR ``data/spot_betrieb.db`` (ampel_tag, ampel_lauf, ampel_meldung); liest Betriebskopie, B4-Stammsatz und die Produktion
     (Fear & Greed) nur. Abrufe: FRED (M2SL, WALCL, WTREGEN, RRPONTSYD ueber ``makro_lage.hole_reihe``) und DefiLlama (ganze Reihe).
-    MAIL nur mit Schalter ``season_ampel_aktiv`` (Vorgabe AUS bis O47 Schritt 2) und nur am Betriebsgeraet; je Wechsel der GELTENDEN
+    MAIL nur mit Schalter ``season_ampel_aktiv`` (seit E-124 an, regel0_betrieb.yaml) und nur am Betriebsgeraet; je Wechsel der GELTENDEN
     Stufe in eine Stufe mit Handlung genau einmal (vermerkt nur bei Zustellung). Mit Schalter aus wird der Wechsel protokolliert und
     NICHT nachgeholt. Scheitert nie nach aussen. ``versand``/``http``/``quellen`` (Pruefstand): Ersatz fuer Versand bzw. Abrufe."""
     aus = {"gelaufen": False}

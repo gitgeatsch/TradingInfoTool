@@ -15,8 +15,10 @@ Funktionen ``stand``/``muster``/``stufe``/``stufen``/``breite``/``taeglich`` hie
     Breite   Anteil der Top 50 (Umsatz 30 T bis zum Monatsersten, ohne BTC und Stablecoins) mit 90-T-Ertrag > BTC, >= 20 Coins
     Kontext  Netto-Liquiditaet 13 W (WALCL - WTREGEN - RRP), Fear & Greed - nur Anzeige
 
-⚠️ KALIBRIERT AUF EINEM ZYKLUS (2020/21, §49.4, O47). Darum: FAKT-Anzeige (Statusseite, Reiter Markt (Krypto), Zeile in B1/B3/B4);
-die MAIL bei einem Wechsel der geltenden Stufe ist gebaut, ihr Schalter ``season_ampel_aktiv`` bleibt AUS, bis O47 Schritt 2 vorliegt.
+⚠️ GEPRUEFT AN ZWEI ZYKLEN (E-124, 18.10.2026, Spot §59): kalibriert 2020/21, Holdout 2017/18 traegt (Season-Klima 76 % Season-Wochen,
+kalt 0 %, Ruhe im Absturz 2018); sie trennt Season-Phase und Baerenmarkt, den BEGINN erkennt sie nicht genau vorab (2016/17: 19 T danach).
+Anzeige: Statusseite, Reiter Markt (Krypto), Zeile in B1/B3/B4. MAIL bei einem Wechsel der geltenden Stufe in eine Stufe mit Handlung,
+Schalter ``season_ampel_aktiv`` (seit E-124 an; ein Wechsel aus der Zeit mit Schalter aus wird nicht nachgeholt).
 
 ⚠️ REVISIONEN (§49.5): DefiLlama aendert die Vergangenheit. Die Tageswerte werden je Lauf ganz neu gerechnet; ein Wechsel zaehlt nur
 gegen die zuletzt GEMELDETE Stufe (``ampel_meldung``), nie gegen eine neu gerechnete Vergangenheit. Die groesste Aenderung von B3
@@ -64,7 +66,7 @@ BEDEUTUNG = {
     "Ueberhitzung": "alle drei erfüllt und die Breite ist hoch",
     "Ende": "alle drei waren in den letzten 90 Tagen erfüllt, jetzt nicht mehr",
 }
-VORBEHALT = "kalibriert auf einem Zyklus (2020/21) – Fakt, löst nichts aus"
+VORBEHALT = "geprüft an zwei Zyklen (2017/18, 2020/21) – trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab"
 
 
 # ══ die Regel (DERSELBE Code wie p19_voranalyse; R-R11 im Pruefstand) ════════════════════════════════════════════════════════

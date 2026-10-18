@@ -821,7 +821,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 
 ### Stand 17.10.2026 — Season-Ampel als Fakt (P19)
 
-- **Season-Ampel** (Spot C1): Drei Bedingungen (BTC 91 T, Geldmenge M2, Stablecoin-Angebot) ergeben eine Stufe von *kalt* bis *Ende*. Du siehst sie oben auf der Statusseite unter dem Makro-Umfeld, als Zeile in den Spot-Mails B1/B3/B4 und im neuen GUI-Reiter *Markt (Krypto)*. Sie löst nichts aus; die Mail beim Stufenwechsel ist gebaut, aber aus, weil die Schwellen nur auf einem Zyklus belegt sind (O47).
+- **Season-Ampel** (Spot C1): Drei Bedingungen (BTC 91 T, Geldmenge M2, Stablecoin-Angebot) ergeben eine Stufe von *kalt* bis *Ende*. Du siehst sie oben auf der Statusseite unter dem Makro-Umfeld, als Zeile in den Spot-Mails B1/B3/B4 und im neuen GUI-Reiter *Markt (Krypto)*. **Seit 18.10. (E-124)** kommt beim Wechsel in eine Stufe mit Handlung (*Vorlauf*, *Season-Klima*, *Überhitzung/Ende*) eine Mail. Geprüft an zwei Zyklen; den Beginn einer Season erkennt sie nicht genau vorab.
 - **Einstiegs-Kandidaten** (A3): Reiter *Spot* und Statusseite zeigen das obere Fünftel je Klasse, bei Bitpanda handelbar. Die Liste ordnet den Fortbestand; ein Einstieg je Asset ist nicht belegt.
 - **Marktscan** der alten Kette ruht (O43).
 - **Haltedauer** (18.10., E1–E3): Ausstiegserinnerung mit gemessenem Fakt und Liquidationsnähe; eine zweite Erinnerung **einmal** nach 72 h, wenn die REGEL0-Position noch offen ist; die Hebelführung nennt je Position *seit n h offen (Regel 24 h)* oder *eigene Entscheidung*.

@@ -111,11 +111,11 @@ _INDEX_HTML = """<!doctype html>
   <details><summary class="muted-text">Kanäle K1&ndash;K9 (lang / kurz) und Datenstand</summary><div id="makro-kanaele"></div></details>
 </div>
 </div>
-<!-- P19 (17.10.2026, Spot §49): Season-Ampel als FAKT (kalibriert auf einem Zyklus), dazu die Einstiegs-Kandidaten aus B4 (A3) -->
+<!-- P19 (17.10.2026, Spot §49): Season-Ampel (E-124: geprueft an zwei Zyklen, Mail beim Stufenwechsel), dazu die Einstiegs-Kandidaten aus B4 (A3) -->
 <div class="section-header section-makro">
   <span class="section-badge">Markt</span>
   <span class="section-title">Krypto-Markt (Season-Ampel)</span>
-  <span class="section-sub">Fakt, löst nichts aus &ndash; kalibriert auf einem Zyklus</span>
+  <span class="section-sub">geprüft an zwei Zyklen &ndash; trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab</span>
 </div>
 <div class="section-group group-makro">
 <div class="card">

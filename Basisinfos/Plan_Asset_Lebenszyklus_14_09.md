@@ -1339,7 +1339,7 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 ### G-Z15 P19 – Reiter Spot und Markt (Krypto), Statusseite mit der Season-Ampel (17.10.2026)
 
 - **GUI:** Reiter **3 Spot** (Einstiegs-Kandidaten aus dem B4-Universum, mit der Ampel als Kopf) und **4 Markt (Krypto)** (Season-Ampel B1–B3 mit Wert, Schwelle, vor 30/90 T, Kontext, Grafik 12 Monate; darunter die Makro-Lage K1–K9) – wie das Zielbild G2. Sie stehen hinter *Hebel*; der alte Reiter *Regime* bleibt bis GUI-5 (Archiv).
-- **Statusseite:** Abschnitt *Krypto-Markt (Season-Ampel)* direkt unter dem Makro-Umfeld; Schalter *Season-Ampel (C1) – Mail beim Stufenwechsel* (aus).
+- **Statusseite:** Abschnitt *Krypto-Markt (Season-Ampel)* direkt unter dem Makro-Umfeld; Schalter *Season-Ampel (C1) – Mail beim Stufenwechsel* (aus, **an seit 18.10.**, E-124; Untertitel *„geprüft an zwei Zyklen …“*).
 - **Mails:** Zeile *Season-Ampel* in B1/B3/B4 (Fakt).
 - **Offen aus G2:** im Reiter *Spot* der Teil *Bestand führen* (B1-Fenster, B4-Fünftel) – steht heute im Reiter *Bestand*; mit GUI-Stufe 2.
 

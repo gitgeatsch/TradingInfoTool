@@ -2585,3 +2585,8 @@ Schritt7 §23.24.
 - Die Season-Wahrheit von S1 misst das Binance-Universum junger Listings.
 - Für den Hebel ist die Ampel nicht messbar (2024–26 immer *kalt*).
 - Details: Spot §59; Vorschlag E-124.
+
+**Nachtrag 18.10.2026 (51) — E-124 Season-Ampel-Mail eingeschaltet:**
+- Die Mail beim Stufenwechsel ist an. Der Vorbehalt lautet jetzt *„geprüft an zwei Zyklen, trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab“*.
+- Die Anzeige in den Spot-Mails, auf der Statusseite und in der GUI besteht seit P19.
+- Details: Spot §59.14.

@@ -30,7 +30,7 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 >
 > | Hier fehlt | Stand seit |
 > |---|---|
-> | Season-Ampel (Spot C1) | `agent/season_ampel.py`, Job `season_ampel` 07:30: Statusseite unter dem Makro-Umfeld, Zeile in B1/B3/B4, Reiter *Markt (Krypto)*; Mail-Schalter `season_ampel_aktiv` aus – **17.10.** |
+> | Season-Ampel (Spot C1) | `agent/season_ampel.py`, Job `season_ampel` 07:30: Statusseite unter dem Makro-Umfeld, Zeile in B1/B3/B4, Reiter *Markt (Krypto)*; Mail-Schalter `season_ampel_aktiv` aus – **17.10.** · **an seit 18.10.** (E-124, Holdout 2017/18 trägt) |
 > | Einstiegs-Kandidaten (A3) | B4 legt je Stichtag das ganze Universum ab (`abbau_universum`); Reiter *Spot*, Statusseite – ab Stichtag **02.11.** |
 > | Marktscan (alte Kette) | ruht (`marktscan.aktiv: false`, O43) – mit ihm Auto-Aufnahme MS-1, Marktscan-Mails, Erfolgsmessung und die Regime-Bestimmung der alten Kette – **17.10.** |
 > | REGEL0-Messstand (O21) | `agent/regel0_messstand.py`, Job 06:50: Ausgang je Signal (Tabelle `ausgang`), Zeile in der Signalmail, Statusseite – **17.10.** |

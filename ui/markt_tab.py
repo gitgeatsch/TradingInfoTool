@@ -36,7 +36,7 @@ AMPEL_TIPP = {
     "bedingung": "B1 BTC-Rendite 91 Tage (Binance, Betriebskopie) · B2 Geldmenge M2 gegen Vorjahr (FRED, 35 T Verzug) · "
                  "B3 Stablecoin-Angebot 91 Tage (DefiLlama, ganze Reihe je Lauf).",
     "wert": "Wert am letzten abgeschlossenen Tag (die laufende Tageskerze zählt nicht).",
-    "schwelle": "Schwelle aus der Kalibrierung (Spot §36.3) - auf einem Zyklus 2020/21 belegt (§49.4).",
+    "schwelle": "Schwelle aus der Kalibrierung (Spot §36.3, 2020/21) - eingefroren am Holdout 2017/18 geprüft (Spot §59, E-124).",
     "erfuellt": "✔ = Bedingung erfüllt. Die Zahl der erfüllten ist der Stand (0 bis 3).",
     "vor30": "Wert derselben Bedingung 30 Tage vorher.",
     "vor90": "Wert derselben Bedingung 90 Tage vorher.",
@@ -162,8 +162,8 @@ class MarktKryptoTab(_Basis):
         self.ampel_tree.pack(fill="x")
         self.kontext = ttk.Label(self, text="", foreground=theme.info_color())
         self.kontext.pack(anchor="w", pady=(4, 0))
-        self.vorbehalt = ttk.Label(self, text="⚠ Kalibriert auf einem Zyklus (2020/21) – Fakt, löst nichts aus. Mail beim Stufenwechsel "
-                                              "nur mit Schalter season_ampel_aktiv (aus bis O47 Schritt 2).",
+        self.vorbehalt = ttk.Label(self, text="⚠ Geprüft an zwei Zyklen (2017/18, 2020/21) – trennt Season-Phase und Bärenmarkt, erkennt den "
+                                              "Beginn nicht genau vorab. Mail beim Stufenwechsel mit Handlung (Schalter season_ampel_aktiv).",
                                    foreground=theme.info_color(), wraplength=1100, justify="left")
         self.vorbehalt.pack(anchor="w", pady=(2, 6))
         self.grafik = ttk.Frame(self)
