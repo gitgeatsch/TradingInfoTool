@@ -7212,3 +7212,33 @@ Festgelegt **vor** dem ersten Lauf von Schritt 0 und 1 (dieser Commit). Ergänzu
 Für alle drei gilt unabhängig davon:
 - **§36.4 K4 wird berichtigt.** Mit vollständigen Daten war der Vorlauf vor 2020-04 28 T, nicht mindestens 357 T.
 - Der Nebenbefund zu Fiat-Token in S1 wird als offener Punkt geführt.
+
+### 59.7 Messplan Fassung 2 (F2-A) — VORAB festgelegt (18.10.2026, Nutzer: *„ja F2-A, prüfen, gegenprüfen und doku“*)
+
+Festgelegt **vor** dem ersten Lauf (dieser Commit). Die Daten sind schon geladen (Schritt 1), auf dem Holdout ist noch **nichts** gerechnet.
+
+**Wahrheit, in beiden Zeiträumen gleich:** der Wochenkorb aus Schritt 1 (CMC, Top 50 nach Umsatz in den Top 200, ohne BTC und Stablecoins, ID-geführt, gleich gewichtet, monatlich neu, Ausfall wie §59.5). Season-Woche = Korb schlägt BTC in den folgenden 13 Wochen um ≥ 25 Pp. Episoden wie S1 (Lücken < 30 T verbunden). Die Korb-Episoden aus Schritt 1 gelten unverändert.
+
+**Ampel, eingefroren:**
+- Schwellen 20 / 5 / 10 %, Stufen §36.5, Haltezeit 7 T, Ende-Regel 90 T (`agent.season_ampel`);
+- B3 = verkettete Stablecoin-Reihe aus Schritt 0 (vor 2021 CoinMetrics);
+- **Breite** = Anteil der Korb-Coins mit 13-Wochen-Rendite über BTC (mindestens 20 mit beiden Kursen), aus den Wochenaufnahmen, bis zur nächsten Aufnahme fortgeschrieben. In beiden Zeiträumen gleich gebildet; sie trennt nur *Season-Klima* von *Überhitzung*.
+
+| Teil | Zeitraum | Daten | Frage | Urteil (vorab, zweiseitig) |
+|---|---|---|---|---|
+| **A1 Tor** | 2019-04 bis 2026-06, an den Sonntagen | B1/B2 aus `am_kalibrierung.csv` (eingefroren), B3 V | Ordnet die eingefrorene Ampel auch gegen die Wochenkorb-Wahrheit? | **besteht**: Season-Anteil steigt 0 < 1 < 2 < 3 von 3 **und** Lift bei 3 von 3 ≥ 2 · sonst **Stopp**: die Ampel ist an das Binance-Universum gebunden, kein Holdout |
+| **A2 Holdout** | 2017-01-01 bis 2019-03-31 (Ampel ab 2016-10 eingeschwungen) | B1 BTC 91 T (CoinMetrics PriceUSD) · B2 M2SL J/J, +35 T (FRED fredgraph.csv) · B3 CoinMetrics-Summe, +1 T | **H1 Vorlauf:** je Episode ≥ 28 T *Vorlauf* oder *Season-Klima* geltend an mindestens einem Tag in [Start − 120 T, Start + 30 T] · **H2 Ruhe:** 2018-02-01 bis 2019-03-31 *Season-Klima* geltend an ≤ 10 % der Tage **und** kein Block ≥ 30 T *Season-Klima* ohne Season-Woche in [Blockbeginn, Blockende + 90 T] · **H3** (Auskunft) Season-Anteil je Stand 0–3 an den Sonntagen | **trägt**: H1 in jeder Episode und H2 · **teilweise**: genau eines · **trägt nicht**: keines · ohne Episode ≥ 28 T: *nur Ruhe geprüft* |
+
+**Auskunft neben dem Urteil (ändert es nicht):**
+- Ausfälle im Holdout (Anteil, mit / ohne CoinMetrics-Kurs);
+- Gegenrechnung Ausfall 0 %;
+- Wahrheit aus einem **täglichen** CoinMetrics-Korb (Top 50 nach Marktwert), wo ≥ 50 Coins da sind (2018-01 bis 2019-03), als Probe der Wochenkörnung;
+- Lage jeder Bedingung vor jeder Episode.
+
+**Gegenprobe:** zweiter Weg für die Holdout-Ampel (Stufe aus dem Wortlaut, Haltezeit als Zähler, B1/B2/B3 per asof) und für die Holdout-Wahrheit (Langformat wie `o47_schritt1_gegenprobe`). A1 neu gezählt.
+
+**Folge:**
+- *trägt* → Vorschlag, den Mail-Schalter einzuschalten (Nutzer-Ja);
+- *teilweise* / *trägt nicht* / A1 Stopp → Fakt-Anzeige, Fassung n+1 nur mit neuer Ursache;
+- ⚠️ Benannt vorab: B3 hatte 2016/17 einen winzigen Sockel, und das Geld kam 2017 über ETH/ICOs. Ein Fehlschlag kann daran liegen.
+
