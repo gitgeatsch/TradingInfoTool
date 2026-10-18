@@ -7141,3 +7141,74 @@ Festgelegt **vor** dem ersten Lauf von Schritt 0 und 1 (dieser Commit). Ergänzu
 - 13 Wochen statt 90 T, weil die Körnung wöchentlich ist.
 - −100 % für Coins ohne Folgekurs, weil das Gegenteil (0 %) die Alts schönrechnet.
 - Die Verkettung bei 2021-01-01, weil dort beide Reihen bis auf 1 % gleich sind.
+
+### 59.5 Ergebnis Schritt 0 und 1 (18.10.2026; `o47_schritt0.py`, `o47_schritt1.py` + Gegenproben + `o47_schritt1_ursache.py` → `.txt`; Daten `o47_cmc_abruf.py`: 537 Sonntage 2016-07 bis 2026-10, je 200 Coins, 0 Fehler)
+
+**Umsetzungsfestlegungen** (nach dem Vorab-Commit 08f61223, **vor** der Bewertung, nicht am Ergebnis gewählt):
+- Ein Coin, der aus den Top 200 fällt, bekommt beim **ersten** Fehlen die CoinMetrics-Rendite oder −100 %. Danach zählt er bis zum Monatswechsel mit 0.
+- Der Wochenkorb beginnt mit dem Monat 2019-04. Der Umsatz für die April-Liste kommt aus den Aufnahmen ab März 2019. Der Holdout ist damit nicht berührt.
+
+**Schritt 0 — B3-Quelle: VERSCHIEBT SICH** (vorab: geltende Stufe ≥ 95 % gleich und Ordnung K2 bleibt)
+
+| | K (wie kalibriert) | DLf (DefiLlama frisch) | **V (vollständig verkettet)** |
+|---|---|---|---|
+| R-R11 Stand aus den eingefrorenen Spalten | 2.639 / 2.639 | – | – |
+| geltende Stufe gleich K | – | **100 %** (die Revision ändert nichts) | **93,7 %** (167 Tage anders, alle 2019-12 bis 2020-06) |
+| B3 an 2019 / 2020 | 96 % / 100 % | 96 % / 100 % | **76 % / 82 %** |
+| K2: Season-Anteil bei 0 / 1 / 2 / 3 von 3 | 1,2 / 3,8 / 6,3 / **26,0 %** | gleich | 1,2 / 3,3 / 7,1 / **26,9 %**, Ordnung **hält**, 3/3 etwas schärfer (Lift 3,56) |
+
+**Wo es kippt:**
+
+| Zeitraum | K | V | B3 K → V |
+|---|---|---|---|
+| 13.01.–12.03.2020 | Vorlauf | **kalt** | +48 % → **+3 %** |
+| 19.03.–22.06.2020 | Ende | **Vorlauf** | +73 % → +62 % |
+
+- **B3 durchgehend an vor dem Start:** 2020-04: K mindestens 357 T, **V 28 T**. 2020-11: K mindestens 573 T, **V 244 T**.
+- ⇒ Den monatelangen Vorlauf **vor** der Season 2020-04 gab es mit vollständigen Daten nicht. Das Geld floss erst **nach** dem Corona-Crash zu. Für die große Season 2020-11 bleibt der Vorlauf (Season-Klima 58 T vor dem Start, B3 seit 244 T).
+- Die **Einteilung** (Schwellen, Stufen) bleibt. Die **Erzählung** in §36.4 K4 (*„Stablecoins 574 T vorher an“*) ist für 2020-04 nicht haltbar und für 2020-11 zu lang.
+- **Betrieb heute:** unberührt (DefiLlama ist seit 2021 vollständig).
+- **Gegenprobe** (zweiter Weg: asof je Stablecoin, Stufe aus dem Wortlaut, Haltezeit als Zähler) **5/5**.
+- ⚠️ **Eigener Fehler, vor der Bewertung behoben:** Die erste Fassung rechnete die 91-T-Rate nur auf dem Zeitraum selbst, die ersten 91 Tage waren leer. Die Gegenprobe verglich deshalb nur 2.548 statt 2.639 Tage. Seither prüft sie auch, dass jeder Tag vorhanden ist. Das Ergebnis blieb gleich.
+
+**Schritt 1 — Brücke Wochenkorb: UNZULÄSSIG** (vorab: ≥ 90 % gleich, beide großen Episoden ± 28 T, keine zusätzliche)
+
+| | Ausfall −100 % (Urteil) | Gegenrechnung 0 % | Auskunft: Korb nach Marktwert |
+|---|---|---|---|
+| Sonntage gleich | **96,8 %** (377) | 97,3 % | 94,2 % |
+| 2020-04 (S1 ab 10.04.) | Korb ab 17.05., **+37 T** ✗ | +37 T ✗ | +37 T ✗ |
+| 2020-11 (S1 ab 12.11.) | Korb ab 20.12., **+38 T** ✗ | 15.11., +3 T ✔ | +3 T ✔ |
+| zusätzliche Episoden ≥ 28 T | keine | keine | keine |
+
+- **Ausfälle:** 136 von 19.600 Coin-Wochen (0,69 %), davon 89 mit CoinMetrics-Kurs, 47 mit −100 %.
+- **Gegenprobe** (zweiter Weg, Langformat mit merge; Top-50-Listen von Hand nachgezählt) **6/6**: Korbindex, Wahrheit je Sonntag und Season-Wochen gleich.
+
+**Ursache (Auskunft, ändert das Urteil nicht):**
+- **2020-04 ist kein knappes Verfehlen.** S1 lag ab 12.04. über +31 Pp, der Wochenkorb bis 03.05. zwischen −2 und +5 Pp.
+- **2020-11 ist knapp:** +24,7 Pp am 15.11. bei einer Schwelle von 25 Pp. Daher trifft die Gegenrechnung.
+- **Die Körbe sind verschiedene Universen:** Nur 27–39 der 50 Coins sind in beiden.
+  - Im S1-Korb (Binance) stecken junge Neulistings (BAND, CHZ, ENJ, FET, COTI …).
+  - Im CMC-Umsatzkorb stecken alte, umsatzstarke Coins (BSV, BTG, HT, ABBC, DCR, GRIN …), zum Teil mit aufgeblähtem Umsatz.
+  - April 2020, 13 Wochen gegen BTC: **nur S1 +57 Pp**, gemeinsam +16 Pp, nur CMC +1 Pp. Nov. 2020: nur S1 +75 Pp, gemeinsam +6 Pp.
+- ⇒ **Die Season-Wahrheit von S1 misst das Binance-Universum der jungen Listings.** Für 2017/18 gibt es dieses Universum nicht (Binance ab 07/2017). Ein Holdout gegen *dieselbe* Wahrheit ist mit freien Daten nicht herstellbar.
+- **Nebenbefund:** Im S1-Korb stehen Fiat- und Fan-Token (EUR, GBP, JUV, PSG). Der Stablecoin-Filter von S1 (Tagesrendite im Median < 0,2 %) erkennt sie nicht. Das hat Wirkung auf die Kalibrierung, wurde aber nicht gemessen.
+
+**Folge nach dem Messplan:** **Stopp, kein Holdout in Fassung 1.** Die Mail-Schalter der Ampel bleiben **aus**.
+
+### 59.6 Vorschlag Fassung 2 (zur Abstimmung, mit Ursachenbegründung)
+
+**Ursache:** Fassung 1 verlangte, dass ein anderer Korb **dieselben** Seasons findet wie S1. Das scheitert am Universum, nicht an der Ampel.
+
+**Vorschlag F2-A (meine Empfehlung):** Die Wahrheit wird für **beide** Zeiträume aus **demselben** Wochenkorb gebildet (CMC, Top 50 nach Umsatz, wie Schritt 1). Statt der Brücke zu S1 wird geprüft, ob die **eingefrorene** Ampel auch gegen diese Wahrheit ordnet.
+1. **Prüfung im Kalibrierungszeitraum 2019-04 bis 2026-06** (Ampel mit B3 V aus Schritt 0): Ordnung K2 0 < 1 < 2 < 3 von 3 **und** Lift bei 3 von 3 ≥ 2. Hält sie nicht, ist die Ampel an das Binance-Universum gebunden. Dann Stopp und Fakt-Anzeige.
+2. **Holdout 2017-01 bis 2019-03** mit derselben Wahrheit, H1/H2/H3 und Urteil wie §59.4.
+- Damit prüft der Holdout die **Ampel**, nicht die Übereinstimmung zweier Körbe.
+- Er sagt dann: *„Erkennt die Ampel die Season der etablierten Alts?“* Ob sie die Season der jungen Listings erkennt, bleibt so offen wie heute.
+
+**F2-B (nicht empfohlen):** Den CMC-Korb auf *junge* Coins beschränken, um Binance nachzubilden. Das wäre eine Stellschraube an der Grundgesamtheit (Regel *Grundgesamtheit keine Stellschraube*), und das Alter als Auswahl ist nicht vorab begründet.
+
+**F2-C:** O47 beenden. Die Ampel bleibt Fakt-Anzeige, die Mail bleibt aus. §36.4 K4 wird mit Schritt 0 berichtigt.
+
+Für alle drei gilt unabhängig davon:
+- **§36.4 K4 wird berichtigt.** Mit vollständigen Daten war der Vorlauf vor 2020-04 28 T, nicht mindestens 357 T.
+- Der Nebenbefund zu Fiat-Token in S1 wird als offener Punkt geführt.

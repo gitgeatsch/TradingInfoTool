@@ -1,0 +1,65 @@
+O47 SCHRITT 1 URSACHE (Auskunft)
+
+U1 Vorsprung gegen BTC in den folgenden 90 T / 13 Wochen (Schwelle 25 Pp):
+   2020-03-01  S1   -1.3 Pp   · Wochenkorb  -22.7 Pp
+   2020-03-08  S1   -1.2 Pp   · Wochenkorb  -19.8 Pp
+   2020-03-15  S1   +7.8 Pp   · Wochenkorb  -17.3 Pp
+   2020-03-22  S1  +17.2 Pp   · Wochenkorb   -7.8 Pp
+   2020-03-29  S1   +9.8 Pp   · Wochenkorb   -8.3 Pp
+   2020-04-05  S1  +18.4 Pp   · Wochenkorb   -1.6 Pp
+   2020-04-12  S1  +31.0 Pp * · Wochenkorb   +2.8 Pp
+   2020-04-19  S1  +34.7 Pp * · Wochenkorb   +4.9 Pp
+   2020-04-26  S1  +27.6 Pp * · Wochenkorb   -1.6 Pp
+   2020-05-03  S1  +26.0 Pp * · Wochenkorb   -0.3 Pp
+   2020-05-10  S1  +51.5 Pp * · Wochenkorb  +14.0 Pp
+   2020-05-17  S1  +81.3 Pp * · Wochenkorb  +35.3 Pp *
+   2020-05-24  S1  +69.7 Pp * · Wochenkorb  +29.6 Pp *
+   2020-05-31  S1  +63.6 Pp * · Wochenkorb  +33.4 Pp *
+   2020-06-07  S1  +20.8 Pp   · Wochenkorb  +19.2 Pp
+   2020-06-14  S1  +42.0 Pp * · Wochenkorb  +20.6 Pp
+   2020-06-21  S1  +15.0 Pp   · Wochenkorb   +1.2 Pp
+   2020-06-28  S1  +16.5 Pp   · Wochenkorb   -1.1 Pp
+
+   2020-10-04  S1  -57.5 Pp   · Wochenkorb  -59.4 Pp
+   2020-10-11  S1  -53.8 Pp   · Wochenkorb  -53.2 Pp
+   2020-10-18  S1  -39.6 Pp   · Wochenkorb  -43.3 Pp
+   2020-10-25  S1  -16.9 Pp   · Wochenkorb  -25.7 Pp
+   2020-11-01  S1   +2.7 Pp   · Wochenkorb   -4.0 Pp
+   2020-11-08  S1  +14.1 Pp   · Wochenkorb  +10.2 Pp
+   2020-11-15  S1  +40.0 Pp * · Wochenkorb  +24.7 Pp
+   2020-11-22  S1  +17.2 Pp   · Wochenkorb  +13.1 Pp
+   2020-11-29  S1  +19.0 Pp   · Wochenkorb   +6.6 Pp
+   2020-12-06  S1  +17.5 Pp   · Wochenkorb  +11.7 Pp
+   2020-12-13  S1   +8.6 Pp   · Wochenkorb  +15.1 Pp
+   2020-12-20  S1  +43.0 Pp * · Wochenkorb  +50.7 Pp *
+   2020-12-27  S1  +76.3 Pp * · Wochenkorb  +98.8 Pp *
+   2021-01-03  S1 +117.7 Pp * · Wochenkorb +146.1 Pp *
+   2021-01-10  S1 +125.6 Pp * · Wochenkorb +138.8 Pp *
+   2021-01-17  S1 +107.0 Pp * · Wochenkorb +144.1 Pp *
+   2021-01-24  S1  +58.0 Pp * · Wochenkorb  +97.9 Pp *
+   2021-01-31  S1  +89.8 Pp * · Wochenkorb +101.6 Pp *
+
+U2 Ueberschneidung der Koerbe (Kuerzel) je Monat:
+   2020-01-05  gemeinsam 28 von 50 · nur CMC u. a. ABBC, BSV, BTG, GRIN, HT, LAMB, MANA, MCO · nur S1 u. a. ARPA, BAND, CELR, COCOS, DUSK, ENJ, ERD, FET
+   2020-02-02  gemeinsam 30 von 50 · nur CMC u. a. ABBC, BSV, BTG, DCR, ELF, GRIN, HC, HT · nur S1 u. a. ARPA, DREP, ENJ, ERD, FET, FTM, FTT, HBAR
+   2020-03-01  gemeinsam 30 von 50 · nur CMC u. a. ABBC, BEAM, BSV, BTG, DCR, ELF, GRIN, HC · nur S1 u. a. AION, CHZ, COTI, ENJ, ERD, FET, FTT, HBAR
+   2020-04-05  gemeinsam 27 von 50 · nur CMC u. a. ABBC, BSV, BTG, DCR, DOGE, ELF, FIRO, GRIN · nur S1 u. a. AION, BAND, CHZ, COTI, ENJ, ERD, EUR, FET
+   2020-05-03  gemeinsam 30 von 50 · nur CMC u. a. ABBC, BEAM, BSV, BTG, BTM, DCR, ELF, GRIN · nur S1 u. a. AION, BAND, CHZ, COTI, CTSI, DATA, ENJ, ERD
+   2020-06-07  gemeinsam 32 von 50 · nur CMC u. a. ABBC, BEAM, BNT, BSV, BTG, CRO, DCR, DOGE · nur S1 u. a. AION, BAND, CHZ, COS, DATA, ENJ, ERD, FET
+   2020-07-05  gemeinsam 32 von 50 · nur CMC u. a. ABBC, BSV, BTG, BTM, CRO, DAC, DCR, DOGE · nur S1 u. a. BAND, CHR, CHZ, ENJ, ERD, FET, HBAR, IOTA
+   2020-08-02  gemeinsam 36 von 50 · nur CMC u. a. ABBC, BSV, BTG, BTM, BTT, CRO, ELF, HC · nur S1 u. a. ANKR, ARPA, BAND, CHR, FET, FTM, IOTA, MATIC
+   2020-09-06  gemeinsam 38 von 50 · nur CMC u. a. BAL, BNT, BSV, CRO, DOGE, HT, LEND, NEST · nur S1 u. a. ANKR, ANT, BZRX, ERD, ICX, IOST, KAVA, MATIC
+   2020-10-04  gemeinsam 39 von 50 · nur CMC u. a. ABBC, BAL, BAT, BNT, BSV, CRO, DOGE, HT · nur S1 u. a. AVAX, BEL, BZRX, FLM, FTM, KAVA, ORN, SOL
+   2020-11-01  gemeinsam 37 von 50 · nur CMC u. a. ABBC, BAL, BAT, BNT, BSV, CRO, DOGE, HT · nur S1 u. a. AAVE, AUDIO, CRV, CTK, FLM, INJ, IOST, KAVA
+   2020-12-06  gemeinsam 35 von 50 · nur CMC u. a. ABBC, BAL, BAT, BNT, BSV, BTT, COMP, DOGE · nur S1 u. a. ALPHA, AXS, CVC, EUR, HARD, IOTA, KAVA, NEAR
+   2021-01-03  gemeinsam 36 von 50 · nur CMC u. a. BAL, BAT, BSV, BTT, DOGE, HT, JST, KSM · nur S1 u. a. CHZ, CRV, EGLD, EUR, INJ, JUV, NEAR, PSG
+   2021-02-07  gemeinsam 38 von 50 · nur CMC u. a. AVAX, BAL, BAT, BSV, COMP, HT, MKR, REN · nur S1 u. a. ALPHA, ENJ, EUR, FTM, GBP, LRC, LUNA, NANO
+   2021-03-07  gemeinsam 36 von 50 · nur CMC u. a. BAT, BSV, CHZ, COMP, ENJ, HT, ICX, NPXS · nur S1 u. a. 1INCH, ALPHA, CRV, DODO, EGLD, EUR, FTM, IOTA
+
+U3 Vorsprung je Teilmenge (CMC-Wochenkurse, 13 Wochen ab dem ersten Sonntag, gegen BTC):
+   2020-04-05 gemeinsam  +15.7 Pp (27 Coins mit beiden Kursen)
+   2020-04-05 nur CMC     +1.4 Pp (21 Coins mit beiden Kursen)
+   2020-04-05 nur S1     +57.1 Pp (11 Coins mit beiden Kursen)
+   2020-11-01 gemeinsam   +5.8 Pp (37 Coins mit beiden Kursen)
+   2020-11-01 nur CMC    +17.4 Pp (12 Coins mit beiden Kursen)
+   2020-11-01 nur S1     +75.0 Pp (8 Coins mit beiden Kursen)

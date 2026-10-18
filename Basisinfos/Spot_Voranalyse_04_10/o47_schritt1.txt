@@ -1,0 +1,29 @@
+O47 SCHRITT 1 · Bruecke Wochenkorb gegen S1 · Aufnahmen 2019-03-03..2026-10-11 (398 Sonntage) · Holdout nicht beruehrt
+
+BTC-ID 1 · als Stablecoin/gebunden ausgeschlossen: 37 IDs (u. a. ACA, BITUSD, BTCB, BUSD, CCA, CCXX, DAI, EURC, EURS, FDUSD, FEI, FRAX, GUSD, HUSD, JUL)
+S1-Episoden (taeglich): 2020-04-10..2020-06-17 · 2020-11-12..2021-03-23 · 2022-05-11..2022-06-15 · 2023-10-16..2023-10-25
+
+AUSFAELLE (Coin binnen einer Woche nicht mehr in den Top 200): 136 von 19600 Coin-Wochen (0.69 %) · davon mit CoinMetrics-Kurs 89, ohne (-100 %) 47
+
+Korb nach UMSATZ, Ausfall -100 %: 377 Sonntage verglichen · gleich 96.8 % · Season-Wochen Korb 22, S1 28 · beide Season 19, nur Korb 3, nur S1 9
+   Korb-Episoden: 2020-05-17..2020-06-07 (21 T) · 2020-12-20..2021-03-28 (98 T) · 2021-10-17..2021-10-24 (7 T) · 2022-06-05..2022-06-19 (14 T) · 2025-06-15..2025-06-29 (14 T)
+   S1-Episode 2020-04-10: NICHT getroffen
+   S1-Episode 2020-11-12: NICHT getroffen
+   zusaetzliche Korb-Episoden >= 28 T ausserhalb +-30 T: keine
+   -> UNZULAESSIG
+
+Korb nach UMSATZ, Ausfall 0 % (Gegenrechnung): 377 Sonntage verglichen · gleich 97.3 % · Season-Wochen Korb 24, S1 28 · beide Season 21, nur Korb 3, nur S1 7
+   Korb-Episoden: 2020-05-17..2020-06-21 (35 T) · 2020-11-15..2021-03-28 (133 T) · 2021-10-17..2021-10-24 (7 T) · 2022-06-05..2022-06-19 (14 T) · 2025-06-15..2025-06-29 (14 T)
+   S1-Episode 2020-04-10: NICHT getroffen
+   S1-Episode 2020-11-12: getroffen, Korb-Start 2020-11-15 (+3 T)
+   zusaetzliche Korb-Episoden >= 28 T ausserhalb +-30 T: keine
+   -> UNZULAESSIG
+
+Auskunft: Korb nach MARKTWERT, Ausfall -100 %: 377 Sonntage verglichen · gleich 94.2 % · Season-Wochen Korb 34, S1 28 · beide Season 20, nur Korb 14, nur S1 8
+   Korb-Episoden: 2020-05-17..2020-06-07 (21 T) · 2020-11-15..2021-04-11 (147 T) · 2021-06-13..2021-07-04 (21 T) · 2021-08-08..2021-08-15 (7 T) · 2021-10-17..2021-10-24 (7 T) · 2022-05-29..2022-06-19 (21 T) · 2024-09-01..2024-09-15 (14 T) · 2025-06-15..2025-06-29 (14 T)
+   S1-Episode 2020-04-10: NICHT getroffen
+   S1-Episode 2020-11-12: getroffen, Korb-Start 2020-11-15 (+3 T)
+   zusaetzliche Korb-Episoden >= 28 T ausserhalb +-30 T: keine
+   -> UNZULAESSIG
+
+URTEIL Schritt 1 (vorab, Korb nach Umsatz, Ausfall -100 %): UNZULAESSIG · Gegenrechnung 0 %: unzulaessig

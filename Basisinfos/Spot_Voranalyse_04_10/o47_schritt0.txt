@@ -1,0 +1,33 @@
+O47 SCHRITT 0 · B3-Quelle · Kalibrierungszeitraum 2019-04-02..2026-06-22, 2639 Tage (Holdout nicht beruehrt)
+
+R-R11 Stand aus den eingefrorenen Spalten = Spalte 'stand' der Kalibrierung: 2639 von 2639 Tagen
+Verkettung am 2021-01-01: CoinMetrics 28.33 Mrd / DefiLlama 27.06 Mrd -> Faktor 1.0467 fuer DefiLlama ab dem Uebergang
+
+Season-Episoden (Wahrheit der Kalibrierung): 2020-04-10..2020-06-17 · 2020-11-12..2021-03-23 · 2022-05-11..2022-06-15 · 2023-10-16..2023-10-25
+
+B3 AN (91 T > 10 %) je Jahr:  2019: K 96 % · DLf 96 % · V 76 % | 2020: K 100 % · DLf 100 % · V 82 % | 2021: K 100 % · DLf 100 % · V 100 % | 2022: K 29 % · DLf 29 % · V 29 % | 2023: K 0 % · DLf 0 % · V 0 % | 2024: K 41 % · DLf 40 % · V 40 % | 2025: K 66 % · DLf 67 % · V 67 % | 2026: K 0 % · DLf 0 % · V 0 %
+
+STUFE DLf gegen K: roh gleich 100.0 % · geltend gleich 100.0 % (2639 von 2639 Tagen) · Wechsel der geltenden Stufe 18 (K: 18)
+STUFE V gegen K: roh gleich 94.1 % · geltend gleich 93.7 % (2472 von 2639 Tagen) · Wechsel der geltenden Stufe 19 (K: 18)
+   abweichende Tage je Jahr: 2019: 5 · 2020: 162
+   K -> V (Zeilen K, Spalten V):
+      col_0    Ende  Vorlauf  kalt
+      row_0                       
+      Ende        0       96     6
+      Vorlauf     5        0    60
+
+K2 K   (Basis 7.5 %): 0 von 3: 727 T, Season 1.2 % (Lift 0.16) · 1 von 3: 629 T, Season 3.8 % (Lift 0.51) · 2 von 3: 853 T, Season 6.3 % (Lift 0.84) · 3 von 3: 430 T, Season 26.0 % (Lift 3.45) -> Ordnung HAELT
+K2 DLf (Basis 7.5 %): 0 von 3: 728 T, Season 1.2 % (Lift 0.16) · 1 von 3: 627 T, Season 3.8 % (Lift 0.51) · 2 von 3: 854 T, Season 6.3 % (Lift 0.84) · 3 von 3: 430 T, Season 26.0 % (Lift 3.45) -> Ordnung HAELT
+K2 V   (Basis 7.5 %): 0 von 3: 728 T, Season 1.2 % (Lift 0.16) · 1 von 3: 734 T, Season 3.3 % (Lift 0.43) · 2 von 3: 760 T, Season 7.1 % (Lift 0.94) · 3 von 3: 417 T, Season 26.9 % (Lift 3.56) -> Ordnung HAELT
+
+K2b K  : keine 727 T (1.2 %) · Geld (M2 UND Stablecoins), BTC schwach 556 T (9.7 %) · alle drei 430 T (26.0 %) · BTC + Stablecoins, M2 fehlt 297 T (0.0 %) · nur BTC 295 T (0.0 %) · nur Stablecoins 206 T (0.0 %) · nur M2 128 T (18.8 %)
+K2b DLf: keine 728 T (1.2 %) · Geld (M2 UND Stablecoins), BTC schwach 556 T (9.7 %) · alle drei 430 T (26.0 %) · BTC + Stablecoins, M2 fehlt 298 T (0.0 %) · nur BTC 294 T (0.0 %) · nur Stablecoins 205 T (0.0 %) · nur M2 128 T (18.8 %)
+K2b V  : keine 728 T (1.2 %) · Geld (M2 UND Stablecoins), BTC schwach 460 T (11.7 %) · alle drei 417 T (26.9 %) · nur BTC 305 T (0.0 %) · BTC + Stablecoins, M2 fehlt 287 T (0.0 %) · nur M2 224 T (10.7 %) · nur Stablecoins 205 T (0.0 %) · BTC + M2, Stablecoins fehlen 13 T (0.0 %)
+
+K4 (Auskunft) geltende Stufe vor jeder Episode, Fenster [Start - 120 T, Start + 30 T]: Tage Vorlauf / Season-Klima / Ueberhitzung
+   2020-04-10: K 86/0/0 | DLf 86/0/0 | V 74/0/0
+   2020-11-12: K 0/58/55 | DLf 0/58/55 | V 0/58/55
+   2022-05-11: K 20/0/0 | DLf 20/0/0 | V 20/0/0
+   2023-10-16: K 0/0/0 | DLf 0/0/0 | V 0/0/0
+
+URTEIL Schritt 0 (vorab: geltend gleich >= 95 % UND K2-Ordnung bleibt): VERSCHIEBT SICH (geltend gleich 93.7 %, Ordnung haelt)

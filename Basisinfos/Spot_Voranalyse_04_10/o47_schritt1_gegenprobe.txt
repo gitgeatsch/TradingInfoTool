@@ -1,0 +1,10 @@
+O47 SCHRITT 1 GEGENPROBE (zweiter Weg) · 393 Wochen
+
+  OK    G1 Korbindex je Woche gleich (relativ < 1e-9)  (groesste 8.88e-16)
+  OK    G2 Wahrheit je Sonntag gleich  (380 Sonntage)
+  OK    G3 Season-Wochen gleich gezaehlt  (22)
+  OK    G4 Top 50 2019-04-07 von Hand nachgezaehlt  (Schnitt 50)
+  OK    G4 Top 50 2023-01-01 von Hand nachgezaehlt  (Schnitt 50)
+  OK    G4 Top 50 2026-09-06 von Hand nachgezaehlt  (Schnitt 50)
+
+6 Pruefungen, ALLE BESTANDEN

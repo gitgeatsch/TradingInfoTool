@@ -1,0 +1,15 @@
+O47 SCHRITT 0 GEGENPROBE (zweiter Weg)
+
+  OK    G1 B3 verkettet je Tag gleich (Abweichung < 1e-9) und an JEDEM Tag vorhanden  (groesste 1.22e-15, verglichen 2639 von 2639 Tagen, nur einseitig vorhanden 0)
+  OK    G2 geltende Stufe K je Tag gleich  (2639 von 2639)
+  OK    G2 geltende Stufe V je Tag gleich  (2639 von 2639)
+  OK    G2 V gegen K gleich: derselbe Anteil wie Schritt 0  (93.67 %)
+  OK    G3 K2 V: Ordnung 0 < 1 < 2 < 3 (neu gezaehlt)  (0: 1.2 % · 1: 3.3 % · 2: 7.1 % · 3: 26.9 %)
+
+G4 Auskunft: B3 vor dem Season-Start zuletzt eingeschaltet (durchgehend an bis zum Start)
+   2020-04-10 K: an seit 2019-04-19 (357 T vor dem Start)
+   2020-04-10 V: an seit 2020-03-13 (28 T vor dem Start)
+   2020-11-12 K: an seit 2019-04-19 (573 T vor dem Start)
+   2020-11-12 V: an seit 2020-03-13 (244 T vor dem Start)
+
+5 Pruefungen, ALLE BESTANDEN
