@@ -125,7 +125,7 @@ def hebel_fuehrung_jetzt(conn) -> list[dict]:
                     "kurs_eur": t.get("kurs_eur"), "liquidation_eur": t.get("liquidation_eur"),
                     "abstand": t.get("abstand_liquidation"), "empfehlung": t.get("empfehlung"), "stufe": t.get("nahe_stufe"),
                     "eigenkapital_eur": t.get("eigenkapital_eur"), "positionswert_eur": t.get("positionswert_eur"),
-                    "eroeffnet_am": t.get("eroeffnet_am"),
+                    "eroeffnet_am": t.get("eroeffnet_am"), "haltedauer": t.get("haltedauer_text"),
                     "grund": (t.get("wallet_hinweis") or (t.get("gruende") or [""])[0] or "")[:240]})
     # P11c (16.10.2026): laut Bitpanda-Wallet geschlossene Positionen sichtbar machen - sie werden nicht mehr gefuehrt
     try:

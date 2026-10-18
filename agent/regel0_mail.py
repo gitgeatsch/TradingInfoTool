@@ -24,10 +24,13 @@ import agent.regel0_ablage as AB
 import agent.regel0_chart as CH
 import agent.regel0_groesse as G
 
+from agent import regel0_messstand as MS_   # E1/E2 (18.10.2026): der gemessene Haltedauer-Fakt (Schritt7 §23.68)
+
 NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stunden vorbei ist, wird nicht mehr gemailt
 ABGLEICH_GRENZE = 0.05    # S7-5b: Bitpanda gegen Binance zum selben Moment - gemessen 03.10.: gleiche Coins -0,1 %, Kollisionen +25 bis +428 %
 NL = chr(10)
 ERINNERUNG_BIS_H = 6      # eine Erinnerung, deren Ausstieg laenger vorbei ist, entfaellt (z. B. nach langem Stillstand)
+ERINNERUNG72_H = 72       # E2 (18.10.2026): zweite Erinnerung, wenn die Position 72 h nach dem Einstieg noch offen ist - EINMAL
 # N-1 (E-57): eine Signalmail entfaellt erst, wenn der gemessene Einstieg (Schluss der Einstiegsstunde) LAENGER als dies vorbei ist.
 # Die Grenze folgt aus dem Takt, sie ist keine Wahl: ein regulaerer Lauf (vorlaeufig 0 -> endgueltig > 0, D1/E-46, oder eine aufgefangene
 # Stunde) mailt hoechstens etwa 10 min nach dem Einstieg; ein nach einem Ausfall nachgeholtes Signal liegt mindestens 1 h dahinter.
@@ -331,14 +334,36 @@ def erinnerung_mail(r: dict, stufe: int, werte: dict, jetzt: datetime) -> tuple:
     text = "\n".join(["REGEL0.1 - AUSSTIEG FAELLIG", "",
                       "%s, Hebel %dx, Einstieg %s" % (name, stufe, _wann(_t(r["einstieg"]) + timedelta(hours=1), jetzt)),
                       "Die 24 Stunden sind um: Ausstieg zum Schlusskurs %s." % _wann(aus, jetzt), "",
-                      "Zeiten in UTC: Einstieg %s, Ausstieg %s." % (_zeit(_t(r["einstieg"]) + timedelta(hours=1)), _zeit(aus)),
-                      "Die Fuehrung offener Positionen kommt spaeter (O13)."])
+                      "Zeiten in UTC: Einstieg %s, Ausstieg %s." % (_zeit(_t(r["einstieg"]) + timedelta(hours=1)), _zeit(aus)), "",
+                      # E1 (18.10.2026, Nutzer: *"ja E1 bis E3 bauen"*): der gemessene Fakt neben der Handlung - kein Gate
+                      "Fakt: " + MS_.HALTEDAUER_FAKT + "."] + (["Fakt: " + MS_.liq_satz(stufe) + "."] if MS_.liq_satz(stufe) else []))
     return betreff, text
+
+
+def erinnerung72_mail(r: dict, stufe: int, werte: dict, jetzt: datetime, position_vm: str | None = None, fuehrung: str | None = None) -> tuple:
+    """E2 (18.10.2026, Schritt7 §23.68): EINMAL, wenn die zum Signal gehoerende Position 72 h nach dem Einstieg noch offen ist."""
+    tw = _testwoche(werte, jetzt)
+    name = r["bitpanda"] or r["symbol"]
+    ein = _t(r["einstieg"]) + timedelta(hours=1)
+    h = ((jetzt if jetzt.tzinfo else jetzt.replace(tzinfo=timezone.utc)) - ein).total_seconds() / 3600   # _t ist UTC-behaftet
+    betreff = "%sREGEL0: %s %dx seit %.0f h offen (Regel 24 h)" % ("[TESTWOCHE] " if tw else "", name, stufe, h)
+    z = ["REGEL0.1 - POSITION LAEUFT UEBER DIE REGEL", "",
+         "%s, Hebel %dx, Einstieg %s - seit %.0f h offen. Die REGEL0 ist ein 24-h-Handel." % (name, stufe, _wann(ein, jetzt), h),
+         "Handlung: schliessen - oder bewusst weiter halten (das ist dann ein anderer Handel als der gemessene).", "",
+         "Fakt: " + MS_.HALTEDAUER_FAKT + "."]
+    if MS_.liq_satz(stufe):
+        z.append("Fakt: " + MS_.liq_satz(stufe) + ".")
+    if fuehrung:
+        z += ["", "Fuehrung (H15):", fuehrung]
+    if position_vm:
+        z += ["", "Position: " + position_vm]
+    z += ["", "Diese Erinnerung kommt EINMAL je Signal (keine taegliche Wiederholung)."]
+    return betreff, "\n".join(z)
 
 
 def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: dict | None = None, kurse=None, melden=None,
              bild=None, pruefung=None, position=None, spot=None, senden_html=None, ankuendigung=None, zusatzbilder=None,
-             verwaesserung=None, termin=None, makro=None, messstand=None) -> dict:
+             verwaesserung=None, termin=None, makro=None, messstand=None, fuehrung=None) -> dict:
     """Prueft die Ablage und verschickt faellige Mails. ``senden(betreff, text) -> bool``. Vermerkt nur echte Versaende.
 
     S7-5b: vor jeder SIGNALmail der Preisabgleich (``kurse() -> (bitpanda_usd, binance)``, Vorgabe die oeffentlichen Ticker).
@@ -538,6 +563,46 @@ def versende(ordner_ablage: str, senden, jetzt: datetime | None = None, werte: d
                 t = t + NL + NL + "Position: " + vm
             if senden(b, t):
                 c.execute("UPDATE signal SET mail_erinnerung_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["erinnerung"] += 1
+            else:
+                zaehl["fehlgeschlagen"] += 1
+        # 4  E2 (18.10.2026): ZWEITE Erinnerung EINMAL, wenn die zum Signal gehoerende Position 72 h nach dem Einstieg noch offen ist.
+        #    Nur, wenn die erste verschickt wurde; eine Position, die schon VOR dem Signal offen war, ist eine eigene Entscheidung (E3)
+        #    und bekommt keine; nach einem langen Stillstand (mehr als ERINNERUNG_BIS_H zu spaet) entfaellt sie wie die erste.
+        for r in c.execute("SELECT * FROM signal WHERE mail_erinnerung_am IS NOT NULL AND mail_erinnerung72_am IS NULL "
+                           "AND erinnerung72_entfallen_am IS NULL AND COALESCE(stufe, mail_signal_stufe) > 0 AND einstieg <= ? AND einstieg >= ?",
+                           ((jetzt - timedelta(hours=ERINNERUNG72_H + 1)).strftime("%Y-%m-%d %H:%M"),
+                            (jetzt - timedelta(hours=ERINNERUNG72_H + 1 + ERINNERUNG_BIS_H)).strftime("%Y-%m-%d %H:%M"))).fetchall():
+            r = dict(r)
+            vm, grund = None, None
+            if position is not None:
+                if "v" not in _bef:
+                    try:
+                        _bef["v"] = position()
+                    except Exception:                           # noqa: BLE001
+                        _bef["v"] = None
+                offen, vm = position_stand(r, _bef["v"])
+                if offen is False:
+                    grund = vm
+                elif offen is True:
+                    name = (r.get("bitpanda") or r.get("symbol") or "").upper()
+                    eig = [p for p in (_bef["v"] or {}).get("positionen") or [] if str(p[0]).upper() == name]
+                    if eig and all(str(p[2])[:16].replace("T", " ") < r["signalstunde"] for p in eig):
+                        grund = "offene Position %s war schon vor dem Signal offen (eigene Entscheidung)" % name
+            if grund:
+                c.execute("UPDATE signal SET erinnerung72_entfallen_am=?, erinnerung72_grund=? WHERE symbol=? AND signalstunde=?",
+                          (jt, grund, r["symbol"], r["signalstunde"]))
+                c.commit(); zaehl["entfallen"] += 1
+                continue
+            _fz = None
+            if fuehrung is not None:                          # scheitert nie - ohne Fuehrungszeilen geht die Erinnerung trotzdem
+                try:
+                    _fz = fuehrung(r)
+                except Exception:                               # noqa: BLE001
+                    _fz = None
+            b, t = erinnerung72_mail(r, int(r["stufe"] if r["stufe"] is not None else r["mail_signal_stufe"]), werte, jetzt, vm, _fz)
+            if senden(b, t):
+                c.execute("UPDATE signal SET mail_erinnerung72_am=? WHERE symbol=? AND signalstunde=?", (jt, r["symbol"], r["signalstunde"]))
                 c.commit(); zaehl["erinnerung"] += 1
             else:
                 zaehl["fehlgeschlagen"] += 1

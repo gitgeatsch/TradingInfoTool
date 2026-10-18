@@ -2366,6 +2366,7 @@ def _paket_b(conn) -> dict:
              "finanzierung_bisher_eur": x.get("finanzierung_bisher_eur"),
              "plan_signal_id": (x.get("plan") or {}).get("signal_id"),
              "stop_eur": x.get("stop_eur"),
+             "haltedauer_text": x.get("haltedauer_text"),        # E3 (18.10.2026)
              "gruende": x.get("gruende"), "hinweise": x.get("hinweise")}
             for x in _HF.lade(conn)]
     except Exception as exc:                                 # noqa: BLE001

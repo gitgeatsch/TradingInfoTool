@@ -1,0 +1,44 @@
+E1-E3 Positionsfuehrung mit Haltedauer-Fakt - Pruefung am Seiteneffekt
+E1  24-h-Erinnerung
+  OK    E1  Stufe 5: Mail mit Fakt, ohne O13
+  OK    E1  Stufe 5: Liquidationsnaehe −20 %
+  OK    E1  Stufe 5: Vermerk Position bleibt, als verschickt vermerkt
+  OK    E1  Stufe 3: Mail mit Fakt, ohne O13
+  OK    E1  Stufe 3: Liquidationsnaehe −33 %
+  OK    E1  Stufe 3: Vermerk Position bleibt, als verschickt vermerkt
+  OK    E1  Stufe 2: Mail mit Fakt, ohne O13
+  OK    E1  Stufe 2: Liquidationsnaehe keine Zeile
+  OK    E1  Stufe 2: Vermerk Position bleibt, als verschickt vermerkt
+E2  72-h-Erinnerung
+  OK    E2-A  offene Position nach dem Signal -> genau EINE Mail
+  OK    E2-A  Betreff nennt Haltedauer und Regel
+  OK    E2-A  Text: Handlung, Fakt, Liquidationsnaehe 5x, Fuehrung, Vermerk, einmalig
+  OK    E2-A  vermerkt mail_erinnerung72_am, erste unberuehrt
+  OK    E2-A  naechster Lauf: nichts doppelt
+  OK    E2-B  keine offene Position -> keine Mail, entfaellt mit Grund
+  OK    E2-B  entfallen ist endgueltig
+  OK    E2-C  Position schon VOR dem Signal offen -> entfaellt (eigene Entscheidung)
+  OK    E2-D  erste Erinnerung nicht verschickt -> keine zweite
+  OK    E2-E  mehr als 6 h zu spaet (Stillstand) -> keine Mail
+  OK    E2-E  5 h spaet -> Mail noch (Rand wie bei der ersten)
+  OK    E2-F  Fuehrung wirft -> Mail trotzdem, ohne Fuehrungsblock
+  OK    E2-G  Abgleich veraltet -> Mail mit Vermerk *unbekannt*
+  OK    E2-H  ohne position-Lieferant -> Mail (wie die erste)
+  OK    E2-I  vor 72 h -> noch nichts
+E3  Haltedauer in der Fuehrung
+  OK    E3  nach dem Signal: 'seit 72 h offen (Regel 24 h, überschritten) · REGEL0-Signal 15.10. 09:00'
+  OK    E3  BTC seit 09.10. -> eigene Entscheidung, 222 h
+  OK    E3  27 h nach dem Signal -> eigene Entscheidung (Grenze 26 h wie trades)
+  OK    E3  anderes Asset -> eigene Entscheidung
+  OK    E3  datetime-Eingabe + Kleinschreibung + unter 24 h: 'seit 10 h offen (Regel 24 h)', ohne 'überschritten'
+  OK    E3  ohne Ablage / ohne Eroeffnung -> None bzw. eigene
+  OK    E3  hebelfuehrung.zeilen: Zeile 'Haltedauer' auch ohne Einstand
+  OK    E3  lade(): Feld haltedauer_text gesetzt
+  OK    E3  lade() -> zeilen(): Haltedauer im Mailtext
+  OK    E3  betriebslage.hebel_fuehrung_jetzt: Feld haltedauer (Statusseite)
+  OK    E2  Scheduler-Lieferant _regel0_fuehrung_zeilen liefert die H15-Zeilen
+  OK    E2  Lieferant: kein Asset offen -> None
+  OK    E3  Statusseite renderHebel zeigt p.haltedauer
+  OK    E2  Scheduler reicht fuehrung= an versende
+  OK    Standard-DB und echte REGEL0-Ablage unberuehrt
+39 Pruefungen, ALLE BESTANDEN

@@ -22302,6 +22302,15 @@ def paket_spot_mitnahme() -> None:
            "10 von 10 bestanden" in (_r.stdout or ""), " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def _vor_umstellung(sicherungen: list) -> list:
+    """P11b/P11c spielen die UMSTELLUNG auf das Buch nach (alte Importer-Zeilen, ETH noch gespeichert offen). Die gibt es nur in
+    Sicherungen VOR dem 16.10.2026 16:26 UTC (K-HB-1) - die Namen tragen UTC. Seit dem 17.10. nahm die Suite die juengste, schon
+    umgestellte Sicherung, und beide Pruefstaende fielen am Zustand statt am Code (18.10.2026, gegen 16.10. 05:43 gegengeprueft:
+    8/8 und 9/9). Liegt keine solche Sicherung mehr da, faellt die Pruefung ehrlich mit 'keine Sicherung gefunden'."""
+    import os as _os
+    return [s for s in sicherungen if _os.path.basename(s) < "tradinginfotool_2026-10-16_1626"]
+
+
 def paket_hebelbuch() -> None:
     """P11b (16.10.2026, Bitpanda-Umstellung Stufe 3): HEBELPOSITIONEN ALS BUCH JE SYMBOL aus /v1/operations.
 
@@ -22320,7 +22329,7 @@ def paket_hebelbuch() -> None:
            _qb.index("INSERT INTO %s SELECT * FROM hebel_positions") < _qb.index("DELETE FROM hebel_positions")
            and "Sicherung unvollstaendig" in _qb and 'typ == "margin_trading_liquidation_long"' in _qb)
     _js = sorted(_gl.glob("K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/nb_bitpanda_buchungen_voll_*.json"))
-    _gz = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
+    _gz = _vor_umstellung(sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz"))))
     if not _js or not _gz:
         pruefe(P, "Pruefstand p11b (braucht Buchungen voll + Prod-Sicherung im Austauschordner)", False, "fehlt: %s" % ("JSON" if not _js else "Sicherung"))
         return
@@ -22351,7 +22360,7 @@ def paket_wallet_fuehrung() -> None:
            and "hebel_position_last_synced_unix" in _q)
     pruefe(P, "LAUT BITPANDA GESCHLOSSEN loest keine Mail aus (nicht in MELDEN)",
            __import__("agent.hebelfuehrung", fromlist=["x"]).LAUT_BITPANDA_GESCHLOSSEN not in __import__("agent.hebelfuehrung", fromlist=["x"]).MELDEN)
-    _sich = sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz")))
+    _sich = _vor_umstellung(sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz"))))
     if not _sich:
         pruefe(P, "Pruefstand p11c (braucht eine Prod-Sicherung im Austauschordner)", False, "keine Sicherung gefunden")
         return
@@ -22615,6 +22624,62 @@ def paket_termin() -> None:
     pruefe(P, "⚠️⚠️ Pruefstand O52: Zeile, Zeitumstellung, Fenster, drei Zustaende, Abrufspeicher, Mail+Versand, Markierung, Entfernen gesperrt/"
               "erlaubt/Rueckweg, config.yaml und Prod unveraendert", "10 von 10 bestanden" in (_r.stdout or ""),
            " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
+def paket_haltedauer() -> None:
+    """E1-E3 (18.10.2026, Schritt7 §23.69): POSITIONSFUEHRUNG MIT DEM GEMESSENEN HALTEDAUER-FAKT.
+
+    Nutzer: *"ja E1 bis E3 bauen"*. E1 der Fakt in der 24-h-Erinnerung, E2 EINE zweite Erinnerung nach 72 h bei noch offener Position,
+    E3 die Haltedauer je offener Position in der Hebelfuehrung (Mail H15, Statusseite). Fakt, kein Gate. Pruefstand e123_pruefstand.py
+    am Seiteneffekt (Wegwerf-Ablage und -DB), Gegenprobe e123_gegenprobe.py auf NB-Kopien (steht als .txt daneben)."""
+    P = "Haltedauer"
+    import subprocess as _sp
+    import os
+    from datetime import datetime as _dt
+
+    import agent.regel0_ablage as _AB
+    import agent.regel0_mail as _RM
+    import agent.regel0_messstand as _MS
+
+    pruefe(P, "Der Fakt nennt die gemessenen Zahlen (Schritt7 §23.68) samt Gegenrichtung 2024; Liquidationsnaehe nur fuer 5x und 3x",
+           "0,3–0,4 % je weiteren Tag" in _MS.HALTEDAUER_FAKT and "2024" in _MS.HALTEDAUER_FAKT and "vorab nicht erkennbar" in _MS.HALTEDAUER_FAKT
+           and set(_MS.LIQ_NAEHE) == {5, 3} and _MS.liq_satz(2) is None and "−20 %" in _MS.liq_satz(5))
+    b, tx = _RM.erinnerung_mail({"bitpanda": "SEI", "symbol": "SEI", "einstieg": "2026-10-17 09:00", "ausstieg": "2026-10-18 09:00"}, 5, {},
+                                _dt(2026, 10, 18, 10, 9, tzinfo=__import__("datetime").timezone.utc))
+    pruefe(P, "E1: 24-h-Erinnerung mit Fakt und Liquidationsnaehe, ohne den alten Satz 'kommt spaeter (O13)'",
+           "Fakt: Gemessen auf den REGEL0-Einstiegen" in tx and "bei 5x liegt die Liquidation" in tx and "O13" not in tx, tx[-300:])
+    _sp_ = {s for s, _t in _AB._SIGNAL_SPALTEN}
+    _qm = _quelltext("agent/regel0_mail.py")
+    pruefe(P, "E2: eigene Spalten (verschickt / entfallen + Grund), EINMAL nach 72 h, nur nach der ersten, Fenster wie die erste",
+           {"mail_erinnerung72_am", "erinnerung72_entfallen_am", "erinnerung72_grund"} <= _sp_ and _RM.ERINNERUNG72_H == 72
+           and "mail_erinnerung_am IS NOT NULL AND mail_erinnerung72_am IS NULL" in _qm and "ERINNERUNG72_H + 1 + ERINNERUNG_BIS_H" in _qm)
+    pruefe(P, "E2: eine Position, die schon VOR dem Signal offen war, ist eine eigene Entscheidung - keine 72-h-Erinnerung",
+           "war schon vor dem Signal offen (eigene Entscheidung)" in _qm)
+    _qb, _qh, _qs, _ql = (_quelltext(x) for x in ("scheduler/background.py", "agent/hebelfuehrung.py", "remote/server.py", "agent/betriebslage.py"))
+    pruefe(P, "E2: Scheduler reicht die H15-Fuehrung (nur lesend) an versende; Lieferant darf scheitern",
+           "fuehrung=_regel0_fuehrung_zeilen" in _qb and "def _regel0_fuehrung_zeilen" in _qb and "_fz = fuehrung(r)" in _qm)
+    pruefe(P, "E3: Zuordnung wie trades() (1-26 h, sekundengenau); Haltedauer in hebelfuehrung (Mail), betriebslage und Statusseite",
+           "1 <= (auf - _t(r[1])).total_seconds() / 3600 <= 26" in _quelltext("agent/regel0_messstand.py")
+           and 't["haltedauer_text"] = _MS.haltedauer_text(' in _qh and '"   Haltedauer   "' in _qh
+           and '"haltedauer": t.get("haltedauer_text")' in _ql and "if (p.haltedauer) x +=" in _qs)
+    _T = __import__("tempfile").mkdtemp(prefix="halte_")
+    try:
+        c = _AB.oeffne(_T)
+        c.execute("INSERT INTO signal (symbol, signalstunde, einstieg, ausstieg, stufe, bitpanda) VALUES ('ETH','2026-10-09 06:00','2026-10-09 06:00',"
+                  "'2026-10-10 06:00',5,'ETH')")
+        c.commit(); c.close()
+        j = _dt(2026, 10, 12, 8)
+        h1 = _MS.haltedauer_text(_T, "ETH", "2026-10-09T08:29:00+00:00", j)
+        h2 = _MS.haltedauer_text(_T, "BTC", "2026-10-09T04:38:53+00:00", j)
+        pruefe(P, "E3 am echten Fall: ETH 09.10. 08:29 -> Signal 06:00, BTC 09.10. 04:38 -> eigene Entscheidung",
+               h1 == "seit 72 h offen (Regel 24 h, überschritten) · REGEL0-Signal 09.10. 06:00" and "eigene Entscheidung" in h2, "%s | %s" % (h1, h2))
+    finally:
+        __import__("wegwerf").aufraeumen(_T)
+    _r = _sp.run([sys.executable, "-X", "utf8", os.path.join("Basisinfos", "Rechenkern_02_10", "e123_pruefstand.py")],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
+    pruefe(P, "⚠️⚠️ Pruefstand E1-E3 am Seiteneffekt: Fakt je Stufe, 72 h einmalig/entfaellt/eigene/zu spaet/Fuehrung wirft, lade/betriebslage/"
+              "Scheduler-Lieferant, Standard-DB und echte Ablage unberuehrt", "39 Pruefungen, ALLE BESTANDEN" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if "FEHL" in z) or (_r.stderr or "")[-300:])
 
 
 def paket_verwaesserung() -> None:
@@ -33195,7 +33260,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

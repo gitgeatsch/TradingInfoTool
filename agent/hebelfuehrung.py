@@ -530,6 +530,13 @@ def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze
             eigenkapital_eur=ek,
             positionsmenge=menge, kurs_eur=kurs, kurs_stand=stand,
             jetzt=jetzt, plan=plan, marge=marge, position_id=p.id, nahe_grenze=nahe_grenze)
+        try:                                                     # E3 (18.10.2026): Haltedauer gegen die Regel 24 h, Signal oder eigene Entscheidung
+            from agent import regel0_messstand as _MS
+            from agent import regel0_nachlader as _NL
+            t["haltedauer_text"] = _MS.haltedauer_text(_NL.DATEN_VORGABE, p.symbol, p.eroeffnet_am, jetzt)
+        except Exception as exc:                                 # noqa: BLE001
+            t["haltedauer_text"] = None
+            logger.warning("Haltedauer zu Hebelposition %s nicht lesbar: %s", p.symbol, exc)
         if hinweis:                                              # P11c: der Abgleich steht VOR allen anderen Hinweisen
             t["hinweise"] = [hinweis] + list(t.get("hinweise") or [])
             t["wallet_hinweis"] = hinweis
@@ -546,6 +553,8 @@ def zeilen(t: dict) -> list:
     if t.get("tage") is not None:
         kopf += ", seit %s Tagen" % _de(t["tage"], 1)
     z = [kopf + " · " + str(t.get("empfehlung"))]
+    if t.get("haltedauer_text"):                                 # E3 (18.10.2026)
+        z.append("   Haltedauer   " + t["haltedauer_text"])
     if t.get("einstand_eur") is None:
         return z + ["   " + h for h in t.get("hinweise") or []]
     z.append("   Position     %s EUR · Eigenkapital %s EUR · Kredit %s EUR"

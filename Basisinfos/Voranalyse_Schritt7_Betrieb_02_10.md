@@ -3990,3 +3990,41 @@ In 2 h rund −2,0 % (vom Stand vor dem Termin, 83.727 $ um 12:17). Das ist etwa
 - **E1:** Die Ausstiegserinnerung (24 h, nur bei offener Position) bekommt diese gemessene Zeile als Fakt neben der Handlung *„schließen“*.
 - **E2 (Option):** Ist eine REGEL0-Position nach **72 h** noch offen, kommt **einmal** eine zweite Erinnerung mit der Haltedauer, dem Liquidationsabstand (H15) und derselben Zeile – keine tägliche Wiederholung.
 - **E3:** Die Hebelführung (Statusseite/Mail H15) nennt je offener Position *„seit n h offen (Regel 24 h)“*; für Trades ohne REGEL0-Signal (BTC seit 09.10.) steht *„eigene Entscheidung“*.
+
+### 23.69 E1–E3 gebaut: Positionsführung mit dem gemessenen Haltedauer-Fakt (18.10.2026; `e123_pruefstand.py` → `.txt`, `e123_gegenprobe.py` → `.txt`)
+
+**Nutzer 18.10.:** *„ja E1 bis E3 bauen“* · *„prüfen und gegenprüfen“*.
+
+| | Was | Wo |
+|---|---|---|
+| **E1** | Die 24-h-Ausstiegserinnerung trägt den gemessenen Fakt (§23.68) neben der Handlung: *„länger als 24 h halten kostete im Mittel 0,3–0,4 % je weiteren Tag … 2024 war es umgekehrt – … vorab nicht erkennbar“*, dazu je Stufe die Liquidationsnähe (5x: −20 %, binnen 24 h 0,4–0,6 %, binnen 7 Tagen 12–13 % der Einstiege; 3x: −33 %, 0,2–0,4 % gegen 2–4 %; 2x: keine Zeile). Der alte Satz *„Die Führung offener Positionen kommt später (O13)“* entfällt | `regel0_messstand.HALTEDAUER_FAKT`, `liq_satz`; `regel0_mail.erinnerung_mail` |
+| **E2** | **Einmal** eine zweite Erinnerung, wenn die Position 72 h nach dem Einstieg noch offen ist: Betreff *„REGEL0: X 5x seit 72 h offen (Regel 24 h)“*, Handlung *„schließen – oder bewusst weiter halten (das ist dann ein anderer Handel als der gemessene)“*, Fakt, Liquidationsnähe, die H15-Führung der Position (Kurs, Liquidation, Abstand, Haltedauer) und der Positionsvermerk | `regel0_mail.erinnerung72_mail`, Block 4 in `versende`; Spalten `mail_erinnerung72_am`, `erinnerung72_entfallen_am`, `erinnerung72_grund`; Lieferant `background._regel0_fuehrung_zeilen` |
+| **E3** | Je offener Hebelposition die Haltedauer: *„seit n h offen (Regel 24 h[, überschritten]) · REGEL0-Signal TT.MM. hh:mm“* oder *„… · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)“* – in der H15-Mail (Zeile *Haltedauer*), auf der Statusseite (Hebel-Karte), in der Diagnose (`hebelfuehrung[].haltedauer_text`) | `regel0_messstand.zuordnung`, `haltedauer_text`; `hebelfuehrung.lade`/`zeilen`; `betriebslage.hebel_fuehrung_jetzt`; `remote/server.py` `renderHebel` |
+
+**Eigene Festlegungen (berichtet):**
+- **Fakt, kein Gate.** Keine Erinnerung ändert Stufe, Einsatz oder Regel.
+- **E2 nur, wenn die erste verschickt wurde** und die Position laut Abgleich noch offen ist. Ist der Abgleich veraltet oder unlesbar, geht sie mit Vermerk hinaus (wie die erste).
+- **E2 entfällt** mit Grund, wenn keine Position offen ist, oder wenn **alle** offenen Positionen des Assets schon **vor der Signalstunde** offen waren: Das ist eine eigene Entscheidung, nicht dieser Handel. Ein entfallener Fall ist endgültig.
+- **Zeitfenster wie bei der ersten:** fällig ab Einstieg + 72 h, höchstens 6 h verspätet (danach nach einem Stillstand keine Mail).
+- **Zuordnung Position → Signal** wie in `trades()`: dasselbe Asset, Eröffnung 1–26 h nach der Signalstunde, das späteste Signal. Sekundengenau, damit beide Wege nie auseinanderlaufen.
+
+**Geprüft am Seiteneffekt** (`e123_pruefstand.txt`, **39/39**; Wegwerf-Ablage und Wegwerf-DB, Standard-DB und echte Ablage vorher/nachher gleich):
+- E1 je Stufe 5/3/2.
+- E2: Mail genau einmal, nicht doppelt; *keine Position* und *schon vor dem Signal offen* entfallen endgültig; erste nicht verschickt → keine zweite; mehr als 6 h zu spät → keine Mail, 5 h → Mail; Führung wirft → Mail ohne Block; Abgleich veraltet → Vermerk; ohne Lieferant → Mail; vor 72 h → nichts.
+- E3: Signal, eigene Entscheidung, Grenze 26 h, anderes Asset, unter 24 h; `lade()` → `zeilen()`, `betriebslage`, Scheduler-Lieferant gegen eine Wegwerf-DB.
+
+⚠️ **Zwei Fehler, die der Prüfstand fand:**
+- Der Zeitstempel der 72-h-Mail mischte zeitzonenbehaftete und naive Zeiten (Abbruch beim ersten Lauf).
+- Die erste Fassung der Zuordnung schnitt die Sekunden der Eröffnung ab und hätte an der 26-h-Grenze anders zugeordnet als `trades()`.
+
+Beide sind behoben, bevor etwas ans NB ging.
+
+**Gegenprobe auf echten NB-Daten** (`e123_gegenprobe.txt`, **15/15**; Kopien: REGEL0-Ablage 14.10., DB-Sicherung 17.10. 16:22, beide auf D: und danach aufgeräumt):
+- **G1:** Die echten Trades seit 03.10. werden identisch wie in `trades()` zugeordnet: ETH 09.10. 08:29 → Signal 06:00; BTC 09.10. 04:38 → eigene Entscheidung.
+- **G2:** 2.000 Zufallsfälle samt Grenzen 1 h und 26 h stimmen sekundengenau mit einer unabhängigen Rechnung überein.
+- **G3:** E2 auf der echten Historie nachgespielt, mit dem Positionsstand zum jeweiligen Zeitpunkt. Von drei gemailten Signalen mit erster Erinnerung hätte **genau eines** die 72-h-Mail bekommen: *„REGEL0: ETH 5x seit 72 h offen“* am 12.10. Je eines wäre entfallen (keine Position, eigene Entscheidung). Erwartung und `versende` stimmen überein.
+- **G4:** p62 neu gerechnet; die Zahlen im Fakt decken alle vier Mengen (je Tag −0,317 bis −0,416 %; −20 %: 0,4–0,6 % / 11,9–12,7 %; −33 %: 0,2–0,4 % / 2,0–3,7 %; 2024 umgekehrt).
+
+**Einordnung:** Der ETH-Trade vom 09.10. lief 149 h und endete mit −127,41 € (−25,5 % auf das Eigenkapital). Mit E2 wäre am 12.10. die Mail mit dem Fakt und dem Liquidationsabstand gekommen. Ob das die Entscheidung geändert hätte, ist nicht messbar. Die Information wäre aber da gewesen.
+
+**Am NB:** Pull und Neustart. Kontrolle **K-HD-1**: E3 sofort in Diagnose und Statusseite, E1/E2 als Ereignis.

@@ -18,6 +18,14 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 18.10.2026 (10) — Haltedauer in der Positionsführung (E1–E3)
+>
+> | Hier fehlt | Stand seit |
+> |---|---|
+> | REGEL0-Ausstiegserinnerung | trägt den gemessenen Haltedauer-Fakt und die Liquidationsnähe der Stufe (`regel0_messstand.HALTEDAUER_FAKT`); der Satz *„kommt später (O13)“* entfällt – **18.10.** |
+> | 72-h-Erinnerung | `regel0_mail.erinnerung72_mail`, **einmal** je Signal bei noch offener Position; Spalten `mail_erinnerung72_am`/`erinnerung72_entfallen_am`/`erinnerung72_grund`; Lieferant `background._regel0_fuehrung_zeilen` (H15) – **18.10.** |
+> | Haltedauer je Hebelposition | `regel0_messstand.haltedauer_text` (Zuordnung wie `trades`), in `hebelfuehrung.zeilen`, `betriebslage.hebel_fuehrung_jetzt`, Statusseite `renderHebel`, Diagnose – **18.10.** |
+>
 > ## ⚠️ NACHTRAG 17.10.2026 (9) — Season-Ampel als Fakt, Marktscan ruht (P19)
 >
 > | Hier fehlt | Stand seit |

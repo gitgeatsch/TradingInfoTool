@@ -2132,6 +2132,13 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 18.10.2026 — Haltedauer in der Positionsführung (E1–E3)
+
+- **Ausstiegserinnerung nach 24 h:** Neben *„schließen“* steht der gemessene Fakt: Länger halten kostete 2025–26 im Mittel 0,3–0,4 % je weiteren Tag; 2024 war es umgekehrt, und das Marktumfeld ist vorab nicht erkennbar. Bei 5x und 3x kommt dazu, wie oft die Liquidationsschwelle binnen 24 h bzw. 7 Tagen erreicht wurde.
+- **Nach 72 h noch offen:** **eine** zweite Mail *„REGEL0: X seit n h offen (Regel 24 h)“* mit der Führung der Position. Sie kommt nicht, wenn keine Position offen ist oder die Position schon vor dem Signal bestand (eigene Entscheidung). Sie wiederholt sich nicht.
+- **Hebelführung (Mail und Statusseite):** je Position *„seit n h offen (Regel 24 h)“* mit dem REGEL0-Signal, zu dem sie gehört, oder *„eigene Entscheidung“*.
+- ⚠️ **Fakt, kein Signal:** Die Zeilen ändern nichts an Stufe, Einsatz oder Regel; ob du länger hältst, entscheidest du.
+
 ### Stand 17.10.2026 — Spot-Mails: verkaufen oder in EURCV tauschen
 
 - B1 (*Hälfte*), B3 (*ganze Position*) und B4 (*Reihenfolge*) nennen beide Wege: **verkaufen oder in EURCV tauschen**. Die Wahl liegt bei dir; gemessen ist der Ausstieg aus dem Coin. Keine steuerliche Aussage.

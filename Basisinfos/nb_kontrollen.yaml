@@ -362,6 +362,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-10-16"
     beleg: "Diagnose 16.10. 19:34 (NB auf 6767197b, keine lokalen Aenderungen): Log 18:26:16 'Hebel-Buch: UMGESTELLT - 191 alte Zeilen nach hebel_positions_alt_bis_16_10 gesichert, 38 Positionen aus dem Buch (offen: BTC)' (8.111 Vorgaenge gelesen); 18:26:18 'Hebel-Wallet-Abgleich: BTC ok · Kredit ok'; Hebelfuehrung '1 offen · BTC HALTEN Abstand 24,3 %' ohne Wallet-Hinweis; hebel_positions 38 (geschlossen 30, liquidiert 7, offen 1: BTC 0,01141097 / 560 EUR / Hebel 3,0) - exakt wie Pruefstand B1; Folgelaeufe alle 15 min ok, keine Job-Fehler"
+  - id: K-HD-1
+    titel: "E1-E3: Haltedauer je Hebelposition (Diagnose/Statusseite), Fakt in der 24-h-Erinnerung, einmalige 72-h-Erinnerung"
+    seit: "2026-10-18"
+    paket: Haltedauer
+    commit: ""
+    art: manuell
+    nachweis: "sofort nach Pull+Neustart: Diagnose hebelfuehrung[].haltedauer_text fuer BTC 'seit ~2xx h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)', Statusseite Hebel-Karte mit derselben Zeile, keine Job-Fehler (hebel_screening, regel0_mails); als Ereignis: naechste REGEL0-Ausstiegserinnerung mit 'Fakt: Gemessen auf den REGEL0-Einstiegen 2025-26' und ohne 'O13'; eine 72-h-Erinnerung nur, wenn eine REGEL0-Position nach 72 h noch offen ist (sonst erinnerung72_entfallen_am mit Grund)"
+    faellig_bis: "2026-11-30"
+    status: offen
   - id: K-SP-5
     titel: "Spot-Mails B1/B3/B4: Wortlaut 'verkaufen oder in EURCV tauschen'"
     seit: "2026-10-17"

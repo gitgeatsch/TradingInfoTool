@@ -736,6 +736,7 @@ function renderHebel(h) {
                esc(p.empfehlung) + (p.stufe ? " (Stufe " + Math.round(p.stufe * 100) + " %)" : ""), cls);
     x += '<div class="unter">Kurs ' + fmtZahl(p.kurs_eur, 2) + " € · Liq. " + fmtZahl(p.liquidation_eur, 2) + " € · Abstand " +
          (p.abstand === null || p.abstand === undefined ? "-" : fmtZahl(p.abstand * 100, 1) + " %") + " · seit " + fmtStempel(p.eroeffnet_am) + "</div>";
+    if (p.haltedauer) x += '<div class="unter">' + esc(p.haltedauer) + "</div>";   // E3 (18.10.2026)
     if (p.grund && p.empfehlung !== "HALTEN") x += '<div class="unter">' + esc(p.grund) + "</div>";
   });
   // P11 (11.10.2026): stimmen die gespeicherten Positionen mit den Bitpanda-Hebel-Wallets? (Teilschliessung, Befund 2.679)

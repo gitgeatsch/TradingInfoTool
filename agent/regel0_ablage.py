@@ -30,6 +30,8 @@ _SIGNAL_SPALTEN = (
     ("mail_verpasst_am", "TEXT"),
     # ... ebenso eine Korrektur, deren Einstieg laenger als VERPASST_NACH vorbei ist (die endgueltige Stufe kam erst nach einem Ausfall)
     ("korrektur_verpasst_am", "TEXT"),
+    # E2 (18.10.2026, Schritt7 §23.68): EINMALIGE zweite Erinnerung, wenn die Position nach 72 h noch offen ist - oder warum sie entfiel
+    ("mail_erinnerung72_am", "TEXT"), ("erinnerung72_entfallen_am", "TEXT"), ("erinnerung72_grund", "TEXT"),
 )
 
 

@@ -1668,6 +1668,18 @@ def _regel0_positionsstand() -> dict:
     return {"stand": f.get("stand"), "veraltet": bool(f.get("veraltet")), "stunden": f.get("stunden"), "positionen": pos}
 
 
+def _regel0_fuehrung_zeilen(r: dict) -> str | None:
+    """E2 (18.10.2026): die H15-Fuehrung der offenen Position zum Signal (Kurs, Liquidation, Abstand, Haltedauer) als Text - NUR LESEND."""
+    from agent import hebelfuehrung as _HF
+    name = (r.get("bitpanda") or r.get("symbol") or "").upper()
+    conn = db.get_connection()
+    try:
+        tr = _HF.lade(conn, symbole=[name])
+    finally:
+        conn.close()
+    return "\n".join("\n".join(_HF.zeilen(t)) for t in tr) if tr else None
+
+
 def _regel0_spot_hinweis(r: dict) -> str | None:
     """O25 M-f (Nutzer 04.10.2026): hat die ALTE Spot-Kette in den letzten 24 h zu diesem Asset gemailt? Dann ein Satz in der
     REGEL0-Mail - ein anderes Geschaeft (Spot), nicht diese Wette. NUR LESEND (``signals``, Mailvermerk ``zugestellt``)."""
@@ -1720,6 +1732,7 @@ def _regel0_mails() -> None:
                          bild=lambda r: _CH.bild(r, _NL.DATEN_VORGABE),       # E-50 N-f: das Chart in der Signalmail
                          pruefung=_pruef,
                          position=_regel0_positionsstand,   # 04.10.: Ausstiegserinnerung nur bei offener Hebelposition
+                         fuehrung=_regel0_fuehrung_zeilen,  # E2 (18.10.2026): H15-Zeilen in der einmaligen 72-h-Erinnerung
                          spot=_regel0_spot_hinweis,          # O25 M-f: die alte Spot-Kette mailte zum selben Asset
                          senden_html=lambda b, t, h, bi: _sende_hinweismail(b, t, bi, h),   # O25 M-d: eigenes HTML
                          # O29 (E-83/E-84): Binance-Ankuendigung als Fakt - nur mit Schalter ankuendigung_aktiv, liest nur die Ablage

@@ -1343,6 +1343,12 @@ Nutzer 14.10.: *„prüfe, ob die aktuelle Funktionalität zu Asset hinzufügen 
 - **Mails:** Zeile *Season-Ampel* in B1/B3/B4 (Fakt).
 - **Offen aus G2:** im Reiter *Spot* der Teil *Bestand führen* (B1-Fenster, B4-Fünftel) – steht heute im Reiter *Bestand*; mit GUI-Stufe 2.
 
+### G-Z17 E1–E3 – Haltedauer je Hebelposition auf Statusseite und in den Mails (18.10.2026)
+
+- **Statusseite, Hebel-Karte:** je offener Position die Zeile *seit n h offen (Regel 24 h) · REGEL0-Signal …* bzw. *· eigene Entscheidung*.
+- **Mails:** H15-Führung mit Zeile *Haltedauer*; REGEL0-Ausstiegserinnerung mit Fakt; einmalige 72-h-Erinnerung.
+- **GUI:** unverändert (der Hebel-Reiter zeigt die Mails als Detail).
+
 ### G-Z16 O21 – Messstand im Betrieb auf Statusseite und in der Signalmail (17.10.2026)
 
 - **Statusseite, REGEL0-Bereich:** neuer Block *Messstand im Betrieb* (Befund, Zeile mit Tagen und Spanne 99 %, rollierend 90 T, Gruppen, Prüfblock, echte Trades gegen ihr Signal).

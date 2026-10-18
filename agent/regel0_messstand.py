@@ -270,6 +270,64 @@ def mailteil(ordner: str | None = None) -> dict:
     return aus
 
 
+# ══ Punkt 2 (18.10.2026, Schritt7 §23.68): Haltedauer als gemessener FAKT fuer die Positionsfuehrung (E1-E3) ════════════════
+HALTEDAUER_FAKT = ("Gemessen auf den REGEL0-Einstiegen 2025–26 (Schritt7 §23.68): länger als 24 h halten kostete im Mittel 0,3–0,4 % je "
+                   "weiteren Tag (nach Gebühr und Finanzierung, auf den Positionswert); 2024 (Aufwärtsjahr) war es umgekehrt – ob "
+                   "längeres Halten lohnt, hängt am Marktumfeld, und das ist vorab nicht erkennbar")
+# Tief binnen 24 h / binnen 7 Tagen (Anteil der Einstiege, 2025-26, vier Mengen) - die Liquidationsnaehe je Hebelstufe
+LIQ_NAEHE = {5: ("−20 %", "0,4–0,6 %", "12–13 %"), 3: ("−33 %", "0,2–0,4 %", "2–4 %")}
+REGEL_H = 24
+
+
+def liq_satz(stufe) -> str | None:
+    """'bei 5x liegt die Liquidation etwa bei -20 %: binnen 24 h erreichten das 0,4-0,6 %, binnen 7 Tagen 12-13 % der Einstiege'."""
+    try:
+        s = int(stufe)
+    except (TypeError, ValueError):
+        return None
+    if s not in LIQ_NAEHE:
+        return None
+    g, k, l_ = LIQ_NAEHE[s]
+    return "bei %dx liegt die Liquidation etwa bei %s: binnen 24 h erreichten das %s der Einstiege, binnen 7 Tagen %s" % (s, g, k, l_)
+
+
+def zuordnung(ordner: str, symbol: str, eroeffnet) -> dict | None:
+    """Das REGEL0-Signal zu einer echten Position: dasselbe Asset, Eroeffnung 1-26 h nach der Signalstunde (wie ``trades``). Nur lesend."""
+    from agent import regel0_ablage as AB
+    p = os.path.join(ordner, AB.ABLAGE_NAME)
+    if not os.path.exists(p) or eroeffnet is None:
+        return None
+    auf = datetime.fromisoformat(str(eroeffnet).replace("Z", "")[:19]).replace(tzinfo=None) if not isinstance(eroeffnet, datetime) \
+        else eroeffnet.replace(tzinfo=None)
+    c = _ro(p)
+    try:
+        rows = c.execute("SELECT COALESCE(bitpanda, symbol), signalstunde, einstieg, stufe, mail_signal_am FROM signal WHERE "
+                         "UPPER(COALESCE(bitpanda, symbol)) = ? AND signalstunde >= ? AND signalstunde <= ? ORDER BY signalstunde",
+                         (str(symbol).upper(), (auf - timedelta(hours=27)).strftime(FMT), auf.strftime(FMT))).fetchall()
+    finally:
+        c.close()
+    rows = [r for r in rows if 1 <= (auf - _t(r[1])).total_seconds() / 3600 <= 26]     # dieselbe Regel wie ``trades`` (sekundengenau)
+    if not rows:
+        return None
+    r = rows[-1]
+    return {"signalstunde": r[1], "einstieg": r[2], "stufe": r[3], "gemailt": bool(r[4])}
+
+
+def haltedauer_text(ordner: str, symbol: str, eroeffnet, jetzt: datetime | None = None) -> str | None:
+    """E3: 'seit 198 h offen (Regel 24 h) · REGEL0-Signal 10.10. 05:00' oder '... · eigene Entscheidung (kein REGEL0-Signal davor)'."""
+    if eroeffnet is None:
+        return None
+    jetzt = (jetzt or datetime.now(timezone.utc)).replace(tzinfo=None)
+    auf = datetime.fromisoformat(str(eroeffnet).replace("Z", "")[:19]).replace(tzinfo=None) if not isinstance(eroeffnet, datetime) \
+        else eroeffnet.astimezone(timezone.utc).replace(tzinfo=None) if eroeffnet.tzinfo else eroeffnet
+    h = (jetzt - auf).total_seconds() / 3600
+    s = zuordnung(ordner, symbol, auf)
+    kopf = "seit %.0f h offen" % h
+    if s:
+        return "%s (Regel %d h%s) · REGEL0-Signal %s" % (kopf, REGEL_H, ", überschritten" if h > REGEL_H else "", _t(s["signalstunde"]).strftime("%d.%m. %H:%M"))
+    return "%s · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)" % kopf
+
+
 # ══ A3 + B1: echte Trades, Ergebnis in EUR ═════════════════════════════════════════════════════════════════════════════════
 EUR_FIAT = "b88b8466-efe3-11eb-b56f-0691764446a7"   # Bitpanda-Waehrung EUR (Fiat) in /v1/operations
 

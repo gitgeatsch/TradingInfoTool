@@ -1,0 +1,22 @@
+Kopien: Ablage regel0_signale.db · Prod tradinginfotool_2026-10-17_1622.db.gz (746 MB)
+G1  echte Trades: zuordnung gegen trades()
+  OK    G1  ETH 2026-10-09 08:29: Signal 2026-10-09 06:00 / 2026-10-09 06:00
+  OK    G1  ETH: Haltedauer-Text passt (seit 212 h offen (Regel 24 h, überschritten) · REGEL0-Signal 09.10. 06:00)
+  OK    G1  BTC 2026-10-09 04:38: Signal None / None
+  OK    G1  BTC: Haltedauer-Text passt (seit 216 h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor))
+  OK    G1  mindestens ein Trade mit und einer ohne Signal geprueft
+G2  2.000 Zufallsfaelle gegen eine unabhaengige Rechnung
+  OK    G2  2.000 Faelle, sekundengenau gleich (spaetestes Signal 1-26 h davor)
+G3  E2 auf der echten Historie nachgespielt
+  3 gemailte Signale mit erster Erinnerung in der Kopie
+    ETH 2026-10-09 06:00 Stufe 5: erwartet mail, versende mail REGEL0: ETH 5x seit 72 h offen (Regel 24 h)
+  Erwartung je Fall: {'entfaellt-keine': 1, 'mail': 1, 'entfaellt-eigene': 1}
+  OK    G3  alle 3 Faelle gleich
+G4  Zahlen im Fakt gegen p62 (neu gerechnet)
+  je weiterem Tag: [-0.416, -0.338, -0.387, -0.317] · Tief (24h -20/-33, 168h -20/-33): [(0.4, 0.2, 11.9, 2.0), (0.6, 0.4, 12.7, 3.2), (0.5, 0.3, 12.5, 3.7), (0.5, 0.2, 12.5, 2.9)]
+  OK    G4  vier Mengen gelesen
+  OK    G4  'kostete 0,3-0,4 % je weiteren Tag' deckt alle vier
+  OK    G4  5x: binnen 24 h 0,4-0,6 %, binnen 7 T 12-13 %
+  OK    G4  3x: binnen 24 h 0,2-0,4 %, binnen 7 T 2-4 %
+  OK    G4  2024 umgekehrt (H168 netto > H24 netto)
+15 Pruefungen, ALLE BESTANDEN

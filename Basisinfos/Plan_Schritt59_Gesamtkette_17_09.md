@@ -2576,3 +2576,5 @@ Schritt7 §23.24.
 **Nachtrag 17.10.2026 (47) — Spot-Mails mit EURCV:** B1, B3 und B4 sagen *„verkaufen oder in EURCV tauschen“* (Nutzer tauscht oft in den Stablecoin); die Regeln sind unverändert (Spot §58, E-122).
 
 **Nachtrag 18.10.2026 (48) — Punkt 2 Ausstieg und Haltedauer:** Auf den REGEL0-Einstiegen 2025–26 kostete Halten über 24 h netto 0,3–0,4 % je Tag, das Liquidationsrisiko binnen 7 Tagen ist rund 20-mal so hoch; ein Stop ändert nichts (Schritt7 §23.68). REGEL0 bleibt bei 24 h. Für M1 heißt das: Die Positionsführung braucht den gemessenen Fakt, keine neue Regel.
+
+**Nachtrag 18.10.2026 (49) — E1–E3 Positionsführung:** Die Ausstiegserinnerung nennt den gemessenen Haltedauer-Fakt; eine noch offene REGEL0-Position bekommt nach 72 h **einmal** eine zweite Erinnerung; die Hebelführung zeigt je Position die Haltedauer gegen die Regel 24 h oder *eigene Entscheidung* (Schritt7 §23.69, E-123). Fakt, kein Gate.

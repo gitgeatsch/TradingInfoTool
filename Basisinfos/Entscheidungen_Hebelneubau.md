@@ -1458,3 +1458,20 @@ Nachweis: Schritt7 §23.66/§23.67, `o21_pruefstand.txt` 13/13, Paket Messstand;
 **Gebaut:** B1, B3 und B4 nennen beide Wege, *verkaufen oder in EURCV tauschen*, mit dem Satz, dass die Wahl beim Nutzer liegt und gemessen der Ausstieg aus dem Coin ist. Die Regeln sind unverändert, eine steuerliche Aussage gibt es nicht.
 
 Nachweis: Spot §58; P14 10/10, P16 12/12, P18 13/13; K-SP-5.
+
+# E-123 · E1–E3: Haltedauer als gemessener Fakt in der Positionsführung (18.10.2026)
+
+**18.10.2026** · Nutzer: *„ja E1 bis E3 bauen“*.
+
+**Gebaut:**
+- **E1:** Die 24-h-Ausstiegserinnerung nennt den Fakt aus §23.68 und die Liquidationsnähe der Stufe.
+- **E2:** Ist die Position 72 h nach dem Einstieg noch offen, kommt **einmal** eine zweite Erinnerung mit Haltedauer, H15-Führung und Fakt.
+- **E3:** Die Hebelführung (H15-Mail, Statusseite, Diagnose) nennt je offener Position *„seit n h offen (Regel 24 h)“* mit dem zugehörigen REGEL0-Signal oder *„eigene Entscheidung“*.
+
+**Eigene Festlegungen (berichtet):**
+- Fakt, kein Gate.
+- E2 nur nach verschickter erster Erinnerung.
+- E2 entfällt endgültig bei keiner offenen Position oder wenn die Position schon vor dem Signal offen war.
+- Zuordnung wie `trades()`, sekundengenau.
+
+Nachweis: Schritt7 §23.69; `e123_pruefstand.txt` 39/39, `e123_gegenprobe.txt` 15/15 (echte NB-Kopien); Paket Haltedauer; K-HD-1.
