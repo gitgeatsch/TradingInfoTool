@@ -73,11 +73,18 @@ def pruefe_eingabe(text, juengst, d):
 
 def frage(key, text):
     body = {"model": MODELL, "temperature": 0.0, "messages": [{"role": "user", "content": PLAN + "\n\nSchlagzeilen:\n" + text}]}
-    for v in range(8):
-        r = requests.post(URL, headers={"Authorization": "Bearer %s" % key}, json=body, timeout=180)
-        if r.status_code == 429:
-            warte = float(r.headers.get("retry-after") or 20)
-            time.sleep(min(max(warte, 5), 120))
+    # 19.10.2026: Groq-Tagesgrenze 200.000 Tokens (TPD) und Netzaussetzer - geduldig warten statt abbrechen (nur Fehlerbehandlung,
+    # Modell/Eingabe/Einstellung unveraendert)
+    for v in range(400):
+        try:
+            r = requests.post(URL, headers={"Authorization": "Bearer %s" % key}, json=body, timeout=180)
+        except requests.RequestException:
+            time.sleep(60)
+            continue
+        if r.status_code == 429 or r.status_code >= 500:
+            m = re.search(r"try again in (?:(\d+)m)?([\d.]+)s", r.text)
+            warte = (int(m.group(1) or 0) * 60 + float(m.group(2))) if m else float(r.headers.get("retry-after") or 30)
+            time.sleep(min(max(warte + 2, 5), 600))
             continue
         r.raise_for_status()
         j = r.json()
@@ -85,7 +92,7 @@ def frage(key, text):
         if rest < 3000:
             time.sleep(20)
         return j["choices"][0]["message"].get("content") or "", (j.get("usage") or {}).get("total_tokens")
-    raise RuntimeError("Groq: 8x 429")
+    raise RuntimeError("Groq: 400 Versuche ohne Antwort")
 
 
 def lies(roh):
