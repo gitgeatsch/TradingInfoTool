@@ -4264,3 +4264,28 @@ Auskunft G3: Je Aufnahme reichen die Meldungen im Median 24–58 h zurück. Es g
 4. **Grenzen, die bleiben:** 16 Absturztage sind wenig, es zeigen sich nur große Wirkungen. Und der größte Tag (04.06.2026) liegt in einer Archivlücke.
 
 **Nächster Schritt (zur Abstimmung):** Messplan L-C2 Fassung 1, vorab festzulegen (Vorschlag in der Mitteilung an den Nutzer).
+
+### 23.74 Messplan L-C2 Fassung 1 — VORAB festgelegt (19.10.2026, Nutzer: *„ja Messplan so festlegen, prüfen, gegenprüfen und doku“*)
+
+Festgelegt **vor** der ersten Abfrage (dieser Commit).
+
+| | Festlegung |
+|---|---|
+| **Modell** | `openai/gpt-oss-120b` über Groq, kostenfrei (1.000 Abfragen/Tag, 8.000 Tokens/Min.), Temperatur 0, Denktiefe Standard. Wissensstand vor dem Prüfzeitraum belegt in §23.73 (Kontrollen 2024 falsch, 2025 unbekannt). Cerebras entfällt: nicht kostenfrei (402) |
+| **Einheit** | jeder REGEL0-Einstiegstag 2025–26 der Menge *bestand* (497 Tage, `data/_lc/p65_einstiege.csv`) |
+| **Eingabe** | Schlagzeilen mit Zeitpunkt (die frühere von Veröffentlichung und Aufnahme) im **Vortag** [d − 1 00:00, d 00:00) UTC, Titel-Dubletten entfernt, die **60 jüngsten**. **Datumsangaben entfernt**: Jahreszahlen 2024–2026, Monatsnamen mit Tageszahl, Wochentage. Ohne Meldung lautet die Eingabe „keine Meldungen“, und der Tag zählt mit |
+| **Plan in der Anweisung** | „Kauf von Altcoins nach einem Rückgang, Wette auf eine Gegenbewegung binnen 24 h. Gefahr ist ein breiter Kursrutsch, der viele Altcoins zugleich um 10 % und mehr fallen lässt.“ Keine Kurszahl, keine Angabe zur Güte der Regel |
+| **Antwort** | JSON `{"risiko": "niedrig" \| "mittel" \| "hoch", "grund": "ein Satz"}`. Unlesbar → bis zu 3 Wiederholungen, dann *fehlt* (wird ausgewiesen, zählt als „niedrig“, Gegenrechnung ohne diese Tage) |
+| **Zielgröße** | **Absturztag** = mindestens 25 % der Einstiege des Tages mit Tief binnen 24 h ≤ −10 %, mindestens 5 Einstiege (16 Tage, §23.73). Auskunft: Anteil der Tief-Fälle je Tag |
+| **Hauptgröße** | **Lift** = Anteil der Absturztage unter den „hoch“-Tagen / Anteil der Absturztage unter allen Tagen; 95-%-Intervall per Tages-Bootstrap (2.000 Ziehungen) |
+| **Vergleich (a) Zufall** | gleich viele „hoch“-Tage zufällig gezogen (10.000×). Kennzahl: Anteil der Ziehungen mit einem Lift mindestens so groß wie der des LLM |
+| **Vergleich (b) Warnwörter** | dieselbe Eingabe; die 29 Warnwort-Stämme aus §23.73 zählen; die Tage mit den meisten Treffern werden in gleicher Zahl wie die LLM-„hoch“-Tage als „hoch“ markiert (Gleichstand per Zufall, fester Startwert); dazu dieselbe Auswahl umgekehrt (wenigste Treffer), weil die Richtung zweiseitig zu prüfen ist |
+| **Urteil (vorab)** | **trägt**: Lift ≥ 2 **und** untere Intervallgrenze > 1 **und** Lift über dem der Warnwörter (beide Richtungen). **trägt nicht**: sonst. Berichtet wird auch ein Lift < 1 (der LLM warnt an den falschen Tagen). Gibt der LLM an weniger als 5 Tagen „hoch“, ist das Urteil *zu wenige Warnungen*, Auskunft dann mit „mittel oder hoch“ |
+| **Gegenprobe** | (1) zweiter Rechenweg für Lift, Intervall und Vergleiche aus der Ablage; (2) Prüfung je Abfrage, dass keine Meldung mit Zeitpunkt ≥ d 00:00 und kein Datum in der Eingabe steht; (3) 20 zufällige Tage erneut abfragen: Stabilität bei Temperatur 0 |
+| **Ablage** | `data/_lc/p67_rueckspiel.db` (Tag, Eingabe-Prüfsumme, Zahl der Meldungen, jüngster Zeitpunkt, Antwort roh, risiko, grund); wiederaufnehmbar |
+
+⚠️ **Grenzen:**
+- Mit 16 Absturztagen werden nur große Wirkungen sichtbar.
+- Der größte Tag (04.06.2026) hat im Vortag keine passende Meldung, liegt also in einer Archivlücke.
+- Ein *trägt* gilt für **gpt-oss-120b**. Im Betrieb müsste dasselbe Modell laufen.
+
