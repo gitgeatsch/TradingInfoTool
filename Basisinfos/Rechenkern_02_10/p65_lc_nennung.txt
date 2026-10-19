@@ -1,0 +1,26 @@
+P65 NENNUNGSABDECKUNG · Archiv: 39926 Meldungen (2019-06-18 12:04:00 .. 2026-10-17 13:53:31) aus 9 Feeds, 2789 Aufnahmen
+
+================================================================================================================
+bestand: 8408 Einstiege, davon mit Archivaufnahme in den 7 T davor 8408 (100.0 %)
+   alle                           n  8408 · Meldung zum Asset 7 T  13.9 % · 3 T   9.1 % · 24 h   5.1 %
+   Tief 24 h <= -10 %             n   319 · Meldung zum Asset 7 T   9.4 % · 3 T   6.3 % · 24 h   4.1 %
+   gehandelte 21                  n  1352 · Meldung zum Asset 7 T  41.6 % · 3 T  31.1 % · 24 h  20.3 %
+   gehandelte 21, Tief <= -10 %   n    29 · Meldung zum Asset 7 T  27.6 % · 3 T  20.7 % · 24 h  17.2 %
+   je Groesse (mit Archiv):
+     Top 50         Einstiege  1311 · mit Meldung 7 T  60.9 % · davon Tief <= -10 %:  20, mit Meldung  75.0 %
+     51-200         Einstiege  4560 · mit Meldung 7 T   8.0 % · davon Tief <= -10 %: 163, mit Meldung   8.0 %
+     nicht Top 200  Einstiege  2537 · mit Meldung 7 T   0.2 % · davon Tief <= -10 %: 136, mit Meldung   1.5 %
+   Tief-Assets ohne JEDE Nennung 2025-26: 43 von 112 (u. a. 1000CAT, 1000CHEEMS, API3, ASR, BANANAS31, BAND, BEAMX, BIGTIME, BNT, BRETT, C98, CGPT, CHR, CTSI, CVC)
+================================================================================================================
+unverzerrt_1: 9124 Einstiege, davon mit Archivaufnahme in den 7 T davor 9124 (100.0 %)
+   alle                           n  9124 · Meldung zum Asset 7 T  10.4 % · 3 T   6.7 % · 24 h   3.8 %
+   Tief 24 h <= -10 %             n   398 · Meldung zum Asset 7 T   7.0 % · 3 T   4.5 % · 24 h   2.5 %
+   gehandelte 21                  n   710 · Meldung zum Asset 7 T  47.3 % · 3 T  38.2 % · 24 h  27.7 %
+   gehandelte 21, Tief <= -10 %   n    18 · Meldung zum Asset 7 T  38.9 % · 3 T  33.3 % · 24 h  22.2 %
+   je Groesse (mit Archiv):
+     Top 50         Einstiege  1006 · mit Meldung 7 T  60.3 % · davon Tief <= -10 %:  20, mit Meldung  70.0 %
+     51-200         Einstiege  4500 · mit Meldung 7 T   7.3 % · davon Tief <= -10 %: 163, mit Meldung   6.7 %
+     nicht Top 200  Einstiege  3618 · mit Meldung 7 T   0.4 % · davon Tief <= -10 %: 215, mit Meldung   1.4 %
+   Tief-Assets ohne JEDE Nennung 2025-26: 55 von 124 (u. a. 1000CAT, 1000CHEEMS, AI, ALPACA, API3, ASR, BANANAS31, BAND, BNT, BNX, BRETT, BSW, C98, CGPT, CHESS)
+
+Nennungen je der 21 gehandelten Assets 2025-26 (Meldungen gesamt): AKT 1 · ALGO 24 · AVAX 156 · BEAMX 0 · BNB 538 · BTC 13796 · ETH 4129 · HYPE 632 · KAIA 0 · KAITO 11 · LINK 247 · MORPHO 54 · NEAR 50 · ONDO 106 · QNT 20 · SEI 6 · SOL 2105 · SUI 139 · TAO 65 · TURBO 0 · VIRTUAL 14

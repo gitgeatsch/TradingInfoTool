@@ -1,0 +1,51 @@
+P65 GEGENPROBE
+
+     fehlt (Titel): cointelegraph | Strategy&#039;s Michael Saylor posts BTC chart after one-week break | Link in der Ablage: ja
+     fehlt (Titel): cointelegraph | Ethereum an &#039;obvious buy&#039; as accumulation addresses see record $883M ETH inflow | Link in der Ablage: ja
+     fehlt (Titel): cointelegraph | Quantum computing will bring lost Bitcoin &#039;back in circulation’ — Tether CEO | Link in der Ablage: ja
+  OK    G1 jede Meldung aus 5 neu gelesenen Aufnahmen steht in der Ablage (ueber den Link; ein spaeter geaenderter Titel zaehlt nicht als fehlend)  (141 Meldungen, Titel abweichend 3, Link fehlt 0)
+  OK    G2 Meldung 7 T davor auf zweitem Weg: >= 98 % der 1.500 Einstiege gleich  (1500 von 1500 gleich)
+  G3 40 zufaellige Treffer zur Durchsicht (Asset | Titel):
+     SSV                             | SSV DAO Unveils “SSV 2.0” Framework, Bringing bApps to Ethereum
+     APT      Aptos                  | AAVE Leads Top 40 Cryptocurrencies With 19% Surge in One Day — Here’s What Could Be Driving It
+     GRT      The Graph              | The Graph Builders, Edge & Node, Unveil “ampersend” Dashboard to Manage AI Agent Payments
+     NIL                             | Nillion's NIL Dips 12% After Debut; Analyst Believes Network's 'Blind Computing' Holds Promise for Data Privac
+     TIA      Celestia               | VanEck continues European expansion into crypto with exchange-traded note tracking Celestia’s TIA
+     KAITO    KAITO                  | TRUMP MEDIA DISCLOSES $2B OF BTC, KAITO INTRODUCES CAPITAL LAUNCHPAD, JPMORGAN LENDING AGAINST BTC & ETH?
+     IMX      Immutable              | SEC Drops Investigation into Web3 Gaming Firm Immutable
+     QNT      Quant                  | Quant (QNT) Rockets 75% Today as Major Banking Catalyst Fuels 180% Weekly Rally
+     MANA     Decentraland           | SAND, AXS, MANA Lead the Charge – But This Small-Cap Surge Isn’t Real Strength
+     ZIL      Zilliqa                | A 7 year Ledger bug lets attackers rebuild a private key from five signatures in seconds
+     CTK                             | Solana (SOL), Official Trump (TRUMP), and Construct Koin (CTK): Price Outlook for This Crypto Major, Crypto Me
+     RENDER   Render                 | Filecoin (FIL) Skyrockets by 50% in a Day, Bitcoin (BTC) Back to $102K: Weekend Watch
+     XTZ      Tezos                  | Bitnomial lists first US futures for Tezos, the blockchain project proposed in 2014 that raised $232 million i
+     1INCH    1inch Network          | 1inch introduces DeFi shared liquidity model ‘Aqua’
+     CRV      Curve DAO Token        | Curve founder pitches market-based fix for $700K bad debt in contrast to Aave bailout
+     SOL      Solana                 | Western Union launches USDPT stablecoin issued by Anchorage on Solana
+     TAO      Bittensor              | Grayscale files for spot Bittensor ETF following network’s first halving event
+     XLM      Stellar                | CME Expands Crypto Futures Lineup With Bitcoin Cash and Uniswap
+     NEAR     NEAR Protocol          | CoinDesk 20 performance update: Index drops 1.4% as all constituents decline
+     GMX      GMX                    | GMX Debuts Multichain To Unlock Seamless Perp Trading Across All Public Blockchains
+     ETHFI    ether.fi               | Arthur Hayes Dumps ETH for $6M in Pendle, Lido, and Emerging DeFi Tokens
+     STX      Stacks                 | Ether whale stacks $1.3B in ETH, fueling $4K recovery hopes
+     IOTX     IoTeX                  | Why did some altcoins on Binance crash to zero?
+     MON      Monad                  | Jupiter Launches DTF Platform As Industry Vies for Fair Token Mechanisms
+     FLOKI    FLOKI                  | BNB Breakout Over $1.1K Leaves Bitcoin, Dogecoin Behind, With Ecosystem Tokens in Focus
+     BNB      BNB                    | $36.5M in BNB Donated to Maltese Cancer Patients Unclaimed After 7 Years—Here's Why
+     SAND     The Sandbox            | Why Ethereum Game 'The Sandbox' Is Launching Its Own Chain
+     PYTH     Pyth Network           | QNT Leads Altcoin Rally, BTC Price Aims at $85K Again: Weekend Watch
+     ADA      Cardano                | Crypto Price Analysis Sep-11: ETH, XRP, ADA, BNB, and HYPE
+     ONDO     Ondo                   | Fidelity to Power Infra for Ondo’s $2.7B Tokenized Assets in Major tie up
+     AXL      Axelar                 | The Protocol: Stripe’s Tempo Testnet Goes Live
+     SFP      SafePal                | Wallet provider SafePal says data breach exposed personal info of nearly 40,000 customers
+     ETH      Ethereum               | Ethereum developers embrace Vitalik Buterin's long-term vision but urge quicker execution
+     APE      ApeCoin                | Bored Ape NFTs Win Big: Court Says They’re Not Securities
+     FLOW     Flow                   | Binance delists FLOW/BTC pair, flags token after exploit
+     BTC      Bitcoin                | Nomura’s Laser Digital adds tokenized bitcoin yield fund targeting around 5% returns
+     ROSE     Oasis                  | Ondo completes acquisition of US-regulated broker Oasis Pro
+     HBAR     Hedera                 | Morning Minute: Solana Staking ETF Goes Live Today
+     BABY     Babylon                | Bitcoin-Holding Institutions Seeking Yield, DeFi Capabilities
+     W        Wormhole               | Stargate Draws Second Acquisition Bid With Wormhole Topping LayerZero's $110M Buy Offer
+  FEHL  G4 keine Veroeffentlichung nach der eigenen Aufnahme (Toleranz 0)  (7 von 39926 nach der Aufnahme, groesste Ueberschreitung 0 days 18:17:23)
+
+4 Pruefungen, 1 FEHLGESCHLAGEN

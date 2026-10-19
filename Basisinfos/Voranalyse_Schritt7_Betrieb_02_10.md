@@ -4155,3 +4155,66 @@ Auskunft G3: Je Aufnahme reichen die Meldungen im Median 24–58 h zurück. Es g
 - Den REGEL0-Assets zuordnen (Kürzel und Name).
 - Zählen, wie viele Einstiege und wie viele **Tief-≤-−10-%-Einstiege** in den 7 T davor eine Meldung zum Asset haben.
 - Wieder kein Ergebnisvergleich. Erst danach ein Messplan für das LLM-Rückspiel.
+
+### 23.72 L-C Vorprüfung Nennungsabdeckung: Werden die Assets des linken Endes in den Nachrichten genannt? (19.10.2026; `p65_lc_archiv_laden.py`, `p65_lc_nennung.py`, `p65_gegenprobe.py` → `.txt`)
+
+**Nutzer 18.10.:** *„ja, Nennungsabdeckung vorprüfen, prüfen, gegenprüfen und doku“*. Kein Ergebnisvergleich nach Meldungsinhalt.
+
+**Archiv (Wayback, kostenfrei, je Feed die erste Aufnahme jedes Tages):**
+- 9 RSS-Feeds (CoinDesk 478 Aufnahmen, Cointelegraph 299, The Block 298, CryptoSlate 294, Decrypt 291, CoinGape 285, Daily Hodl 285, Bitcoinist 280, CryptoPotato 279), **2.789 Aufnahmen, 0 fehlgeschlagen**, **39.926 Meldungen** mit Veröffentlichungszeit. Ablage `data/_lc/nachrichten.db`.
+- Bei **jedem** REGEL0-Einstieg 2025–26 liegt in den 7 T davor mindestens eine Aufnahme.
+- Weitere Feeds geprüft und verworfen: CryptoNews 8 T, NewsBTC 52, BeInCrypto 25, AMBCrypto 36, U.Today 0.
+
+**Zuordnungsregeln** (vorab im Skriptkopf, nicht am Ergebnis gewählt):
+- Name ohne Groß-/Kleinschreibung, ab 4 Zeichen, auch der Stamm ohne Zusätze wie *Protocol*/*Network*, mit Stoppliste;
+- Kürzel in Großbuchstaben ab 3 Zeichen, ohne Abkürzungs-Stoppliste; `$KÜRZEL` immer;
+- Fenster vor Beginn der Einstiegsstunde, kein Vorgriff.
+
+**Ergebnis** (Meldung zum **eigenen** Asset in den 7 T vor dem Einstieg; bestand / unverzerrt_1):
+
+| | Einstiege | mit Meldung 7 T | 3 T | 24 h |
+|---|---|---|---|---|
+| alle | 8.408 / 9.124 | 13,9 % / 10,4 % | 9,1 / 6,7 | 5,1 / 3,8 |
+| **Tief 24 h ≤ −10 %** | 319 / 398 | **9,4 % / 7,0 %** | 6,3 / 4,5 | 4,1 / 2,5 |
+| gehandelte 21 | 1.352 / 710 | 41,6 % / 47,3 % | 31,1 / 38,2 | 20,3 / 27,7 |
+| gehandelte 21, Tief ≤ −10 % | 29 / 18 | 27,6 % / 38,9 % (8 bzw. 7 Fälle) | | |
+
+| Größe (CMC-Rang) | Einstiege | mit Meldung | davon Tief ≤ −10 % | mit Meldung |
+|---|---|---|---|---|
+| Top 50 | 1.311 | 60,9 % | **20** | 75 % |
+| 51–200 | 4.560 | 8,0 % | **163** | 8,0 % |
+| außerhalb der Top 200 | 2.537 | 0,2 % | **136** | 1,5 % |
+
+- **43 von 112** Assets mit Tief ≤ −10 % (unverzerrt: 55 von 124) werden 2025–26 **kein einziges Mal** genannt.
+- Unter den 21 gehandelten Assets: BEAMX, KAIA und TURBO 0 Nennungen, AKT 1, SEI 6. Dagegen BTC 13.796, ETH 4.129, SOL 2.105.
+
+**Auskunft – Ballung des linken Endes:**
+- **43 % aller Tief-Fälle (136 von 319) fallen auf nur 10 Tage.** An diesen Tagen traf es **45 %** der Einstiege, an allen anderen 2,3 %. Größte Tage: 04.06.2026 (36), 13.08.2025 (22), 13.11.2025 (18), 23.05.2025 (13), 06.03.2025 (12).
+- An diesen 10 Tagen gab es 300 Einstiege, also rund **30 je Tag**. Der Median liegt sonst bei 6–11.
+
+**Gegenprobe** **3 von 4** (zweite Wege):
+- **G1 Lesen** ✔: 141 Meldungen aus 5 neu abgerufenen Aufnahmen, mit xml.etree gelesen, alle über den Link in der Ablage. Bei 3 wich der Titel ab, weil der Feed ein Apostroph doppelt kodiert (`&#039;`): Der Lader löst es korrekt auf, xml.etree nicht. Das ist ein Unterschied im Prüfweg, kein Fehler der Ablage.
+- **G2 Zuordnung** ✔: Wortzerlegung statt Regex, 1.500 von 1.500 Einstiegen gleich.
+- **G3 Treffsicherheit** (40 zufällige Treffer, von mir durchgesehen):
+  - **2 klar falsch**: „Ether whale *stacks*“ → Stacks, „*Oasis* Pro“ (Broker) → Oasis;
+  - etwa 8 nur über die Kurzbeschreibung, am Titel nicht beurteilbar;
+  - der Rest korrekt.
+  - Fehltreffer erhöhen die Abdeckung. Die geringe Abdeckung des linken Endes ist daher eher **überschätzt**.
+- **G4 Vorgriff** ✗ nach der Vorabregel (Toleranz 0): **7 von 39.926** Meldungen tragen eine Veröffentlichungszeit **nach** ihrer Aufnahme (bis 18 h, Zeitzonenfehler im Feed).
+  - Diese Richtung erzeugt keinen Vorgriff.
+  - ⇒ Für jede weitere Nutzung gilt **die frühere von Veröffentlichung und Aufnahme**.
+
+**Was daraus folgt (fachlich, meine Einordnung):**
+1. **L-C in der Asset-Form trägt nicht, und zwar an der Abdeckung, nicht am Modell.**
+   - Das linke Ende sitzt zu 94 % in Werten außerhalb der Top 50.
+   - Über diese schreiben die Medien praktisch nicht: 2025–26 hätten nur **~30 Tief-Fälle** überhaupt eine Meldung zum eigenen Asset, auf den 21 gehandelten 7–8.
+   - Das ist zu wenig für ein Rückspiel-Urteil (wie bei E-1 Token-Delisting), und ein stärkeres Modell ändert daran nichts.
+2. **Das linke Ende ist ein Markttag-Ereignis.** 10 Tage tragen 43 % davon, mit rund 30 Signalen am Tag statt 6–11.
+   - Wenn ein LLM hier etwas beitragen kann, dann mit **allgemeinen Marktnachrichten vor dem Tag**. Diese deckt das Archiv reichlich ab (BTC 13.796 Nennungen).
+   - ⚠️ Vorbefund: Der Marktzustand war über Zahlen **nicht** vorab erkennbar (2.599). Große Abstürze werden oft durch Ereignisse **innerhalb** der 24 h ausgelöst und nicht vorher angekündigt. Die Aussicht ist offen, nicht gut.
+3. **Nebenbefund ohne LLM:** Die schlimmsten Tage sind Tage mit einer **Signalflut**. Ob „viele gleichzeitige Signale“ auf der Messbasis ein Risiko-Merkmal ist, wäre eine eigene, billige Messung (kein LLM), etwa für Hebelstufe oder Aggregat-Deckel.
+   - ⚠️ Das ist eine Beobachtung nach Sicht der Daten, keine Regel.
+
+**Zur Abstimmung (eine Frage):** Wie geht es mit der LLM-Komponente weiter?
+- **L-C2:** Markttag-Risiko aus allgemeinen Nachrichten; Rückspiel auf dem vorhandenen Archiv, mit Messplan vorab;
+- **oder** L-C beenden: Der LLM bleibt Auskunft, und die Zeit geht in den Nebenbefund *Signalflut* (Messbasis).
