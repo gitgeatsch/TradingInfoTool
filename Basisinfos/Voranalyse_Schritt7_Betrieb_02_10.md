@@ -4289,3 +4289,10 @@ Festgelegt **vor** der ersten Abfrage (dieser Commit).
 - Der größte Tag (04.06.2026) hat im Vortag keine passende Meldung, liegt also in einer Archivlücke.
 - Ein *trägt* gilt für **gpt-oss-120b**. Im Betrieb müsste dasselbe Modell laufen.
 
+**Laufprotokoll L-C2 (19.10.2026, kein Ergebnis):**
+- **Start 18:1x (WMI):** nach 9 Tagen durch Strg+C im **sichtbaren** Konsolenfenster beendet; Protokoll nur `^C`. Neustart 18:35 mit verstecktem Fenster (`ShowWindow = 0`), wiederaufgenommen ab Tag 10.
+- **Groq-Grenze:** **200.000 Tokens je Tag (TPD)**, nach 238 Tagen erreicht (19:12, 199.847 verbraucht). Seitdem etwa ein Tag je 10–11 Minuten, also die Nachfüllrate.
+- **Restlaufzeit:** 258 Tage × ~1.500 Tokens ≈ 390.000 Tokens → **fertig etwa Mi. 21.10. gegen 18 Uhr**.
+- **Keine Änderung am Plan:** keine niedrigere Denktiefe, kein anderer Anbieter (sonst zwei Fassungen in einem Lauf).
+- ⚠️ **Offen benannt:** `p67_auswertung.py` lief einmal versehentlich auf 238 Tagen, weil der Lauf für beendet gehalten wurde. Das war ein Blick auf ein Zwischenergebnis, den der Plan nicht vorsieht. Er wird nicht verwendet; das Urteil fällt nach §23.74 auf allen 497 Tagen.
+
