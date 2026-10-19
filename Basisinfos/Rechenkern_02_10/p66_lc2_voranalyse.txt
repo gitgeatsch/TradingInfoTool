@@ -1,0 +1,28 @@
+P66 L-C2 VORANALYSE · 39784 Meldungen ohne Titel-Dubletten (2024-12-02 .. 2026-10-17)
+
+V1 Meldungen je Kalendertag: Median 44 (5 %..95 %: 2..156) · Tage mit Meldungen 632 von 655
+   alle Einstiegstage   497 Tage · Meldungen 24 h vor dem Einstieg: Median 39 (min 0) · Tage mit < 10 Meldungen: 94
+   Tage mit Tief-Fall   136 Tage · Meldungen 24 h vor dem Einstieg: Median 42 (min 0) · Tage mit < 10 Meldungen: 27
+   10 groesste Tage      10 Tage · Meldungen 24 h vor dem Einstieg: Median 30 (min 0) · Tage mit < 10 Meldungen: 2
+
+V2 Zielgroesse je Einstiegstag (Anteil Tief <= -10 %):
+   Tage 497 · mit Tief-Fall 136 · 'Absturztage' (>= 25 %, >= 5 Einstiege): 16, sie tragen 144 von 319 Tief-Faellen (45 %)
+   Absturztage: 2025-03-06 (12/35) · 2025-03-10 (3/5) · 2025-03-27 (2/8) · 2025-05-23 (13/24) · 2025-06-21 (2/8) · 2025-08-13 (22/59) · 2025-08-18 (2/5) · 2025-09-21 (3/7) · 2025-10-09 (10/11) · 2025-10-13 (7/17) · 2025-11-02 (3/5) · 2025-11-13 (18/23) · 2025-11-30 (3/5) · 2025-12-10 (5/13) · 2026-06-03 (3/5) · 2026-06-04 (36/54)
+
+V4 Warnwoerter (vorab, 29 Staemme) je 24-h-Fenster vor dem Einstieg, Median je Tag: alle 6 · Tage mit Tief-Fall 6 · Absturztage 2
+   (nur Zaehlung - ob das trennt, ist die Messung; der LLM muss es schlagen)
+
+V3 KONTAMINATION gemini-3.5-flash-lite (12 Testfragen, Temperatur 0)
+   2025-01-15  echt   100172 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2025-03-06  echt    90222 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2025-04-07  echt    79422 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2025-05-23  echt   107292 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2025-08-13  echt   123443 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2025-10-10  echt   113755 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2025-11-13  echt   100035 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2026-01-15  echt    95546 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2026-03-16  echt    74724 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2026-06-04  echt    63639 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2026-08-14  echt    62925 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   2026-09-30  echt    83580 · Modell None       · Fehler -       · kennt nicht · unbekannt
+   -> kennt den Kurs an 0 von 12 Testtagen

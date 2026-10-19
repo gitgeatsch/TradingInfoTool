@@ -4218,3 +4218,49 @@ Auskunft G3: Je Aufnahme reichen die Meldungen im Median 24–58 h zurück. Es g
 **Zur Abstimmung (eine Frage):** Wie geht es mit der LLM-Komponente weiter?
 - **L-C2:** Markttag-Risiko aus allgemeinen Nachrichten; Rückspiel auf dem vorhandenen Archiv, mit Messplan vorab;
 - **oder** L-C beenden: Der LLM bleibt Auskunft, und die Zeit geht in den Nebenbefund *Signalflut* (Messbasis).
+
+### 23.73 L-C2 Voranalyse: Markttag-Risiko aus allgemeinen Nachrichten – Datenlage, Zielgröße und Kontamination der Modelle (19.10.2026; `p66_lc2_voranalyse.py`, `p66_gegenprobe.py`, `p66_horizont.py`, `p66_ereignis_probe.py` → `.txt`)
+
+**Nutzer 19.10.:** *„1. allgemeine Nachrichten prüfen“*. Kein Ergebnisvergleich Nachricht → Ausgang.
+
+**V1 Datenlage** (39.784 Meldungen ohne Titel-Dubletten, Zeitpunkt = die frühere von Veröffentlichung und Aufnahme):
+- **je Kalendertag:** Median 44 Meldungen (5 %: 2, 95 %: 156), Meldungen an 632 von 655 Tagen;
+- **24 h vor dem Einstieg** (Median je Tag): 39; an 94 von 497 Einstiegstagen weniger als 10;
+- **vor den 10 größten Verlusttagen:** Median 30; an 2 dieser Tage weniger als 10 Meldungen.
+- ⚠️ Für den **größten Absturztag (04.06.2026, 36 von 54 Einstiegen)** enthält das Archiv in den Tagen davor **keine** passende Meldung (Archivlücke).
+
+**V2 Zielgröße:**
+- **16 Absturztage** (mindestens 25 % der Einstiege mit Tief binnen 24 h ≤ −10 %, mindestens 5 Einstiege) tragen **144 von 319 Tief-Fällen (45 %)**.
+- Absturztage: 06.03., 10.03., 27.03., 23.05., 21.06., 13.08., 18.08., 21.09., **09.10.**, 13.10., 02.11., 13.11., 30.11., 10.12.2025 sowie 03.06. und 04.06.2026.
+
+**V4 Vergleichsmaßstab:** 29 Warnwort-Stämme (crash, plunge, liquidation, hack, tariff, …), vorab festgelegt.
+- ⚠️ **Offen benannt:** Die Zählung wurde in V4 schon nach Absturztagen aufgeteilt (Median 2 gegen 6 sonst, nur 16 Tage). Das ist ein Blick aufs Ergebnis und hätte nicht in die Voranalyse gehört.
+- Für den Messplan heißt das: Die Warnwort-Zählung ist **Vergleichsmaßstab**, nicht Kandidat, und ihre Richtung wird **zweiseitig** geprüft.
+
+**V3 Kontamination** – entscheidend für ein Rückspiel:
+- Die erste Probe (BTC-Kurs, „unbekannt“ erlaubt) ergab bei Gemini 12-mal „unbekannt“. **Das war Zurückhaltung, nicht Nichtwissen.**
+- Mit erzwungener Schätzung und **Positivkontrolle** sieht es so aus:
+
+  | Modell (kostenfrei) | Kurse 2023/24 (Kontrolle) | Kurse 2025 | Ereignis-Quiz 2025 | Urteil für ein Rückspiel 2025–26 |
+  |---|---|---|---|---|
+  | gemini-3.5-flash-lite (heute im Prüfblock) | 0,0–3,9 % Fehler | **kennt bis ~Okt. 2025** (10.10.: 1,1 %), ab Dez. 2025 nicht | kennt den Bybit-Hack 02/2025 | ✗ **kontaminiert für 2025** |
+  | qwen3.8-27b (Groq) | ungenau | kennt bis ~Aug. 2025 (Juni: 0,5 %) | „unbekannt“ | ✗ kontaminiert |
+  | **gpt-oss-120b** (Groq/Cerebras) | Kontrollfragen **falsch** („ETF Juni 2024“) | verweigert jede Kursangabe (Richtlinie, aus dem Denkprotokoll belegt) | unbekannt | ◐ **sauber**, Wissen endet etwa Mitte 2024 |
+  | ministral-8b-2512 (Mistral) | Kontrollen richtig, Kurse 17 % daneben | kennt 2025 **nicht** (65–75 Tsd. statt 80–117 Tsd.) | ausdrücklich unbekannt | ✔ sauber, aber kleines Modell |
+
+- **Lehre:** Ein Modell, das „unbekannt“ sagen darf, wirkt sauberer, als es ist. Gemini nennt den Oktober-Crash „unbekannt“ und kennt doch die Kurse bis dahin. Sauberkeit erkennt man nur mit Positivkontrolle **und** erzwungener Schätzung.
+
+**Gegenprobe** (`p66_gegenprobe.py`) **3/4**:
+- G1a ✔ Die Positivkontrolle greift (0,0 / 2,1 / 3,9 %).
+- G1b ✗ Das ist der Befund selbst: Gemini schätzt 2025 näher als der Ende-2024-Kurs, also Wissen über 2025.
+- G2 ✔ Die 16 Absturztage stimmen auf zweitem Weg.
+- G3 ✔ Die Meldungen 24 h davor stimmen per searchsorted (300/300).
+
+**Was daraus folgt (fachlich, meine Einordnung):**
+1. **Mit dem heutigen Modell ist ein Rückspiel 2025 wertlos.** Gemini kann den Ausgang kennen. Sauber wäre nur ab Dezember 2025, mit 3 von 16 Absturztagen; das ist zu wenig.
+2. **Ein sauberes Rückspiel 2025–26 geht mit gpt-oss-120b** (großes Modell, Wissen bis etwa Mitte 2024) oder mit ministral-8b. Beide sind kostenfrei.
+3. **Das beantwortet L-E (stärkeres Modell):** Für ein Rückspiel zählt nicht nur die Stärke, sondern ein Wissensstand **vor** dem Prüfzeitraum. Die stärkeren freien Modelle (Gemini 3.5, Qwen 3.8) kennen 2025, gpt-oss-120b nicht.
+   - Im Betrieb (vorwärts) gilt die Einschränkung nicht. Geprüft werden darf aber nur das Modell, das auch läuft.
+4. **Grenzen, die bleiben:** 16 Absturztage sind wenig, es zeigen sich nur große Wirkungen. Und der größte Tag (04.06.2026) liegt in einer Archivlücke.
+
+**Nächster Schritt (zur Abstimmung):** Messplan L-C2 Fassung 1, vorab festzulegen (Vorschlag in der Mitteilung an den Nutzer).

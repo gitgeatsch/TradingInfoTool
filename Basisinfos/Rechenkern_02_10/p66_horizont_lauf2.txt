@@ -1,0 +1,44 @@
+P66b WISSENSHORIZONT
+
+groq      Modelle (11): allam-2-7b, canopylabs/orpheus-arabic-saudi, canopylabs/orpheus-v1-english, meta-llama/llama-prompt-guard-2-22m, meta-llama/llama-prompt-guard-2-86m, openai/gpt-oss-120b, openai/gpt-oss-20b, openai/gpt-oss-safeguard-20b, qwen/qwen3.8-27b, whisper-large-v3, whisper-large-v3-turbo
+cerebras  Modelle (2): gpt-oss-120b, qwen-3.8-27b
+mistral   Modelle (45): codestral-2508, codestral-embed, codestral-embed-2505, codestral-latest, labs-leanstral-1-5, labs-leanstral-1-5-1, magistral-medium-latest, magistral-small-latest, ministral-14b-2512, ministral-14b-latest, ministral-3b-2512, ministral-3b-latest, ministral-8b-2512, ministral-8b-latest, mistral-code-fim-latest, mistral-code-latest, mistral-embed, mistral-embed-2312, mistral-medium, mistral-medium-2604, mistral-medium-3, mistral-medium-3-5, mistral-medium-3.5, mistral-medium-latest, mistral-moderation-2603, mistral-ocr-2512, mistral-ocr-3, mistral-ocr-3-0, mistral-ocr-4, mistral-ocr-4-1, mistral-ocr-latest, mistral-small-2603, mistral-small-latest, mistral-vibe-cli-fast, mistral-vibe-cli-latest, mistral-vibe-cli-with-tools, voxtral-mini-2602, voxtral-mini-latest, voxtral-mini-realtime-2602, voxtral-mini-realtime-latest
+
+groq / openai/gpt-oss-120b
+   2023-06-15  echt    25559 · Schaetzung    26500 · Fehler   3.7 % · Fortschreibung 3 M   2.0 % · KENNT
+   2024-03-14  keine Antwort ('NoneType' object has no attribute 'group')
+   2024-09-15  keine Antwort ('NoneType' object has no attribute 'group')
+   2024-12-15  keine Antwort ('NoneType' object has no attribute 'group')
+   2025-02-15  keine Antwort ('NoneType' object has no attribute 'group')
+   2025-04-07  keine Antwort ('NoneType' object has no attribute 'group')
+   2025-06-15  keine Antwort ('NoneType' object has no attribute 'group')
+   2025-08-15  keine Antwort ('NoneType' object has no attribute 'group')
+   2025-10-10  keine Antwort ('NoneType' object has no attribute 'group')
+   2025-12-15  keine Antwort ('NoneType' object has no attribute 'group')
+   2026-02-15  keine Antwort ('NoneType' object has no attribute 'group')
+
+groq / qwen/qwen3.8-27b
+   2023-06-15  echt    25559 · Schaetzung    30500 · Fehler  19.3 % · Fortschreibung 3 M   2.0 % · -
+   2024-03-14  echt    71505 · Schaetzung    67500 · Fehler   5.6 % · Fortschreibung 3 M  39.8 % · naeher als Fortschreibung
+   2024-09-15  echt    59130 · Schaetzung    50000 · Fehler  15.4 % · Fortschreibung 3 M  12.7 % · -
+   2024-12-15  echt   104551 · Schaetzung    96500 · Fehler   7.7 % · Fortschreibung 3 M  43.4 % · naeher als Fortschreibung
+   2025-02-15  echt    97583 · Schaetzung    98500 · Fehler   0.9 % · Fortschreibung 3 M   7.2 % · KENNT
+   2025-04-07  echt    79422 · Schaetzung    84500 · Fehler   6.4 % · Fortschreibung 3 M  28.7 % · naeher als Fortschreibung
+   2025-06-15  echt   105513 · Schaetzung   105000 · Fehler   0.5 % · Fortschreibung 3 M  21.8 % · KENNT
+   2025-08-15  echt   117311 · Schaetzung   125000 · Fehler   6.6 % · Fortschreibung 3 M  11.7 % · naeher als Fortschreibung
+   2025-10-10  echt   113755 · Schaetzung   125000 · Fehler   9.9 % · Fortschreibung 3 M   3.4 % · -
+   2025-12-15  echt    86353 · Schaetzung   150000 · Fehler  73.7 % · Fortschreibung 3 M  33.7 % · -
+   2026-02-15  echt    68630 · Schaetzung   150000 · Fehler 118.6 % · Fortschreibung 3 M  37.2 % · -
+
+mistral / ministral-8b-2512
+   2023-06-15  echt    25559 · Schaetzung    29800 · Fehler  16.6 % · Fortschreibung 3 M   2.0 % · -
+   2024-03-14  echt    71505 · Schaetzung    62500 · Fehler  12.6 % · Fortschreibung 3 M  39.8 % · naeher als Fortschreibung
+   2024-09-15  echt    59130 · Schaetzung    58000 · Fehler   1.9 % · Fortschreibung 3 M  12.7 % · KENNT
+   2024-12-15  echt   104551 · Schaetzung    65000 · Fehler  37.8 % · Fortschreibung 3 M  43.4 % · naeher als Fortschreibung
+   2025-02-15  echt    97583 · Schaetzung    65000 · Fehler  33.4 % · Fortschreibung 3 M   7.2 % · -
+   2025-04-07  echt    79422 · Schaetzung    65000 · Fehler  18.2 % · Fortschreibung 3 M  28.7 % · naeher als Fortschreibung
+   2025-06-15  echt   105513 · Schaetzung    75000 · Fehler  28.9 % · Fortschreibung 3 M  21.8 % · -
+   2025-08-15  echt   117311 · Schaetzung    65000 · Fehler  44.6 % · Fortschreibung 3 M  11.7 % · -
+   2025-10-10  echt   113755 · Schaetzung    75000 · Fehler  34.1 % · Fortschreibung 3 M   3.4 % · -
+   2025-12-15  echt    86353 · Schaetzung    65000 · Fehler  24.7 % · Fortschreibung 3 M  33.7 % · naeher als Fortschreibung
+   2026-02-15  echt    68630 · Schaetzung   125000 · Fehler  82.1 % · Fortschreibung 3 M  37.2 % · -
