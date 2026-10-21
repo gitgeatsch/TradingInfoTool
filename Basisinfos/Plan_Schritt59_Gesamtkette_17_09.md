@@ -2597,3 +2597,10 @@ Schritt7 §23.24.
 - Gemini, das Modell im Prüfblock, kennt 2025 aus seinem Training. Vor jedem LLM-Rückspiel gehört deshalb eine Kontaminationsprobe mit Positivkontrolle (§23.73).
 
 **Nachtrag 21.10.2026 (53) — Bilanz LLM-Komponente und neue Richtung:** Auf elf geprüften Wegen liefert die LLM-Komponente keinen messbaren Mehrwert (E-125, `Bilanz_LLM_Komponente_21_10.md`). Der Nutzer stellt das System in dieser Form infrage und lässt **Grid-Trading** recherchieren: BTC und ein Altcoin, mit oder ohne LLM.
+
+**Nachtrag 21.10.2026 (54) — Recherche Grid-Trading:** `Recherche_Grid_Trading_21_10.md`.
+- Ein Gitter ist **ohne LLM** baubar. Fuer keine der denkbaren LLM-Aufgaben gibt es einen Beleg; L-C2 (§23.75) zeigt zudem, dass ein LLM den gefaehrlichen Fall, den Absturz, aus den Nachrichten des Vortags nicht erkennt.
+- Bei einem Zufallspfad ist der Erwartungswert des Gitters null (Chen/Chen/Jang 2025). Ein Ertrag entsteht nur, wenn der Kurs auf Stufenskala zur Mitte zurueckkehrt, und zwar ueber die Gebuehr. Das ist messbar.
+- Bitpanda Broker ist fuer ein Gitter zu teuer. In Frage kommen MiCA-Boersen mit Limitorders (Bybit EU, One Trading, OKX, Kraken, Bitpanda Fusion).
+- Fuer das Rueckspiel braucht es 1-min-Daten (Binance Public Data, frei).
+- Noch nichts gemessen.
