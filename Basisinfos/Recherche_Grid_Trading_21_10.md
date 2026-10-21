@@ -192,3 +192,17 @@ Nutzer 22.10.: *„ok, können eine kurze Prüfung machen für W-A, dann müssen
 **Unverändert aus §9:** Daten, Fenster, Stufen, monatliches Neusetzen, Glattstellung, Nennwert, Schwelle 0,25 % je Ausführung, beide Hälften, zweiseitig, Folgen, Auskunft.
 
 ⚠️ **Ehrlich:** Fassung 1 und G4 sind angesehen. G4 zeigt eine leichte Rückkehr auf Stunden bis Tage. Das Urteil hängt aber an der **Größe über der Gebühr**, nicht an der Richtung, und diese Größe ist ungesehen.
+
+### 9.3 Fassung 2: der Selbsttest sperrt die Messung (22.10.2026; `grid_stufe1_f2.py` → `.txt`) — Fassung 2b VORAB
+
+- **Selbsttest Fassung 2: nicht bestanden.**
+  - Rückkehr-Welten 1,000 / 0,990 / 1,000;
+  - Trend-Welten 0,995 / 0,975 / 1,000;
+  - **unabhängige Welten 1,000 / 0,985 / 1,000** (Soll: dazwischen).
+  - Gemessen wurde nach Plan **nichts**.
+- **Ursache:** Die Nullwelt zog die Stundenrenditen **samt der tatsächlichen Monatsdrift**. Ihr Monatsende streut deshalb um das **echte** Monatsende herum. Der Restbestand ist dann im Mittel größer als beim echten Pfad (Erwartung von d² gleich d_echt² + n·σ²). Jeder echte Pfad schlägt so die Nullwelt, auch ein reiner Zufallspfad.
+- **Fassung 2b (einzige Änderung):**
+  - Die Stundenrenditen jedes Monats werden um ihr **eigenes Monatsmittel bereinigt**.
+  - Dann wird mit Zurücklegen gezogen und die **gemeinsame Drift des ganzen Fensters** (Mittel aller Stundenrenditen des Assets 2023-09 bis 2026-08) addiert.
+  - Unter H0 (Zufallspfad mit konstanter Drift) liegt das echte Monatsende damit dort, wo auch die Nullwelt es erwartet.
+- **Selbsttest wieder zuerst, sonst keine Messung.** Alles andere bleibt wie §9 und §9.2.
