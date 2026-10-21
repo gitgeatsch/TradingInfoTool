@@ -1,0 +1,13 @@
+GRID STUFE 1 - GEGENPROBE
+
+  OK    G1 eigene Gitterschleife BTC 1 % = grid_stufe1  (hier -19.92 / 3701 · dort ('3701', '-19.92'))
+  OK    G2 Nullwelt behaelt das Monatsende  (Abweichung max 0.0e+00)
+  FEHL  G3 Selbsttest: Rueckkehr (phi -0,10) Rang >= 0,95 · Trend (+0,10) Rang <= 0,05 · unabhaengig dazwischen  (Rueckkehr 0.000 · Trend 1.000 · unabhaengig 0.540)
+  G4 Varianz-Ratio der Stundenrenditen 2023-09..2026-08:
+     BTC: VR(6) 0.967 z -1.3 · VR(24) 0.952 z -1.0 · VR(168) 0.951 z -0.4
+     ETH: VR(6) 1.016 z +0.6 · VR(24) 1.030 z +0.6 · VR(168) 1.048 z +0.4
+     SOL: VR(6) 0.930 z -2.8 · VR(24) 0.918 z -1.6 · VR(168) 0.906 z -0.8
+     LINK: VR(6) 0.966 z -1.3 · VR(24) 0.940 z -1.2 · VR(168) 0.864 z -1.2
+  FEHL  G4 zweiter Weg: VR(24) > 1 (Trend) bei allen vier - gleiche Richtung wie das Gitter (umgekehrt)
+
+4 Pruefungen, 2 FEHLGESCHLAGEN

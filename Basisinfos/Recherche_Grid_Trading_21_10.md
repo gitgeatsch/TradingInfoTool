@@ -160,3 +160,35 @@ Nutzer 22.10.: *„ok, können eine kurze Prüfung machen für W-A, dann müssen
 ⚠️ **Ehrlich vorab:**
 - Stundenschlüsse sehen nichts **innerhalb** der Stunde. Ein echtes Gitter füllt öfter; eine Rückkehr innerhalb der Stunde bleibt hier ungemessen (das wäre Stufe 2).
 - Sechs Zellen ergeben Mehrfachtesten. Die Gebührenschwelle und die Bedingung „beide Hälften“ begrenzen das.
+
+### 9.1 Fassung 1 gelaufen — das INSTRUMENT ist falsch herum, das Ergebnis ist ungültig (22.10.2026; `grid_stufe1.py`, `grid_stufe1_gegenprobe.py` → `.txt`)
+
+- **Ergebnis von Fassung 1 (nur festgehalten, nicht bewertet):** alle 6 Zellen Rang 0,000 bis 0,040, also *„umgekehrt (Trend)“*. SOL und LINK ebenso.
+- **Gegenprobe:**
+  - G1 eigene Gitterschleife (gleich) ✔
+  - G2 Nullwelt behält das Monatsende ✔
+  - **G3 Selbsttest mit bekannter Wahrheit ✘:** Eine künstliche Welt mit *Rückkehr zur Mitte* (Stundenrenditen φ = −0,10) erhielt Rang **0,000**, eine *Trend*-Welt (φ = +0,10) Rang **1,000**. Das Instrument zeigt die Richtung also **verkehrt** an.
+  - **G4 zweiter Weg ✘:** Die Varianz-Ratio zeigt keinen Trend, sondern eine leichte Rückkehr: VR(24) BTC 0,952 (z −1,0), ETH 1,030 (+0,6), SOL 0,918 (−1,6), LINK 0,940 (−1,2); SOL VR(6) 0,930 (z −2,8).
+- **Ursache (aus der Sache, nicht nachgestellt):**
+  - Die Nullwelt hat die Stundenrenditen je Monat **umgeordnet**. Damit bleiben Anfang **und Ende** jedes Monats fest.
+  - Bei festem Monatsende ist der Restbestand des Gitters vorgegeben, und das Ergebnis hängt nur noch an der **Zahl der Stufendurchgänge**.
+  - Eine Rückkehr zur Mitte *verringert* die Schwankung auf längerer Skala, also auch die Durchgänge. Sie erscheint deshalb als Nachteil.
+  - Ihr eigentlicher Vorteil für das Gitter, ein **Monatsende nahe am Start und damit ein kleiner Restbestand**, war durch die Nullwelt ausgeschaltet.
+- ⇒ Fassung 1 misst die **falsche Frage**. Ihr Ergebnis ist **kein Befund**, auch nicht *„Trend“*.
+
+### 9.2 Messplan Fassung 2 — VORAB, Selbsttest ZUERST (22.10.2026)
+
+**Was sich ändert**, und nur das:
+- **Nullwelt = Zufallspfad.** Je Monat 200 Ziehungen der Stundenrenditen **mit Zurücklegen** aus demselben Monat.
+  - Gleich bleiben die Schwankung und die erwartete Drift des Monats; das **Monatsende ist frei**.
+  - Für einen Zufallspfad ist das Gitter in der Theorie ein Nullsummenspiel (bis auf Mechanik, die echt und Nullwelt gleich trifft).
+
+**Selbsttest VOR der Messung:** Pflicht, sonst wird nicht gemessen.
+- Künstliche Monate mit der BTC-Stundenschwankung:
+  - Rückkehr φ = −0,10 → Rang ≥ 0,95;
+  - Trend φ = +0,10 → Rang ≤ 0,05;
+  - unabhängig φ = 0 → Rang dazwischen.
+
+**Unverändert aus §9:** Daten, Fenster, Stufen, monatliches Neusetzen, Glattstellung, Nennwert, Schwelle 0,25 % je Ausführung, beide Hälften, zweiseitig, Folgen, Auskunft.
+
+⚠️ **Ehrlich:** Fassung 1 und G4 sind angesehen. G4 zeigt eine leichte Rückkehr auf Stunden bis Tage. Das Urteil hängt aber an der **Größe über der Gebühr**, nicht an der Richtung, und diese Größe ist ungesehen.
