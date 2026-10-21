@@ -1,0 +1,20 @@
+^C  2025-02-17: 25 neu · Stand {'hoch': 7, 'mittel': 15, 'niedrig': 12}
+  2025-03-20: 50 neu · Stand {'hoch': 17, 'mittel': 28, 'niedrig': 14}
+  2025-04-19: 75 neu · Stand {'hoch': 22, 'mittel': 43, 'niedrig': 19}
+  2025-05-20: 100 neu · Stand {'hoch': 24, 'mittel': 54, 'niedrig': 31}
+  2025-06-23: 125 neu · Stand {'hoch': 26, 'mittel': 64, 'niedrig': 44}
+  2025-07-23: 150 neu · Stand {'hoch': 27, 'mittel': 76, 'niedrig': 56}
+  2025-08-22: 175 neu · Stand {'hoch': 31, 'mittel': 87, 'niedrig': 66}
+  2025-09-24: 200 neu · Stand {'hoch': 34, 'mittel': 100, 'niedrig': 75}
+  2025-10-24: 225 neu · Stand {'hoch': 41, 'mittel': 109, 'niedrig': 84}
+  2025-12-04: 25 neu · Stand {'hoch': 57, 'mittel': 121, 'niedrig': 86}
+  2026-01-11: 50 neu · Stand {'hoch': 71, 'mittel': 129, 'niedrig': 89}
+  2026-02-22: 75 neu · Stand {'hoch': 82, 'mittel': 143, 'niedrig': 89}
+  2026-03-20: 100 neu · Stand {'hoch': 94, 'mittel': 151, 'niedrig': 94}
+  2026-04-14: 125 neu · Stand {'hoch': 108, 'mittel': 162, 'niedrig': 94}
+  2026-05-10: 150 neu · Stand {'hoch': 115, 'mittel': 177, 'niedrig': 97}
+  2026-06-04: 175 neu · Stand {'hoch': 122, 'mittel': 190, 'niedrig': 102}
+  2026-07-02: 200 neu · Stand {'hoch': 129, 'mittel': 199, 'niedrig': 111}
+  2026-07-28: 225 neu · Stand {'hoch': 135, 'mittel': 215, 'niedrig': 114}
+  2026-08-22: 250 neu · Stand {'hoch': 141, 'mittel': 231, 'niedrig': 117}
+RUECKSPIEL openai/gpt-oss-120b: 497 Tage in der Ablage, neu 258 · {'hoch': 141, 'mittel': 237, 'niedrig': 119}

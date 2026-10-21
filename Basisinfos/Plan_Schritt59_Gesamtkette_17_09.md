@@ -2590,3 +2590,8 @@ Schritt7 §23.24.
 - Die Mail beim Stufenwechsel ist an. Der Vorbehalt lautet jetzt *„geprüft an zwei Zyklen, trennt Season-Phase und Bärenmarkt, erkennt den Beginn nicht genau vorab“*.
 - Die Anzeige in den Spot-Mails, auf der Statusseite und in der GUI besteht seit P19.
 - Details: Spot §59.14.
+
+**Nachtrag 21.10.2026 (52) — LLM als Risikoprüfer (L-C) geprüft, trägt nicht:**
+- Meldungen zum einzelnen Asset erreichen das linke Ende nicht: kleine Werte werden kaum genannt (§23.72).
+- Allgemeine Marktnachrichten des Vortags kündigen die 16 Absturztage nicht an (gpt-oss-120b, Lift 0,88, §23.75).
+- Gemini, das Modell im Prüfblock, kennt 2025 aus seinem Training. Vor jedem LLM-Rückspiel gehört deshalb eine Kontaminationsprobe mit Positivkontrolle (§23.73).

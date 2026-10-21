@@ -1,0 +1,33 @@
+P67 AUSWERTUNG L-C2 (§23.74) · 497 Einstiegstage, Absturztage 16 · Urteile {'mittel': np.int64(237), 'hoch': np.int64(141), 'niedrig': np.int64(119)} · ohne Abfrage 0
+
+Hauptfrage 'hoch': 141 Tage markiert, davon Absturztage 4 von 16
+   Lift 0.88 [95 %: 0.19..1.71] · Zufall >= Lift in 71.5 % der Ziehungen · Warnwoerter meiste 0.44 / wenigste 1.98
+Gegenrechnung ohne 'fehlt': 141 Tage markiert, davon Absturztage 4 von 16
+   Lift 0.88 [95 %: 0.18..1.71] · Zufall >= Lift in 71.7 % der Ziehungen · Warnwoerter meiste 0.44 / wenigste 1.98
+Auskunft 'mittel oder hoch': 378 Tage markiert, davon Absturztage 9 von 16
+   Lift 0.74 [95 %: 0.41..1.04] · Zufall >= Lift in 98.1 % der Ziehungen · Warnwoerter meiste 0.66 / wenigste 1.15
+
+Auskunft je Urteil: Tage · Absturztage · mittlerer Anteil der Tief-Faelle
+   hoch          141 Tage ·  4 Absturztage (2.8 %) · Tief-Anteil 8.9 %
+   mittel        237 Tage ·  5 Absturztage (2.1 %) · Tief-Anteil 5.3 %
+   niedrig       119 Tage ·  7 Absturztage (5.9 %) · Tief-Anteil 10.7 %
+
+Auskunft: die 16 Absturztage
+   2025-03-06  12/35 Tief · Meldungen  18 · mittel  · Die Mischung aus positiven ETF‑ und Investitionsnachrichten sowie negativen Meldungen zu Betrugsfällen, regulatorischen 
+   2025-03-10   3/ 5 Tief · Meldungen  18 · hoch    · Die überwiegende Mehrheit der Schlagzeilen weist auf makroökonomische Spannungen, sinkende Bitcoin‑Preise und erhebliche
+   2025-03-27   2/ 8 Tief · Meldungen   7 · mittel  · Die Schlagzeilen zeigen sowohl positive Entwicklungen (Token‑Booms, Netzwerk‑Upgrades, institutionelle Expansion) als au
+   2025-05-23  13/24 Tief · Meldungen   2 · niedrig · Die aktuellen Schlagzeilen sind überwiegend positiv und deuten auf steigendes Interesse sowie regulatorische Unterstützu
+   2025-06-21   2/ 8 Tief · Meldungen   1 · niedrig · Die einzige Schlagzeile deutet auf steigende Kryptopreise hin, was das Risiko eines breiten Kursrutsches in den nächsten
+   2025-08-13  22/59 Tief · Meldungen  33 · mittel  · Trotz einiger negativer Nachrichten wie Do Kwons Geständnis und einem Monero‑Angriff überwiegen die vielen positiven Sig
+   2025-08-18   2/ 5 Tief · Meldungen   6 · mittel  · Die Schlagzeilen zeigen sowohl bullishe Signale (Bitcoin‑Aufwärtstrend, Saylor‑Kauf) als auch Warnungen vor einer Korrek
+   2025-09-21   3/ 7 Tief · Meldungen   7 · niedrig · Alle Schlagzeilen sind überwiegend positiv oder neutral und deuten nicht auf unmittelbare Marktstressfaktoren hin.
+   2025-10-09  10/11 Tief · Meldungen  60 · niedrig · Die meisten Schlagzeilen sind positiv oder neutral und zeigen keine akuten regulatorischen oder makroökonomischen Schock
+   2025-10-13   7/17 Tief · Meldungen  59 · mittel  · Die Schlagzeilen zeigen sowohl erhebliche regulatorische und technische Probleme (Steuerklammer, Depeg‑Incidents, Flash‑
+   2025-11-02   3/ 5 Tief · Meldungen  60 · hoch    · Die Schlagzeilen dominieren negative Themen wie Bitcoin‑Kapitalisierung, „Red October“, massive Exchange‑Abhebungen, Ins
+   2025-11-13  18/23 Tief · Meldungen  60 · hoch    · Zahlreiche negative Schlagzeilen (z. B. Solana‑Einbruch, Hyperliquid‑Pausen, massive Ethereum‑Abflüsse, Bitdeer‑Feuer, C
+   2025-11-30   3/ 5 Tief · Meldungen  60 · hoch    · Zahlreiche regulatorische Eingriffe, Marktängste und Leverage‑Wipe‑Ereignisse deuten auf ein starkes Abwärtsdruckpotenzi
+   2025-12-10   5/13 Tief · Meldungen  60 · niedrig · Die überwiegende Mehrheit der Schlagzeilen ist positiv (Preissteigerungen, neue ETFs, regulatorische Genehmigungen und i
+   2026-06-03   3/ 5 Tief · Meldungen   0 · niedrig · Keine aktuellen Meldungen deuten nicht auf ein bevorstehendes breites Marktgeschehen hin.
+   2026-06-04  36/54 Tief · Meldungen   0 · niedrig · Keine aktuellen Meldungen deuten nicht auf ein bevorstehendes breites Marktgeschehen hin.
+
+URTEIL L-C2 (vorab §23.74): TRAEGT NICHT · Lift 0.88 [0.19..1.71] · Warnwoerter 0.44 / 1.98 · 'hoch' an 141 Tagen

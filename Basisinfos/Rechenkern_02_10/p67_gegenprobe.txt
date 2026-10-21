@@ -1,0 +1,8 @@
+P67 GEGENPROBE
+
+  G1 Tage 497 · Absturztage 16 · 'hoch' 141 · Absturztage unter 'hoch' 4 · Lift 0.88 · P(Zufall >= x) exakt 0.7111
+  OK    G1 dieselben Zahlen wie p67_auswertung (markiert, Treffer, Absturztage, Lift)  (Hauptfrage 'hoch': 141 Tage markiert, davon Absturztage 4 von 16    Lift 0.88)
+  OK    G2 Eingabe: Rueckspiel-Eingabe reproduziert die gespeicherte Pruefsumme, zweiter Weg hat denselben INHALT, kein Vorgriff, kein Datum  (Pruefsumme reproduziert 497 · Inhalt gleich 497 von 497 · Vorgriff 0 · Datum 0 · ohne Abfrage 0)
+  G3 Stabilitaet: 18 von 20 Tagen gleiches Urteil · abweichend: 2026-03-10 niedrig->hoch, 2026-05-25 mittel->niedrig
+
+3 Pruefungen, ALLE BESTANDEN

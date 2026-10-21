@@ -4296,3 +4296,53 @@ Festgelegt **vor** der ersten Abfrage (dieser Commit).
 - **Keine Änderung am Plan:** keine niedrigere Denktiefe, kein anderer Anbieter (sonst zwei Fassungen in einem Lauf).
 - ⚠️ **Offen benannt:** `p67_auswertung.py` lief einmal versehentlich auf 238 Tagen, weil der Lauf für beendet gehalten wurde. Das war ein Blick auf ein Zwischenergebnis, den der Plan nicht vorsieht. Er wird nicht verwendet; das Urteil fällt nach §23.74 auf allen 497 Tagen.
 
+### 23.75 Ergebnis L-C2: Ein LLM erkennt aus allgemeinen Nachrichten keinen Absturztag – TRÄGT NICHT (21.10.2026; `p67_lc2_rueckspiel.py`, `p67_auswertung.py`, `p67_gegenprobe.py` → `.txt`)
+
+**Rückspiel** (Messplan vorab fa3aac7e, §23.74):
+- gpt-oss-120b über Groq, alle **497 Einstiegstage** 2025–26 bewertet (19.10. 18:1x bis 21.10. 10:57), **0 Ausfälle**.
+- Laufzeit begrenzt durch Groqs Tagesgrenze von 200.000 Tokens.
+- Urteile: hoch 141 · mittel 237 · niedrig 119.
+
+**Urteil (vorab): TRÄGT NICHT.**
+
+| | „hoch“-Tage | davon Absturztage (16) | Lift [95 %] | Zufall ≥ LLM | Warnwörter meiste / wenigste |
+|---|---|---|---|---|---|
+| **Hauptfrage „hoch“** | 141 (28 %) | **4** | **0,88** [0,19–1,71] | 71,5 % (exakt 71,1 %) | 0,44 / 1,98 |
+| Auskunft „mittel oder hoch“ | 378 | 9 | 0,74 [0,41–1,04] | 98,1 % | 0,66 / 1,15 |
+
+| Urteil | Tage | Absturztage | Anteil der Tief-Fälle im Mittel |
+|---|---|---|---|
+| hoch | 141 | 4 (2,8 %) | 8,9 % |
+| mittel | 237 | 5 (2,1 %) | 5,3 % |
+| **niedrig** | 119 | **7 (5,9 %)** | **10,7 %** |
+
+- **An den Tagen, an denen der LLM warnte, kam es nicht häufiger zum Absturz**, eher seltener.
+- Vor dem **Crash am 10.10.2025** (Einstiege 09.10., 10 von 11 mit Tief ≤ −10 %) urteilte er *niedrig*: *„Die meisten Schlagzeilen sind positiv oder neutral …“*. Es lagen 60 Schlagzeilen vor.
+
+**Gegenprobe 3/3:**
+- G1: Zahlen auf zweitem Weg gleich, exakte hypergeometrische Wahrscheinlichkeit 0,711.
+- G2: Die Eingabe reproduziert an allen 497 Tagen die gespeicherte Prüfsumme und ist auf zweitem Weg inhaltsgleich; kein Vorgriff, kein Datum.
+- G3: 18 von 20 Tagen haben bei erneuter Abfrage dasselbe Urteil.
+- ⚠️ **Zwei Fehler in der Gegenprobe selbst, vor der Bewertung behoben:**
+  - Ihr Datumsmuster erkannte in „**Dec**lines 4 %“ und „**Mar**kets 50“ einen Monat (14 Fehltreffer, kein echtes Datum).
+  - Sie verglich die Reihenfolge statt den Inhalt: 49 Tage unterschieden sich nur in der Sortierung bei gleichem Zeitstempel.
+
+**Auskunft (ändert das Urteil nicht):**
+- An **7 der 16 Absturztage** lagen im Vortag weniger als 10 Schlagzeilen vor; über alle Tage gilt das nur für 19 %. Darunter sind der größte Tag 04.06.2026 sowie der 03.06.2026 mit 0 Meldungen.
+- Archivlücken und dünne Nachrichtentage treffen die Absturztage also überproportional.
+- Auf den 9 gut abgedeckten Absturztagen (mindestens 18 Meldungen) warnte der LLM an 4 mit *hoch*, über alle Tage an 28 %. Das sind 9 Tage, kein Befund.
+- Die Auswahl „wenigste Warnwörter“ (Lift 1,98) zieht genau diese leeren Tage: Sie zeigt eine Lücke im Archiv, keine Information.
+- Laufprotokoll: Abbruch durch Strg+C im sichtbaren Fenster, danach neu mit verstecktem Fenster; eine robustere Fehlerbehandlung, ohne Änderung an Modell, Eingabe oder Einstellung. Ein Zwischenblick auf 238 Tage ist offen benannt (§23.74).
+
+**Einordnung (fachlich, meine):**
+1. **L-C ist damit in beiden Formen geprüft und trägt nicht:**
+   - Asset-Nachrichten erreichen das linke Ende nicht (§23.72, Abdeckung);
+   - allgemeine Marktnachrichten des Vortags kündigen die Absturztage nicht an (dieser Abschnitt).
+   - Das passt zu 2.599: Der Marktzustand ist vorab nicht erkennbar, und große Abstürze kommen durch Ereignisse **innerhalb** der 24 h.
+2. **Der LLM neigt zur Warnung** (28 % „hoch“ bei 3,2 % Absturztagen). Das ist dasselbe Muster wie der Pessimismus des Traders in N5 (dagegen 43–52 %).
+3. **Was bleibt verwertbar:**
+   - das kostenfreie Nachrichtenarchiv (`data/_lc/`);
+   - die Kontaminationsprobe mit Positivkontrolle als **Standard vor jedem LLM-Rückspiel** (§23.73; Vorbehalt für N4/N5 auf 2025);
+   - der Nebenbefund *Signalflut* (§23.72), der ohne LLM auf der Messbasis messbar ist.
+
+**Zur Abstimmung (eine Frage):** Wie geht es mit der LLM-Komponente im Betrieb weiter?
