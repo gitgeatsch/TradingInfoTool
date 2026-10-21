@@ -7384,3 +7384,138 @@ Ja, das ist seit P19 (17.10.) gebaut: Zeile *Season-Ampel* in den Spot-Mails B1/
 - **Suite:** SeasonAmpel 8, Makro 5, GuiKette 60, SpotMitnahme 9, SpotUpbit 8, SpotAbbau 11, Mailabschnitte 18, NurLesend 22 grün.
 
 **Am NB:** Pull und Neustart. Kontrolle **K-SP-6**.
+
+## 60. M-A — langsame Trendallokation BTC ↔ EURCV: Voranalyse und Messplan Fassung 1 (21.10.2026)
+
+Nutzer 21.10.:
+- *„ja M-A Voranalyse starten, Messplan vorab festlegen – wir haben so eine ähnliche Messung zum Teil bereits durchgeführt und ich erinnere mich, dass wir hier auch ein Problem hatten, also vorher den Vorschlag korrekt einordnen“*
+- *„ich glaube bei Einstieg und Ausstieg war es problematisch, da der Regimewechsel hier nicht trug bzw. etwas voraussagen konnte.“*
+
+**Herkunft:** E-125 (Bilanz LLM), `Recherche_Grid_Trading_21_10.md`, Vorschlag M-A (Chat 21.10.).
+
+### 60.1 Was schon gemessen ist — und das Problem, an das der Nutzer sich erinnert
+
+| Messung | Frage | Ergebnis | Problem |
+|---|---|---|---|
+| §8.7 F1 H4 | Bringt ein Einstieg bei *Wende bestätigt* mehr? Die Wende enthält u. a. BTC über dem steigenden 200-T-Schnitt | **nein** (1 von 4) | Die Wende kommt **30–78 Tage und +46 bis +99 % nach dem Tief** |
+| §8.9 F2 / §8.11 F3 | Schlägt eine Kaufregel nach dem Klima das regelmäßige Kaufen? | **nein**: weder Warten noch Gewichten, weder BTC noch ETH, in keiner Epoche | WORAN: *Der Trend über ein Jahr ist stärker als die Rückkehr zum Mittel.* Drei Blicke auf dieselben Zyklen; *„Fassung 4 wäre Kurvenanpassung, ein neuer Anlauf nur mit neuen Daten oder einer ANDEREN Frage“* |
+| §12.6 / §12.9 D2 | Teilverkauf bei Überhitzung | **nicht belegt** | *„überhitzt“* kommt **zu früh**; K1 hängt an einem einzigen Ereignis (2021) |
+| §13.4 S1 | Ist eine Altcoin-Phase rechtzeitig erkennbar? | **nein** | Fehlalarm 74–86 % oder zu spät; seit 2024 gab es keine Phase |
+| 2.599 (Hebel) | Ist der Marktzustand vorab erkennbar? | **nein** (`btc_trend` ≈ Zufallsreihe) | Die wirkliche Fallzahl ist die Zahl der **Regimewechsel** (6–10), nicht die der Anker |
+| §59.11 O47 F3 | Trennt die Season-Ampel? | ja, Holdout 2017/18 | Sie erkennt den **Beginn nicht genau vorab**, und der Holdout ist damit **verbraucht** |
+
+⇒ **Die Erinnerung stimmt.** Überall, wo der Regimewechsel einen **Zeitpunkt** liefern sollte (Einstieg, Teilverkauf, Phasenbeginn), kam er zu spät oder zu früh.
+
+### 60.2 Mein Vorschlag M-A vom 21.10. — berichtigt
+
+| Teil des Vorschlags | Einordnung |
+|---|---|
+| *„2017/18 als Holdout“* | ✘ **falsch**: durch O47 F3 bereits gesehen |
+| *Altcoin-Anteil nach der Season-Ampel* | ✘ **nicht messbar**. Es gibt zwei Season-Phasen, eine davon schon gesehen. S1 fand die Phase nicht rechtzeitig, und im Messfokus ab 2024 gab es keine. **Entfällt in Fassung 1** |
+| *„auf dem aufbauen, was getragen hat“* | ⚠️ zu weit gefasst: Getragen hat die **Beschreibung** der Phasen, nicht ein **Zeitpunkt** |
+| **Trendfolge BTC ↔ EURCV als Allokation** | ✔ **die ANDERE Frage**, die F3 selbst nennt. Sie ist noch **nie** gemessen worden: F1–F3 waren Kaufregeln (wann und wie viel kaufen), D2 ein Verkauf nach einer Bewertung (überhitzt) |
+
+**Was die Trendregel von den gescheiterten Zeitpunkt-Fragen unterscheidet – und warum das deren Probleme nicht aufhebt:**
+- Eine Trendregel **sagt nichts voraus**. Sie läuft dem Kurs nach und nimmt den verspäteten Aus- und Wiedereinstieg in Kauf. Das 30–78-Tage-Problem aus F1 gilt **genauso**.
+- Ihr einziger möglicher Nutzen: in der **langen Mitte** eines Bärenmarkts draußen zu sein (2014–15, 2018 und 2022, jeweils rund ein Jahr).
+- Ob der vermiedene Verlust größer ist als die Kosten der Verspätung an beiden Enden, **ist genau das, was gemessen wird**.
+- **Zustandsschalter-Regel** (23.09.): Draußen zu sein lohnt nur, wenn der Ertrag im Zustand *draußen* **negativ** ist (Umkehr). Bloß kleiner reicht nicht.
+
+### 60.3 Zwei Grenzen, die vorab feststehen
+
+1. **Fallzahl:** BTC hatte seit 2011 rund **fünf Bärenphasen**: 2011, 2014–15, 2018, 2022 und 2025–26 (laufend). Mit den vorhandenen Daten ist mehr als eine **Beschreibung über fünf Fälle** nicht zu erreichen. Ein Vorwärtstest über Jahre ist keine Option (Nutzer 18.10.).
+2. ⚠️ **Mein eigenes Vorwissen ist eine Kontamination wie beim LLM** (§23.73 Schritt7): Ich kenne den BTC-Verlauf seit 2010. Deshalb wird **keine Regel auf unseren Daten gewählt**. Die Regelformen kommen **vorab aus der Literatur**, und es wird kein einziger Parameter gesucht.
+
+### 60.4 Vorprüfung — nur Zustandswechsel, keine Erträge (`ma_vorpruefung.py` → `.txt`)
+
+**Daten:** CoinMetrics BTC täglich, **2010-07-18 bis 2026-10-04**, lückenlos (`data/_spot/coinmetrics.db`); ETH ab 2015-07.
+
+| Regel (Literatur) | erster Zustand | Wechsel je Jahr | Folge |
+|---|---|---|---|
+| R1 Tagesschluss über dem **200-Tage-Schnitt** | 2011-02 | 0–17 (2012: 15, 2021: 17, 2025: 17) | **Hin-und-her-Problem**: Bei den gemessenen Bitpanda-Kosten von 0,56–0,81 % je Runde (G1-M1) sind das bis rund 12 % im Jahr |
+| R2 Monatsschluss über dem **10-Monats-Schnitt** (Faber 2007) | 2011-04 | **0–3** | wenige Wechsel |
+| R3 **12-Monats-Momentum** > 0 (Moskowitz/Ooi/Pedersen 2012) | 2011-07 | **0–2** | wenige Wechsel |
+
+**Formwahl (begründet, ohne Ertrag): Hauptregel R2.**
+- Sie ist die gängigste Monatsform in der Literatur.
+- Sie wechselt selten; die Kosten sind deshalb nachrangig (Regel 2).
+- Sie reagiert schneller als R3.
+
+R1 und R3 laufen nur als **Auskunft** mit. Für die Wahl wurde kein Ertrag angesehen.
+
+### 60.5 Messplan Fassung 1 — VORAB festgelegt (Lauf erst nach Nutzer-Ja)
+
+**Die Regel R2**
+- Am letzten Tag des Monats: Liegt der Schluss über dem Mittel der letzten 10 Monatsschlüsse, wird BTC gehalten, sonst **EURCV**.
+- Gehandelt wird zum Schluss des **Folgetags** (t+1, kein Vorgriff).
+- EURCV bringt 0 % Zins. Gebühren gehen nicht in die Bewertung ein (Regel 2).
+
+**Währung**
+- Gerechnet wird in EUR: BTC-USD (CoinMetrics) geteilt durch EUR-USD (FRED `DEXUSEU`, kostenfrei, über `makro_lage.hole_reihe`).
+- Es gilt der Wechselkurs desselben Tages; fehlt er, der des Vortags.
+- USD als Auskunft.
+
+**Zwei Teile, getrennt ausgewiesen**
+- **A: 2011-05 bis 2016-12.** Diese Regel wurde dort nie gerechnet; vgl. aber §60.3 Punkt 2.
+- **B: 2017-01 bis 2026-09.** Ab 2024 zusätzlich als Auskunft (Messfokus).
+
+**Vergleich:** BTC halten, mit derselben Startsumme.
+
+**Je Teil ausgewiesen**
+- Endvermögen ÷ Halten
+- **größter Rückgang**, Regel gegen Halten
+- Zahl der Wechsel
+- Anteil der Zeit draußen
+
+**Je Bärenphase ausgewiesen** (Hoch → Tief, aus dem Kursverlauf)
+- welcher Anteil des Rückgangs vermieden wurde
+- die **Verspätung** beim Ausstieg (Tage und % nach dem Hoch) und beim Wiedereinstieg (Tage und % nach dem Tief); das ist das Problem aus F1
+- Fehlausstiege: draußen gewesen, und beim Wiedereinstieg lag der Kurs **höher**
+
+**Umkehr-Probe (vorab):** mittlere Monatsrendite von BTC in den Monaten *draußen*, je Teil.
+
+**Nullwelt**
+- Die Zustandsreihe von R2 wird zirkulär verschoben, um mindestens 12 Monate, über alle möglichen Verschiebungen.
+- So bleiben der Anteil draußen und die Länge der Phasen gleich.
+- Ausgewiesen wird der Rang der Regel bei *größter Rückgang kleiner* und bei *Endvermögen ÷ Halten*.
+
+**Anwendungszeile** (keine Bewertung)
+- netto mit den gemessenen Bitpanda-Kosten für BTC, 0,56 bzw. 0,81 % je Runde
+- Hinweis (Fakt, Bitpanda-FAQ): Ein Tausch BTC → EURCV ist *„tax-free at execution“*. Eine weitere steuerliche Einordnung gibt es nicht.
+
+**Auskunft**
+- R1 und R3
+- ETH mit R2 (ab 2016-06; nur teilweise unabhängig von BTC)
+- Starts an jedem 01.01.: Anteil der Starts mit kleinerem Rückgang
+
+**Wann es als stimmig gilt — vorab, zweiseitig.** Wegen der wenigen Fälle liegt die Rangschwelle bei 0,90, wie bei F3-H3.
+
+| # | Kriterium |
+|---|---|
+| S1 | Umkehr: Monatsrendite *draußen* < 0, in **A und B** |
+| S2 | größter Rückgang kleiner als beim Halten, Rang ≥ 0,90, in **A und B** |
+| S3 | Endvermögen ÷ Halten mit Rang ≥ 0,90, in **A und B** |
+| S4 | In **jeder** abgeschlossenen Bärenphase wurde ein Teil des Rückgangs vermieden (> 0) |
+| umgekehrt | Rang ≤ 0,10 bei S2 oder S3 in einem der Teile |
+
+**Folgen, vorab festgelegt**
+
+| Ergebnis | Folge |
+|---|---|
+| S1–S4 stimmig | **Kandidat** für den Spot-Strang: Der Zustandswechsel *„BTC-Trend gebrochen / zurück“* wird **Handlung** in der Spot-Mail (Tausch in oder aus EURCV). Begründung ist die Messung, mit dem Vorbehalt *„beschreibend über fünf Bärenphasen, verspätet an beiden Enden“*. Die Voranalyse für den Bau folgt erst nach Abstimmung |
+| S1, S2 und S4 stimmig, S3 nicht | Die Regel **senkt das Risiko und kostet Ertrag**. Sie kommt als Fakt-Zeile mit beiden Zahlen; ob du das willst, entscheidest du |
+| S1 oder S4 nicht stimmig | **M-A trägt nicht** und wird so festgehalten. Dieselbe Regel wird nicht nachgestellt (Mehrfachtesten) |
+| etwas umgekehrt | wie *trägt nicht*, mit WORAN |
+
+**Gegenprüfung vorab**
+- gehandelt zu t+1 statt t
+- der Zustand nur aus Kursen bis zum Monatsende
+- der Wechselkurs vom selben Tag
+- die Bärenphasen aus dem Kursverlauf, nicht aus dem Ergebnis der Regel
+- die Nullwelt mit gleicher Phasenstruktur
+- Regeln 1–4:
+  - Der Takt (Monatsende) ist nur der **Messzeitpunkt**; das Signal ist der Zustandswechsel.
+  - Keine Gebühren in der Bewertung.
+  - Kein Asset-Rang.
+  - Der Zustand ist ein Fakt; bewertet wird, **was danach kam**.
+- Gegenprobe nach dem Lauf: eigene Monatsschleife für Endvermögen und größten Rückgang je Teil

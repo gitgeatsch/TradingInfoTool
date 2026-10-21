@@ -1,0 +1,55 @@
+BTC Kurs 2010-07-18 bis 2026-10-04, 5923 Tage, Luecken im Tagesraster 0
+
+R1 200-Tage: ab 2011-02-02
+  2011  Wechsel   1  Anteil drin 0.65
+  2012  Wechsel  15  Anteil drin 0.87
+  2013  Wechsel   4  Anteil drin 0.99
+  2014  Wechsel  13  Anteil drin 0.33
+  2015  Wechsel   5  Anteil drin 0.36
+  2016  Wechsel   0  Anteil drin 1.00
+  2017  Wechsel   0  Anteil drin 1.00
+  2018  Wechsel   5  Anteil drin 0.19
+  2019  Wechsel   4  Anteil drin 0.52
+  2020  Wechsel   5  Anteil drin 0.78
+  2021  Wechsel  17  Anteil drin 0.71
+  2022  Wechsel   0  Anteil drin 0.00
+  2023  Wechsel   5  Anteil drin 0.81
+  2024  Wechsel  12  Anteil drin 0.80
+  2025  Wechsel  17  Anteil drin 0.73
+  2026  Wechsel   1  Anteil drin 0.17
+
+R2 10-Monate: ab 2011-04-30
+  2011  Wechsel   1  Anteil drin 0.56
+  2012  Wechsel   1  Anteil drin 0.67
+  2013  Wechsel   0  Anteil drin 1.00
+  2014  Wechsel   3  Anteil drin 0.42
+  2015  Wechsel   3  Anteil drin 0.33
+  2016  Wechsel   0  Anteil drin 1.00
+  2017  Wechsel   0  Anteil drin 1.00
+  2018  Wechsel   3  Anteil drin 0.25
+  2019  Wechsel   2  Anteil drin 0.58
+  2020  Wechsel   3  Anteil drin 0.83
+  2021  Wechsel   1  Anteil drin 0.92
+  2022  Wechsel   0  Anteil drin 0.00
+  2023  Wechsel   1  Anteil drin 1.00
+  2024  Wechsel   0  Anteil drin 1.00
+  2025  Wechsel   1  Anteil drin 0.83
+  2026  Wechsel   1  Anteil drin 0.30
+
+R3 12-Monats-Momentum: ab 2011-07-31
+  2011  Wechsel   0  Anteil drin 1.00
+  2012  Wechsel   2  Anteil drin 0.75
+  2013  Wechsel   0  Anteil drin 1.00
+  2014  Wechsel   1  Anteil drin 0.83
+  2015  Wechsel   1  Anteil drin 0.08
+  2016  Wechsel   0  Anteil drin 1.00
+  2017  Wechsel   0  Anteil drin 1.00
+  2018  Wechsel   1  Anteil drin 0.75
+  2019  Wechsel   1  Anteil drin 0.67
+  2020  Wechsel   2  Anteil drin 0.92
+  2021  Wechsel   0  Anteil drin 1.00
+  2022  Wechsel   1  Anteil drin 0.08
+  2023  Wechsel   1  Anteil drin 0.58
+  2024  Wechsel   0  Anteil drin 1.00
+  2025  Wechsel   1  Anteil drin 0.83
+  2026  Wechsel   0  Anteil drin 0.00
