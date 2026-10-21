@@ -106,3 +106,57 @@ Grundlage sind zwei Recherchen vom 21.10.: A zu Funktionsweise, Belegen und Risi
 - **Baubar ja, ohne LLM.** Ob es etwas einbringt, entscheidet **eine messbare Frage**: Kehrt der Kurs von BTC und des gewählten Altcoins auf der Skala von ~0,5–3 % stärker zur Mitte zurück als ein Zufallspfad, und zwar über die Gebühr?
 - **Nichts gemessen, nichts gebaut, nichts heruntergeladen.**
 - **Zur Abstimmung:** der nächste Schritt (Stufe-1-Vorprüfung auf den vorhandenen Stundenkursen, gleich 1-min-Rückspiel oder nicht weiterverfolgen) und die Wahl des Altcoins.
+
+## 9. Messplan Stufe 1 (W-A) — Rückkehr zur Mitte auf Stufenskala, VORAB festgelegt (22.10.2026)
+
+Nutzer 22.10.: *„ok, können eine kurze Prüfung machen für W-A, dann müssen wir u. U. zurück zu Alternativen oder Bestehendes noch einmal analysieren.“*
+
+**Die eine Frage:** Kehrt der Kurs von BTC und ETH auf der Skala von 1–3 % so viel stärker zur Mitte zurück als in einer zufälligen Reihenfolge derselben Bewegungen, dass ein Gitter **mehr als die Fusion-Gebühr** (0,25 % je Ausführung) verdient?
+
+**Daten:**
+- `data/stundenkurse.db` (Messbasis, nur lesend), Binance-Spot, Stundenschlüsse.
+- BTC und ETH, gemeinsames Fenster **2023-09-01 bis 2026-08-31** (36 volle Monate, Messfokus).
+- Fehlende Stunden erhalten den Vorstundenkurs; ihre Zahl wird ausgewiesen.
+
+**Das Gitter (Bewertungsform):**
+- geometrisch, Stufe **g = 1 %, 2 %, 3 %** (Auskunft 0,5 %);
+- **jeden Monat neu**: Bezug ist der erste Stundenschluss, Bestand 0; am letzten Stundenschluss wird glattgestellt;
+- jede Ausführung hat denselben Nennwert (1 Einheit Geld);
+- Leiter mit *zuletzt gehandelter Stufe*: verkauft wird eine Stufe höher, gekauft eine tiefer. Gefüllt wird zum **Stufenpreis**, sobald ein Stundenschluss die Stufe erreicht; mehrere Stufen in einer Stunde ergeben mehrere Füllungen;
+- ⚠️ Der Bestand darf negativ werden. Das ist eine Bewertung der Rückkehr, **nicht** der Betrieb; am Spot wäre die obere Seite durch das Inventar begrenzt.
+
+**Größen:**
+- Ergebnis je Monat und Summe (in Einheiten Nennwert);
+- Zahl der Ausführungen (Füllungen plus Glattstellung);
+- Ergebnis je Ausführung.
+
+**Nullwelt (herleitbar):**
+- 200 Ziehungen; **je Monat** werden die stündlichen Log-Renditen zufällig umgeordnet.
+- Anfang und Ende jedes Monats und die Schwankung bleiben gleich; zerstört wird nur die **Reihenfolge**.
+- Bei Zufallsreihenfolge ist ein Gitter im Mittel ein Nullsummenspiel.
+- **Rang** = Anteil der Nullwelten mit kleinerem Ergebnis.
+
+**Überschuss je Ausführung** = (echt − Mittel der Nullwelten) ÷ Ausführungen echt, in % des Nennwerts. Maßstab: **0,25 %** (Fusion, Grundstufe).
+
+**Trägt (je Zelle Asset × Stufe, vorab, zweiseitig):**
+
+| | |
+|---|---|
+| trägt | Rang ≥ 0,95 **und** Überschuss je Ausführung ≥ 0,25 % **und** Überschuss > 0 in **beiden Hälften** (2023-09 bis 2025-02 / 2025-03 bis 2026-08) |
+| umgekehrt | Rang ≤ 0,05: Auf dieser Skala herrscht **Trend**, und ein Gitter schadet |
+
+**Folgen, vorab:**
+
+| Ergebnis | Folge |
+|---|---|
+| mindestens eine Zelle trägt | **Stufe 2**: Rückspiel eines echten Spot-Gitters (Band, Inventar, Fusion-Kosten) auf 1-Minuten-Kerzen. Der Download braucht ein **Nutzer-Ja** |
+| keine Zelle trägt | **W-A endet.** Zurück zu den Alternativen bzw. eine neue Analyse des Bestehenden (Nutzer 22.10.) |
+
+**Auskunft:**
+- g = 0,5 %;
+- Netto-Ergebnis bei 0,25 % je Ausführung;
+- SOL und LINK im selben Fenster.
+
+⚠️ **Ehrlich vorab:**
+- Stundenschlüsse sehen nichts **innerhalb** der Stunde. Ein echtes Gitter füllt öfter; eine Rückkehr innerhalb der Stunde bleibt hier ungemessen (das wäre Stufe 2).
+- Sechs Zellen ergeben Mehrfachtesten. Die Gebührenschwelle und die Bedingung „beide Hälften“ begrenzen das.
