@@ -815,6 +815,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   - **Makro-Lage** lang/kurz in REGEL0 und B1/B3/B4 (O54).
 - **Statusseite:** Ganz oben steht das **Makro-Umfeld** (O54).
 - **LLM-Prüfblock:** bleibt in der REGEL0-Mail, markiert *„gemessen: trennt nicht“* (N4/N5).
+- **Bilanz 21.10. (E-125):** elf Prüfwege, kein messbarer Mehrwert; Blatt `Bilanz_LLM_Komponente_21_10.md`. Die Entscheidung über Block und System liegt beim Nutzer.
 - **Watchlist:** Grundliste im Repo plus Ergänzung am NB; Assets ohne Bestand lassen sich **entfernen** (O51).
 - **Hebelpositionen aus dem Buch je Symbol** (P11b, 16.10.): Sie kommen aus den Bitpanda-Buchungen der neuen Schnittstelle, eine Position je Lebenszyklus, Liquidationen ausdrücklich. Die alten Zeilen sind gesichert.
 - **Hebelführung gegen Bitpanda** (P11c, 16.10.): Eine laut Bitpanda-Wallet geschlossene Position wird nicht mehr geführt und nicht gemeldet; weicht die Menge ab, rechnet die Führung mit der Wallet-Menge.

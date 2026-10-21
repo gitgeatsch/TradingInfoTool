@@ -18,6 +18,13 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 21.10.2026 (11) — LLM-Komponente: Bilanz
+>
+> | Hier fehlt | Stand seit |
+> |---|---|
+> | LLM-Prüfblock (REGEL0-Mail) | elf Prüfwege ohne messbaren Mehrwert (`Bilanz_LLM_Komponente_21_10.md`, E-125); Gemini kennt 2025 (Vorbehalt N4/N5) – **21.10.** |
+> | Nachrichtenarchiv 2025–26 | `data/_lc/nachrichten.db` (9 RSS-Feeds über Wayback, 39.926 Meldungen); Forschungsdaten, nicht im Betrieb – **19.10.** |
+>
 > ## ⚠️ NACHTRAG 18.10.2026 (10) — Haltedauer in der Positionsführung (E1–E3)
 >
 > | Hier fehlt | Stand seit |

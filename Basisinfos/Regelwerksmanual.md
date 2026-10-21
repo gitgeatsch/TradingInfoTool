@@ -2132,6 +2132,12 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 21.10.2026 — LLM-Prüfblock: Bilanz aller Prüfungen
+
+- **Was der Block in der REGEL0-Mail heute ist:** eine Auskunft, kein Urteil mit nachgewiesenem Wert. Gemessen auf elf Wegen, keiner trägt (`Bilanz_LLM_Komponente_21_10.md`, E-125). Die Markierung *„trennt nicht“* bleibt.
+- **Warum:** Er sieht dieselben Zahlen wie die Regel (die tragen für sich kaum). Nachrichten zu kleinen Werten gibt es praktisch nicht, und große Abstürze kommen ohne Vorankündigung in den Schlagzeilen des Vortags.
+- ⚠️ Das Modell im Block (Gemini) kennt den Kursverlauf 2025 aus seinem Training. Ein Rückspiel auf 2025 wäre mit ihm kein sauberer Test.
+
 ### Stand 18.10.2026 — Haltedauer in der Positionsführung (E1–E3)
 
 - **Ausstiegserinnerung nach 24 h:** Neben *„schließen“* steht der gemessene Fakt: Länger halten kostete 2025–26 im Mittel 0,3–0,4 % je weiteren Tag; 2024 war es umgekehrt, und das Marktumfeld ist vorab nicht erkennbar. Bei 5x und 3x kommt dazu, wie oft die Liquidationsschwelle binnen 24 h bzw. 7 Tagen erreicht wurde.

@@ -2595,3 +2595,5 @@ Schritt7 §23.24.
 - Meldungen zum einzelnen Asset erreichen das linke Ende nicht: kleine Werte werden kaum genannt (§23.72).
 - Allgemeine Marktnachrichten des Vortags kündigen die 16 Absturztage nicht an (gpt-oss-120b, Lift 0,88, §23.75).
 - Gemini, das Modell im Prüfblock, kennt 2025 aus seinem Training. Vor jedem LLM-Rückspiel gehört deshalb eine Kontaminationsprobe mit Positivkontrolle (§23.73).
+
+**Nachtrag 21.10.2026 (53) — Bilanz LLM-Komponente und neue Richtung:** Auf elf geprüften Wegen liefert die LLM-Komponente keinen messbaren Mehrwert (E-125, `Bilanz_LLM_Komponente_21_10.md`). Der Nutzer stellt das System in dieser Form infrage und lässt **Grid-Trading** recherchieren: BTC und ein Altcoin, mit oder ohne LLM.

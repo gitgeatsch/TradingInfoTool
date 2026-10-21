@@ -1493,3 +1493,21 @@ Nachweis: Schritt7 §23.69; `e123_pruefstand.txt` 39/39, `e123_gegenprobe.txt` 1
 **Nicht:** keine Ampel in den REGEL0-Mails (für den Hebel nicht messbar, §59.12).
 
 Nachweis: Spot §59.14; `p19_pruefstand.txt` 14/14, `p19_bau_gegenprobe.txt` 3/3; K-SP-6.
+
+# E-125 · Bilanz der LLM-Komponente: kein messbarer Mehrwert auf allen geprüften Wegen (21.10.2026)
+
+**21.10.2026** · Nutzer: *„Die LLM-Komponente sollte einen Mehrwert liefern – was wir offenbar nicht schaffen … Wenn sich das als Deadend herausstellt, brauchen wir das System so nicht weiterverfolgen. Halte alle Ergebnisse fest. Danach Recherche Grid-Trading.“*
+
+**Festgehalten:** `Bilanz_LLM_Komponente_21_10.md`. Elf geprüfte Wege, keiner trägt:
+- Urteil über Zahlen (N4, N5, A2);
+- Entscheider;
+- Regime als Gewicht;
+- Ereignisse als Fakt (E-1);
+- Asset-Nachrichten (L-C);
+- Marktnachrichten (L-C2).
+
+Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminationsbefund: Gemini kennt 2025. Daraus folgt ein Vorbehalt für N4/N5.
+
+**Betrieb:** unverändert, der Prüfblock bleibt markiert *„trennt nicht“*. Die Entscheidung über die Komponente und das System liegt beim Nutzer.
+
+**Nächster Schritt:** Recherche Grid-Trading (BTC und ein Altcoin).
