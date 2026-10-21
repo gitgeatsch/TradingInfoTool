@@ -2604,3 +2604,8 @@ Schritt7 §23.24.
 - Bitpanda Broker ist fuer ein Gitter zu teuer. In Frage kommen MiCA-Boersen mit Limitorders (Bybit EU, One Trading, OKX, Kraken, Bitpanda Fusion).
 - Fuer das Rueckspiel braucht es 1-min-Daten (Binance Public Data, frei).
 - Noch nichts gemessen.
+
+**Nachtrag 21.10.2026 (55) — Börse und M-A:**
+- Bitpanda Fusion steht laut der offiziellen Bitpanda-FAQ unter dem automatischen KESt-Abzug.
+- Die langsame Trendallokation BTC ↔ EURCV (R2, 10-Monats-Schnitt) **trägt nicht** (Spot §60, E-126). Sie steigt zu spät aus und zu spät wieder ein, und die Monate draußen waren im Mittel nicht negativ.
+- Damit ist auch die langsamste Form eines Marktzeitpunkts geprüft.

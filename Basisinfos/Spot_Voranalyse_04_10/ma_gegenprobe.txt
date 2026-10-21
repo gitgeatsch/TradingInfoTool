@@ -1,0 +1,11 @@
+M-A GEGENPROBE
+
+  OK    G4 Wechselkurs: Tagesraster ohne Luecke, EUR-Kurse an Stichtagen  (2011-06-08 19.87 · 2014-03-15 458.24 · 2018-12-15 2822.40 · 2022-11-21 15399.20 · 2026-06-30 51364.82)
+  OK    G2 kein Vorgriff: Zustand nur aus Kursen bis zum Monatsende  (20 von 20 gleich)
+  OK    G1 Teil A eigene Tagesschleife = ma_messung  (hier 0.735 / -82.7 % / -92.2 % / 8 · dort ('0.735', '-82.7', '-92.2', '8'))
+  OK    G3 Teil A Umkehr-Probe zweiter Weg  (draussen +4.0 % (n 23), drin +25.1 % (n 45))
+  OK    G1 Teil B eigene Tagesschleife = ma_messung  (hier 1.401 / -73.0 % / -83.0 % / 14 · dort ('1.401', '-73.0', '-83.0', '14'))
+  OK    G3 Teil B Umkehr-Probe zweiter Weg  (draussen +0.9 % (n 38), drin +8.5 % (n 79))
+  OK    G5 Baerenphasen: Hoch ist Maximum, Tief ist Minimum, Rueckgang >= 50 %  (9 Phasen, 0 Fehler)
+
+7 Pruefungen, ALLE BESTANDEN

@@ -2132,6 +2132,13 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 21.10.2026 — Spot: keine Trendallokation (M-A)
+
+- Eine Regel *„BTC unter dem 10-Monats-Schnitt → in EURCV“* ist gemessen und **trägt nicht** (Spot §60, E-126).
+  - Sie steigt im Mittel erst nach −28 bis −81 % aus und erst nach +30 bis +176 % wieder ein.
+  - Die Monate draußen brachten im Mittel keinen Verlust, den man vermieden hätte.
+- Die Spot-Mails enthalten deshalb **keine** Trend-Handlung.
+
 ### Stand 21.10.2026 — LLM-Prüfblock: Bilanz aller Prüfungen
 
 - **Was der Block in der REGEL0-Mail heute ist:** eine Auskunft, kein Urteil mit nachgewiesenem Wert. Gemessen auf elf Wegen, keiner trägt (`Bilanz_LLM_Komponente_21_10.md`, E-125). Die Markierung *„trennt nicht“* bleibt.

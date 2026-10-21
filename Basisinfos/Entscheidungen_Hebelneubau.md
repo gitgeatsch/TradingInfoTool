@@ -1511,3 +1511,25 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 **Betrieb:** unverändert, der Prüfblock bleibt markiert *„trennt nicht“*. Die Entscheidung über die Komponente und das System liegt beim Nutzer.
 
 **Nächster Schritt:** Recherche Grid-Trading (BTC und ein Altcoin).
+
+# E-126 · Börse und M-A: Fusion ist steuereinfach; die Trendallokation BTC ↔ EURCV trägt nicht (21.10.2026)
+
+**21.10.2026** · Nutzer: *„recherchiere ob FUSION auch steuereinfach ist“* · *„ja M-A Voranalyse starten, Messplan vorab festlegen“* · *„ja Messplan so festlegen, prüfen gegenprüfen und doku“*
+
+**Börse (Fakt, Bitpanda-FAQ *Tax Withholding in Austria*):**
+- **„Bitpanda Fusion Trades“** stehen dort unter dem **automatischen KESt-Abzug**.
+- Fusion hat *„One balance. One account.“*, eine API mit Handelsrecht und Gebühren von 0,25 % bis 0,02 % je nach Volumen der letzten 30 Tage.
+- Krypto→Krypto-Tausch (auch in einen Stablecoin) ist laut FAQ *„tax-free at execution“*.
+- Andere steuereinfache Anbieter (Coinfinity, 21bitcoin) bieten praktisch nur BTC; bei Bybit EU sind die Angaben widersprüchlich.
+- ⇒ Für ein Grid braucht es **keine neue Börse**.
+
+**M-A** (Spot §60, Messplan vorab c18e23f2):
+- Getestet: R2, 10-Monats-Schnitt, BTC ↔ EURCV, in EUR, Teil A 2011–2016 und Teil B 2017–2026.
+- Ergebnis: **trägt nicht**; S1–S4 alle nein, Gegenprobe 7/7.
+- Kern ist das Verspätungsproblem aus F1:
+  - Ausstieg 54–158 T nach dem Hoch (−28 bis −81 %), Wiedereinstieg 50–199 T nach dem Tief (+30 bis +176 %);
+  - die Monate draußen waren im Mittel positiv;
+  - schnelle Abstürze blieben ganz unberührt.
+- Der Rückgang ist kleiner, aber nicht besser als bei zufällig verschobenen Phasen. Teil A kostet Ertrag (0,735).
+
+**Betrieb:** unverändert. **Gesamtbild:** Der Regimewechsel liefert bei BTC weder schnell (2.599) noch langsam (§60) einen Zeitpunkt.

@@ -7519,3 +7519,66 @@ R1 und R3 laufen nur als **Auskunft** mit. Für die Wahl wurde kein Ertrag anges
   - Kein Asset-Rang.
   - Der Zustand ist ein Fakt; bewertet wird, **was danach kam**.
 - Gegenprobe nach dem Lauf: eigene Monatsschleife für Endvermögen und größten Rückgang je Teil
+
+### 60.6 Ergebnis Fassung 1: M-A TRÄGT NICHT (21.10.2026; `ma_messung.py`, `ma_gegenprobe.py` → `.txt`)
+
+Nutzer 21.10.: *„ja Messplan so festlegen, prüfen gegenprüfen und doku“*.
+
+**Abweichung vor dem Lauf (kein Ergebnis angesehen):** FRED war in Wartung; es kam eine HTML-Seite *„Site Maintenance“* statt JSON. Den EUR-USD-Kurs liefert deshalb die **EZB** (Referenzkurs `EXR D.USD.EUR.SP00.A`), ebenso amtlich und kostenfrei. Auslegungen, die im Plan offen waren, stehen im Skriptkopf:
+- Zustand auf dem EUR-Kurs;
+- Bärenphasen im Zickzack −50 % / +100 %.
+
+**Bärenphasen BTC in EUR:**
+- 2011 (−92 %), zweimal 2013 (kurz, −71 / −57 %), 2013-12 → 2015-01 (−82 %), 2017-12 → 2018-12 (−83 %), 2019-06 → 2020-03 (−61 %), 2021-04 → 2021-07 (−53 %) und 2021-11 → 2022-11 (−74 %);
+- dazu 2025-10 → 2026-06 (−52 %, **laufend**).
+
+| | Teil A 2011-05 bis 2016 | Teil B 2017 bis 2026-09 |
+|---|---|---|
+| Endvermögen ÷ Halten | **0,735** | **1,401** |
+| größter Rückgang Regel / Halten | −82,7 % / −92,2 % | −73,0 % / −83,0 % |
+| Nullwelt-Rang Rückgang (S2) | 0,73 | 0,80 |
+| Nullwelt-Rang Endvermögen (S3) | 0,91 | 0,86 |
+| Rendite der Monate **draußen** (S1) | **+4,0 %** (n 23) | **+0,9 %** (n 38) |
+| Wechsel · Zeit draußen | 8 · 34 % | 14 · 32 % |
+| Fehlausstiege (Wiedereinstieg teurer) | 3 von 4 | 4 von 7 |
+
+**Je Bärenphase (R2):**
+
+| Phase | Kurs | vermieden | Ausstieg nach dem Hoch | Wiedereinstieg nach dem Tief |
+|---|---|---|---|---|
+| 2011 | −92 % | 12 % | 115 T, bei −81 % | 196 T, bei +176 % |
+| 2013-04 (zwei kurze) | −71 / −57 % | **0 %** | in der Phase keiner | — |
+| 2013-12 → 2015-01 | −82 % | 25 % | 148 T, −60 % | 199 T, +72 % |
+| 2017-12 → 2018-12 | −83 % | 14 % | 106 T, −67 % | 137 T, +68 % |
+| 2019-06 → 2020-03 | −61 % | 26 % | 158 T, −40 % | 50 T, +85 % |
+| 2021-04 → 2021-07 | −53 % | **0 %** | in der Phase keiner | — |
+| 2021-11 → 2022-11 | −74 % | **49 %** | 54 T, −28 % | 100 T, +44 % |
+| *2025-10 → 2026-06 (laufend)* | *−52 %* | *41 %* | *56 T, −31 %* | *63 T, +30 %* |
+
+**Urteil nach §60.5:** S1 nein · S2 nein · S3 nein · S4 nein (8 abgeschlossene Phasen) · nichts umgekehrt ⇒ **M-A TRÄGT NICHT.** Das wird so festgehalten; dieselbe Regel wird nicht nachgestellt.
+
+**Gegenprobe 7/7:**
+- G1: eigene Tagesschleife, Teil A und B, Endvermögen, Rückgang und Wechsel gleich.
+- G2: 20 von 20 Zuständen aus Kursen nur bis zum Monatsende gleich, also kein Vorgriff.
+- G3: Umkehr-Probe auf zweitem Weg.
+- G4: Wechselkurs, Tagesraster ohne Lücke.
+- G5: Bei allen 9 Phasen sind Hoch und Tief echte Extremwerte.
+- ⚠️ Ein Fehler steckte in der Gegenprobe selbst: Im Suchmuster stand `%%` ohne Formatierung, sodass es die Zeile nie fand. Die Werte waren gleich. Vor der Bewertung behoben.
+
+**Anwendung netto (Bitpanda 0,56 / 0,81 % je Runde):** A 0,719 / 0,712 · B 1,347 / 1,324.
+
+**Auskunft (ändert das Urteil nicht):**
+- **Kleinerer größter Rückgang in allen 15 Jahresstarts** 2012–2026, um 10 bis 32 Pp. Die Nullwelt zeigt aber: Ein großer Teil davon ist **Mechanik**. Wer ein Drittel der Zeit draußen ist, hat auch bei zufällig verschobenen Phasen einen kleineren Rückgang (Rang 0,73 / 0,80).
+- **Zerbrechlich:** Wird der Zustand aus USD statt aus EUR gerechnet, wird B zu 1,631 statt 1,401. Ganz in USD wird A zu 1,022 statt 0,735; draußen in EUR verlor man 2014–15 den Anstieg des Dollars.
+- **ab 2024:** 1,112, Rückgang −32 % statt −52 %, die laufende Phase zu 41 % vermieden. Das ist **eine** Phase.
+- **R1** (200 Tage): A 0,434, B 0,803, 36 bzw. 82 Wechsel. **R3** (12 Monate): A 0,547, B 0,592. Beide schlechter.
+- **ETH mit R2:** 0,135 gegen Halten, Rückgang gleich (−93,6 %).
+
+#### Zwischenfazit zum Ziel
+
+| | |
+|---|---|
+| **Das Problem aus F1 ist bestätigt, und es ist der Kern** | Ausgestiegen wird 54–158 Tage nach dem Hoch, wenn der Kurs schon 28–81 % gefallen ist. Wieder eingestiegen wird 50–199 Tage nach dem Tief, wenn er schon 30–176 % gestiegen ist. Die Monate draußen waren im Mittel **nicht negativ**. Die Regel verpasst einen großen Teil der Erholung, und das kostet so viel, wie sie in der Mitte des Absturzes spart |
+| **Schnelle Abstürze fängt sie gar nicht** | 2013 und 2021-04 blieb sie drin (0 % vermieden) |
+| **Was bleibt** | ein kleinerer größter Rückgang, aber nicht besser als zufällig verschobene Phasen gleicher Länge, und mit Ertragsverlust in Teil A. Kein Signal, kein Fakt für die Mail |
+| **Für das Gesamtbild** | Damit ist auch die **langsamste** Form eines Marktzeitpunkts geprüft. Der Regimewechsel liefert bei BTC keinen Zeitpunkt, an dem sich der Bestand besser führen ließe als durch Halten, weder schnell (2.599) noch langsam (hier) |

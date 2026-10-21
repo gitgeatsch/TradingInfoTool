@@ -1,0 +1,88 @@
+M-A MESSUNG Fassung 1 · BTC in EUR 2010-07-18 bis 2026-10-04, 5923 Tage · EUR-USD bis 2026-10-21
+
+Baerenphasen (Zickzack -50 %/+100 %, EUR):
+  2011-06-08 -> 2011-11-18  -92 %
+  2013-04-09 -> 2013-04-16  -71 %
+  2013-04-24 -> 2013-07-06  -57 %
+  2013-12-04 -> 2015-01-14  -82 %
+  2017-12-16 -> 2018-12-15  -83 %
+  2019-06-26 -> 2020-03-12  -61 %
+  2021-04-13 -> 2021-07-20  -53 %
+  2021-11-08 -> 2022-11-21  -74 %
+  2025-10-06 -> 2026-06-30  -52 %  LAUFEND
+
+HAUPTREGEL R2 (10-Monats-Schnitt, Zustand in EUR)
+  Teil A 2011-05-01 bis 2016-12-31: Endvermoegen / Halten 0.735 · groesster Rueckgang Regel -82.7 % gegen Halten -92.2 % · Wechsel 8 · draussen 34 %
+    Nullwelt (45 Verschiebungen): Rang Endvermoegen 0.91 (Median Null 0.047) · Rang Rueckgang 0.73 (Median Null -91.9 %)
+    Umkehr: Haltemonat-Rendite draussen +4.0 % (n 23) · drin +25.1 % (n 45)
+    Ausstiege mit Wiedereinstieg 4, davon Fehlausstiege (Wiedereinstieg teurer) 3
+    Phase 2011-06-08 -> 2011-11-18: Kurs -92 % · Regel -81 % · vermieden 12 % · Ausstieg 115 T nach dem Hoch (-81 %) · Wiedereinstieg 196 T nach dem Tief (+176 %)
+    Phase 2013-04-09 -> 2013-04-16: Kurs -71 % · Regel -71 % · vermieden 0 % · Ausstieg 387 T nach dem Hoch (+88 %) · Wiedereinstieg 0 T nach dem Tief (+0 %)
+    Phase 2013-04-24 -> 2013-07-06: Kurs -57 % · Regel -57 % · vermieden 0 % · Ausstieg 372 T nach dem Hoch (+180 %) · Wiedereinstieg 0 T nach dem Tief (+0 %)
+    Phase 2013-12-04 -> 2015-01-14: Kurs -82 % · Regel -62 % · vermieden 25 % · Ausstieg 148 T nach dem Hoch (-60 %) · Wiedereinstieg 199 T nach dem Tief (+72 %)
+  Teil B 2017-01-01 bis 2026-09-30: Endvermoegen / Halten 1.401 · groesster Rueckgang Regel -73.0 % gegen Halten -83.0 % · Wechsel 14 · draussen 32 %
+    Nullwelt (94 Verschiebungen): Rang Endvermoegen 0.86 (Median Null 0.209) · Rang Rueckgang 0.80 (Median Null -80.1 %)
+    Umkehr: Haltemonat-Rendite draussen +0.9 % (n 38) · drin +8.5 % (n 79)
+    Ausstiege mit Wiedereinstieg 7, davon Fehlausstiege (Wiedereinstieg teurer) 4
+    Phase 2017-12-16 -> 2018-12-15: Kurs -83 % · Regel -72 % · vermieden 14 % · Ausstieg 106 T nach dem Hoch (-67 %) · Wiedereinstieg 137 T nach dem Tief (+68 %)
+    Phase 2019-06-26 -> 2020-03-12: Kurs -61 % · Regel -45 % · vermieden 26 % · Ausstieg 158 T nach dem Hoch (-40 %) · Wiedereinstieg 50 T nach dem Tief (+85 %)
+    Phase 2021-04-13 -> 2021-07-20: Kurs -53 % · Regel -53 % · vermieden 0 % · Ausstieg 263 T nach dem Hoch (-21 %) · Wiedereinstieg 0 T nach dem Tief (+0 %)
+    Phase 2021-11-08 -> 2022-11-21: Kurs -74 % · Regel -37 % · vermieden 49 % · Ausstieg 54 T nach dem Hoch (-28 %) · Wiedereinstieg 100 T nach dem Tief (+44 %)
+    Phase 2025-10-06 -> 2026-06-30 (LAUFEND): Kurs -52 % · Regel -31 % · vermieden 41 % · Ausstieg 56 T nach dem Hoch (-31 %) · Wiedereinstieg 63 T nach dem Tief (+30 %)
+
+URTEIL nach §60.5: S1 Umkehr nein · S2 Rueckgang nein · S3 Endvermoegen nein · S4 jede abgeschlossene Phase vermieden nein (8 Phasen) · umgekehrt nein
+FOLGE: M-A TRAEGT NICHT
+
+ANWENDUNG netto (Bitpanda BTC je Runde 0,56 / 0,81 %):
+  Teil A, Kosten 0.56 %: Endvermoegen / Halten 0.719
+  Teil A, Kosten 0.81 %: Endvermoegen / Halten 0.712
+  Teil B, Kosten 0.56 %: Endvermoegen / Halten 1.347
+  Teil B, Kosten 0.81 %: Endvermoegen / Halten 1.324
+
+AUSKUNFT
+ ab 2024 (R2):
+  Teil ab2024 2024-01-01 bis 2026-09-30: Endvermoegen / Halten 1.112 · groesster Rueckgang Regel -31.9 % gegen Halten -51.9 % · Wechsel 2 · draussen 27 %
+    Umkehr: Haltemonat-Rendite draussen -0.4 % (n 9) · drin +4.2 % (n 24)
+    Ausstiege mit Wiedereinstieg 1, davon Fehlausstiege (Wiedereinstieg teurer) 1
+    Phase 2025-10-06 -> 2026-06-30 (LAUFEND): Kurs -52 % · Regel -31 % · vermieden 41 % · Ausstieg 56 T nach dem Hoch (-31 %) · Wiedereinstieg 63 T nach dem Tief (+30 %)
+ Zustand aus USD (R2), Bewertung in EUR:
+  Teil A: Endverm./Halten 0.735 · Rueckgang -82.7 gegen -92.2 % · Wechsel 8
+  Teil B: Endverm./Halten 1.631 · Rueckgang -73.0 gegen -83.0 % · Wechsel 12
+ Rechnung ganz in USD (R2 auf USD):
+  Teil A: Endverm./Halten 1.022 · Rueckgang -83.7 gegen -92.7 %
+  Teil B: Endverm./Halten 1.813 · Rueckgang -72.8 gegen -83.8 %
+ R1 200-Tage:
+  Teil A (ab 2011-05-01): Endverm./Halten 0.434 · Rueckgang -90.1 gegen -92.2 % · Wechsel 36
+  Teil B (ab 2017-01-01): Endverm./Halten 0.803 · Rueckgang -68.6 gegen -83.0 % · Wechsel 82
+ R3 12-Monats-Momentum:
+  Teil A (ab 2011-08-01): Endverm./Halten 0.547 · Rueckgang -82.8 gegen -82.8 % · Wechsel 4
+  Teil B (ab 2017-01-01): Endverm./Halten 0.592 · Rueckgang -87.4 gegen -83.0 % · Wechsel 7
+ ETH mit R2 (EUR, ab 2016-06):
+  Endverm./Halten 0.135 · Rueckgang -93.6 gegen -93.5 % · Wechsel 22 · draussen 41 %
+  Phase 2016-06-16 -> 2016-12-05: Kurs -66 % · Regel -57 % · vermieden 14 %
+  Phase 2017-06-12 -> 2017-07-16: Kurs -61 % · Regel -61 % · vermieden 0 %
+  Phase 2018-01-13 -> 2018-04-06: Kurs -73 % · Regel -73 % · vermieden 1 %
+  Phase 2018-05-05 -> 2018-12-15: Kurs -89 % · Regel -43 % · vermieden 52 %
+  Phase 2019-06-26 -> 2019-12-17: Kurs -63 % · Regel -44 % · vermieden 30 %
+  Phase 2020-02-14 -> 2020-03-12: Kurs -63 % · Regel -51 % · vermieden 19 %
+  Phase 2021-05-11 -> 2021-06-26: Kurs -56 % · Regel -56 % · vermieden 0 %
+  Phase 2021-11-08 -> 2022-06-18: Kurs -77 % · Regel -49 % · vermieden 37 %
+  Phase 2024-12-16 -> 2025-04-08: Kurs -65 % · Regel -44 % · vermieden 32 %
+  Phase 2025-08-22 -> 2026-06-06 (LAUFEND): Kurs -68 % · Regel -42 % · vermieden 38 %
+ Starts je 01.01. bis 2026-09-30 (R2, BTC EUR):
+  2012: Endverm./Halten 1.131 · Rueckgang -73.0 gegen -83.0 %
+  2013: Endverm./Halten 1.181 · Rueckgang -73.0 gegen -83.0 %
+  2014: Endverm./Halten 1.181 · Rueckgang -73.0 gegen -83.0 %
+  2015: Endverm./Halten 0.959 · Rueckgang -73.0 gegen -83.0 %
+  2016: Endverm./Halten 1.401 · Rueckgang -73.0 gegen -83.0 %
+  2017: Endverm./Halten 1.401 · Rueckgang -73.0 gegen -83.0 %
+  2018: Endverm./Halten 1.401 · Rueckgang -68.4 gegen -80.1 %
+  2019: Endverm./Halten 0.984 · Rueckgang -52.6 gegen -73.6 %
+  2020: Endverm./Halten 1.324 · Rueckgang -52.6 gegen -73.6 %
+  2021: Endverm./Halten 1.843 · Rueckgang -52.6 gegen -73.6 %
+  2022: Endverm./Halten 1.843 · Rueckgang -31.9 gegen -64.2 %
+  2023: Endverm./Halten 0.784 · Rueckgang -31.9 gegen -51.9 %
+  2024: Endverm./Halten 1.112 · Rueckgang -31.9 gegen -51.9 %
+  2025: Endverm./Halten 1.112 · Rueckgang -31.9 gegen -51.9 %
+  2026: Endverm./Halten 1.130 · Rueckgang -6.3 gegen -38.3 %
+  kleinerer Rueckgang in 15 von 15 Starts
