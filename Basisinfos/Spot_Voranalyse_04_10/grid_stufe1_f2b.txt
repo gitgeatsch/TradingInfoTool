@@ -1,0 +1,5 @@
+GRID STUFE 1 FASSUNG 2b · 2023-09-01 bis 2026-08-31 · Nullwelt Zufallspfad (200 Ziehungen je Monat, mit Zuruecklegen, gemeinsame Drift) · Schwelle 0.25 %
+
+SELBSTTEST (je 3 kuenstliche Welten, 36 Monate, BTC-Stundenschwankung, g 1 %): Rueckkehr 0.760 / 0.415 / 0.925 · Trend 0.350 / 0.075 / 0.755 · unabhaengig 0.585 / 0.215 / 0.860 -> NICHT BESTANDEN
+
+SELBSTTEST NICHT BESTANDEN - es wird NICHT gemessen (§9.2).

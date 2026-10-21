@@ -1,0 +1,9 @@
+GRID AUFLOESUNG · BTC-Stundenschwankung 0.498 % · 2000 kuenstliche Monate je phi · Schwelle Fusion 0,25 % je Ausfuehrung
+
+phi +0.00 (entspricht VR(24) 1.000, VR(168) 1.000): g 1 %: je Ausf. -0.268 % (Rueckkehr-Ertrag +0.000 %) · g 2 %: je Ausf. -0.252 % (Rueckkehr-Ertrag +0.000 %) · g 3 %: je Ausf. -0.241 % (Rueckkehr-Ertrag +0.000 %)
+phi -0.05 (entspricht VR(24) 0.909, VR(168) 0.905): g 1 %: je Ausf. -0.233 % (Rueckkehr-Ertrag +0.035 %) · g 2 %: je Ausf. -0.219 % (Rueckkehr-Ertrag +0.033 %) · g 3 %: je Ausf. -0.206 % (Rueckkehr-Ertrag +0.035 %)
+phi -0.10 (entspricht VR(24) 0.825, VR(168) 0.819): g 1 %: je Ausf. -0.198 % (Rueckkehr-Ertrag +0.070 %) · g 2 %: je Ausf. -0.181 % (Rueckkehr-Ertrag +0.071 %) · g 3 %: je Ausf. -0.172 % (Rueckkehr-Ertrag +0.068 %)
+phi -0.20 (entspricht VR(24) 0.678, VR(168) 0.668): g 1 %: je Ausf. -0.138 % (Rueckkehr-Ertrag +0.130 %) · g 2 %: je Ausf. -0.130 % (Rueckkehr-Ertrag +0.122 %) · g 3 %: je Ausf. -0.117 % (Rueckkehr-Ertrag +0.123 %)
+phi -0.30 (entspricht VR(24) 0.553, VR(168) 0.541): g 1 %: je Ausf. -0.085 % (Rueckkehr-Ertrag +0.183 %) · g 2 %: je Ausf. -0.078 % (Rueckkehr-Ertrag +0.174 %) · g 3 %: je Ausf. -0.058 % (Rueckkehr-Ertrag +0.183 %)
+
+Gemessen (G4): VR(24) BTC 0,952 · ETH 1,030 · SOL 0,918 · LINK 0,940 -> phi etwa -0,025 · +0,015 · -0,04 · -0,03

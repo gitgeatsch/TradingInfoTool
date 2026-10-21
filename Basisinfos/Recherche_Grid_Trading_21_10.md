@@ -206,3 +206,36 @@ Nutzer 22.10.: *„ok, können eine kurze Prüfung machen für W-A, dann müssen
   - Dann wird mit Zurücklegen gezogen und die **gemeinsame Drift des ganzen Fensters** (Mittel aller Stundenrenditen des Assets 2023-09 bis 2026-08) addiert.
   - Unter H0 (Zufallspfad mit konstanter Drift) liegt das echte Monatsende damit dort, wo auch die Nullwelt es erwartet.
 - **Selbsttest wieder zuerst, sonst keine Messung.** Alles andere bleibt wie §9 und §9.2.
+
+### 9.4 Fassung 2b und die Auflösung: W-A ENDET — die Gebühr ist mit der gemessenen Rückkehr unerreichbar (22.10.2026; `grid_stufe1_f2.py` → `grid_stufe1_f2b.txt`, `grid_aufloesung.py`, `grid_aufloesung_gegenprobe.py` → `.txt`)
+
+**Selbsttest Fassung 2b: ohne Schlagseite, aber zu unscharf.**
+- Unabhängige Welten 0,585 / 0,215 / 0,860 (Soll: dazwischen ✔).
+- Rückkehr 0,760 / 0,415 / 0,925 und Trend 0,350 / 0,075 / 0,755. In jedem Paar liegt die Rückkehr über dem Trend, aber nicht zuverlässig über 0,95 bzw. unter 0,05.
+- Der Restbestand am Monatsende überlagert in 36 Monaten selbst eine deutliche Rückkehr (φ = −0,10).
+- ⇒ Nach Plan **keine Messung** des Rangs auf echten Daten.
+
+**Die Frage, auf die es ankommt, ohne echten Ertrag beantwortet: Wie viel bringt eine Rückkehr bekannter Stärke je Ausführung?**
+- Eingepflanzt in künstliche Monate mit der BTC-Stundenschwankung, je φ 2.000 Monate.
+- Verglichen wird mit einem Zufallspfad (φ = 0).
+
+| φ (Stundenrenditen) | entspricht VR(24) | Rückkehr-Ertrag je Ausführung, g 1 / 2 / 3 % |
+|---|---|---|
+| −0,05 | 0,909 | +0,035 / +0,033 / +0,035 % |
+| −0,10 | 0,825 | +0,070 / +0,071 / +0,068 % |
+| −0,20 | 0,678 | +0,130 / +0,122 / +0,123 % |
+| −0,30 | 0,553 | +0,183 / +0,174 / +0,183 % |
+| **Gebühr Fusion** | | **0,25 %** |
+
+- **Gemessen** (G4, zweiter Weg, Varianz-Ratio der echten Stundenrenditen 2023-09 bis 2026-08): VR(24) BTC 0,952 · ETH 1,030 · SOL 0,918 · LINK 0,940. Das entspricht einem φ von etwa −0,025 / +0,015 / −0,04 / −0,03. Der Rückkehr-Ertrag beträgt damit **rund 0,02–0,03 % je Ausführung, also etwa ein Zehntel der Gebühr**.
+- Selbst eine Rückkehr, die **zehnmal** stärker ist als die gemessene (φ = −0,30, VR 0,55), deckt die 0,25 % nicht.
+- **Gegenprobe:** eigene Gitterschleife, anderer Startwert, 400 Monate. Der Rückkehr-Ertrag bei φ −0,10 ist +0,071 %, bei −0,30 +0,191 % ✔.
+
+**Urteil:** **W-A endet.** Das Urteil folgt nicht aus einem Rang (der war nicht messbar), sondern aus der **Größe**: Die Rückkehr zur Mitte auf Stunden- bis Tagesskala ist bei BTC, ETH, SOL und LINK etwa zehnmal zu klein für die Fusion-Gebühr. Ein Gitter wäre im Erwartungswert ein Verlust von rund 0,2 % je Ausführung, plus das Bestandsrisiko bei Trend.
+
+**Einschränkungen (ehrlich):**
+- Stundenschlüsse sehen keine Rückkehr **innerhalb** der Stunde. Die bekannte Rückkehr dort (Geld-Brief-Sprung) ernten Market-Maker mit Rabatt, nicht ein Gitter mit 1–3 % Stufen.
+- Die Varianz-Ratio reicht bis 168 h.
+- Eine 1-Minuten-Messung (Stufe 2) entfällt nach §9.
+
+**Lehre für die Messanlage:** Zwei Nullwelten waren falsch gebaut. Die **Umordnung** fixiert das Monatsende; das **Ziehen samt Monatsdrift** zentriert die Nullwelt auf das echte Ende. Beide hat erst der **Selbsttest mit bekannter Wahrheit** gefunden, nicht die Gegenprobe der Rechnung (G1 war grün). ⇒ Bei jeder neuen Nullwelt gehört der Selbsttest **vor** den ersten Blick auf echte Ergebnisse.

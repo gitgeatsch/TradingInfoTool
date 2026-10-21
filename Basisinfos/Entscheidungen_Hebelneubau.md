@@ -1533,3 +1533,20 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Der Rückgang ist kleiner, aber nicht besser als bei zufällig verschobenen Phasen. Teil A kostet Ertrag (0,735).
 
 **Betrieb:** unverändert. **Gesamtbild:** Der Regimewechsel liefert bei BTC weder schnell (2.599) noch langsam (§60) einen Zeitpunkt.
+
+# E-127 · Grid-Trading endet an der Größe: die Rückkehr zur Mitte ist rund zehnmal zu klein für die Gebühr (22.10.2026)
+
+**22.10.2026** · Nutzer: *„ok, können eine kurze Prüfung machen für W-A, dann müssen wir u. U. zurück zu Alternativen oder Bestehendes noch einmal analysieren.“*
+
+**Ergebnis** (`Recherche_Grid_Trading_21_10.md` §9 bis §9.4):
+- Gemessen wurde die Varianz-Ratio der Stundenrenditen 2023-09 bis 2026-08: VR(24) BTC 0,952 · ETH 1,030 · SOL 0,918 · LINK 0,940.
+- Eine eingepflanzte Rückkehr dieser Stärke bringt einem Gitter **rund 0,02–0,03 % je Ausführung**. Die Fusion-Gebühr liegt bei 0,25 %.
+- Selbst bei zehnfacher Stärke (VR 0,55) wären es nur 0,18 %.
+- ⇒ **Grid wird nicht weiterverfolgt.** Stufe 2 (1-Minuten-Daten) entfällt.
+
+**Zwei Fehler der Messanlage**, beide vom Selbsttest gefunden, bevor ein Ergebnis bewertet wurde:
+- Die Umordnungs-Nullwelt fixierte das Monatsende (Fassung 1 ungültig).
+- Die Nullwelt mit Monatsdrift war auf das echte Ende zentriert (Fassung 2 gesperrt).
+- Fassung 2b ist unverzerrt, aber für den Rang zu unscharf. Das Urteil kam deshalb über die Auflösung.
+
+**Betrieb:** unverändert.

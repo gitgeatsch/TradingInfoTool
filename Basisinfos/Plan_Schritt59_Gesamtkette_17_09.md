@@ -2609,3 +2609,5 @@ Schritt7 §23.24.
 - Bitpanda Fusion steht laut der offiziellen Bitpanda-FAQ unter dem automatischen KESt-Abzug.
 - Die langsame Trendallokation BTC ↔ EURCV (R2, 10-Monats-Schnitt) **trägt nicht** (Spot §60, E-126). Sie steigt zu spät aus und zu spät wieder ein, und die Monate draußen waren im Mittel nicht negativ.
 - Damit ist auch die langsamste Form eines Marktzeitpunkts geprüft.
+
+**Nachtrag 22.10.2026 (56) — Grid-Vorprüfung W-A:** Ein Gitter auf BTC/ETH (auch SOL, LINK) bekäme aus der gemessenen Rückkehr zur Mitte etwa 0,02–0,03 % je Ausführung. Die Fusion-Gebühr beträgt 0,25 %. **Grid endet** (E-127). Der Selbsttest mit bekannter Wahrheit fand vorher zwei falsch gebaute Nullwelten.
