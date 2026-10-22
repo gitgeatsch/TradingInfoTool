@@ -1,0 +1,8 @@
+A1 GEGENPROBE
+
+  OK    G1 24-h-Ertrag direkt per SQL  (300 von 300 gleich)
+  OK    G2 N24 durch Abzaehlen  (300 von 300 gleich)
+  OK    G3 Tagesblock-Breite Formel gegen Bootstrap (+-20 %)  (Formel +-0.50 Pp · Bootstrap +-0.52 Pp)
+  OK    G4 R-R11 Referenz +0,55 %  (+0.545 %)
+
+4 Pruefungen, ALLE BESTANDEN

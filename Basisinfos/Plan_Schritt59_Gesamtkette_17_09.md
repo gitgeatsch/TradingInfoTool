@@ -2611,3 +2611,8 @@ Schritt7 §23.24.
 - Damit ist auch die langsamste Form eines Marktzeitpunkts geprüft.
 
 **Nachtrag 22.10.2026 (56) — Grid-Vorprüfung W-A:** Ein Gitter auf BTC/ETH (auch SOL, LINK) bekäme aus der gemessenen Rückkehr zur Mitte etwa 0,02–0,03 % je Ausführung. Die Fusion-Gebühr beträgt 0,25 %. **Grid endet** (E-127). Der Selbsttest mit bekannter Wahrheit fand vorher zwei falsch gebaute Nullwelten.
+
+**Nachtrag 22.10.2026 (57) — Bestandsaufnahme A1** (`Bestandsaufnahme_brutto_netto_22_10.md`, E-128):
+- Vor Kosten trägt als Ertrag nur die REGEL0, mit einer Lücke von rund 0,18 Pp je Handel.
+- Weder Kosten- noch Auswahlhebel schließen sie, auch nicht zusammen in der Rückschau.
+- Innerhalb der bestehenden Ansätze ist damit kein Weg offen. Nächster Schritt sind neue Ansätze.

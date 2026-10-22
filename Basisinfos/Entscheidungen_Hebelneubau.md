@@ -1550,3 +1550,20 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Fassung 2b ist unverzerrt, aber für den Rang zu unscharf. Das Urteil kam deshalb über die Auflösung.
 
 **Betrieb:** unverändert.
+
+# E-128 · Bestandsaufnahme A1: innerhalb der bestehenden Ansätze ist kein Weg offen (22.10.2026)
+
+**22.10.2026** · Nutzer: *„ja A1 Bestandsaufnahme starten … mit Alternativen meine ich nicht nur Anpassungen der bestehenden Strategien, sondern auch neue Ansätze … aber mach zuerst die Prüfung A1.“*
+
+**Ergebnis** (`Bestandsaufnahme_brutto_netto_22_10.md`):
+- **Vor** Kosten trägt als Ertrag nur die REGEL0: unverzerrt +0,30 % je Handel gegen 0,48 % Kosten, also eine Lücke von rund 0,18 Pp.
+- Keiner der Hebel schließt sie, auch nicht zusammen und auch nicht als Obergrenze in der Rückschau:
+  - Fusion ohne Hebel kostet 0,50 %;
+  - 12 h halten gibt −0,07..−0,11 Pp, selbst bei stündlicher Finanzierung;
+  - die Sperre bei Signalflut bestenfalls −0,04 Pp;
+  - beides zusammen −0,03..−0,08 Pp;
+  - Informationsmonate (K_IG) und Wucht sind schon gemessen, schwach bzw. ohne Richtung.
+- Die Tagesblock-Unsicherheit (±0,5 Pp) ist größer als die Lücke.
+- Netto trägt nur **Mitnahme ×3** (Spot), als Schadensbegrenzung. Gegenprobe 4/4.
+
+**Folge:** Es werden keine Anpassungen an bestehenden Strängen weiterverfolgt. Der nächste Schritt sind **neue Ansätze** (Nutzerauftrag). **Betrieb:** unverändert (REGEL0 als Vorwärtsprotokoll mit kleinen Einsätzen).

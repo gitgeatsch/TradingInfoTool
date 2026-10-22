@@ -1,0 +1,40 @@
+A1 HEBEL-RECHNUNG · REGEL0-Einstiege 2025-01..2026-08 · Kosten Bitpanda-Hebel 0,48 %% je Tageshandel
+
+bestand: 8408 Einstiege an 497 Tagen
+  24 h Mittel +0.545 % [Tagesblock +0.05; +1.08] · Luecke zu 0,48 %: +0.065 Pp
+  H1 Haltedauer: 6 h +0.148 % · 12 h +0.347 % · 24 h +0.545 %
+  H2 Sperre ab N24 >=   29 (P70): weg 30.9 % · Mittel uebrig +0.599 % [+0.06; +1.14] · weg +0.423 % · Luecke +0.119 Pp
+  H2 Sperre ab N24 >=   39 (P80): weg 20.9 % · Mittel uebrig +0.599 % [+0.13; +1.12] · weg +0.338 % · Luecke +0.119 Pp
+  H2 Sperre ab N24 >=   50 (P90): weg 10.9 % · Mittel uebrig +0.590 % [+0.07; +1.07] · weg +0.174 % · Luecke +0.110 Pp
+  H3 12 h + Sperre P70: Mittel +0.344 % · Luecke zu 0,39 %: -0.046 Pp
+  H3 12 h + Sperre P80: Mittel +0.365 % · Luecke zu 0,39 %: -0.025 Pp
+  R0 R-R11: bestand 2025-26 +0.545 % (Referenz Schritt7 §23.64: +0,55 %) -> GLEICH
+
+unverzerrt_1: 9124 Einstiege an 528 Tagen
+  24 h Mittel +0.296 % [Tagesblock -0.21; +0.83] · Luecke zu 0,48 %: -0.184 Pp
+  H1 Haltedauer: 6 h +0.110 % · 12 h +0.302 % · 24 h +0.296 %
+  H2 Sperre ab N24 >=   31 (P70): weg 30.6 % · Mittel uebrig +0.444 % [-0.08; +0.94] · weg -0.041 % · Luecke -0.036 Pp
+  H2 Sperre ab N24 >=   41 (P80): weg 20.3 % · Mittel uebrig +0.338 % [-0.17; +0.83] · weg +0.129 % · Luecke -0.142 Pp
+  H2 Sperre ab N24 >=   55 (P90): weg 10.0 % · Mittel uebrig +0.316 % [-0.19; +0.83] · weg +0.109 % · Luecke -0.164 Pp
+  H3 12 h + Sperre P70: Mittel +0.339 % · Luecke zu 0,39 %: -0.051 Pp
+  H3 12 h + Sperre P80: Mittel +0.337 % · Luecke zu 0,39 %: -0.053 Pp
+
+unverzerrt_2: 8583 Einstiege an 530 Tagen
+  24 h Mittel +0.295 % [Tagesblock -0.24; +0.82] · Luecke zu 0,48 %: -0.185 Pp
+  H1 Haltedauer: 6 h +0.133 % · 12 h +0.321 % · 24 h +0.295 %
+  H2 Sperre ab N24 >=   30 (P70): weg 30.6 % · Mittel uebrig +0.389 % [-0.10; +0.89] · weg +0.080 % · Luecke -0.091 Pp
+  H2 Sperre ab N24 >=   39 (P80): weg 20.4 % · Mittel uebrig +0.351 % [-0.14; +0.85] · weg +0.076 % · Luecke -0.129 Pp
+  H2 Sperre ab N24 >=   52 (P90): weg 10.4 % · Mittel uebrig +0.341 % [-0.16; +0.86] · weg -0.104 % · Luecke -0.139 Pp
+  H3 12 h + Sperre P70: Mittel +0.331 % · Luecke zu 0,39 %: -0.059 Pp
+  H3 12 h + Sperre P80: Mittel +0.327 % · Luecke zu 0,39 %: -0.063 Pp
+
+unverzerrt_3: 8918 Einstiege an 528 Tagen
+  24 h Mittel +0.313 % [Tagesblock -0.16; +0.82] · Luecke zu 0,48 %: -0.167 Pp
+  H1 Haltedauer: 6 h +0.118 % · 12 h +0.283 % · 24 h +0.313 %
+  H2 Sperre ab N24 >=   31 (P70): weg 30.1 % · Mittel uebrig +0.418 % [-0.09; +0.91] · weg +0.071 % · Luecke -0.062 Pp
+  H2 Sperre ab N24 >=   40 (P80): weg 20.0 % · Mittel uebrig +0.440 % [-0.05; +0.97] · weg -0.193 % · Luecke -0.040 Pp
+  H2 Sperre ab N24 >=   53 (P90): weg 10.7 % · Mittel uebrig +0.433 % [-0.02; +0.92] · weg -0.689 % · Luecke -0.047 Pp
+  H3 12 h + Sperre P70: Mittel +0.313 % · Luecke zu 0,39 %: -0.077 Pp
+  H3 12 h + Sperre P80: Mittel +0.359 % · Luecke zu 0,39 %: -0.031 Pp
+
+Fusion ohne Hebel: 2 x 0,25 %% = 0,50 %% je Runde (Stufe 2 ab 100.000 EUR Umsatz in 30 T: 0,42 %%)
