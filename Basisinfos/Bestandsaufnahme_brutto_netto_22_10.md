@@ -66,3 +66,5 @@ Ein Hebel wird nur dann gemessen, wenn er die Lücke **rechnerisch** schließen 
 | ⇒ **für den nächsten Schritt** | Innerhalb der **bestehenden** Ansätze ist mit den freien Daten und den heutigen Kosten kein Weg mehr offen. Was bleibt, sind **neue Ansätze**: andere Ertragsquellen, nicht noch eine Anpassung (Nutzer 22.10.) |
 
 **Betrieb:** unverändert. Die REGEL0 läuft weiter als Vorwärtsprotokoll mit kleinen Einsätzen; die Freigabe galt ausdrücklich *„nach Kosten nicht als gewinnbringend belegt“* (Schritt7 §23.38, E-94).
+
+**Nachtrag 22.10.2026:** Die offene Faktfrage zu K2 ist geklärt. Bitpanda berechnet die Margin-Finanzierung **alle 4 Stunden**, 0,03 % je 4 h in Tag 1–60 (Kostendokument v4.0.0 vom 08.07.2026, `Recherche_Neue_Ansaetze_22_10.md` §5.3). 12 h kosten damit 0,09 %, die Rechnung mit 0,39 % stimmt, und das Urteil *schließt nicht* bleibt.

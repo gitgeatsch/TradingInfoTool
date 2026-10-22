@@ -2616,3 +2616,9 @@ Schritt7 §23.24.
 - Vor Kosten trägt als Ertrag nur die REGEL0, mit einer Lücke von rund 0,18 Pp je Handel.
 - Weder Kosten- noch Auswahlhebel schließen sie, auch nicht zusammen in der Rückschau.
 - Innerhalb der bestehenden Ansätze ist damit kein Weg offen. Nächster Schritt sind neue Ansätze.
+
+**Nachtrag 22.10.2026 (58) — Recherche neue Ansätze (R-A, E-129):**
+- Vier Recherchen (Krypto, Multi-Asset, Bitpanda, freie Daten), gegengeprüft.
+- Ein Rendite-Vorteil nach Veröffentlichung und Kosten ist nirgends belegt. Belegt sind gehaltene Prämien und Bremsen für Rückgänge.
+- Engere Wahl: Multi-Asset-Grundportfolio mit Trendfilter, Staking-Lücke im Bestand, Carry beobachten.
+- Offene Grundsatzfrage: Portfolio-Aufbau und -Führung statt Signale.

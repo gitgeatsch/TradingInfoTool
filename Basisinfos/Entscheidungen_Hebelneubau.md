@@ -1567,3 +1567,26 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Netto trägt nur **Mitnahme ×3** (Spot), als Schadensbegrenzung. Gegenprobe 4/4.
 
 **Folge:** Es werden keine Anpassungen an bestehenden Strängen weiterverfolgt. Der nächste Schritt sind **neue Ansätze** (Nutzerauftrag). **Betrieb:** unverändert (REGEL0 als Vorwärtsprotokoll mit kleinen Einsätzen).
+
+# E-129 · Recherche neue Ansätze (R-A): Belegt sind Prämien und Bremsen, kein Vorhersage-Vorteil (22.10.2026)
+
+**22.10.2026** · Nutzer: *„ja R-A Recherche starten, prüfen, gegenprüfen und Doku – … bitte im Detail durchplanen und analysieren“*.
+
+**Ergebnis** (`Recherche_Neue_Ansaetze_22_10.md` §5–§7; vier Recherchen, Gegenprüfung 12 Aussagen an Primärquellen, eigene Gegenrechnung):
+- **Kein** Ansatz liefert einem Privatanleger einen nachweisbaren Rendite-Vorteil nach Veröffentlichung und Kosten.
+  - Krypto-Carry: Prämie seit 2025 eingebrochen, bei Bitpanda nicht umsetzbar.
+  - Trendfolge: TSMOM Sharpe 1,41 → 0,41 nach Veröffentlichung.
+  - Faktoren nach Veröffentlichung etwa halbiert, über ETFs ≈ 0.
+  - Kalendereffekte verschwunden.
+  - Paarhandel und Liquiditätsgabe negativ.
+- **Belegt** sind:
+  - Prämien, die man **hält** (Aktien, Anleihen, Krypto-Beta, Staking);
+  - **Bremsen für Rückgänge** (Trendfilter über mehrere Anlageklassen, Volatilitätssteuerung, Diversifikation);
+  - niedrige Kosten und wenig Steuerreibung.
+- **Engere Wahl:**
+  - W1 Multi-Asset-Grundportfolio mit Trendfilter (Risiko, nicht Rendite);
+  - W2 Staking-Lücke im Bestand (Fakt);
+  - W3 Carry nur beobachten.
+- **Nebenbefund:** Die Bitpanda-Margin-Finanzierung wird alle 4 h berechnet (Kostendokument v4.0.0). Damit ist die offene Faktfrage aus E-128 geschlossen, das Urteil bleibt.
+
+**Zur Abstimmung:** Die Wirkung liegt im **Aufbau und in der Führung eines Portfolios**, nicht in Signalen. Das ist eine Änderung der Systemaufgabe. **Betrieb:** unverändert.
