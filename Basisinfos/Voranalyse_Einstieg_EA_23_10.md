@@ -61,6 +61,16 @@ Bitpanda: Spot über den Broker oder Fusion, Limit-Kauf bei Spot fast überall m
 | **Selbsttest VOR dem ersten Blick** | (a) Zufallspfad mit zufälligen „Signalen“ → Kaufvorteil ≈ 0 und Rang gleichverteilt; (b) Positivkontrolle: „Signale“ an lokalen Tiefs → Kaufvorteil > 0, Rang ≥ 0,95. Fällt (a) oder (b) durch, wird nicht gemessen |
 | Folgen | **trägt** → Voranalyse Betrieb (Sparplan-Mail *„Kaufsignal für die Monatsrate“* bzw. Limit-Order über Fusion) und Stufe B (mehrere Zyklen). **trägt nicht** → E-A ist erledigt; der Kauf am festen Tag bleibt |
 
+### 5.1 Selbsttest sperrt Fassung 1 – Zielgröße verzerrt, Fassung 1b VORAB (23.10.2026)
+
+- **Selbsttest Fassung 1:** Zufallssignale auf einem Zufallspfad ergeben einen Kaufvorteil von **+0,52 %** (Soll ≈ 0); die Ränge streuen 0,10–0,98; die Positivkontrolle ergibt +6,3 % (Rang 1,00). Nach Plan wurde **nicht gemessen**.
+- **Ursache:** P_plan / P_Kauf − 1 ist wegen der **Konvexität** (Jensen) auch bei reinem Zufall im Mittel positiv. Wer später zu einem zufälligen Preis kauft, bekommt im Mittel mehr Stück; diese sind am Ende im Mittel aber **nicht mehr wert**.
+- **Fassung 1b (einzige Änderung):**
+  - Zielgröße ist der **Wertunterschied je eingesetztem Euro an einem gemeinsamen Endpunkt T** = Fensterende + 24 h: P_T / P_Kauf − P_T / P_plan.
+  - Bei einem Zufallspfad ist sie im Mittel null, für jeden Kaufzeitpunkt.
+  - Nach T halten beide Käufe gleich viel Wert im Verhältnis, das Ergebnis gilt also auch für ein längeres Halten.
+- Alles andere bleibt wie §5. Kein echtes Ergebnis ist bisher angesehen.
+
 ## 6. Recherche 4-Jahres-Zyklus und Bärenmarktdauer
 
 *(folgt, Recherche läuft)*

@@ -1,0 +1,5 @@
+P70 E-A KAUFZEITPUNKT · geplante Kaeufe am Monatsersten 2024-01..2026-08 · Fenster (3, 7, 14) Tage
+
+SELBSTTEST: Zufallssignale Kaufvorteil +0.521 %, Raenge 0.98 / 0.10 / 0.59 / 0.78 / 0.43 · Signale an Tiefs +6.274 %, Rang 1.00 -> NICHT BESTANDEN
+
+Selbsttest nicht bestanden - es wird NICHT gemessen (§5).
