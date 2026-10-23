@@ -1,0 +1,9 @@
+ATLAS GEGENPROBE
+
+  OK    G3 Zickzack eigene Schleife: 86 Wenden  (86)
+  OK    G1 F&G Vorlauf-Quote per einfacher Schleife = p75  (hier 69 % (n13) / 50 % (n26) · p75 ('69', '13', '50', '26'))
+  OK    G2 F&G Rang anderer Startwert, 2.000 Ziehungen: beide >= 0,95  (0.972 / 0.955)
+  OK    G4 T2 Netto-Liquiditaet: Aufwaerts-Tage ohne Ausweitung = 48 %  (47.8 %)
+  OK    G5 T3 Nasdaq-Baerenmaerkte per cummax: 13, keiner laufend  (13 (laufend: False))
+
+5 Pruefungen, ALLE BESTANDEN

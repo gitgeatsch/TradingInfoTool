@@ -64,3 +64,83 @@ Lage im Oktober 2026, mit Quelle und Zitat, Fakt und Erzählung getrennt:
 | T3 | **Lagebild Gesamtmarkt** (Reifegrad, Rezessionsampel) als Fakt auf der Statusseite, nach Abstimmung |
 
 ⚠️ **Regeln 1–4:** Dauer und Reifegrad sind **Fakten**, nie Auslöser (Regel 1, kein Kalendersignal). Kein Asset-Vorurteil. Ein Vorlauf in der Rückschau ist **keine Begründung** (Regel 4), bis er getestet ist.
+
+## Ergebnis Fassung 1 (23.10.2026; `p73_atlas_t3_lang.py`, `p74_atlas_t2_geld.py`, `p75_atlas_t1_krypto.py`, `p75_gegenprobe.py` → `.txt`)
+
+### T1 Krypto-Atlas: Selbsttest bestanden, ein Kandidat
+
+**Selbsttest:**
+- Zufallsindikatoren (Strecken-Permutation): **0 von 200** als Kandidat gewertet ✔.
+- Der gebaute Vorlauf-Indikator wurde erkannt ✔.
+
+**Kleine Ebene** (86 BTC-Wendepunkte, Zickzack −20 % / +25 %, W = 30 T). Vorlauf-Quote, dahinter der Zufallswert und der Rang:
+
+| Indikator | 2013–2019 | 2020–2026 | Einordnung |
+|---|---|---|---|
+| **Fear & Greed** (< 25 günstig, > 75 ungünstig) | **69 % / 46 % / 0,97** (n 13, ab 2018) | **50 % / 31 % / 0,97** (n 26) | **einziger Kandidat**. ⚠️ Er wird zum Teil aus Kurs, Schwankung und Volumen berechnet, ist also eher **gleichlaufend an Extremen** als ein unabhängiger Vorlauf. Nachlauf 2020–26 ebenfalls hoch (0,93) |
+| Makrokanäle K1–K9, Makro gesamt kurz und lang | durchweg im Zufallsband (Ränge 0,04–0,92) | dto. | **kein** Vorlauf auf der kleinen Ebene |
+| Nasdaq über 200 T | 5 % / 15 % / **0,00** | 0 % / 11 % / **0,00** | dreht **seltener** nahe den Wendepunkten als zufällig: ein **träger** Trendzustand |
+| Stablecoins 91 T | 0 % / 16 % / **0,00** | 0 % / 4 % / **0,00** | dto. (vor 2020-10 unvollständig) |
+| Funding BTC 30 T | – | 20 % / 21 % / 0,35 | kein Vorlauf |
+| BTC-Dominanz 4 W | 37 % / 36 % / 0,44 | 54 % / 50 % / 0,58 | kein Vorlauf |
+
+**Übergeordnete Ebene** (6 Bärenphasen, W = 90 T, beschreibend): Seit 2017 wechseln vor den großen Wendepunkten **mehrere** Indikatoren, besonders Fear & Greed, Dominanz, VIX, Dollar und Kredit. Bei 4 Zyklen ist das aber eine Beschreibung, keine Regel. Die Matrix steht in `p75_atlas_t1_krypto.txt`.
+
+### T2 Voraussetzung Geldausweitung (Nutzerfrage): **nicht belegt**
+
+| Geldmaß (ab) | Zeit ohne Ausweitung | Aufwärts-Tage ohne Ausweitung | Rang (≤ 0,05 = Voraussetzung) | BTC 90 T mit / ohne | Aufwärtsstrecken ganz ohne |
+|---|---|---|---|---|---|
+| (i) US-M2 J/J (2014) | 10 % | 14 % | 0,89 | +18 / +25 % | 1 von 42 |
+| (ii) Netto-Liquidität 26 W (2013) | 47 % | 48 % | 0,54 | **+37 / +17 %** | 8 von 42 |
+| (iii) Bilanzen Fed + EZB + BoJ J/J (2014) | 40 % | 38 % | 0,37 | +21 / +15 % | 5 von 42 |
+| Auskunft reales M2 | 19 % | 20 % | 0,50 | +19 / +17 % | 3 von 42 |
+
+- BTC stieg in Phasen **ohne** Geldausweitung etwa so oft wie mit.
+- Der Zyklus **2022-11 bis 2025-10 (BTC × 7,9)** lief zu **99 % der Tage bei schrumpfenden Notenbank-Bilanzen** (Fed-QT).
+- ⇒ Geldausweitung ist **keine Voraussetzung**. Bei der Netto-Liquidität bleibt ein **Niveau**-Unterschied (+37 % gegen +17 % über 90 T), der in O49 nicht Bonferroni-fest war.
+- ⚠️ **Eigener Fehler, vor der Bewertung behoben:** Die Nullwelt verglich zuerst nur den Anteil der Aufwärts-Tage statt der **Differenz zum Zeitanteil**, wie in §T2 (a) festgelegt. Die erste Fassung meldete beim realen M2 fälschlich Rang 0,04.
+
+### T3 Lange Historie traditioneller Märkte (beschreibend)
+
+| | Befund |
+|---|---|
+| Nasdaq-Bärenmärkte (≥ −20 %) 1971–2026 | **13**; Bullenmärkte im Median **60 Monate** (18–239) |
+| heute | Bullenmarkt seit dem Tief vom **08.04.2025** (18 Monate; der Rückgang 12/2024–04/2025 war −24 %); seit dem großen Tief vom 28.12.2022 **46 Monate** ohne −30 % |
+| Nominales M2 | schrumpfte seit 1960 **nur einmal** (12/2022–03/2024), und gerade dann lief ein Nasdaq-Bullenmarkt (15 von 15 Monaten) |
+| Reales M2 | 12 Schrumpfungen; Bullenmarkt-Anteil der Monate **82 %** bei wachsendem gegen **80 %** bei schrumpfendem realem M2 ⇒ auch bei Aktien **keine Voraussetzung** |
+| **Rezessionen** (NBER, 7 seit 1971) | der Nasdaq fiel **jedes Mal**, vom Hoch der 12 Monate davor um −24 bis −68 % ⇒ **die stärkste Größe** |
+| **Zinskurve** | vor jeder Rezession 1980–2008 invertiert, mit 4–33 Monaten Vorlauf. **Die Inversion 2022–2024 (26 Monate 10J–2J) blieb bisher ohne Rezession**, zum ersten Mal seit 1976 |
+| Sahm-Regel / Fed Funds | **0,00** (09/2026) / 3,75 % |
+
+### T4 Recherche Lage 10/2026 (Quellen im Recherchebericht; Fakt und Erzählung getrennt)
+
+| Nutzerhypothese | Urteil | Kernzahl |
+|---|---|---|
+| Anleihen im kritischen Bereich | **teilweise gestützt** | US-10J 5,31 % (05.10., höchster Stand seit 2002), 30J 5,67 %; Laufzeitprämie 1,10 (höchster Stand seit 2010, Langfristmittel 0,82); Defizit 6,2 % des BIP, Zinslast +11 %; Spread Frankreich 120–147 Bp; Auktionen intakt |
+| Währungen in der Krise | **nicht** für USD, EUR, CNY; **teilweise** für den Yen (163,86 je USD, schwächster Stand seit 1986, Interventionen) und für ölimportierende Schwellenländer (Rupie-Rekordtief) | Broad Dollar 12 Monate ± 0 % |
+| KI-Investitionen tragen nicht | **teilweise** | Capex der vier Großen 735–750 Mrd. USD 2026, freier Cashflow −24 %; **aber** Cloud-Umsatz +37 bis +82 %, S&P-Gewinne Q3 +29,6 %, KGV 19,1 |
+| Krisen → massive Geldausweitung | **für Corona gestützt** (M2 +26,8 % J/J, Fed-Bilanz verdoppelt), **für 2026 nicht**: M2 +5,7 %, die Fed **erhöht** (16.09.: 3,75–4,00 %), Bilanz nur +0,2 Bio. USD |
+| (implizit) Rezession droht | **derzeit nicht gestützt** | Sahm 0,00, GDPNow 3,6 %, Stellenzuwachs schwach (+29.000) |
+| Auslöser 2026 | **Ölschock** (Brent 62 → 138 → 115 USD), Inflation 3,7 %, Zinserhöhungen von Fed, EZB und BoJ | |
+
+- **BTC und der Aktienmarkt:** Die Tageskorrelation stieg von **0,02 (2017–19)** auf 0,37–0,59 (seit 2020); 2026 liegt sie bei 0,45 (eigene Rechnung, deckt sich mit dem IWF).
+- **Die Trends laufen 2026 aber auseinander:** Nasdaq über 12 Monate +14 % und auf Allzeithoch, **BTC −26 %**, und das bei M2 +5,7 %. Die Liquiditätsthese erklärt 2026 **nicht**. Literatur: Karau 2023 (BTC reagiert erst seit Ende 2020 wie eine Risikoanlage), IWF-Arbeitspapier 2023/163.
+
+### Zwischenfazit zum Ziel (fachlich, meine Einordnung)
+
+1. **Die Nutzerfrage „Geldausweitung Voraussetzung?“ ist für BTC und für Aktien mit Nein beantwortet.** Geld wirkt höchstens auf das **Niveau** (Netto-Liquidität), nicht als Bedingung.
+2. **Die stärkste Größe für den Gesamtmarkt ist die Rezession** (Aktien jedes Mal −24 bis −68 %). In der Krypto-Zeit gab es aber nur **eine** (2020). Der beste Vorläufer, die Zinskurve, hat 2022–24 zum ersten Mal **ohne** Rezession invertiert. Ein Rezessionssignal ist heute nicht aktiv.
+3. **Kein Makrokanal läuft den BTC-Wenden auf der kleinen Ebene voraus.** Trendzustände (Nasdaq, Stablecoins) laufen nach. Nur Fear & Greed hält sich an den Extremen, ist aber zum Teil selbst aus dem Kurs gerechnet.
+4. **Die Lage 2026 ist eine eigene Form:** ein Ölschock mit steigenden Zinsen, BTC löst sich vom Aktienmarkt. Sie passt zu keinem der früheren Muster. Das spricht dafür, den Gesamtmarkt als **Lagebild** zu zeigen (Fakt), nicht als Regel.
+
+### Folge nach dem Messplan
+
+**T1-Kandidat vorhanden** (Fear & Greed) ⇒ als nächster Schritt die REGEL0-Historie 2020–23 (Download-Ja) und **F-1 Fassung 2** nur mit diesem Kandidaten. Dazu, zur Abstimmung: das **Lagebild Gesamtmarkt** als Fakt (Reifegrad, Rezessionsampel, Geld, Anleihen, Öl).
+
+**Gegenprobe 5/5:**
+- G1: F&G-Quote per einfacher Schleife, gleich.
+- G2: F&G-Rang mit anderem Startwert und 2.000 Ziehungen: 0,972 / 0,955.
+- G3: Zickzack auf eigenem Weg: 86 Wenden.
+- G4: T2-Anteil 47,8 %.
+- G5: Nasdaq-Bärenmärkte per cummax: 13.
+- ⚠️ G5 enthielt zuerst **einen eigenen Fehler**: Die Erwartung lautete „13 + 1 laufend“, aber T3 meldet einen laufenden **Bullen**markt. Korrigiert.

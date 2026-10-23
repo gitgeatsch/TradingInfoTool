@@ -2647,3 +2647,9 @@ Schritt7 §23.24.
 - Die REGEL0-Historie zu verlängern macht große Markteffekte nachweisbar.
 - Marktphasen auf zwei Ebenen gezählt: übergeordnet 6, kleiner 86 Wendepunkte seit 2013.
 - Nächster Schritt zur Abstimmung: der Indikator-Atlas (welche Indikatoren in welchen Phasen vor- oder nachliefen), dann der Test auf der verlängerten Historie.
+
+**Nachtrag 23.10.2026 (64) — Indikator-Atlas** (E-135):
+- Geldausweitung ist weder für BTC noch für Aktien eine Voraussetzung.
+- Kein Makrokanal läuft den BTC-Wendepunkten voraus; nur Fear & Greed an den Extremen.
+- Die Rezession ist die stärkste Größe für den Gesamtmarkt, in der Krypto-Zeit aber nur einmal aufgetreten.
+- Nächster Schritt zur Abstimmung: F-1 Fassung 2 auf der verlängerten REGEL0-Historie und das Lagebild Gesamtmarkt.

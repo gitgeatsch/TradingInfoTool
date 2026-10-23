@@ -1,0 +1,77 @@
+P73 ATLAS T3 · Nasdaq 1971-02-05..2026-10-22 · M2 1959-01-01..2026-08-01
+
+(a) Nasdaq-Baerenmaerkte (>= -20 % vom Hoch): 13 abgeschlossen
+    1973-01-11 -> 1974-10-03  -60 %  (20.7 Mon.)
+    1978-09-13 -> 1978-11-14  -20 %  (2.0 Mon.)
+    1980-02-08 -> 1980-03-27  -25 %  (1.6 Mon.)
+    1981-05-29 -> 1982-08-13  -29 %  (14.5 Mon.)
+    1983-06-24 -> 1984-07-25  -32 %  (13.0 Mon.)
+    1987-08-26 -> 1987-10-28  -36 %  (2.1 Mon.)
+    1989-10-09 -> 1990-10-16  -33 %  (12.2 Mon.)
+    1998-07-20 -> 1998-10-08  -30 %  (2.6 Mon.)
+    2000-03-10 -> 2002-10-09  -78 %  (31.0 Mon.)
+    2018-08-29 -> 2018-12-24  -24 %  (3.8 Mon.)
+    2020-02-19 -> 2020-03-23  -30 %  (1.1 Mon.)
+    2021-11-19 -> 2022-12-28  -36 %  (13.3 Mon.)
+    2024-12-16 -> 2025-04-08  -24 %  (3.7 Mon.)
+    Bullenmaerkte (Tief -> Hoch vor dem naechsten Baeren), ohne Anfang 1971: n 13 · Median 60 Mon. · Spanne 18..239 Mon.
+    LAUFENDER Bullenmarkt seit 2025-04-08: 18 Monate = Perzentil 0 der abgeschlossenen
+
+(a) M2-Ausweitungen (J/J > 0) 1960-2026: 1 abgeschlossene Strecken · Median 755 Mon. · Spanne 755..755 Mon. · Schrumpfungen: 1 Strecken
+    M2-SCHRUMPFUNG 2022-12-01 .. 2024-03-01 (15 Mon.)
+    laufend seit 2024-03-01: Ausweitung seit 29 Monaten (Stand M2 2026-08-01, J/J +5.7 %)
+
+(b) Monate 1971-2026: Bullenmarkt-Anteil bei M2-Ausweitung 81 % (n 654) · bei M2-Schrumpfung 100 % (n 15)
+
+(b2) AUSKUNFT reales M2 (M2 / Verbraucherpreise, J/J > 0): 25 Strecken seit 1960-01-01; Schrumpfungen:
+    reales M2 SCHRUMPFT 1969-09-01 .. 1970-10-01 (13 Mon.)
+    reales M2 SCHRUMPFT 1973-10-01 .. 1975-06-01 (20 Mon.)
+    reales M2 SCHRUMPFT 1978-08-01 .. 1981-04-01 (32 Mon.)
+    reales M2 SCHRUMPFT 1981-06-01 .. 1981-12-01 (6 Mon.)
+    reales M2 SCHRUMPFT 1987-11-01 .. 1988-02-01 (3 Mon.)
+    reales M2 SCHRUMPFT 1989-02-01 .. 1989-09-01 (7 Mon.)
+    reales M2 SCHRUMPFT 1990-08-01 .. 1991-10-01 (14 Mon.)
+    reales M2 SCHRUMPFT 1992-03-01 .. 1995-08-01 (41 Mon.)
+    reales M2 SCHRUMPFT 2005-09-01 .. 2005-11-01 (2 Mon.)
+    reales M2 SCHRUMPFT 2010-01-01 .. 2010-02-01 (1 Mon.)
+    reales M2 SCHRUMPFT 2010-03-01 .. 2010-06-01 (3 Mon.)
+    reales M2 SCHRUMPFT 2022-04-01 .. 2024-09-01 (29 Mon.)
+    Bullenmarkt-Anteil der Monate: reales M2 waechst 82 % (n 511) · schrumpft 80 % (n 158)
+    laufend: reales M2 J/J +2.2 % (Stand 2026-08-01)
+    Auskunft: seit dem Tief des letzten grossen Baeren (2022-12-28) laeuft der Nasdaq 46 Monate ohne -30 %-Rueckgang
+
+(c) NBER-Rezessionen seit 1971: 7
+    1973-12-01 .. 1975-04-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -41 % · Hoch der 12 Mon. davor bis Tief -60 %
+    1980-02-01 .. 1980-08-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -24 % · Hoch der 12 Mon. davor bis Tief -24 %
+    1981-08-01 .. 1982-12-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -25 % · Hoch der 12 Mon. davor bis Tief -29 %
+    1990-08-01 .. 1991-04-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -25 % · Hoch der 12 Mon. davor bis Tief -33 %
+    2001-04-01 .. 2001-12-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -23 % · Hoch der 12 Mon. davor bis Tief -68 %
+    2008-01-01 .. 2009-07-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -52 % · Hoch der 12 Mon. davor bis Tief -56 %
+    2020-03-01 .. 2020-05-01 · Nasdaq vom Beginn bis Tief binnen +-6 Mon. -20 % · Hoch der 12 Mon. davor bis Tief -30 %
+
+(d) Inversion T10Y2Y (Monatsmittel < 0) seit 1976-06-30: 12 Strecken
+    Inversion ab 1978-09-30 (20 Mon.) -> Rezession ab 1980-02-01 nach 16 Mon.
+    Inversion ab 1980-09-30 (14 Mon.) -> Rezession ab 1981-08-01 nach 10 Mon.
+    Inversion ab 1982-02-28 (5 Mon.) -> Rezession ab 1990-08-01 nach 101 Mon.
+    Inversion ab 1989-01-31 (6 Mon.) -> Rezession ab 1990-08-01 nach 18 Mon.
+    Inversion ab 1989-08-31 (2 Mon.) -> Rezession ab 1990-08-01 nach 11 Mon.
+    Inversion ab 1990-03-31 (1 Mon.) -> Rezession ab 1990-08-01 nach 4 Mon.
+    Inversion ab 1998-06-30 (1 Mon.) -> Rezession ab 2001-04-01 nach 33 Mon.
+    Inversion ab 2000-02-29 (11 Mon.) -> Rezession ab 2001-04-01 nach 13 Mon.
+    Inversion ab 2006-02-28 (2 Mon.) -> Rezession ab 2008-01-01 nach 22 Mon.
+    Inversion ab 2006-06-30 (10 Mon.) -> Rezession ab 2008-01-01 nach 18 Mon.
+    Inversion ab 2007-05-31 (1 Mon.) -> Rezession ab 2008-01-01 nach 7 Mon.
+    Inversion ab 2022-07-31 (26 Mon.) -> keine Rezession bisher
+
+(d) Inversion T10Y3M (Monatsmittel < 0) seit 1982-01-31: 9 Strecken
+    Inversion ab 1989-06-30 (3 Mon.) -> Rezession ab 1990-08-01 nach 13 Mon.
+    Inversion ab 1989-11-30 (2 Mon.) -> Rezession ab 1990-08-01 nach 8 Mon.
+    Inversion ab 2000-07-31 (7 Mon.) -> Rezession ab 2001-04-01 nach 8 Mon.
+    Inversion ab 2006-08-31 (10 Mon.) -> Rezession ab 2008-01-01 nach 16 Mon.
+    Inversion ab 2019-05-31 (5 Mon.) -> Rezession ab 2020-03-01 nach 9 Mon.
+    Inversion ab 2020-02-29 (1 Mon.) -> Rezession ab 2020-03-01 nach 0 Mon.
+    Inversion ab 2022-11-30 (25 Mon.) -> keine Rezession bisher
+    Inversion ab 2025-03-31 (2 Mon.) -> keine Rezession bisher
+    Inversion ab 2025-06-30 (3 Mon.) -> keine Rezession bisher
+
+(e) Reifegrad heute: Sahm-Regel 0.00 (Stand 2026-09-01; >= 0,50 gilt als Rezessionssignal) · Fed Funds 3.75 % (Stand 2026-09-01)

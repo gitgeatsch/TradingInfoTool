@@ -1,0 +1,38 @@
+P75 ATLAS T1 · BTC-Wendepunkte klein 86 (2013-2026) · uebergeordnete Baerenphasen 6
+
+SELBSTTEST: Zufallsindikatoren als Kandidat 0 von 200 (0.0 %, Soll <= 5 %) · gebauter Vorlauf-Indikator erkannt: ja -> BESTANDEN
+
+KLEINE EBENE (Zickzack -20 %/+25 %, W = 30 T): Vorlauf-Quote / Zufall / Rang je Haelfte · Nachlauf
+  Makro K1 Geldmenge kurz        VOR  8%/11%/0.21 (n13) | 8%/10%/0.26 (n26)   NACH  0%/9%/0.00 (n13) | 15%/10%/0.74 (n26)
+  Makro K2 Netto-Liquiditaet kurz VOR  38%/24%/0.90 (n24) | 27%/24%/0.57 (n26)   NACH  25%/24%/0.48 (n24) | 23%/24%/0.37 (n26)
+  Makro K3 Realzins kurz         VOR  29%/36%/0.19 (n24) | 42%/34%/0.77 (n26)   NACH  54%/38%/0.92 (n24) | 35%/33%/0.51 (n26)
+  Makro K4 Zinspfad 2J kurz      VOR  29%/32%/0.29 (n24) | 27%/27%/0.45 (n26)   NACH  29%/33%/0.27 (n24) | 19%/26%/0.16 (n26)
+  Makro K5 Kurve kurz            VOR  16%/19%/0.27 (n45) | 31%/38%/0.19 (n26)   NACH  13%/19%/0.12 (n45) | 27%/37%/0.10 (n26)
+  Makro K6 Kredit BAA kurz       VOR  29%/23%/0.66 (n24) | 19%/34%/0.04 (n26)   NACH  17%/22%/0.19 (n24) | 35%/34%/0.45 (n26)
+  Makro K7 NFCI kurz             VOR  21%/11%/0.88 (n24) | 8%/11%/0.24 (n26)   NACH  8%/10%/0.29 (n24) | 4%/10%/0.06 (n26)
+  Makro K8 Dollar kurz           VOR  25%/25%/0.41 (n24) | 46%/31%/0.92 (n26)   NACH  29%/25%/0.62 (n24) | 46%/31%/0.90 (n26)
+  Makro K9 VIX kurz              VOR  58%/53%/0.62 (n24) | 62%/59%/0.53 (n26)   NACH  62%/54%/0.73 (n24) | 62%/59%/0.53 (n26)
+  Makro Gesamt kurz              VOR  - | 31%/35%/0.27 (n26)   NACH  - | 31%/35%/0.26 (n26)
+  Makro Gesamt lang              VOR  - | 12%/11%/0.43 (n26)   NACH  - | 15%/11%/0.68 (n26)
+  Nasdaq ueber 200 T             VOR  5%/15%/0.00 (n60) | 0%/11%/0.00 (n26)   NACH  8%/14%/0.05 (n60) | 4%/10%/0.07 (n26)
+  Stablecoins 91 T               VOR  0%/16%/0.00 (n11) | 0%/4%/0.00 (n26)   NACH  0%/11%/0.00 (n11) | 4%/4%/0.33 (n26)
+  Funding BTC 30 T               VOR  - | 20%/21%/0.35 (n25)   NACH  - | 12%/20%/0.10 (n25)
+  Fear & Greed                   VOR  69%/46%/0.97 (n13) | 50%/31%/0.97 (n26)   NACH  46%/45%/0.39 (n13) | 46%/31%/0.93 (n26)   <- KANDIDAT
+  BTC-Dominanz 4 W               VOR  37%/36%/0.44 (n27) | 54%/50%/0.58 (n26)   NACH  30%/37%/0.17 (n27) | 38%/50%/0.08 (n26)
+
+Kandidaten (Vorlauf in beiden Haelften, Rang >= 0,95): Fear & Greed
+
+UEBERGEORDNETE EBENE (W = 90 T, beschreibend): passender Wechsel in den 90 T VOR der Wende (x) je Indikator
+  2013-04-09 Hoch . . . . . . . . . . . - . . . .
+  2013-07-06 Tief . . . . . . . . . . . - . . . .
+  2013-12-04 Hoch . . . . . . . . . . . - . . . .
+  2015-01-14 Tief . . . . - . . . . . . x . . . .
+  2017-12-16 Hoch . x x x x - - x x . . - . . . x
+  2018-12-15 Tief - - - x - x - - x . . x x . x x
+  2021-04-13 Hoch x - x - x - - x x x - - - - x x
+  2021-07-20 Tief - - x - x x x x x x - - - x x x
+  2021-11-08 Hoch - - x x x x - x x x - - - x x x
+  2022-11-09 Tief - - - - - x - - x - - - - - x x
+  2025-10-06 Hoch - x - x x x - - - - - - - x x x
+  2026-06-30 Tief x x - - - x x x x x x x - x x x
+  Spalten: 1=Makro K1 Geldmenge kurz | 2=Makro K2 Netto-Liquiditaet kurz | 3=Makro K3 Realzins kurz | 4=Makro K4 Zinspfad 2J kurz | 5=Makro K5 Kurve kurz | 6=Makro K6 Kredit BAA kurz | 7=Makro K7 NFCI kurz | 8=Makro K8 Dollar kurz | 9=Makro K9 VIX kurz | 10=Makro Gesamt kurz | 11=Makro Gesamt lang | 12=Nasdaq ueber 200 T | 13=Stablecoins 91 T | 14=Funding BTC 30 T | 15=Fear & Greed | 16=BTC-Dominanz 4 W

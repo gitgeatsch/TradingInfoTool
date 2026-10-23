@@ -1673,3 +1673,18 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 **Vorschlag V-1:** erst der **Indikator-Atlas** (Vorlauf je Indikator vor den Wendepunkten, Nullwelt Zufallsdaten, Stabilität 2013–19 gegen 2020–26), dann die REGEL0-Historie und F-1 Fassung 2 nur mit den Atlas-Kandidaten.
 
 **Betrieb:** unverändert.
+
+# E-135 · Indikator-Atlas: Geldausweitung ist keine Voraussetzung; kein Makrokanal läuft den BTC-Wenden voraus; Rezession ist die stärkste Größe (23.10.2026)
+
+**23.10.2026** · Nutzer: *„ja V-1“*, mit seinen Gedanken: Geldausweitung als Voraussetzung? Rezession? Wie lange Ausweitung und Bullenmarkt? Die aktuelle Lage (Anleihen, Währungen, KI, Krisen) gesondert messen und recherchieren.
+
+**Ergebnis** (`Messplan_Indikator_Atlas_23_10.md`, vorab ec7ce185; Selbsttest T1 bestanden; Gegenprobe 5/5):
+- **T1:** einziger Kandidat **Fear & Greed** (Vorlauf 69 %/46 % und 50 %/31 %, Rang 0,97 in beiden Hälften; zum Teil aus dem Kurs berechnet). Die Makrokanäle K1–K9 und gesamt zeigen keinen Vorlauf. Nasdaq-Trend und Stablecoins laufen nach (Rang 0,00).
+- **T2:** Geldausweitung ist für BTC **keine Voraussetzung** (Ränge 0,37–0,89). Der Zyklus 2022–25 (× 7,9) lief bei schrumpfenden Notenbank-Bilanzen. Ein Niveau-Unterschied bleibt bei der Netto-Liquidität (+37 % gegen +17 % über 90 T).
+- **T3:**
+  - Auch beim Nasdaq ist Geldausweitung keine Voraussetzung (reales M2: 82 % gegen 80 % Bullenmarkt-Monate).
+  - Rezessionen kosteten den Nasdaq jedes Mal 24–68 %.
+  - Die Zinskurve invertierte 2022–24 zum ersten Mal seit 1976 ohne folgende Rezession; Sahm 0,00.
+- **T4:** Anleihen teilweise kritisch (10J 5,31 %, höchster Stand seit 2002), Währungen nur beim Yen und in Schwellenländern. KI-Investitionen teilweise (freier Cashflow −24 %, aber Gewinne +30 %). 2026 gibt es keine Geldflut; der Auslöser ist ein Ölschock. BTC löst sich 2026 vom Nasdaq (−26 % gegen +14 %).
+
+**Folge:** Kandidat vorhanden ⇒ zur Abstimmung: REGEL0-Historie 2020–23 (Download-Ja) und F-1 Fassung 2 mit Fear & Greed; dazu das Lagebild Gesamtmarkt als Fakt. **Betrieb:** unverändert.

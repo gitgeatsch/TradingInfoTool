@@ -1,0 +1,15 @@
+P74 ATLAS T2 · BTC 2013-01..2026-10 · Aufwaertsstrecken (-20 %/+25 %): 42, Anteil Aufwaerts-Tage 57 %
+
+(i) US-M2 J/J                      gueltig ab 2014-01-01 · Zeit ohne Ausweitung 10 % · Aufwaerts-Tage ohne Ausweitung 14 % · Rang 0.89
+                                   BTC 90 T: mit Ausweitung +18 % · ohne +25 % · Aufwaertsstrecken GANZ ohne Ausweitung: 1 von 42
+(ii) Netto-Liquiditaet 26 W        gueltig ab 2013-07-02 · Zeit ohne Ausweitung 47 % · Aufwaerts-Tage ohne Ausweitung 48 % · Rang 0.54
+                                   BTC 90 T: mit Ausweitung +37 % · ohne +17 % · Aufwaertsstrecken GANZ ohne Ausweitung: 8 von 42
+(iii) ZB-Bilanzen Fed+EZB+BoJ J/J  gueltig ab 2014-01-01 · Zeit ohne Ausweitung 40 % · Aufwaerts-Tage ohne Ausweitung 38 % · Rang 0.37
+                                   BTC 90 T: mit Ausweitung +21 % · ohne +15 % · Aufwaertsstrecken GANZ ohne Ausweitung: 5 von 42
+Auskunft reales M2 J/J             gueltig ab 2014-01-01 · Zeit ohne Ausweitung 19 % · Aufwaerts-Tage ohne Ausweitung 20 % · Rang 0.50
+                                   BTC 90 T: mit Ausweitung +19 % · ohne +17 % · Aufwaertsstrecken GANZ ohne Ausweitung: 3 von 42
+
+(c) Uebergeordnete Bullenphasen (Tief des Zyklus-Baeren -> naechstes Hoch) und Geld am Beginn / im Mittel:
+   2015-01-14 -> 2017-12-16 (BTC x111.8): (i) Beginn +6.0 % / Anteil Tage mit Ausweitung 100 % · (ii) Beginn +0.1 % / Anteil Tage mit Ausweitung 46 % · (iii) Beginn +3.7 % / Anteil Tage mit Ausweitung 97 % · Auskunft Beginn +5.3 % / Anteil Tage mit Ausweitung 100 %
+   2018-12-15 -> 2021-11-08 (BTC x21.2): (i) Beginn +3.2 % / Anteil Tage mit Ausweitung 100 % · (ii) Beginn -7.1 % / Anteil Tage mit Ausweitung 65 % · (iii) Beginn -0.6 % / Anteil Tage mit Ausweitung 74 % · Auskunft Beginn +1.0 % / Anteil Tage mit Ausweitung 100 %
+   2022-11-09 -> 2025-10-06 (BTC x7.9): (i) Beginn +1.4 % / Anteil Tage mit Ausweitung 57 % · (ii) Beginn -5.3 % / Anteil Tage mit Ausweitung 49 % · (iii) Beginn -9.6 % / Anteil Tage mit Ausweitung 1 % · Auskunft Beginn -5.9 % / Anteil Tage mit Ausweitung 33 %
