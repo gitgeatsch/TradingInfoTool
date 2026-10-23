@@ -90,3 +90,41 @@ Skripte: `Rechenkern_02_10/p72_historie_voranalyse.py`, `p72_gegenprobe.py` → 
 | V-2 | erst die REGEL0-Historie (Download jetzt), dann F-1 mit den sechs Filtern | schneller beim Hebel, aber sechs Filter und schwächere Auflösung |
 | V-3 | beides parallel | doppelte Arbeit vor der ersten Antwort |
 """
+
+## 6. Messplan F-1 Fassung 2 — Fear & Greed als Marktfilter auf der verlängerten REGEL0-Historie, VORAB festgelegt (23.10.2026)
+
+Nutzer 23.10.: *„L-A“* · *„und Download“*. Herkunft: E-133 (2024–26 nicht entscheidbar), E-134 (Verlängerung lohnt), E-135 (Atlas: einziger Kandidat Fear & Greed).
+
+**Signale (vorab):**
+- REGEL0 0.1 unverändert (`agent/regel0_rechnung`, Betriebscode **nicht** geändert), Menge *bestand* mit Zusatz (`kern48jbz_gruppe_bestand.csv`), auf `data/_hist/`. Dort liegen die heutigen Stundenkurse plus Binance 2019-06 bis zum jeweiligen Datenbeginn.
+- **Zwei Läufe:**
+  - **A:** Monate 2024-01 bis 2026-08, Lernbeginn wie im Betrieb 2023-01-01.
+  - **B:** Monate 2020-07 bis 2023-12, Lernbeginn **2020-06-01** (wachsendes Fenster ab dem Datenbeginn). Das ist die dokumentierte Regel für die frühen Monate.
+- **R-R11:**
+  - (1) Auf den **heutigen** Daten (`data/`) ist die Nachrechnung **zeilengleich** zur Referenz `kern48jbz_einstiege_bestand.csv`; sonst wird nicht weitergerechnet.
+  - (2) Auskunft: Anteil gleicher Einstiege 2024–26 zwischen Lauf A und der Referenz. Die längere Vorgeschichte verändert *Reife* und *Normal*, Abweichungen sind deshalb erwartet und werden ausgewiesen.
+- ⚠️ Nur *bestand*, also ohne eingestellte Paare (Überlebensverzerrung). Trägt es, folgen die unverzerrten Mengen als Bestätigung.
+
+**Filter (vorab, nur einer):**
+- **FG-Gier aus:** gehandelt wird nicht, wenn Fear & Greed am **Vortag > 75** (Gier) liegt.
+- Begründung aus E-135: Der Wechsel auf Gier lief den BTC-Hochs voraus.
+- Auskunft:
+  - *30 T nach einem Wechsel auf Gier aus*;
+  - *nur bei F&G < 50 an*;
+  - die sechs Filter aus E-133 (ohne Urteil).
+
+**Zielgröße:** 24-h-Ertrag je Handel nach **0,48 %** (Bitpanda-Hebel), Tagesraster wie p71.
+
+**Selbsttest VOR dem ersten Blick** (auf den verlängerten Signalen, ohne Filterergebnis):
+- (a) 200 Zufallsfilter mit der Streckenstruktur von FG-Gier: Anteil „trägt“ ≤ 5 %;
+- (b) Orakel-Filter (zentrierter 30-T-Mittelwert des Tagesnettos > 0) erreicht **Rang ≥ 0,95**.
+- Fällt (b) durch, heißt das Urteil **nicht entscheidbar**, und der Filter wird nicht angesehen.
+
+**Trägt, wenn:**
+- (1) Umkehr über 2020-07 bis 2026-08: netto *an* > 0 und *aus* < 0;
+- (2) netto *an* > 0 in **2025 und 2026** (der heutige Markt) **und** in mindestens 4 der 6 übrigen Halbjahre 2020-H2 bis 2024-H2;
+- (3) Rang der Verbesserung (netto *an* minus netto alle) gegen die Strecken-Permutation **≥ 0,95** (ein Filter, keine Bonferroni-Korrektur).
+
+**Folgen:**
+- **trägt** → Bestätigung auf den unverzerrten Mengen (eingestellte Paare nachladen), dann Voranalyse Betrieb (Sperre der REGEL0 bei Gier).
+- **trägt nicht / nicht entscheidbar** → REGEL0 bleibt Vorwärtsprotokoll; Fear & Greed bleibt Fakt im Lagebild.
