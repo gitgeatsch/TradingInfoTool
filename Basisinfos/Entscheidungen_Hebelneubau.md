@@ -1590,3 +1590,19 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - **Nebenbefund:** Die Bitpanda-Margin-Finanzierung wird alle 4 h berechnet (Kostendokument v4.0.0). Damit ist die offene Faktfrage aus E-128 geschlossen, das Urteil bleibt.
 
 **Zur Abstimmung:** Die Wirkung liegt im **Aufbau und in der Führung eines Portfolios**, nicht in Signalen. Das ist eine Änderung der Systemaufgabe. **Betrieb:** unverändert.
+
+# E-130 · REGEL0-Kosten: trägt auf Kraken-Perps (Rückschau), auf Bitpanda nur der Limit-Einstieg mit Vorbehalt (23.10.2026)
+
+**23.10.2026** · Nutzer: *„ja P-A Voranalyse starten, prüfen, gegenprüfen und Doku – ich hätte gerne noch REGEL0 weiter optimiert, bis wir auch auf BP tragen.“*
+
+**Ergebnis** (`Voranalyse_REGEL0_Kosten_23_10.md` §3–§5, Plan vorab 82a1fe89, Gegenprobe 4/5 mit einem inhaltlichen Fehlschlag):
+- **P-A Kraken Pro** (Taker 0,05 %, belegt):
+  - netto **+0,18 bis +0,28 %** je Handel unverzerrt, positiv in jedem Jahr;
+  - Abdeckung 47 % (API-Liste, Kriterium ≥ 50 % knapp verfehlt);
+  - nicht steuereinfach, ESMA-Hebelfrage offen.
+- **P-O Bitpanda:**
+  - Haltedauer im 4-h-Takt und Auswahl nach Schwankung tragen nicht.
+  - Der **Limit-Einstieg 1 % unter dem Schluss** liegt über 2025–26 bei +0,11 Pp, **2026 aber negativ** (3 von 4 Mengen).
+  - Offene Faktfrage: Gibt es Limit-Orders bei Bitpanda-Margin?
+
+**Betrieb:** unverändert. **Zur Abstimmung:** welcher Messplan (Wahl 2024, Bestätigung je Jahr).

@@ -40,3 +40,76 @@
 ⚠️ **Ehrlich vorab:**
 - Das ist die **zweite** Runde auf denselben Einstiegen 2025–26 (nach A1). Ein Treffer in der Rückschau ist **kein Befund**, sondern nur der Anlass für einen Messplan mit Wahl auf 2024.
 - Die Tagesblock-Unsicherheit liegt bei ±0,5 Pp.
+
+## 3. Fakten Kraken EU (A0, Recherche 23.10.2026, Kraken-Quellen)
+
+| | Stand | Status |
+|---|---|---|
+| Gebühr **Kraken Pro**, Grundstufe | **Maker 0,02 %, Taker 0,05 %** vom Nominalwert (kraken.com/features/fee-schedule); die EEA-Gebührenseite verweist darauf | belegt |
+| Kraken-**App** „Perps“ | 0,25 % beim Öffnen und 0,25 % beim Schließen. **Nicht** die Pro-Oberfläche | belegt (Satz), für die EU geschlossen |
+| Funding | **stündlich**, Prämie ÷ 8, Obergrenze ±0,5 %/h, Long zahlt bei positiver Rate; keine weitere Finanzierungsgebühr | belegt |
+| Funding BTC 2025-10 bis 2026-10 | Mittel +0,0092 % je 24 h (5.–95. Perzentil −0,015 bis +0,033 %); die öffentliche Historie reicht nur etwa ein Jahr zurück | belegt (eigener Abruf) |
+| Kontrakte | API 209 `PF_*` (202 mit Plattform „europa“); die EU-Supportseite listet etwa 327 | belegt; die Abweichung ist offen |
+| Hebel EEA | Kraken zeigt bis 10× (nach Positionsgröße gestaffelt). ESMA 24.02.2026: Perps fallen *„likely“* unter die CFD-Regeln (Krypto 2:1); eine Reaktion von Kraken ist nicht gefunden | belegt / offen |
+| Sicherheit EUR | 0 % Abschlag, 0 % Umrechnung; abgerechnet wird in USD, ungedeckte Verluste kosten 0,0025 %/h | belegt / für EEA geschlossen |
+| **Steuer** | **kein automatischer KESt-Abzug** (Sitz IE/CY); Steuer-ID nötig; ein AT-Steuerreport ist nicht gefunden | geschlossen |
+| Unified Wallet (EEA seit 16.10.2026) | Cross-Margin als Standard: Spot- und Earn-Bestände können Futures-Verluste decken | belegt (Bericht) |
+
+## 4. Ergebnisse der Vorprüfung (`Rechenkern_02_10/p68_regel0_kosten.py`, `p68_gegenprobe.py` → `.txt`)
+
+**Rohvorteil** 24 h (R-R11 wie A1): bestand +0,545 %, unverzerrt +0,296 / +0,295 / +0,313 %.
+
+### 4.1 P-A Kraken-Perps
+
+| Menge | Abdeckung | Rohvorteil dort | netto Taker + Schlupf 0,05 % (Kosten ≈ 0,19 %) | 2025 / 2026 |
+|---|---|---|---|---|
+| bestand | 58,2 % | +0,673 % | **+0,484 %** | +0,507 / +0,454 |
+| unverzerrt 1 | 47,2 % | +0,407 % | **+0,217 %** | +0,259 / +0,161 |
+| unverzerrt 2 | 47,7 % | +0,377 % | **+0,182 %** | +0,260 / +0,069 |
+| unverzerrt 3 | 47,1 % | +0,470 % | **+0,280 %** | +0,375 / +0,159 |
+
+- Mit Maker-Gebühr kommen etwa +0,06 Pp dazu.
+- Die Tagesblock-95 % liegen unverzerrt bei rund −0,35 bis +0,79.
+- Das Funding im Einstiegsmittel ist leicht **negativ** (−0,005 bis −0,011 % je Tag): Nach einem Rückgang erhalten die Longs eher Funding.
+- **Ersatzgröße geprüft:** Binance- gegen Kraken-Funding 2025-10 bis 2026-08: BTC 0,0084 gegen 0,0074 %, ETH 0,0061 gegen 0,0078 % je Tag, Korrelation 0,6.
+
+**Urteil nach §1:**
+- **Netto-Kriterium erfüllt:** alle vier Mengen und **jedes Jahr** über 0 (Gegenprobe G6).
+- **Abdeckung knapp verfehlt:** unverzerrt 47 % gegen die geforderten ≥ 50 %. Sie ist an der API-Liste (209) gemessen; die EU-Liste (~327) könnte mehr abdecken (offen).
+
+⚠️ **Vorbehalte:**
+- Die Kontraktliste ist von **heute**. 2025 gab es manche Kontrakte noch nicht (Überlebensverzerrung der Liste).
+- Spread und Schlupf sind angenommen, nicht gemessen.
+- Ein Hebel 2:1 ist möglich (ESMA).
+- **Nicht steuereinfach.**
+- Nur Kraken **Pro**; die App mit 0,25 % je Seite würde den Vorteil aufzehren.
+
+### 4.2 P-O Bitpanda
+
+| # | Ergebnis (unverzerrt 1 / 2 / 3) | Urteil |
+|---|---|---|
+| O1 Haltedauer im 4-h-Takt | bestes netto 12 h: −0,09 / −0,07 / −0,11 Pp; 20 h und 24 h schlechter | ✘ |
+| O2 Schwankungs-Fünftel | uneinheitlich, kein Fünftel in allen vier Mengen > 0 (F4: −0,01 / +0,17 / −0,07; bestand +0,12) | ✘ |
+| **O3 Limit 1 % unter dem Schluss** (4 h gültig, 51 % gefüllt) | gesamt **+0,106 / +0,112 / +0,117 Pp** (bestand +0,336); mit strengerer Füllung +0,087 / +0,082 / +0,100. **Aber 2026: −0,120 / −0,216 / −0,108** (bestand +0,156) | ◐ **erfüllt das Kriterium über den ganzen Zeitraum, ist aber nicht jahresstabil** |
+| O3 Dosis (Auskunft) | 1,5 %: +0,22..+0,29; 2 %: +0,44..+0,58 gesamt, aber 2026 bei zwei von drei unverzerrten Mengen weiter negativ | Auskunft |
+| Auskunft: nur Coins mit Kraken-Perp | Rohvorteil +0,38..+0,47 % gegen 0,48 % | −0,01 bis −0,10 Pp: nahe, aber darunter |
+
+**Gegenprobe 4 von 5:**
+- G1: Kurse direkt per SQL, 300/300 gleich.
+- G3: strengere Füllung.
+- G5: Abdeckung auf zweitem Weg.
+- G6: P-A je Jahr.
+- **G2 (O3 je Jahr) fällt**, und zwar inhaltlich: 2026 ist negativ. Das ist ein Befund, kein Rechenfehler.
+
+## 5. Einordnung und Vorschlag
+
+1. **REGEL0 trägt auf einer Perp-Börse mit Pro-Gebühren, in der Rückschau in jedem Jahr.**
+   - Der Grund ist allein die Kostenstruktur: rund 0,19 % gegen 0,48 % je Tageshandel.
+   - Was dagegen steht: die Abdeckung (knapp die Hälfte der Signale), dass es nicht steuereinfach ist, die ESMA-Hebelfrage und eine zweite Börse.
+2. **Auf Bitpanda bleibt eine einzige Stellschraube mit Aussicht: der Einstieg mit Limit unter dem Kurs** (O3).
+   - Er wirkt wie ein besserer Einstiegskurs und bringt in der Rückschau +0,1 Pp über die Kosten.
+   - **2026 kippt er aber.** Das ist ein ernster Vorbehalt, weil 2026 der jüngste Markt ist.
+   - Dazu kommt die **offene Faktfrage**, ob Bitpanda-Margin Limit-Orders kennt (Hilfecenter: Limit bei Aktien nur als *Limit-to-Market*; für Krypto-Margin nicht gefunden).
+3. **Ein Treffer in der Rückschau ist kein Befund.**
+   - Beide Wege brauchen einen **Messplan mit Wahl auf 2024 und Bestätigung je Jahr 2025 und 2026**.
+   - Für O3 hieße das: die Limit-Tiefe aus {0,5; 1; 1,5; 2 %} auf 2024 wählen.

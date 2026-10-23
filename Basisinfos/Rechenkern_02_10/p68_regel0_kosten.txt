@@ -1,0 +1,42 @@
+P68 REGEL0 KOSTEN · Einstiege 2025-01..2026-08 · Kraken-Perps (Basen) 209 · Kraken-Gebuehr ANNAHME Taker 0.050 % / Maker 0.020 %
+
+=== bestand: 8408 Einstiege an 497 Tagen · 24 h Rohvorteil +0.545 %
+  P-A Abdeckung Kraken: 58.2 % der Einstiege (4890), Rohvorteil dort +0.673 % · Funding bekannt 98 %, Mittel -0.0110 % je Tag
+      Taker + Schlupf 0.02 %: Kosten 0.129 % · netto +0.544 % [Tagesblock +0.01; +1.07] · je Jahr 2025 +0.567 / 2026 +0.514
+      Taker + Schlupf 0.05 %: Kosten 0.189 % · netto +0.484 % [Tagesblock -0.05; +1.01] · je Jahr 2025 +0.507 / 2026 +0.454
+      Maker + Schlupf 0.02 %: Kosten 0.069 % · netto +0.604 % [Tagesblock +0.07; +1.13] · je Jahr 2025 +0.627 / 2026 +0.574
+      Maker + Schlupf 0.05 %: Kosten 0.129 % · netto +0.544 % [Tagesblock +0.01; +1.07] · je Jahr 2025 +0.567 / 2026 +0.514
+  O1 Haltedauer: 4 h +0.078 (Kosten 0.33, netto -0.252) · 8 h +0.249 (Kosten 0.36, netto -0.111) · 12 h +0.347 (Kosten 0.39, netto -0.043) · 16 h +0.363 (Kosten 0.42, netto -0.057) · 20 h +0.454 (Kosten 0.45, netto +0.004) · 24 h +0.545 (Kosten 0.48, netto +0.065)
+  O2 Schwankungs-Fuenftel (1 ruhig .. 5 unruhig), 24 h Rohvorteil / netto 0,48 %%: F1 +0.665 / +0.185 (n 1682) · F2 +0.645 / +0.165 (n 1681) · F3 +0.435 / -0.045 (n 1682) · F4 +0.599 / +0.119 (n 1681) · F5 +0.377 / -0.103 (n 1682)
+  O3 Limit-Einstieg (4 h gueltig): 0.25 %: gefuellt 86 %, Rohvorteil +0.631, netto +0.151 · 0.50 %: gefuellt 73 %, Rohvorteil +0.695, netto +0.215 · 1.00 %: gefuellt 51 %, Rohvorteil +0.816, netto +0.336
+
+=== unverzerrt_1: 9124 Einstiege an 528 Tagen · 24 h Rohvorteil +0.296 %
+  P-A Abdeckung Kraken: 47.2 % der Einstiege (4302), Rohvorteil dort +0.407 % · Funding bekannt 96 %, Mittel -0.0099 % je Tag
+      Taker + Schlupf 0.02 %: Kosten 0.130 % · netto +0.277 % [Tagesblock -0.28; +0.83] · je Jahr 2025 +0.319 / 2026 +0.221
+      Taker + Schlupf 0.05 %: Kosten 0.190 % · netto +0.217 % [Tagesblock -0.34; +0.77] · je Jahr 2025 +0.259 / 2026 +0.161
+      Maker + Schlupf 0.02 %: Kosten 0.070 % · netto +0.337 % [Tagesblock -0.22; +0.89] · je Jahr 2025 +0.379 / 2026 +0.281
+      Maker + Schlupf 0.05 %: Kosten 0.130 % · netto +0.277 % [Tagesblock -0.28; +0.83] · je Jahr 2025 +0.319 / 2026 +0.221
+  O1 Haltedauer: 4 h +0.033 (Kosten 0.33, netto -0.297) · 8 h +0.207 (Kosten 0.36, netto -0.153) · 12 h +0.302 (Kosten 0.39, netto -0.088) · 16 h +0.292 (Kosten 0.42, netto -0.128) · 20 h +0.311 (Kosten 0.45, netto -0.139) · 24 h +0.296 (Kosten 0.48, netto -0.184)
+  O2 Schwankungs-Fuenftel (1 ruhig .. 5 unruhig), 24 h Rohvorteil / netto 0,48 %%: F1 +0.282 / -0.198 (n 1825) · F2 +0.221 / -0.259 (n 1825) · F3 +0.185 / -0.295 (n 1824) · F4 +0.470 / -0.010 (n 1825) · F5 +0.320 / -0.160 (n 1825)
+  O3 Limit-Einstieg (4 h gueltig): 0.25 %: gefuellt 86 %, Rohvorteil +0.287, netto -0.193 · 0.50 %: gefuellt 73 %, Rohvorteil +0.367, netto -0.113 · 1.00 %: gefuellt 52 %, Rohvorteil +0.586, netto +0.106
+
+=== unverzerrt_2: 8583 Einstiege an 530 Tagen · 24 h Rohvorteil +0.295 %
+  P-A Abdeckung Kraken: 47.7 % der Einstiege (4093), Rohvorteil dort +0.377 % · Funding bekannt 98 %, Mittel -0.0046 % je Tag
+      Taker + Schlupf 0.02 %: Kosten 0.135 % · netto +0.242 % [Tagesblock -0.29; +0.84] · je Jahr 2025 +0.320 / 2026 +0.129
+      Taker + Schlupf 0.05 %: Kosten 0.195 % · netto +0.182 % [Tagesblock -0.35; +0.78] · je Jahr 2025 +0.260 / 2026 +0.069
+      Maker + Schlupf 0.02 %: Kosten 0.075 % · netto +0.302 % [Tagesblock -0.23; +0.90] · je Jahr 2025 +0.380 / 2026 +0.189
+      Maker + Schlupf 0.05 %: Kosten 0.135 % · netto +0.242 % [Tagesblock -0.29; +0.84] · je Jahr 2025 +0.320 / 2026 +0.129
+  O1 Haltedauer: 4 h +0.057 (Kosten 0.33, netto -0.273) · 8 h +0.229 (Kosten 0.36, netto -0.131) · 12 h +0.321 (Kosten 0.39, netto -0.069) · 16 h +0.330 (Kosten 0.42, netto -0.090) · 20 h +0.332 (Kosten 0.45, netto -0.118) · 24 h +0.295 (Kosten 0.48, netto -0.185)
+  O2 Schwankungs-Fuenftel (1 ruhig .. 5 unruhig), 24 h Rohvorteil / netto 0,48 %%: F1 +0.292 / -0.188 (n 1717) · F2 -0.039 / -0.519 (n 1716) · F3 +0.016 / -0.464 (n 1717) · F4 +0.650 / +0.170 (n 1716) · F5 +0.553 / +0.073 (n 1717)
+  O3 Limit-Einstieg (4 h gueltig): 0.25 %: gefuellt 86 %, Rohvorteil +0.307, netto -0.173 · 0.50 %: gefuellt 73 %, Rohvorteil +0.394, netto -0.086 · 1.00 %: gefuellt 51 %, Rohvorteil +0.592, netto +0.112
+
+=== unverzerrt_3: 8918 Einstiege an 528 Tagen · 24 h Rohvorteil +0.313 %
+  P-A Abdeckung Kraken: 47.1 % der Einstiege (4202), Rohvorteil dort +0.470 % · Funding bekannt 98 %, Mittel -0.0102 % je Tag
+      Taker + Schlupf 0.02 %: Kosten 0.130 % · netto +0.340 % [Tagesblock -0.16; +0.85] · je Jahr 2025 +0.435 / 2026 +0.219
+      Taker + Schlupf 0.05 %: Kosten 0.190 % · netto +0.280 % [Tagesblock -0.22; +0.79] · je Jahr 2025 +0.375 / 2026 +0.159
+      Maker + Schlupf 0.02 %: Kosten 0.070 % · netto +0.400 % [Tagesblock -0.10; +0.91] · je Jahr 2025 +0.495 / 2026 +0.279
+      Maker + Schlupf 0.05 %: Kosten 0.130 % · netto +0.340 % [Tagesblock -0.16; +0.85] · je Jahr 2025 +0.435 / 2026 +0.219
+  O1 Haltedauer: 4 h +0.050 (Kosten 0.33, netto -0.280) · 8 h +0.205 (Kosten 0.36, netto -0.155) · 12 h +0.283 (Kosten 0.39, netto -0.107) · 16 h +0.274 (Kosten 0.42, netto -0.146) · 20 h +0.303 (Kosten 0.45, netto -0.147) · 24 h +0.313 (Kosten 0.48, netto -0.167)
+  O2 Schwankungs-Fuenftel (1 ruhig .. 5 unruhig), 24 h Rohvorteil / netto 0,48 %%: F1 +0.310 / -0.170 (n 1784) · F2 +0.216 / -0.264 (n 1783) · F3 +0.140 / -0.340 (n 1784) · F4 +0.414 / -0.066 (n 1783) · F5 +0.485 / +0.005 (n 1784)
+  O3 Limit-Einstieg (4 h gueltig): 0.25 %: gefuellt 86 %, Rohvorteil +0.312, netto -0.168 · 0.50 %: gefuellt 73 %, Rohvorteil +0.395, netto -0.085 · 1.00 %: gefuellt 51 %, Rohvorteil +0.597, netto +0.117
+

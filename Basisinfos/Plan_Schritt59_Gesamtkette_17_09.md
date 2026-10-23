@@ -2622,3 +2622,8 @@ Schritt7 §23.24.
 - Ein Rendite-Vorteil nach Veröffentlichung und Kosten ist nirgends belegt. Belegt sind gehaltene Prämien und Bremsen für Rückgänge.
 - Engere Wahl: Multi-Asset-Grundportfolio mit Trendfilter, Staking-Lücke im Bestand, Carry beobachten.
 - Offene Grundsatzfrage: Portfolio-Aufbau und -Führung statt Signale.
+
+**Nachtrag 23.10.2026 (59) — REGEL0-Kosten** (`Voranalyse_REGEL0_Kosten_23_10.md`, E-130):
+- Auf Kraken-Perps (Pro-Gebühren) trägt REGEL0 in der Rückschau netto in jedem Jahr. Dagegen stehen die Abdeckung von rund der Hälfte der Signale und dass es nicht steuereinfach ist.
+- Auf Bitpanda trägt nur ein Limit-Einstieg 1 % unter dem Kurs, und der kippt 2026.
+- Nächster Schritt: ein Messplan mit Wahl auf 2024.

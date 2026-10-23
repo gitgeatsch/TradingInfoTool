@@ -1,0 +1,10 @@
+P68 GEGENPROBE
+
+  OK    G1 Kurse fuer O3 direkt per SQL (Einstieg, Tief 4 h, Schluss 24 h)  (300 von 300 gleich)
+  FEHL  G2 O3 1 % netto > 0 in jedem Jahr und jeder Menge  (bestand 2025 +0.454 · bestand 2026 +0.156 · unverzerrt_1 2025 +0.244 · unverzerrt_1 2026 -0.120 · unverzerrt_2 2025 +0.298 · unverzerrt_2 2026 -0.216 · unverzerrt_3 2025 +0.265 · unverzerrt_3 2026 -0.108)
+  OK    G3 O3 1 % mit strengerer Fuellung (Tief 0,05 % unter Limit) netto > 0  (bestand +0.322 (gefuellt 49 %) · unverzerrt_1 +0.087 (gefuellt 50 %) · unverzerrt_2 +0.082 (gefuellt 49 %) · unverzerrt_3 +0.100 (gefuellt 50 %))
+  G4 Auskunft Dosis: bestand: 1,5 % +0.461 (2026 +0.343) · 2 % +0.662 (2026 +0.510) | unverzerrt_1: 1,5 % +0.277 (2026 -0.052) · 2 % +0.532 (2026 -0.032) | unverzerrt_2: 1,5 % +0.219 (2026 -0.238) · 2 % +0.444 (2026 -0.228) | unverzerrt_3: 1,5 % +0.288 (2026 +0.041) · 2 % +0.583 (2026 +0.146)
+  OK    G5 P-A Abdeckung auf zweitem Weg (Kontraktname)  (bestand 58.2 % · unverzerrt_1 47.2 % · unverzerrt_2 47.7 % · unverzerrt_3 47.1 %)
+  OK    G6 P-A Taker + 0,05 % Schlupf netto > 0 in jedem Jahr und jeder Menge  (bestand 2025 +0.507 · bestand 2026 +0.454 · unverzerrt_1 2025 +0.259 · unverzerrt_1 2026 +0.161 · unverzerrt_2 2025 +0.260 · unverzerrt_2 2026 +0.069 · unverzerrt_3 2025 +0.375 · unverzerrt_3 2026 +0.159)
+
+5 Pruefungen, 1 FEHLGESCHLAGEN
