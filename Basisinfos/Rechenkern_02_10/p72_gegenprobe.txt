@@ -1,0 +1,8 @@
+P72 GEGENPROBE
+
+  OK    G1 Strecken F6 2024-01..2026-08 per groupby  (31 (Soll 31))
+  OK    G1 Strecken F6 2020-06..2026-08 per groupby  (53 (Soll 53))
+  OK    G2 Aufloesung D 1,0 Pp anderer Startwert: verlaengert deutlich besser (>= +30 Pp)  (2024-26 40 % · 2020-26 77 %)
+  OK    G3 Baerenphasen-Hochs per cummax gleich  (['2013-04-09', '2013-12-04', '2017-12-16', '2021-04-13', '2021-11-08', '2025-10-06'])
+
+4 Pruefungen, ALLE BESTANDEN

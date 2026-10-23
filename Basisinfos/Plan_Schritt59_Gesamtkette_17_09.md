@@ -2642,3 +2642,8 @@ Schritt7 §23.24.
 - Ein Marktfilter für REGEL0 ist mit 2024–26 nicht entscheidbar; selbst ein Orakel ist nicht von Zufall zu trennen.
 - Der Gesamtmarkt bleibt die größte Stellschraube.
 - Nächster Schritt zur Abstimmung: die REGEL0-Historie auf 2019–2023 verlängern.
+
+**Nachtrag 23.10.2026 (63) — H-A Voranalyse** (E-134):
+- Die REGEL0-Historie zu verlängern macht große Markteffekte nachweisbar.
+- Marktphasen auf zwei Ebenen gezählt: übergeordnet 6, kleiner 86 Wendepunkte seit 2013.
+- Nächster Schritt zur Abstimmung: der Indikator-Atlas (welche Indikatoren in welchen Phasen vor- oder nachliefen), dann der Test auf der verlängerten Historie.

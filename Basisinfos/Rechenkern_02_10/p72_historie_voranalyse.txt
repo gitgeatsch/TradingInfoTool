@@ -1,0 +1,24 @@
+P72 VORANALYSE H-A · REGEL0-Historie verlaengern?
+
+A  Zustandsstrecken je Filter (nur Filterreihen):
+   F1 Makro Gesamt kurz       2024-26:  51 Strecken · 2020-06..2026-08:  91 Strecken · erste Zustand 2020-01-26
+   F2 Makro Gesamt lang       2024-26:   9 Strecken · 2020-06..2026-08:  29 Strecken · erste Zustand 2019-10-27
+   F3 Netto-Liquiditaet kurz  2024-26:  27 Strecken · 2020-06..2026-08:  57 Strecken · erste Zustand 2017-01-30
+   F4 Dollar kurz             2024-26:  31 Strecken · 2020-06..2026-08:  72 Strecken · erste Zustand 2017-01-27
+   F5 Nasdaq ueber 200 T      2024-26:   9 Strecken · 2020-06..2026-08:  21 Strecken · erste Zustand 2018-10-18
+   F6 BTC ueber 200 T         2024-26:  31 Strecken · 2020-06..2026-08:  53 Strecken · erste Zustand 2013-01-02
+
+B  Aufloesung (Struktur F6, Tagesnetto aus 2024-26 gezogen, Fundquote Rang >= 0,99; Unterschied an minus aus in Pp):
+   2024-26 (heute)                Tage  974 · Strecken  31 · Fundquote D 0,5 / 1,0 / 1,5 Pp: 12 % / 31 % / 67 %
+   2020-06..2026-08 (verlaengert) Tage 2283 · Strecken  53 · Fundquote D 0,5 / 1,0 / 1,5 Pp: 30 % / 84 % / 100 %
+
+C  Marktphasen BTC 2013-2026 (Tagesschluss, CoinMetrics):
+   uebergeordnet (Baerenphasen >= -50 % vom Allzeithoch):
+     2013-04-09 -> 2013-07-06  -71 %
+     2013-12-04 -> 2015-01-14  -85 %
+     2017-12-16 -> 2018-12-15  -84 %
+     2021-04-13 -> 2021-07-20  -53 %
+     2021-11-08 -> 2022-11-09  -77 %
+     2025-10-06 -> 2026-06-30  -53 %  (laufend/kein neues Hoch)
+   kleiner (Zickzack -20 % / +25 %): 86 Wendepunkte 2013-2026; je Jahr: 2013 14 · 2014 7 · 2015 10 · 2016 3 · 2017 12 · 2018 8 · 2019 6 · 2020 2 · 2021 9 · 2022 5 · 2023 2 · 2024 3 · 2025 2 · 2026 3
+   davon 2020-06..2026-08: 24 · 2024-01..2026-08: 8

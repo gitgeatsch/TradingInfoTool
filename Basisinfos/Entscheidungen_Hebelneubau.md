@@ -1655,3 +1655,21 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 **Der Nutzerhinweis bleibt richtig:** Der Gesamtmarkt ist die größte Stellschraube (2.598, E-131). Nachweisbar wird er nur mit **mehr Jahren REGEL0-Handel** (Signale 2019–2023 nachrechnen, Download nötig).
 
 **Betrieb:** unverändert.
+
+# E-134 · H-A Voranalyse: Die REGEL0-Historie zu verlängern lohnt für große Markteffekte; Marktphasen auf zwei Ebenen; Indikator-Atlas vorgeschlagen (23.10.2026)
+
+**23.10.2026** · Nutzer: *„ja H-A Voranalyse starten …“*, Hinweise: übergeordnete und kleinere Marktphasen unterscheiden; rückwirkend prüfen, welche Indikatoren in welchen Phasen relevant waren.
+
+**Ergebnis** (`Voranalyse_REGEL0_Historie_23_10.md`, Gegenprobe 4/4):
+- **Auflösung:** Mit 2020-06 bis 2026-08 statt 2024–26 steigt die Fundquote für einen Markteffekt von 1,0 Pp von 31 % auf 84 %. 0,5 Pp bleiben schwach (12 % → 30 %).
+- **Machbar:**
+  - Der Erzeuger `regel0_rechnung --ordner` arbeitet auf einem eigenen Datenordner.
+  - ⚠️ Das Monatsmodell lernt fest ab 2023-01; für die Monate vor 2024 braucht es eine dokumentierte Regel. 2024–26 muss bitgleich bleiben.
+  - Der Download umfasst grob 0,5–0,7 GB, frei, und braucht ein Ja.
+- **Marktphasen BTC:**
+  - übergeordnet 6 (4 Zyklus-Bärenmärkte, 2 Einbrüche im Bullenmarkt; der jetzige läuft noch);
+  - kleiner 86 Wendepunkte 2013–2026 (24 ab 2020-06, 8 in 2024–26).
+
+**Vorschlag V-1:** erst der **Indikator-Atlas** (Vorlauf je Indikator vor den Wendepunkten, Nullwelt Zufallsdaten, Stabilität 2013–19 gegen 2020–26), dann die REGEL0-Historie und F-1 Fassung 2 nur mit den Atlas-Kandidaten.
+
+**Betrieb:** unverändert.
