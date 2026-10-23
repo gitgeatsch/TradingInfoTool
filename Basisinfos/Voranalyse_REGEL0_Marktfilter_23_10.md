@@ -54,3 +54,30 @@ Der Zustand gilt für den **Einstiegstag** und ist am Vortag bekannt (Verzug wie
 | **Auflösung** | je Filter die Zahl der Zustandswechsel 2024–26; Pflanzprobe: +0,3 Pp auf die *an*-Tage eines Zufallsfilters → Fundquote. Reicht sie nicht, heißt das Urteil „nicht entscheidbar“, nicht „trägt nicht“ |
 | Auskunft | 2024 je Filter; Kombination „alle sechs an“; Anteil der Tage *an* |
 | Folgen | **trägt** → Messplan Fassung 2 als Bestätigung auf Spot-Kosten (Fusion 0,50 %) und **Voranalyse Gesamtmarkt-Modul** (Phasen, Dauer, Ursachen; Nutzerhinweis). **Nicht entscheidbar / trägt nicht** → Gesamtmarkt bleibt Fakt in der Mail; die breitere Frage *„wie lange und warum steigt oder fällt der Markt“* wird als eigene **Recherche + Messung über lange Historie** (BTC ab 2013, Nasdaq ab 1971) vorgeschlagen |
+
+## 5. Ergebnis Fassung 1: Der Selbsttest sperrt – mit den Daten 2024–26 ist ein Marktfilter NICHT ENTSCHEIDBAR (23.10.2026; `p71_marktfilter.py` → `.txt`)
+
+**Selbsttest:**
+- (a) Fehlalarm **0 von 200** Zufallsfiltern ✔.
+- (b) Positivkontrolle **✘**: Selbst ein Filter **mit Blick in die Zukunft** (an, wenn der zentrierte 30-Tage-Mittelwert des REGEL0-Tagesnettos > 0 ist) erreicht nur Rang **0,92 / 0,94 / 0,92** (Soll ≥ 0,99).
+- Nach Plan wurde **nicht gemessen**. Die sechs Filter sind nicht angesehen.
+
+**Ursache, nachgerechnet (kein Rechenfehler):**
+
+| 2025–26, unverzerrt 1 | |
+|---|---|
+| Orakel-Filter: netto *an* / *aus* / alle | +0,749 % / −0,398 % / −0,184 % je Handel (an an 118 von 608 Tagen) |
+| Verbesserung durch das Orakel | **+0,93 Pp** je Handel |
+| Zufallsfilter gleicher Streckenstruktur: Median / P90 / **P99** | −0,03 / +0,77 / **+1,43 Pp** |
+| Zustandsstrecken | **22** in 20 Monaten |
+| Streuung des Tagesnettos | **5,0 %** (Median 6 Handel je Tag) |
+
+- Die Tagesergebnisse streuen so stark, und die Marktzustände wechseln so selten, dass **selbst perfektes Markt-Timing** auf 2024–26 nicht von Zufall zu trennen ist.
+- Das ist dieselbe Grenze wie in 2.599 und O49: Die Fallzahl ist die **Zahl der Marktphasen**.
+
+**Urteil:** **nicht entscheidbar** (Auflösung). Das heißt ausdrücklich nicht „trägt nicht“. Der Gesamtmarkt kann der Hebel sein; mit 2024–26 lässt er sich für REGEL0 nur nicht nachweisen.
+
+**Was helfen würde – und was nicht:**
+- **Mehr Filter oder strengere Formen helfen nicht.**
+- Helfen würden nur **mehr Jahre mit REGEL0-Handel**: Signale für 2019–2023 nachrechnen (Bullenmarkt 2021, Bärenmarkt 2022). Dafür braucht es Stundenkurse vor 2023 für das REGEL0-Universum (Download, Ja nötig) und die Nachrechnung der Signale mit R-R11 (2024–26 bitgleich).
+- Mit rund 7 Jahren und mehreren Zyklen würde die Positivkontrolle voraussichtlich bestehen. Das ist vorab zu prüfen: zuerst der Selbsttest auf der längeren Reihe, dann die Messung.

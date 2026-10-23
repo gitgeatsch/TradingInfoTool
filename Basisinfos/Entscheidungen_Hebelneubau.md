@@ -1641,3 +1641,17 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 **Bilanz REGEL0 auf Bitpanda:** Kosten, Auswahl, Limit und Timing geplanter Käufe sind geprüft, und nichts trägt. Getragen hat das Signal nur als 24-h-Handel bei niedrigen Kosten (Kraken, E-130).
 
 **Betrieb:** unverändert.
+
+# E-133 · F-1 Marktfilter für REGEL0: mit 2024–26 nicht entscheidbar – selbst perfektes Timing ist nicht von Zufall zu trennen (23.10.2026)
+
+**23.10.2026** · Nutzer: *„ja F-1 Messplan festlegen … wir sollten breiter denken … die größte Bremse ist offenbar der Gesamtmarkt … Makro und traditionelle Märkte (Nasdaq, Zinsen, Anleihen)“*.
+
+**Ergebnis** (`Voranalyse_REGEL0_Marktfilter_23_10.md`, vorab 590bcdac):
+- Sechs Filter aus dem bestehenden Schema: Makro Gesamt kurz/lang, Netto-Liquidität, Dollar, Nasdaq 200 T, BTC 200 T.
+- Der **Selbsttest sperrt**: Fehlalarm 0/200 ✔, aber die Positivkontrolle (Orakel-Filter mit Zukunftswissen) erreicht nur Rang 0,92–0,94.
+- Verbesserung des Orakels +0,93 Pp gegen P99 der Zufallsfilter +1,43 Pp: 22 Zustandsstrecken in 20 Monaten, Tagesnetto ±5 %.
+- ⇒ **nicht entscheidbar**; die Filter sind nicht angesehen.
+
+**Der Nutzerhinweis bleibt richtig:** Der Gesamtmarkt ist die größte Stellschraube (2.598, E-131). Nachweisbar wird er nur mit **mehr Jahren REGEL0-Handel** (Signale 2019–2023 nachrechnen, Download nötig).
+
+**Betrieb:** unverändert.

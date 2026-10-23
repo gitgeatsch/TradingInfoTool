@@ -1,0 +1,5 @@
+P71 F-1 MARKTFILTER · REGEL0-Einstiege 2024-01..2026-08 · Kosten 0,48 %
+
+SELBSTTEST: Fehlalarm 0 von 200 Zufallsfiltern (0.0 %, Soll <= 5 %) · Positivkontrolle Rang 0.921 / 0.935 / 0.917 -> NICHT BESTANDEN
+
+Selbsttest nicht bestanden - es wird NICHT gemessen (§4).

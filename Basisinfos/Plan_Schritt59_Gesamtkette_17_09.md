@@ -2637,3 +2637,8 @@ Schritt7 §23.24.
 - REGEL0 als Kaufzeitpunkt für geplante Spot-Käufe trägt nicht; das Vorzeichen wechselt mit dem Jahr und dem Regime.
 - 4-Jahres-Zyklus: Der Zeitplan hält bisher, die Form weicht ab. Er kommt nur als Fakt in die Mail.
 - REGEL0 ist auf Bitpanda damit in allen Wegen geprüft.
+
+**Nachtrag 23.10.2026 (62) — F-1 Marktfilter** (E-133):
+- Ein Marktfilter für REGEL0 ist mit 2024–26 nicht entscheidbar; selbst ein Orakel ist nicht von Zufall zu trennen.
+- Der Gesamtmarkt bleibt die größte Stellschraube.
+- Nächster Schritt zur Abstimmung: die REGEL0-Historie auf 2019–2023 verlängern.
