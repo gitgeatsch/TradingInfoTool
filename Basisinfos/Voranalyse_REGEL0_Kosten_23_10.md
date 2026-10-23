@@ -162,3 +162,25 @@ Nutzer 23.10.: *„Der Limit-Kauf müsste dann über unsere Anwendung eigenstän
 ⚠️ **Ehrlich vorab:**
 - 2025–26 sind in §4 und §6 schon in der Rückschau angesehen, mit 2026 schwach. Ungesehen ist die **Wahl auf 2024** und ihre Bestätigung je Jahr; die Folge-Erwartung für 2026 ist eher negativ.
 - Füllung mit Stundentief ist eine Näherung; Schlupf und Warteschlange bildet die 0,1-%-Variante ab.
+
+### 7.1 Selbsttest sperrt Fassung 1 — Ursache geklärt, Fassung 1b VORAB (23.10.2026)
+
+**Ergebnis Selbsttest Fassung 1:**
+- Zufallspfad brutto −0,056 / −0,048 / −0,046 / −0,036 % (Tiefe 0,5 / 1 / 1,5 / 2 %), Grenze |·| < 0,03 % → **nicht bestanden**.
+- Positivkontrolle +0,40 bis +1,59 % ✔.
+- Nach Plan wurde **nicht gemessen**.
+
+**Ursache, nachgewiesen** (eigene Simulation, Tiefe 1 %):
+
+| Teilschritte je Stunde | Füllung **zum Limit** | **Marktkauf** beim Erreichen | Überschießen unter das Limit |
+|---|---|---|---|
+| 60, t-verteilt | −0,062 % | −0,009 % | 0,053 % |
+| 60, normal | −0,035 % | +0,002 % | 0,038 % |
+| 600, normal | +0,026 % | +0,038 % | 0,012 % |
+| 600, t-verteilt | +0,004 % | +0,021 % | 0,017 % |
+
+- Das Minus entspricht dem **Überschießen**: Eine echte Limit-Order wird zum Limitpreis gefüllt, wenn der Kurs schon darunter liegt. Das ist die bekannte negative Auswahl bei Limit-Orders und eine **echte** Eigenschaft, keine Verzerrung zu unseren Gunsten.
+- Der Marktkauf beim Erreichen liegt bei ≈ 0, innerhalb des Rauschens (Standardfehler ≈ 0,05 %).
+- ⇒ Die Füllregel **rechnet nichts schön**. Das zweiseitige Kriterium war falsch kalibriert.
+
+**Fassung 1b (einzige Änderung):** Selbsttest (a) wird **einseitig**: Der Zufallspfad muss brutto ≤ +0,03 % ergeben, also keine positive Verzerrung. Alles andere bleibt wie §7. Kein echtes Ergebnis ist bisher angesehen.

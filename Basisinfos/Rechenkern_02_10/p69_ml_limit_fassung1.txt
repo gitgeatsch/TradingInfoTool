@@ -1,0 +1,9 @@
+P69 M-L LIMIT-EINSTIEG · Tiefen (0.005, 0.01, 0.015, 0.02) · Gueltigkeit 4 h · Kostenbasen {'H': 0.0048, 'H+Schlupf': 0.0058, 'S': 0.005}
+
+  Selbsttest Tiefe 0.5 %: Zufallspfad brutto -0.0556 % (gefuellt 58 %) · Rueckkehr +0.4046 % (gefuellt 58 %)
+  Selbsttest Tiefe 1.0 %: Zufallspfad brutto -0.0477 % (gefuellt 29 %) · Rueckkehr +0.7781 % (gefuellt 26 %)
+  Selbsttest Tiefe 1.5 %: Zufallspfad brutto -0.0462 % (gefuellt 12 %) · Rueckkehr +1.1849 % (gefuellt 9 %)
+  Selbsttest Tiefe 2.0 %: Zufallspfad brutto -0.0362 % (gefuellt 4 %) · Rueckkehr +1.5859 % (gefuellt 2 %)
+  SELBSTTEST NICHT BESTANDEN
+
+Selbsttest nicht bestanden - es wird NICHT gemessen (§7).
