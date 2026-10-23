@@ -113,3 +113,27 @@
 3. **Ein Treffer in der Rückschau ist kein Befund.**
    - Beide Wege brauchen einen **Messplan mit Wahl auf 2024 und Bestätigung je Jahr 2025 und 2026**.
    - Für O3 hieße das: die Limit-Tiefe aus {0,5; 1; 1,5; 2 %} auf 2024 wählen.
+
+## 6. Nutzer-Fakt 23.10.: bei Bitpanda-Hebel KEIN Limit-Kauf – O3 nur als Spot (`p68b_spot_limit.py` → `.txt`)
+
+Nutzer 23.10.: *„Bei BP ist ein Limit-Kauf fast durchgängig bei Spot möglich, exkl. kleine Coins; bei Hebel kein Limit-Kauf, aber Verkauf mit TP/SL.“*
+
+- ⇒ **O3 ist auf Bitpanda-Margin nicht umsetzbar.**
+- Umsetzbar wäre er nur als **Spot ohne Hebel**, über Fusion: 2 × 0,25 % = 0,50 %, steuereinfach. Der Broker scheidet mit 0,99 % / 1,49 % je Seite aus.
+- TP/SL beim Verkauf bringt nichts Neues: Kursziele +3/+5 % waren schlechter (2.690), der Stopp ist gemessen (8 %).
+
+**Abdeckung:** Bitpanda-Katalog vom 08.10.2026 als Stellvertreter für Fusion: **92–94 %** der Einstiege.
+
+| Menge | ohne Limit | Limit 1 % (51 % gefüllt) | Limit 1,5 % (34 %) | Limit 2 % (23 %) |
+|---|---|---|---|---|
+| unverzerrt 1 | −0,224 | +0,076 (2025 +0,19 / **2026 −0,12**) | +0,226 (2026 −0,02) | +0,410 (2026 +0,01) |
+| unverzerrt 2 | −0,191 | +0,123 (2025 +0,32 / **2026 −0,22**) | +0,240 (2026 −0,22) | +0,456 (2026 −0,19) |
+| unverzerrt 3 | −0,214 | +0,058 (2025 +0,17 / **2026 −0,11**) | +0,213 (2026 +0,07) | +0,425 (2026 +0,19) |
+| bestand | +0,050 | +0,325 (2026 +0,18) | +0,456 | +0,641 |
+
+**Einordnung:**
+- Über 2025–26 trägt ein tieferes Limit **mehr** (Dosis monoton), aber **2026 ist uneinheitlich bis negativ**.
+- Bei 1 % ist 2026 in allen drei unverzerrten Mengen negativ, bei 2 % in einer von drei.
+- Ein Limit von 2 % füllt nur noch ein Viertel der Signale.
+- ⇒ Als Fusion-Spot ist O3 ein **Kandidat für einen Messplan** (Wahl der Tiefe auf 2024, Bestätigung je Jahr). Die Rückschau lässt für 2026 aber eher ein Scheitern erwarten.
+- Kraken (P-A) ist der einzige Weg, der in der Rückschau **in jedem Jahr** trägt.
