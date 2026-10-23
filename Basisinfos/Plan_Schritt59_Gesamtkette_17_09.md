@@ -2632,3 +2632,8 @@ Schritt7 §23.24.
 - Der Limit-Einstieg trägt auf Bitpanda nicht (2026 negativ).
 - Der Befund dahinter: REGEL0 schlägt den Markt deutlich (+0,3 bis +0,6 Pp je 24 h). Die fallende Altcoin-Drift 2025–26 und die Kosten zehren das auf.
 - Weiter mit der Frage, wo sich der Vorsprung ohne Drift nutzen lässt.
+
+**Nachtrag 23.10.2026 (61) — E-A Kaufzeitpunkt** (E-132):
+- REGEL0 als Kaufzeitpunkt für geplante Spot-Käufe trägt nicht; das Vorzeichen wechselt mit dem Jahr und dem Regime.
+- 4-Jahres-Zyklus: Der Zeitplan hält bisher, die Form weicht ab. Er kommt nur als Fakt in die Mail.
+- REGEL0 ist auf Bitpanda damit in allen Wegen geprüft.

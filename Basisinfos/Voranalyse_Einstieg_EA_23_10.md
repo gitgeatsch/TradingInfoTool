@@ -71,9 +71,29 @@ Bitpanda: Spot über den Broker oder Fusion, Limit-Kauf bei Spot fast überall m
   - Nach T halten beide Käufe gleich viel Wert im Verhältnis, das Ergebnis gilt also auch für ein längeres Halten.
 - Alles andere bleibt wie §5. Kein echtes Ergebnis ist bisher angesehen.
 
-## 6. Recherche 4-Jahres-Zyklus und Bärenmarktdauer
+## 6. Recherche 4-Jahres-Zyklus und Bärenmarktdauer (23.10.2026; Quellen im Recherchebericht, eigene Zahlen aus `messdaten.db`, nur lesend)
 
-*(folgt, Recherche läuft)*
+| Zyklus | Hoch | Tief | Rückgang | Hoch → Tief | Halving → Hoch |
+|---|---|---|---|---|---|
+| 2011 | 06/2011 | 11/2011 | −93 % | 5,4 Mon. | – |
+| 2013/14 | 30.11.2013 | 14.01.2015 | −84 bis −87 % | 13,5 Mon. | 12,1 Mon. |
+| 2017/18 | 17.12.2017 | 15.12.2018 | −84 % | 11,9 Mon. | 17,3 Mon. |
+| 2021/22 | 10.11.2021 | 21.11.2022 | −78 % | 12,4 Mon. | 18,0 Mon. |
+| **2025/26** | **06.10.2025** (~126.100 $) | **vorläufig 30.06./01.07.2026** (57.800 $) | **−54 %** | **8,8 Mon.** | 17,5 Mon. |
+
+**Was das für die Annahmen des Nutzers heißt:**
+- **„BTC 1 Jahr Bärenmarkt“:** Die drei Bärenmärkte nach einem Halving dauerten 12–13,5 Monate. Der aktuelle Tiefpunkt kam nach **8,8 Monaten**, war **flacher** (−54 % statt −77 bis −87 %) und lag erstmals nicht unter dem Realized Price (Glassnode).
+  - Ein Boden ist **nicht bestätigt**. Glassnode stellt ihn unter die Bedingung, dass der Kurs über ~77.000 $ bleibt; Galaxy und Fidelity halten ein Tief bis Q4/Nov. 2026 für möglich.
+  - Heute (23.10.) steht der Kurs bei ~81.600 $, rund −35 % unter dem Hoch.
+- **„4-Jahres-Zyklus intakt?“:** Der **Zeitplan** hält bisher (Halving → Hoch 534 Tage, Hoch zu Hoch 1.426 Tage). Die **Form** weicht ab: Hoch vor dem Halving (2024), flacher, kürzer, Tief rund 4 Monate früher.
+  - Das Halving als **Ursache** ist nicht belegt: 3–4 Fälle, vermischt mit Zins- und Liquiditätszyklen, und die Studien widersprechen sich im Vorzeichen.
+  - Die Prognosen *„neues Hoch im ersten Halbjahr 2026“* (Grayscale, Bitwise) sind nicht eingetreten.
+- **Gegenbewegungen:** In Bärenmärkten gab es 2–4 Gegenbewegungen von +29 bis +66 % (2018: vier, 2022: zwei, 2026 bisher: +31 % und +39 %). In Bullenmärkten gab es Rücksetzer bis −53 % (2021).
+
+**Folge für das Regelwerk (Regel 1 und 2.599):**
+- *„1 Jahr Bärenmarkt“* wäre ein **Kalendersignal** und ist mit vier Fällen nicht als Bewertung messbar.
+- In die Mail gehört nur der **Fakt** (X % unter dem Hoch, Y Monate seit dem Hoch), nicht die Auslösung.
+- Mit Abweichungen und Regimewechseln umgehen heißt: Jede Regel wird **je Regime und je Teilzeitraum** auf ein stabiles Vorzeichen geprüft (so in §7), und das Risiko wird über die **Schwankung** geführt. Volatilitätsregime sind messbar (Ardia u. a. 2019); Richtungsregime sind es vorab nicht.
 
 ## 7. Ergebnis E-A Fassung 1b: TRÄGT NICHT – das Vorzeichen wechselt mit dem Jahr (23.10.2026; `p70_ea_kaufzeitpunkt.py`, `p70_gegenprobe.py` → `.txt`)
 

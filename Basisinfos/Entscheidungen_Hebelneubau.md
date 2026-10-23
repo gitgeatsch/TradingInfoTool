@@ -1621,3 +1621,23 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Die Altcoins fielen aber im Mittel um −0,28 bzw. −0,13 % je 24 h. **Drift plus Kosten** zehren den Vorsprung auf.
 
 **Betrieb:** unverändert.
+
+# E-132 · E-A: REGEL0 als Kaufzeitpunkt geplanter Spot-Käufe trägt nicht; 4-Jahres-Zyklus nur als Fakt (23.10.2026)
+
+**23.10.2026** · Nutzer: *„ja E-A Messplan festlegen, prüfen, gegenprüfen und Doku, auf BP“*, mit vier Hinweisen (Vorwissen, BP, Zeiträume und Zyklen, Regimewechsel).
+
+**Ergebnis** (`Voranalyse_Einstieg_EA_23_10.md`; vorab 4241f1e0, Fassung 1b nach Selbsttest 5d864b99, Ergebnis 5cc2acf0):
+- Auf 2024 gewählt wurde ein Fenster von 7 Tagen.
+- Gegen Zufallsstunden im selben Fenster liegt REGEL0 2025 auf Rang **0,00**, 2026 auf Rang **1,00**. Das gilt für Kern und Altcoins; die Gegenprobe mit gleicher Wartezeit (G5) bestätigt es.
+- Im steigenden Regime liegt der Rang bei 0,03, im fallenden bei 0,99.
+- Der Kaufvorteil ist Wartedrift. ⇒ **trägt nicht**; der Kauf am festen Tag bleibt.
+- **Vorwissen bestätigt:** M-0c L3 (REGEL0 als Spot-Handel trägt nicht, der Vorsprung ist nach 72 h weg).
+
+**Zyklus** (§6):
+- Der Zeitplan hält bisher, die Form weicht ab (−54 %, 8,8 Monate, Boden nicht bestätigt).
+- Das Halving als Ursache ist nicht belegt.
+- ⇒ Nur als **Fakt** in die Mail, nie als Auslöser (Regel 1).
+
+**Bilanz REGEL0 auf Bitpanda:** Kosten, Auswahl, Limit und Timing geplanter Käufe sind geprüft, und nichts trägt. Getragen hat das Signal nur als 24-h-Handel bei niedrigen Kosten (Kraken, E-130).
+
+**Betrieb:** unverändert.
