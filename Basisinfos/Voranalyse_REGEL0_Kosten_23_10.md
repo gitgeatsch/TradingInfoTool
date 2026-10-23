@@ -137,3 +137,28 @@ Nutzer 23.10.: *„Bei BP ist ein Limit-Kauf fast durchgängig bei Spot möglich
 - Ein Limit von 2 % füllt nur noch ein Viertel der Signale.
 - ⇒ Als Fusion-Spot ist O3 ein **Kandidat für einen Messplan** (Wahl der Tiefe auf 2024, Bestätigung je Jahr). Die Rückschau lässt für 2026 aber eher ein Scheitern erwarten.
 - Kraken (P-A) ist der einzige Weg, der in der Rückschau **in jedem Jahr** trägt.
+
+## 7. Messplan M-L Fassung 1 — Limit-Einstieg für REGEL0 auf Bitpanda/Fusion, VORAB festgelegt (23.10.2026)
+
+Nutzer 23.10.: *„Der Limit-Kauf müsste dann über unsere Anwendung eigenständig erfolgen – das wäre eine Möglichkeit für Hebel und Spot, manuell vs. automatisch. Aktuell müssen wir das Beste aus der BP-Börse bzw. Fusion machen.“* · *„ja Messplan M-L so festlegen, prüfen, gegenprüfen und Doku“*.
+
+**Frage:** Hebt ein Limit-Einstieg unter dem Schluss der Einstiegsstunde REGEL0 über die Bitpanda-Kosten, und zwar **stabil in jedem Jahr**?
+
+| | festgelegt |
+|---|---|
+| Einstiege | REGEL0 (`kern48jbz_einstiege_<menge>.csv`), vier Mengen, 2024-01 bis 2026-08 |
+| Varianten | Tiefe x = 0,5 / 1 / 1,5 / 2 % unter dem Schluss der Einstiegsstunde; das Limit gilt **4 h** (Auskunft: 2 h und 8 h) |
+| Füllung | gefüllt zum **Limitpreis**, sobald ein Stundentief in der Gültigkeit ≤ Limit ist (das entspricht einem synthetischen Limit mit laufender Beobachtung) |
+| Ausstieg | unverändert: Schluss 24 h nach der Einstiegsstunde |
+| Kostenbasis **H** (Hebel) | 0,48 %. Dazu eine Variante mit 0,1 % Schlupf, weil das synthetische Limit zum Marktpreis kauft |
+| Kostenbasis **S** (Fusion-Spot) | 0,50 %, nur Coins im Bitpanda-Katalog (08.10.2026) |
+| **Wahl auf 2024** | je Kostenbasis die Tiefe mit dem höchsten **Gesamtertrag je Signal**: Summe der Nettoerträge der gefüllten Handel geteilt durch **alle** Signale (ungefüllt = 0), gemittelt über die vier Mengen. Damit gewinnt nicht automatisch das tiefste Limit |
+| **Bestätigung** | 2025 und 2026 **getrennt**, mit der auf 2024 gewählten Tiefe |
+| **trägt, wenn** | netto je gefülltem Handel > 0 **in 2025 und in 2026**, in **allen drei unverzerrten** Mengen, **und** besser als die Nullwelt (unten) mit Rang ≥ 0,90 in beiden Jahren |
+| **Nullwelt** | dasselbe Limit auf **zufällige Stunden derselben Coins im selben Jahr**, 200 Ziehungen (je Signal eine Zufallsstunde). Sie zeigt, ob der Vorteil von REGEL0 kommt oder nur vom mechanischen Kauf nach einem Rücksetzer. Rang = Anteil der Ziehungen mit kleinerem Nettoertrag je gefülltem Handel |
+| **Selbsttest VOR dem ersten Blick** | (a) Auf künstlichen Zufallspfaden (t-verteilte Stundenrenditen, BTC-Schwankung) muss der Limit-Einstieg **brutto ≈ 0** bringen (\|Mittel\| < 0,03 %): So ist geprüft, dass die Füllregel mit dem Stundentief nichts schönrechnet. (b) Positivkontrolle: Auf Pfaden mit Rückkehr zur Mitte muss er **positiv** sein. Fällt (a) oder (b) durch, wird nicht gemessen |
+| Folgen | **trägt** → Voranalyse der Ausführung (automatisch oder manuell; ob Bitpanda-Margin per API eröffnet werden kann; Fusion-API mit Limit-Orders ist belegt). **trägt nicht** → der Limit-Einstieg ist für REGEL0 auf Bitpanda erledigt und wird nicht nachgestellt |
+
+⚠️ **Ehrlich vorab:**
+- 2025–26 sind in §4 und §6 schon in der Rückschau angesehen, mit 2026 schwach. Ungesehen ist die **Wahl auf 2024** und ihre Bestätigung je Jahr; die Folge-Erwartung für 2026 ist eher negativ.
+- Füllung mit Stundentief ist eine Näherung; Schlupf und Warteschlange bildet die 0,1-%-Variante ab.
