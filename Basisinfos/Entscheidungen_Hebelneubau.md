@@ -1606,3 +1606,18 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
   - Offene Faktfrage: Gibt es Limit-Orders bei Bitpanda-Margin?
 
 **Betrieb:** unverändert. **Zur Abstimmung:** welcher Messplan (Wahl 2024, Bestätigung je Jahr).
+
+# E-131 · M-L: Der Limit-Einstieg trägt auf Bitpanda nicht – REGEL0 schlägt den Markt, aber der Markt fiel (23.10.2026)
+
+**23.10.2026** · Nutzer: *„ja Messplan M-L so festlegen, prüfen, gegenprüfen und Doku“*; Nutzer-Fakt: Bitpanda-Hebel ohne Limit-Kauf, Spot mit Limit.
+
+**Ergebnis** (`Voranalyse_REGEL0_Kosten_23_10.md` §7–§7.2, vorab e6e30261, Fassung 1b nach Selbsttest bacc11d4, Gegenprobe 3/3):
+- Auf 2024 gewählt wurde ein Limit 0,5 % unter dem Kurs.
+- Bestätigung unverzerrt: 2025 ≈ 0 (−0,05 bis +0,05 %), **2026 −0,21 bis −0,27 %** je Handel.
+- Das gilt auf allen Basen (Hebel, Hebel mit Schlupf, Fusion-Spot). ⇒ **trägt nicht**.
+
+**Befund:**
+- REGEL0 liegt gegenüber Zufallsstunden derselben Coins um **+0,6 Pp (2025) bzw. +0,3 Pp (2026)** vorn (Rang 1,00).
+- Die Altcoins fielen aber im Mittel um −0,28 bzw. −0,13 % je 24 h. **Drift plus Kosten** zehren den Vorsprung auf.
+
+**Betrieb:** unverändert.

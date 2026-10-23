@@ -2627,3 +2627,8 @@ Schritt7 §23.24.
 - Auf Kraken-Perps (Pro-Gebühren) trägt REGEL0 in der Rückschau netto in jedem Jahr. Dagegen stehen die Abdeckung von rund der Hälfte der Signale und dass es nicht steuereinfach ist.
 - Auf Bitpanda trägt nur ein Limit-Einstieg 1 % unter dem Kurs, und der kippt 2026.
 - Nächster Schritt: ein Messplan mit Wahl auf 2024.
+
+**Nachtrag 23.10.2026 (60) — M-L Limit-Einstieg** (E-131):
+- Der Limit-Einstieg trägt auf Bitpanda nicht (2026 negativ).
+- Der Befund dahinter: REGEL0 schlägt den Markt deutlich (+0,3 bis +0,6 Pp je 24 h). Die fallende Altcoin-Drift 2025–26 und die Kosten zehren das auf.
+- Weiter mit der Frage, wo sich der Vorsprung ohne Drift nutzen lässt.

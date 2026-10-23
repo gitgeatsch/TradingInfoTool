@@ -184,3 +184,44 @@ Nutzer 23.10.: *„Der Limit-Kauf müsste dann über unsere Anwendung eigenstän
 - ⇒ Die Füllregel **rechnet nichts schön**. Das zweiseitige Kriterium war falsch kalibriert.
 
 **Fassung 1b (einzige Änderung):** Selbsttest (a) wird **einseitig**: Der Zufallspfad muss brutto ≤ +0,03 % ergeben, also keine positive Verzerrung. Alles andere bleibt wie §7. Kein echtes Ergebnis ist bisher angesehen.
+
+### 7.2 Ergebnis M-L Fassung 1b: Der Limit-Einstieg TRÄGT NICHT (23.10.2026; `p69_ml_limit.py`, `p69_gegenprobe.py` → `.txt`)
+
+**Selbsttest (einseitig):** bestanden. Zufallspfad −0,036 bis −0,056 % (Überschießen), Positivkontrolle +0,40 bis +1,59 %.
+
+**Wahl auf 2024** nach Gesamtertrag je Signal:
+
+| Kostenbasis | Gesamtertrag je Signal bei 0,5 / 1 / 1,5 / 2 % | gewählt |
+|---|---|---|
+| H (0,48 %) | +0,482 / +0,392 / +0,327 / +0,285 | **0,5 %** |
+| S (0,50 %) | +0,494 / +0,428 / +0,365 / +0,307 | **0,5 %** |
+
+**Bestätigung mit 0,5 %:** netto je gefülltem Handel, etwa 70–75 % gefüllt.
+
+| Basis | 2025 unverzerrt 1 / 2 / 3 | **2026** unverzerrt 1 / 2 / 3 | bestand 2025 / 2026 |
+|---|---|---|---|
+| H | −0,045 / −0,011 / +0,047 | **−0,215 / −0,209 / −0,273** | +0,298 / +0,100 |
+| H + Schlupf 0,1 % | −0,145 / −0,111 / −0,053 | −0,315 / −0,309 / −0,373 | +0,198 / −0,000 |
+| S (Fusion-Spot) | −0,081 / +0,001 / −0,021 | −0,219 / −0,206 / −0,285 | +0,272 / +0,108 |
+
+**Urteil nach §7:** **TRÄGT NICHT** auf allen drei Basen. 2025 liegt ≈ 0, 2026 klar negativ. Der Limit-Einstieg ist für REGEL0 auf Bitpanda erledigt und wird nicht nachgestellt.
+
+**Nullwelt:** Rang **1,00** überall. Dasselbe Limit auf Zufallsstunden derselben Coins ergibt netto −0,54 bis −0,89 %.
+
+**Gegenprobe 3/3:**
+- G1: Einzelschleife, alle acht Zellen gleich.
+- G2: Die Wahl auf 2024 fällt auf zweitem Weg auf dieselbe Tiefe.
+- G3: Die Nullwelt ist plausibel.
+- Auskunft G4: Gültigkeit 2 h oder 8 h ändert nichts; 2026 bleibt negativ.
+
+#### ⭐ Der Befund dahinter: REGEL0 schlägt den Markt deutlich – der MARKT selbst fiel
+
+| | 2025 | 2026 |
+|---|---|---|
+| zufällige Stunden derselben Coins, 24 h, ohne Kosten (G3) | **−0,28 %** | **−0,13 %** |
+| REGEL0, 24 h, ohne Kosten (unverzerrt) | ≈ +0,40 % | ≈ +0,15 % |
+| **Vorsprung von REGEL0 gegen den Markt dieser Coins** | **≈ +0,6 Pp** | **≈ +0,3 Pp** |
+
+- Das Signal ist **stark gegenüber dem Markt**. Das passt zu 2.598: Der Nullpunkt von E[R] ist die **Drift**.
+- Vom Vorsprung bleibt absolut aber nur +0,30 % übrig, weil die Altcoins 2025–26 im Mittel fallen. Erst die **Drift plus die Kosten** machen das Ergebnis negativ.
+- ⇒ Eine Optimierung des **Einstiegs** allein kann das nicht beheben. Wer den Vorsprung **ohne** die Drift ernten will, muss den Markt absichern (Short, nur über eine Perp-Börse) oder die Kosten **ohnehin** tragen: ein Kauf, der sowieso ansteht, wird nur besser getimt.

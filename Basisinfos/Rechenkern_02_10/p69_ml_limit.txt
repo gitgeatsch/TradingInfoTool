@@ -1,0 +1,47 @@
+P69 M-L LIMIT-EINSTIEG · Tiefen (0.005, 0.01, 0.015, 0.02) · Gueltigkeit 4 h · Kostenbasen {'H': 0.0048, 'H+Schlupf': 0.0058, 'S': 0.005}
+
+  Selbsttest Tiefe 0.5 %: Zufallspfad brutto -0.0556 % (gefuellt 58 %) · Rueckkehr +0.4046 % (gefuellt 58 %)
+  Selbsttest Tiefe 1.0 %: Zufallspfad brutto -0.0477 % (gefuellt 29 %) · Rueckkehr +0.7781 % (gefuellt 26 %)
+  Selbsttest Tiefe 1.5 %: Zufallspfad brutto -0.0462 % (gefuellt 12 %) · Rueckkehr +1.1849 % (gefuellt 9 %)
+  Selbsttest Tiefe 2.0 %: Zufallspfad brutto -0.0362 % (gefuellt 4 %) · Rueckkehr +1.5859 % (gefuellt 2 %)
+  SELBSTTEST BESTANDEN
+
+  bestand: 10732 Einstiege mit vollem Fenster (2024 2324 · 2025 4715 · 2026 3693)
+  unverzerrt_1: 11175 Einstiege mit vollem Fenster (2024 2051 · 2025 5325 · 2026 3799)
+  unverzerrt_2: 10479 Einstiege mit vollem Fenster (2024 1896 · 2025 5220 · 2026 3363)
+  unverzerrt_3: 10791 Einstiege mit vollem Fenster (2024 1873 · 2025 5088 · 2026 3830)
+
+=== Basis H (Kosten 0.48 %) · WAHL 2024 nach Gesamtertrag je Signal: 0.5 % +0.482 · 1.0 % +0.392 · 1.5 % +0.327 · 2.0 % +0.285 -> gewaehlt 0.5 %
+  2025 bestand       netto je gefuelltem Handel +0.298 % (gefuellt 75 %, ohne Limit +0.132) · Gesamtertrag je Signal +0.225 · Nullwelt -0.765 [P10 -0.887; P90 -0.605] · Rang 1.00
+  2025 unverzerrt_1  netto je gefuelltem Handel -0.045 % (gefuellt 75 %, ohne Limit -0.084) · Gesamtertrag je Signal -0.034 · Nullwelt -0.759 [P10 -0.883; P90 -0.655] · Rang 1.00
+  2025 unverzerrt_2  netto je gefuelltem Handel -0.011 % (gefuellt 75 %, ohne Limit -0.087) · Gesamtertrag je Signal -0.008 · Nullwelt -0.779 [P10 -0.910; P90 -0.641] · Rang 1.00
+  2025 unverzerrt_3  netto je gefuelltem Handel +0.047 % (gefuellt 75 %, ohne Limit -0.031) · Gesamtertrag je Signal +0.035 · Nullwelt -0.785 [P10 -0.911; P90 -0.670] · Rang 1.00
+  2026 bestand       netto je gefuelltem Handel +0.100 % (gefuellt 69 %, ohne Limit -0.021) · Gesamtertrag je Signal +0.069 · Nullwelt -0.539 [P10 -0.664; P90 -0.403] · Rang 1.00
+  2026 unverzerrt_1  netto je gefuelltem Handel -0.215 % (gefuellt 70 %, ohne Limit -0.325) · Gesamtertrag je Signal -0.151 · Nullwelt -0.582 [P10 -0.714; P90 -0.467] · Rang 1.00
+  2026 unverzerrt_2  netto je gefuelltem Handel -0.209 % (gefuellt 71 %, ohne Limit -0.338) · Gesamtertrag je Signal -0.148 · Nullwelt -0.591 [P10 -0.747; P90 -0.460] · Rang 1.00
+  2026 unverzerrt_3  netto je gefuelltem Handel -0.273 % (gefuellt 70 %, ohne Limit -0.347) · Gesamtertrag je Signal -0.193 · Nullwelt -0.573 [P10 -0.709; P90 -0.421] · Rang 1.00
+  URTEIL Basis H: TRAEGT NICHT
+
+=== Basis H+Schlupf (Kosten 0.58 %) · WAHL 2024 nach Gesamtertrag je Signal: 0.5 % +0.406 · 1.0 % +0.335 · 1.5 % +0.285 · 2.0 % +0.255 -> gewaehlt 0.5 %
+  2025 bestand       netto je gefuelltem Handel +0.198 % (gefuellt 75 %, ohne Limit +0.032) · Gesamtertrag je Signal +0.150 · Nullwelt -0.847 [P10 -0.980; P90 -0.728] · Rang 1.00
+  2025 unverzerrt_1  netto je gefuelltem Handel -0.145 % (gefuellt 75 %, ohne Limit -0.184) · Gesamtertrag je Signal -0.110 · Nullwelt -0.865 [P10 -1.002; P90 -0.726] · Rang 1.00
+  2025 unverzerrt_2  netto je gefuelltem Handel -0.111 % (gefuellt 75 %, ohne Limit -0.187) · Gesamtertrag je Signal -0.083 · Nullwelt -0.883 [P10 -1.014; P90 -0.745] · Rang 1.00
+  2025 unverzerrt_3  netto je gefuelltem Handel -0.053 % (gefuellt 75 %, ohne Limit -0.131) · Gesamtertrag je Signal -0.040 · Nullwelt -0.863 [P10 -1.010; P90 -0.739] · Rang 1.00
+  2026 bestand       netto je gefuelltem Handel -0.000 % (gefuellt 69 %, ohne Limit -0.121) · Gesamtertrag je Signal -0.000 · Nullwelt -0.640 [P10 -0.761; P90 -0.508] · Rang 1.00
+  2026 unverzerrt_1  netto je gefuelltem Handel -0.315 % (gefuellt 70 %, ohne Limit -0.425) · Gesamtertrag je Signal -0.221 · Nullwelt -0.673 [P10 -0.809; P90 -0.547] · Rang 1.00
+  2026 unverzerrt_2  netto je gefuelltem Handel -0.309 % (gefuellt 71 %, ohne Limit -0.438) · Gesamtertrag je Signal -0.219 · Nullwelt -0.673 [P10 -0.816; P90 -0.512] · Rang 1.00
+  2026 unverzerrt_3  netto je gefuelltem Handel -0.373 % (gefuellt 70 %, ohne Limit -0.447) · Gesamtertrag je Signal -0.263 · Nullwelt -0.672 [P10 -0.811; P90 -0.551] · Rang 0.99
+  URTEIL Basis H+Schlupf: TRAEGT NICHT
+
+=== Basis S (Kosten 0.50 %) · WAHL 2024 nach Gesamtertrag je Signal: 0.5 % +0.494 · 1.0 % +0.428 · 1.5 % +0.365 · 2.0 % +0.307 -> gewaehlt 0.5 %
+  2025 bestand       netto je gefuelltem Handel +0.272 % (gefuellt 76 %, ohne Limit +0.113) · Gesamtertrag je Signal +0.205 · Nullwelt -0.767 [P10 -0.889; P90 -0.641] · Rang 1.00
+  2025 unverzerrt_1  netto je gefuelltem Handel -0.081 % (gefuellt 76 %, ohne Limit -0.135) · Gesamtertrag je Signal -0.061 · Nullwelt -0.814 [P10 -0.937; P90 -0.674] · Rang 1.00
+  2025 unverzerrt_2  netto je gefuelltem Handel +0.001 % (gefuellt 75 %, ohne Limit -0.088) · Gesamtertrag je Signal +0.001 · Nullwelt -0.810 [P10 -0.945; P90 -0.680] · Rang 1.00
+  2025 unverzerrt_3  netto je gefuelltem Handel -0.021 % (gefuellt 75 %, ohne Limit -0.099) · Gesamtertrag je Signal -0.016 · Nullwelt -0.805 [P10 -0.932; P90 -0.680] · Rang 1.00
+  2026 bestand       netto je gefuelltem Handel +0.108 % (gefuellt 69 %, ohne Limit -0.031) · Gesamtertrag je Signal +0.075 · Nullwelt -0.561 [P10 -0.692; P90 -0.421] · Rang 1.00
+  2026 unverzerrt_1  netto je gefuelltem Handel -0.219 % (gefuellt 70 %, ohne Limit -0.348) · Gesamtertrag je Signal -0.154 · Nullwelt -0.602 [P10 -0.724; P90 -0.472] · Rang 1.00
+  2026 unverzerrt_2  netto je gefuelltem Handel -0.206 % (gefuellt 71 %, ohne Limit -0.353) · Gesamtertrag je Signal -0.145 · Nullwelt -0.618 [P10 -0.751; P90 -0.486] · Rang 1.00
+  2026 unverzerrt_3  netto je gefuelltem Handel -0.285 % (gefuellt 70 %, ohne Limit -0.367) · Gesamtertrag je Signal -0.200 · Nullwelt -0.620 [P10 -0.737; P90 -0.497] · Rang 1.00
+  URTEIL Basis S: TRAEGT NICHT
+
+Auskunft Gueltigkeit (Basis H, Tiefe 1 %, unverzerrt_1, alle Jahre) - siehe p69_gegenprobe.py
