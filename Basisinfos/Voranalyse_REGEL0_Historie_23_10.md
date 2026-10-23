@@ -128,3 +128,23 @@ Nutzer 23.10.: *„L-A“* · *„und Download“*. Herkunft: E-133 (2024–26 n
 **Folgen:**
 - **trägt** → Bestätigung auf den unverzerrten Mengen (eingestellte Paare nachladen), dann Voranalyse Betrieb (Sperre der REGEL0 bei Gier).
 - **trägt nicht / nicht entscheidbar** → REGEL0 bleibt Vorwärtsprotokoll; Fear & Greed bleibt Fakt im Lagebild.
+
+### 6.1 Auslegung vor dem ersten Lauf (23.10.2026, vor jedem Blick auf ein Filterergebnis)
+
+| # | Offene Stelle im Plan | Auslegung |
+|---|---|---|
+| 1 | Kriterium (2) nennt *„4 der 6 übrigen Halbjahre 2020-H2 bis 2024-H2“*. Das sind **9** Halbjahre, nicht 6 (eigener Zählfehler im Plan) | derselbe Anteil von zwei Dritteln: **mindestens 6 von 9**. Die Zahl wird ausgegeben, sodass auch die strengere Lesart nachprüfbar bleibt |
+| 2 | Fear & Greed *„am Vortag“* | Tageswert von alternative.me (UTC-Tag) des Vortags. Ein fehlender Wert zählt als *an* (wie p71) |
+| 3 | Lücke zwischen Historie und Datenbeginn bei einem Start mitten im Monat | `p76 --erster-monat` lädt auch den ersten vorhandenen Monat. Eingefügt wird mit INSERT OR IGNORE, vorhandene Zeilen bleiben. **Jede überlappende Zeile** wird gegen den Bestand verglichen (`p77`, Abweichung > 1e-9 relativ). Bei einer systematischen Abweichung wird nicht gemessen |
+| 4 | Lauf B ohne Änderung am Betriebscode | `p78` liest den Quelltext von `rechne` und ersetzt **genau zwei** Stellen (Schrumpfung ab 2020-07, Lernbeginn 2020-06-01). Mit den Betriebswerten rechnet diese Kopie auf `data/` **zeilengleich** zur Referenz (nachgewiesen 23.10. 17:06, 10.732 = 10.732). Lauf A ruft den Erzeuger unverändert auf |
+| 5 | Monate ohne Modell | Bei weniger als 5.000 Treffern bleibt der Monat ohne Einstiege. Das ist die Regel des Erzeugers; die Monate werden ausgewiesen |
+| 6 | Zielgröße | wie p71: Schluss der Einstiegsstunde bis Schluss 24 h später, minus 0,48 %, Tag = UTC-Tag der Einstiegsstunde. Einstiege ohne Kurs werden gezählt und ausgewiesen |
+| 7 | Permutation | Strecken-Permutation über das ganze Raster 2020-07-01 bis 2026-08-31, 1.000 Ziehungen. Im Selbsttest (a) durchläuft jeder Zufallsfilter **alle drei** Kriterien, mit 200 inneren Ziehungen |
+| 8 | Kriterium (1) | über den ganzen Zeitraum, ohne Mindestzahl an Tagen *aus* |
+| 9 | Auskunft E-133 | die sechs Filter mit den Regeln aus p71, lang gerechnet ab 2020-06 (Nasdaq ab 2018 für den 200-T-Schnitt). Sie fließen nicht ins Urteil |
+
+**Werkzeuge:**
+- `p76_hist_download.py` (Download, SHA-256);
+- `p77_hist_aufbau.py` (Aufbau `data/_hist`, Abgleich);
+- `p78_regel0_lauf_ab.py` (Lauf A/B, `--probe` = R-R11 der Kopie);
+- `p79_f1_fg_gier.py` (Selbsttest, dann Messung).

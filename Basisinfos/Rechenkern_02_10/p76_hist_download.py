@@ -1,6 +1,9 @@
 """P76 DOWNLOAD REGEL0-HISTORIE (23.10.2026, Nutzer-Ja "L-A" + "und Download"; Voranalyse_REGEL0_Historie_23_10.md §2).
 
-    python Basisinfos/Rechenkern_02_10/p76_hist_download.py [--nur-liste]
+    python Basisinfos/Rechenkern_02_10/p76_hist_download.py [--nur-liste] [--erster-monat]
+
+--erster-monat: statt der Historie nur den ERSTEN vorhandenen Monat je Symbol der REGEL0-Menge (Messbasis + Zusatz bestand) - schliesst
+die Luecke vom Monatsanfang bis zum Datenbeginn und liefert die Ueberlappung fuer den Abgleich in p77.
 
 Binance Public Data (data.binance.vision, frei, ohne Konto): Stundenkerzen 1h, Monatsdateien, 2019-06 bis zum Monat VOR dem ersten Datensatz
 des Symbols in den vorhandenen Dateien (stundenkurse.db = Messbasis, stundenkurse_alle.db = Zusatz). Spot: data/spot/monthly/klines,
@@ -73,8 +76,16 @@ def main():
     S = symbole()
     print("Symbole %d (Spot %d, Futures %d)" % (len(S), sum(1 for v in S.values() if v[0] == "spot"), sum(1 for v in S.values() if v[0] != "spot")), flush=True)
     plan = []
+    erster = "--erster-monat" in sys.argv
+    if erster:   # nur der ERSTE vorhandene Monat der REGEL0-Menge (Messbasis + Zusatz bestand): Luecke bis Datenbeginn + Abgleich (p77)
+        c = sqlite3.connect("file:data/stundenkurse.db?mode=ro", uri=True)
+        menge = {r[0] for r in c.execute("SELECT DISTINCT symbol FROM stundenkurse")}
+        c.close()
+        with open(os.path.join("data", "_vergleich", "kern48jbz_gruppe_bestand.csv"), encoding="utf-8") as g:
+            menge |= {r["symbol"] for r in csv.DictReader(g, delimiter=";") if r["neu"] == "1"}
+        S = {s: v for s, v in S.items() if s in menge}
     for i, (s, (markt, paar, erst)) in enumerate(sorted(S.items())):
-        if erst <= AB:
+        if erst <= AB and not erster:
             continue
         try:
             ks = liste(markt, paar)
@@ -83,7 +94,7 @@ def main():
             ks = liste(markt, paar)
         for k in ks:
             m = re.search(r"-(\d{4}-\d{2})\.zip$", k)
-            if m and AB <= m.group(1) < erst:
+            if m and (m.group(1) == erst if erster else AB <= m.group(1) < erst):
                 plan.append((s, markt, paar, k))
         time.sleep(0.05)
         if i % 50 == 0:
