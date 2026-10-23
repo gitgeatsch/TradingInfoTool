@@ -1,0 +1,9 @@
+P70 GEGENPROBE
+
+  OK    G1 Kaufvorteil per eigener Schleife = p70  (2025 1492 Faelle +2.373 / ('1492', '+2.373') · 2026 971 Faelle -0.691 / ('971', '-0.691'))
+  FEHL  G2 Wartezeit REGEL0 gegen Nullwelt gleich (+-6 h)  (2025 REGEL0 88.6 h gegen Nullwelt 76.4 h · 2026 REGEL0 79.5 h gegen Nullwelt 76.5 h)
+  OK    G3 Selbsttest anderer Startwert: Zufallssignale |Mittel| < 0,2 %  (-0.079 % / -0.094 % / -0.063 %)
+  G4 Auskunft: Monate mit REGEL0 besser als Nullwelt: 2025 50 % · 2026 75 %
+  G5 2025 nur Faelle mit Signal: REGEL0 +2.871 % · Nullwelt gleiche Wartezeit +3.920 % · Rang 0.00 | 2026 nur Faelle mit Signal: REGEL0 +0.615 % · Nullwelt gleiche Wartezeit -0.393 % · Rang 1.00
+
+3 Pruefungen, 1 FEHLGESCHLAGEN

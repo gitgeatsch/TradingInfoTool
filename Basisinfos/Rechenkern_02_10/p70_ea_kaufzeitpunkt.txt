@@ -1,0 +1,23 @@
+P70 E-A KAUFZEITPUNKT · geplante Kaeufe am Monatsersten 2024-01..2026-08 · Fenster (3, 7, 14) Tage
+
+SELBSTTEST: Zufallssignale Kaufvorteil +0.052 %, Raenge 0.11 / 0.96 / 0.27 / 0.93 / 0.97 · Signale an Tiefs +5.886 %, Rang 1.00 -> BESTANDEN
+
+WAHL 2024 (alle Coins, Mittel der vier Mengen): 3 T +2.017 % · 7 T +3.143 % · 14 T +2.657 % -> gewaehlt N = 7 Tage
+
+  2025 bestand       Altcoins:  1381 Faelle · mit Signal 58 % · Kaufvorteil +1.618 % · Nullwelt +2.341 % · Rang 0.00 · Limit-Variante +1.671 %
+  2025 unverzerrt_1  Altcoins:  1492 Faelle · mit Signal 66 % · Kaufvorteil +2.373 % · Nullwelt +2.678 % · Rang 0.01 · Limit-Variante +2.443 %
+  2025 unverzerrt_2  Altcoins:  1429 Faelle · mit Signal 70 % · Kaufvorteil +2.083 % · Nullwelt +2.534 % · Rang 0.00 · Limit-Variante +2.135 %
+  2025 unverzerrt_3  Altcoins:  1444 Faelle · mit Signal 66 % · Kaufvorteil +2.086 % · Nullwelt +2.500 % · Rang 0.00 · Limit-Variante +2.167 %
+  2025 KERN (BTC/ETH/SOL, vier Mengen gemeinsam): 108 Faelle · mit Signal 55 % · Kaufvorteil +0.417 % · Nullwelt +0.827 % · Rang 0.05
+
+  2026 bestand       Altcoins:   992 Faelle · mit Signal 67 % · Kaufvorteil -1.049 % · Nullwelt -1.585 % · Rang 1.00 · Limit-Variante -1.077 %
+  2026 unverzerrt_1  Altcoins:   971 Faelle · mit Signal 73 % · Kaufvorteil -0.691 % · Nullwelt -1.531 % · Rang 1.00 · Limit-Variante -0.704 %
+  2026 unverzerrt_2  Altcoins:   925 Faelle · mit Signal 67 % · Kaufvorteil -0.145 % · Nullwelt -1.029 % · Rang 1.00 · Limit-Variante -0.082 %
+  2026 unverzerrt_3  Altcoins:   961 Faelle · mit Signal 74 % · Kaufvorteil -0.706 % · Nullwelt -1.414 % · Rang 1.00 · Limit-Variante -0.728 %
+  2026 KERN (BTC/ETH/SOL, vier Mengen gemeinsam): 72 Faelle · mit Signal 65 % · Kaufvorteil +1.663 % · Nullwelt +0.298 % · Rang 1.00
+
+URTEIL nach §5: TRAEGT NICHT
+
+Auskunft je Regime (BTC-Zickzack -20 %/+25 %, unverzerrt_1, alle Coins, N gewaehlt):
+  auf  1991 Faelle · Kaufvorteil -1.982 % · Nullwelt -1.794 % · Rang 0.03
+  ab   1737 Faelle · Kaufvorteil +6.190 % · Nullwelt +5.929 % · Rang 0.99

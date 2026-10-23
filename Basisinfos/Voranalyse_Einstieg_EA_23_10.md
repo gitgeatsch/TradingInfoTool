@@ -74,3 +74,50 @@ Bitpanda: Spot über den Broker oder Fusion, Limit-Kauf bei Spot fast überall m
 ## 6. Recherche 4-Jahres-Zyklus und Bärenmarktdauer
 
 *(folgt, Recherche läuft)*
+
+## 7. Ergebnis E-A Fassung 1b: TRÄGT NICHT – das Vorzeichen wechselt mit dem Jahr (23.10.2026; `p70_ea_kaufzeitpunkt.py`, `p70_gegenprobe.py` → `.txt`)
+
+**Selbsttest:** bestanden. Zufallssignale auf einem Zufallspfad ergeben +0,05 % (Gegenprobe G3 mit anderem Startwert: −0,06 bis −0,09 %); die Positivkontrolle ergibt +5,9 %, Rang 1,00.
+
+**Wahl auf 2024** (alle Coins): N = 3 / 7 / 14 Tage ergeben +2,02 / +3,14 / +2,66 %. **Gewählt: 7 Tage.**
+
+**Bestätigung, Kaufvorteil je eingesetztem Euro** (Wertunterschied am gemeinsamen Endpunkt):
+
+| | 2025 | 2026 |
+|---|---|---|
+| Altcoins unverzerrt 1 / 2 / 3: REGEL0 | +2,37 / +2,08 / +2,09 % | −0,69 / −0,15 / −0,71 % |
+| Altcoins: Nullwelt (Zufallsstunden im Fenster) | +2,68 / +2,53 / +2,50 % | −1,53 / −1,03 / −1,41 % |
+| **Altcoins: Rang REGEL0 gegen Nullwelt** | **0,01 / 0,00 / 0,00** | **1,00 / 1,00 / 1,00** |
+| Kern BTC/ETH/SOL (vier Mengen gemeinsam): REGEL0 / Nullwelt / Rang | +0,42 / +0,83 / **0,05** | +1,66 / +0,30 / **1,00** |
+| Limit-Variante (0,5 % unter dem Signal) | ≈ wie ohne Limit (+0,02 bis +0,07 Pp) | ≈ wie ohne Limit |
+
+**Urteil nach §5: TRÄGT NICHT.**
+- 2025 kauft REGEL0 innerhalb der Woche **schlechter** als ein zufälliger Zeitpunkt, 2026 **besser**.
+- Kern und Altcoins zeigen dasselbe Bild.
+- Der Kauf am festen Tag bleibt.
+
+**Gegenprobe:**
+- G1: eigene Schleife, gleich.
+- G2 ✘ (Fairness): REGEL0 kauft im Fenster im Mittel **später** als die Nullwelt (2025 88,6 h gegen 76,4 h). 2025 war späteres Kaufen günstiger; der Unterschied hilft REGEL0 also und erklärt den schlechten Rang **nicht**.
+- **G5, Nullwelt mit gleicher Wartezeit:** 2025 Rang **0,00**, 2026 Rang **1,00**. Das Urteil steht.
+- G3: Selbsttest mit anderem Startwert ✔.
+- Auskunft G4: Monate, in denen REGEL0 vorn liegt: 2025 50 %, 2026 75 %.
+
+**Auskunft je Regime** (BTC-Zickzack −20 % / +25 %, unverzerrt 1, alle Coins, 7 Tage):
+
+| Regime | Kaufvorteil REGEL0 | Nullwelt | Rang |
+|---|---|---|---|
+| steigend | −1,98 % | −1,79 % | **0,03** |
+| fallend | +6,19 % | +5,93 % | **0,99** |
+
+- Im **fallenden** Markt kauft REGEL0 besser als der Zufall, im **steigenden** schlechter.
+- Das Regime ist vorab nicht erkennbar (2.599). Ein Schalter darauf wäre die schon gescheiterte Timing-Frage.
+- Fast der ganze Kaufvorteil ist **Wartedrift**: Im fallenden Markt ist **jedes** Warten gut (+6 %), im steigenden schlecht (−2 %). Er ist kein Vorteil von REGEL0.
+
+#### Zwischenfazit
+
+| | |
+|---|---|
+| **Was das Ergebnis heißt** | REGEL0 trifft nach einem Rückgang einen Zeitpunkt, der **24 h** lang besser ist (E-131). Für einen **gehaltenen** Kauf hängt der Vorteil am Regime und kippt mit ihm. Das bestätigt M-0c: Der Vorsprung ist nach 72 h weg |
+| **Was folgt** | E-A ist für die Kernwerte und Altcoin-Käufe **erledigt**; Stufe B (mehr Zyklen) entfällt, weil schon Stufe A keinen Hinweis liefert |
+| **Für die Frage „ist REGEL0 ausgereizt?“** | Auf Bitpanda sind jetzt alle Wege geprüft: Kosten (Haltedauer, Limit), Auswahl, Timing geplanter Käufe. Trägt das Signal, dann nur als 24-h-Handel mit niedrigen Kosten (Kraken, E-130) |
