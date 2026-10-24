@@ -2663,3 +2663,8 @@ Schritt7 §23.24.
 - L1–L6 als Fakt auf der Statusseite, in den Handlungsmails und in der GUI.
 - Die Rezessionsampel ist rot nur bei Zinskurve und Sahm-Regel. Das bestätigt eine Rezession, es warnt nicht vor.
 - NB-Kontrolle K-GM-1 im nächsten Bündel.
+
+**Nachtrag 24.10.2026 (67) — Voranalyse Robustheit REGEL0** (E-138):
+- Die Abhängigkeit vom Datenbeginn sitzt im Querschnitt (Monatsmodell, Schrumpfung) und an den marktweiten Signaltagen.
+- Das gemessene Plus der REGEL0 war nie von null zu trennen.
+- Nächster Schritt zur Abstimmung: Messplan R (Vorsprung gegen Zufallsstunden bei sechs gemeinsamen Startdaten, Zerlegung in vier Bausteine).

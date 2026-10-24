@@ -1,0 +1,5 @@
+P82 GEGENPROBE Voranalyse Robustheit REGEL0
+G1 tau2 = 0 (Erzeuger-Ausgabe): Referenz 32 von 33 · lang 23 von 33 -> NICHT OK
+G2 Einzeltag-Bootstrap: Referenz [-0.280; +0.572] % (schliesst 0 ein) · Differenz [-0.871; -0.173] % · t-Test Tagesdifferenz (gleich gewichtete Tage, 631 gemeinsame) Mittel -0.150 %, t = -1.17 -> NICHT OK
+G3 Symbole ohne fruehere Kurse (Datenbeginn gleich): 23 · Kursreihe zeilengleich in beiden Dateien: 23 · abweichend: keine -> ok
+ERGEBNIS 1 von 3

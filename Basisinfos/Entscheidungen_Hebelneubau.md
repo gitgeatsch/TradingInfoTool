@@ -1737,3 +1737,26 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Nutzer: *„ja HY-Aufschlag“*.
 - L4 trägt den High-Yield-Aufschlag (FRED `BAMLH0A0HYM2`, nur ~3 Jahre verfügbar, deshalb nur Fakt).
 - Prüfstand p81 8/8.
+
+# E-138 · Voranalyse Robustheit REGEL0: Die Abhängigkeit sitzt im Querschnitt und an den Signaltagen; das Plus der Referenz war nie von null zu trennen (24.10.2026)
+
+**24.10.2026** · Nutzer: *„Voranalyse Robustheit starten, prüfen gegenprüfen und doku“*. Grundlage: `Voranalyse_REGEL0_Robustheit_24_10.md`; `p82`, `p82b`, Gegenprobe `p82_gegenprobe` (zwei Aussagen berichtigt, alle drei tragend).
+
+**Befunde:**
+- **Datenbeginn:** Die Messbasis beginnt dort, wo die Terminmarktdaten beginnen (2021-12, jüngere Futures später). BTC, BNB, SOL, AVAX und XLM stehen erst ab 2023-09 drin, obwohl Binance sie seit 2019/20 führt. Das ist keine Wahl für die REGEL0.
+- **Querschnitt:** Auch 23 Symbole mit streng gleicher Kursreihe haben nur 36 % gleiche Einstiege. Die Abhängigkeit kommt also aus Monatsmodell bzw. Schrumpfung:
+  - Die Trainingsmenge ist Anfang 2024 lang um 45 % größer.
+  - τ² ist in der Referenz in 32 von 33 Monaten 0.
+- **Signaltage:** Rund 99 % der Differenz liegen an Tagen mit mehr als 20 Signalen. An ruhigen Tagen verlieren beide Fassungen (−2,0 % bzw. −0,5 % je Handel).
+- **Rauschen:**
+  - Das Plus der Referenz (+0,153 %) war nie von null zu trennen, Band [−0,23; +0,59].
+  - Die Differenz ist je Handel deutlich, Band [−0,88; −0,17].
+  - Je Tag gleich gewichtet sind es nur −0,15 % (t = −1,2).
+
+**Folge:** Messplan R Fassung 1 zur Abstimmung (§5):
+- R1 gemeinsamer Datenbeginn an sechs Startdaten;
+- R2 Zerlegung in vier Bausteine, die alle zusammen die Referenz nachbilden müssen;
+- Hauptgröße ist der Vorsprung gegen Zufallsstunden derselben Coins, je Handel und je Tag;
+- Selbsttest vor dem ersten Blick.
+
+**Betrieb unverändert.**

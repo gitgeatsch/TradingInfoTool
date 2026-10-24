@@ -1,0 +1,5 @@
+23 streng unveraenderte Symbole: Einstiege gemeinsam 801, nur lang 752, nur Referenz 663 -> gleich 36.1 %
+Tage mit 1-5 Signalen: 282 Tage · Referenz 564 Handel -1.970 % · lang 640 Handel -1.597 % · Anteil an der Differenz -3 %
+Tage mit 6-20 Signalen: 241 Tage · Referenz 2105 Handel -0.500 % · lang 2450 Handel -0.574 % · Anteil an der Differenz 4 %
+Tage mit 21-60 Signalen: 172 Tage · Referenz 5167 Handel +0.311 % · lang 5788 Handel -0.307 % · Anteil an der Differenz 61 %
+Tage mit 61- Signalen: 46 Tage · Referenz 2896 Handel +0.759 % · lang 2823 Handel +0.080 % · Anteil an der Differenz 38 %
