@@ -261,9 +261,11 @@ def stand(d: dict | None = None, heute: date | None = None) -> dict:
 # Nutzer 24.10.: *"E2 alle"* (L1-L6) · *"E3 ja"* (rot nur bei Kurve UND Sahm) · *"E4 alle"* (Zeile in REGEL0, B1, B3, B4).
 # Grundlage: Indikator-Atlas E-135 (Messplan_Indikator_Atlas_23_10.md, p73/p75). ⚠️ FAKT, KEIN SIGNAL - keine Makrogroesse laeuft den
 # BTC-Wenden voraus (T1); die Zeile sperrt nichts und aendert nichts. Einzige Farbe: Rezessionsampel ROT.
-GESAMT_AB = {"T10Y3M": 6, "SAHMREALTIME": 6, "NASDAQCOM": 60, "DGS10": 6, "THREEFYTP10": 6, "DCOILBRENTEU": 6, "CBBTCUSD": 15}
+GESAMT_AB = {"T10Y3M": 6, "SAHMREALTIME": 6, "NASDAQCOM": 60, "DGS10": 6, "THREEFYTP10": 6, "DCOILBRENTEU": 6, "CBBTCUSD": 15,
+             "BAMLH0A0HYM2": 4}
 # Reihe: Jahre Abruf. Ohne Verzug (Beobachtungsdatum) - angezeigt wird der Stand, gerechnet wird nichts Kuenftiges.
 # NASDAQCOM 60 J: die Baerenmarkt-Erkennung braucht das Allzeithoch (wie p73 ab 1971); CBBTCUSD (Coinbase, FRED) ab 2014-12.
+# BAMLH0A0HYM2 (ICE BofA High-Yield-Aufschlag, Nutzer 24.10.: *"ja HY-Aufschlag"*): FRED liefert aus Lizenzgruenden nur ~3 Jahre.
 KURVE_FENSTER_M = 24          # Kurve "angeschlagen": Monatsmittel < 0 binnen 24 Monaten - deckt alle Vorlaeufe der 10J-3M (0-16 Mon.)
 SAHM_SCHWELLE = 0.50          # und 9 von 11 der 10J-2J (4-33 Mon., ohne 101) aus p73 (d); Sahm >= 0,50 = Rezessionssignal (p73 (e))
 NASDAQ_MEDIAN_M = 60          # Median der 13 Nasdaq-Bullenmaerkte 1971-2026 (p73 (a), 18-239 Mon.)
@@ -274,7 +276,7 @@ GEMESSEN = {
           "Beginn – es bestätigt, es warnt nicht vor; ein Fehlalarm (07–10/2024)",
     "L2": "Nasdaq-Bullenmärkte seit 1971: Median 60 Mon. (18–239); BTC: 4 Zyklen – zu wenige für eine Regel",
     "L3": "Geldausweitung ist keine Voraussetzung für BTC oder Aktien (Atlas E-135)",
-    "L4": "Fakt, keine gemessene Regel",
+    "L4": "Fakt, keine gemessene Regel (den High-Yield-Aufschlag liefert FRED nur ~3 Jahre – keine eigene Messung möglich)",
     "L5": "Fakt, keine gemessene Regel (Ölschocks gingen Inflations- und Rezessionsschüben voraus)",
     "L6": "einziger gemessener Vorläufer der BTC-Wenden (Rang 0,97), zum Teil aus dem Kurs; als Regel offen",
 }
@@ -378,6 +380,8 @@ def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
     tp, tp_dat = _letzt(ex["THREEFYTP10"])
     br, br_dat = _letzt(ex["DCOILBRENTEU"])
     br_vor = _vor(ex["DCOILBRENTEU"], 365)
+    hy, hy_dat = _letzt(ex["BAMLH0A0HYM2"])
+    hy_vor = _vor(ex["BAMLH0A0HYM2"], 365)
     W = {"rezession": L1,
          "nasdaq": {"stand": _letzt(nq), "bull_seit": nq_bull, "bull_monate": None if offen or not nq_bull else round(_monate(nq_bull, nq.index[-1]), 1),
                     "baer_seit": offen[0].date().isoformat() if offen else None, "baer_tief": offen[2] if offen else None},
@@ -386,7 +390,8 @@ def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
          "geld": {"m2_jj": (float(m2y.iloc[-1]), (m2y.index[-1] - pd.Timedelta(days=REIHEN["M2SL"])).date().isoformat()),
                   "netto_26w": None if not n_vor else float(netto.iloc[-1] / n_vor - 1),
                   "netto_stand": (roh["WALCL"].dropna().index[-1] - pd.Timedelta(days=REIHEN["WALCL"])).date().isoformat()},
-         "anleihen": {"zehn": (d10, d10_dat), "zehn_12m": None if d10_vor is None else d10 - d10_vor, "praemie": (tp, tp_dat)},
+         "anleihen": {"zehn": (d10, d10_dat), "zehn_12m": None if d10_vor is None else d10 - d10_vor, "praemie": (tp, tp_dat),
+                      "hy": (hy, hy_dat), "hy_12m": None if hy_vor is None else hy - hy_vor},
          "oel": {"brent": (br, br_dat), "brent_12m": None if not br_vor else br / br_vor - 1},
          "fg": fg}
     # Texte
@@ -409,6 +414,8 @@ def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
     a = W["anleihen"]
     t4 = "10J %s %%%s · Laufzeitprämie %s %%" % (_z(a["zehn"][0]), (" (%s Pp in 12 M)" % ("%+.2f" % a["zehn_12m"]).replace(".", ","))
                                                 if a["zehn_12m"] is not None else "", _z(a["praemie"][0]))
+    t4 += " · High-Yield-Aufschlag %s %%%s" % (_z(a["hy"][0]), (" (%s Pp in 12 M)" % ("%+.2f" % a["hy_12m"]).replace(".", ","))
+                                              if a["hy_12m"] is not None else "")
     o = W["oel"]
     t5 = "Brent %s $%s" % (_z(o["brent"][0], 0), (" (%s in 12 M)" % _p(o["brent_12m"])) if o["brent_12m"] is not None else "")
     t6 = ("F&G %d (%s%s)" % (fg["wert"], fg.get("klasse") or "", ", Extrem" if fg["wert"] < 25 or fg["wert"] > 75 else "")) if fg else "F&G nicht verfügbar"
@@ -420,7 +427,7 @@ def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
                        t2n, t2b, "10J %s %%" % _z(a["zehn"][0]), "Brent %s $" % _z(o["brent"][0], 0)] + ([t6.split(" (")[0]] if fg else []))
     return {"stand": heute.isoformat(), "rot": L1["rot"], "zeilen": zeilen, "kurz": kurz, "werte": W,
             "datenstand": {"Kurve": L1["kurve_3m"][1], "Sahm": L1["sahm"][1], "Nasdaq": n["stand"][1], "BTC": b["stand"][1],
-                           "10J": d10_dat, "Prämie": tp_dat, "Brent": br_dat, "F&G": (fg or {}).get("datum")},
+                           "10J": d10_dat, "Prämie": tp_dat, "HY": hy_dat, "Brent": br_dat, "F&G": (fg or {}).get("datum")},
             "berechnet_am": datetime.now(timezone.utc).isoformat(timespec="seconds"), "fehler": None}
 
 

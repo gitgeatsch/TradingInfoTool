@@ -3,7 +3,7 @@ Lagebild Gesamtmarkt nicht neu berechnet - alter Stand 2026-10-24 bleibt: Runtim
 Lagebild Gesamtmarkt nicht neu berechnet - alter Stand 2026-10-20 bleibt: ConnectionError: gestellt: Gesamtmarkt-Quelle weg, api_key=*** (2026-10-24)
 G1   bestanden Nasdaq-Phasen 13 bitgleich zu p73 True · Bull seit 2025-04-08 (live 2025-04-08, 18.5 Mon.) · letzte Inversion {'10J–2J': '2024-08', '10J–3M': '2025-08'} = p73 {'10J–2J': '2024-08', '10J–3M': '2025-08'} · Sahm 0.00
 G2   bestanden Auskunft 1982-2026-09: ROT in 81 Monaten, 6 Strecken · nahe einer Rezession (+-12 Mon.): 1982-01..1983-07, 1990-11..1992-04, 2001-06..2002-11, 2008-04..2009-06, 2020-04..2021-04 · Fehlalarm: 2024-07..2024-10 · Rezessionen mit ROT (ab 12 Mon. vorher bis Ende): 5 von 5
-G3   bestanden fehlt / veraltet / ok / Vermerk: True / True / ok / True · O54-Zeile unveraendert True · 6 Zeilen True
+G3   bestanden fehlt / veraltet / ok / Vermerk: True / True / ok / True · O54-Zeile unveraendert True · 6 Zeilen True · L4 mit HY-Aufschlag True (Stand 2026-10-22)
 G4   bestanden O54 alt mit Vermerk True · Gesamtmarkt alt mit Vermerk 'RuntimeError: Makro-Reihen nicht abgerufen (2026-10-24)' · Schluessel verborgen True
 G5   bestanden O54 frisch True (Stand 2026-10-24) · Gesamtmarkt alter Stand 2026-10-20 mit Vermerk 'ConnectionError: gestellt: Gesamtmarkt-Quelle weg,'
 G6   bestanden REGEL0 'Gesamtmarkt' unter 'Makro' + Technik + HTML True · B1/B3/B4 eigene Zeile True · Job viermal zeile_mail True
@@ -17,7 +17,7 @@ Lagebild heute:
   L1 Rezessionsampel      Warnung der Zinskurve (10J–2J zuletzt 08/2024, 10J–3M zuletzt 08/2025 invertiert), Sahm 0,00 – kein Rot
   L2 Reifegrad            Nasdaq-Bull seit 18 Mon. (Median 60) · BTC -35 % vom Hoch (vor 13 Mon.)
   L3 Geld                 M2 +5,7 % J/J · Netto-Liquidität +1,8 % in 26 W
-  L4 Zinsen und Anleihen  10J 4,96 % (+0,99 Pp in 12 M) · Laufzeitprämie 0,99 %
+  L4 Zinsen und Anleihen  10J 4,96 % (+0,99 Pp in 12 M) · Laufzeitprämie 0,99 % · High-Yield-Aufschlag 3,40 % (+0,39 Pp in 12 M)
   L5 Öl                   Brent 115 $ (+90 % in 12 M)
   L6 Fear & Greed         F&G 51 (Neutral)
 Mailzeile: Kurve warnt, kein Rot · Nasdaq-Bull seit 18 Mon. (Median 60) · BTC -35 % vom Hoch (vor 13 Mon.) · 10J 4,96 % · Brent 115 $ · F&G 51 · Stand 24.10.

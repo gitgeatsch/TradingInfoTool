@@ -1731,4 +1731,9 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 
 **Ehrlich mitgeführt:** ROT kam 1982–2026 bei allen 5 Rezessionen, aber 1–3 Monate **nach** deren Beginn; dazu ein Fehlalarm 2024. Es bestätigt also, es warnt nicht vor.
 
-**Kein Gate, kein Gewicht.** **Offen zur Abstimmung:** High-Yield-Aufschlag in L4. **NB:** K-GM-1 im nächsten Bündel.
+**Kein Gate, kein Gewicht.** **NB:** K-GM-1 im nächsten Bündel.
+
+**Nachtrag 24.10.2026:**
+- Nutzer: *„ja HY-Aufschlag“*.
+- L4 trägt den High-Yield-Aufschlag (FRED `BAMLH0A0HYM2`, nur ~3 Jahre verfügbar, deshalb nur Fakt).
+- Prüfstand p81 8/8.

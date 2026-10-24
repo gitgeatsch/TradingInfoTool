@@ -6,7 +6,8 @@ Dateien (D:\\CLAUDE_Temp). Liest FRED und alternative.me live (frei, nur lesend)
   G1  R-R11 gegen die Atlas-Rechnung p73 (Zwischenablage data/_ra/p73_fred.csv, Stand 23.10.): Baerenmarkt-Phasen des Nasdaq bitgleich
       zu p73.baer_phasen, laufender Bullenmarkt seit 2025-04-08; letzte Inversion je Kurve wie p73 (d); Sahm wie p73 (e)
   G2  Auskunft Rueckschau 1982-2026: Monate mit Rezessionsampel ROT gegen NBER-Rezessionen (Treffer, Fehlalarme) - keine Bedingung
-  G3  drei Zustaende (fehlt / veraltet / ok) in zeile_gesamtmarkt und stand(); Fehlervermerk sichtbar; O54-Zeile unveraendert
+  G3  drei Zustaende (fehlt / veraltet / ok) in zeile_gesamtmarkt und stand(); Fehlervermerk sichtbar; O54-Zeile unveraendert;
+      L4 traegt den High-Yield-Aufschlag (Nutzer 24.10.)
   G4  lauf() mit kaputtem Abruf: O54 UND Gesamtmarkt behalten den alten Stand MIT Vermerk, Schluessel verborgen
   G5  lauf() nur der Gesamtmarkt kaputt: O54 frisch, Gesamtmarkt alt mit Vermerk (eigener Fehlerpfad)
   G6  Mails: REGEL0 (Einschaetzung 'Gesamtmarkt' unter 'Makro', Technik, HTML); B1/B3/B4 mit zeile_mail -> eigene Zeile 'Gesamtmarkt';
@@ -118,10 +119,11 @@ ohne = dict(d)
 ohne.pop("gesamtmarkt")
 pruefe("G3", ML.zustand_gesamtmarkt(None) == "fehlt" and ML.zustand_gesamtmarkt(alt) == "veraltet" and ML.zustand_gesamtmarkt(d) == "ok"
        and "NICHT VERFÜGBAR" in z_f and "VERALTET" in z_v and "VERALTET" not in z_ok and "letzter Abruf gescheitert" in z_e
-       and ML.stand(alt)["gesamtmarkt"]["zustand"] == "veraltet" and ML.zeile(d) == ML.zeile(ohne) and len(g["zeilen"]) == 6,
-       "fehlt / veraltet / ok / Vermerk: %s / %s / %s / %s · O54-Zeile unveraendert %s · 6 Zeilen %s" % (
+       and ML.stand(alt)["gesamtmarkt"]["zustand"] == "veraltet" and ML.zeile(d) == ML.zeile(ohne) and len(g["zeilen"]) == 6
+       and "High-Yield-Aufschlag" in g["zeilen"][3][2] and g["datenstand"].get("HY"),
+       "fehlt / veraltet / ok / Vermerk: %s / %s / %s / %s · O54-Zeile unveraendert %s · 6 Zeilen %s · L4 mit HY-Aufschlag %s (Stand %s)" % (
            "NICHT VERFÜGBAR" in z_f, "VERALTET" in z_v, ML.zustand_gesamtmarkt(d), "gescheitert" in z_e, ML.zeile(d) == ML.zeile(ohne),
-           len(g["zeilen"]) == 6))
+           len(g["zeilen"]) == 6, "High-Yield-Aufschlag" in g["zeilen"][3][2], g["datenstand"].get("HY")))
 
 
 # ══ G4 / G5 lauf mit kaputtem Abruf ═══════════════════════════════════════════════════════════════════════════════════════════

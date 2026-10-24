@@ -495,7 +495,7 @@ kontrollen:
     paket: Gesamtmarkt
     commit: ""
     art: manuell
-    nachweis: "Log nach Start bzw. 06:35: 'Lagebild Gesamtmarkt: ... · Stand <heute>' ohne 'Fehler'; Diagnose makro_lage.gesamtmarkt: zustand ok, 6 Zeilen L1-L6, datenstand je Reihe (Sahm ~1 Monat alt ist normal); Statusseite: Makro-Karte mit Zeile 'Gesamtmarkt' und aufklappbaren L1-L6; naechste REGEL0-/Spot-Mail: Zeile 'Gesamtmarkt' direkt unter 'Makro'"
+    nachweis: "Log nach Start bzw. 06:35: 'Lagebild Gesamtmarkt: ... · Stand <heute>' ohne 'Fehler'; Diagnose makro_lage.gesamtmarkt: zustand ok, 6 Zeilen L1-L6 (L4 mit High-Yield-Aufschlag), datenstand je Reihe (Sahm ~1 Monat alt ist normal); Statusseite: Makro-Karte mit Zeile 'Gesamtmarkt' und aufklappbaren L1-L6; naechste REGEL0-/Spot-Mail: Zeile 'Gesamtmarkt' direkt unter 'Makro'"
     faellig_bis: "2026-10-31"
     status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------

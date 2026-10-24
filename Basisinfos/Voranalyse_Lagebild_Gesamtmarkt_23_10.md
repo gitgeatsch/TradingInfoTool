@@ -96,7 +96,7 @@ Nutzer 24.10.: *„E2 alle“* (L1–L6) · *„E3 ja“* (Rezessionsampel rot n
   - Prod und echte Ablage unverändert.
 - **Statusseite im Browser** gegen eine Kopie der Desktop-DB (Prüfserver, POST gesperrt): Block gerendert, L1–L6 mit Messbefund, keine Skriptfehler.
 - **Suite:** neues Paket `Gesamtmarkt`; die Prüfung im Paket `Makro` ist auf `zeile_mail()` nachgezogen.
-- **Ergänzungsvorschlag offen:** der High-Yield-Aufschlag (FRED `BAMLH0A0HYM2`, frei, auf FRED erst ab 2023-10) in L4. Er wird nur nach Ja gebaut.
+- ✔ **High-Yield-Aufschlag in L4** (Nutzer 24.10.: *„ja HY-Aufschlag“*): FRED `BAMLH0A0HYM2` (ICE BofA, frei). FRED liefert ihn aus Lizenzgründen nur ~3 Jahre, deshalb gibt es keine eigene Messung, nur den Fakt. Stand 24.10.: 3,40 % (+0,39 Pp in 12 M). Prüfstand G3 prüft ihn mit (8/8).
 
 **Lagebild am 24.10.2026:**
 - L1: Warnung der Zinskurve (10J–2J zuletzt 08/2024, 10J–3M zuletzt 08/2025 invertiert), Sahm 0,00, kein Rot.
