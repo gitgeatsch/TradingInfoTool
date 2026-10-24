@@ -93,7 +93,7 @@ Werkzeuge:
 
 Damit stehen die drei tragenden Aussagen, zwei davon in der berichtigten Form.
 
-## 5. Messplan R Fassung 1 — VORSCHLAG zur Abstimmung (erst nach Ja vorab festgelegt und committet)
+## 5. Messplan R Fassung 1 — VORAB FESTGELEGT 24.10.2026 (Nutzer: *„ja Messplan R festlegen“*)
 
 **Frage:** Ist der Vorsprung der REGEL0 gegen den Markt derselben Coins robust gegen den Datenbeginn, und welcher Baustein trägt die Abhängigkeit?
 
@@ -131,3 +131,17 @@ B2 bis B4 laufen über eine Quelltextkopie wie in `p78`, mit R-R11 der Kopie. **
 **Aufwand:** ~1 h Rechenzeit, kein Download, keine Betriebsänderung.
 
 ⚠️ Nur die Menge *bestand*. Für die eingestellten Paare liegt keine Historie vor 2021 vor; das wird als Einschränkung ausgewiesen.
+
+### 5.1 Auslegung vor dem ersten Lauf (24.10.2026, vor jeder Rechnung einer Variante)
+
+| # | Offene Stelle | Auslegung |
+|---|---|---|
+| 1 | Z1 „Vorsprung gegen Zufallsstunden derselben Coins im selben Jahr“ | **je Einstieg:** Ertrag 24 h (Schluss zu Schluss, ohne Kosten) **minus die Drift von Coin und Jahr**. Die Drift ist das Mittel aller gültigen Stunden des Coins in diesem Jahr, also genau der Erwartungswert der Nullwelt aus `p69` (ohne Limit). Z1 = Mittel über die Einstiege, je Handel (Gewicht 1) und je Tag (Gewicht 1/Handel am Tag) |
+| 2 | ⚠️ **Rang** | Die Nullwelt aus `p69` streut ihre Stunden über das Jahr; die REGEL0 ballt ihre Handel an Signaltagen (§3.4). Ein Rang gegen diese Nullwelt kennt das Rauschen der Ballung nicht. **Deshalb entscheidet der Selbsttest (a), welcher Rang gilt:** zuerst der Rang wie `p69` (1.000 Ziehungen). Liegt sein Fehlalarm in (a) über 5 %, gilt der **Tagesblock-Rang**: Anteil von Z1 > 0 über 1.000 Ziehungen von 7-Tage-Blöcken (wie §3.5) |
+| 3 | Selbsttest (a) | 100 Zufallsregeln, **die die Tagesballung der Referenz behalten**. Die Tage der Referenz (mit ihrer Zahl und ihren Coins) werden innerhalb des Jahres zufällig auf andere Tage gelegt; je Einstieg eine zufällige gültige Stunde dieses Coins am neuen Tag. Fehlalarm = Rang ≥ 0,95, je Handel und je Tag; Soll je ≤ 5 % |
+| 4 | Selbsttest (b) | dieselben 100 Zufallsregeln, je Einstieg +0,5 Pp gepflanzt: erkannt (Rang ≥ 0,95) in ≥ 80 %, je Handel und je Tag |
+| 5 | Kriterium (2) | gilt für **beide** Gewichtungen |
+| 6 | R-R11 | (i) Z2 netto der Referenz 2025/2026 = `p69` „ohne Limit“ (+0,132 / −0,021 %) · (ii) S = 2019-06 ergibt zeilengleich `einstiege_A.csv` (die Daten beginnen 2019-06-11) · (iii) die Quelltextkopie für R2 mit allen Schaltern aus ergibt auf `data/_hist` zeilengleich `einstiege_A.csv` |
+| 7 | „Referenzbeginn je Symbol“ (R2) | der erste Anker der Symbols in der Referenz (`data/`). Gezählt werden Anker mit Stunde ≥ diesem Wert |
+| 8 | Kurse | für alle Varianten aus `data/_hist`; für 2024–26 gleich den Kursen der Messbasis |
+| 9 | Werkzeug | `p83_robustheit_r.py` (`--selbsttest`, dann die Messung) |
