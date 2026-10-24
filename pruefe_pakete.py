@@ -22391,13 +22391,54 @@ def paket_makro() -> None:
     _qs, _qb, _qr = _quelltext("remote/server.py"), _quelltext("scheduler/background.py"), _quelltext("agent/regel0_mail.py")
     pruefe(P, "Statusseite: Makro-Abschnitt VOR Betrieb & Lage; Job externe_reihen; REGEL0, B1/B3/B4 und C1 (P19) bekommen die Zeile",
            _qs.index('id="makro-kopf"') < _qs.index("section-header section-system") and "_ML.lauf()" in _qb
-           and 'makro=lambda r: __import__("agent.makro_lage"' in _qb and _qb.count('__import__("agent.makro_lage", fromlist=["zeile"]).zeile()') == 4
+           and 'makro=lambda r: __import__("agent.makro_lage"' in _qb
+           and _qb.count('__import__("agent.makro_lage", fromlist=["zeile_mail"]).zeile_mail()') == 4      # L-A 24.10.: Zeile + Gesamtmarkt
            and "makro" in _qr.split("def _als_text")[0])
     _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "o54_pruefstand.py")],
                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     pruefe(P, "⚠️⚠️ Pruefstand O54: R-R11 bitgleich zu p51, Abgleich mit der Messung, drei Zustaende, kaputter Abruf, Mails + Versand, "
               "Statusseite, Job, Prod unveraendert", "8 von 8 bestanden" in (_r.stdout or ""),
            " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+
+
+def paket_gesamtmarkt() -> None:
+    """L-A (24.10.2026, E-137): LAGEBILD GESAMTMARKT L1-L6 ALS FAKT - Statusseite (Makro-Karte), REGEL0, B1/B3/B4 und C1, GUI, Diagnose.
+
+    Nutzer 24.10.: *"E2 alle"* · *"E3 ja"* (Rezessionsampel rot nur bei Zinskurve UND Sahm-Regel) · *"E4 alle"*. Geprueft: dieselbe
+    Rechnung wie die Atlas-Rechnung p73 (R-R11, ohne Netz auf der Zwischenablage), eigener Fehlerpfad (O54 haengt nie daran), kein Gate;
+    der Pruefstand p81 liest FRED/alternative.me live und schreibt nur Wegwerf-Dateien."""
+    P = "Gesamtmarkt"
+    import io as _io
+    import os as _os
+    import subprocess as _sp
+    from contextlib import redirect_stdout as _rs
+
+    import agent.makro_lage as _ML
+
+    sys.path.insert(0, _os.path.join("Basisinfos", "Rechenkern_02_10"))
+    with _rs(_io.StringIO()):
+        import p73_atlas_t3_lang as _P73
+    _D = _P73.lade()
+    pruefe(P, "R-R11: Baerenmarkt-Phasen des Nasdaq bitgleich zu p73 (13 abgeschlossen, Bull seit 2025-04-08)",
+           _ML.baer_phasen(_D["NASDAQCOM"]) == _P73.baer_phasen(_D["NASDAQCOM"]) and len(_ML.baer_phasen(_D["NASDAQCOM"])[0]) == 13)
+    _r = _ML.rezession(_D["T10Y2Y"], _D["T10Y3M"], _D["SAHMREALTIME"], _D["T10Y3M"].index[-1].date())
+    _s = _D["SAHMREALTIME"].copy()
+    _s.iloc[-1] = 0.6
+    _r2 = _ML.rezession(_D["T10Y2Y"], _D["T10Y3M"], _s, _D["T10Y3M"].index[-1].date())
+    pruefe(P, "Rezessionsampel: ROT nur bei Kurve (Monatsmittel < 0 binnen 24 Mon.) UND Sahm >= 0,50 - sonst keine Farbe",
+           _ML.KURVE_FENSTER_M == 24 and _ML.SAHM_SCHWELLE == 0.50 and _r["kurve_an"] and not _r["rot"] and _r2["rot"])
+    _q, _qr = _quelltext("agent/makro_lage.py"), _quelltext("agent/regel0_mail.py")
+    _qs, _qb = _quelltext("remote/server.py"), _quelltext("scheduler/background.py")
+    pruefe(P, "eigener Fehlerpfad in lauf(): Gesamtmarkt behaelt den alten Stand, O54 haengt nicht daran",
+           "Lagebild Gesamtmarkt nicht neu berechnet" in _q and _q.index("d = lage_aus(roh, heute)") < _q.index('d["gesamtmarkt"] = gesamtmarkt('))
+    pruefe(P, "Mails: REGEL0 liest makro['zusatz'], B1/B3/B4 und C1 viermal zeile_mail(); Statusseite Block in der Makro-Karte",
+           'makro.get("zusatz")' in _qr and _qb.count('fromlist=["zeile_mail"]).zeile_mail()') == 4
+           and _qs.index('id="makro-kopf"') < _qs.index('id="gesamt-kopf"') < _qs.index("section-header section-system") and "m.gesamtmarkt" in _qs)
+    _rp = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p81_lagebild_pruefstand.py")],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+    pruefe(P, "⚠️⚠️ Pruefstand p81: R-R11 zu p73, Rueckschau 1982-2026, drei Zustaende, kaputter Abruf (gesamt und nur Gesamtmarkt), "
+              "Mails, Statusseite/GUI/Diagnose, Prod unveraendert", "8 von 8 bestanden" in (_rp.stdout or ""),
+           " | ".join(z for z in (_rp.stdout or "").splitlines() if " FEHLER " in z) or (_rp.stderr or "")[-300:])
 
 
 def paket_season_ampel() -> None:
@@ -33264,7 +33305,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

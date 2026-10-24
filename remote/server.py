@@ -109,6 +109,10 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><strong>lang / kurz</strong><span id="makro-kopf">-</span></div>
   <div id="makro-body"></div>
   <details><summary class="muted-text">Kanäle K1&ndash;K9 (lang / kurz) und Datenstand</summary><div id="makro-kanaele"></div></details>
+  <!-- L-A (24.10.2026, E-137): Lagebild Gesamtmarkt L1-L6 als FAKT, einzige Farbe: Rezessionsampel rot (Kurve UND Sahm) -->
+  <div class="row"><strong>Gesamtmarkt</strong><span id="gesamt-kopf">-</span></div>
+  <div id="gesamt-body"></div>
+  <details><summary class="muted-text">Lagebild L1&ndash;L6 mit Messbefund und Datenstand</summary><div id="gesamt-zeilen"></div></details>
 </div>
 </div>
 <!-- P19 (17.10.2026, Spot §49): Season-Ampel (E-124: geprueft an zwei Zyklen, Mail beim Stufenwechsel), dazu die Einstiegs-Kandidaten aus B4 (A3) -->
@@ -997,6 +1001,16 @@ async function refreshStatus() {
     document.getElementById("makro-kanaele").innerHTML = (m.kanaele || []).map(function (k) {
       return zeile(esc(k[0]), esc(k[1]) + " / " + esc(k[2]), ""); }).join("") +
       '<div class="unter">Datenstand: ' + esc(Object.entries(m.datenstand || {}).map(function (e) { return e[0] + " " + e[1]; }).join(", ")) + '</div>';
+    const g = m.gesamtmarkt || {};                           // L-A (E-137): Fakt, rot nur bei Kurve UND Sahm
+    const gk = document.getElementById("gesamt-kopf");
+    gk.textContent = g.zustand === "fehlt" || !g.zustand ? "nicht verfügbar" : ((g.rot ? "Rezessionsampel ROT" : "Fakt, kein Signal") +
+      (g.zustand === "veraltet" ? " · VERALTET" : ""));
+    gk.className = g.zustand === "ok" ? (g.rot ? "err" : "ok") : "err";
+    document.getElementById("gesamt-body").innerHTML = '<div class="unter">' + esc(g.zeile || "") + '</div>' +
+      (g.fehler ? '<div class="error-line">letzter Abruf: ' + esc(g.fehler) + '</div>' : '');
+    document.getElementById("gesamt-zeilen").innerHTML = (g.zeilen || []).map(function (z) {
+      return zeile(esc(z[0] + " " + z[1]), esc(z[2]), "") + '<div class="unter">gemessen: ' + esc(z[3]) + '</div>'; }).join("") +
+      '<div class="unter">Datenstand: ' + esc(Object.entries(g.datenstand || {}).map(function (e) { return e[0] + " " + e[1]; }).join(", ")) + '</div>';
   }
   if (data.season_ampel) {                                   // P19: Season-Ampel unter dem Makro-Umfeld, drei Zustaende
     const s = data.season_ampel;

@@ -2653,3 +2653,13 @@ Schritt7 §23.24.
 - Kein Makrokanal läuft den BTC-Wendepunkten voraus; nur Fear & Greed an den Extremen.
 - Die Rezession ist die stärkste Größe für den Gesamtmarkt, in der Krypto-Zeit aber nur einmal aufgetreten.
 - Nächster Schritt zur Abstimmung: F-1 Fassung 2 auf der verlängerten REGEL0-Historie und das Lagebild Gesamtmarkt.
+
+**Nachtrag 24.10.2026 (65) — REGEL0-Historie und F-1 Fassung 2** (E-136):
+- Die REGEL0 erzeugt 2020–22 keinen Einstieg; F-1 Fassung 2 ist abgebrochen.
+- Wichtiger: Mit der Vorgeschichte ab 2019 ergibt dieselbe Regel 2024–26 −0,34 % statt +0,15 % je Handel. Ihr Ergebnis hängt an der Länge der Datenreihen, also an der Grundgesamtheit.
+- Nächster Schritt: Voranalyse Robustheit REGEL0 (welcher Baustein macht den Unterschied).
+
+**Nachtrag 24.10.2026 (66) — Lagebild Gesamtmarkt** (E-137):
+- L1–L6 als Fakt auf der Statusseite, in den Handlungsmails und in der GUI.
+- Die Rezessionsampel ist rot nur bei Zinskurve und Sahm-Regel. Das bestätigt eine Rezession, es warnt nicht vor.
+- NB-Kontrolle K-GM-1 im nächsten Bündel.

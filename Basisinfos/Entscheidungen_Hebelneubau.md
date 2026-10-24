@@ -1688,3 +1688,47 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - **T4:** Anleihen teilweise kritisch (10J 5,31 %, höchster Stand seit 2002), Währungen nur beim Yen und in Schwellenländern. KI-Investitionen teilweise (freier Cashflow −24 %, aber Gewinne +30 %). 2026 gibt es keine Geldflut; der Auslöser ist ein Ölschock. BTC löst sich 2026 vom Nasdaq (−26 % gegen +14 %).
 
 **Folge:** Kandidat vorhanden ⇒ zur Abstimmung: REGEL0-Historie 2020–23 (Download-Ja) und F-1 Fassung 2 mit Fear & Greed; dazu das Lagebild Gesamtmarkt als Fakt. **Betrieb:** unverändert.
+
+# E-136 · F-1 Fassung 2 abgebrochen: Die REGEL0 feuert 2020–22 nicht, und ihr Ergebnis 2024–26 hängt an der Länge der Datenreihen (24.10.2026)
+
+**24.10.2026** · Nutzer: *„E1 A“* (vorgelegt: A abbrechen und Ursache messen · B formal zu Ende messen · C Plan nur 2023–26).
+
+**Grundlage:** `Voranalyse_REGEL0_Historie_23_10.md` §6 (Plan 6623eab2), §6.1 (Auslegung 0516af21), §7. Historie 2019-06 bis Datenbeginn: Binance-Archiv, vollständig gegen REST abgeglichen.
+
+**Befunde:**
+- **Befund 1:** REGEL0 0.1 erzeugt 2020-07 bis 2022-12 **keinen** Einstieg.
+  - 2022 liegt v-dach selbst im 99,9. Perzentil bei −0,43 %.
+  - Die Treffer 2021 sind Datenlücken.
+  - Kriterium (2) des Plans war damit nicht erfüllbar, deshalb blieb der Filter ungesehen.
+- **Befund 2:** Mit der Vorgeschichte ab 2019 ergibt dieselbe Regel 2024–26 **−0,34 %** statt **+0,15 %** je Handel nach 0,48 %.
+  - Nur 37,5 % der Einstiege sind gleich.
+  - Die Verschiebung zeigt sich bei alten wie bei jungen Assets.
+- **Gegenprobe 3/3** (`p80`).
+
+**Entscheidung:**
+- F-1 Fassung 2 ist **abgebrochen**; Fear & Greed bleibt Fakt (L6).
+- **Betrieb unverändert:** REGEL0 als Vorwärtsprotokoll, mit dem Vorbehalt **„Ergebnis nicht robust gegen die Datenlänge“**. Er widerlegt die Regel nicht (R-R11), aber das Plus der Referenz hängt am Sammelbeginn je Symbol, also an der Grundgesamtheit.
+- **Nächster Schritt:** Voranalyse Robustheit REGEL0. Je Baustein (Reife/Reihenbeginn, Normal, Schrumpfung, Trainingsmenge) einzeln messen, welcher den Unterschied macht.
+
+# E-137 · Lagebild Gesamtmarkt L1–L6 als Fakt gebaut; Rezessionsampel rot nur bei Kurve UND Sahm (24.10.2026)
+
+**24.10.2026** · Nutzer: *„E2 alle“* · *„E3 ja“* · *„E4 alle“*, mit der Frage, welche Indikatoren herangezogen wurden und warum sie fachlich die relevantesten sind (Antwort: `Voranalyse_Lagebild_Gesamtmarkt_23_10.md` §2 und §6).
+
+**Gebaut** (§6):
+- **Zeilen:** L1 Rezessionsampel, L2 Reifegrad (Nasdaq, BTC), L3 Geld, L4 Zinsen und Anleihen, L5 Öl, L6 Fear & Greed.
+- **Technik:** als Erweiterung von O54 `makro_lage`, mit eigenem Fehlerpfad.
+- **Orte:**
+  - Statusseite (Makro-Karte);
+  - eine Zeile in REGEL0-, B1-, B3-, B4- und Season-Ampel-Mails;
+  - GUI *Markt (Krypto)*;
+  - Diagnose;
+  - Log.
+
+**Prüfung:**
+- Prüfstand `p81` 8/8, R-R11 zu p73;
+- Statusseite im Browser gegen eine Kopie;
+- Suite-Paket `Gesamtmarkt`.
+
+**Ehrlich mitgeführt:** ROT kam 1982–2026 bei allen 5 Rezessionen, aber 1–3 Monate **nach** deren Beginn; dazu ein Fehlalarm 2024. Es bestätigt also, es warnt nicht vor.
+
+**Kein Gate, kein Gewicht.** **Offen zur Abstimmung:** High-Yield-Aufschlag in L4. **NB:** K-GM-1 im nächsten Bündel.

@@ -179,6 +179,7 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     # O54 (15.10.2026): Makro-Lage lang/kurz als FAKT - Gewichtung beim Nutzer, kein Gate (Schritt7 §23.57)
     if isinstance(makro, dict) and makro.get("ein"):
         ein_z.append(("Makro", makro["ein"]))
+        ein_z += [tuple(x) for x in (makro.get("zusatz") or [])]   # L-A (24.10.2026, E-137): Lagebild Gesamtmarkt als Fakt
     # O21 (17.10.2026, Nutzer: *"die Zeile fuer den Messstand sollte sofort vorhanden sein"*): wie die REGEL0 im Betrieb bisher lief -
     # FAKT mit Spanne und Tagen, kein Gate, keine Wirkung auf Stufe oder Einsatz (Schritt7 §23.64)
     if isinstance(messstand, dict) and messstand.get("ein"):

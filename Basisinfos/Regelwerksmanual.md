@@ -2132,6 +2132,19 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 - **B4-Karte:** Verwässerung 90 T (stärkstes Fünftel im Bestand) und Freigabe-Rhythmus (P22/P22c).
 - Diagnose-Schlüssel `makro_lage`, `termine_vorschau`, `umlauf_zusatz`.
 
+### Stand 24.10.2026 — Lagebild Gesamtmarkt in der Makro-Karte (L-A)
+
+- **Statusseite, Makro-Karte:** neue Zeile *Gesamtmarkt*. Der Kopf zeigt „Fakt, kein Signal“, nur bei Zinskurve **und** Sahm-Regel **„Rezessionsampel ROT“**. Aufklappbar sind L1–L6 (Rezessionsampel, Reifegrad Nasdaq/BTC, Geld, Zinsen und Anleihen, Öl, Fear & Greed), je mit Messbefund und Datenstand.
+- **Mails:** Zeile *Gesamtmarkt* direkt unter *Makro*, in REGEL0, B1, B3, B4 und der Season-Ampel-Mail. Sie sperrt nichts und ändert nichts.
+- ⚠️ **Wie „rot“ zu lesen ist:** In der Rückschau 1982–2026 kam ROT bei allen 5 Rezessionen, aber **1–3 Monate nach deren Beginn**; dazu ein Fehlalarm 2024. Es **bestätigt**, es warnt nicht vor.
+- **Quelle:** `agent/makro_lage.py` (Abschnitt `gesamtmarkt`, eigener Fehlerpfad), FRED und alternative.me, Job `externe_reihen`. GUI-Reiter *Markt (Krypto)*, Diagnose `makro_lage.gesamtmarkt`. E-137.
+
+### Stand 24.10.2026 — REGEL0: Ergebnis nicht robust gegen die Datenlänge
+
+- Mit Kursdaten ab 2019 statt ab dem heutigen Sammelbeginn ergibt dieselbe REGEL0 2024–26 **−0,34 %** statt **+0,15 %** je Handel nach Bitpanda-Kosten. Nur 37,5 % der Einstiege sind gleich; 2020–22 entsteht kein Einstieg (E-136).
+- **Am Betrieb ändert sich nichts.** Die REGEL0-Mails laufen weiter als Vorwärtsprotokoll; ihr gemessenes Plus steht unter diesem Vorbehalt.
+- Gesucht wird als Nächstes, welcher Baustein den Unterschied macht (Voranalyse Robustheit).
+
 ### Stand 21.10.2026 — Spot: keine Trendallokation (M-A)
 
 - Eine Regel *„BTC unter dem 10-Monats-Schnitt → in EURCV“* ist gemessen und **trägt nicht** (Spot §60, E-126).

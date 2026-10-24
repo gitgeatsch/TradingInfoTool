@@ -1950,6 +1950,8 @@ def externe_reihen_job(conn_factory) -> None:
             _m = _ML.lauf()
             logger.info("Makro-Lage: lang %s · kurz %s · Stand %s%s", _ML._wort(_m.get("gesamt_lang")), _ML._wort(_m.get("gesamt_kurz")),
                         _m.get("stand"), (" · Fehler " + _m["fehler"]) if _m.get("fehler") else "")
+            _gm = _m.get("gesamtmarkt") or {}                   # L-A (24.10.2026, E-137): Lagebild Gesamtmarkt, eigener Fehlerpfad
+            logger.info("Lagebild Gesamtmarkt: %s%s", _ML.zeile_gesamtmarkt(_m), (" · Fehler " + _gm["fehler"]) if _gm.get("fehler") else "")
         except Exception as exc:                             # noqa: BLE001
             logger.warning("Makro-Lage nicht berechnet: %s", exc)
 
@@ -4394,7 +4396,7 @@ def spot_mitnahme_job(conn_factory, watchlist_provider, versand=None, heute=None
                     except Exception:                                # noqa: BLE001
                         _vw = None
                     try:                                             # O54: Makro-Lage als Fakt - scheitert nie nach aussen
-                        _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                        _mk = __import__("agent.makro_lage", fromlist=["zeile_mail"]).zeile_mail()
                     except Exception:                                # noqa: BLE001
                         _mk = None
                     try:                                             # P19: Season-Ampel als Fakt - scheitert nie nach aussen
@@ -4464,7 +4466,7 @@ def spot_upbit_job(conn_factory, watchlist_provider, versand=None, jetzt=None, o
                     except Exception:                                # noqa: BLE001
                         _vw = None
                     try:                                             # O54: Makro-Lage als Fakt - scheitert nie nach aussen
-                        _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                        _mk = __import__("agent.makro_lage", fromlist=["zeile_mail"]).zeile_mail()
                     except Exception:                                # noqa: BLE001
                         _mk = None
                     try:                                             # P19: Season-Ampel als Fakt - scheitert nie nach aussen
@@ -4536,7 +4538,7 @@ def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, o
                 except Exception:                                    # noqa: BLE001
                     _verw = None
                 try:                                             # O54: Makro-Lage als Fakt - scheitert nie nach aussen
-                    _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                    _mk = __import__("agent.makro_lage", fromlist=["zeile_mail"]).zeile_mail()
                 except Exception:                                # noqa: BLE001
                     _mk = None
                 try:                                                 # P19: Season-Ampel als Fakt - scheitert nie nach aussen
@@ -4599,7 +4601,7 @@ def season_ampel_job(conn_factory, versand=None, heute=None, ordner=None, http=N
                 except Exception:                                    # noqa: BLE001
                     _kand = None
                 try:                                                 # O54: Makro-Lage als Fakt - scheitert nie nach aussen
-                    _mk = __import__("agent.makro_lage", fromlist=["zeile"]).zeile()
+                    _mk = __import__("agent.makro_lage", fromlist=["zeile_mail"]).zeile_mail()
                 except Exception:                                    # noqa: BLE001
                     _mk = None
                 b, t = _SA.mail(fall, _SA.lade(ordner), (_kand or {}).get("kurz"), _mk)

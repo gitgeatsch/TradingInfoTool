@@ -831,6 +831,19 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
 - **Messstand im Betrieb** (O21): Jede REGEL0-Signalmail sagt, wie die bisherigen Signale nach 24 h liefen – mit Tagen, Spanne und dem Vergleich zur Messung. Das ist eine Kontrolle, ob der Betrieb tut, was gemessen wurde; über die Kosten entscheidet sie nicht.
 - **Nach einer Unterbrechung** (P11d): Hat die REGEL0-Rechnung nur verpasste Stunden nachgeholt, heißt die Mail *„REGEL0 nachgeholt – Rechnung erfolgreich“*; *„fehlgeschlagen“* kommt nur noch bei einem echten Fehler.
 
+### Stand 24.10.2026 — Lagebild Gesamtmarkt (L-A) und REGEL0-Vorbehalt
+
+- **Lagebild Gesamtmarkt:** Sechs Fakten zum großen Bild:
+  1. Rezessionsampel (Zinskurve, Sahm-Regel);
+  2. Reifegrad (wie lange der Nasdaq-Bullenmarkt läuft, wie weit BTC unter dem Hoch steht);
+  3. Geld (M2, Netto-Liquidität);
+  4. Zinsen und Anleihen (US-10J, Laufzeitprämie);
+  5. Öl (Brent);
+  6. Fear & Greed.
+- **Wo du es siehst:** Statusseite in der Makro-Karte, als eine Zeile in jeder Handlungsmail, im Reiter *Markt (Krypto)*.
+- **Was es bewirkt:** nichts. Es löst nichts aus. Die einzige Farbe ist die **Rezessionsampel ROT**, wenn Zinskurve und Sahm-Regel zugleich anschlagen. In der Rückschau 1982–2026 bestätigte ROT jede der 5 Rezessionen, aber erst 1–3 Monate nach deren Beginn (E-137).
+- **REGEL0-Vorbehalt (E-136):** Mit Kursdaten ab 2019 ergibt dieselbe REGEL0 für 2024–26 ein Minus statt des gemessenen Plus. Die Signalmails laufen unverändert weiter; ihr gemessenes Plus gilt nur unter diesem Vorbehalt.
+
 ## 11. Roadmap & Erweiterbarkeit
 
 1. **Phase 1** Grundgerüst (Struktur, SQLite, CoinGecko, Basis-UI, Watchlist,

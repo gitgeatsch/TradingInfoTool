@@ -13,7 +13,7 @@
 #   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
 #      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
 #   4. eine Quelle: das Memory verweist nur noch hierher.
-stand: "2026-10-17"
+stand: "2026-10-24"
 kontrollen:
   # ---- offen ------------------------------------------------------------------------------------------------------------
   - id: K-ANK-1
@@ -489,6 +489,15 @@ kontrollen:
     status: entfallen
     erfuellt_am: "2026-10-10"
     beleg: "Nutzer 10.10.: 'K-ALT-1 entfallen' (K16/K21 an der angehaltenen Rollen-Kette, K15 ohne sichtbaren Nachweis)"
+  - id: K-GM-1
+    titel: "L-A Lagebild Gesamtmarkt (E-137): Job externe_reihen berechnet es taeglich, Statusseite zeigt es in der Makro-Karte, Mails tragen die Zeile 'Gesamtmarkt'"
+    seit: "2026-10-24"
+    paket: Gesamtmarkt
+    commit: ""
+    art: manuell
+    nachweis: "Log nach Start bzw. 06:35: 'Lagebild Gesamtmarkt: ... · Stand <heute>' ohne 'Fehler'; Diagnose makro_lage.gesamtmarkt: zustand ok, 6 Zeilen L1-L6, datenstand je Reihe (Sahm ~1 Monat alt ist normal); Statusseite: Makro-Karte mit Zeile 'Gesamtmarkt' und aufklappbaren L1-L6; naechste REGEL0-/Spot-Mail: Zeile 'Gesamtmarkt' direkt unter 'Makro'"
+    faellig_bis: "2026-10-31"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

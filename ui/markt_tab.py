@@ -48,6 +48,13 @@ MAKRO_TIPP = {
     "lang": "Rückenwind / neutral / Gegenwind über das lange Fenster (Drittel im rollierenden 5-Jahres-Fenster).",
     "kurz": "Rückenwind / neutral / Gegenwind über das kurze Fenster.",
 }
+GESAMT_SPALTEN = ("nr", "stichwort", "wert", "gemessen")
+GESAMT_KOPF = {"nr": "", "stichwort": "Lagebild", "wert": "heute", "gemessen": "gemessen"}
+GESAMT_TIPP = {
+    "stichwort": "Lagebild Gesamtmarkt L1-L6 (L-A, E-137): Fakt, kein Signal - keine Makrogröße läuft den BTC-Wenden voraus (Atlas E-135).",
+    "wert": "Stand heute (FRED, alternative.me). Einzige Farbe: Rezessionsampel ROT, wenn Zinskurve UND Sahm-Regel anschlagen.",
+    "gemessen": "Was die Messung dazu sagt (Indikator-Atlas E-135).",
+}
 KAND_SPALTEN = ("klasse", "asset", "perzentil", "gehalten")
 KAND_KOPF = {"klasse": "Klasse", "asset": "Asset (Bitpanda)", "perzentil": "Perzentil", "gehalten": "gehalten"}
 KAND_TIPP = {
@@ -98,6 +105,11 @@ def kontext_text(d: dict) -> str:
 
 def makro_zeilen(m: dict) -> list:
     return [tuple(k) for k in (m or {}).get("kanaele") or []]
+
+
+def gesamt_zeilen(m: dict) -> list:
+    """[(Nr, Stichwort, heute, gemessen)] aus ``makro_lage.stand()['gesamtmarkt']`` (L-A)."""
+    return [tuple(z) for z in ((m or {}).get("gesamtmarkt") or {}).get("zeilen") or []]
 
 
 def kandidaten_zeilen(k: dict | None) -> list:
@@ -178,6 +190,15 @@ class MarktKryptoTab(_Basis):
             self.makro_tree.column(c, width=260 if c == "kanal" else 140, anchor="w" if c == "kanal" else "center")
         add_heading_tooltips(self.makro_tree, MAKRO_TIPP)
         self.makro_tree.pack(fill="x", pady=(2, 0))
+        ttk.Label(self, text="Lagebild Gesamtmarkt (L-A)", font=("", 11, "bold")).pack(anchor="w", pady=(8, 0))
+        self.gesamt_zeile = ttk.Label(self, text="", foreground=theme.info_color(), wraplength=1100, justify="left")
+        self.gesamt_zeile.pack(anchor="w")
+        self.gesamt_tree = ttk.Treeview(self, columns=GESAMT_SPALTEN, show="headings", height=6)
+        for c, b in zip(GESAMT_SPALTEN, (40, 170, 420, 520)):
+            self.gesamt_tree.heading(c, text=GESAMT_KOPF[c])
+            self.gesamt_tree.column(c, width=b, anchor="w")
+        add_heading_tooltips(self.gesamt_tree, GESAMT_TIPP)
+        self.gesamt_tree.pack(fill="x", pady=(2, 0))
         self.lauf = ttk.Label(self, text="", foreground=theme.info_color())
         self.lauf.pack(anchor="w", pady=(6, 0))
 
@@ -201,6 +222,10 @@ class MarktKryptoTab(_Basis):
         self.makro_tree.delete(*self.makro_tree.get_children())
         for z in makro_zeilen(m):
             self.makro_tree.insert("", "end", values=z)
+        self.gesamt_zeile.configure(text=((m.get("gesamtmarkt") or {}).get("zeile")) or "")
+        self.gesamt_tree.delete(*self.gesamt_tree.get_children())
+        for z in gesamt_zeilen(m):
+            self.gesamt_tree.insert("", "end", values=z)
 
     def _zeichne(self, vl: list) -> None:
         if self._canvas is not None:

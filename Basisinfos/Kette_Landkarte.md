@@ -18,6 +18,13 @@ LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*
 > | „Einstieg und Stop als **Angabe**" | Die Felder sind seit **18.08.2026** (S3) aus dem Ausgabeschema; der BC-Prompt verlangt sie aber weiter — ein Widerspruch, kein Stand | 2.457-w4 |
 > | „Gegenstand von **Schritt 42**", „Schritt 42 misst" | Schritt 42 ist am **15.09.2026 in Schritt 59 aufgegangen** | Plan Schritt 59 |
 >
+> ## ⚠️ NACHTRAG 24.10.2026 (12) — Lagebild Gesamtmarkt, REGEL0-Datenlänge
+>
+> | Hier fehlt | Stand seit |
+> |---|---|
+> | Lagebild Gesamtmarkt (L-A) | `agent/makro_lage.py` Abschnitt `gesamtmarkt` im Job `externe_reihen`: L1–L6 in der Makro-Karte der Statusseite, Zeile *Gesamtmarkt* in REGEL0/B1/B3/B4/C1, Reiter *Markt (Krypto)*; Rezessionsampel rot nur bei Kurve UND Sahm (E-137) – **24.10.** |
+> | REGEL0-Historie ab 2019 | `data/_hist/` (Messdaten, nicht Betrieb, nicht NB): Binance-Archiv gegen REST abgeglichen; ⚠️ das REGEL0-Ergebnis hängt an der Datenlänge (E-136) – **24.10.** |
+>
 > ## ⚠️ NACHTRAG 21.10.2026 (11) — LLM-Komponente: Bilanz
 >
 > | Hier fehlt | Stand seit |

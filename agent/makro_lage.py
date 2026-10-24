@@ -60,7 +60,7 @@ def hole_reihe(series_id: str, fred_key: str, start: str, http=None) -> pd.Serie
     obs = [(o["date"], o["value"]) for o in r.json().get("observations", []) if o.get("value") not in (".", "", None)]
     if not obs:
         raise ValueError("FRED %s: keine Beobachtungen" % series_id)
-    d = pd.Series([float(v) for _, v in obs], index=pd.to_datetime([t for t, _ in obs]) + pd.Timedelta(days=REIHEN[series_id]))
+    d = pd.Series([float(v) for _, v in obs], index=pd.to_datetime([t for t, _ in obs]) + pd.Timedelta(days=REIHEN.get(series_id, 0)))
     return d.sort_index().rename(series_id)
 
 
@@ -153,18 +153,31 @@ def lage_aus(roh: dict, heute: date) -> dict:
 
 
 def lauf(ziel: str | None = None, fred_key: str | None = None, heute: date | None = None, http=None, pause: float = 0.3) -> dict:
-    """Holt, rechnet, legt ab. Scheitert nie nach aussen: bei einem Fehler bleibt der alte Stand, mit ``fehler`` vermerkt."""
+    """Holt, rechnet, legt ab. Scheitert nie nach aussen: bei einem Fehler bleibt der alte Stand, mit ``fehler`` vermerkt.
+    Der Abschnitt ``gesamtmarkt`` (L-A) hat einen EIGENEN Fehlerpfad - O54 haengt nie an ihm, und er behaelt seinen alten Stand."""
     heute = heute or date.today()
     ziel = ziel or ABLAGE
     fred_key = os.environ.get("FRED_API_KEY", "") if fred_key is None else fred_key
+    alt = lade(ziel)
+    roh = None
     try:
         if not fred_key:
             raise RuntimeError("kein FRED-Schluessel")
-        d = lage_aus(hole_alle(fred_key, heute, http, pause), heute)
+        roh = hole_alle(fred_key, heute, http, pause)
+        d = lage_aus(roh, heute)
     except Exception as exc:                                                        # noqa: BLE001
-        d = lade(ziel) or {"stand": None, "gesamt_lang": None, "gesamt_kurz": None, "je_kanal": {}, "datenstand": {}}
+        d = dict(alt or {"stand": None, "gesamt_lang": None, "gesamt_kurz": None, "je_kanal": {}, "datenstand": {}})
         d["fehler"] = "%s: %s (%s)" % (type(exc).__name__, str(exc).replace(fred_key or "\0", "***")[:200], heute.isoformat())
         logger.warning("Makro-Lage nicht neu berechnet - alter Stand %s bleibt: %s", d.get("stand"), d["fehler"])
+    try:
+        if roh is None:
+            raise RuntimeError("Makro-Reihen nicht abgerufen")
+        d["gesamtmarkt"] = gesamtmarkt(roh, hole_gesamt(fred_key, heute, http, pause), hole_fg(http), heute)
+    except Exception as exc:                                                        # noqa: BLE001
+        g = dict((alt or {}).get("gesamtmarkt") or {})
+        g["fehler"] = "%s: %s (%s)" % (type(exc).__name__, str(exc).replace(fred_key or "\0", "***")[:200], heute.isoformat())
+        d["gesamtmarkt"] = g
+        logger.warning("Lagebild Gesamtmarkt nicht neu berechnet - alter Stand %s bleibt: %s", g.get("stand"), g["fehler"])
     _schreibe(ziel, d)
     return d
 
@@ -219,9 +232,20 @@ def zeile(d: dict | None = None, heute: date | None = None) -> str:
 
 
 def mailteil(d: dict | None = None) -> dict:
-    """Fuer die REGEL0-Signalmail (Muster ``termin``): {'ein': Zeile, 'technik': [(k, v)]}."""
-    return {"ein": zeile(d), "technik": [("Makro", "Fakt, nicht Teil der Regel (O54) · Kanäle wie Messung §51.7; Richtung und Risiko-"
-                                                  "Bremse gemessen, beide nicht belegt (Schritt7 §23.56)")]}
+    """Fuer die REGEL0-Signalmail (Muster ``termin``): {'ein': Zeile, 'zusatz': [(k, v)], 'technik': [(k, v)]}.
+    ``zusatz`` (L-A, E-137): die Zeile Gesamtmarkt direkt unter der Makro-Zeile."""
+    d = lade() if d is None else d
+    return {"ein": zeile(d), "zusatz": [("Gesamtmarkt", zeile_gesamtmarkt(d))],
+            "technik": [("Makro", "Fakt, nicht Teil der Regel (O54) · Kanäle wie Messung §51.7; Richtung und Risiko-"
+                                  "Bremse gemessen, beide nicht belegt (Schritt7 §23.56)"),
+                        ("Gesamtmarkt", "Fakt, nicht Teil der Regel (L-A, E-137) · Befunde aus dem Indikator-Atlas E-135; "
+                                        "rot nur bei Zinskurve UND Sahm-Regel")]}
+
+
+def zeile_mail(d: dict | None = None, heute: date | None = None) -> str:
+    """Fuer die Text-Mails B1/B3/B4 und C1: die Makro-Zeile, darunter (eigene Zeile, eingerueckt) der Gesamtmarkt (L-A, E-137)."""
+    d = lade() if d is None else d
+    return zeile(d, heute) + "\n  Gesamtmarkt " + zeile_gesamtmarkt(d, heute)
 
 
 def stand(d: dict | None = None, heute: date | None = None) -> dict:
@@ -230,4 +254,201 @@ def stand(d: dict | None = None, heute: date | None = None) -> dict:
     return {"zustand": zustand(d, heute), "zeile": zeile(d, heute), "lang": _wort((d or {}).get("gesamt_lang")),
             "kurz": _wort((d or {}).get("gesamt_kurz")), "stand": (d or {}).get("stand"), "fehler": (d or {}).get("fehler"),
             "kanaele": [(v["name"], _wort(v.get("lang")), _wort(v.get("kurz"))) for v in (d or {}).get("je_kanal", {}).values()],
-            "datenstand": (d or {}).get("datenstand", {})}
+            "datenstand": (d or {}).get("datenstand", {}), "gesamtmarkt": stand_gesamtmarkt(d, heute)}
+
+
+# ══ Lagebild Gesamtmarkt (L-A Teil 1, E-137, 24.10.2026) ═════════════════════════════════════════════════════════════════
+# Nutzer 24.10.: *"E2 alle"* (L1-L6) · *"E3 ja"* (rot nur bei Kurve UND Sahm) · *"E4 alle"* (Zeile in REGEL0, B1, B3, B4).
+# Grundlage: Indikator-Atlas E-135 (Messplan_Indikator_Atlas_23_10.md, p73/p75). ⚠️ FAKT, KEIN SIGNAL - keine Makrogroesse laeuft den
+# BTC-Wenden voraus (T1); die Zeile sperrt nichts und aendert nichts. Einzige Farbe: Rezessionsampel ROT.
+GESAMT_AB = {"T10Y3M": 6, "SAHMREALTIME": 6, "NASDAQCOM": 60, "DGS10": 6, "THREEFYTP10": 6, "DCOILBRENTEU": 6, "CBBTCUSD": 15}
+# Reihe: Jahre Abruf. Ohne Verzug (Beobachtungsdatum) - angezeigt wird der Stand, gerechnet wird nichts Kuenftiges.
+# NASDAQCOM 60 J: die Baerenmarkt-Erkennung braucht das Allzeithoch (wie p73 ab 1971); CBBTCUSD (Coinbase, FRED) ab 2014-12.
+KURVE_FENSTER_M = 24          # Kurve "angeschlagen": Monatsmittel < 0 binnen 24 Monaten - deckt alle Vorlaeufe der 10J-3M (0-16 Mon.)
+SAHM_SCHWELLE = 0.50          # und 9 von 11 der 10J-2J (4-33 Mon., ohne 101) aus p73 (d); Sahm >= 0,50 = Rezessionssignal (p73 (e))
+NASDAQ_MEDIAN_M = 60          # Median der 13 Nasdaq-Bullenmaerkte 1971-2026 (p73 (a), 18-239 Mon.)
+FG_URL = "https://api.alternative.me/fng/"
+GEMESSEN = {
+    "L1": "Rezessionen kosteten den Nasdaq seit 1971 jedes Mal 24–68 %; die Kurve lief 1980–2008 jeder Rezession 4–33 Mon. voraus, "
+          "2022–24 erstmals ohne Rezession. ROT (Kurve und Sahm) kam 1982–2026 bei allen 5 Rezessionen, aber 1–3 Mon. NACH deren "
+          "Beginn – es bestätigt, es warnt nicht vor; ein Fehlalarm (07–10/2024)",
+    "L2": "Nasdaq-Bullenmärkte seit 1971: Median 60 Mon. (18–239); BTC: 4 Zyklen – zu wenige für eine Regel",
+    "L3": "Geldausweitung ist keine Voraussetzung für BTC oder Aktien (Atlas E-135)",
+    "L4": "Fakt, keine gemessene Regel",
+    "L5": "Fakt, keine gemessene Regel (Ölschocks gingen Inflations- und Rezessionsschüben voraus)",
+    "L6": "einziger gemessener Vorläufer der BTC-Wenden (Rang 0,97), zum Teil aus dem Kurs; als Regel offen",
+}
+
+
+def hole_gesamt(fred_key: str, heute: date | None = None, http=None, pause: float = 0.3) -> dict:
+    heute = heute or date.today()
+    aus = {}
+    for i, (sid, jahre) in enumerate(GESAMT_AB.items()):
+        if i and pause:
+            time.sleep(pause)
+        aus[sid] = hole_reihe(sid, fred_key, (heute - timedelta(days=int(jahre * 365.25))).isoformat(), http)
+    return aus
+
+
+def hole_fg(http=None) -> dict:
+    """Fear & Greed (alternative.me, frei): der juengste Tageswert."""
+    import requests
+    j = (http or requests).get(FG_URL, params={"limit": 1, "format": "json"}, timeout=30).json()["data"][0]
+    return {"wert": int(j["value"]), "klasse": j.get("value_classification"),
+            "datum": datetime.fromtimestamp(int(j["timestamp"]), tz=timezone.utc).date().isoformat()}
+
+
+def baer_phasen(p: pd.Series, grenze: float = 0.20):
+    """Wie ``p73_atlas_t3_lang.baer_phasen`` (R-R11): Hoch -> Tief mit Rueckgang >= grenze; -> (abgeschlossene, laufender oder None)."""
+    ath, ath_t, phasen = p.iloc[0], p.index[0], []
+    tief, tief_t, im_baer = None, None, False
+    for t, v in p.items():
+        if not im_baer:
+            if v > ath:
+                ath, ath_t = v, t
+            elif v <= ath * (1 - grenze):
+                im_baer, tief, tief_t = True, v, t
+        else:
+            if v < tief:
+                tief, tief_t = v, t
+            if v >= ath:
+                phasen.append((ath_t, tief_t, tief / ath - 1))
+                im_baer, ath, ath_t = False, v, t
+    offen = (ath_t, tief_t, tief / ath - 1) if im_baer else None
+    return phasen, offen
+
+
+def _monate(a, b) -> float:
+    return (pd.Timestamp(b) - pd.Timestamp(a)).days / 30.44
+
+
+def _letzt(r: pd.Series, verzug: int = 0):
+    r = r.dropna()
+    return float(r.iloc[-1]), (r.index[-1] - pd.Timedelta(days=verzug)).date().isoformat()
+
+
+def _vor(r: pd.Series, tage: int):
+    r = r.dropna()
+    v = r[r.index <= r.index[-1] - pd.Timedelta(days=tage)]
+    return float(v.iloc[-1]) if len(v) else None
+
+
+def rezession(t2: pd.Series, t3: pd.Series, sahm: pd.Series, heute: date) -> dict:
+    """L1: Kurve angeschlagen = Monatsmittel 10J-2J ODER 10J-3M < 0 in den letzten 24 Monaten (wie p73 (d)); Sahm >= 0,50; rot = beides."""
+    grenze = (pd.Timestamp(heute) - pd.DateOffset(months=KURVE_FENSTER_M)).to_period("M").to_timestamp("M")
+    inv = {}
+    for name, k in (("10J–2J", t2), ("10J–3M", t3)):
+        m = k.dropna().resample("ME").mean()
+        neg = m[m < 0]
+        inv[name] = neg.index[-1] if len(neg) else None
+    kurve_an = any(t is not None and t >= grenze for t in inv.values())
+    s, s_dat = _letzt(sahm)
+    return {"kurve_2j": _letzt(t2), "kurve_3m": _letzt(t3),
+            "inversion_zuletzt": {k: (v.strftime("%Y-%m") if v is not None else None) for k, v in inv.items()},
+            "kurve_an": bool(kurve_an), "sahm": (s, s_dat), "sahm_an": bool(s >= SAHM_SCHWELLE),
+            "rot": bool(kurve_an and s >= SAHM_SCHWELLE)}
+
+
+def _z(x: float, n: int = 2) -> str:
+    return ("%.*f" % (n, x)).replace(".", ",")
+
+
+def _p(x: float, n: int = 0) -> str:
+    return ("%+.*f %%" % (n, 100 * x)).replace(".", ",")
+
+
+def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
+    """L1-L6 als Fakt -> {'stand', 'rot', 'zeilen': [(Nr, Stichwort, Wert, gemessen)], 'kurz': Mailzeile, 'werte': {...}, 'fehler': None}."""
+    t2 = roh["T10Y2Y"].copy()
+    t2.index = t2.index - pd.Timedelta(days=REIHEN["T10Y2Y"])                            # zurueck aufs Beobachtungsdatum (wie p73)
+    L1 = rezession(t2, ex["T10Y3M"], ex["SAHMREALTIME"], heute)
+    nq = ex["NASDAQCOM"].dropna()
+    phasen, offen = baer_phasen(nq)
+    nq_bull = None if offen else (phasen[-1][1].date().isoformat() if phasen else None)
+    btc = ex["CBBTCUSD"].dropna()
+    ath_t = btc.idxmax()
+    m2y = (roh["M2SL"] / roh["M2SL"].shift(12) - 1).dropna()
+    w = pd.concat([roh["WALCL"], roh["WTREGEN"], roh["RRPONTSYD"].resample("W-WED").last()], axis=1, sort=True)
+    w.columns = ["WALCL", "WTREGEN", "RRPONTSYD"]
+    w = w.ffill().dropna()
+    netto = (w["WALCL"] - w["WTREGEN"] - w["RRPONTSYD"] * 1000) / 1e6                       # wie kanaele() K2
+    n_vor = _vor(netto, 182)
+    d10, d10_dat = _letzt(ex["DGS10"])
+    d10_vor = _vor(ex["DGS10"], 365)
+    tp, tp_dat = _letzt(ex["THREEFYTP10"])
+    br, br_dat = _letzt(ex["DCOILBRENTEU"])
+    br_vor = _vor(ex["DCOILBRENTEU"], 365)
+    W = {"rezession": L1,
+         "nasdaq": {"stand": _letzt(nq), "bull_seit": nq_bull, "bull_monate": None if offen or not nq_bull else round(_monate(nq_bull, nq.index[-1]), 1),
+                    "baer_seit": offen[0].date().isoformat() if offen else None, "baer_tief": offen[2] if offen else None},
+         "btc": {"stand": _letzt(btc), "hoch": float(btc.max()), "hoch_am": ath_t.date().isoformat(), "abstand": float(btc.iloc[-1] / btc.max() - 1),
+                 "monate_seit_hoch": round(_monate(ath_t, btc.index[-1]), 1)},
+         "geld": {"m2_jj": (float(m2y.iloc[-1]), (m2y.index[-1] - pd.Timedelta(days=REIHEN["M2SL"])).date().isoformat()),
+                  "netto_26w": None if not n_vor else float(netto.iloc[-1] / n_vor - 1),
+                  "netto_stand": (roh["WALCL"].dropna().index[-1] - pd.Timedelta(days=REIHEN["WALCL"])).date().isoformat()},
+         "anleihen": {"zehn": (d10, d10_dat), "zehn_12m": None if d10_vor is None else d10 - d10_vor, "praemie": (tp, tp_dat)},
+         "oel": {"brent": (br, br_dat), "brent_12m": None if not br_vor else br / br_vor - 1},
+         "fg": fg}
+    # Texte
+    inv = [("%s zuletzt %s" % (k, v[5:] + "/" + v[:4])) for k, v in L1["inversion_zuletzt"].items() if v]
+    if L1["rot"]:
+        t1 = "ROT – Zinskurve und Sahm-Regel schlagen an"
+    elif L1["kurve_an"]:
+        t1 = "Warnung der Zinskurve (%s invertiert), Sahm %s – kein Rot" % (", ".join(inv), _z(L1["sahm"][0]))
+    elif L1["sahm_an"]:
+        t1 = "Sahm-Regel %s schlägt an, Kurve nicht invertiert – kein Rot" % _z(L1["sahm"][0])
+    else:
+        t1 = "keine Rezessionssignale (Kurve %s/%s, Sahm %s)" % (_z(L1["kurve_2j"][0]), _z(L1["kurve_3m"][0]), _z(L1["sahm"][0]))
+    n = W["nasdaq"]
+    t2n = ("Nasdaq-Bull seit %.0f Mon. (Median %d)" % (n["bull_monate"], NASDAQ_MEDIAN_M)) if n["bull_monate"] is not None else \
+        ("Nasdaq im Bärenmarkt seit %s (%s)" % (n["baer_seit"], _p(n["baer_tief"])) if n["baer_seit"] else "Nasdaq: keine Phase erkennbar")
+    b = W["btc"]
+    t2b = "BTC %s vom Hoch (vor %.0f Mon.)" % (_p(b["abstand"]), b["monate_seit_hoch"]) if b["abstand"] < -0.005 else "BTC am Allzeithoch"
+    g = W["geld"]
+    t3 = "M2 %s J/J%s" % (_p(g["m2_jj"][0], 1), (" · Netto-Liquidität %s in 26 W" % _p(g["netto_26w"], 1)) if g["netto_26w"] is not None else "")
+    a = W["anleihen"]
+    t4 = "10J %s %%%s · Laufzeitprämie %s %%" % (_z(a["zehn"][0]), (" (%s Pp in 12 M)" % ("%+.2f" % a["zehn_12m"]).replace(".", ","))
+                                                if a["zehn_12m"] is not None else "", _z(a["praemie"][0]))
+    o = W["oel"]
+    t5 = "Brent %s $%s" % (_z(o["brent"][0], 0), (" (%s in 12 M)" % _p(o["brent_12m"])) if o["brent_12m"] is not None else "")
+    t6 = ("F&G %d (%s%s)" % (fg["wert"], fg.get("klasse") or "", ", Extrem" if fg["wert"] < 25 or fg["wert"] > 75 else "")) if fg else "F&G nicht verfügbar"
+    zeilen = [("L1", "Rezessionsampel", t1, GEMESSEN["L1"]), ("L2", "Reifegrad", t2n + " · " + t2b, GEMESSEN["L2"]),
+              ("L3", "Geld", t3, GEMESSEN["L3"]), ("L4", "Zinsen und Anleihen", t4, GEMESSEN["L4"]),
+              ("L5", "Öl", t5, GEMESSEN["L5"]), ("L6", "Fear & Greed", t6, GEMESSEN["L6"])]
+    kurz = " · ".join(["Rezessionsampel ROT" if L1["rot"] else ("Kurve warnt, kein Rot" if L1["kurve_an"] else
+                                                                ("Sahm schlägt an, kein Rot" if L1["sahm_an"] else "keine Rezessionssignale")),
+                       t2n, t2b, "10J %s %%" % _z(a["zehn"][0]), "Brent %s $" % _z(o["brent"][0], 0)] + ([t6.split(" (")[0]] if fg else []))
+    return {"stand": heute.isoformat(), "rot": L1["rot"], "zeilen": zeilen, "kurz": kurz, "werte": W,
+            "datenstand": {"Kurve": L1["kurve_3m"][1], "Sahm": L1["sahm"][1], "Nasdaq": n["stand"][1], "BTC": b["stand"][1],
+                           "10J": d10_dat, "Prämie": tp_dat, "Brent": br_dat, "F&G": (fg or {}).get("datum")},
+            "berechnet_am": datetime.now(timezone.utc).isoformat(timespec="seconds"), "fehler": None}
+
+
+def zustand_gesamtmarkt(d: dict | None, heute: date | None = None) -> str:
+    g = (d or {}).get("gesamtmarkt") or {}
+    if not g.get("stand") or not g.get("kurz"):
+        return "fehlt"
+    heute = heute or date.today()
+    return "veraltet" if (heute - date.fromisoformat(g["stand"])).days > VERALTET_TAGE else "ok"
+
+
+def zeile_gesamtmarkt(d: dict | None = None, heute: date | None = None) -> str:
+    """Eine Zeile fuer Mail und Statusseite - Fakt, kein Signal."""
+    d = lade() if d is None else d
+    z = zustand_gesamtmarkt(d, heute)
+    if z == "fehlt":
+        return "Lagebild NICHT VERFÜGBAR (noch nicht berechnet oder Quelle nicht erreicht) – kein Urteil"
+    g = d["gesamtmarkt"]
+    txt = g["kurz"] + " · Stand %s" % date.fromisoformat(g["stand"]).strftime("%d.%m.")
+    if z == "veraltet":
+        txt += " ⚠ VERALTET"
+    if g.get("fehler"):
+        txt += " · letzter Abruf gescheitert"
+    return txt
+
+
+def stand_gesamtmarkt(d: dict | None, heute: date | None = None) -> dict:
+    g = (d or {}).get("gesamtmarkt") or {}
+    return {"zustand": zustand_gesamtmarkt(d, heute), "zeile": zeile_gesamtmarkt(d or {}, heute), "rot": bool(g.get("rot")),
+            "zeilen": [list(x) for x in g.get("zeilen") or []], "stand": g.get("stand"), "fehler": g.get("fehler"),
+            "datenstand": g.get("datenstand") or {}}
