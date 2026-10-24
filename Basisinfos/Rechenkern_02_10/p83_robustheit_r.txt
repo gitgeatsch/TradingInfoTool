@@ -1,0 +1,28 @@
+P83 MESSPLAN R · 2026-10-24 18:52
+
+R-R11 (i) Referenz netto 2025 +0.132 % / 2026 -0.021 % (p69 ohne Limit +0,132 / -0,021) -> ok · bewertet 10732 von 10732 Einstiegen
+
+SELBSTTEST (100 Zufallsregeln mit der Tagesballung der Referenz):
+  Rang p69    Fehlalarm je Handel 30 % / je Tag 2 % (Soll <= 5) · gepflanzt +0,5 Pp erkannt je Handel 100 % / je Tag 97 % (Soll >= 80)
+  Rang block  Fehlalarm je Handel 1 % / je Tag 0 % (Soll <= 5) · gepflanzt +0,5 Pp erkannt je Handel 81 % / je Tag 97 % (Soll >= 80)
+  -> es gilt der Rang 'block' (Tagesblock-Bootstrap) · Selbsttest BESTANDEN
+
+R1 gemeinsamer Datenbeginn (Rang: block)
+  Referenz (gemischt)         10732 Einst. · gleich 100.0 % · netto +0.153 % · Z1 je Handel +0.718 % (Rang 1.000; 2025 +0.858 / 2026 +0.481) · je Tag -0.239 % (Rang 0.144; 2025 -0.341 / 2026 +0.038)
+  R-R11 (ii) S = 2019-06 gleich einstiege_A.csv: ZEILENGLEICH
+  Start 2019-06               11701 Einst. · gleich  37.5 % · netto -0.340 % · Z1 je Handel +0.220 % (Rang 0.810; 2025 +0.152 / 2026 +0.248) · je Tag -0.409 % (Rang 0.029; 2025 -0.703 / 2026 +0.152)
+  Start 2020-06               11701 Einst. · gleich  37.5 % · netto -0.340 % · Z1 je Handel +0.220 % (Rang 0.797; 2025 +0.152 / 2026 +0.248) · je Tag -0.409 % (Rang 0.021; 2025 -0.703 / 2026 +0.152)
+  Start 2021-06               11701 Einst. · gleich  37.5 % · netto -0.340 % · Z1 je Handel +0.220 % (Rang 0.811; 2025 +0.152 / 2026 +0.248) · je Tag -0.409 % (Rang 0.027; 2025 -0.703 / 2026 +0.152)
+  Start 2021-12               11701 Einst. · gleich  37.5 % · netto -0.340 % · Z1 je Handel +0.220 % (Rang 0.818; 2025 +0.152 / 2026 +0.248) · je Tag -0.409 % (Rang 0.035; 2025 -0.703 / 2026 +0.152)
+  Start 2022-06                8089 Einst. · gleich  24.0 % · netto -0.445 % · Z1 je Handel +0.123 % (Rang 0.704; 2025 +0.069 / 2026 +0.387) · je Tag -0.591 % (Rang 0.017; 2025 -0.657 / 2026 -0.064)
+  Start 2023-01                8525 Einst. · gleich  16.6 % · netto -0.198 % · Z1 je Handel +0.393 % (Rang 0.932; 2025 +0.489 / 2026 +0.317) · je Tag -0.335 % (Rang 0.080; 2025 -0.207 / 2026 -0.340)
+  -> Kriterium (1) 0 von 6 (Soll >= 5) · Kriterium (2) 0 von 6 (Soll >= 4) -> URTEIL: NICHT ROBUST
+
+R2 Zerlegung auf Start 2019-06 (je Baustein auf den Referenzstand)
+  R-R11 (iii) Kopie mit allen Schaltern aus gleich einstiege_A.csv: ZEILENGLEICH
+  B1 Reife                    10735 Einst. · gleich  99.9 % · netto +0.154 % · Z1 je Handel +0.719 % (Rang 1.000; 2025 +0.862 / 2026 +0.481) · je Tag -0.238 % (Rang 0.124; 2025 -0.339 / 2026 +0.038)
+  B2 Trainingsmenge           11011 Einst. · gleich  36.1 % · netto -0.186 % · Z1 je Handel +0.385 % (Rang 0.960; 2025 +0.114 / 2026 +0.366) · je Tag -0.231 % (Rang 0.162; 2025 -0.529 / 2026 -0.046)
+  B3 Schrumpfung              11684 Einst. · gleich  37.6 % · netto -0.334 % · Z1 je Handel +0.226 % (Rang 0.803; 2025 +0.152 / 2026 +0.248) · je Tag -0.395 % (Rang 0.023; 2025 -0.703 / 2026 +0.152)
+  B4 eigenes Normal           10356 Einst. · gleich  35.0 % · netto -0.172 % · Z1 je Handel +0.414 % (Rang 0.945; 2025 +0.146 / 2026 +0.367) · je Tag -0.137 % (Rang 0.262; 2025 -0.448 / 2026 -0.058)
+  B1-B4 zusammen              10735 Einst. · gleich  99.9 % · netto +0.154 % · Z1 je Handel +0.719 % (Rang 1.000; 2025 +0.862 / 2026 +0.481) · je Tag -0.238 % (Rang 0.162; 2025 -0.339 / 2026 +0.038)
+  -> alle vier zusammen bilden die Referenz zu 99.9 % nach (Soll >= 90 %): Zerlegung vollstaendig

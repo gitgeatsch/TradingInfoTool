@@ -2143,7 +2143,7 @@ Näherung dokumentiert, kein exakter Marktstandard-Wert).
 
 - Mit Kursdaten ab 2019 statt ab dem heutigen Sammelbeginn ergibt dieselbe REGEL0 2024–26 **−0,34 %** statt **+0,15 %** je Handel nach Bitpanda-Kosten. Nur 37,5 % der Einstiege sind gleich; 2020–22 entsteht kein Einstieg (E-136).
 - **Am Betrieb ändert sich nichts.** Die REGEL0-Mails laufen weiter als Vorwärtsprotokoll; ihr gemessenes Plus steht unter diesem Vorbehalt.
-- Gesucht wird als Nächstes, welcher Baustein den Unterschied macht (Voranalyse Robustheit).
+- **Gemessen (E-139):** Die REGEL0 ist **nicht robust**. Ihr Plus entsteht allein aus der Reife-Regel (ein Jahr ab Datenbeginn), wenn dieser Beginn der Beginn der Terminmarktdaten ist. Bei echtem Kursbeginn ist kein Vorsprung belegt. Die Mails laufen bis zu deiner Entscheidung unverändert.
 
 ### Stand 21.10.2026 — Spot: keine Trendallokation (M-A)
 

@@ -1760,3 +1760,23 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Selbsttest vor dem ersten Blick.
 
 **Betrieb unverändert.**
+
+# E-139 · Messplan R: Die REGEL0 ist NICHT robust; ihr Vorsprung entsteht allein aus der Reife-Regel am Datenbeginn (24.10.2026)
+
+**24.10.2026** · Nutzer: *„ja Messplan R festlegen, prüfen gegenprüfen und doku“*.
+
+**Grundlage:** `Voranalyse_REGEL0_Robustheit_24_10.md` §5, §5.1 (vorab de529dc4), §6; `p83_robustheit_r.py`, Gegenprobe `p83_gegenprobe.py`.
+
+**Selbsttest:** Der Rang gegen Zufallsstunden (p69) hat bei geballten Signalen 30 % Fehlalarm. Deshalb gilt der Tagesblock-Rang (Fehlalarm 1 %/0 %, Erkennung 81 %/97 %).
+
+**Ergebnis:**
+- **R1:** Kriterium (1) 0 von 6, Kriterium (2) 0 von 6 ⇒ **nicht robust**.
+  - Z1 je Handel ist bei echtem Datenbeginn +0,12 bis +0,39 % (Rang 0,70–0,93).
+  - Je Tag ist Z1 überall negativ, auch in der Referenz (−0,24 %).
+- **R2:** **B1 Reife** allein bildet die Referenz zu 99,9 % nach; B2 bis B4 allein nicht.
+- **Gegenprobe:** G1 und G3 bestanden. G2 kippt einen Teilrang an der Grenze, das Urteil bleibt.
+
+**Folge:**
+- Die REGEL0 0.1 hat **keinen belegten Vorsprung**.
+- Ihr gemessenes Plus hängt an der Reife-Regel ab dem Beginn der Terminmarktdaten.
+- **Betrieb unverändert bis zur Nutzerentscheidung über die weiteren Schritte.**

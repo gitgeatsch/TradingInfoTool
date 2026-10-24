@@ -145,3 +145,55 @@ B2 bis B4 laufen über eine Quelltextkopie wie in `p78`, mit R-R11 der Kopie. **
 | 7 | „Referenzbeginn je Symbol“ (R2) | der erste Anker der Symbols in der Referenz (`data/`). Gezählt werden Anker mit Stunde ≥ diesem Wert |
 | 8 | Kurse | für alle Varianten aus `data/_hist`; für 2024–26 gleich den Kursen der Messbasis |
 | 9 | Werkzeug | `p83_robustheit_r.py` (`--selbsttest`, dann die Messung) |
+
+## 6. Ergebnis Messplan R, 24.10.2026 — NICHT ROBUST; die Abhängigkeit ist allein die Reife (E-139)
+
+**Selbsttest (vor dem ersten Blick)** auf 100 Zufallsregeln mit der Tagesballung der Referenz:
+
+| Rang | Fehlalarm je Handel / je Tag | gepflanzt +0,5 Pp erkannt je Handel / je Tag |
+|---|---|---|
+| p69-Nullwelt | **30 %** / 2 % | 100 % / 97 % |
+| Tagesblock | 1 % / 0 % | 81 % / 97 % |
+
+⇒ Wie vorab festgelegt gilt der **Tagesblock-Rang**. ⚠️ Der Rang gegen Zufallsstunden ist bei geballten Signalen **zu großzügig**. Das betrifft frühere Ränge nach dieser Nullwelt (E-131: „Rang 1,00 überall“; das Urteil dort war ohnehin „trägt nicht“).
+
+**R-R11:**
+- (i) Referenz netto 2025/2026 = p69 (+0,132 / −0,021).
+- (ii) Start 2019-06 ist zeilengleich mit `einstiege_A.csv`.
+- (iii) Die Kopie mit allen Schaltern aus ist zeilengleich.
+
+**R1 — gemeinsamer Datenbeginn** (Z1 = Vorsprung gegen die Drift von Coin und Jahr; Rang = Tagesblock):
+
+| Start | Einstiege | gleich wie Referenz | netto | Z1 je Handel (Rang) | Z1 je Tag (Rang) |
+|---|---|---|---|---|---|
+| Referenz (gemischt) | 10.732 | 100 % | +0,153 % | **+0,718 % (1,000)** | −0,239 % (0,144) |
+| 2019-06 bis 2021-12 (vier Starts, identisch) | 11.701 | 37,5 % | −0,340 % | +0,220 % (0,80–0,82) | −0,409 % (0,02–0,04) |
+| 2022-06 | 8.089 | 24,0 % | −0,445 % | +0,123 % (0,704) | −0,591 % (0,017) |
+| 2023-01 | 8.525 | 16,6 % | −0,198 % | +0,393 % (0,932) | −0,335 % (0,080) |
+
+- Kriterium (1): **0 von 6**. Kriterium (2): **0 von 6**. ⇒ **NICHT ROBUST.**
+- ⚠️ **Planschwäche:** Die Starts bis 2021-12 sind identisch, weil bis 2023-01 alle reif werden. Es gab also nur drei verschiedene Fassungen; das Urteil ändert das nicht.
+- **Je Tag gewichtet liegt Z1 überall unter null, auch in der Referenz.** Die REGEL0 liegt an den meisten Tagen unter der Drift ihrer Coins und gewinnt nur an wenigen Tagen mit vielen Signalen.
+
+**R2 — Zerlegung auf Start 2019-06:**
+
+| Baustein auf Referenzstand | gleich wie Referenz | netto | Z1 je Handel (Rang) |
+|---|---|---|---|
+| **B1 Reife** | **99,9 %** | +0,154 % | +0,719 % (1,000) |
+| B2 Trainingsmenge | 36,1 % | −0,186 % | +0,385 % (0,960) |
+| B3 Schrumpfung | 37,6 % | −0,334 % | +0,226 % (0,803) |
+| B4 eigenes Normal | 35,0 % | −0,172 % | +0,414 % (0,945) |
+| B1–B4 zusammen | 99,9 % | +0,154 % | +0,719 % (1,000) |
+
+- ⇒ **Die ganze Abhängigkeit ist die Reife**, also der Reihenbeginn `st0`, ab dem ein Jahr gezählt wird. Zählt die Reife ab dem Beginn der Terminmarktdaten (wie in der Messbasis), entsteht das Plus der Referenz. Zählt sie ab dem echten Kursbeginn, verschwindet es.
+- Beispiel: In der Referenz gelten **BTC, BNB, SOL, AVAX und XLM** bis 2024-09 als „jung“. Sie fallen damit aus Training und Schrumpfung und laufen über den Pfad für junge Assets.
+
+**Gegenprobe** (`p83_gegenprobe.py`):
+- **G1** Z1 auf zweitem Weg (pandas, Stundentext): alle sieben Zeilen gleich.
+- **G2** zirkuläre 14-Tage-Blöcke: gleiches Urteil, außer **Start 2023-01 je Handel** (0,932 → 0,956, knapp an der Grenze). Das Gesamturteil ändert sich nicht (je Tag 0,10).
+- **G3** Der Lader kürzt: Mit Start 2022-06 beginnt keine Reihe früher, ohne Kürzung beginnen 59 früher.
+
+**Einordnung:**
+- Der Vorsprung der Referenz (+0,72 % je Handel, Rang 1,00) ist echt **für diese eine Konstellation**. Er entsteht aber aus einer Reife-Regel, die am Datenbeginn einer fremden Quelle hängt.
+- Bei echtem Kursbeginn ist der Vorsprung je Handel klein und nicht von Zufall zu trennen. Je Tag ist er negativ.
+- ⇒ **Die REGEL0 0.1 hat keinen belegten Vorsprung.**

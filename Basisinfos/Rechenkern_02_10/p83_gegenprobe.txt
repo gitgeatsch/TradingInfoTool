@@ -1,0 +1,10 @@
+P83 GEGENPROBE
+  Referenz (gemischt)  G1 Z1 je Handel +0.718 (p83 +0.718) je Tag -0.239 (p83 -0.239) ok · G2 Rang14 1.000/0.170 (p83 1.000/0.144) gleiches Urteil
+  Start 2019-06        G1 Z1 je Handel +0.220 (p83 +0.220) je Tag -0.409 (p83 -0.409) ok · G2 Rang14 0.807/0.024 (p83 0.810/0.029) gleiches Urteil
+  Start 2020-06        G1 Z1 je Handel +0.220 (p83 +0.220) je Tag -0.409 (p83 -0.409) ok · G2 Rang14 0.813/0.038 (p83 0.797/0.021) gleiches Urteil
+  Start 2021-06        G1 Z1 je Handel +0.220 (p83 +0.220) je Tag -0.409 (p83 -0.409) ok · G2 Rang14 0.810/0.029 (p83 0.811/0.027) gleiches Urteil
+  Start 2021-12        G1 Z1 je Handel +0.220 (p83 +0.220) je Tag -0.409 (p83 -0.409) ok · G2 Rang14 0.844/0.031 (p83 0.818/0.035) gleiches Urteil
+  Start 2022-06        G1 Z1 je Handel +0.123 (p83 +0.123) je Tag -0.591 (p83 -0.591) ok · G2 Rang14 0.764/0.014 (p83 0.704/0.017) gleiches Urteil
+  Start 2023-01        G1 Z1 je Handel +0.393 (p83 +0.393) je Tag -0.335 (p83 -0.335) ok · G2 Rang14 0.956/0.100 (p83 0.932/0.080) ANDERES URTEIL
+  G3 Lader ab 2022-06: 127 Reihen, davon vor 2022-06-01 beginnend: 0 · ohne ab beginnen 59 Reihen frueher
+ERGEBNIS: G1 ok · G2 NICHT OK · G3 ok

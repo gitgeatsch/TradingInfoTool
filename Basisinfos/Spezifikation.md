@@ -842,7 +842,7 @@ Start mit Kryptowährungen, später erweiterbar auf Aktien, ETF, Rohstoffe.
   6. Fear & Greed.
 - **Wo du es siehst:** Statusseite in der Makro-Karte, als eine Zeile in jeder Handlungsmail, im Reiter *Markt (Krypto)*.
 - **Was es bewirkt:** nichts. Es löst nichts aus. Die einzige Farbe ist die **Rezessionsampel ROT**, wenn Zinskurve und Sahm-Regel zugleich anschlagen. In der Rückschau 1982–2026 bestätigte ROT jede der 5 Rezessionen, aber erst 1–3 Monate nach deren Beginn (E-137).
-- **REGEL0-Vorbehalt (E-136):** Mit Kursdaten ab 2019 ergibt dieselbe REGEL0 für 2024–26 ein Minus statt des gemessenen Plus. Die Signalmails laufen unverändert weiter; ihr gemessenes Plus gilt nur unter diesem Vorbehalt.
+- **REGEL0-Vorbehalt (E-136):** Mit Kursdaten ab 2019 ergibt dieselbe REGEL0 für 2024–26 ein Minus statt des gemessenen Plus. Die Signalmails laufen unverändert weiter. **Gemessen (E-139):** nicht robust; das Plus entsteht allein aus der Reife-Regel am Datenbeginn, ein Vorsprung ist nicht belegt.
 
 ## 11. Roadmap & Erweiterbarkeit
 

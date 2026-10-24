@@ -2668,3 +2668,9 @@ Schritt7 §23.24.
 - Die Abhängigkeit vom Datenbeginn sitzt im Querschnitt (Monatsmodell, Schrumpfung) und an den marktweiten Signaltagen.
 - Das gemessene Plus der REGEL0 war nie von null zu trennen.
 - Nächster Schritt zur Abstimmung: Messplan R (Vorsprung gegen Zufallsstunden bei sechs gemeinsamen Startdaten, Zerlegung in vier Bausteine).
+
+**Nachtrag 24.10.2026 (68) — Messplan R: REGEL0 nicht robust** (E-139):
+- Bei echtem Kursbeginn ist der Vorsprung der REGEL0 gegen die Drift ihrer Coins nicht von Zufall zu trennen; je Tag gewichtet ist er negativ.
+- Das Plus der Referenz entsteht allein aus der Reife-Regel ab dem Beginn der Terminmarktdaten.
+- Damit gibt es derzeit keinen Signalgeber mit belegtem Vorsprung.
+- Nächster Schritt: Abstimmung über den Betrieb der REGEL0 und die Richtung.
