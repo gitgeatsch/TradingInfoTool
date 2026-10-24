@@ -1,0 +1,8 @@
+== p78 2026-10-23 17:06 --probe
+R-R11 Kopie (Betriebswerte, data/): ZEILENGLEICH · 10732 gegen 10732 Zeilen
+== p78 2026-10-24 06:53 
+Anker 4257930, Assets 127, erste Stunde 2019-06-11 00:00 · 48 s
+Lauf A (2024-01..2026-08, Lernbeginn 2023-01): 32 Monatsmodelle, 11701 Einstiege
+Lauf B (2020-07..2023-12, Lernbeginn 2020-06): 37 Monatsmodelle, 1714 Einstiege · ohne Modell (< 5.000 Treffer): 2020-07, 2020-08, 2020-09, 2020-10, 2020-11
+  Lauf B je Jahr: {2023: 1714}
+Auskunft Lauf A gegen Referenz: gemeinsam 6122, nur A 5579, nur Referenz 4610 · Anteil gleicher Einstiege 37.5 %

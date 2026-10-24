@@ -1,0 +1,11 @@
+P80 GEGENPROBE F-1 Fassung 2 / E-136
+   REGEL0.1-RECHENKERN Nachrechnung 2024-01..2026-08: 4257930 Anker, 127 Assets (Zusatz 11), 32 Monatsmodelle, 11701 Einstiege · Laden 40 s · Rechnen 85 s
+G1 Lauf A Kommandozeile gegen p78: ZEILENGLEICH (11701 / 11701 Zeilen)
+G2 Referenz   10732 Handel netto je Handel +0.153 %
+G2 Lauf A     11701 Handel netto je Handel -0.340 %
+G2 Lauf B      1714 Handel netto je Handel -0.229 %
+G2 gemeinsam      6122 Handel netto je Handel +0.079 %
+G2 nur Lauf A     5579 Handel netto je Handel -0.799 %
+G2 nur Referenz   4610 Handel netto je Handel +0.251 %
+G3 2021: 189 Laeufe ueber der Schwelle, davon nach einer Ankerluecke binnen 48 h: 189 · Tage: 2021-03-16, 2021-05-05, 2021-06-28, 2021-08-23, 2021-08-24, 2021-10-09
+ERGEBNIS: G1 ok · G3 ok (G2 Werte gegen p79 vergleichen)

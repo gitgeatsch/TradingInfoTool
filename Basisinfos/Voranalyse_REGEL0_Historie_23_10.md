@@ -148,3 +148,61 @@ Nutzer 23.10.: *„L-A“* · *„und Download“*. Herkunft: E-133 (2024–26 n
 - `p77_hist_aufbau.py` (Aufbau `data/_hist`, Abgleich);
 - `p78_regel0_lauf_ab.py` (Lauf A/B, `--probe` = R-R11 der Kopie);
 - `p79_f1_fg_gier.py` (Selbsttest, dann Messung).
+
+## 7. Ergebnis 24.10.2026 — F-1 Fassung 2 abgebrochen; die REGEL0 hängt an der Datenlänge (E-136)
+
+Nutzer 24.10.: *„E1 A“*.
+
+### 7.1 Daten (`data/_hist/`, nicht versioniert)
+
+| Schritt | Ergebnis |
+|---|---|
+| Download `p76` | 4.715 Monatsdateien + 127 erste Monate, alle SHA-256 gültig, 154 MB |
+| Aufbau `p77` | 94 von 127 Symbolen mit Historie (die übrigen erst mit Bestandsbeginn gelistet), 1.043.913 neue Zeilen, Übergang lückenlos bei allen |
+| Abgleich Überlappungsmonat | 57 von 62.359 Zeilen weichen ab. In der Stichprobe (7 Symbole, 35 Zeilen) ist die **Archivkerze von data.binance.vision abgeschnitten** (open = high = low = close, nur der erste Handel); der Bestand hat die volle Kerze |
+| Zweiter Weg `p77b` | ganze Historie über die REST-Schnittstelle (Quelle des Bestands): von 1.035.809 Zeilen 1.035.634 gleich, 135 abweichend (38 flach) und durch REST ersetzt, 40 nur im Archiv (etwa eine je Symbol, offen ohne Belang), 0 nur in REST |
+
+### 7.2 Läufe (`p78`, Betriebscode unverändert)
+
+| | Monatsmodelle | Einstiege |
+|---|---|---|
+| R-R11 heute (`data/`) | 32 | 10.732 = Referenz, alle Spalten |
+| R-R11 der Lauf-B-Kopie mit Betriebswerten | 32 | 10.732 = Referenz |
+| **Lauf A** (2024-01 bis 2026-08) | 32 | 11.701 |
+| **Lauf B** (2020-07 bis 2023-12) | 37 (2020-07 bis 11 ohne Modell) | 1.714, **nur 2023** |
+
+### 7.3 Befund 1 — die REGEL0 feuert 2020 bis 2022 nicht
+
+- **2022:** v-dach liegt selbst im 99,9. Perzentil bei −0,43 %; die Schwelle ist +3,5 %. Die Streuung des Modellbeitrags ist dort 0,027, 2023 sind es 0,082.
+- **2021:** 4.278 Stunden liegen über der Schwelle. Es sind 189 Läufe an 6 Tagen, **alle nach einer Ankerlücke** binnen 48 h (Datenlücken über alle Assets). Die Ruheregel verwirft sie zu Recht (`p80` G3).
+- **Folge:** Kriterium (2) („6 von 9 Halbjahren ab 2020-H2“) ist nicht erfüllbar. Die Messung könnte nur „trägt nicht“ ergeben, ohne etwas über Fear & Greed zu sagen. Der Filter wurde **nicht angesehen**.
+
+### 7.4 Befund 2 — das Ergebnis hängt an der Datenlänge
+
+Dieselbe Regel, dieselben Monate 2024–26, nur mit der Vorgeschichte ab 2019 (netto je Handel nach 0,48 %):
+
+| | Handel | netto |
+|---|---|---|
+| Referenz (Daten wie im Betrieb) | 10.732 | **+0,153 %** |
+| Lauf A | 11.701 | **−0,340 %** |
+| — gemeinsame Einstiege | 6.122 | +0,079 % |
+| — nur Lauf A | 5.579 | −0,799 % |
+| — nur Referenz | 4.610 | +0,251 % |
+| Lauf B (2023) | 1.714 | −0,229 % |
+
+- Nur 37,5 % der Einstiege sind gleich.
+- Die Verschiebung zeigt sich bei Assets mit Bestandsbeginn vor 2023 (+0,088 / −0,933 / +0,300 %) genauso wie danach (+0,074 / −0,726 / +0,225 %). Sie liegt also nicht an einigen neu gereiften Werten, sondern an der ganzen Rechnung: Reife, Normal, Schrumpfung über den Querschnitt, Trainingsmenge.
+- **Einordnung (R-R11):** Das widerlegt die REGEL0 nicht; sie wurde mit einer anderen Basis gerechnet. Aber das Plus von +0,15 % hängt daran, **wann für jedes Symbol die Datensammlung begann**. Das ist keine Regel, sondern ein Merkmal der Grundgesamtheit.
+
+### 7.5 Gegenprobe (`p80_gegenprobe_historie.py`, 3/3)
+
+- **G1:** Lauf A über die Kommandozeile des Erzeugers ist zeilengleich zu p78 (11.701).
+- **G2:** Der Nettoertrag, je Einstieg per SQL über den Stundentext gerechnet (ohne Raster), ergibt dieselben Werte samt Zerlegung.
+- **G3:** Alle 189 Läufe über der Schwelle 2021 folgen auf eine Ankerlücke.
+
+### 7.6 Folge (E-136)
+
+- F-1 Fassung 2 ist **abgebrochen**.
+- Fear & Greed bleibt **Fakt im Lagebild** (L6, E-137).
+- **Betrieb unverändert:** Die REGEL0 läuft als Vorwärtsprotokoll weiter, mit dem Vorbehalt „Ergebnis nicht robust gegen die Datenlänge“.
+- **Nächster Schritt:** Voranalyse Robustheit der REGEL0. Welcher Baustein macht den Unterschied: Reife (Reihenbeginn `st0`), eigenes Normal, Schrumpfung, Trainingsmenge des Monatsmodells? Das ist messbar, je Baustein einzeln umgeschaltet auf `data/_hist`.
