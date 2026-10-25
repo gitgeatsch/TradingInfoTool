@@ -1839,3 +1839,31 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Gegenprobe = zweiter Weg;
 - Zwischenfassungen committen;
 - Geltungsbereich im Urteilssatz.
+
+# E-142 · Voranalyse Vorsprungs-Atlas: Der Auswahl-Vorsprung wirkt über Monate; im 24-h-Einstieg ist er zehnmal kleiner als messbar (25.10.2026)
+
+**25.10.2026** · Nutzer:
+- *„wir müssen den Vorsprung ausbauen und das ist unabhängig von den Kosten“*
+- *„der Drift muss über die besseren assets und optimale Einstiege ausgeglichen werden“*
+- *„ja Voranalyse Vorsprungs-Atlas starten, prüfen gegenprüfen und doku“*
+
+**Grundlage:** `Voranalyse_Vorsprungs_Atlas_25_10.md`; `p85_atlas_voranalyse.py`, Gegenprobe `p85_gegenprobe.py` 3/3.
+
+**Befunde:**
+- **Hauptgröße** jeder weiteren Suche ist der Vorsprung gegen die Drift **ohne Kosten**; die Kosten kommen als spätere Prüfung.
+- Die Auswahl (Watchlist-Ordnung) ist **belegt** (Spot §25.6, B4), aber **langsam**:
+  - oberes Fünftel +12,1 Pp über 12 M ⇒ anteilig nur 0,03 Pp je 24 h;
+  - messbar wären ab 0,29 Pp je Handel bzw. 0,77 Pp je Tag.
+- Eine **additive** Kombination mit REGEL0-Einstiegen ist damit nicht nachweisbar, nur ein **Zusammenwirken**.
+- Auch der beste Auswahl-Korb verlor gegen BTC (−7 % / −26 % in 12 M). Der Drift-Ausgleich ist eine Frage der **Monatsebene**.
+- **Machbarkeit:**
+  - R-R11 der Auswahl auf 19.610 Ankern gleich;
+  - 95 % der Einstiege haben einen Wert (BTC/ETH/SOL nicht).
+- **Eigener Fehler vor der Bewertung behoben:** Die Zufallseinteilung lief erst je Einstieg statt je Coin und Stichtag.
+
+**Folge:** Messplan A Fassung 1 zur Abstimmung:
+- A1 Zerlegung auf der Monatsebene (Auskunft);
+- A2 Zusammenwirken Auswahl × Einstieg (ein Test, Referenz und Lauf A, Bestätigung 2023);
+- Abbruchregel.
+
+**Betrieb unverändert.**

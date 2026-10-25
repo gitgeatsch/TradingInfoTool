@@ -1,0 +1,4 @@
+G1 Abdeckung merge_asof: mit Wert 10247, Fuenftel 2563 / 2210 / 1705 / 1789 / 1980 (p85: 10247 / 2563 / 2210 / 1705 / 1789 / 1980) -> ok
+G2 MDE 24 h je Handel: Formel (Cluster Coin x Stichtag, 2807 Cluster) 0.26 Pp gegen Simulation 0.29 Pp, Verhaeltnis 0.88 -> ok
+G3 Dosis oberes Fuenftel E3 laut b4_vormessung.txt: 12.1 Pp (angesetzt +12,1) -> ok
+ERGEBNIS 3 von 3

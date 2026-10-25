@@ -2684,3 +2684,8 @@ Schritt7 §23.24.
 - Inhaltlich sind acht Stellen berichtigt, darunter die Festschreibung der REGEL0 (B6 gegen 0 statt gegen den Versatz) und „trägt auf Kraken“ (jetzt nicht entscheidbar).
 - Kein Einstiegssignal hat einen belegten Vorsprung. Belegt sind Schadensbegrenzung, Schutz und Fakten.
 - Nächster Schritt: die Richtung als Kombination (Bilanz B.6/B.7).
+
+**Nachtrag 25.10.2026 (71) — Voranalyse Vorsprungs-Atlas** (E-142):
+- Hauptgröße ist der Vorsprung gegen die Drift ohne Kosten.
+- Die Auswahl der besseren Assets ist belegt, wirkt aber über Monate. Im 24-h-Einstieg ist sie nicht messbar, nur ein Zusammenwirken mit dem Einstieg wäre es.
+- Nächster Schritt zur Abstimmung: Messplan A (Zerlegung auf der Monatsebene, Test Auswahl × Einstieg).

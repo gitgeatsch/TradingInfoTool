@@ -1,0 +1,17 @@
+P85 VORANALYSE VORSPRUNGS-ATLAS
+
+V1 R-R11 Auswahl: Stichtage h=1 2019-01-01..2026-09-01 (93) gegen h=365 2019-01-01..2025-09-01 (81) · gemeinsame Anker 19681 · Klasse gleich 100.0 % · Perzentil gleich 100.0 % (beide mit Wert 19610) · Anker nur in h=1 an gemeinsamen Stichtagen 0
+
+V2 Referenz 2024-26: 10732 Einstiege · mit Wert 10247 (95 %) · ohne Stichtag 0 · Fuenftel 1-5: 2563 / 2210 / 1705 / 1789 / 1980 · Klassen H/M/S: 1051 / 3856 / 5340
+    je Jahr mit Wert: {2024: 2217, 2025: 4514, 2026: 3516} · Tage mit Einstieg im oberen Fuenftel: 440
+    haeufigste ohne Wert: BTC 95, ETH 91, SOL 90, ASTER 36, CC 35, MON 28, HYPE 8, GRIFFAIN 7, AKT 6, COW 5, BIO 5, CGPT 5
+V3 Referenz 2024-26 24 h: 10247 Einstiege, oberes Fuenftel 1980 · MDE 'oben - alle' je Handel 0.29 Pp · je Tag 0.77 Pp · erwarteter Auswahl-Effekt, falls gleichmaessig ueber 12 M: 0.03 Pp
+V3 Referenz 2024-26 7 T : 10240 Einstiege, oberes Fuenftel 1980 · MDE 'oben - alle' je Handel 0.80 Pp · je Tag 1.79 Pp · erwarteter Auswahl-Effekt, falls gleichmaessig ueber 12 M: 0.23 Pp
+V3 Referenz 2024-26 30 T: 10045 Einstiege, oberes Fuenftel 1932 · MDE 'oben - alle' je Handel 2.71 Pp · je Tag 5.09 Pp · erwarteter Auswahl-Effekt, falls gleichmaessig ueber 12 M: 0.99 Pp
+
+V2 Lauf B 2023: 1714 Einstiege · mit Wert 1610 (94 %) · ohne Stichtag 0 · Fuenftel 1-5: 329 / 172 / 364 / 373 / 372 · Klassen H/M/S: 242 / 780 / 588
+    je Jahr mit Wert: {2023: 1610} · Tage mit Einstieg im oberen Fuenftel: 107
+    haeufigste ohne Wert: BTC 27, ETH 26, SOL 25, PENDLE 5, SEI 5, BEAMX 4, MEME 4, ORDI 4, BLUR 2, TIA 1, JTO 1
+V3 Lauf B 2023 24 h: 1610 Einstiege, oberes Fuenftel 372 · MDE 'oben - alle' je Handel 0.43 Pp · je Tag 1.00 Pp · erwarteter Auswahl-Effekt, falls gleichmaessig ueber 12 M: 0.03 Pp
+V3 Lauf B 2023 7 T : 1610 Einstiege, oberes Fuenftel 372 · MDE 'oben - alle' je Handel 2.41 Pp · je Tag 2.82 Pp · erwarteter Auswahl-Effekt, falls gleichmaessig ueber 12 M: 0.23 Pp
+V3 Lauf B 2023 30 T: 1610 Einstiege, oberes Fuenftel 372 · MDE 'oben - alle' je Handel 9.94 Pp · je Tag 9.98 Pp · erwarteter Auswahl-Effekt, falls gleichmaessig ueber 12 M: 0.99 Pp
