@@ -254,3 +254,27 @@ Die **Notebook-Diagnose** bekommt einen Abschnitt `spot_b4_fuenftel`. Er gibt da
 | **L2-a (Empfehlung)** | **Regime-Hebel auf dem Kern:** Kern long, Haltedauer 7 T, **nur in einem vorab messbaren Aufwärtsregime**. Prüfung auf **langer Kern-Historie 2019–2026** (Stundenkurse ab 2019 liegen vor), unabhängig von REGEL0-Signalen, mit der Season-Ampel und einem einfachen Trendmaß als Regime | Der Regime-Zeitpunkt war bisher **nicht vorab erkennbar** (W3, M-A, E-126). Dort muss sich zeigen, ob ein Regime-Maß die 7-T-Haltedauer trägt |
 | L2-b | REGEL0 auf dem Kern bleibt 24 h (heute), nur Fakt-Zeilen | kein Ertrag belegt (netto ≈ 0) |
 | L2-c | Kraken statt Bitpanda (geringere Kosten) | nicht steuereinfach (E-130) |
+
+### 9.3 Berichtigung: L-2 neutral bewertet, Gebühren nachgelagert (Nutzer 25.10.)
+
+Nutzer 25.10.: *„die Einstiege und Bewertung soll vorerst neutral erfolgen, ob ein Trade sich lohnt und wie sich die Gebühren auswirken ist nachgelagert zu bewerten“*.
+
+⚠️ **Eigener Fehler:** Der Messplan §8.2 machte **netto nach Bitpanda-Kosten** zur Hauptgröße (i). Das widerspricht der stehenden Regel 2 (*Gebühren gehören nicht in die Bewertung*) und der Vorgabe vom 25.10. (*Vorsprung unabhängig von den Kosten*).
+
+**Neutrale Bewertung derselben Läufe** (ohne Kosten; Ertrag vor Kosten = netto + Kosten aus §9.2; Vorsprung = (ii), schon ohne Kosten gerechnet):
+
+| Kern BTC/ETH/SOL | | 24 h | 72 h | 168 h |
+|---|---|---|---|---|
+| Referenz 2024–26 | Ertrag vor Kosten je Handel | +0,54 % | +0,44 % | +1,15 % |
+| | **Vorsprung gegen Zufallsstunden** je Handel / je Tag (Rang) | +0,48 / +0,25 Pp (0,98 / 0,83) | +0,24 / +0,09 (0,73 / 0,59) | +0,70 / +0,43 (0,83 / 0,71) |
+| Lauf A 2024–26 | Ertrag vor Kosten | +0,16 % | −0,10 % | +0,92 % |
+| | **Vorsprung** je Handel / je Tag (Rang) | +0,09 / +0,05 (0,65 / 0,57) | −0,32 / −0,17 (0,26 / 0,37) | +0,43 / +0,26 (0,71 / 0,59) |
+| 2023 | Ertrag vor Kosten | +0,86 % | +2,36 % | +5,54 % (KEIN BEFUND) |
+
+**Neutrales Urteil:**
+- Der Vorsprung des REGEL0-Einstiegs auf dem Kern ist bei keiner Haltedauer belegt, weder je Handel **und** je Tag noch auf beiden Einstiegswegen.
+- Stufen: **TRÄGT NICHT BIS 1,0 Pp (24 h) / 2,0 Pp (72 h, 168 h)**.
+- Längeres Halten hebt den Ertrag vor Kosten nur in Aufwärtsphasen (2023, 2024). Das ist die **Drift des Marktes**, kein Vorsprung des Einstiegs.
+- Die Kosten sind ein späterer Schritt und hier nicht Teil des Urteils.
+
+**Ab sofort für alle Pläne:** Hauptgröße ist der Vorsprung bzw. der Ertrag **vor** Kosten. Gebühren werden erst geprüft, wenn ein Vorsprung belegt ist.

@@ -1979,3 +1979,9 @@ Dazu ein Nachtrag zu E-139 (7- statt 15-Tage-Blöcke, Urteil bleibt).
 Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 
 **Betrieb unverändert.**
+
+**Nachtrag 25.10.2026 zu E-146 (Nutzer: *„Bewertung soll vorerst neutral erfolgen … Gebühren nachgelagert“*):**
+- L-2 hatte netto nach Kosten als Hauptgröße. Das war ein **eigener Fehler** gegen Regel 2.
+- Neutral bewertet (Voranalyse L1/L2 §9.3) ist der Vorsprung auf dem Kern bei keiner Haltedauer belegt (TRÄGT NICHT BIS 1,0 / 2,0 / 2,0 Pp).
+- Längeres Halten hebt den Ertrag vor Kosten nur in Aufwärtsphasen (Drift, kein Vorsprung).
+- Künftig sind Kosten ein nachgelagerter Schritt.
