@@ -152,3 +152,70 @@ Nutzer 25.10.: *„Vergleiche auch ob die top 100 Altcoins oder u.U. top 50 ggf.
 - Je Gruppe und Epoche dieselben Größen wie §6.2: Gruppe − BTC, Fünftel 5 in der Gruppe − Gruppe, Fünftel 5 − BTC, Anteil der Stichtage mit Fünftel 5 > BTC, Band.
 - Coins **ohne Umlaufangabe** haben keinen Rang und fehlen in den Top-Gruppen. Ihr Anteil am Gesamtmarkt wird ausgewiesen.
 - In A2 kommt dieselbe Gruppierung als **Auskunft** hinzu; das Urteil bleibt wie in §6.3.
+
+### 6.5 Abgleich mit dem Mess-Regelwerk vor jeder Bewertung (25.10.2026; Nutzer: *„gehe auch vorher in unser mess Regelwerk damit wir hier keine Abweichungen haben“*)
+
+| Regel (`messnorm`) | Abweichung gefunden | Behebung |
+|---|---|---|
+| **Blocklänge** = max(15 T, 3 × Horizont) (`_block`), je Messung nachgeprüft (Autokorrelation beim Blockabstand ≤ 0,15, `pruefe_block`) | A1 lief zuerst mit 1 bzw. 12 Monaten; der Plan A2 und Messplan R (`p83`) mit 7 Tagen | A1: Block 3 Stichtage (1 M) bzw. 37 (12 M), Autokorrelation ausgewiesen. **A2: 15-Tage-Blöcke** plus `pruefe_block`. R: siehe Nachtrag E-139 |
+| **Unter 20 Blöcken: KEIN BEFUND** (`Befund`, Z. 689) | nicht angewendet | A1 gibt unter 20 Blöcken kein Band aus, nur den Punktwert („beschreibend“) |
+| **Urteilsstufen** TRÄGT / TRÄGT NICHT BIS X / NICHT TRENNBAR / KEIN BEFUND; Bezug = **Nullpunkt** (Mittel der Nullwelten) | Plan A2 kannte nur „trägt / trägt nicht“ und den Bezug 0 | A2 übernimmt die Stufen und den Nullpunkt (Mittel der 100 Zufallseinteilungen); „trägt nicht bis X“ aus der Pflanzung |
+| Band über Blöcke, nicht über Einzelwerte (Methodik 2.47) | A1 lief zuerst mit gleitenden Blöcken **ohne Umlauf**; der Punktwert lag teils außerhalb seines Bands | zirkuläre Blöcke |
+
+**Plan A2, damit vor dem Lauf berichtigt:**
+- Rang und Band über **15-Tage-Blöcke**, Autokorrelation geprüft.
+- Bezug ist der Nullpunkt der Zufallseinteilungen.
+- Urteil in den Stufen der Norm: „trägt“ nur, wenn das Band den Nullpunkt ausschließt, je Handel **und** je Tag, auf beiden Einstiegswegen; 2023 in derselben Richtung.
+- Alles Übrige wie §6.3.
+
+## 7. Ergebnis Teil A1, 25.10.2026 (Auskunft; `p86_a1_zerlegung.py`, Gegenprobe `p86_gegenprobe.py` 3/3)
+
+**Nach dem Regelwerk belastbar ist nur 1 Monat über alle Jahre 2019–2026** (92 Stichtage, 31 Blöcke, Autokorrelation ≤ 0,15). Je Epoche hat 1 M nur 10–12 Blöcke, 12 M höchstens 2. Das ist **KEIN BEFUND**; die Punktwerte sind dort nur beschreibend.
+
+### 7.1 Belastbar: 1 Monat, alle Jahre (Pp je Monat, Band 95 %)
+
+| Gruppe | Gruppe − BTC | **oberes Fünftel − Gruppe** | oberes Fünftel − BTC |
+|---|---|---|---|
+| Top 30 | −0,9 [−4,8; +3,1] | **+3,5 [+0,7; +7,5]** | +2,6 [−3,0; +9,4] |
+| Top 50 | −0,8 [−4,6; +3,4] | +2,0 [−0,6; +5,8] | +1,2 [−3,7; +7,1] |
+| Top 100 | −0,3 [−4,8; +5,3] | +1,7 [−0,4; +4,2] | +1,4 [−4,2; +8,1] |
+| Gesamt | −0,7 [−5,1; +5,1] | **+1,5 [+0,3; +2,9]** | +0,8 [−4,2; +7,1] |
+
+- **Die Auswahl wirkt auch auf 1 Monat**, am stärksten in den **Top 30**: Das obere Fünftel liegt +3,5 Pp je Monat über seiner Gruppe; das Band schließt die Null aus.
+- **Gegen BTC ist in keiner Gruppe etwas belegt.** Alle Bänder schließen die Null ein.
+
+### 7.2 Beschreibend je Epoche (KEIN BEFUND nach der Norm; Pp)
+
+| | 1 M ab 2024 | | | 12 M ab 2024 | | |
+|---|---|---|---|---|---|---|
+| Gruppe | Gruppe − BTC | F5 − Gruppe | F5 − BTC | Gruppe − BTC | F5 − Gruppe | F5 − BTC |
+| **Top 30** | −2,9 | +5,3 | **+2,4** | −43,7 | +33,0 | **−10,7** |
+| Top 50 | −3,7 | +4,9 | +1,3 | −55,3 | +21,5 | −33,8 |
+| Top 100 | −4,8 | +2,5 | −2,3 | −62,7 | +22,8 | −39,9 |
+| H | −1,9 | +4,7 | +2,8 | −31,0 | +24,2 | −6,8 |
+| S | −5,7 | −0,3 | −6,0 | −77,0 | +1,7 | −75,3 |
+| **Gesamt** | −5,5 | +0,5 | −4,9 | −72,7 | +7,9 | −64,8 |
+
+**Zur Nutzerfrage „Top 100 / Top 50 anders als der Gesamtmarkt?“ (beschreibend):**
+- **Ja, und je enger, desto deutlicher.** Ab 2024 verlor der Gesamtmarkt in 12 M −73 Pp gegen BTC, die Top 100 −63, die Top 50 −55, die **Top 30 −44**.
+- Die Auswahl wirkt in den großen Gruppen (Top 30 +33 Pp) und **nicht bei den Kleinwerten** (S +1,7).
+- **Das obere Fünftel der Top 30 kam nahe an BTC heran** (−11 Pp in 12 M, +2,4 Pp je Monat), das des Gesamtmarkts nicht (−65 Pp).
+- Die Masse der Kleinwerte (S) zieht den Gesamtmarkt nach unten; dort hilft keine Auswahl. Das bestätigt deinen Hinweis.
+
+### 7.3 Je Season-Ampel-Stufe (beschreibend, alle Epochen)
+
+- **kalt** (56 von 88 Stichtagen): Altcoins −5 Pp je Monat gegen BTC; auch das obere Fünftel liegt darunter (Top 100 −3,4); oberes Fünftel > BTC nur in 29 %.
+- **Season-Klima, Überhitzung, Ende** (6–15 Stichtage, fast nur 2020–21): Altcoins weit über BTC (+10 bis +24 Pp je Monat).
+- ⇒ Die Ampel trennt die Lage, in der Altcoins BTC schlagen, von der, in der sie es nicht tun. Für eine Regel sind die Stichtage zu wenige.
+
+### 7.4 Wie sich Krypto verändert hat (Auskunft)
+
+- **BTC-Volatilität** je Jahr: 2017 93 % · 2018 84 % · 2019 70 % · 2020 78 % · 2021 79 % · 2022 65 % · **2023 43 % · 2024 52 % · 2025 42 % · 2026 45 %**. Seit 2023 etwa halb so hoch wie bis 2021.
+- **Coins je Stichtag** (Binance-Messbasis): E1 72 → E2 284 → **E3 375**. Fast der ganze Zuwachs liegt in S (20 → 161 → 268), die Top 100 sind voll besetzt.
+- In **2021–23** wirkte die Auswahl auch bei S (+36,5 Pp in 12 M), **ab 2024 nicht mehr**. Das ist ein Zeichen des veränderten Markts.
+
+### 7.5 Was A1 für das Ziel heißt (zur Abstimmung)
+
+1. Die **besseren Assets** gibt es **messbar**: Die Auswahl schlägt ihre Gruppe, belastbar auf 1 Monat, am stärksten bei den Top 30.
+2. Den **Drift gegen BTC** gleicht sie bisher **nicht belegt** aus. Am nächsten kommt das obere Fünftel der **Top 30**, gerade im heutigen Markt.
+3. **Kleinwerte** tragen nichts zur Lösung bei; sie sind der Hauptteil des Drifts.

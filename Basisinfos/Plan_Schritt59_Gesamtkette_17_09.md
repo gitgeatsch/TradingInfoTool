@@ -2689,3 +2689,8 @@ Schritt7 §23.24.
 - Hauptgröße ist der Vorsprung gegen die Drift ohne Kosten.
 - Die Auswahl der besseren Assets ist belegt, wirkt aber über Monate. Im 24-h-Einstieg ist sie nicht messbar, nur ein Zusammenwirken mit dem Einstieg wäre es.
 - Nächster Schritt zur Abstimmung: Messplan A (Zerlegung auf der Monatsebene, Test Auswahl × Einstieg).
+
+**Nachtrag 25.10.2026 (72) — Messplan A, Teil A1** (E-143):
+- Die Auswahl der besseren Assets schlägt ihre Gruppe, belastbar auf 1 Monat, am stärksten bei den Top 30.
+- Gegen BTC ist sie nicht belegt. Im heutigen Markt kommt das obere Fünftel der Top 30 BTC am nächsten; Kleinwerte tragen nichts bei.
+- Vor der Bewertung wurde das Mess-Regelwerk abgeglichen und vier Abweichungen behoben.

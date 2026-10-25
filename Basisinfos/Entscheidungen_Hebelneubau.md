@@ -1799,6 +1799,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 
 **Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Geltungsbereich:** Das Urteil gilt für die Menge *bestand*; die unverzerrten Mengen sind nicht nachgerechnet. Der „Vorsprung der Referenz“ gilt nur je Handel (je Tag −0,24 %). Je Handel allein wäre Kriterium (2) 6 von 6; das 0 von 6 kommt aus der vorab festgelegten Je-Tag-Bedingung.
 
+**Nachtrag 25.10.2026 (E-143, Abgleich mit dem Mess-Regelwerk):** Der Tagesblock-Rang in `p83` nutzte 7-Tage-Blöcke. Die Norm verlangt max(15 T, 3 × Horizont) = 15 Tage. Die Gegenprobe G2 mit 14-Tage-Blöcken gab dasselbe Urteil (nicht robust). Ein Teilrang lag an der Grenze (Start 2023-01 je Handel 0,932 → 0,956), das Gesamturteil hängt aber an der Je-Tag-Bedingung (Ränge ≤ 0,17). Das Urteil bleibt; die Abweichung ist vermerkt.
+
 # E-140 · REGEL0 im Betrieb vorerst unverändert; Richtung nach Gesamtbilanz R-3 (25.10.2026)
 
 **25.10.2026** · Nutzer: *„also mit regel0 welche wir für hebel benötigen ist nicht geeignet und gemessen, hier bleibt nur vorerst alles so zu belassen. Frage 2 musst du mir genauer beschreiben - sehe hier eher eine kombination. R3 benötigen wir ohnehin“*.
@@ -1867,3 +1869,33 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Abbruchregel.
 
 **Betrieb unverändert.**
+
+# E-143 · Messplan A Teil A1: Die Auswahl schlägt ihre Gruppe (belastbar, 1 M); die Top 30 kommen BTC am nächsten; gegen BTC nichts belegt (25.10.2026)
+
+**25.10.2026** · Nutzer:
+- *„ja Messplan A festlegen, prüfen gegenprüfen und doku - immer alle Teilergebnisse mit mir Abstimmen …“*
+- *„Vergleiche auch ob die top 100 Altcoins oder u.U. top 50 ggf. anders als der Gesamtmarkt gesehen werden kann.“*
+- *„gehe auch vorher in unser mess Regelwerk damit wir hier keine Abweichungen haben“*
+
+**Grundlage:** `Voranalyse_Vorsprungs_Atlas_25_10.md` §6 (vorab a5825547), §6.4 (ec3f83e4), §6.5, §7; `p86_a1_zerlegung.py`, Gegenprobe `p86_gegenprobe.py` 3/3.
+
+**Mess-Regelwerk (§6.5):** vier Abweichungen vor der Bewertung behoben:
+- Blocklänge nach `messnorm._block`;
+- unter 20 Blöcken KEIN BEFUND;
+- Urteilsstufen und Nullpunkt in A2;
+- zirkuläre Blöcke.
+
+Dazu ein Nachtrag zu E-139 (7- statt 15-Tage-Blöcke, Urteil bleibt).
+
+**A1 (Auskunft):**
+- **Belastbar** (1 M, 2019–2026): oberes Fünftel − Gruppe **Top 30 +3,5 Pp/M [+0,7; +7,5]**, Gesamt +1,5 [+0,3; +2,9]. Gegen BTC ist in keiner Gruppe etwas belegt.
+- **Beschreibend ab 2024:** Je enger die Gruppe, desto kleiner der Drift (12 M gegen BTC: Gesamt −73, Top 100 −63, Top 50 −55, Top 30 −44 Pp).
+  - Das obere Fünftel der Top 30 liegt nahe BTC (−11 Pp / 12 M, +2,4 Pp / M).
+  - Kleinwerte ohne Auswahlwirkung (S +1,7).
+  - Season-Ampel: in *kalt* verlieren Altcoins gegen BTC.
+  - BTC-Volatilität seit 2023 etwa halb so hoch.
+
+**Folge:**
+- Abstimmung über A1, danach A2 (Auswahl × Einstieg) mit dem berichtigten Plan.
+- Zusätzlich zu prüfen ist eine Fassung „Top 30, oberes Fünftel“ (Nutzer entscheidet).
+- **Betrieb unverändert.**
