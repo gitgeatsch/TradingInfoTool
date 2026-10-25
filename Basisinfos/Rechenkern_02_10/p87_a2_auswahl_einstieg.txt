@@ -1,0 +1,21 @@
+P87 MESSPLAN A · TEIL A2 ZUSAMMENWIRKEN AUSWAHL x EINSTIEG · Block 15 Tage (messnorm._block(1))
+
+R-R11 Z1 24 h Referenz (alle 10732 Einstiege mit Kurs): +0.718 % (p83 +0,718) -> ok
+SELBSTTEST (Referenz, 24 h, 100 Zufallseinteilungen je Coin x Stichtag, Anteil oben 19.3 %): Nullpunkt je Handel -0.021 / je Tag +0.008 Pp · Fehlalarm 3 % / 4 % (Soll <= 5) · +0,5 Pp erkannt 99 % / 83 % (Soll >= 80) -> BESTANDEN
+
+Referenz       10247 Einstiege (oben 1980, 19.3 %) · 973 Tage, 65 Bloecke, AK -0.02
+   je Handel: D +0.122 Pp [-0.213; +0.534] · Nullpunkt +0.001 · Rang 0.752 -> TRAEGT NICHT BIS 0.50 Pp
+   je Tag   : D +0.029 Pp [-0.357; +0.443] · Nullpunkt +0.010 · Rang 0.530 -> TRAEGT NICHT BIS 0.50 Pp
+Lauf A (lang)  11142 Einstiege (oben 2154, 19.3 %) · 973 Tage, 65 Bloecke, AK 0.00
+   je Handel: D +0.073 Pp [-0.249; +0.441] · Nullpunkt +0.002 · Rang 0.668 -> TRAEGT NICHT BIS 0.50 Pp
+   je Tag   : D +0.294 Pp [-0.182; +0.838] · Nullpunkt +0.000 · Rang 0.886 -> TRAEGT NICHT BIS 0.50 Pp
+Lauf B 2023     1610 Einstiege (oben 372, 23.1 %) · 152 Tage, 10 Bloecke, AK -0.03
+   je Handel: D +0.052 Pp [-0.431; +0.613] · Nullpunkt -0.012 · Rang 0.599 -> KEIN BEFUND (10 Bloecke, AK -0.03)
+   je Tag   : D +0.103 Pp [-0.318; +0.548] · Nullpunkt +0.036 · Rang 0.626 -> KEIN BEFUND (10 Bloecke, AK -0.03)
+
+-> URTEIL A2: TRAEGT NICHT (Stufen je Weg oben) (2024-26 beide Wege, beide Gewichtungen TRAEGT: False · 2023 D > 0 in beiden Gewichtungen: True)
+
+AUSKUNFT (Punktwerte D = oben - uebrige, je Handel / je Tag, Pp; n oben):
+  Referenz       7 T +0.62/+0.45 (1980) · 30 T +2.39/+0.95 (1932) · H +0.98/+0.68 (111) · M -0.13/-0.36 (835) · S +0.21/+0.08 (1034) · Top 30 +0.66/+0.33 (116) · Top 50 +0.56/+0.32 (241) · Top 100 +0.01/-0.22 (946) · Jahr 2024 +0.72/+0.23 (440) · Jahr 2025 -0.14/-0.33 (838) · Jahr 2026 +0.08/+0.29 (702) · Ampel kalt +0.08/-0.06 (1853)
+  Lauf A (lang)  7 T +0.60/+0.77 (2153) · 30 T +2.93/+1.31 (2113) · H +0.84/+0.59 (126) · M -0.13/+0.10 (940) · S +0.16/-0.01 (1088) · Top 30 +0.80/+0.65 (130) · Top 50 +0.51/+0.66 (260) · Top 100 -0.03/+0.26 (1066) · Jahr 2024 +1.04/+1.08 (526) · Jahr 2025 -0.26/-0.12 (889) · Jahr 2026 -0.21/+0.18 (739) · Ampel kalt +0.11/+0.32 (2034)
+  Lauf B 2023    7 T +0.18/+1.06 (372) · 30 T +2.06/+0.34 (372) · H -0.33/-1.83 (34) · M +0.31/-0.03 (190) · S -0.12/+0.47 (148) · Top 30 -0.10/-1.19 (34) · Top 50 +0.19/-0.10 (141) · Top 100 +0.16/+0.02 (224) · Jahr 2023 +0.05/+0.10 (372) · Ampel kalt +0.05/+0.10 (372)

@@ -2694,3 +2694,8 @@ Schritt7 §23.24.
 - Die Auswahl der besseren Assets schlägt ihre Gruppe, belastbar auf 1 Monat, am stärksten bei den Top 30.
 - Gegen BTC ist sie nicht belegt. Im heutigen Markt kommt das obere Fünftel der Top 30 BTC am nächsten; Kleinwerte tragen nichts bei.
 - Vor der Bewertung wurde das Mess-Regelwerk abgeglichen und vier Abweichungen behoben.
+
+**Nachtrag 25.10.2026 (73) — Messplan A, Teil A2** (E-144):
+- Die besseren Assets machen den REGEL0-Einstieg über 24 h nicht messbar besser; ein Zusammenwirken von mindestens 0,5 Pp ist ausgeschlossen.
+- Die Auswahl verbessert den Coin über Monate, nicht den Zeitpunkt.
+- Nächster Schritt zur Abstimmung: die Auswahl als Asset-Filter auf Monatsebene, für Spot und Bestand.

@@ -1899,3 +1899,30 @@ Dazu ein Nachtrag zu E-139 (7- statt 15-Tage-Blöcke, Urteil bleibt).
 - Abstimmung über A1, danach A2 (Auswahl × Einstieg) mit dem berichtigten Plan.
 - Zusätzlich zu prüfen ist eine Fassung „Top 30, oberes Fünftel“ (Nutzer entscheidet).
 - **Betrieb unverändert.**
+
+# E-144 · Messplan A Teil A2: Auswahl × Einstieg trägt nicht bis 0,50 Pp; die Auswahl verbessert den Coin, nicht den Zeitpunkt (25.10.2026)
+
+**25.10.2026** · Nutzer: *„… u.U. können wir dies auf Assetebene für das bestehende Portfolio nutzen und somit selektiv nur bestimmte Krypto Assets für Regel0 bzw. das System nutzen. warten wir auf die Ergebnisse“*.
+
+**Grundlage:** `Voranalyse_Vorsprungs_Atlas_25_10.md` §6.3, §6.5, §6.6 (Fassung 1b, 85cb6098), §8; `p87_a2_auswahl_einstieg.py`, Gegenprobe `p87_gegenprobe.py` 3/3.
+
+**Ablauf:**
+- **Selbsttest Fassung 1 nicht bestanden:** Die Je-Tag-Rechnung verglich verschiedene Markttage (Nullpunkt +0,30 Pp, Fehlalarm 6 %, Erkennung 65 %).
+- **Fassung 1b** rechnet je Tag als Tagesklammer und hat den Selbsttest bestanden (3 %/4 %, 99 %/83 %).
+
+**Ergebnis:**
+- D (oberes Fünftel − übrige, 24 h, ohne Kosten): Referenz +0,12/+0,03 Pp, Lauf A +0,07/+0,29 Pp; Ränge 0,53–0,89. Stufe **TRÄGT NICHT BIS 0,50 Pp**.
+- 2023: KEIN BEFUND (10 Blöcke).
+- Auskunft 30 T: +2,4/+2,9 Pp je Handel.
+
+**Ursachen:**
+1. Die Auswahl wirkt über Monate.
+2. Der REGEL0-Zeitpunkt ist in guten Coins nicht besser.
+3. 2023 ist zu klein; das war ein eigener Planungsfehler, die 20-Blöcke-Regel war nicht geprüft.
+
+**Lösungsvorschläge zur Abstimmung:**
+- **L-1 Auswahl als Asset-Filter auf Monatsebene** (Spot/Bestand, Top 30 bzw. oberes Fünftel), entspricht der Nutzeridee;
+- L-2 REGEL0 nur auf gefilterte Coins (kein Vorteil belegt);
+- L-3 nicht möglich.
+
+**Betrieb unverändert.**

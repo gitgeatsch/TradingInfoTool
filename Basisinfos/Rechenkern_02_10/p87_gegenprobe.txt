@@ -1,0 +1,3 @@
+Referenz       G1 je Handel groupby +0.122 (p87 +0.122) ok · G2 Tagesklammer pivot +0.029 (p87 +0.029, 427 Tage) ok · G3 Rang 30-T-Bloecke 0.730/0.539 (p87 15 T 0.752/0.530) gleiche Stufe
+Lauf A (lang)  G1 je Handel groupby +0.073 (p87 +0.073) ok · G2 Tagesklammer pivot +0.294 (p87 +0.294, 441 Tage) ok · G3 Rang 30-T-Bloecke 0.647/0.869 (p87 15 T 0.668/0.886) gleiche Stufe
+ERGEBNIS G1 ok · G2 ok · G3 ok -> 3 von 3

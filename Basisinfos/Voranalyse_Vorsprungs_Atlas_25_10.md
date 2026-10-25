@@ -239,3 +239,47 @@ Nutzer 25.10.: *„Vergleiche auch ob die top 100 Altcoins oder u.U. top 50 ggf.
 - Die Bewegung des Tages fällt damit heraus. Das ist die Gewichtung „Tagesklammer“, die im Projekt bereits gilt (Memory: Gewichtung ausweisen).
 - „Je Handel“, die Blöcke, der Nullpunkt, die Urteilsstufen und die Kriterien bleiben wie §6.3/§6.5.
 - Der Selbsttest läuft in Fassung 1b erneut vor dem ersten Blick.
+
+## 8. Ergebnis Teil A2, 25.10.2026 — TRÄGT NICHT BIS 0,50 Pp (E-144)
+
+Nutzer 25.10.: *„wenn wir bei den top werten einen positiven Effekt sehen u.U. können wir dies auf Assetebene für das bestehende Portfolio nutzen und somit selektiv nur bestimmte Krypto Assets für Regel0 bzw. das System nutzen. warten wir auf die Ergebnisse“*
+
+**Prüfung:**
+- **R-R11:** Z1 der Referenz +0,718 % = p83.
+- **Selbsttest Fassung 1b bestanden** (§6.6):
+  - Nullpunkt −0,021 / +0,008 Pp;
+  - Fehlalarm 3 % / 4 %;
+  - Erkennung +0,5 Pp 99 % / 83 %.
+- **Block** 15 Tage, 65 Blöcke, Autokorrelation −0,02 / 0,00.
+- **Gegenprobe** `p87_gegenprobe.py` **3/3** (groupby, Tagestabelle, 30-Tage-Blöcke).
+
+| Einstiege | D je Handel [Band] · Rang | D je Tag (Tagesklammer) [Band] · Rang | Stufe |
+|---|---|---|---|
+| Referenz 2024–26 | +0,12 Pp [−0,21; +0,53] · 0,75 | +0,03 Pp [−0,36; +0,44] · 0,53 | **TRÄGT NICHT BIS 0,50 Pp** |
+| Lauf A 2024–26 | +0,07 Pp [−0,25; +0,44] · 0,67 | +0,29 Pp [−0,18; +0,84] · 0,89 | **TRÄGT NICHT BIS 0,50 Pp** |
+| Lauf B 2023 | +0,05 Pp · 0,60 | +0,10 Pp · 0,63 | **KEIN BEFUND** (152 Signaltage = 10 Blöcke) |
+
+⇒ **Ein Zusammenwirken von ≥ 0,5 Pp je 24-h-Einstieg ist ausgeschlossen.** Die Richtung ist überall positiv, aber klein und nicht von Zufall zu trennen.
+
+**Auskunft** (Punktwerte, nicht belegt; Referenz / Lauf A, je Handel):
+- 7 T: +0,62 / +0,60 Pp
+- **30 T: +2,39 / +2,93 Pp**
+- Top 30: +0,66 / +0,80 · H: +0,98 / +0,84
+- M: −0,13 / −0,13
+- je Jahr: 2024 +0,72 / +1,04 · 2025 −0,14 / −0,26 · 2026 +0,08 / −0,21
+
+Der Unterschied wächst mit dem Horizont, so wie es die langsame Auswahl erwarten lässt (A1, §3).
+
+### 8.1 Ursachen (nicht abbrechen ohne Grund)
+
+1. **Horizont:** Die Auswahl wirkt über Monate (A1: belastbar auf 1 M). Im 24-h-Einstieg ist sie nach §3 rund zehnmal kleiner als messbar. A2 bestätigt das: kein messbarer Unterschied in 24 h, ein wachsender bei 7 und 30 T.
+2. **Kein Zusammenwirken:** Der REGEL0-Zeitpunkt ist in guten Coins nicht deutlich besser als in den übrigen (≥ 0,5 Pp ausgeschlossen). Die Auswahl verbessert den **Coin**, nicht den **Zeitpunkt**.
+3. **Bestätigung 2023 zu klein:** 152 Signaltage ergeben nach der Norm nur 10 Blöcke. ⚠️ Eigener Planungsfehler: Die Voranalyse prüfte die Auflösung, nicht die 20-Blöcke-Regel für 2023.
+
+### 8.2 Lösungsvorschläge (zur Abstimmung)
+
+| | Lösung | Begründung | offen |
+|---|---|---|---|
+| **L-1 (Empfehlung)** | **Die Auswahl als Asset-Filter auf Monatsebene**: welche Coins das System führt, kauft und hält (Spot, Bestand), Top 30 bzw. oberes Fünftel. Das ist die Nutzeridee | Die Auswahl wirkt dort, wo sie belegt ist (A1, 1 M, alle Jahre; Top 30 +3,5 Pp/M gegen die Gruppe) | gegen BTC nicht belegt; im heutigen Markt allein KEIN BEFUND (zu wenige Monate) → Voranalyse muss die Prüfbarkeit klären (alle Jahre gemeinsam, E3 als Auskunft; Season-Ampel als Lenkung) |
+| L-2 | **REGEL0 nur auf ausgewählte Coins** | schadet nicht (D ≥ 0), bringt aber in 24 h keinen messbaren Vorteil | für den Hebel keine Verbesserung belegt; ein längeres Halten gefilterter Coins wäre eine neue Regel (7/30 T sind schon gesehen; für Hebel kostet Halten 0,3–0,4 %/Tag, E-123) |
+| L-3 | 2023 als Bestätigung vergrößern | — | nicht möglich: Die REGEL0 feuert vor 2023 nicht (E-136) |
