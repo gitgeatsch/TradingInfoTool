@@ -1780,3 +1780,18 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Die REGEL0 0.1 hat **keinen belegten Vorsprung**.
 - Ihr gemessenes Plus hängt an der Reife-Regel ab dem Beginn der Terminmarktdaten.
 - **Betrieb unverändert bis zur Nutzerentscheidung über die weiteren Schritte.**
+
+# E-140 · REGEL0 im Betrieb vorerst unverändert; Richtung nach Gesamtbilanz R-3 (25.10.2026)
+
+**25.10.2026** · Nutzer: *„also mit regel0 welche wir für hebel benötigen ist nicht geeignet und gemessen, hier bleibt nur vorerst alles so zu belassen. Frage 2 musst du mir genauer beschreiben - sehe hier eher eine kombination. R3 benötigen wir ohnehin“*.
+
+**Vorgelegt war Frage 1:**
+- A: weiterlaufen mit Fakt-Zeile „Vorsprung nicht belegt“;
+- B: Signalmails abschalten;
+- C: unverändert.
+
+**Entschieden:** **C, vorerst unverändert.**
+- Die REGEL0 ist als Hebel-Signalgeber gemessen und **nicht geeignet** (E-139).
+- Die Mails laufen weiter wie bisher; der Befund steht im Regelwerksmanual und in der Spezifikation.
+
+**Frage 2 (Richtung):** Der Nutzer sieht eher eine **Kombination** und braucht die genauere Beschreibung. **R-3 (Gesamtbilanz)** wird ohnehin gebraucht und kommt zuerst. Die Gliederung wird vorab abgestimmt.

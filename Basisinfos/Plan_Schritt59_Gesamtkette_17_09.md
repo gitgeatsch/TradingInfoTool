@@ -2674,3 +2674,7 @@ Schritt7 §23.24.
 - Das Plus der Referenz entsteht allein aus der Reife-Regel ab dem Beginn der Terminmarktdaten.
 - Damit gibt es derzeit keinen Signalgeber mit belegtem Vorsprung.
 - Nächster Schritt: Abstimmung über den Betrieb der REGEL0 und die Richtung.
+
+**Nachtrag 25.10.2026 (69) — REGEL0 vorerst unverändert, Gesamtbilanz zuerst** (E-140):
+- Die REGEL0 bleibt im Betrieb, wie sie ist; als Hebel-Signalgeber ist sie gemessen ungeeignet.
+- Als Nächstes kommt die Gesamtbilanz aller Ansätze (R-3); danach die Richtung, eher als Kombination.
