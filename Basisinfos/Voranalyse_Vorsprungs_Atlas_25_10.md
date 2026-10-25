@@ -58,7 +58,7 @@ Ohne Wert bleiben vor allem **BTC, ETH und SOL**: Der Kern ist in der Watchlist 
 
 ⚠️ **Eigener Fehler, vor der Bewertung behoben:** Die erste Fassung zog die Zufallseinteilung je **Einstieg**. Das Fünftel gilt aber je **Coin und Stichtag**, und derselbe Coin feuert mehrmals. Neu gezogen je Coin und Stichtag; die Auflösung bei 30 T ist dadurch deutlich schlechter (1,60 → 2,71 Pp).
 
-## 5. Messplan A Fassung 1 — VORSCHLAG zur Abstimmung (erst nach Ja vorab festgelegt und committet)
+## 5. Messplan A Fassung 1 — Vorschlag (abgelöst durch die Festlegung in §6)
 
 **Teil A1 — Zerlegung auf der Monatsebene** (Auskunft, beschreibend; 2021–23 und ab 2024):
 - je Monatsstichtag der Ertrag über 1 und 12 Monate, zerlegt in:
@@ -92,3 +92,53 @@ Ohne Wert bleiben vor allem **BTC, ETH und SOL**: Der Kern ist in der Watchlist 
 ⚠️ **Ehrlich:**
 - 2024–26 ist für die REGEL0 schon gesehen. A2 ist deshalb **ein** vorab festgelegter Vergleich, keine Suche. Die Bestätigung auf 2023 ist klein (372 Einstiege im oberen Fünftel, Auflösung 0,43 / 1,00 Pp).
 - BTC, ETH und SOL haben keinen Wert und fallen aus A2 heraus.
+
+## 6. Messplan A Fassung 1 — VORAB FESTGELEGT 25.10.2026
+
+Nutzer 25.10.: *„ja Messplan A festlegen, prüfen gegenprüfen und doku - immer alle Teilergebnisse mit mir Abstimmen und berücksichtigen, dass sich Krypto bis heute massiv geändert hat (millionen von Altcoins großteil unintressant, btc volatilität hat nachgelassen). Bevor wir abbrechen muss es einen grund geben und wenn es diesen gibt immer eine Lösung suchen.“*
+
+### 6.1 Drei Vorgaben des Nutzers, eingearbeitet
+
+| Vorgabe | Umsetzung |
+|---|---|
+| **Teilergebnisse abstimmen** | A1 wird gerechnet und **vorgelegt**; A2 läuft erst nach der Abstimmung über A1. Der Plan für A2 ist trotzdem jetzt fest |
+| **Krypto hat sich massiv geändert** | Ausweis **je Epoche**: E2 2021–23 und **E3 ab 2024** (der heutige Markt, Gewicht im Urteil). **Je Klasse:** H und M (die relevanten) getrennt von S (die Masse der Kleinwerte). Dazu die **BTC-Volatilität je Jahr** und die **Zahl der Coins je Klasse** als Auskunft. Universum bleibt die Binance-Messbasis (schon eine Auswahl aus den Millionen) |
+| **Kein Abbruch ohne Grund, dann Lösung suchen** | Die Abbruchregel aus §5 entfällt. Trägt ein Teil nicht, folgt eine **Ursachenanalyse** (welche Klasse, welcher Horizont, welche Tage, welcher Einstiegsweg) und ein **Lösungsvorschlag Fassung 2**, zur Abstimmung |
+
+### 6.2 Teil A1 — Zerlegung auf der Monatsebene (Auskunft; `p86_a1_zerlegung.py`)
+
+- **Anker:** jeder Monatsstichtag × Coin der Messkette (`mk_messung.paare_mw(h)`, h = 30 und 365 Tage, eingestellte Coins wie in B4). Fünftel nach Wert ohne F9 (B4-Regel) am Stichtag, aus `paare_mw(1)` (R-R11 §2).
+- **Größen je Stichtag × Klasse:**
+  - BTC-Ertrag;
+  - Mittel der Klasse;
+  - Klasse − BTC;
+  - Fünftel 1–5 − Klasse (Dosis);
+  - **Fünftel 5 − BTC**;
+  - Anteil der Stichtage, an denen Fünftel 5 BTC schlägt.
+- **Gewichtung:** jeder Stichtag gleich (wie B4). Epoche = Mittel der Stichtage.
+- **Band:** gleitende Blöcke über die Stichtage (Blocklänge = Horizont in Monaten, mindestens 1), 2.000 Ziehungen.
+- **Je Season-Ampel-Stufe:** Stufe am Stichtag aus `season_ampel.geltend(stufen(...))` auf `am_kalibrierung.csv` (2019-04 bis 2026-06).
+- **Auskunft:** BTC-Volatilität je Jahr (CoinMetrics, Tagesrenditen, aufs Jahr gerechnet) und Zahl der Coins je Klasse und Epoche.
+- **Kein Urteil „trägt“.** A1 beantwortet, wie viel der Drift gegen BTC die beste Auswahl ausgleicht, wo (Klasse, Ampel-Stufe) und wie sich das seit 2024 verändert hat.
+
+### 6.3 Teil A2 — Zusammenwirken Auswahl × Einstieg (Test; erst nach der Abstimmung über A1)
+
+- **Einstiege:**
+  - Referenz `kern48jbz_einstiege_bestand.csv` und Lauf A `data/_hist/einstiege_A.csv`, je 2024-01 bis 2026-08;
+  - Bestätigung Lauf B `data/_hist/einstiege_B.csv` (2023).
+- **Fünftel:** Wert ohne F9 am letzten Stichtag t mit t + 1 Tag ≤ Einstieg.
+- **Z1 (24 h):** Ertrag (Schluss zu Schluss, ohne Kosten) minus Drift Coin-Jahr, genau wie `p83`.
+- **Größe D:** Z1(Fünftel 5) − Z1(Fünftel 1–4).
+  - **je Handel:** jeder Einstieg gleich;
+  - **je Tag:** Tagesmittel je Gruppe, dann jeder Tag gleich.
+- **Rang:** Tagesblock-Bootstrap (7-Tage-Blöcke, 1.000 Ziehungen), Anteil D > 0.
+- **Selbsttest vor dem ersten Blick:**
+  - (a) 100 Zufallseinteilungen je Coin und Stichtag (gleicher Anteil wie echt): Fehlalarm (Rang ≥ 0,95) ≤ 5 %, je Gewichtung;
+  - (b) +0,5 Pp auf Z1 des oberen Fünftels gepflanzt: erkannt ≥ 80 %, je Gewichtung.
+- **Trägt, wenn:**
+  - D > 0 und Rang ≥ 0,95, je Handel **und** je Tag, auf **beiden** Einstiegswegen 2024–26;
+  - **und** 2023 D > 0 in beiden Gewichtungen.
+- **Auskunft:** 7 T und 30 T; je Klasse H/M/S; je Jahr; je Season-Ampel-Stufe.
+- **Folgen:**
+  - trägt → Kandidat „REGEL0 nur im oberen Fünftel“, danach Kosten und Betriebs-Voranalyse;
+  - trägt nicht → Ursachenanalyse und Lösungsvorschlag Fassung 2 (§6.1).
