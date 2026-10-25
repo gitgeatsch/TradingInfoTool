@@ -498,6 +498,15 @@ kontrollen:
     nachweis: "Log nach Start bzw. 06:35: 'Lagebild Gesamtmarkt: ... · Stand <heute>' ohne 'Fehler'; Diagnose makro_lage.gesamtmarkt: zustand ok, 6 Zeilen L1-L6 (L4 mit High-Yield-Aufschlag), datenstand je Reihe (Sahm ~1 Monat alt ist normal); Statusseite: Makro-Karte mit Zeile 'Gesamtmarkt' und aufklappbaren L1-L6; naechste REGEL0-/Spot-Mail: Zeile 'Gesamtmarkt' direkt unter 'Makro'"
     faellig_bis: "2026-10-31"
     status: offen
+  - id: K-B4-D1
+    titel: "Diagnose-Abschnitt spot_b4_fuenftel: B4-Fuenftel ALLER Bestaende (auch ausserhalb Binance) und oberes Fuenftel je Klasse"
+    seit: "2026-10-25"
+    paket: L-1
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach Pull: Abschnitt spot_b4_fuenftel mit je_bestand (stichtag, fuenftel, klasse, grund) fuer alle gehaltenen Coins inkl. HYPE, KAS, SUPRA, XDC u. a.; universum_stichtag = juengster B4-Stichtag; oberes_fuenftel H/M/S gefuellt; kein 'fehler'"
+    faellig_bis: "2026-11-08"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

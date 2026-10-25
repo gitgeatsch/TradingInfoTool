@@ -159,3 +159,13 @@ L-2 prüft den Hebel gerade **für** den Kern.
 ### 8.3 Werte außerhalb von Binance im Bestand
 
 Die **Notebook-Diagnose** bekommt einen Abschnitt `spot_b4_fuenftel`. Er gibt das B4-Fünftel **aller** Bestände aus, auch der Coins außerhalb von Binance, nur lesend aus `spot_betrieb.db`. Er wirkt mit dem nächsten NB-Pull (Kontrolle K-B4-D1).
+
+### 8.4 Welche Regel heute für den Kern gilt (Nutzer 25.10.: *„es sind kernwerte und wenn dann fallen diese aus der normalen spot regel raus nur diese ist bisher noch nicht zustande gekommen, prüfe welche Regel für kern zählt“*)
+
+| | Inhalt | Stand im Betrieb |
+|---|---|---|
+| **Beschlossene Kern-Regel** (E-68, E-69, Spot §12.6/§12.10/§12.11) | Aufbau **70/20/10** BTC/ETH/SOL, monatlich gleicher Betrag, **Ausgleich über die Raten** (ohne Verkauf); **Klima-Ampel** mit Hinweis **K1** (q war über 0,90, fällt unter 0,85/0,75/0,65 → Teilverkauf je ein Zehntel erwägen) und **Rückkauf** (q ≤ 0,20/0,10/0,05, je ein Drittel; Rest nach 12 Monaten). Kein Auslöser, du entscheidest | ⛔ **nicht gebaut**: „gebaut wird mit dem Spot-Betrieb (S7, O27)“; O27 Punkt 2 (Fakt-Mail Bestand und Klima) steht auf „Abstimmung“. Es gibt keinen Code für Klima-Ampel q, Aufbau oder K1 |
+| B1 Mitnahme, B4 Abbau | schließen den Kern **aus** (`spot_mitnahme.KERN`) | gebaut |
+| REGEL0 / Hebel | Kern **eingeschlossen** (E-37) | läuft |
+
+⇒ **Offener Punkt (nach L-1/L-2 zur Abstimmung):** Bau-Voranalyse der Kern-Regel nach §12.11. Gemessen und beschlossen ist sie; es fehlt nur der Bau.

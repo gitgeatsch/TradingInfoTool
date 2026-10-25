@@ -3070,6 +3070,33 @@ def _season_ampel() -> dict:
         return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
 
 
+def _spot_b4_fuenftel() -> dict:
+    """L-1 (25.10.2026, K-B4-D1; Nutzer: *"auch Werte welche nicht auf Binance sind sollten enthalten sein"*): das B4-Fuenftel ALLER
+    Bestaende am juengsten fertigen Stichtag - auch der Coins ausserhalb Binance (B4 rechnet sie mit den Kursen der Produktion) - und
+    das obere Fuenftel je Klasse als Auskunft. Nur lesend aus spot_betrieb.db (agent.spot_abbau.letzte_fuenftel, abbau_universum)."""
+    try:
+        import sqlite3 as _sq
+        from agent import spot_abbau as _AB
+        from agent import regel0_nachlader as _NL
+        d = {"je_bestand": {s: {"stichtag": t, "fuenftel": f, "klasse": k, "grund": g}
+                            for s, (t, f, k, g) in _AB.letzte_fuenftel(_NL.DATEN_VORGABE).items()}}
+        p = os.path.join(_NL.DATEN_VORGABE, _AB.ABLAGE)
+        if os.path.exists(p):
+            c = _sq.connect("file:%s?mode=ro" % p.replace("\\", "/"), uri=True, timeout=10)
+            try:
+                if c.execute("SELECT 1 FROM sqlite_master WHERE name='abbau_universum'").fetchone():
+                    t = c.execute("SELECT MAX(stichtag) FROM abbau_universum").fetchone()[0]
+                    d["universum_stichtag"] = t
+                    d["oberes_fuenftel"] = {k: [r[0] for r in c.execute(
+                        "SELECT bitpanda FROM abbau_universum WHERE stichtag=? AND klasse=? AND fuenftel=5 ORDER BY perzentil DESC",
+                        (t, k))] for k in ("H", "M", "S")}
+            finally:
+                c.close()
+        return d
+    except Exception as exc:                                             # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _termine_vorschau() -> dict:
     """O52 (15.10.2026, K-TM-1): die naechsten Makro-Termine so, wie die REGEL0-Mail sie sieht (agent.termin_fakt) - CPI und
     Arbeitsmarkt aus FRED, FOMC aus der festen Liste. Belegt am NB, dass FRED kuenftige Termine liefert (bis 15.10. kam nie einer)
@@ -4142,6 +4169,7 @@ def main() -> None:
         "termine_vorschau": _termine_vorschau(),           # O52 15.10.: Termine wie in der REGEL0-Mail (K-TM-1)
         "makro_lage": _makro_lage(),                       # O54 15.10.: wie Statusseite/Mail (K-ML-1)
         "season_ampel": _season_ampel(),                   # P19 17.10.: wie Statusseite/Mail (K-SP-4)
+        "spot_b4_fuenftel": _spot_b4_fuenftel(),           # L-1 25.10.: B4-Fuenftel aller Bestaende, auch ausserhalb Binance (K-B4-D1)
         "regel0_messstand": _regel0_messstand(),           # O21 17.10.: wie Statusseite/Mail (K-O21-1)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
