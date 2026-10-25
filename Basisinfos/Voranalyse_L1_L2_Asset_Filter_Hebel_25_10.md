@@ -169,3 +169,23 @@ Die **Notebook-Diagnose** bekommt einen Abschnitt `spot_b4_fuenftel`. Er gibt da
 | REGEL0 / Hebel | Kern **eingeschlossen** (E-37) | läuft |
 
 ⇒ **Offener Punkt (nach L-1/L-2 zur Abstimmung):** Bau-Voranalyse der Kern-Regel nach §12.11. Gemessen und beschlossen ist sie; es fehlt nur der Bau.
+
+### 8.5 L-2 Fassung 1b — Selbsttest sperrt Fassung 1, Ursache und Lösung VOR dem ersten Blick (25.10.2026)
+
+**Selbsttest Fassung 1** (`p90_l2_fassung1.txt`):
+
+| H | Fehlalarm (je Handel / je Tag) | +1,0 Pp erkannt (je Handel / je Tag) |
+|---|---|---|
+| 24 h | 4 % / 3 % | 100 % / 100 % |
+| 72 h | 1 % / 2 % | **77 % / 81 %** |
+| 168 h | 1 % / 1 % | **29 % / 27 %** |
+
+⇒ **Nicht bestanden, nicht gemessen;** das echte Ergebnis ist ungesehen.
+
+**Ursache:** Der Fehlalarm ist niedrig, also arbeitet die Anlage richtig. Aber die **Auflösung** reicht bei längerem Halten nicht für 1 Pp (Voranalyse §4: MDE 7 T ≈ 1,9 Pp). Das feste Kriterium „+1,0 Pp für jedes H“ war ein **eigener Planungsfehler**.
+
+**Lösung, Fassung 1b** (wie die stehende Regel „Pflanzung als Auflösungskurve“):
+- Gepflanzt wird 0,5 / 1 / 2 / 3 Pp je H.
+- Die Grenze X ist die kleinste Stärke, die zu ≥ 80 % erkannt wird (je Gewichtung).
+- Bestanden heißt: Fehlalarm ≤ 5 % und ein X existiert.
+- Ein Nicht-Tragen heißt „TRÄGT NICHT BIS X“ je H. Alles Übrige wie §8.2.

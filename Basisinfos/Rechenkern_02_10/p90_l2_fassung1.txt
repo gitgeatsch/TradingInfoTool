@@ -1,0 +1,7 @@
+P90 MESSPLAN L-2 · RegelXY Hebel: REGEL0 auf BTC/ETH/SOL, Haltedauer 24/72/168 h, netto Bitpanda
+
+SELBSTTEST 24 h  (Block 15 T): Nullpunkt (ii) +0.042 / +0.039 Pp · Fehlalarm 4 % / 3 % (Soll <= 5) · +1,0 Pp erkannt 100 % / 100 % (Soll >= 80) -> bestanden
+SELBSTTEST 72 h  (Block 15 T): Nullpunkt (ii) -0.062 / -0.058 Pp · Fehlalarm 1 % / 2 % (Soll <= 5) · +1,0 Pp erkannt 77 % / 81 % (Soll >= 80) -> NICHT BESTANDEN
+SELBSTTEST 168 h (Block 21 T): Nullpunkt (ii) +0.019 / +0.004 Pp · Fehlalarm 1 % / 1 % (Soll <= 5) · +1,0 Pp erkannt 29 % / 27 % (Soll >= 80) -> NICHT BESTANDEN
+
+Selbsttest nicht bestanden - es wird NICHT gemessen (§8.2); Ursache und Loesung folgen.
