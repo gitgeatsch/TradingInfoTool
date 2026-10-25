@@ -189,3 +189,68 @@ Die **Notebook-Diagnose** bekommt einen Abschnitt `spot_b4_fuenftel`. Er gibt da
 - Die Grenze X ist die kleinste Stärke, die zu ≥ 80 % erkannt wird (je Gewichtung).
 - Bestanden heißt: Fehlalarm ≤ 5 % und ein X existiert.
 - Ein Nicht-Tragen heißt „TRÄGT NICHT BIS X“ je H. Alles Übrige wie §8.2.
+
+## 9. Teilergebnisse 25.10.2026 (E-146)
+
+### 9.1 L-1 Teil 1: Die Brücke hält nicht; Ursache ist die Datenlänge (`p89_l1_cmc.py --bruecke`, `p89b_bruecke_ursache.py`)
+
+| | Ergebnis | Soll |
+|---|---|---|
+| Rangkorrelation CMC-Wert gegen Binance-Wert (232 Zellen, 114 gemeinsame Coins je Stichtag) | Mittel **0,679**, Median 0,764 | ≥ 0,8 |
+| oberes Fünftel Binance auch oberes Fünftel CMC | **55 %** | ≥ 50 % |
+| je Jahr | 2019 0,29 · 2020 0,28 · 2021 0,49 · 2022 0,69 · 2023 0,74 · **2024 0,80 · 2025 0,84 · 2026 0,81** | |
+
+**Ursache je Merkmal** (Rangkorrelation CMC gegen Binance):
+
+| | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|---|---|---|
+| F1 Tiefe unter dem Hoch | 0,60 | 0,42 | 0,63 | 0,81 | 0,82 | 0,86 | 0,89 | 0,88 |
+| F2 Tage seit dem Hoch | 0,36 | 0,34 | 0,44 | 0,71 | 0,77 | 0,78 | 0,80 | 0,81 |
+| F8 Alter | 0,42 | 0,40 | 0,57 | 0,66 | 0,74 | 0,84 | 0,89 | 0,88 |
+
+- **Alle drei Merkmale** weichen früh ab und laufen ab 2022–24 zusammen.
+- Hoch, Tage seit dem Hoch und Alter hängen davon ab, **seit wann eine Quelle den Coin beobachtet**:
+  - Binance ab dem Listing (2017 und später);
+  - CMC ab 2016-07, und nur solange der Coin in den Top 200 ist; F8 ist 2019 zu 19 % an 2016-07 zensiert.
+- ⚠️ Das betrifft auch den **Binance-Wert der frühen Jahre** selbst; er war 2019–2021 „jung“.
+
+**Lösungsvorschläge (zur Abstimmung):**
+
+| | Lösung | Aufwand | offen |
+|---|---|---|---|
+| **L1-a (Empfehlung)** | **Brücke Fassung 2 „gleiche Historie“**: nur Coins, die in beiden Quellen ≥ 2 Jahre Kursgeschichte haben. Hält sie dort (≥ 0,8), liegt die Abweichung allein an der Datenlänge, und der CMC-Wert ist bei genug Historie dieselbe Regel | 1 h | Der Holdout 2017–19 hat selbst kurze Historien (CMC ab 2016-07) |
+| L1-b | **Langhistorie aus CoinMetrics** (`coinmetrics.db`, Kurse ab 2010 für die erfassten Coins): F1/F2/F8 mit voller Geschichte, Holdout 2017–19 auf diesen Coins | ½ Tag | CoinMetrics Community ist überlebensverzerrt (O47: 17–30 von 50) |
+| L1-c | **Ohne Holdout entscheiden:** gegen die Gruppe ist L-1 auf 2019–2026 belastbar (A1, 1 M); gegen BTC nur vorwärts | — | „gesehen“, keine unabhängige Bestätigung |
+
+### 9.2 L-2 RegelXY (Kern länger halten): TRÄGT NICHT 2024–26; 2023 deutlich positiv, aber KEIN BEFUND (`p90_l2_kern_halten.py`)
+
+**Selbsttest Fassung 1b bestanden:**
+- Fehlalarm 0–5 %;
+- Grenze X: **1,0 Pp** (24 h), **2,0 Pp** (72 h, 168 h).
+
+**Gegenprobe** `p90_gegenprobe.py` **3/3** (Einzelschleife SQL, gepaart über merge, doppelte Blocklänge).
+
+| Kern BTC/ETH/SOL | 24 h netto | 72 h netto | 168 h netto | Stufe |
+|---|---|---|---|---|
+| Referenz 2024–26 (276) | +0,06 % [−0,40; +0,55] | −0,40 % [−1,21; +0,56] | −0,41 % [−1,86; +1,17] | TRÄGT NICHT BIS 1,0 / 2,0 / 2,0 Pp |
+| Lauf A 2024–26 (315) | −0,32 % | **−0,94 % [−1,70; −0,11]** | −0,64 % | TRÄGT NICHT BIS 1,0 / 2,0 / 2,0 Pp |
+| **2023 (78, Aufwärtsjahr)** | +0,38 % | **+1,52 %** | **+3,98 %** | **KEIN BEFUND** (7–10 Blöcke) |
+
+**Auskunft:**
+- **gepaart** gegen 24 h (2024–26): 72 h −0,46 / −0,62 Pp, 168 h −0,47 / −0,32 Pp.
+- **je Jahr** 168 h, Referenz: 2024 +1,25 · 2025 −0,56 · 2026 −1,84 %.
+- **je Coin** 168 h, Referenz: BTC +0,11 · ETH −0,07 · SOL −1,30 %.
+- **Liquidationsnähe** 5× binnen 168 h: 4,3–4,4 % der Einstiege; bei 2× null.
+- **Vorsprung gegen Zufallsstunden:** Kern 24 h Referenz +0,48 Pp je Handel (Rang 0,98), je Tag +0,25 (Rang 0,83). Nicht beide, also nicht tragend; Lauf A +0,09.
+
+**Einordnung:**
+- **Länger halten auf dem Kern trägt im Markt 2024–26 nicht.** Es kostet gegenüber 24 h 0,3–0,6 Pp; das bestätigt §23.68 für den Kern.
+- **In Aufwärtsphasen (2023, 2024) war es deutlich positiv.** Das Vorzeichen hängt am **Regime**, wie in §23.68.
+
+**Lösungsvorschläge Hebel (zur Abstimmung):**
+
+| | Lösung | offen |
+|---|---|---|
+| **L2-a (Empfehlung)** | **Regime-Hebel auf dem Kern:** Kern long, Haltedauer 7 T, **nur in einem vorab messbaren Aufwärtsregime**. Prüfung auf **langer Kern-Historie 2019–2026** (Stundenkurse ab 2019 liegen vor), unabhängig von REGEL0-Signalen, mit der Season-Ampel und einem einfachen Trendmaß als Regime | Der Regime-Zeitpunkt war bisher **nicht vorab erkennbar** (W3, M-A, E-126). Dort muss sich zeigen, ob ein Regime-Maß die 7-T-Haltedauer trägt |
+| L2-b | REGEL0 auf dem Kern bleibt 24 h (heute), nur Fakt-Zeilen | kein Ertrag belegt (netto ≈ 0) |
+| L2-c | Kraken statt Bitpanda (geringere Kosten) | nicht steuereinfach (E-130) |

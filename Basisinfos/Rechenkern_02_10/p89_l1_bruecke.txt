@@ -1,0 +1,8 @@
+P89 MESSPLAN L-1 · CMC-Wochen 2016-07-03..2026-10-11 · Coins im Universum 1597 · Wochen 537
+
+TEIL 1 BRUECKE (Monatsstichtage 2019-01..2026-09, CMC-Woche am oder vor dem Stichtag, gemeinsame Coins je Klasse):
+  Zellen (Stichtag x Klasse, >= 10 gemeinsame Coins) 232 · gemeinsame Coins je Stichtag im Mittel 114
+  Rangkorrelation CMC-Wert gegen Binance-Wert im Mittel 0.679 (Soll >= 0,8) · Median 0.764 · 10. Perz. 0.328
+  oberes Fuenftel Binance auch oberes Fuenftel CMC: 55 % im Mittel (Soll >= 50 %)
+  je Jahr Rangkorrelation (Mittel der Zellen): 2019 0.29 · 2020 0.28 · 2021 0.49 · 2022 0.69 · 2023 0.74 · 2024 0.80 · 2025 0.84 · 2026 0.81
+  -> BRUECKE HAELT NICHT - Ursache und Loesung, keine Bestaetigung (§8.1)

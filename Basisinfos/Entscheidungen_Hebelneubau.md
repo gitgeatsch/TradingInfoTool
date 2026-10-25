@@ -1954,3 +1954,28 @@ Dazu ein Nachtrag zu E-139 (7- statt 15-Tage-Blöcke, Urteil bleibt).
 - NB-Export der B4-Fünftel für die elf Werte außerhalb von Binance.
 
 **Betrieb unverändert.**
+
+# E-146 · L-1: Brücke CMC→Binance hält nicht (Datenlänge); L-2: Kern länger halten trägt 2024–26 nicht, 2023 stark positiv (25.10.2026)
+
+**25.10.2026** · Nutzer:
+- *„Messplan L1 und L2 zur Prüfung ok“*
+- *„vorsicht - btc und eth und sol sollen auch regel0 und hebel nutzen können“* → festgelegt §8.0: Der Kern ist immer zugelassen.
+- *„prüfe welche Regel für kern zählt“* → §8.4: Die Kern-Regel E-69 (Aufbau 70/20/10, K1/Rückkauf) ist **beschlossen, aber nicht gebaut**.
+
+**Grundlage:** `Voranalyse_L1_L2_Asset_Filter_Hebel_25_10.md` §8 (vorab 43772659), §8.5 (Fassung 1b d33c1cee), §9; `p89`, `p89b`, `p90`, Gegenprobe `p90_gegenprobe` 3/3.
+
+**L-1 Brücke:**
+- Mittel 0,68 (Soll 0,8); oberes Fünftel zu 55 % gleich; ab 2024 0,80–0,84.
+- Ursache: Alle drei Merkmale hängen am Beobachtungsbeginn der Quelle (Datenlänge).
+- Keine Bestätigung. Lösungen L1-a (Brücke „gleiche Historie“) / L1-b (CoinMetrics-Langhistorie) / L1-c.
+
+**L-2:**
+- Selbsttest Fassung 1 sperrte (Auflösung bei 72/168 h, eigener Planungsfehler); Fassung 1b mit Auflösungskurve bestanden.
+- 2024–26: **TRÄGT NICHT BIS 1,0 / 2,0 / 2,0 Pp**; netto 72/168 h negativ, gepaart −0,3 bis −0,6 Pp gegen 24 h.
+- 2023 (Aufwärtsjahr): +1,5 % / +4,0 % je Handel, KEIN BEFUND (zu wenige Blöcke).
+- Das Vorzeichen hängt am Regime.
+- Lösung L2-a: Regime-Hebel auf dem Kern, geprüft auf langer Historie 2019–2026.
+
+Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
+
+**Betrieb unverändert.**

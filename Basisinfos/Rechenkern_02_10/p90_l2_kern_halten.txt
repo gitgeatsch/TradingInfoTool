@@ -1,0 +1,33 @@
+P90 MESSPLAN L-2 · RegelXY Hebel: REGEL0 auf BTC/ETH/SOL, Haltedauer 24/72/168 h, netto Bitpanda
+
+SELBSTTEST 24 h  (Block 15 T): Nullpunkt (ii) +0.042 / +0.039 Pp · Fehlalarm 3 % / 5 % (Soll <= 5) · Aufloesungskurve erkannt 0.5 Pp 68/72 % 1.0 Pp 100/100 % 2.0 Pp 100/100 % 3.0 Pp 100/100 % · Grenze X = 1.0 Pp -> bestanden
+SELBSTTEST 72 h  (Block 15 T): Nullpunkt (ii) -0.050 / -0.047 Pp · Fehlalarm 0 % / 3 % (Soll <= 5) · Aufloesungskurve erkannt 0.5 Pp 26/29 % 1.0 Pp 78/81 % 2.0 Pp 100/100 % 3.0 Pp 100/100 % · Grenze X = 2.0 Pp -> bestanden
+SELBSTTEST 168 h (Block 21 T): Nullpunkt (ii) +0.064 / +0.100 Pp · Fehlalarm 2 % / 2 % (Soll <= 5) · Aufloesungskurve erkannt 0.5 Pp 9/9 % 1.0 Pp 25/26 % 2.0 Pp 86/92 % 3.0 Pp 100/100 % · Grenze X = 2.0 Pp -> bestanden
+
+Referenz: 276 Kern-Einstiege (BTC 95, ETH 91, SOL 90)
+   24 h   netto je Handel +0.06 % [-0.40; +0.55] / je Tag -0.16 % [-0.67; +0.33] · Vorsprung +0.48 / +0.25 Pp (Nullpunkt +0.02 / +0.01, Rang 0.98 / 0.83) · 65 Bl. AK -0.02 -> TRAEGT NICHT BIS 1.0 Pp
+          Auskunft: gepaart gegen 24 h +0.00 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.0 % · 5x 0.0 % · je Coin netto BTC +0.14 ETH +0.03 SOL +0.02 · je Jahr netto 2024 -0.06 2025 -0.00 2026 +0.29
+   72 h   netto je Handel -0.40 % [-1.21; +0.56] / je Tag -0.55 % [-1.41; +0.40] · Vorsprung +0.24 / +0.09 Pp (Nullpunkt -0.06 / -0.06, Rang 0.73 / 0.59) · 65 Bl. AK 0.01 -> TRAEGT NICHT BIS 2.0 Pp
+          Auskunft: gepaart gegen 24 h -0.46 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.4 % · 5x 1.1 % · je Coin netto BTC -0.07 ETH -0.44 SOL -0.70 · je Jahr netto 2024 +0.69 2025 -0.58 2026 -1.22
+   168 h  netto je Handel -0.41 % [-1.86; +1.17] / je Tag -0.67 % [-2.14; +1.04] · Vorsprung +0.70 / +0.43 Pp (Nullpunkt +0.02 / +0.04, Rang 0.83 / 0.71) · 46 Bl. AK 0.02 -> TRAEGT NICHT BIS 2.0 Pp
+          Auskunft: gepaart gegen 24 h -0.47 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.4 % · 5x 4.3 % · je Coin netto BTC +0.11 ETH -0.07 SOL -1.30 · je Jahr netto 2024 +1.25 2025 -0.56 2026 -1.84
+
+Lauf A (lang): 315 Kern-Einstiege (BTC 107, ETH 104, SOL 104)
+   24 h   netto je Handel -0.32 % [-0.72; +0.08] / je Tag -0.36 % [-0.82; +0.08] · Vorsprung +0.09 / +0.05 Pp (Nullpunkt +0.01 / -0.00, Rang 0.65 / 0.57) · 65 Bl. AK 0.03 -> TRAEGT NICHT BIS 1.0 Pp
+          Auskunft: gepaart gegen 24 h +0.00 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.0 % · 5x 0.3 % · je Coin netto BTC -0.15 ETH -0.12 SOL -0.70 · je Jahr netto 2024 -0.34 2025 -0.59 2026 +0.05
+   72 h   netto je Handel -0.94 % [-1.70; -0.11] / je Tag -0.79 % [-1.65; +0.20] · Vorsprung -0.32 / -0.17 Pp (Nullpunkt -0.05 / -0.05, Rang 0.26 / 0.37) · 65 Bl. AK 0.08 -> TRAEGT NICHT BIS 2.0 Pp
+          Auskunft: gepaart gegen 24 h -0.62 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.3 % · 5x 1.0 % · je Coin netto BTC -0.82 ETH -0.77 SOL -1.25 · je Jahr netto 2024 -0.29 2025 -1.18 2026 -1.29
+   168 h  netto je Handel -0.64 % [-2.16; +0.95] / je Tag -0.80 % [-2.49; +1.02] · Vorsprung +0.43 / +0.26 Pp (Nullpunkt +0.02 / +0.03, Rang 0.71 / 0.59) · 46 Bl. AK 0.03 -> TRAEGT NICHT BIS 2.0 Pp
+          Auskunft: gepaart gegen 24 h -0.32 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.6 % · 5x 4.4 % · je Coin netto BTC -0.44 ETH -0.37 SOL -1.12 · je Jahr netto 2024 +0.39 2025 -1.04 2026 -1.16
+
+Lauf B 2023: 78 Kern-Einstiege (BTC 27, ETH 26, SOL 25)
+   24 h   netto je Handel +0.38 % [-0.29; +1.08] / je Tag +0.30 % [-0.42; +1.08] · Vorsprung +0.44 / +0.37 Pp (Nullpunkt +0.00 / +0.01, Rang 0.90 / 0.81) · 10 Bl. AK 0.02 -> KEIN BEFUND (10 Bloecke, AK 0.02)
+          Auskunft: gepaart gegen 24 h +0.00 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.0 % · 5x 0.0 % · je Coin netto BTC -0.24 ETH +0.39 SOL +1.03 · je Jahr netto 2023 +0.38
+   72 h   netto je Handel +1.52 % [-0.36; +3.55] / je Tag +1.43 % [-0.66; +3.59] · Vorsprung +1.10 / +1.04 Pp (Nullpunkt +0.03 / -0.02, Rang 0.87 / 0.86) · 10 Bl. AK 0.10 -> KEIN BEFUND (10 Bloecke, AK 0.10)
+          Auskunft: gepaart gegen 24 h +1.14 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.0 % · 5x 0.0 % · je Coin netto BTC -0.40 ETH -0.26 SOL +5.42 · je Jahr netto 2023 +1.52
+   168 h  netto je Handel +3.98 % [-0.31; +8.59] / je Tag +3.80 % [-0.44; +8.26] · Vorsprung +2.69 / +2.57 Pp (Nullpunkt -0.05 / -0.03, Rang 0.91 / 0.89) · 7 Bl. AK 0.07 -> KEIN BEFUND (7 Bloecke, AK 0.07)
+          Auskunft: gepaart gegen 24 h +3.60 Pp · Liquidationsnaehe (Tief binnen H) 2x 0.0 % · 3x 0.0 % · 5x 1.3 % · je Coin netto BTC +1.28 ETH -0.13 SOL +11.16 · je Jahr netto 2023 +3.98
+
+-> URTEIL L-2 24 h  : TRAEGT NICHT (Stufen oben)
+-> URTEIL L-2 72 h  : TRAEGT NICHT (Stufen oben)
+-> URTEIL L-2 168 h : TRAEGT NICHT (Stufen oben)

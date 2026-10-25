@@ -1,0 +1,8 @@
+P89b URSACHE BRUECKE: Rangkorrelation CMC gegen Binance je Merkmal und Jahr (Mittel der Stichtage)
+
+jahr                             2019  2020  2021  2022  2023  2024  2025  2026
+merkmal                                                                        
+F1                               0.60  0.42  0.63  0.81  0.82  0.86  0.89  0.88
+F2                               0.36  0.34  0.44  0.71  0.77  0.78  0.80  0.81
+F8                               0.42  0.40  0.57  0.66  0.74  0.84  0.89  0.88
+F8 zensiert (erst = 2016-07-03)  0.19  0.15  0.10  0.09  0.08  0.05  0.05  0.05

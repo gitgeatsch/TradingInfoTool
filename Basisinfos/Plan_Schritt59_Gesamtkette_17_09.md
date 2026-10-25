@@ -2705,3 +2705,9 @@ Schritt7 §23.24.
 - Der Asset-Filter lässt sich auf unberührten CMC-Wochen 2017–19 bestätigen.
 - Für den Hebel ist eine andere Haltedauer nur auf BTC/ETH/SOL messbar.
 - Nächster Schritt zur Abstimmung: die Messpläne L-1 und L-2.
+
+**Nachtrag 25.10.2026 (75) — Teilergebnisse L-1 und L-2** (E-146):
+- Der Asset-Filter lässt sich auf CMC nicht direkt bestätigen; der Wert hängt dort wie hier an der Länge der Kursgeschichte.
+- Den Kern länger zu halten trägt im Markt 2024–26 nicht, in Aufwärtsjahren war es deutlich positiv.
+- Für den Hebel bleibt die Frage nach einem vorab erkennbaren Regime.
+- Die beschlossene Kern-Regel (Aufbau 70/20/10) ist noch nicht gebaut.

@@ -1,0 +1,9 @@
+Referenz       24 h   G1 Einzelschleife netto +0.06 % (p90 +0.06, n 276) ok · G3 Band Block 30 T [-0.34; +0.51] (p90 [-0.40; +0.55]) gleiche Aussage
+Referenz       72 h   G1 Einzelschleife netto -0.40 % (p90 -0.40, n 276) ok · G3 Band Block 30 T [-1.27; +0.57] (p90 [-1.21; +0.56]) gleiche Aussage
+Referenz       168 h  G1 Einzelschleife netto -0.41 % (p90 -0.41, n 276) ok · G3 Band Block 42 T [-1.95; +1.00] (p90 [-1.86; +1.17]) gleiche Aussage
+Referenz       G2 gepaart 168 h - 24 h ueber merge -0.47 Pp (p90 -0.47) ok
+Lauf A (lang)  24 h   G1 Einzelschleife netto -0.32 % (p90 -0.32, n 315) ok · G3 Band Block 30 T [-0.73; +0.07] (p90 [-0.72; +0.08]) gleiche Aussage
+Lauf A (lang)  72 h   G1 Einzelschleife netto -0.94 % (p90 -0.94, n 315) ok · G3 Band Block 30 T [-1.81; -0.01] (p90 [-1.70; -0.11]) gleiche Aussage
+Lauf A (lang)  168 h  G1 Einzelschleife netto -0.64 % (p90 -0.64, n 315) ok · G3 Band Block 42 T [-2.03; +0.84] (p90 [-2.16; +0.95]) gleiche Aussage
+Lauf A (lang)  G2 gepaart 168 h - 24 h ueber merge -0.32 Pp (p90 -0.32) ok
+ERGEBNIS G1 ok · G2 ok · G3 ok -> 3 von 3
