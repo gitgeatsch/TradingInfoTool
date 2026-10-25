@@ -141,3 +141,5 @@ Bitpanda: Spot über den Broker oder Fusion, Limit-Kauf bei Spot fast überall m
 | **Was das Ergebnis heißt** | REGEL0 trifft nach einem Rückgang einen Zeitpunkt, der **24 h** lang besser ist (E-131). Für einen **gehaltenen** Kauf hängt der Vorteil am Regime und kippt mit ihm. Das bestätigt M-0c: Der Vorsprung ist nach 72 h weg |
 | **Was folgt** | E-A ist für die Kernwerte und Altcoin-Käufe **erledigt**; Stufe B (mehr Zyklen) entfällt, weil schon Stufe A keinen Hinweis liefert |
 | **Für die Frage „ist REGEL0 ausgereizt?“** | Auf Bitpanda sind jetzt alle Wege geprüft: Kosten (Haltedauer, Limit), Auswahl, Timing geplanter Käufe. Trägt das Signal, dann nur als 24-h-Handel mit niedrigen Kosten (Kraken, E-130) |
+
+⚠️ **Berichtigung 25.10.2026 (E-141):** Die Nullwelt (Zufallsstunden je Fall) ist nicht tagestreu, dazu kommt Pseudo-Replikation über die Mengen. Die extremen Ränge sind überzeichnet; das Urteil „trägt nicht“ bleibt.

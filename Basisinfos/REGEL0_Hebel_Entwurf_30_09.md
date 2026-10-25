@@ -236,3 +236,5 @@ Rauschen*). Die Beschreibung *Vorsprung gegen die eigene Phase* trifft für die 
 Die REGEL0.1 läuft am Notebook stündlich in `agent/regel0_rechnung.py`, zeilengleich zur Messung (R-R11). Neue Signale für Assets mit eingeschaltetem
 Hebel-Schalter kommen als Mail: Einstieg zum Schluss der Folgestunde, Ausstieg 24 h danach, Hebelstufe zuerst vorläufig (Korrektur nur bei Abweichung),
 Einsatz aus `Basisinfos/regel0_betrieb.yaml`. Der alte Hebelvorschlag der Rollen-Kette ist aus (E-46). Ausführlich: `Voranalyse_Schritt7_Betrieb_02_10.md` §13 bis §15.
+
+⚠️ **Prüfbericht 25.10.2026 (E-141):** Die Bestätigung B6 (Tagesblock) prüfte gegen 0 statt gegen den Versatz (E-11). Gegen das Nullmittel hätten 2 von 4 Mengen nicht bestanden. Die Ruhe 48 h ist ohne Tagesunsicherheit übernommen. Zur Robustheit: E-139.

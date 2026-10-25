@@ -89,7 +89,6 @@ Skripte: `Rechenkern_02_10/p72_historie_voranalyse.py`, `p72_gegenprobe.py` → 
 | **V-1 (empfohlen)** | **Erst der Indikator-Atlas** (ohne Download, Daten vorhanden), **dann** die REGEL0-Historie 2020–23 (Download-Ja) und F-1 Fassung 2 nur mit den Atlas-Kandidaten | beantwortet Hinweis 2 direkt; senkt das Mehrfachtesten; der Download kommt erst, wenn es Kandidaten gibt |
 | V-2 | erst die REGEL0-Historie (Download jetzt), dann F-1 mit den sechs Filtern | schneller beim Hebel, aber sechs Filter und schwächere Auflösung |
 | V-3 | beides parallel | doppelte Arbeit vor der ersten Antwort |
-"""
 
 ## 6. Messplan F-1 Fassung 2 — Fear & Greed als Marktfilter auf der verlängerten REGEL0-Historie, VORAB festgelegt (23.10.2026)
 
@@ -206,3 +205,5 @@ Dieselbe Regel, dieselben Monate 2024–26, nur mit der Vorgeschichte ab 2019 (n
 - Fear & Greed bleibt **Fakt im Lagebild** (L6, E-137).
 - **Betrieb unverändert:** Die REGEL0 läuft als Vorwärtsprotokoll weiter, mit dem Vorbehalt „Ergebnis nicht robust gegen die Datenlänge“.
 - **Nächster Schritt:** Voranalyse Robustheit der REGEL0. Welcher Baustein macht den Unterschied: Reife (Reihenbeginn `st0`), eigenes Normal, Schrumpfung, Trainingsmenge des Monatsmodells? Das ist messbar, je Baustein einzeln umgeschaltet auf `data/_hist`.
+
+⚠️ **Berichtigung 25.10.2026 (E-141):** Die Fundquote aus §1–5 (31 → 84 %) hat ein Streuband von etwa ±9 Pp; die Annahme „die REGEL0 feuert 2020–22“ ist durch §7 widerlegt.

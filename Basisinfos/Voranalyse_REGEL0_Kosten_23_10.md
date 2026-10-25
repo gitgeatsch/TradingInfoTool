@@ -225,3 +225,5 @@ Nutzer 23.10.: *„Der Limit-Kauf müsste dann über unsere Anwendung eigenstän
 - Das Signal ist **stark gegenüber dem Markt**. Das passt zu 2.598: Der Nullpunkt von E[R] ist die **Drift**.
 - Vom Vorsprung bleibt absolut aber nur +0,30 % übrig, weil die Altcoins 2025–26 im Mittel fallen. Erst die **Drift plus die Kosten** machen das Ergebnis negativ.
 - ⇒ Eine Optimierung des **Einstiegs** allein kann das nicht beheben. Wer den Vorsprung **ohne** die Drift ernten will, muss den Markt absichern (Short, nur über eine Perp-Börse) oder die Kosten **ohnehin** tragen: ein Kauf, der sowieso ansteht, wird nur besser getimt.
+
+⚠️ **Berichtigung 25.10.2026 (E-141):** P-A „trägt auf Kraken“ → **nicht entscheidbar** (Band schließt 0 ein, Abdeckung 47 % < 50 %). Der Befund in §7.2 „REGEL0 schlägt den Markt, Rang 1,00“ beruht auf einer nicht tagestreuen Nullwelt (30 % Fehlalarm); je Tag gewichtet ist der Vorsprung negativ (E-139).

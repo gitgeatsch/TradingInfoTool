@@ -2678,3 +2678,9 @@ Schritt7 §23.24.
 **Nachtrag 25.10.2026 (69) — REGEL0 vorerst unverändert, Gesamtbilanz zuerst** (E-140):
 - Die REGEL0 bleibt im Betrieb, wie sie ist; als Hebel-Signalgeber ist sie gemessen ungeeignet.
 - Als Nächstes kommt die Gesamtbilanz aller Ansätze (R-3); danach die Richtung, eher als Kombination.
+
+**Nachtrag 25.10.2026 (70) — Prüfbericht und Gesamtbilanz** (E-141):
+- Formal sind die Prüfregeln eingehalten.
+- Inhaltlich sind acht Stellen berichtigt, darunter die Festschreibung der REGEL0 (B6 gegen 0 statt gegen den Versatz) und „trägt auf Kraken“ (jetzt nicht entscheidbar).
+- Kein Einstiegssignal hat einen belegten Vorsprung. Belegt sind Schadensbegrenzung, Schutz und Fakten.
+- Nächster Schritt: die Richtung als Kombination (Bilanz B.6/B.7).

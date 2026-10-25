@@ -197,3 +197,5 @@ B2 bis B4 laufen über eine Quelltextkopie wie in `p78`, mit R-R11 der Kopie. **
 - Der Vorsprung der Referenz (+0,72 % je Handel, Rang 1,00) ist echt **für diese eine Konstellation**. Er entsteht aber aus einer Reife-Regel, die am Datenbeginn einer fremden Quelle hängt.
 - Bei echtem Kursbeginn ist der Vorsprung je Handel klein und nicht von Zufall zu trennen. Je Tag ist er negativ.
 - ⇒ **Die REGEL0 0.1 hat keinen belegten Vorsprung.**
+
+⚠️ **Geltungsbereich (E-141):** §6 gilt für die Menge *bestand*. Der Vorsprung der Referenz gilt nur je Handel. Je Handel allein wäre Kriterium (2) 6 von 6; das 0 von 6 kommt aus der vorab festgelegten Je-Tag-Bedingung.

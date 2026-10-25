@@ -144,3 +144,5 @@ Lage im Oktober 2026, mit Quelle und Zitat, Fakt und Erzählung getrennt:
 - G4: T2-Anteil 47,8 %.
 - G5: Nasdaq-Bärenmärkte per cummax: 13.
 - ⚠️ G5 enthielt zuerst **einen eigenen Fehler**: Die Erwartung lautete „13 + 1 laufend“, aber T3 meldet einen laufenden **Bullen**markt. Korrigiert.
+
+⚠️ **Berichtigung 25.10.2026 (E-141):** (a) Ein Nachlauf von Nasdaq/Stablecoins ist **nicht** belegt (Nachlauf-Ränge 0,05/0,07 und 0,00/0,33). (b) Fear & Greed ist ein Grenzfall: n = 13 in der ersten Hälfte, Gegenprobe 0,955. (c) T2 „keine Voraussetzung“ ist eine Beschreibung, kein Messbefund (nur Nicht-Verwerfen).

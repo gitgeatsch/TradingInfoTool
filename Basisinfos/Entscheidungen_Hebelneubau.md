@@ -487,6 +487,7 @@ Handgriff am Desktop dieselben Signale erzeugt. Jede Voranalyse und jede REGELn 
 - Die Grundlage: 2.688–2.699, der Showstopper Mindesthistorie behoben (2.698), die Schwelle auf der vollständigen Menge bestätigt (2.699).
 - Festgeschrieben im Dokument `REGEL0_Hebel_Entwurf_30_09.md` (Dateiname historisch) und im Code `hebel_neubau.REGEL0`. Die Wache prüft die Referenzzahlen gegen die Belege.
 
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** Die Tagesblock-Bedingung B6 prüfte gegen 0 statt gegen den Versatz (E-11). Gegen das Nullmittel hätten unverzerrt:2 und :3 nicht bestanden (2 von 4). Die REGEL0 war damit schon bei der Festschreibung nicht voll bestätigt; heute ist sie durch E-139 überholt.
 
 ---
 
@@ -1551,6 +1552,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 
 **Betrieb:** unverändert.
 
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** Präzisierung: Fassung 1 war gesehen, bevor ihr Selbsttest lief (Gegenprobe G3). Das Urteil über die Auflösung war nicht vorab geplant; es ist robust, weil selbst die zehnfache Stärke nicht reicht.
+
 # E-128 · Bestandsaufnahme A1: innerhalb der bestehenden Ansätze ist kein Weg offen (22.10.2026)
 
 **22.10.2026** · Nutzer: *„ja A1 Bestandsaufnahme starten … mit Alternativen meine ich nicht nur Anpassungen der bestehenden Strategien, sondern auch neue Ansätze … aber mach zuerst die Prüfung A1.“*
@@ -1607,6 +1610,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 
 **Betrieb:** unverändert. **Zur Abstimmung:** welcher Messplan (Wahl 2024, Bestätigung je Jahr).
 
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Berichtigt:** „trägt auf Kraken-Perps“ beruht auf Punktwerten. Das Tagesblock-Band (unverzerrt −0,35 bis +0,79 %) schließt die Null ein, und die Abdeckung von 47 % liegt unter dem eigenen Kriterium von 50 %. Richtig ist **nicht entscheidbar**; nach E-139 ohne Grundlage.
+
 # E-131 · M-L: Der Limit-Einstieg trägt auf Bitpanda nicht – REGEL0 schlägt den Markt, aber der Markt fiel (23.10.2026)
 
 **23.10.2026** · Nutzer: *„ja Messplan M-L so festlegen, prüfen, gegenprüfen und Doku“*; Nutzer-Fakt: Bitpanda-Hebel ohne Limit-Kauf, Spot mit Limit.
@@ -1621,6 +1626,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Die Altcoins fielen aber im Mittel um −0,28 bzw. −0,13 % je 24 h. **Drift plus Kosten** zehren den Vorsprung auf.
 
 **Betrieb:** unverändert.
+
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Berichtigt:** Der Befund „REGEL0 schlägt den Markt um +0,6/+0,3 Pp, Rang 1,00“ beruht auf einer Nullwelt, die nicht tagestreu ist (30 % Fehlalarm, E-139). Je Tag gewichtet ist der Vorsprung negativ. Das Urteil „trägt nicht“ bleibt.
 
 # E-132 · E-A: REGEL0 als Kaufzeitpunkt geplanter Spot-Käufe trägt nicht; 4-Jahres-Zyklus nur als Fakt (23.10.2026)
 
@@ -1641,6 +1648,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 **Bilanz REGEL0 auf Bitpanda:** Kosten, Auswahl, Limit und Timing geplanter Käufe sind geprüft, und nichts trägt. Getragen hat das Signal nur als 24-h-Handel bei niedrigen Kosten (Kraken, E-130).
 
 **Betrieb:** unverändert.
+
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Berichtigt:** Die Nullwelt war nicht tagestreu, dazu kommt Pseudo-Replikation über die vier Mengen. Die Ränge 0,00/1,00 und Regime 0,03/0,99 sind überzeichnet; „Wartedrift“ und „kippt mit dem Regime“ gelten nur als Tendenz. Das Urteil „trägt nicht“ bleibt.
 
 # E-133 · F-1 Marktfilter für REGEL0: mit 2024–26 nicht entscheidbar – selbst perfektes Timing ist nicht von Zufall zu trennen (23.10.2026)
 
@@ -1674,6 +1683,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 
 **Betrieb:** unverändert.
 
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Berichtigt:** Die Fundquote 31 → 84 % hat ein Streuband von etwa ±9 Pp (Gegenprobe 40 → 77 %). Die Annahme „die REGEL0 feuert 2020–22“ ist durch E-136 widerlegt.
+
 # E-135 · Indikator-Atlas: Geldausweitung ist keine Voraussetzung; kein Makrokanal läuft den BTC-Wenden voraus; Rezession ist die stärkste Größe (23.10.2026)
 
 **23.10.2026** · Nutzer: *„ja V-1“*, mit seinen Gedanken: Geldausweitung als Voraussetzung? Rezession? Wie lange Ausweitung und Bullenmarkt? Die aktuelle Lage (Anleihen, Währungen, KI, Krisen) gesondert messen und recherchieren.
@@ -1688,6 +1699,11 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - **T4:** Anleihen teilweise kritisch (10J 5,31 %, höchster Stand seit 2002), Währungen nur beim Yen und in Schwellenländern. KI-Investitionen teilweise (freier Cashflow −24 %, aber Gewinne +30 %). 2026 gibt es keine Geldflut; der Auslöser ist ein Ölschock. BTC löst sich 2026 vom Nasdaq (−26 % gegen +14 %).
 
 **Folge:** Kandidat vorhanden ⇒ zur Abstimmung: REGEL0-Historie 2020–23 (Download-Ja) und F-1 Fassung 2 mit Fear & Greed; dazu das Lagebild Gesamtmarkt als Fakt. **Betrieb:** unverändert.
+
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Berichtigt:**
+- (a) „Nasdaq und Stablecoins laufen nach“ ist falsch; die Nachlauf-Ränge 0,05/0,07 und 0,00/0,33 zeigen keinen Nachlauf.
+- (b) Fear & Greed ist ein Grenzfall: erste Hälfte n = 13, Rang in der Gegenprobe 0,955.
+- (c) „Geldausweitung ist keine Voraussetzung“ ist eine Beschreibung (Zyklus 2022–25 bei schrumpfenden Bilanzen), kein Messbefund; sie folgt nur aus dem Nicht-Verwerfen.
 
 # E-136 · F-1 Fassung 2 abgebrochen: Die REGEL0 feuert 2020–22 nicht, und ihr Ergebnis 2024–26 hängt an der Länge der Datenreihen (24.10.2026)
 
@@ -1781,6 +1797,8 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Ihr gemessenes Plus hängt an der Reife-Regel ab dem Beginn der Terminmarktdaten.
 - **Betrieb unverändert bis zur Nutzerentscheidung über die weiteren Schritte.**
 
+**Nachtrag 25.10.2026 (E-141, Prüfbericht):** **Geltungsbereich:** Das Urteil gilt für die Menge *bestand*; die unverzerrten Mengen sind nicht nachgerechnet. Der „Vorsprung der Referenz“ gilt nur je Handel (je Tag −0,24 %). Je Handel allein wäre Kriterium (2) 6 von 6; das 0 von 6 kommt aus der vorab festgelegten Je-Tag-Bedingung.
+
 # E-140 · REGEL0 im Betrieb vorerst unverändert; Richtung nach Gesamtbilanz R-3 (25.10.2026)
 
 **25.10.2026** · Nutzer: *„also mit regel0 welche wir für hebel benötigen ist nicht geeignet und gemessen, hier bleibt nur vorerst alles so zu belassen. Frage 2 musst du mir genauer beschreiben - sehe hier eher eine kombination. R3 benötigen wir ohnehin“*.
@@ -1795,3 +1813,29 @@ Der Engpass ist die **Information**, nicht das Modell. Dazu kommt ein Kontaminat
 - Die Mails laufen weiter wie bisher; der Befund steht im Regelwerksmanual und in der Spezifikation.
 
 **Frage 2 (Richtung):** Der Nutzer sieht eher eine **Kombination** und braucht die genauere Beschreibung. **R-3 (Gesamtbilanz)** wird ohnehin gebraucht und kommt zuerst. Die Gliederung wird vorab abgestimmt.
+
+# E-141 · Prüfbericht vor der Gesamtbilanz: Formal sauber, acht inhaltliche Stellen berichtigt, zwei frühere „trägt“ halten nicht (25.10.2026)
+
+**25.10.2026** · Nutzer: *„… zuvor prüfe aber ob Fehler und wo Fehler passiert sind, wurden alle Prüfregeln eingehalten?“*. Grundlage: `Bilanz_Gesamt_25_10.md` Teil A. Drei unabhängige Prüfaufträge; jeder urteilsrelevante Hinweis ist an der Quelle nachgeprüft.
+
+**Formal eingehalten:**
+- Vorab-Commits vor jeder Ergebnisdatei;
+- die Produktions-DB nie beschrieben;
+- Nutzer-Ja vor jedem Bau und Download;
+- Selbsttest vor dem ersten Blick seit 22.10.
+
+**Inhaltlich berichtigt** (Nachträge an den Einträgen):
+- E-36: B6 gegen 0 statt gegen den Versatz, 2 von 4 Mengen;
+- E-130: „trägt“ → nicht entscheidbar;
+- E-131/E-132: Nullwelt nicht tagestreu;
+- E-134: Streuband;
+- E-135: Nachlauf falsch, F&G Grenzfall, T2 nur beschreibend;
+- E-139: Geltungsbereich *bestand*;
+- E-127: Präzisierung.
+
+**Neue stehende Regeln** (Bilanz A.6):
+- Tagesblock-Rang bei Ballung;
+- „trägt“ braucht das Band;
+- Gegenprobe = zweiter Weg;
+- Zwischenfassungen committen;
+- Geltungsbereich im Urteilssatz.

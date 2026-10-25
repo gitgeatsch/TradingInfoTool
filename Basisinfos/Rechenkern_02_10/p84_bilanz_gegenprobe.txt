@@ -1,0 +1,5 @@
+G1 zitierte E-Nummern 53, in den Entscheidungen vorhanden 53, fehlend: keine -> ok
+G2 tragende Zahlen gegen die Quelle: 18 von 18 gefunden -> ok
+G3 Nachtraege an den Eintraegen: 8 von 8 -> ok
+G4 Word-Fassung C:\Users\Geatsch\Desktop\Gesamtbilanz_R3_25_10_2026.docx (47 KB): Ueberschriften 22/22 · Tabellen 12/12 · Kernsaetze fehlend: keine -> ok
+ERGEBNIS 4 von 4
