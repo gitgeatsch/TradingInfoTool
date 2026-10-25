@@ -551,6 +551,13 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - **K11a** Cash-Zeile in einer Kaufmail (Nutzerblick)
 - beobachten: yfinance ^GSPC/^IXIC/^VIX (2.454-vix)
 
+### Stand 25.10.2026 nachts (E-147)
+
+- **L1-a:** Brücke hält nicht (0,705); Ursache F8/F2 sind in den Quellen verschiedene Größen. Vorschlag L1-c (CMC als eigene Messbasis).
+- **L2-a:** nur R1 (BTC > 200 T) messbar, nahe an E-126; Messplan-Vorschlag mit Reproduktion als Schritt 0; Top-Werte als Stufe 2.
+- **Kern-Regel:** Bau-Voranalyse liegt vor; offen K-1 bis K-4, Bauumfang B-1 bis B-3.
+- ➤ Zur Abstimmung: L1-c · Messplan L2-a · Kern-Regel K-1 bis K-4 und B-1.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

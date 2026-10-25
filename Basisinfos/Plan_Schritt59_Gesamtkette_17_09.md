@@ -2711,3 +2711,8 @@ Schritt7 §23.24.
 - Den Kern länger zu halten trägt im Markt 2024–26 nicht, in Aufwärtsjahren war es deutlich positiv.
 - Für den Hebel bleibt die Frage nach einem vorab erkennbaren Regime.
 - Die beschlossene Kern-Regel (Aufbau 70/20/10) ist noch nicht gebaut.
+
+**Nachtrag 25.10.2026 (76) — L1-a, L2-a, Kern-Regel** (E-147):
+- Der Asset-Filter lässt sich auf CMC auch bei gleicher Historie nicht direkt bestätigen; Binance- und CMC-Wert sind zwei Fassungen. Vorschlag: CMC als eigene Messbasis (L1-c).
+- Ein Regime-Hebel auf dem Kern ist auf der langen Historie nur mit dem 200-T-Schnitt messbar, und der ist mit E-126 schon einmal gescheitert. Die Top-Werte kommen als Stufe 2.
+- Die Kern-Regel ist aus dem bestehenden Schema baubar; offen sind Monatsrate, Tag, Altbestand und die Trennung von der alten Spot-Kette.

@@ -1,0 +1,20 @@
+P91 VORANALYSE L2-a Regime-Hebel Kern · CoinMetrics Tagesschluss: BTC ab 2010-07-18 · ETH ab 2015-08-08 · SOL ab 2020-08-11
+
+BTC 7-T-Ertraege 2015-01-01..2026-09-27 (4288 Tage) · Orakel-Regime: Anteil an 61 %, 132 Strecken, Rang 1.000 (messbar, wenn >= 0,95)
+   R1 BTC ueber 200-T-Schnitt (Vortag)            2015-01-01..2026-09-27 · Anteil an  60 % ·  72 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 2 % · Orakel auf dem Zeitraum Rang 1.000
+   R2 BTC 91 T > +20 % (Season B1, Vortag)        2015-01-01..2026-09-27 · Anteil an  40 % · 138 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 6 % · Orakel auf dem Zeitraum Rang 1.000
+   R3 Season-Ampel nicht kalt (Vortag)            2019-04-03..2026-06-23 · Anteil an  37 % ·   3 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 0 % · Orakel auf dem Zeitraum Rang 1.000
+   R4 Makro Gesamt kurz nicht Gegenwind (Vortag)  2020-06-01..2026-09-27 · Anteil an  64 % ·  91 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 10 % · Orakel auf dem Zeitraum Rang 1.000
+
+ETH 7-T-Ertraege 2016-02-24..2026-09-27 (3869 Tage) · Orakel-Regime: Anteil an 57 %, 107 Strecken, Rang 1.000 (messbar, wenn >= 0,95)
+   R1 BTC ueber 200-T-Schnitt (Vortag)            2016-02-24..2026-09-27 · Anteil an  61 % ·  67 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 6 % · Orakel auf dem Zeitraum Rang 1.000
+   R2 BTC 91 T > +20 % (Season B1, Vortag)        2016-02-24..2026-09-27 · Anteil an  42 % · 121 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 4 % · Orakel auf dem Zeitraum Rang 1.000
+   R3 Season-Ampel nicht kalt (Vortag)            2019-04-03..2026-06-23 · Anteil an  37 % ·   3 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 0 % · Orakel auf dem Zeitraum Rang 1.000
+   R4 Makro Gesamt kurz nicht Gegenwind (Vortag)  2020-06-01..2026-09-27 · Anteil an  64 % ·  91 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 6 % · Orakel auf dem Zeitraum Rang 1.000
+
+SOL 7-T-Ertraege 2021-02-27..2026-09-16 (2028 Tage) · Orakel-Regime: Anteil an 54 %, 57 Strecken, Rang 1.000 (messbar, wenn >= 0,95)
+   R1 BTC ueber 200-T-Schnitt (Vortag)            2021-02-27..2026-09-16 · Anteil an  54 % ·  53 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 5 % · Orakel auf dem Zeitraum Rang 1.000
+   R2 BTC 91 T > +20 % (Season B1, Vortag)        2021-02-27..2026-09-16 · Anteil an  32 % ·  54 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 3 % · Orakel auf dem Zeitraum Rang 1.000
+   R3 Season-Ampel nicht kalt (Vortag)            2021-02-27..2026-06-23 · Anteil an  22 % ·   2 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 0 % · Orakel auf dem Zeitraum Rang 1.000
+   R4 Makro Gesamt kurz nicht Gegenwind (Vortag)  2021-02-27..2026-09-16 · Anteil an  59 % ·  89 Strecken · Fehlalarm Zufallsregime mit dieser Struktur 5 % · Orakel auf dem Zeitraum Rang 1.000
+

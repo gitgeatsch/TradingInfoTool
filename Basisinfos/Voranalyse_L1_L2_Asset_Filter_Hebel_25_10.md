@@ -286,3 +286,39 @@ Nutzer 25.10.: *„die Einstiege und Bewertung soll vorerst neutral erfolgen, ob
 - **Kriterium wie Teil 1:** Rangkorrelation im Mittel ≥ 0,8 **und** ≥ 50 % gleiche Coins im oberen Fünftel. Dazu der Ausweis je Jahr.
 - **Hält sie:** Die Abweichung in Teil 1 lag an der Datenlänge. Der CMC-Wert ist bei genug Historie dieselbe Regel, und die Bestätigung 2017–19 wird auf Coins mit ausreichender CMC-Historie vorgeschlagen; dann ist die Zahl der Blöcke zu prüfen.
 - **Hält sie nicht:** Es gibt einen Unterschied über die Datenlänge hinaus. Dann folgen Ursache und Lösung.
+
+### 9.5 L1-a Ergebnis: Die Brücke hält auch bei gleicher Historie nicht (`p89c_bruecke_gleiche_historie.py`, Ursache `p89d_bruecke_ursache_gleiche_historie.py`)
+
+| | Fassung 1 (§9.1) | **Fassung 2 (≥ 730 T in beiden Quellen)** | Soll |
+|---|---|---|---|
+| Rangkorrelation im Mittel | 0,68 | **0,705** (Median 0,761, 10. Perz. 0,49) | ≥ 0,8 |
+| oberes Fünftel gleich | 55 % | **51 %** | ≥ 50 % |
+| je Jahr | | 2020 0,49 · 2021 0,55 · 2022 0,67 · 2023 0,71 · 2024 0,78 · 2025 0,73 · 2026 0,74 | |
+
+190 Zellen, im Mittel 58 gemeinsame Coins je Stichtag. ⇒ **HÄLT NICHT** — nach der vorab festen Regel (§9.4) gibt es einen Unterschied über die Datenlänge hinaus.
+
+**Ursache je Merkmal** (Rangkorrelation CMC gegen Binance, nur Coins mit ≥ 730 T in beiden Quellen):
+
+| Merkmal | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 | Lesart |
+|---|---|---|---|---|---|---|---|---|
+| F1 Abstand zum Hoch | 0,64 | 0,76 | 0,84 | 0,88 | 0,91 | 0,86 | 0,85 | stimmt weitgehend ab 2022 |
+| **F2 Tage seit dem Hoch** | 0,53 | 0,51 | 0,71 | 0,76 | 0,80 | **0,68** | **0,72** | ⚠️ schwach, auch mit langer Historie |
+| **F8 Alter** | 0,40 | 0,37 | 0,48 | 0,66 | 0,79 | 0,78 | 0,83 | ⚠️ zwei **verschiedene Größen** |
+
+**Woran es liegt (aus dem Code, nicht vermutet):**
+- **F8:** Binance misst das Alter **seit der Binance-Listung**, CMC seit dem **ersten Erscheinen in den Top 200**. Das ist nicht dasselbe Alter. Dazu ist CMC links bei 2016-07 abgeschnitten.
+- **F2:** Das Hoch liegt bei CMC auf **Wochen**-Schlusskursen, bei Binance auf **Tages**-Kursen ab der Listung. Liegt das wahre Hoch vor der Binance-Listung, kennt Binance es nicht.
+- **F1** ist am wenigsten betroffen, weil der Abstand zum Hoch nur grob am Zeitpunkt des Hochs hängt.
+
+**Was das bedeutet:**
+- Der Binance-Wert und der CMC-Wert sind **zwei Fassungen** derselben Idee, nicht dieselbe Regel. Eine Bestätigung auf CMC 2017–19 wäre die Bestätigung einer **anderen** Regel.
+- Für den **Hebel** zählt das kaum: Gehebelt wird nur, was bei Bitpanda handelbar ist, und dafür gibt es die Binance-Reihen (Voranalyse L2-a §3).
+- Für die Werte **außerhalb von Binance** (11 im Bestand) fehlt damit weiter ein bestätigter Wert.
+
+**Lösungen (zur Abstimmung, eine Entscheidung):**
+
+| | Weg | Aufwand | Was er löst |
+|---|---|---|---|
+| **L1-c (Vorschlag)** | **CMC als eigene Messbasis:** die A1-Messung (E-143) auf CMC 2019–26 **reproduzieren** (R-R11). Hält das Ergebnis dort, ist 2017–19 die unberührte Bestätigung **dieser** Fassung, und sie gilt auch für Werte außerhalb von Binance | 1 Skript, Minuten | Bestätigung + Werte außerhalb von Binance; keine Brücke nötig |
+| L1-b | Ein gemeinsames Alter aus einer dritten Quelle (CoinGecko-Historie ab Handelsbeginn, frei, aber ~500 Abrufe mit Pausen) | Stunden, Download mit Ja | nur F8, F2 bleibt |
+| L1-d | Den Binance-Wert auf Wochenkurse umstellen | Änderung am Messwert | ⚠️ ändert die Grundgesamtheit der Merkmale, nicht empfohlen |

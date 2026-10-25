@@ -1985,3 +1985,25 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - Neutral bewertet (Voranalyse L1/L2 §9.3) ist der Vorsprung auf dem Kern bei keiner Haltedauer belegt (TRÄGT NICHT BIS 1,0 / 2,0 / 2,0 Pp).
 - Längeres Halten hebt den Ertrag vor Kosten nur in Aufwärtsphasen (Drift, kein Vorsprung).
 - Künftig sind Kosten ein nachgelagerter Schritt.
+
+# E-147 · L1-a hält nicht (Binance- und CMC-Wert sind zwei Fassungen); L2-a messbar nur für R1 und nahe an E-126; Kern-Regel baubar aus bestehendem Schema (25.10.2026)
+
+**25.10.2026** · Nutzer: *„ja L1-a, L2-a und Kern-Regel Voranalyse starten - was ist mit den andern Werten also den aussichtsreichsten TOP Werten, diese wollen wir auch hebeln bzw. wenn die Strategie für Kern funktionieren sollte wäre dies auch eine Variante für andere Hebelpositionen oder?“*
+
+**L1-a** (vorab 2d0c00cc, Voranalyse L1/L2 §9.4/§9.5, `p89c`, `p89d`):
+- Brücke Fassung 2 (≥ 730 T in beiden Quellen): 0,705 (Soll 0,8), oberes Fünftel 51 % ⇒ **hält nicht**.
+- Ursache: F8 ist bei Binance das Alter seit der Listung, bei CMC seit dem ersten Top-200-Erscheinen; F2 hängt an Wochen- gegen Tageskursen und an der Listung. F1 stimmt ab 2022 (0,84–0,91).
+- Vorschlag **L1-c**: CMC als eigene Messbasis, zuerst A1 auf CMC 2019–26 reproduzieren.
+
+**L2-a** (`Voranalyse_L2a_Regime_Hebel_Kern_25_10.md`, `p91`):
+- Auf der langen Historie (ab 2015) reicht die Auflösung (Orakel Rang 1,000); auf 2024–26 allein nicht (E-133).
+- Fehlalarm sauber nur für **R1** BTC > 200-T-Schnitt (2 / 6 / 5 %); R2 grenzwertig, R3 3 Strecken, R4 Fehlalarm 10 %.
+- ⚠️ R1 ist nahe an **E-126 M-A** (trägt nicht). Messplan-Vorschlag mit Schritt 0 = Reproduktion von E-126.
+- **Top-Werte hebeln:** als **Stufe 2**, nur wenn Stufe 1 trägt (Top 30 und Top 30 im oberen Fünftel, gegen den Kern im selben Regime).
+
+**Kern-Regel** (`Voranalyse_Kern_Regel_Bau_25_10.md`):
+- Baubar aus dem bestehenden Schema: `api/onchain` (CoinMetrics), Job `externe_reihen`, `k3_gewichten.klima`.
+- Heute q = 0,38 (Desktop-Stand 04.10.); K1 seit 2021 nicht scharf.
+- Offene Nutzerfragen K-1 bis K-4 (Monatsrate, Tag, Altbestand, Kern aus der alten Spot-Kette); Bauumfang B-1 bis B-3.
+
+**Betrieb unverändert.**
