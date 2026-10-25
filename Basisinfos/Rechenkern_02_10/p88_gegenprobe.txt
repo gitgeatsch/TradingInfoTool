@@ -1,0 +1,4 @@
+G1 Bestaende im Universum: 17 geprueft (Rang selbst sortiert, Fuenftel ueber d4_wirkung.fuenftel) -> ok
+G2 BTC 24 h: Formel 0.67 Pp (n 95, Tage 95) gegen Block-Bootstrap 0.71 Pp, Verhaeltnis 0.94 -> ok
+G3 Kostenformel in §23.68: gefunden -> ok
+ERGEBNIS 3 von 3

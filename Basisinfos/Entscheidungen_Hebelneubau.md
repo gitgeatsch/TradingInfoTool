@@ -1926,3 +1926,31 @@ Dazu ein Nachtrag zu E-139 (7- statt 15-Tage-Blöcke, Urteil bleibt).
 - L-3 nicht möglich.
 
 **Betrieb unverändert.**
+
+# E-145 · Voranalyse L-1/L-2: Kein Bestand im oberen Fünftel; Hebel nur für den Kern messbar; 2024–26 durchweg „kalt“ (25.10.2026)
+
+**25.10.2026** · Nutzer: *„ja L-1 Voranalyse starten … auch L-2 wir brauchen auch für Hebel eine Lösung, diese kann nicht wie spot sein, auch auf mein bestehendes Portfolio prüfen und eine andere Haltedauer prüfen …“*
+
+**Grundlage:** `Voranalyse_L1_L2_Asset_Filter_Hebel_25_10.md`; `p88_l1_l2_voranalyse.py`, Gegenprobe `p88_gegenprobe.py` 3/3.
+
+**Befunde:**
+- **Bestand:**
+  - Von 31 Krypto-Werten liegen 10 in den Top 30, **keiner im oberen Fünftel**.
+  - Vier liegen im unteren (SUI, TAO, KAIA, TURBO).
+  - Elf liegen außerhalb der Binance-Messbasis; ihre Fünftel gibt es nur am NB.
+- **L-1:**
+  - Der Filterwechsel kostet 0,04–0,10 %/Monat.
+  - Nach der Norm ist 30 T ab 2024 KEIN BEFUND, 7 T ab 2024 dagegen messbar.
+  - Gegen BTC ist erst ab 2–3 Pp/Woche etwas erkennbar.
+  - Unberührt sind die CMC-Wochen 2017–2019 (Top 200 mit eingestellten Coins).
+- **L-2:**
+  - Kosten 0,48/0,84/1,56/5,70 % für 24 h/72 h/7 T/30 T.
+  - Messbar ist nur der Kern (276 Einstiege, MDE 0,62/1,94 Pp); die Top-30-Auswahl hat zu wenige Einstiege.
+  - Die Season-Ampel stand 2024–26 zu 100 % auf „kalt“.
+
+**Vorschläge zur Abstimmung:**
+- Messplan L-1 (CMC-Holdout 2017–19, Brücke zuerst, 7 T Wochen-Stichtage, gegen die Gruppe und gegen BTC);
+- Messplan L-2 RegelXY (REGEL0 nur Kern, 72/168 h, netto, Selbsttest);
+- NB-Export der B4-Fünftel für die elf Werte außerhalb von Binance.
+
+**Betrieb unverändert.**

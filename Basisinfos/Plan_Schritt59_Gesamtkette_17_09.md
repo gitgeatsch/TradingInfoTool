@@ -2699,3 +2699,9 @@ Schritt7 §23.24.
 - Die besseren Assets machen den REGEL0-Einstieg über 24 h nicht messbar besser; ein Zusammenwirken von mindestens 0,5 Pp ist ausgeschlossen.
 - Die Auswahl verbessert den Coin über Monate, nicht den Zeitpunkt.
 - Nächster Schritt zur Abstimmung: die Auswahl als Asset-Filter auf Monatsebene, für Spot und Bestand.
+
+**Nachtrag 25.10.2026 (74) — Voranalyse L-1/L-2** (E-145):
+- Im Bestand liegt kein Wert im oberen Fünftel, vier liegen im unteren.
+- Der Asset-Filter lässt sich auf unberührten CMC-Wochen 2017–19 bestätigen.
+- Für den Hebel ist eine andere Haltedauer nur auf BTC/ETH/SOL messbar.
+- Nächster Schritt zur Abstimmung: die Messpläne L-1 und L-2.

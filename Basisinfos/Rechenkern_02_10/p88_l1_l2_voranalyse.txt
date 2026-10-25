@@ -1,0 +1,80 @@
+P88 VORANALYSE L-1 / L-2 (Machbarkeit und Aufloesung)
+
+L1-a BESTAND (NB-Diagnose, Stand 2026-10-15) gegen den Stichtag 2026-09-01: 31 Krypto-Werte
+    ALGO     Klasse M    Rang 30         Fuenftel 4  -> Top 30
+    ASTER    Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    AVAX     Klasse H    Rang 13         Fuenftel 4  -> Top 30
+    BEAMX    Klasse S    Rang 115        Fuenftel 2  -> in keinem Filter
+    BIO      Klasse S    Rang 140        Fuenftel 2  -> in keinem Filter
+    BNB      Klasse H    Rang 1          Fuenftel 2  -> Top 30
+    BRETT    Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    BTC      Klasse Kern Rang -          Fuenftel -  -> Kern (nicht in der Watchlist-Ordnung)
+    CANTON   Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    CAT      Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    ETH      Klasse Kern Rang -          Fuenftel -  -> Kern (nicht in der Watchlist-Ordnung)
+    HBAR     Klasse H    Rang 12         Fuenftel 3  -> Top 30
+    HYPE     Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    INJ      Klasse M    Rang 43         Fuenftel 3  -> in keinem Filter
+    KAIA     Klasse M    Rang 74         Fuenftel 1  -> in keinem Filter
+    KAS      Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    LINK     Klasse H    Rang 6          Fuenftel 4  -> Top 30
+    MON      Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    MORPHO   Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    NEAR     Klasse H    Rang 16         Fuenftel 3  -> Top 30
+    PLUME    Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    QNT      Klasse H    Rang 27         Fuenftel 2  -> Top 30
+    SEI      Klasse M    Rang 51         Fuenftel 2  -> in keinem Filter
+    SOL      Klasse Kern Rang -          Fuenftel -  -> Kern (nicht in der Watchlist-Ordnung)
+    SUI      Klasse H    Rang 15         Fuenftel 1  -> Top 30
+    SUPRA    Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    TAO      Klasse H    Rang 17         Fuenftel 1  -> Top 30
+    TURBO    Klasse S    Rang 130        Fuenftel 1  -> in keinem Filter
+    W        Klasse S    Rang 133        Fuenftel 3  -> in keinem Filter
+    XDC      Klasse -    Rang -          Fuenftel -  -> nicht im Universum am Stichtag (Binance-Spot, >= 400 Kerzen)
+    XLM      Klasse H    Rang 8          Fuenftel 4  -> Top 30
+    Zusammen: Kern 3 · in Top 30 10 · oberes Fuenftel 0 · Top 30 & oberes Fuenftel 0 · in keinem Filter 7 · nicht im Universum 11
+
+L1 Horizont 7 T · Block nach messnorm 1 Stichtag(e)
+    Top 30                     E3   Coins/Stichtag 30.0 · MDE Filter-Gruppe – (Filter = Gruppe) · Filter-BTC 2.5 Pp (32 Bloecke)
+    Top 30                     alle Coins/Stichtag 29.2 · MDE Filter-Gruppe – (Filter = Gruppe) · Filter-BTC 1.9 Pp (93 Bloecke)
+    oberes Fuenftel            E3   Coins/Stichtag 76.1 · MDE Filter-Gruppe 0.8 Pp · Filter-BTC 2.0 Pp (32 Bloecke)
+    oberes Fuenftel            alle Coins/Stichtag 52.9 · MDE Filter-Gruppe 0.7 Pp · Filter-BTC 2.1 Pp (93 Bloecke)
+    Top 30 & oberes Fuenftel   E3   Coins/Stichtag  5.2 · MDE Filter-Gruppe 1.5 Pp · Filter-BTC 2.9 Pp (32 Bloecke)
+    Top 30 & oberes Fuenftel   alle Coins/Stichtag  5.3 · MDE Filter-Gruppe 1.0 Pp · Filter-BTC 2.1 Pp (93 Bloecke)
+    H & oberes Fuenftel        E3   Coins/Stichtag  4.9 · MDE Filter-Gruppe 1.3 Pp · Filter-BTC 2.9 Pp (32 Bloecke)
+    H & oberes Fuenftel        alle Coins/Stichtag  4.4 · MDE Filter-Gruppe 1.4 Pp · Filter-BTC 2.4 Pp (71 Bloecke)
+
+L1 Horizont 30 T · Block nach messnorm 3 Stichtag(e)
+    Top 30                     E3   Coins/Stichtag 30.0 · Wechsel je Monat   7 % (Gebuehr 0.04 % je Monat) · MDE Filter-Gruppe KEIN BEFUND · Filter-BTC KEIN BEFUND (10 Bloecke)
+    Top 30                     alle Coins/Stichtag 29.2 · Wechsel je Monat   8 % (Gebuehr 0.04 % je Monat) · MDE Filter-Gruppe – (Filter = Gruppe) · Filter-BTC 5.3 Pp (31 Bloecke)
+    oberes Fuenftel            E3   Coins/Stichtag 76.3 · Wechsel je Monat   8 % (Gebuehr 0.04 % je Monat) · MDE Filter-Gruppe KEIN BEFUND · Filter-BTC KEIN BEFUND (10 Bloecke)
+    oberes Fuenftel            alle Coins/Stichtag 52.7 · Wechsel je Monat  14 % (Gebuehr 0.07 % je Monat) · MDE Filter-Gruppe 1.6 Pp · Filter-BTC 7.4 Pp (31 Bloecke)
+    Top 30 & oberes Fuenftel   E3   Coins/Stichtag  5.2 · Wechsel je Monat  14 % (Gebuehr 0.07 % je Monat) · MDE Filter-Gruppe KEIN BEFUND · Filter-BTC KEIN BEFUND (10 Bloecke)
+    Top 30 & oberes Fuenftel   alle Coins/Stichtag  5.3 · Wechsel je Monat  19 % (Gebuehr 0.10 % je Monat) · MDE Filter-Gruppe 4.5 Pp · Filter-BTC 7.5 Pp (31 Bloecke)
+    H & oberes Fuenftel        E3   Coins/Stichtag  4.8 · Wechsel je Monat  13 % (Gebuehr 0.06 % je Monat) · MDE Filter-Gruppe KEIN BEFUND · Filter-BTC KEIN BEFUND (10 Bloecke)
+    H & oberes Fuenftel        alle Coins/Stichtag  4.3 · Wechsel je Monat  17 % (Gebuehr 0.09 % je Monat) · MDE Filter-Gruppe 5.2 Pp · Filter-BTC 8.0 Pp (23 Bloecke)
+
+L2-a Kosten Bitpanda-Hebel je Haltedauer (0,30 % + 0,18 % je Tag, §23.68): 24 h 0.48 % · 72 h 0.84 % · 7 T 1.56 % · 30 T 5.70 %
+L2 Referenz: Einstiege 2024-26 und kleinster erkennbarer mittlerer Ertrag (2,5 x Streuung, Tagesbloecke nach messnorm)
+    BTC                           95 Einstiege an   95 Tagen · 24 h MDE 0.71 Pp (65 Bl.) · 7 T MDE 1.54 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    ETH                           91 Einstiege an   91 Tagen · 24 h MDE 1.00 Pp (65 Bl.) · 7 T MDE 2.47 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    SOL                           90 Einstiege an   90 Tagen · 24 h MDE 0.90 Pp (65 Bl.) · 7 T MDE 2.79 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    Kern BTC/ETH/SOL             276 Einstiege an  192 Tagen · 24 h MDE 0.62 Pp (65 Bl.) · 7 T MDE 1.94 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    Top 30 & oberes Fuenftel     116 Einstiege an   98 Tagen · 24 h MDE 2.44 Pp (65 Bl.) · 7 T MDE 7.95 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    H & oberes Fuenftel          111 Einstiege an   94 Tagen · 24 h MDE 2.72 Pp (65 Bl.) · 7 T MDE 8.06 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    Top 30                      1466 Einstiege an  434 Tagen · 24 h MDE 0.60 Pp (65 Bl.) · 7 T MDE 2.20 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    oberes Fuenftel             1980 Einstiege an  440 Tagen · 24 h MDE 0.69 Pp (65 Bl.) · 7 T MDE 2.69 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    alle                       10732 Einstiege an  671 Tagen · 24 h MDE 0.49 Pp (65 Bl.) · 7 T MDE 2.20 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+
+L2 Lauf A: Einstiege 2024-26 und kleinster erkennbarer mittlerer Ertrag (2,5 x Streuung, Tagesbloecke nach messnorm)
+    BTC                          107 Einstiege an  107 Tagen · 24 h MDE 0.49 Pp (65 Bl.) · 7 T MDE 1.43 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    ETH                          104 Einstiege an  104 Tagen · 24 h MDE 0.92 Pp (65 Bl.) · 7 T MDE 2.62 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    SOL                          104 Einstiege an  104 Tagen · 24 h MDE 0.89 Pp (65 Bl.) · 7 T MDE 2.79 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    Kern BTC/ETH/SOL             315 Einstiege an  211 Tagen · 24 h MDE 0.51 Pp (65 Bl.) · 7 T MDE 1.93 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    Top 30 & oberes Fuenftel     130 Einstiege an  112 Tagen · 24 h MDE 2.40 Pp (65 Bl.) · 7 T MDE 7.13 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    H & oberes Fuenftel          126 Einstiege an  108 Tagen · 24 h MDE 2.62 Pp (65 Bl.) · 7 T MDE 7.44 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    Top 30                      1553 Einstiege an  456 Tagen · 24 h MDE 0.63 Pp (65 Bl.) · 7 T MDE 2.14 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    oberes Fuenftel             2154 Einstiege an  458 Tagen · 24 h MDE 0.68 Pp (65 Bl.) · 7 T MDE 2.46 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+    alle                       11701 Einstiege an  701 Tagen · 24 h MDE 0.57 Pp (65 Bl.) · 7 T MDE 2.20 Pp (46 Bl.) · 30 T KEIN BEFUND (11 Bloecke)
+
+L2 Auskunft Season-Ampel 2024-01..2026-06: kalt 100 %
