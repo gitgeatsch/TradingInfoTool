@@ -1,0 +1,6 @@
+P87 MESSPLAN A · TEIL A2 ZUSAMMENWIRKEN AUSWAHL x EINSTIEG · Block 15 Tage (messnorm._block(1))
+
+R-R11 Z1 24 h Referenz (alle 10732 Einstiege mit Kurs): +0.718 % (p83 +0,718) -> ok
+SELBSTTEST (Referenz, 24 h, 100 Zufallseinteilungen je Coin x Stichtag, Anteil oben 19.3 %): Nullpunkt je Handel -0.021 / je Tag +0.297 Pp · Fehlalarm 3 % / 6 % (Soll <= 5) · +0,5 Pp erkannt 99 % / 65 % (Soll >= 80) -> NICHT BESTANDEN
+
+Selbsttest nicht bestanden - es wird NICHT gemessen (§6.3).

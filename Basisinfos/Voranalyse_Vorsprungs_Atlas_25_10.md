@@ -219,3 +219,23 @@ Nutzer 25.10.: *„Vergleiche auch ob die top 100 Altcoins oder u.U. top 50 ggf.
 1. Die **besseren Assets** gibt es **messbar**: Die Auswahl schlägt ihre Gruppe, belastbar auf 1 Monat, am stärksten bei den Top 30.
 2. Den **Drift gegen BTC** gleicht sie bisher **nicht belegt** aus. Am nächsten kommt das obere Fünftel der **Top 30**, gerade im heutigen Markt.
 3. **Kleinwerte** tragen nichts zur Lösung bei; sie sind der Hauptteil des Drifts.
+
+### 6.6 A2 Fassung 1b — Selbsttest sperrt Fassung 1, Ursache und Lösung VOR dem ersten Blick (25.10.2026)
+
+**Selbsttest Fassung 1** (Referenz, 24 h, 100 Zufallseinteilungen je Coin und Stichtag; `p87_a2_fassung1.txt`):
+
+| | je Handel | je Tag |
+|---|---|---|
+| Fehlalarm (Soll ≤ 5 %) | 3 % | **6 %** |
+| +0,5 Pp erkannt (Soll ≥ 80 %) | 99 % | **65 %** |
+| Nullpunkt | −0,021 Pp | **+0,297 Pp** |
+
+⇒ **Nicht bestanden, nicht gemessen;** das echte D ist ungesehen.
+
+**Ursache:** „je Tag“ verglich das Mittel über die Tage **mit** Einstiegen im oberen Fünftel (440 von ~970 Tagen) mit dem Mittel über die Tage der übrigen Einstiege (fast alle Tage). Das sind **verschiedene Markttage**. Daher der Nullpunkt weit über null und das große Rauschen.
+
+**Lösung, Fassung 1b:**
+- „je Tag“ wird als **Tagesklammer** gerechnet: nur Tage mit Einstiegen in **beiden** Gruppen; je Tag das Mittel oben minus das Mittel der übrigen; jeder dieser Tage gleich gewichtet.
+- Die Bewegung des Tages fällt damit heraus. Das ist die Gewichtung „Tagesklammer“, die im Projekt bereits gilt (Memory: Gewichtung ausweisen).
+- „Je Handel“, die Blöcke, der Nullpunkt, die Urteilsstufen und die Kriterien bleiben wie §6.3/§6.5.
+- Der Selbsttest läuft in Fassung 1b erneut vor dem ersten Blick.
