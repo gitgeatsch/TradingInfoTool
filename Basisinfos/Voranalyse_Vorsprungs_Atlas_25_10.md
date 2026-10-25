@@ -142,3 +142,13 @@ Nutzer 25.10.: *„ja Messplan A festlegen, prüfen gegenprüfen und doku - imme
 - **Folgen:**
   - trägt → Kandidat „REGEL0 nur im oberen Fünftel“, danach Kosten und Betriebs-Voranalyse;
   - trägt nicht → Ursachenanalyse und Lösungsvorschlag Fassung 2 (§6.1).
+
+### 6.4 Ergänzung vor dem ersten Lauf (25.10.2026)
+
+Nutzer 25.10.: *„Vergleiche auch ob die top 100 Altcoins oder u.U. top 50 ggf. anders als der Gesamtmarkt gesehen werden kann.“*
+
+- A1 weist zusätzlich die Gruppen **Top 30, Top 50 und Top 100** aus, nach dem Marktwert-Rang am Stichtag (`mk_messung.rang_mw`: Umlauf CoinGecko × Kurs, Näherung geprüft in Spot §25.1), ohne die Stabilitätsbedingung der Klasse H.
+- Daneben steht der **Gesamtmarkt** (alle Anker, auch S und Coins ohne Umlaufangabe).
+- Je Gruppe und Epoche dieselben Größen wie §6.2: Gruppe − BTC, Fünftel 5 in der Gruppe − Gruppe, Fünftel 5 − BTC, Anteil der Stichtage mit Fünftel 5 > BTC, Band.
+- Coins **ohne Umlaufangabe** haben keinen Rang und fehlen in den Top-Gruppen. Ihr Anteil am Gesamtmarkt wird ausgewiesen.
+- In A2 kommt dieselbe Gruppierung als **Auskunft** hinzu; das Urteil bleibt wie in §6.3.
