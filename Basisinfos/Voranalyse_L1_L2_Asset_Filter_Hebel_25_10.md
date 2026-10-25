@@ -278,3 +278,11 @@ Nutzer 25.10.: *„die Einstiege und Bewertung soll vorerst neutral erfolgen, ob
 - Die Kosten sind ein späterer Schritt und hier nicht Teil des Urteils.
 
 **Ab sofort für alle Pläne:** Hauptgröße ist der Vorsprung bzw. der Ertrag **vor** Kosten. Gebühren werden erst geprüft, wenn ein Vorsprung belegt ist.
+
+### 9.4 L1-a vorab festgelegt: Brücke Fassung 2 „gleiche Historie“ (25.10.2026; Nutzer: *„ja L1-a“*)
+
+- Wie Teil 1 (§8.1), aber je Stichtag **nur Coins mit ≥ 2 Jahren (730 T) Kursgeschichte in beiden Quellen**: im Binance-Alter F8 ≥ 730 T **und** CMC-Tage seit dem ersten Erscheinen ≥ 730 T.
+- Verglichen wird die Rangfolge des Werts unter diesen Coins je Stichtag und Klasse (Zellen ≥ 10 Coins).
+- **Kriterium wie Teil 1:** Rangkorrelation im Mittel ≥ 0,8 **und** ≥ 50 % gleiche Coins im oberen Fünftel. Dazu der Ausweis je Jahr.
+- **Hält sie:** Die Abweichung in Teil 1 lag an der Datenlänge. Der CMC-Wert ist bei genug Historie dieselbe Regel, und die Bestätigung 2017–19 wird auf Coins mit ausreichender CMC-Historie vorgeschlagen; dann ist die Zahl der Blöcke zu prüfen.
+- **Hält sie nicht:** Es gibt einen Unterschied über die Datenlänge hinaus. Dann folgen Ursache und Lösung.
