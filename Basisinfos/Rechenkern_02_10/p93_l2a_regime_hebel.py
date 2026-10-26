@@ -2,7 +2,7 @@
 
     python -X utf8 Basisinfos/Rechenkern_02_10/p93_l2a_regime_hebel.py
 
-Schritt 0  R-R11: E-126 (M-A, 10-Monats-Schnitt) auf diesem Pruefstand nachrechnen - reproduziert, wenn NICHT 'TRAEGT'
+Schritt 0  R-R11: E-126 nachrechnen - Fassung 1b (§9, 876072ce): E-126s Groesse S1 (Monate draussen EUR +0,9 % +- 0,2); "an - alle" nur Auskunft
 Selbsttest je Wert VOR dem ersten Blick (Fehlalarm <= 5 %, Pflanzung +0,5/1/2/3 Pp, X = kleinste Staerke mit >= 80 % Fund)
 Stufe 1    R1 BTC-Schluss am Vortag ueber 200-T-Schnitt; BTC, ETH, SOL; Ertrag 7 T vor Kosten; Vorsprung = Mittel an - Mittel alle
 Nullwelt Strecken-Permutation, Nullpunkt = Mittel; Band zirkulaerer Tagesblock (messnorm._block(7) = 21 T); < 20 Bloecke KEIN BEFUND.
@@ -101,6 +101,21 @@ def schritt0(K):
     return rep
 
 
+def schritt0_1b(K):
+    """Fassung 1b (§9, vorab 876072ce): E-126s eigene Groesse S1 - Monate DRAUSSEN in EUR, Teil B - reproduziert bei +0,9 % +- 0,2 Pp."""
+    import p93b_schritt0_klaerung as KL
+    usd = K.btc.dropna()
+    e = pd.read_csv("data/_spot/ma_eurusd_ezb.csv")
+    e = e.set_index(pd.to_datetime(e.iloc[:, 0])).iloc[:, -1].astype(float)
+    eur = (usd / e.reindex(usd.index).ffill()).dropna()
+    z, y = KL.monate(eur, "2016-12-31", "2026-08-31")
+    s1 = y[z == 0].mean()
+    rep = abs(100 * s1 - 0.9) <= 0.2
+    print("SCHRITT 0 FASSUNG 1b (R-R11 auf E-126s Groesse S1): Monate draussen BTC in EUR, Teil B, %d Monate davon %d draussen: %+.2f %% "
+          "(E-126: +0,9 %%, n 38) -> %s\n" % (len(y), int((z == 0).sum()), 100 * s1, "REPRODUZIERT" if rep else "NICHT REPRODUZIERT - Halt"))
+    return rep
+
+
 def reihe(K, a, Z):
     y_all = K[a].shift(-7) / K[a] - 1
     ab = max(pd.Timestamp("2015-01-01"), K[a].first_valid_index() + pd.Timedelta(days=200))
@@ -127,7 +142,9 @@ def selbsttest(z, y, block, rng):
 def main():
     K = P91.kurse()
     print("P93 MESSPLAN L2-a STUFE 1 · Regime-Hebel Kern · Ertrag 7 T vor Kosten (neutral, Gebuehren nachgelagert)\n")
-    if not schritt0(K):
+    print("(Auskunft, entscheidet seit Fassung 1b nicht:)")
+    schritt0(K)
+    if not schritt0_1b(K):
         return 1
     Z = P91.kandidaten(K)
     r1, r2 = Z.columns[0], Z.columns[1]

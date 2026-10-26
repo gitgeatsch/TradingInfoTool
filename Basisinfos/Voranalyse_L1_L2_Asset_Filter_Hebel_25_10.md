@@ -385,3 +385,39 @@ Ausfaller aus den Top 200 binnen 4 Wochen: 7,4 % der Erträge (begrenzt gerechne
 - **Lesart (vorab):** Die Variante mit dem größten Abfall gegen V0 ist die Ursache. Fällt schon V1, hängt A1 an Coins außerhalb der CMC Top 200 (Kleinwerte); fällt V2, an der Gruppenabgrenzung; fällt V3, an der Ertragsrechnung.
 - **Gegenprobe:** V0 und V4 über eine eigene Schleife je Stichtag (gleich ±0,01 Pp).
 - **Folge:** Ursache festhalten. Ob A1 dann „nicht robust“ bleibt oder eine Abgrenzung fachlich die richtige ist, wird mit dem Nutzer abgestimmt.
+
+### 9.9 L1-c Ursache gemessen: der Marktwert-Rang hat einen VORGRIFF (26.10.2026; `p92c_ursache_abgrenzung.py`)
+
+| A1-Top-30, oberes Fünftel − Gruppe, 1 M | Pp | Band | gegen V0 |
+|---|---|---|---|
+| V0 A1 | +3,5 | [+0,5; +7,6] | — |
+| V1 nur Coins auch in CMC | +3,4 | [+0,3; +7,6] | −0,1 |
+| **V2 Gruppe nach CMC-Rang** | **+1,9** | **[−1,7; +6,5]** | **−1,6** |
+| V3 CMC-Ertrag (ab Woche **vor** t) | +1,7 | [−0,9; +5,1] | −1,8 ⚠️ Messfehler |
+| **V3b CMC-Ertrag ab Woche nach t** | **+3,6** | [+0,8; +7,7] | +0,1 |
+| V4b Gruppe CMC + Ertrag b | +2,6 | [−0,4; +6,5] | −0,9 |
+
+V0 trifft A1 (+3,50). Gegenprobe über eine eigene Schleife V0 / V4 / V3b gleich.
+
+**⚠️ Eigener Messfehler, berichtigt:**
+- V3/V4 und p92b ließen den CMC-Ertrag an der Woche **am oder vor** dem Stichtag beginnen, bis zu 6 T früher. Diese Tage kennt der Binance-Wert schon: Ein Coin, der in dieser Woche gefallen ist, steht tiefer und damit eher im oberen Fünftel. Das drückte den Ertrag künstlich.
+- Richtig ausgerichtet (V3b) ist der Ertrag **nicht** die Ursache.
+- **Die Aussage in §9.7 und E-149 „selbst die Binance-Auswahl zeigt −0,0“ ist damit falsch.** Sie beruhte auf demselben Versatz.
+- p92 Schritt 0 selbst ist richtig ausgerichtet (CMC-Wert und Ertrag ab derselben Woche) und bleibt gültig.
+
+**Die Ursache ist die Gruppe, und dahinter ein Datenvorgriff:**
+- In `rang_mw ≤ 30`, aber nicht in den CMC-Top-30, stehen im Mittel 7,8 Coins je Stichtag, vor allem **WLD, ALGO, HBAR, OP, QNT, ARB, ENA, TIA**.
+- Unser Marktwert ist dort ein Vielfaches des CMC-Werts:
+
+| Stichtag | Coin | unser Marktwert | CMC | Rang unser / CMC |
+|---|---|---|---|---|
+| 2024-06 | ENA | 12,2 Mrd | 1,4 Mrd | 9 / 61 |
+| 2024-06 | TIA | 11,1 Mrd | 1,7 Mrd | 12 / 52 |
+| 2024-06 | ARB | 7,7 Mrd | 3,2 Mrd | 19 / 28 |
+| 2025-06 | WLD | 4,4 Mrd | 1,8 Mrd | 18 / 41 |
+
+- **Woher das kommt** (Docstring `mk_messung.umlauf_stufe`, bekannt, aber in der Wirkung nie gemessen): Vor dem 21.09.2025 gilt für die meisten Coins die **heutige** Umlaufmenge. Tokens mit großen Freigaben seither stehen damit historisch zu hoch.
+- **Folge für A1 (E-143):** Mit der zeitrichtigen CMC-Rangfolge (V2) sinkt der Top-30-Vorsprung auf **+1,9 Pp [−1,7; +6,5] ⇒ NICHT TRENNBAR.** Der belastbare Top-30-Befund von E-143 trägt damit den Vorgriff in sich.
+- **Was nicht betroffen ist:** Im Betrieb ist die Umlaufmenge die aktuelle, dort gibt es keinen Vorgriff. Betroffen sind alle Messungen mit `mk_messung`-Klassen und -Rängen (E-142 bis E-145: Klassen H/M/S, Top 30/50/100).
+
+**Lösung (zur Abstimmung):** In den Messungen den Marktwert-Rang aus den CMC-Wochen nehmen (zeitrichtig, 2016–2026, Top 200), darunter den eigenen. Danach A1 einmal neu rechnen. R-R11: E-143 wird erst umgestoßen, wenn die neue Fassung V0 reproduziert und nur den Rang tauscht; das ist mit V2 erfüllt.

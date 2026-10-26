@@ -1,7 +1,16 @@
 P93 MESSPLAN L2-a STUFE 1 · Regime-Hebel Kern · Ertrag 7 T vor Kosten (neutral, Gebuehren nachgelagert)
 
+(Auskunft, entscheidet seit Fassung 1b nicht:)
 SCHRITT 0 (R-R11) E-126 nachrechnen: BTC Monatsschluss > 10-Monats-Schnitt, Folgemonat t+1, 2016-12-31..2026-08-31, 117 Monate, an 68 %, Block 3 Monate
   10-Monats-Schnitt (M-A)            Vorsprung +2.84 Pp · Nullpunkt -0.30 · Rang 0.961 · Band (minus Nullpunkt) [+0.40; +6.39] Pp · 39 Bloecke -> TRAEGT
   Auskunft: Monatsertrag an +9.0 % · aus +0.2 % (E-126 Teil B: Monate draussen +0,9 % in EUR)
   -> NICHT REPRODUZIERT - Halt, Pruefstand und E-126 widersprechen sich
 
+SCHRITT 0 FASSUNG 1b (R-R11 auf E-126s Groesse S1): Monate draussen BTC in EUR, Teil B, 117 Monate davon 38 draussen: +0.87 % (E-126: +0,9 %, n 38) -> REPRODUZIERT
+
+SELBSTTEST vor dem ersten Blick (100 Zufallsregime je Stufe, Strecken wie R1; Soll Fehlalarm <= 5 %, Fund >= 80 %):
+  BTC 2015-01-01..2026-09-27 4288 Tage · 204 Bloecke · AK y beim Blockabstand 0.01 · Fehlalarm 6 % NICHT OK · Fund +0.5 Pp 16 % +1.0 Pp 15 % +2.0 Pp 65 % +3.0 Pp 88 % · Aufloesung X 3.0 Pp
+  ETH 2016-02-24..2026-09-27 3869 Tage · 184 Bloecke · AK y beim Blockabstand 0.08 · Fehlalarm 9 % NICHT OK · Fund +0.5 Pp 10 % +1.0 Pp 16 % +2.0 Pp 32 % +3.0 Pp 50 % · Aufloesung X keine <= 3 Pp
+  SOL 2021-02-27..2026-09-16 2028 Tage · 97 Bloecke · AK y beim Blockabstand 0.12 · Fehlalarm 4 % ok · Fund +0.5 Pp 10 % +1.0 Pp 9 % +2.0 Pp 22 % +3.0 Pp 32 % · Aufloesung X keine <= 3 Pp
+
+SELBSTTEST NICHT BESTANDEN - echtes Ergebnis wird nicht angesehen (Plan §7).

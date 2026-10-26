@@ -2042,3 +2042,21 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **1a:** Schritt 0 Fassung 1b vorab (Voranalyse L2-a §9), danach Stufe 1 nach §7.
 - **2a:** Ursachenmessung V0–V4 vorab (Voranalyse L1/L2 §9.8).
 - **3a:** K-4 bauen: zentrale Konstante KERN, Ausschluss nur in den Spot-Zellen der Rollen-Kette, Bestandszeilen bleiben, REGEL0/Hebel unberührt, Suite-Prüfung, NB-Kontrolle im nächsten Bündel.
+
+# E-151 · L2-a nicht entscheidbar (Selbsttest: zu wenige Regimewechsel); L1-c-Ursache: Vorgriff im Marktwert-Rang, A1-Top-30 ohne ihn NICHT TRENNBAR; Berichtigung E-149 (26.10.2026)
+
+**L2-a** (Voranalyse L2-a §10):
+- Schritt 0 Fassung 1b reproduziert (+0,87 % gegen +0,9 %).
+- Selbsttest nicht bestanden: Fehlalarm BTC 6 %, ETH 9 %; Auflösung erst bei +3 Pp je Woche, die plausible Größe liegt bei ~0,65 Pp.
+- Echtes Ergebnis nicht angesehen. Ursache: 72 Regimewechsel in 12 Jahren.
+- Vorschlag (a): festhalten, Hebel bleibt bei REGEL0, R1 nur als Fakt.
+
+**L1-c** (Voranalyse L1/L2 §9.9, `p92c`):
+- Ursache ist die **Gruppe**, nicht Coin-Menge oder Ertrag.
+- Unser Marktwert-Rang nimmt vor dem 21.09.2025 die **heutige** Umlaufmenge: ENA 2024-06 12,2 statt 1,4 Mrd, Rang 9 statt 61.
+- Mit zeitrichtigem CMC-Rang: A1-Top-30 +1,9 Pp [−1,7; +6,5] ⇒ **nicht trennbar**.
+- Lösung: CMC-Rang in den Messungen.
+
+**Berichtigung E-149:** Die Aussage *„Es liegt nicht am Wert, selbst die Binance-Auswahl zeigt −0,0“* beruhte auf einem eigenen Zeitversatz: Der CMC-Ertrag begann bis zu 6 T **vor** dem Stichtag. Richtig ausgerichtet bleibt A1 auf CMC-Erträgen erhalten (+3,6).
+
+**Betrieb unverändert** (dort ist die Umlaufmenge aktuell).

@@ -1,0 +1,18 @@
+P92c URSACHE L1-c · A1-Anker 1 M 2019-01..2026-08 · 23832 Anker · davon in den CMC Top 200 der Woche 44 %
+
+  V0 A1                 92 Stichtage 31 Bloecke · Gruppe 29 Coins, Fuenftel 5.3 · F5 - Gruppe +3.5 Pp [+0.5; +7.6]
+  V1 Menge              92 Stichtage 31 Bloecke · Gruppe 28 Coins, Fuenftel 5.1 · F5 - Gruppe +3.4 Pp [+0.3; +7.6] · gegen V0 -0.1 Pp
+  V2 Gruppe             92 Stichtage 31 Bloecke · Gruppe 23 Coins, Fuenftel 4.8 · F5 - Gruppe +1.9 Pp [-1.7; +6.5] · gegen V0 -1.6 Pp
+  V3 Ertrag             92 Stichtage 31 Bloecke · Gruppe 28 Coins, Fuenftel 5.1 · F5 - Gruppe +1.7 Pp [-0.9; +5.1] · gegen V0 -1.8 Pp
+  V4 Gruppe + Ertrag    92 Stichtage 31 Bloecke · Gruppe 23 Coins, Fuenftel 4.8 · F5 - Gruppe -0.0 Pp [-3.0; +3.3] · gegen V0 -3.5 Pp
+  V3b Ertrag nach t     92 Stichtage 31 Bloecke · Gruppe 28 Coins, Fuenftel 5.1 · F5 - Gruppe +3.6 Pp [+0.8; +7.7] · gegen V0 +0.1 Pp
+  V4b Gruppe + Ertr. b  92 Stichtage 31 Bloecke · Gruppe 23 Coins, Fuenftel 4.8 · F5 - Gruppe +2.6 Pp [-0.4; +6.5] · gegen V0 -0.9 Pp
+
+AUSKUNFT Gruppenunterschied (gemeinsame Coins):
+  nur in rang_mw <= 30   7.8 je Stichtag · F5-Anteil 10 % · mittlerer Ertrag 1 M +4.5 % (Gruppe V0 +3.8 %) · haeufig: WLD 34, ALGO 30, HBAR 28, OP 27, QNT 22, ARB 21, ENA 20, KAVA 19, ZRX 18, TIA 17, DYDX 16, GALA 16
+  nur in CMC-Rang <= 30  1.0 je Stichtag · F5-Anteil 30 % · mittlerer Ertrag 1 M +9.8 % (Gruppe V0 +3.8 %) · haeufig: ETC 10, IMX 9, TON 9, MKR 8, XTZ 8, THETA 7, VET 7, XMR 7, MANA 5, ZEC 2, NEO 2, XEM 2
+
+  V0 trifft A1 (+3,5 +- 0,1 Pp): ja
+  Gegenprobe V0 A1                eigene Schleife +3.50 Pp · Hauptweg +3.50 Pp -> gleich
+  Gegenprobe V4 Gruppe + Ertrag   eigene Schleife -0.04 Pp · Hauptweg -0.04 Pp -> gleich
+  Gegenprobe V3b Ertrag nach t    eigene Schleife +3.64 Pp · Hauptweg +3.64 Pp -> gleich

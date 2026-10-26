@@ -137,3 +137,34 @@ Selbsttest des Schritt-0-Prüfstands: Fehlalarm 5,0 % (genau am Soll).
 - Die Größe *an − alle* aus §7 Schritt 0 läuft als **Auskunft** mit, sie entscheidet nicht.
 - Reproduziert → **Stufe 1 unverändert nach §7** (R1, 7 T, Selbsttest vor dem ersten Blick, Stufen, Gesamturteil, Folgen). Nicht reproduziert → Halt.
 - **Gegenprobe nach dem Lauf** (`p93_gegenprobe.py`): Vorsprung je Wert über eine eigene Tagesschleife (gleich ±0,01 Pp); Richtung über Monatsmittel statt Tageswerte gleich; Band mit doppelter Blocklänge, gleiche Aussage zur Stufe.
+
+## 10. Ergebnis Stufe 1: SELBSTTEST NICHT BESTANDEN — echtes Ergebnis nicht angesehen (26.10.2026; `p93_l2a_regime_hebel.py`)
+
+**Schritt 0 Fassung 1b:** Monate draußen BTC in EUR, Teil B: **+0,87 %** bei 38 von 117 Monaten (E-126: +0,9 %, n 38) ⇒ **reproduziert**.
+
+**Selbsttest** (100 Zufallsregime je Stufe, Strecken wie R1; Soll Fehlalarm ≤ 5 %, Fund ≥ 80 %):
+
+| | Tage | Blöcke | Fehlalarm | Fund +0,5 / +1 / +2 / +3 Pp je 7 T | Auflösung X |
+|---|---|---|---|---|---|
+| BTC | 4.288 | 204 | **6 %** ✖ | 16 / 15 / 65 / 88 % | 3,0 Pp |
+| ETH | 3.869 | 184 | **9 %** ✖ | 10 / 16 / 32 / 50 % | keine ≤ 3 Pp |
+| SOL | 2.028 | 97 | 4 % | 10 / 9 / 22 / 32 % | keine ≤ 3 Pp |
+
+⇒ **Nicht bestanden.** Nach §7 wird das echte Ergebnis **nicht angesehen**.
+
+**Ursache (aus den Zahlen, nicht vermutet):**
+- Es gibt **zu wenige Wechsel**, nicht zu wenige Tage. R1 hat in knapp 12 Jahren 72 Strecken (rund 36 *an*-Strecken).
+- Der Mittelwert der *an*-Tage schwankt deshalb mit den Strecken. Jede Strecke ist eine eigene Marktphase mit eigenem Ertrag.
+- Auflösung: Erst **+3 Pp je Woche** (BTC) werden sicher erkannt.
+- Die plausible Größe aus Schritt 0 liegt bei rund **+2,8 Pp je Monat ≈ +0,65 Pp je Woche**, also vier- bis fünfmal unter der Auflösung.
+- Der Fehlalarm liegt mit 6 / 9 % leicht über dem Soll. Bei 100 Ziehungen ist das teils Zufall (± 2 Pp).
+
+**Urteil:** L2-a ist mit unseren Daten **nicht entscheidbar**, auch auf der langen Historie. Das bestätigt E-133 auf einer anderen Ebene: Es fehlen Regimewechsel, nicht Jahre.
+
+**Lösungen (zur Abstimmung):**
+
+| | Weg | Bewertung |
+|---|---|---|
+| **(a) Vorschlag** | **festhalten.** Der Hebel bleibt bei REGEL0 (§5 Folge). R1 (BTC über/unter 200-T-Schnitt) steht als **Fakt** im Lagebild, wo es ihn schon gibt | ehrlich: Mehr Wechsel lassen sich nicht herbeimessen |
+| (b) | Monatsebene mit BTC ab 2011 (mehr Wechsel, Fehlalarm im Schritt-0-Prüfstand 5,0 %) | ⚠️ Der 10-Monats-Schnitt auf Teil B ist schon gesehen (Schritt 0), eine Fassung darauf wäre nicht unberührt. Die Auflösung liegt bei einem Monat an der Grenze |
+| (c) | mehr Märkte mit eigenen Regimen (Aktien, Gold) | gehört zur Multiasset-Schiene, nicht zum Krypto-Hebel |
