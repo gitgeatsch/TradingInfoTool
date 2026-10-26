@@ -26,3 +26,18 @@ Nutzer 26.10.: *„ja DVOL Stufe 0 starten - prüfen gegenprüfen und doku“*. 
 | Gegenprüfung | DVOL-Werte an 5 zufälligen Tagen gegen eine zweite API-Abfrage (`get_index_price`/Einzelabfrage) bzw. Plausibilität (BTC-DVOL 2022 > 2024); Streckenzahl über eine eigene Schleife |
 
 **Ehrliche Erwartung:** DVOL ist ein Marktzustand, und solche Zustände wechseln selten. Ich erwarte dieselbe Grenze wie bei L2-a und den ETF-Flüssen. Teil B hat mehr Fälle, die Einstiegstage ballen sich aber (E-138: 27–28 Episoden).
+
+## 2. Fassung 1 — Fehler in der Zustandsdefinition D1/D2, Fassung 1b VORAB (26.10.2026; `p98_dvol_fassung1.txt`)
+
+| Zustand | Anteil *an* (Teil A BTC / ETH) | Strecken | in Teil B (2024–26) |
+|---|---|---|---|
+| D1 DVOL oberes Fünftel, **wachsendes** Fenster | **1 % / 3 %** | 19 / 23 | **0 %** (1–3 Strecken) |
+| D2 Angstprämie, wachsendes Fenster | 4 % / 9 % | 63 / 57 | 2 % |
+| D3 Fear & Greed < 25 | 22 % | 219 | 23–24 %, 39 Strecken |
+
+- **Eigener Planungsfehler:** Die DVOL ist seit 2021 **strukturell gefallen**, mit dem Median je Jahr von BTC 89,6 → 73,0 → 50,6 → 56,4 → 45,7 → 39,9. Im **wachsenden** Fenster bleiben die hohen Werte von 2021/22 maßgeblich, und spätere Angstphasen erreichen das obere Fünftel nie. Das ist dasselbe Muster wie beim Klima q im ETF-Markt (E-69: q nie über 0,90). D1/D2 messen so den Zeitraum 2021/22, nicht die Angst.
+- **D3** ist sauber definiert. Fassung 1: Teil A mit X = 3 Pp (BTC 7 T) über der Grenze von 2 Pp; Teil B ohne Auflösung bis 1 Pp ⇒ **nicht messbar**. D3 bleibt in Fassung 1b unverändert und wird nicht neu gewählt.
+
+**Fassung 1b (vorab, vor jedem Ergebnis):**
+- D1 und D2 werden als **oberes Fünftel des rollenden Fensters der letzten 365 T** gebildet (mindestens 180 T), also Angst **relativ zum aktuellen Niveau**.
+- Alles andere bleibt wie §1, auch die Grenzen.

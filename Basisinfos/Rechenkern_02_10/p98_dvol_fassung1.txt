@@ -1,0 +1,25 @@
+P98 DVOL / ANGSTMASS STUFE 0 · DVOL 2021-03-24..2026-10-26 · Zustaende am Vortag
+
+TEIL A - Lage BTC/ETH (Ertrag ab Schluss t; Grenze X <= 2 Pp je 7 T):
+  BTC D1 DVOL oberes Fuenftel 7 T     1832 Tage · an   1 % ·   19 Strecken · Orakel 1.000 · Fehlalarm   1 % · Fund +0.50:0% +1.00:1% +2.00:4% +3.00:4% · X keine -> nicht messbar
+  BTC D1 DVOL oberes Fuenftel 30 T    1809 Tage · an   1 % ·   19 Strecken · Orakel 1.000 · Fehlalarm   0 % · Fund +2.00:4% +4.00:3% +8.00:3% · X keine -> nicht messbar (30 T: nur Auskunft)
+  BTC D2 Angstpraemie oberes Fuenftel 7 T  1832 Tage · an   4 % ·   63 Strecken · Orakel 1.000 · Fehlalarm   2 % · Fund +0.50:4% +1.00:9% +2.00:13% +3.00:25% · X keine -> nicht messbar
+  BTC D2 Angstpraemie oberes Fuenftel 30 T  1809 Tage · an   4 % ·   63 Strecken · Orakel 1.000 · Fehlalarm   1 % · Fund +2.00:10% +4.00:8% +8.00:18% · X keine -> nicht messbar (30 T: nur Auskunft)
+  BTC D3 Fear & Greed < 25 7 T        3155 Tage · an  22 % ·  219 Strecken · Orakel 1.000 · Fehlalarm   6 % · Fund +0.50:14% +1.00:23% +2.00:50% +3.00:89% · X 3.00 Pp -> nicht messbar
+  BTC D3 Fear & Greed < 25 30 T       3132 Tage · an  22 % ·  219 Strecken · Orakel 1.000 · Fehlalarm   7 % · Fund +2.00:7% +4.00:21% +8.00:55% · X keine -> nicht messbar (30 T: nur Auskunft)
+  ETH D1 DVOL oberes Fuenftel 7 T     1832 Tage · an   3 % ·   23 Strecken · Orakel 1.000 · Fehlalarm   4 % · Fund +0.50:6% +1.00:7% +2.00:8% +3.00:12% · X keine -> nicht messbar
+  ETH D1 DVOL oberes Fuenftel 30 T    1809 Tage · an   3 % ·   23 Strecken · Orakel 1.000 · Fehlalarm   2 % · Fund +2.00:6% +4.00:3% +8.00:10% · X keine -> nicht messbar (30 T: nur Auskunft)
+  ETH D2 Angstpraemie oberes Fuenftel 7 T  1832 Tage · an   9 % ·   57 Strecken · Orakel 1.000 · Fehlalarm   6 % · Fund +0.50:10% +1.00:10% +2.00:15% +3.00:36% · X keine -> nicht messbar
+  ETH D2 Angstpraemie oberes Fuenftel 30 T  1809 Tage · an   9 % ·   57 Strecken · Orakel 1.000 · Fehlalarm   7 % · Fund +2.00:11% +4.00:12% +8.00:25% · X keine -> nicht messbar (30 T: nur Auskunft)
+  ETH D3 Fear & Greed < 25 7 T        3155 Tage · an  22 % ·  219 Strecken · Orakel 1.000 · Fehlalarm   3 % · Fund +0.50:10% +1.00:17% +2.00:33% +3.00:65% · X keine -> nicht messbar
+  ETH D3 Fear & Greed < 25 30 T       3132 Tage · an  22 % ·  219 Strecken · Orakel 1.000 · Fehlalarm   4 % · Fund +2.00:4% +4.00:17% +8.00:36% · X keine -> nicht messbar (30 T: nur Auskunft)
+
+TEIL B - Umfeld der REGEL0-Einstiege aller Assets (Tagesmittel 24 h; Grenze X <= 0,5 Pp; Zustand BTC-DVOL bzw. F&G):
+  Referenz D1 DVOL oberes Fuenftel     670 Tage · an   0 % ·    3 Strecken · Orakel 1.000 · Fehlalarm   0 % · Fund +0.25:0% +0.50:0% +1.00:0% · X keine -> nicht messbar
+  Referenz D2 Angstpraemie oberes Fuenftel   670 Tage · an   2 % ·   15 Strecken · Orakel 1.000 · Fehlalarm  10 % · Fund +0.25:9% +0.50:14% +1.00:21% · X keine -> nicht messbar
+  Referenz D3 Fear & Greed < 25        669 Tage · an  24 % ·   39 Strecken · Orakel 1.000 · Fehlalarm   4 % · Fund +0.25:11% +0.50:18% +1.00:48% · X keine -> nicht messbar
+  Lauf A D1 DVOL oberes Fuenftel       700 Tage · an   0 % ·    1 Strecken · Orakel 1.000 · Fehlalarm   0 % · Fund +0.25:0% +0.50:0% +1.00:0% · X keine -> nicht messbar
+  Lauf A D2 Angstpraemie oberes Fuenftel   700 Tage · an   2 % ·   17 Strecken · Orakel 1.000 · Fehlalarm   2 % · Fund +0.25:5% +0.50:9% +1.00:15% · X keine -> nicht messbar
+  Lauf A D3 Fear & Greed < 25          699 Tage · an  23 % ·   39 Strecken · Orakel 1.000 · Fehlalarm   6 % · Fund +0.25:21% +0.50:22% +1.00:52% · X keine -> nicht messbar
+
+TEIL B messbar in BEIDEN Mengen: D1 nein · D2 nein · D3 nein
