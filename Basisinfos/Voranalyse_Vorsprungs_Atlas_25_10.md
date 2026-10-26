@@ -317,3 +317,41 @@ Der Unterschied wächst mit dem Horizont, so wie es die langsame Auswahl erwarte
 - **Folge:**
   - Die neuen Zahlen **ersetzen** E-143. Nach R-R11 ist das zulässig: Reproduktion B1 plus ein einziger getauschter Bestandteil.
   - E-142, E-144 und E-145 bekommen einen Vorbehaltsvermerk. Neu gerechnet werden sie erst nach Abstimmung.
+
+### 9.4 Ergebnis 26.10.2026 (E-154; `p94_a1_zeitrichtig.py` → `.txt`, `p94_a1_neu.txt`, Gegenprobe `p94_gegenprobe_neu.txt`)
+
+**Prüfung des Baus — bestanden:**
+
+| | Ergebnis |
+|---|---|
+| B1 alter Rang rechnet A1 nach | **bitgleich**, 82 / 82 Zeilen |
+| B2 Rangkorrelation zu CMC (89 Stichtage) | **0,997** (10. Perz. 0,993); bisher 0,899 |
+| B3 Beispiele | ENA 2024-06 Rang **51** (bisher 9) · TIA 2024-06 **42** (12) · WLD 2025-06 **32** (18) |
+| B4 Wirkung auf die Grundgesamtheit | **8,2 %** der Anker in anderer Klasse; 2019 0 %, **2021 17 %**, 2022 13 %, 2023 9 %, 2024 8 %, 2025 5 %, 2026 3 %. Wechsel vor allem M → S (1.153) und S → M (604). Klassen je Stichtag H 16/16, M 87/81, S 157/163 |
+
+**A1 neu (1 M, alle Jahre, Band ohne 0 = belastbar):**
+
+| oberes Fünftel − Gruppe | A1 bisher (E-143) | **A1 zeitrichtig** | Urteil |
+|---|---|---|---|
+| **Top 30** | +3,5 [+0,7; +7,5] | **+1,4 [−1,1; +4,3]** | **NICHT TRENNBAR** (war belastbar) |
+| Top 50 | +2,0 [−0,6; +5,8] | +1,2 [−1,4; +4,5] | nicht trennbar |
+| Top 100 | +1,7 [−0,4; +4,2] | +1,3 [−0,4; +3,4] | nicht trennbar |
+| **Gesamt** | +1,5 [+0,3; +2,9] | **+1,2 [+0,0; +2,3]** | **an der Grenze**; die Gegenprobe zieht [−0,1; +2,4] ⇒ **nicht belastbar** |
+| H / M / S | +2,9 / +1,6 / +1,2 | +1,6 / +1,4 / +0,6 | alle nicht trennbar |
+
+**Beschreibend 12 M, E3 (KEIN BEFUND, < 20 Blöcke):**
+
+| | bisher | zeitrichtig |
+|---|---|---|
+| Drift Top 30 − BTC | −43,7 | −42,7 |
+| oberes Fünftel Top 30 − BTC | −10,7 | −14,2 |
+| Gesamt − BTC | −72,7 | −72,7 |
+
+**Abstufung der Fünftel E3 (B4-Wert, 12 M):** −19,4 / −3,8 / +5,0 / +6,5 / +11,4 (bisher −17,2 / −4,7 / +3,0 / +6,0 / +12,1). **Die Ordnung des Fortbestands bleibt.**
+
+**Gegenprobe (zweiter Rechenweg) 2 / 2:** G1 eigene Schleife gleich; G2 Band mit 3er-Blöcken, gleiche Aussage bei allen sechs. Der alte Rang rechnet weiterhin 3 / 3 nach.
+
+**Was daraus folgt:**
+- Der **einzige belastbare** Vorsprung der Auswahl (Top 30, E-143) war der **Datenvorgriff**. Zeitrichtig ist die Auswahl auf 1 Monat in **keiner** Gruppe belastbar besser als ihre Gruppe. Die Richtung bleibt überall positiv (+0,6 bis +1,6 Pp).
+- Die Watchlist-Ordnung (B4) **ordnet weiter den Fortbestand** auf 12 Monate. Das ist ihr gemessener Zweck (E-72 ff.), und er bleibt.
+- **E-142, E-144, E-145** rechneten mit dem alten Rang. Ihre Aussagen „nicht trennbar / trägt nicht“ werden durch die Korrektur eher bestätigt als umgestoßen; sie bekommen einen Vorbehaltsvermerk.

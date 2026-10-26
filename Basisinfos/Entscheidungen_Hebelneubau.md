@@ -2076,3 +2076,23 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Zeitrichtiger Rang:** Bau und Messplan A1 neu vorab (Voranalyse Vorsprungs-Atlas §9). `mk_messung.RANG_QUELLE` hat die Vorgabe `"cmc"`, `"eigen"` dient nur dem Nachrechnen.
 
 **Betrieb unverändert.**
+
+# E-154 · Zeitrichtiger Marktwert-Rang gebaut; A1 neu: Der Top-30-Vorsprung war der Datenvorgriff, die Auswahl ist auf 1 Monat nirgends belastbar (26.10.2026)
+
+**Grundlage:** vorab 04d010cd · `mk_messung.RANG_QUELLE` (Vorgabe `"cmc"`) · `p94`, Gegenprobe `p86_gegenprobe` mit beiden Rängen.
+
+**Bau:**
+- B1 bitgleich (alter Rang rechnet A1 nach).
+- B2 Rangkorrelation zu CMC 0,997 (bisher 0,899).
+- B3 ENA/TIA/WLD berichtigt.
+- B4: 8,2 % der Anker in anderer Klasse, 2021 17 %.
+
+**A1 neu, 1 M:** Top 30 **+1,4 Pp [−1,1; +4,3]** (war +3,5 [+0,7; +7,5]) ⇒ **nicht trennbar**. Gesamt +1,2 [+0,0; +2,3], Gegenprobe [−0,1; +2,4] ⇒ nicht belastbar. Alle Gruppen positiv, keine trennbar.
+
+**Ersetzt E-143** (R-R11 erfüllt: Reproduktion bitgleich plus genau ein getauschter Bestandteil).
+
+**Bleibt:** Die B4-Ordnung des Fortbestands auf 12 M (Fünftel E3 −19,4 bis +11,4).
+
+**Nachtrag zu E-142, E-144, E-145:** Sie rechneten mit dem alten Rang (Vorgriff). Ihre Urteile „nicht trennbar / trägt nicht“ sind davon nicht nach oben verzerrt. Sie gelten mit Vorbehalt und werden nur auf Wunsch neu gerechnet.
+
+**Betrieb unverändert.** `spot_abbau` rechnet zeitrichtig mit der CoinGecko-Historie ab 21.09.2025.

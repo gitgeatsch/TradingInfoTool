@@ -1,0 +1,10 @@
+P94 A1 MIT ZEITRICHTIGEM MARKTWERT-RANG (E-153)
+
+B1 RANG_QUELLE=eigen gegen p86_a1_zerlegung.txt: 82 / 82 Zeilen gleich -> BITGLEICH
+B2 Rangkorrelation zum CMC-Altcoin-Rang (gemeinsame Coins, 89 Stichtage): zeitrichtig 0.997 (10. Perz. 0.993) · bisher 0.899 -> ok
+B3 ENA 2024-06 Rang 51 (bisher 9) · TIA 2024-06 Rang 42 (bisher 12) · WLD 2025-06 Rang 32 (bisher 18) -> ok, keiner mehr in den Top 30
+B4 Wirkung (Anker 1 M): 24164 Anker, andere Klasse 8.2 % · je Jahr 2019 0 % · 2020 7 % · 2021 17 % · 2022 13 % · 2023 9 % · 2024 8 % · 2025 5 % · 2026 3 %
+   Wechsel: H->M 97 · H->S 7 · M->H 120 · M->S 1153 · S->H 1 · S->M 604
+   Klassengroessen je Stichtag (Mittel) bisher/neu: H 16/16 · M 87/81 · S 157/163
+
+A1 NEU geschrieben: p94_a1_neu.txt · Gegenprobe: p94_gegenprobe_neu.txt

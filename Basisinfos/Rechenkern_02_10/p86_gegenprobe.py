@@ -7,6 +7,9 @@ G1  Top 30 und Gesamt, E3, 12 M: 'Gruppe - BTC' und 'F5 - BTC' direkt aus den Ta
 G2  Band anders (nur wo die Norm ein Band erlaubt: 1 M, alle Jahre): Stichtage in NICHT ueberlappende 3er-Bloecke gemittelt, dann
     einfacher Bootstrap - gleiche Aussage, ob das Band die Null einschliesst (F5-Gruppe und F5-BTC fuer Top 30, Top 100, Gesamt)
 G3  R-R11: Dosis E3 ohne F9 nach der B4-Rechnung (d4_wirkung.dosis) auf denselben Ankern = b4_vormessung SOLL (+-0,15 Pp)
+
+E-153 (26.10.2026): mit MK_RANG_QUELLE=cmc (zeitrichtiger Rang) vergleicht G1/G2 gegen p94_a1_neu.txt; G3 gehoert zur ALTEN Basis
+(b4_vormessung lief mit dem bisherigen Rang) und ist dann nur Auskunft.
 """
 import os
 import re
@@ -72,7 +75,8 @@ def werte(teil, g, ep):
 
 
 def main():
-    txt = open(os.path.join(HIER, "p86_a1_zerlegung.txt"), encoding="utf-8").read()
+    neu = MK.RANG_QUELLE == "cmc"
+    txt = open(os.path.join(HIER, "p94_a1_neu.txt" if neu else "p86_a1_zerlegung.txt"), encoding="utf-8").read()
     teil12 = txt.split("HORIZONT 12 Monate")[1]
     T1 = P.P85.wert_tabelle(1)
     ok1 = True
@@ -109,6 +113,11 @@ def main():
     w9 = P.P85.W.wert(Z, F, wahl=D4.OHNE_F9)
     d = D4.dosis(Z, w9, "E3")
     soll = [-17.2, -4.7, 3.0, 6.0, 12.1]
+    if neu:
+        print("G3 (Auskunft, alte Basis) Dosis E3 ohne F9 mit zeitrichtigem Rang: %s (alter Rang: %s)" % (
+            " ".join("%+.1f" % x for x in d), " ".join("%+.1f" % x for x in soll)))
+        print("ERGEBNIS %d von 2 (G3 gehoert zur alten Basis)" % sum([ok1, ok2]))
+        return
     ok3 = all(abs(a - b) <= 0.15 for a, b in zip(d, soll))
     print("G3 R-R11 Dosis E3 ohne F9: %s (Soll %s) -> %s" % (" ".join("%+.1f" % x for x in d), " ".join("%+.1f" % x for x in soll),
                                                           "ok" if ok3 else "NICHT OK"))

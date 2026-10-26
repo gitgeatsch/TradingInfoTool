@@ -2721,3 +2721,9 @@ Schritt7 §23.24.
 - Der Hebel nur in guten Marktphasen ist mit unseren Daten **nicht entscheidbar**: In 12 Jahren gibt es zu wenige Regimewechsel (Selbsttest nicht bestanden, Ergebnis ungesehen). Der Hebel bleibt bei REGEL0.
 - Der belastbare Top-30-Vorsprung der Watchlist-Auswahl (E-143) trug einen **Datenvorgriff** in sich: Die heutige Umlaufmenge stand für die Vergangenheit. Mit dem zeitrichtigen CMC-Rang ist er nicht trennbar.
 - Die Kernwerte bekommen in der alten Spot-Kette keine Kauffrage mehr; der Nutzer führt dafür einen Sparplan. REGEL0 und Hebel bleiben.
+
+**Nachtrag 26.10.2026 (78) — zeitrichtiger Rang, A1 neu** (E-153/E-154):
+- Der Hebel bleibt bei REGEL0; die Marktphase ist nur Fakt.
+- Die Messungen rechnen den Marktwert-Rang jetzt zeitrichtig aus den CMC-Wochen.
+- Damit ist die Watchlist-Auswahl auf 1 Monat **nirgends** belastbar besser als ihre Gruppe. Der frühere Top-30-Befund war der Datenvorgriff.
+- Die Ordnung des Fortbestands auf 12 Monate bleibt.

@@ -7,6 +7,8 @@ in gebuehren.db (Tabelle halter, Messdatei des Spot-Strangs).
 
 AUSLEGUNG, vor dem ersten Lauf festgelegt:
   - Teil 0 (R-R11): §19.6 mit den Umsatz-Klassen ohne Nullwelt nachrechnen; Abweichung > 1e-9 bricht ab
+  - ⚠️ SEIT 26.10.2026 (E-153): Marktwert ZEITRICHTIG aus den CMC-Wochen (RANG_QUELLE, siehe unten); die folgende Zeile ist der
+    alte Weg (RANG_QUELLE='eigen', nur zum Nachrechnen)
   - Marktwert(t) = Umlauf x Schluss t; Umlauf = CoinMetrics SplyCur zu t (asof, <= 7 T alt), sonst CoinGecko heute; ohne Umlauf -> Ersatzklasse
     (Umsatz-Klasse). Rang nur unter den an t klassierten Coins mit Marktwert. H = Rang <= 30 an t, t-1M, t-2M und >= 730 T Kurs; M = Rang <= 100
     oder <= 30 ohne H; S = uebrige mit Marktwert
@@ -83,18 +85,78 @@ def umlauf(s, t):
     return umlauf_stufe(s, t, 3)
 
 
+# ---------------------------------------------------------------- zeitrichtiger Marktwert (E-153, 26.10.2026)
+# ⚠️ WARUM: `umlauf` nimmt vor dem 21.09.2025 fuer die meisten Coins die HEUTIGE Menge (Docstring oben). Tokens mit grossen Freigaben
+# stehen dadurch historisch zu hoch - ENA 2024-06 Rang 9 statt 61 (E-151); der Top-30-Vorsprung von A1 (E-143) hing daran.
+# CMC-Wochen (data/_spot/o47_cm.db, Top 200 je Woche ab 2016-07, mit eingestellten Coins) haben den Marktwert DER ZEIT.
+#   "cmc"    Vorgabe: CMC-Marktwert der Woche w <= t, mit dem Binance-Kurs von w auf t fortgeschrieben (einheitenfrei, auch fuer
+#            Buendel wie 1000SATS); nicht in den CMC Top 200 -> eigener Wert, hoechstens knapp unter CMC-Rang 200 der Woche
+#   "eigen"  der bisherige Rang - NUR zum Nachrechnen alter Befunde (R-R11), nicht fuer neue Messungen
+RANG_QUELLE = os.environ.get("MK_RANG_QUELLE", "cmc")   # Umgebung nur fuer das Nachrechnen im eigenen Prozess (p94 B1)
+assert RANG_QUELLE in ("cmc", "eigen"), RANG_QUELLE
+_cmcon = sqlite3.connect("file:data/_spot/o47_cm.db?mode=ro", uri=True)
+_CMC = pd.read_sql("SELECT stichtag, symbol, preis, cap FROM cmc_woche WHERE cap > 0 AND preis > 0", _cmcon, parse_dates=["stichtag"])
+_cmcon.close()
+_CMC["symbol"] = _CMC.symbol.str.upper()
+CMC_WOCHEN = np.sort(_CMC.stichtag.unique())
+CMC_CAP200 = _CMC.groupby("stichtag").cap.min()               # 200 Eintraege je Woche -> der kleinste ist Rang 200
+_CMC_TAB = {}
+
+
+def _cmc_tabelle(w):
+    if w not in _CMC_TAB:
+        g = _CMC[_CMC.stichtag == w]
+        _CMC_TAB[w] = {s: list(zip(x.preis, x.cap)) for s, x in g.groupby("symbol")}
+    return _CMC_TAB[w]
+
+
+def cmc_eintrag(s, w, kurs_w):
+    """(preis, cap) des Coins in der CMC-Woche w oder None. Bei Buendeln ueber den Grundnamen; bei doppeltem Symbol der Eintrag,
+    dessen Preis dem Binance-Kurs (je Einzeltoken) am naechsten liegt - ohne Binance-Kurs der groesste."""
+    f, grund = HU.vervielfacher(s)
+    tab = _cmc_tabelle(w)
+    for name in (s, grund):
+        e = tab.get(name)
+        if not e:
+            continue
+        if len(e) == 1:
+            return e[0]
+        if kurs_w == kurs_w and kurs_w > 0:
+            return min(e, key=lambda x: abs(np.log(x[0] / (kurs_w / f))))
+        return max(e, key=lambda x: x[1])
+    return None
+
+
+def marktwert(s, t):
+    """Marktwert in USD zu t nach RANG_QUELLE (siehe oben)."""
+    kt = K[s].values[POS[t]]
+    eigen = umlauf(s, t) * kt
+    if RANG_QUELLE == "eigen":
+        return eigen
+    i = np.searchsorted(CMC_WOCHEN, np.datetime64(t), side="right") - 1
+    if i < 0:
+        return eigen
+    w = pd.Timestamp(CMC_WOCHEN[i])
+    kw = K[s].values[POS[w]] if w in POS else np.nan
+    e = cmc_eintrag(s, w, kw)
+    if e is not None:
+        return e[1] * kt / kw if (kw == kw and kw > 0 and kt == kt) else e[1]
+    if eigen == eigen:
+        return min(eigen, 0.999 * CMC_CAP200.loc[w])
+    return eigen
+
+
 def rang_mw(t):
     kl = A.klassen(t)[0]
-    i = POS[t]
-    mw = {s: umlauf(s, t) * K[s].values[i] for s in kl}
+    mw = {s: marktwert(s, t) for s in kl}
     mw = {s: v for s, v in mw.items() if v == v and v > 0}
     r = pd.Series(mw).rank(ascending=False)
     return kl, r
 
 
 def klassen_mw(t):
-    if t in _KLASSE:
-        return _KLASSE[t]
+    if (t, RANG_QUELLE) in _KLASSE:                           # E-153: Speicher je Rang-Quelle
+        return _KLASSE[(t, RANG_QUELLE)]
     kl, r = rang_mw(t)
     r1 = rang_mw(t - pd.DateOffset(months=1))[1] if (t - pd.DateOffset(months=1)) in POS else pd.Series(dtype=float)
     r2 = rang_mw(t - pd.DateOffset(months=2))[1] if (t - pd.DateOffset(months=2)) in POS else pd.Series(dtype=float)
@@ -109,8 +171,8 @@ def klassen_mw(t):
             out[s] = "M"
         else:
             out[s] = "S"
-    _KLASSE[t] = (out, ersatz, kl)
-    return _KLASSE[t]
+    _KLASSE[(t, RANG_QUELLE)] = (out, ersatz, kl)
+    return _KLASSE[(t, RANG_QUELLE)]
 
 
 def paare_mw(h):

@@ -565,6 +565,12 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - **L1-c:** Vorgriff im Marktwert-Rang der Messungen (heutige Umlaufmenge); A1-Top-30 mit CMC-Rang nicht trennbar. Berichtigung E-149 (eigener Zeitversatz).
 - ➤ Zur Abstimmung: CMC-Rang in den Messungen und A1 neu · L2-a festhalten.
 
+### Stand 26.10.2026 abends (E-153/E-154)
+
+- L2-a festgehalten: Der Hebel bleibt bei REGEL0.
+- `mk_messung.RANG_QUELLE = "cmc"`: zeitrichtiger Rang, B1–B4 bestanden. A1 neu: Top 30 +1,4 [−1,1; +4,3], nicht trennbar (E-143 ersetzt). Die B4-Fortbestandsordnung bleibt.
+- ➤ Offen: das NB-Bündel (K-GM-1, K-B4-D1, K-K4-1, K-SP-6).
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

@@ -5372,3 +5372,8 @@ eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
 | 1 | **Reproduziert wird auf der GRÖSSE des registrierten Befunds**, nicht auf einer neuen. Wer als Schritt 0 eine andere Kennzahl ansetzt, hat nichts reproduziert. Er hat etwas Neues gemessen und hält den Unterschied fälschlich für einen Widerspruch | L2-a Schritt 0 (E-149/E-151): „an gegen alle“ statt E-126s S1 |
 | 2 | **Der Ertrag beginnt NACH dem Zeitpunkt der Information.** Bei Quellen mit gröberem Takt (Wochen gegen Tage) ist der Startpunkt die erste Beobachtung **nach** dem Stichtag, nie die letzte davor | p92b/V3: Der CMC-Ertrag begann bis zu 6 T vor dem Stichtag und drückte das Ergebnis künstlich (Berichtigung E-149) |
 | 3 | **Ein historischer Rang braucht die historische Größe.** Die heutige Umlaufmenge auf die Vergangenheit angewandt ist ein Vorgriff. Tokens mit großen Freigaben stehen dann zu hoch (ENA 2024-06: Rang 9 statt 61). Vor jeder Messung mit Marktwert-Klassen den Rang gegen eine zeitrichtige Quelle (CMC-Wochen) prüfen | L1-c-Ursache (E-151): A1-Top-30 ohne den Vorgriff nicht trennbar |
+
+**Umsetzung von Regel 3 (26.10.2026, E-153/E-154):**
+- `mk_messung.RANG_QUELLE` hat die Vorgabe `"cmc"`: Marktwert zeitrichtig aus den CMC-Wochen. Rangkorrelation zu CMC 0,997.
+- `"eigen"` (alter Rang) gilt **nur zum Nachrechnen** alter Befunde (Umgebung `MK_RANG_QUELLE=eigen`).
+- ⚠️ **Altbestand:** Werkzeuge, die den Marktwert selbst aus `MK.umlauf(s, t) × Kurs` bilden (`lage_e3`, `e33_analyse`, `v32_*`, `p88_gegenprobe`), tragen den Vorgriff weiter. Ihre Befunde gelten nur mit Vorbehalt.

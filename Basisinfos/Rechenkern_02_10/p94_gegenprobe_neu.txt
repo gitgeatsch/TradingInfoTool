@@ -1,0 +1,10 @@
+G1 Top 30  E3 12 M direkt: Gruppe-BTC -42.7 (p86 -42.7) · F5-BTC -14.2 (p86 -14.2) · Stichtage 20 -> ok
+G1 Gesamt  E3 12 M direkt: Gruppe-BTC -72.7 (p86 -72.7) · F5-BTC -63.5 (p86 -63.5) · Stichtage 20 -> ok
+G2 Top 30  1 M alle F5-Gruppe: 3er-Bloecke (30) [-1.5; +4.4] (p86 [-1.1; +4.3]) · Null im Band True / p86 True -> gleiche Aussage
+G2 Top 30  1 M alle F5-BTC   : 3er-Bloecke (30) [-4.3; +5.6] (p86 [-4.0; +5.6]) · Null im Band True / p86 True -> gleiche Aussage
+G2 Top 100 1 M alle F5-Gruppe: 3er-Bloecke (30) [-0.6; +3.6] (p86 [-0.4; +3.4]) · Null im Band True / p86 True -> gleiche Aussage
+G2 Top 100 1 M alle F5-BTC   : 3er-Bloecke (30) [-4.6; +7.4] (p86 [-4.4; +6.7]) · Null im Band True / p86 True -> gleiche Aussage
+G2 Gesamt  1 M alle F5-Gruppe: 3er-Bloecke (30) [-0.1; +2.4] (p86 [+0.0; +2.3]) · Null im Band True / p86 True -> gleiche Aussage
+G2 Gesamt  1 M alle F5-BTC   : 3er-Bloecke (30) [-5.0; +7.5] (p86 [-4.4; +6.2]) · Null im Band True / p86 True -> gleiche Aussage
+G3 (Auskunft, alte Basis) Dosis E3 ohne F9 mit zeitrichtigem Rang: -19.4 -3.8 +5.0 +6.5 +11.4 (alter Rang: -17.2 -4.7 +3.0 +6.0 +12.1)
+ERGEBNIS 2 von 2 (G3 gehoert zur alten Basis)
