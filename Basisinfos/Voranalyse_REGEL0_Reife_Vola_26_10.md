@@ -100,3 +100,16 @@ Eine Volatilitätssteuerung des **Bestands** hieße: in wilden Phasen verkaufen.
 | **Selbsttest vor dem ersten Blick** | Fehlalarm: 200 Mal wird statt G1 eine Nullwelt-Ziehung getestet ⇒ Anteil „TRÄGT“ ≤ 5 %. Pflanzung: r′ = r + λ · ATR · z (z standardnormal, je Handel); G1 muss bei λ = 0,5 / 1 / 2 als Bremse erkannt werden, Soll ≥ 80 % bei λ = 1. Echte Kennzahlen werden erst nach bestandenem Selbsttest ausgegeben |
 | Gegenprobe | P_d, Rückgang und Verhältnis über eine eigene Schleife je Handel (gleich ± 1e-9); Band mit doppelter Blocklänge, gleiche Aussage |
 | Folge | trägt ⇒ Bauvorschlag `positionswert_eur` nach ATR in `regel0_groesse` (Schalter, Vorgabe aus, Kappung wie gemessen) · nicht trennbar / trägt nicht ⇒ fester Positionswert bleibt |
+
+### 4.1 Selbsttest Fassung 1 NICHT BESTANDEN — Ursache und Fassung 1b, VOR dem ersten Blick (26.10.2026)
+
+| | Fehlalarm | Fund λ 0,5 / 1 / 2 |
+|---|---|---|
+| Referenz (10.728 Handel, 45 Blöcke) | 0,5 % ✔ | 11 / **22** / 29 % ✖ |
+| Lauf A (11.696 Handel, 47 Blöcke) | 1,0 % ✔ | 0 / **2** / 6 % ✖ |
+
+**Ursache (eigener Planungsfehler):** Die Pflanzung r′ = r + λ · ATR · z zog z **unabhängig je Handel**. Bei rund 16 Handeln je Tag mittelt sich dieses Rauschen in der Tagessumme weg; Rückgang und Tagesschwankung werden von **gemeinsamen** Marktbewegungen bestimmt. Der Mechanismus, den eine Größe nach ATR ausnutzt, ist ein anderer: Coins mit hoher ATR bewegen sich bei einem Marktschock **stärker**.
+
+**Fassung 1b (vorab, sonst unverändert):**
+- Pflanzung r′ = r + λ · ATR · m_d, mit **einem** standardnormalen Schock m_d je Tag für alle Handel des Tages; λ = 0,5 / 1 / 2.
+- Soll ≥ 80 % bei λ = 1; Fehlalarm wie gehabt.

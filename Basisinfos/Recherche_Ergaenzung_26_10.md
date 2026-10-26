@@ -77,3 +77,16 @@ Diese Ergänzung sucht nur, was dort **fehlte**, und gleicht jeden Fund mit R-A 
 | Auflösung | Pflanzung auf *an*-Tagen eines Zufallszustands: +0,25 / 0,5 / 1 / 2 Pp je Tag (1 T); X = kleinste Stärke mit ≥ 80 % Fund |
 | **Messbar, wenn** | Fehlalarm ≤ 5 % **und** X ≤ 1 Pp je Tag. Das ist die Größe, die die vorläufige Literaturangabe r ≈ 0,30 bei 1 T Verzögerung bei ~2,2 % Tagesschwankung bedeuten würde (≈ 1,1 Pp Unterschied je Tag) |
 | Folge | messbar ⇒ Messplan Stufe 1 zur Abstimmung · nicht messbar ⇒ ETF-Flüsse nur als Fakt im Lagebild (Vorschlag) |
+
+### 5.1 Ergebnis Stufe 0 Fassung 1 und Fassung 1b (26.10.2026, `p96_etf_machbarkeit.py` → `.txt`)
+
+| | Tage | Strecken | Orakel | Fehlalarm | Auflösung X |
+|---|---|---|---|---|---|
+| **Haupt** 3 T, Ertrag 1 T | 991 | 111 | 1,000 | **7 %** ✖ | **0,50 Pp** ✔ |
+| 3 T, Ertrag 7 T | 985 | 109 | 1,000 | 6 % | keine ≤ 2 Pp |
+| Auskunft 1 T, Ertrag 1 T | 994 | 209 | 1,000 | 3 % | 0,50 Pp |
+| Auskunft 5 T, Ertrag 1 T | 989 | 73 | 1,000 | 6 % | 0,50 Pp |
+
+- Nach der Regel ist der Hauptfall **nicht messbar**, weil der Fehlalarm 7 % beträgt (Soll ≤ 5 %).
+- Der Wert stammt aus nur 100 Ziehungen (± 2,5 Pp); die Auflösung reicht dagegen klar.
+- **Fassung 1b (vorab, vor jedem Ergebnis):** Hauptfall mit **400** Fehlalarm-Ziehungen und 1.000 Permutationen je Rang. Messbar, wenn Fehlalarm ≤ 5 %. Das 1-T-Fenster bleibt Auskunft und wird nicht nachträglich zum Haupt.

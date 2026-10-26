@@ -1,0 +1,7 @@
+P95 MESSPLAN V-1 · Groesse nach ATR gegen festen Positionswert · Ertrag 24 h vor Kosten (neutral)
+
+SELBSTTEST vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * z, je 100):
+  Referenz 10728 Handel an 670 Tagen (45 Bloecke) · Fehlalarm 0.5 % · Fund lambda 0.5 11 % · lambda 1.0 22 % · lambda 2.0 29 % -> NICHT BESTANDEN
+  Lauf A   11696 Handel an 700 Tagen (47 Bloecke) · Fehlalarm 1.0 % · Fund lambda 0.5 0 % · lambda 1.0 2 % · lambda 2.0 6 % -> NICHT BESTANDEN
+
+SELBSTTEST NICHT BESTANDEN - echtes Ergebnis wird nicht angesehen (Plan §4).
