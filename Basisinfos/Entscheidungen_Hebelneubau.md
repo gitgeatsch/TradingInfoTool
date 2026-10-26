@@ -2127,3 +2127,24 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **NB-Export:** morgen nach 07:45 (nach `externe_reihen` 06:35 und Season-Ampel 07:30).
 
 **Betrieb unverändert.**
+
+# E-157 · Ansatz 1 (REGEL0-Reife) beantwortet; Ansatz 2 (Größe nach Schwankung) Messplan V-1 zur Abstimmung; Recherche-Ergänzung: Elliott-Wellen und Chart+Makro tragen nicht, neu nur ETF-Flüsse (26.10.2026)
+
+**26.10.2026** · Nutzer: *„beides - prüfen gegenprüfen und doku danach prüfe noch einmal auf recherchebasis …: Eliot Wellen Methode, Kombinationen chart und Makro, sonstiges“*
+
+**Ansatz 1** (`Voranalyse_REGEL0_Reife_Vola_26_10.md` §1):
+- Das eigene Normal rechnet schon rollend über ein Jahr. Der Datenbeginn wirkt nur über die Reife, also darüber, wer mitmacht.
+- **Lauf A ist die datenbeginn-unabhängige Fassung**, ohne Vorsprung (E-139/E-146).
+- Die Spur „Ballungstage“ hat 172–192 Tage, aber nur **27–28 getrennte Episoden** ⇒ Marktphasenfrage, nicht entscheidbar.
+- **Beantwortet, keine Messung.**
+
+**Ansatz 2** (§2): Der Hebel kommt aus der ATR, der **Positionswert ist fest 1.500 €**; das Euro-Risiko je Handel steigt mit der Schwankung. **Messplan V-1** (Positionswert ∝ 1/ATR gegen fest; Nullwelt Größen je Tag vertauscht; ~45 Blöcke) liegt **zur Abstimmung** vor. Erwartung: Bremse, keine Mehrrendite. Kern-Spot nicht (Sparplan).
+
+**Recherche-Ergänzung** (`Recherche_Ergaenzung_26_10.md`, Abgleich mit R-A/E-129):
+- Elliott-Wellen: kein objektiver Test außerhalb der Stichprobe; kodiert = Swing-Merkmal (gemessen) ⇒ nein.
+- Chart+Makro als Bedingung: keine Studie; Hudson/Urquhart (selbst nachgelesen) finden für Bitcoin außerhalb der Stichprobe keine Vorhersagekraft ⇒ nein.
+- Kalender, Intraday, Sessions: Regel 1 und verschwunden ⇒ nein.
+- Token-Unlocks: Daten kostenpflichtig (DefiLlama 402) ⇒ nein nach Projektregel.
+- **Neu und frei:** ETF-Flüsse mit Verzögerung (Farside erreichbar, ab 2024) ⇒ Stufe-0-Machbarkeit vorgeschlagen. DVOL (Deribit, frei) nur als V-1-Variante.
+
+**Betrieb unverändert.**

@@ -2736,3 +2736,8 @@ Schritt7 §23.24.
 **Nachtrag 26.10.2026 (80) — Weiterentwicklung** (E-156):
 - Die Einstiegssuche ist abgeschlossen.
 - Nächster Vorschlag W-1: Reihenbeginn der REGEL0 am NB prüfen (daran hängt das Plus) und den Vorbehalt „nicht robust“ in die REGEL0-Mail.
+
+**Nachtrag 26.10.2026 (81) — Ansätze 1/2 und Recherche-Ergänzung** (E-157):
+- Eine REGEL0 mit datenbeginn-unabhängiger Reife ist Lauf A, ohne Vorsprung.
+- Größe nach Schwankung: Messplan V-1 zur Abstimmung.
+- Elliott-Wellen und Chart+Makro tragen nach der Literatur nicht. Neu prüfbar sind nur ETF-Flüsse mit Verzögerung (Machbarkeit).

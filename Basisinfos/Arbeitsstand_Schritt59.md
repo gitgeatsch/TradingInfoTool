@@ -581,6 +581,11 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - Einstiegssuche abgeschlossen. Weiterentwicklung von Führung/Ordnung/Lage; Vorschlag **W-1** (REGEL0-Reihenbeginn in die Diagnose, Vorbehalt in die REGEL0-Mail).
 - ➤ Morgen: NB-Export nach 07:45 → Auswertung K-GM-1, K-B4-D1, K-K4-1, K-SP-6 → W-1 zur Abstimmung.
 
+### Stand 26.10.2026 nachts (E-157)
+
+- Ansatz 1 beantwortet (Lauf A); Ansatz 2 **V-1** zur Abstimmung; Recherche: neu nur ETF-Flüsse (Stufe-0-Machbarkeit, Farside-Download mit Ja).
+- ➤ Morgen: NB-Export nach 07:45 auswerten; dann V-1 / ETF-Machbarkeit / W-1 abstimmen.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
