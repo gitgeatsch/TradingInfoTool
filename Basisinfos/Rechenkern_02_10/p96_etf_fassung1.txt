@@ -1,0 +1,10 @@
+P96 ETF-FLUESSE STUFE 0 (Machbarkeit) · Farside 2024-01-11..2026-10-23, 699 US-Handelstage · BTC CoinMetrics bis 2026-10-04
+
+  HAUPT   Fenster 3 T · Ertrag 1 T: 991 Tage · Zufluss 59 % · 111 Strecken · Orakel Rang 1.000 · Fehlalarm 7 % · Fund +0.25 Pp 45 % +0.50 Pp 92 % +1.00 Pp 100 % +2.00 Pp 100 % · Aufloesung X 0.50 Pp -> nicht messbar
+  HAUPT   Fenster 3 T · Ertrag 7 T: 985 Tage · Zufluss 59 % · 109 Strecken · Orakel Rang 1.000 · Fehlalarm 6 % · Fund +0.25 Pp 6 % +0.50 Pp 8 % +1.00 Pp 24 % +2.00 Pp 49 % · Aufloesung X keine <= 2 Pp
+  Auskunft Fenster 1 T · Ertrag 1 T: 994 Tage · Zufluss 60 % · 209 Strecken · Orakel Rang 1.000 · Fehlalarm 3 % · Fund +0.25 Pp 48 % +0.50 Pp 94 % +1.00 Pp 100 % +2.00 Pp 100 % · Aufloesung X 0.50 Pp
+  Auskunft Fenster 1 T · Ertrag 7 T: 988 Tage · Zufluss 60 % · 207 Strecken
+  Auskunft Fenster 5 T · Ertrag 1 T: 989 Tage · Zufluss 62 % · 73 Strecken · Orakel Rang 1.000 · Fehlalarm 6 % · Fund +0.25 Pp 53 % +0.50 Pp 84 % +1.00 Pp 100 % +2.00 Pp 100 % · Aufloesung X 0.50 Pp
+  Auskunft Fenster 5 T · Ertrag 7 T: 983 Tage · Zufluss 62 % · 73 Strecken
+
+Tagesschwankung BTC 2024-26: 2.45 %

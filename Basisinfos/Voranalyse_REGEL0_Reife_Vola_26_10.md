@@ -113,3 +113,28 @@ Eine Volatilitätssteuerung des **Bestands** hieße: in wilden Phasen verkaufen.
 **Fassung 1b (vorab, sonst unverändert):**
 - Pflanzung r′ = r + λ · ATR · m_d, mit **einem** standardnormalen Schock m_d je Tag für alle Handel des Tages; λ = 0,5 / 1 / 2.
 - Soll ≥ 80 % bei λ = 1; Fehlalarm wie gehabt.
+
+### 4.2 Selbsttest Fassung 1b NICHT BESTANDEN — Ursache gemessen, Fassung 1c VOR dem ersten Blick (26.10.2026)
+
+| | Fehlalarm | Fund λ 0,5 / 1 / 2 |
+|---|---|---|
+| Referenz | 0,5 % | 62 / 66 / 51 % |
+| Lauf A | 2,0 % | 22 / 37 / 32 % |
+
+**Auffällig:** Die Erkennung **fällt** mit stärkerer Pflanzung. Die Ursache ist gemessen (nur gepflanzte Daten, Referenz, je 40 Ziehungen):
+
+| λ | Rang Rückgang ≥ 0,95 | Rang Mittel ÷ Schwankung ≥ 0,95 |
+|---|---|---|
+| 1 | 88 % | 78 % |
+| 2 | 90 % | 52 % |
+| 4 | 85 % | **30 %** |
+
+- G1 tut, was es soll: Die Gewichte korrelieren im Monat mit −0,81 gegen die ATR; Streuung 0,53 / 0,94 / 1,59; 11 % liegen an der Kappung.
+- **Das Kriterium (ii) „Mittel ÷ Schwankung“ ist für eine Bremse falsch gewählt (eigener Planungsfehler).** Der eingepflanzte Schock hat den Erwartungswert null, verschiebt aber das **Stichprobenmittel** zufällig. Je stärker er ist, desto mehr hängt das Verhältnis am Zufall des Mittels statt an der Schwankung.
+- Eine Bremse senkt das **Risiko**. Das Mittel gehört nicht in das Urteil (Erwartung „Rendite etwa gleich“), sondern in die Auskunft.
+
+**Fassung 1c (vorab, sonst unverändert):**
+- (ii) wird ersetzt durch die **Schwankung der Tages-P&L** (kleiner ist besser; Rang = Anteil Nullwelten mit größerer Schwankung).
+- Urteil TRÄGT als Bremse: Rang (i) **und** Rang (ii) ≥ 0,95 in beiden Mengen; „schadet“ bei ≤ 0,05.
+- **Auskunft:** Mittel je Tag G1 gegen G0 mit Band (15 T). Eine Bremse, die das Mittel belastbar senkt, wird so ausgewiesen.
+- Selbsttest wie 1b (gemeinsamer Tagesschock).

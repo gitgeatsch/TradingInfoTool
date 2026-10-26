@@ -5,7 +5,7 @@
 G0 Gewicht 1 · G1 Gewicht c/ATR (c = Median der ATR der Einstiege der vorigen 90 T, kausal), gekappt [0,5; 2], auf gleiche Summe normiert.
 Ertrag 24 h vor Kosten aus den Stundenkursen data/_hist, ATR nach Betriebsformel (regel0_rechnung.E2._atr). Konto = Summe der Tages-P&L.
 (i) groesster Rueckgang, (ii) Mittel/Schwankung der Tages-P&L; Nullwelt: G1-Gewichte je Kalendermonat vertauscht (1.000).
-SELBSTTEST vor dem ersten Blick (Fehlalarm <= 5 %, Pflanzung lambda 0,5/1/2, Soll >= 80 % bei 1). Gegenprobe eigene Schleife. Nur lesend.
+SELBSTTEST vor dem ersten Blick (Fehlalarm <= 5 %, Pflanzung lambda 0,5/1/2, Soll >= 80 % bei 1) - Fassung 1b: gemeinsamer Tagesschock. Gegenprobe eigene Schleife. Nur lesend.
 """
 import os
 import sqlite3
@@ -141,7 +141,7 @@ def main():
     print("P95 MESSPLAN V-1 · Groesse nach ATR gegen festen Positionswert · Ertrag 24 h vor Kosten (neutral)\n")
     daten = {name: handel(p) for name, p in MENGEN.items()}
     block = messnorm._block(1)
-    print("SELBSTTEST vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * z, je 100):")
+    print("SELBSTTEST Fassung 1b vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * m_Tag, je 100):")
     ok_alle = True
     for name, e in daten.items():
         P = Pruefstand(e)
@@ -149,7 +149,8 @@ def main():
         fa = np.mean([bremse(*P.urteil(P.vertausche(w1, RNG), r, RNG, 200)[2:]) for _ in range(200)])
         fund = {}
         for lam in LAMBDAS:
-            fund[lam] = np.mean([bremse(*P.urteil(w1, r + lam * e.atr.to_numpy() * RNG.standard_normal(len(r)), RNG, 200)[2:])
+            # FASSUNG 1b (§4.1): EIN gemeinsamer Schock je Tag, Staerke proportional zur ATR (Fassung 1 zog je Handel - wegdiversifiziert)
+            fund[lam] = np.mean([bremse(*P.urteil(w1, r + lam * e.atr.to_numpy() * RNG.standard_normal(P.nt)[P.tag], RNG, 200)[2:])
                                  for _ in range(100)])
         ok = fa <= 0.05 and fund[1.0] >= 0.8
         ok_alle &= ok

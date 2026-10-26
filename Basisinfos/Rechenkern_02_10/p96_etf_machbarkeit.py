@@ -59,7 +59,9 @@ def main():
                 continue
             orakel = (pd.Series(y).rolling(7, center=True, min_periods=3).mean() > 0).astype(int).to_numpy()
             r_o = P91.rang(orakel, y, RNG, 500)
-            fa = np.mean([P91.rang(P91.permutiere(zz, RNG), y, RNG, 200) >= 0.95 for _ in range(100)])
+            # FASSUNG 1b (§5.1): Hauptfall mit 400 Fehlalarm-Ziehungen und 1.000 Permutationen je Rang (Fassung 1: 100 / 200)
+            n_fa, k_fa = (400, 1000) if (haupt and h == 1) else (100, 200)
+            fa = np.mean([P91.rang(P91.permutiere(zz, RNG), y, RNG, k_fa) >= 0.95 for _ in range(n_fa)])
             fund = {}
             for d in STAERKEN:
                 n = 0
