@@ -61,3 +61,19 @@ Diese Ergänzung sucht nur, was dort **fehlte**, und gleicht jeden Fund mit R-A 
 - Keyrock Token-Unlocks [I]: https://keyrock.com/from-locked-to-liquidity-what-16000-token-unlocks-teach-us/
 - Halving FDR arXiv 2607.26188: https://arxiv.org/pdf/2607.26188
 - Liquidationskaskaden arXiv 2607.27070: https://ideas.repec.org/p/arx/papers/2607.27070.html
+
+## 5. ETF-Flüsse Stufe 0 (Machbarkeit) — VORAB festgelegt 26.10.2026 (Nutzer: *„2 ja“*) · `Rechenkern_02_10/p96_etf_machbarkeit.py`
+
+**Kein Ergebnis**, nur Machbarkeit, wie p91 (L2-a).
+
+| | Festlegung |
+|---|---|
+| Laden | **einmal** `https://farside.co.uk/bitcoin-etf-flow-all-data/` (Webseite, ~0,8 MB) → `data/_etf/farside_btc.html`, danach nur noch aus der Datei. Spalte *Total* (Mio. USD) je US-Handelstag |
+| Zustand | Z(t) = Summe der Nettoflüsse der letzten 3 US-Handelstage bis t > 0 („Zufluss“). Bekannt erst nach US-Börsenschluss t ⇒ **Wirkung ab Schluss t + 1 Tag (UTC)**, kein Vorgriff. Auskunft: 1 und 5 Tage |
+| Ziel | BTC-Tagesschluss (CoinMetrics), Ertrag 1 T und 7 T ab Schluss t + 1 |
+| Ausgewiesen | Tage, Anteil Zufluss, **Zahl der Strecken** (Wechsel) |
+| Positivkontrolle | Orakel-Zustand (kommender 7-T-Mittelwert > 0) gegen Strecken-Permutation, Rang |
+| Fehlalarm | 100 Zufallszustände mit der Streckenstruktur von Z (Rang ≥ 0,95 als Treffer) ⇒ Soll ≤ 5 % |
+| Auflösung | Pflanzung auf *an*-Tagen eines Zufallszustands: +0,25 / 0,5 / 1 / 2 Pp je Tag (1 T); X = kleinste Stärke mit ≥ 80 % Fund |
+| **Messbar, wenn** | Fehlalarm ≤ 5 % **und** X ≤ 1 Pp je Tag. Das ist die Größe, die die vorläufige Literaturangabe r ≈ 0,30 bei 1 T Verzögerung bei ~2,2 % Tagesschwankung bedeuten würde (≈ 1,1 Pp Unterschied je Tag) |
+| Folge | messbar ⇒ Messplan Stufe 1 zur Abstimmung · nicht messbar ⇒ ETF-Flüsse nur als Fakt im Lagebild (Vorschlag) |
