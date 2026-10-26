@@ -586,6 +586,11 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - Ansatz 1 beantwortet (Lauf A); Ansatz 2 **V-1** zur Abstimmung; Recherche: neu nur ETF-Flüsse (Stufe-0-Machbarkeit, Farside-Download mit Ja).
 - ➤ Morgen: NB-Export nach 07:45 auswerten; dann V-1 / ETF-Machbarkeit / W-1 abstimmen.
 
+### Stand 26.10.2026 Nacht (E-158 bis E-160)
+
+- V-1 Bremse nicht trennbar · ETF nicht messbar · DVOL/Angstprämie/F&G nicht auflösbar · W-1 gebaut (im morgigen Pull).
+- ➤ Morgen: Pull + Neustart (falls noch nicht), Export nach 07:45 → K-GM-1, K-B4-D1, K-K4-1, K-SP-6, K-R0-ST0 (`p97 --nb`).
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

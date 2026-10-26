@@ -5377,3 +5377,8 @@ eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
 - `mk_messung.RANG_QUELLE` hat die Vorgabe `"cmc"`: Marktwert zeitrichtig aus den CMC-Wochen. Rangkorrelation zu CMC 0,997.
 - `"eigen"` (alter Rang) gilt **nur zum Nachrechnen** alter Befunde (Umgebung `MK_RANG_QUELLE=eigen`).
 - ⚠️ **Altbestand:** Werkzeuge, die den Marktwert selbst aus `MK.umlauf(s, t) × Kurs` bilden (`lage_e3`, `e33_analyse`, `v32_*`, `p88_gegenprobe`), tragen den Vorgriff weiter. Ihre Befunde gelten nur mit Vorbehalt.
+
+**Nachtrag 26.10.2026 (E-160) — Regel 4: Perzentil-Zustände auf Reihen mit Niveauwechsel nur im rollenden Fenster.**
+- Ein Zustand „oberes Fünftel des **wachsenden** Fensters“ auf einer Reihe, deren Niveau strukturell fällt (DVOL 89 → 40, BTC-Schwankung halbiert), ist nach einigen Jahren **nie mehr an**. Er misst dann den Anfang der Reihe, nicht die Lage.
+- **Vor jeder Messung den Anteil *an* je Jahr ausweisen.** Fällt er gegen null, ist der Zustand im rollenden Fenster zu bilden (oder die Wahl zu begründen).
+- Gleiches Muster: Klima q im ETF-Markt (E-69), DVOL D1/D2 (E-160).

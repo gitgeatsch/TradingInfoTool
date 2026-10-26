@@ -41,3 +41,43 @@ Nutzer 26.10.: *„ja DVOL Stufe 0 starten - prüfen gegenprüfen und doku“*. 
 **Fassung 1b (vorab, vor jedem Ergebnis):**
 - D1 und D2 werden als **oberes Fünftel des rollenden Fensters der letzten 365 T** gebildet (mindestens 180 T), also Angst **relativ zum aktuellen Niveau**.
 - Alles andere bleibt wie §1, auch die Grenzen.
+
+## 3. Ergebnis Fassung 1b — NICHT MESSBAR (26.10.2026; `p98_dvol_machbarkeit.py` → `.txt`)
+
+**Teil A — Lage BTC/ETH, Ertrag 7 T** (Grenze: Fehlalarm ≤ 5 %, X ≤ 2 Pp):
+
+| Zustand | an | Strecken | Fehlalarm | Fund +1 / +2 / +3 Pp | Urteil |
+|---|---|---|---|---|---|
+| BTC D1 DVOL (rollend 365 T) | 10 % | 43 | 2 % | 12 / 35 / 60 % | nicht messbar |
+| BTC D2 Angstprämie | 13 % | 107 | 3 % | 13 / 39 / 68 % | nicht messbar |
+| BTC D3 Fear & Greed < 25 | 22 % | 219 | 6 % | 23 / 50 / 89 % | nicht messbar (X = 3 Pp) |
+| ETH D1 | 18 % | 121 | 5 % | 21 / 45 / 62 % | nicht messbar |
+| ETH D2 | 17 % | 75 | 1 % | 19 / 33 / 58 % | nicht messbar |
+| ETH D3 | 22 % | 219 | 3 % | 17 / 33 / 65 % | nicht messbar |
+
+30 T (Auskunft): keine Auflösung bis 8 Pp.
+
+**Teil B — Umfeld der REGEL0-Einstiege aller Assets** (Tagesmittel 24 h; Grenze X ≤ 0,5 Pp in beiden Mengen):
+
+| Zustand | Referenz: an · Strecken · Fehlalarm · Fund +1 Pp | Lauf A: an · Strecken · Fehlalarm · Fund +1 Pp |
+|---|---|---|
+| D1 BTC-DVOL | 14 % · 16 · 6 % · 41 % | 16 % · 16 · 3 % · 46 % |
+| D2 Angstprämie | 12 % · 36 · 6 % · 27 % | 13 % · 44 · 2 % · 42 % |
+| D3 Fear & Greed | 24 % · 39 · 4 % · 48 % | 23 % · 39 · 6 % · 52 % |
+
+⇒ **In keinem Fall auflösbar.** Selbst +1 Pp je Tag auf alle Einstiege wird höchstens zu 52 % gefunden.
+
+**Gegenprüfung:**
+- DVOL an 5 zufälligen Tagen gegen Einzelabfragen: **5/5 gleich**.
+- Streckenzahl über eine eigene Schleife: gleich (Prüfung im Skript).
+- Plausibilität: BTC-DVOL 2022 (73) > 2024 (56) ✔.
+
+**Ursache (aus den Zahlen):**
+- Es gibt **zu wenige unabhängige Angstphasen**: Seit 2021 kommen D1/D2 auf 43–121 Strecken, in den Einstiegsjahren 2024–26 auf nur **16–44**.
+- Der Ertrag einer Angstphase ist eine einzige, stark streuende Größe. Wie bei L2-a (E-151), Ballungstagen (E-157) und ETF-Flüssen (E-158) fehlen **Wechsel**, nicht Tage.
+- **Fear & Greed** (D3, Atlas-Kandidat) teilt dieses Schicksal: 219 Strecken über 8 Jahre, Auflösung erst ab 3 Pp je 7 T.
+
+**Folge (vorab):**
+- DVOL, Angstprämie und Fear & Greed nur als **Fakt** im Lagebild, nicht als Auslöser oder Gewicht.
+- DVOL ist neu im Fakt-Teil und würde als Zeile gebaut, wenn du das willst.
+- Fear & Greed steht dort schon.

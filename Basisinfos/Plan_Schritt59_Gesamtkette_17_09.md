@@ -2741,3 +2741,8 @@ Schritt7 §23.24.
 - Eine REGEL0 mit datenbeginn-unabhängiger Reife ist Lauf A, ohne Vorsprung.
 - Größe nach Schwankung: Messplan V-1 zur Abstimmung.
 - Elliott-Wellen und Chart+Makro tragen nach der Literatur nicht. Neu prüfbar sind nur ETF-Flüsse mit Verzögerung (Machbarkeit).
+
+**Nachtrag 26.10.2026 (82) — V-1, ETF, W-1, DVOL** (E-158 bis E-160):
+- Die Größe nach Schwankung wirkt als Bremse, ist nach Plan aber nicht trennbar.
+- ETF-Flüsse und Angstmaße (DVOL, Fear & Greed) sind mit unseren Daten **nicht auflösbar**: Es fehlen unabhängige Wechsel, nicht Tage.
+- W-1 ist gebaut (Vorbehalt in der REGEL0-Mail, Reihenbeginn in der Diagnose) und im morgigen Pull.

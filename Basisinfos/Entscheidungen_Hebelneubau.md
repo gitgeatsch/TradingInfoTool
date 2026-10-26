@@ -2177,3 +2177,21 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Prüfung:** Paket `W1Reihenbeginn` 6/6 mit Mutationsprobe und Wegwerf-Ordner; keine neuen roten Prüfungen in den REGEL0- und Mail-Paketen.
 - **NB:** K-R0-ST0 (Abgleich `p97 --nb`) und K-W1-MAIL. **Gebündelt in den morgigen Pull** (eine Diagnose für alle offenen Kontrollen).
 - **Fakt:** BTC/SOL/BNB/AVAX/XLM sind im Betrieb seit 2024-09 reif. Der Betrieb rechnet für sie wie Lauf A (ohne belegten Vorsprung).
+
+# E-160 · DVOL Stufe 0: Angstmaße (DVOL, Angstprämie, Fear & Greed) mit unseren Daten nicht auflösbar — zu wenige unabhängige Angstphasen (26.10.2026)
+
+**26.10.2026** · Nutzer: *„ja DVOL Stufe 0 starten - prüfen gegenprüfen und doku“*
+
+**Grundlage:** `Voranalyse_DVOL_Angstmass_26_10.md` (vorab d3ef63b1, Fassung 1b c853f59e); `p98`; DVOL BTC/ETH 2021-03-24 bis 2026-10-26 (Deribit, frei, 2.041 Tage je Wert, Gegenprobe 5/5).
+
+**Fassung 1:** D1/D2 im wachsenden Fenster waren falsch definiert (eigener Fehler): Die DVOL ist strukturell gefallen (89 → 40), deshalb waren sie nur an 1–3 % der Tage an, 2024–26 an 0 %. **Fassung 1b** mit rollendem 365-T-Fenster, vor jedem Ergebnis.
+
+**Ergebnis 1b:**
+- Teil A (BTC/ETH, 7 T): kein Zustand mit Auflösung ≤ 2 Pp; Fear & Greed erst ab 3 Pp.
+- Teil B (Umfeld aller REGEL0-Einstiege): selbst +1 Pp je Tag nur zu 27–52 % gefunden.
+- Fehlalarm meist im Soll.
+- ⇒ **nicht messbar**.
+
+**Ursache:** zu wenige unabhängige Angstphasen (16–44 Strecken in 2024–26). Das ist dieselbe Grenze wie bei L2-a, Ballungstagen und ETF-Flüssen.
+
+**Folge:** DVOL, Angstprämie und Fear & Greed nur als Fakt im Lagebild (DVOL-Zeile auf Wunsch). **Betrieb unverändert.**
