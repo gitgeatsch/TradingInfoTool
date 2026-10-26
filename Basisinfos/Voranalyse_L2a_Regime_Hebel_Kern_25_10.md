@@ -130,3 +130,10 @@ Selbsttest des Schritt-0-Prüfstands: Fehlalarm 5,0 % (genau am Soll).
 - **Mein Schritt 0 war unscharf festgelegt (eigener Fehler):** Ich hatte eine **andere Größe** als Reproduktion angesetzt (an gegen alle statt E-126s S1–S4). E-126 fragt *„lohnt der Ausstieg?“* — nein, die Monate draußen sind nicht negativ. Meine Größe fragt *„sind die Monate an besser?“* — in allen vier Fassungen positiv (+2,5 bis +7,6 Pp), aber nur in einer knapp über der Schwelle.
 - **Für den Hebel ist das die eigentliche Frage:** Ein Hebel nur in *an*-Phasen braucht keine negativen *aus*-Monate, sondern bessere *an*-Monate. E-126 schließt das nicht aus.
 - **Lösung (zur Abstimmung):** Schritt 0 Fassung 1b = Reproduktion auf E-126s eigenen Größen (S1 Monate draußen, Rang S3). Das ist mit p93b **erfüllt**. Danach Stufe 1 wie vorab festgelegt (R1, 7 T, Selbsttest vor dem Blick).
+
+## 9. Schritt 0 Fassung 1b — VORAB festgelegt 26.10.2026 (Nutzer: *„1a … prüfen gegenprüfen und doku“*)
+
+- **Reproduktion auf E-126s eigener Größe S1:** mittlere Monatsrendite BTC in EUR in den Monaten *draußen*, Teil B 2017-01 bis 2026-09, Zustand 10-Monats-Schnitt, gehandelt t+1. **Reproduziert, wenn** sie im Bereich +0,9 % ± 0,2 Pp liegt (E-126: +0,9 %, n 38) und damit S1 „nein“ bleibt.
+- Die Größe *an − alle* aus §7 Schritt 0 läuft als **Auskunft** mit, sie entscheidet nicht.
+- Reproduziert → **Stufe 1 unverändert nach §7** (R1, 7 T, Selbsttest vor dem ersten Blick, Stufen, Gesamturteil, Folgen). Nicht reproduziert → Halt.
+- **Gegenprobe nach dem Lauf** (`p93_gegenprobe.py`): Vorsprung je Wert über eine eigene Tagesschleife (gleich ±0,01 Pp); Richtung über Monatsmittel statt Tageswerte gleich; Band mit doppelter Blocklänge, gleiche Aussage zur Stufe.

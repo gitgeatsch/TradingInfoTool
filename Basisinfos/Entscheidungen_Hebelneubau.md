@@ -2035,3 +2035,10 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **K-4:** Spot erzeugt heute keine Kern-Kaufvorschläge (Kette angehalten, B1/B3/B4 ohne Kern). K-4 = Absicherung. Fallstrick: Fällt `regel0_betrieb.yaml` aus, läuft die Kette wieder. Vorschlag: zentrale Konstante + Ausschluss nur in den Spot-Zellen.
 
 **Betrieb unverändert.**
+
+# E-150 · Nutzer 1a, 2a, 3a: L2-a Schritt 0 Fassung 1b + Stufe 1; L1-c Ursache zu Ende messen; K-4 bauen (26.10.2026)
+
+**26.10.2026** · Nutzer: *„1a, 2a, 3a - prüfen gegenprüfen und doku“*
+- **1a:** Schritt 0 Fassung 1b vorab (Voranalyse L2-a §9), danach Stufe 1 nach §7.
+- **2a:** Ursachenmessung V0–V4 vorab (Voranalyse L1/L2 §9.8).
+- **3a:** K-4 bauen: zentrale Konstante KERN, Ausschluss nur in den Spot-Zellen der Rollen-Kette, Bestandszeilen bleiben, REGEL0/Hebel unberührt, Suite-Prüfung, NB-Kontrolle im nächsten Bündel.

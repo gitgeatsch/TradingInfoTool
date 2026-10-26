@@ -365,3 +365,23 @@ Ausfaller aus den Top 200 binnen 4 Wochen: 7,4 % der Erträge (begrenzt gerechne
 - **Es liegt nicht am CMC-Wert.** Selbst die Binance-Auswahl zeigt auf CMC-Erträgen und der CMC-Gruppe keinen Vorsprung.
 - Es liegt an **Gruppe, Ertrag oder Coin-Menge**: CMC-Top 30 (Marktwert-Rang der Woche, ohne Stabilitätsbedingung) gegen A1-Top 30 (`rang_mw`), 4 Wochen aus Wochenkursen gegen 30 T aus Tageskursen, nur Coins in beiden Quellen.
 - ⚠️ **Das betrifft auch A1 (E-143):** Der Top-30-Vorsprung hält eine andere, gleich vernünftige Abgrenzung nicht aus. Er ist **nicht robust**. Welche der drei Abgrenzungen es ist, ist noch nicht gemessen.
+
+### 9.8 L1-c Ursache zu Ende messen — VORAB festgelegt 26.10.2026 (Nutzer: *„2a“*) · `p92c_ursache_abgrenzung.py`
+
+**Frage:** An welcher Abgrenzung hängt der A1-Vorsprung der Top 30 (+3,5 Pp, 1 M)? Keine neue Bestätigung, nur Ursache.
+
+**Ausgang** ist A1 selbst (`p86.anker(30)`: Binance-Erträge 30 T, Gruppe `rang_mw ≤ 30`, Binance-Fünftel). Getauscht wird **je eine** Sache in Richtung CMC, an denselben Monatsstichtagen 2019-01 bis 2026-08:
+
+| | Coin-Menge | Gruppe Top 30 | Ertrag | Fünftel |
+|---|---|---|---|---|
+| V0 | A1 | `rang_mw` | Binance 30 T | Binance |
+| V1 Menge | **nur Coins auch in CMC Top 200** | `rang_mw` | Binance | Binance |
+| V2 Gruppe | wie V1 | **CMC-Rang ≤ 30 (Klasse H)** | Binance | Binance |
+| V3 Ertrag | wie V1 | `rang_mw` | **CMC 4 Wochen** | Binance |
+| V4 | wie V1 | CMC | CMC | Binance (= p92b „b“) |
+
+- Größe wie A1: je Stichtag oberes Fünftel − Gruppe, Band zirkulär, Block 3 Stichtage (`p86.band`), < 20 Blöcke KEIN BEFUND.
+- **V0 muss A1 treffen** (+3,5 ± 0,1 Pp), sonst Halt.
+- **Lesart (vorab):** Die Variante mit dem größten Abfall gegen V0 ist die Ursache. Fällt schon V1, hängt A1 an Coins außerhalb der CMC Top 200 (Kleinwerte); fällt V2, an der Gruppenabgrenzung; fällt V3, an der Ertragsrechnung.
+- **Gegenprobe:** V0 und V4 über eine eigene Schleife je Stichtag (gleich ±0,01 Pp).
+- **Folge:** Ursache festhalten. Ob A1 dann „nicht robust“ bleibt oder eine Abgrenzung fachlich die richtige ist, wird mit dem Nutzer abgestimmt.
