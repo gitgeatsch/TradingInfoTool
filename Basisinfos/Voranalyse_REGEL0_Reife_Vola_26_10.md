@@ -82,3 +82,21 @@ Eine Volatilitätssteuerung des **Bestands** hieße: in wilden Phasen verkaufen.
 - Die Code-Aussagen zur Reife (`regel0_rechnung.py:150-170`) und zur Größe (`regel0_groesse.py:4-7, 167-172`, `regel0_betrieb.yaml:10-17`) sind nachgelesen.
 - Die Zählung der Ballungstage beruht auf den Einstiegsdateien `kern48jbz_einstiege_bestand.csv` und `einstiege_A.csv`, gerechnet ab 2024; die Episoden sind über > 7 T Abstand gezählt. Bei einer Schwelle von > 30 Signalen ergeben sich 38 bzw. 30 Episoden, also dasselbe Bild.
 - Die Literaturlage ist aus R-A übernommen (dort gegengeprüft: 12 Aussagen an Primärquellen), nicht neu behauptet.
+
+## 4. Messplan V-1 — VORAB festgelegt 26.10.2026 (Nutzer: *„1 ja“*) · `Rechenkern_02_10/p95_v1_groesse_atr.py`
+
+| | Festlegung |
+|---|---|
+| Mengen | Referenz (`data/_vergleich/kern48jbz_einstiege_bestand.csv`) und Lauf A (`data/_hist/einstiege_A.csv`), Einstiege ab 2024-01-01 mit vollständigem 24-h-Fenster |
+| Ertrag je Handel | r = Schluss(t + 24 h) ÷ Schluss(t) − 1 aus den Stundenkursen `data/_hist` (Spot), **vor Kosten**, auf den Positionswert. Liquidation nicht modelliert: Die Hebelstufe hält P(Liquidation) ≤ 2 % in beiden Armen gleich |
+| ATR | `regel0_rechnung.E2._atr` (Betriebsformel) in der Einstiegsstunde |
+| **G0** | Gewicht 1 je Handel (fester Positionswert, heute) |
+| **G1** | Gewicht = c ÷ ATR, mit c = Median der ATR aller Einstiege der **vorigen 90 T** (kausal), gekappt auf [0,5; 2]; danach **ein** fester Faktor, sodass die Summe der Gewichte der von G0 gleicht (gleiches Gesamt-Engagement) |
+| Konto | Tagessumme P_d = Σ Gewicht × r über die Einstiege des Tages; Konto = laufende Summe (ohne Zinseszins) |
+| Zielgrößen | (i) **größter Rückgang** des Kontos · (ii) **Mittel ÷ Schwankung** von P_d (Tage mit Einstieg) · Auskunft (iii) Anteil der Tage mit P_d ≤ −3 % des mittleren Tagesengagements, je Jahr |
+| **Nullwelt** | die G1-Gewichte **innerhalb desselben Kalendermonats** zufällig über die Handel vertauscht (Verteilung und Monatsengagement gleich, Bezug zur ATR zerstört), 1.000 Ziehungen; Rang (i) = Anteil Nullwelten mit größerem Rückgang, Rang (ii) = Anteil mit kleinerem Verhältnis |
+| Band | zirkulärer Tagesblock-Bootstrap, Block `messnorm._block(1)` = 15 T, für die Differenz (ii) G1 − G0; < 20 Blöcke KEIN BEFUND |
+| **Urteil** | **TRÄGT als Bremse**, wenn Rang (i) **und** Rang (ii) ≥ 0,95 in **beiden** Mengen · TRÄGT NICHT, wenn eines ≤ 0,05 (Größe nach ATR schadet) · sonst NICHT TRENNBAR |
+| **Selbsttest vor dem ersten Blick** | Fehlalarm: 200 Mal wird statt G1 eine Nullwelt-Ziehung getestet ⇒ Anteil „TRÄGT“ ≤ 5 %. Pflanzung: r′ = r + λ · ATR · z (z standardnormal, je Handel); G1 muss bei λ = 0,5 / 1 / 2 als Bremse erkannt werden, Soll ≥ 80 % bei λ = 1. Echte Kennzahlen werden erst nach bestandenem Selbsttest ausgegeben |
+| Gegenprobe | P_d, Rückgang und Verhältnis über eine eigene Schleife je Handel (gleich ± 1e-9); Band mit doppelter Blocklänge, gleiche Aussage |
+| Folge | trägt ⇒ Bauvorschlag `positionswert_eur` nach ATR in `regel0_groesse` (Schalter, Vorgabe aus, Kappung wie gemessen) · nicht trennbar / trägt nicht ⇒ fester Positionswert bleibt |
