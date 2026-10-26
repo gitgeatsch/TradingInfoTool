@@ -576,6 +576,11 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - NB-Bündel vorbereitet (64 Commits seit `d3b45f94`; Betriebsänderungen: Lagebild + HY, K-4). Kontrollen K-GM-1, K-B4-D1, K-K4-1, K-SP-6.
 - Voranalyse Restquellen: Mit freien Daten ist die Suche erschöpft. ➤ Zur Abstimmung: (a) Fakten-/Führungssystem weiterentwickeln · (b) CryptoCompare · (c) Projektregel.
 
+### Stand 26.10.2026 Ende (E-156)
+
+- Einstiegssuche abgeschlossen. Weiterentwicklung von Führung/Ordnung/Lage; Vorschlag **W-1** (REGEL0-Reihenbeginn in die Diagnose, Vorbehalt in die REGEL0-Mail).
+- ➤ Morgen: NB-Export nach 07:45 → Auswertung K-GM-1, K-B4-D1, K-K4-1, K-SP-6 → W-1 zur Abstimmung.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

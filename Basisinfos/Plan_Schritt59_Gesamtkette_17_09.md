@@ -2732,3 +2732,7 @@ Schritt7 §23.24.
 - Mit freien Daten ist die Suche nach einem Einstiegsvorsprung erschöpft. Alle Inventare sind gemessen; der Freigabekalender ist jetzt kostenpflichtig, Wikipedia zu dünn.
 - Vorschlag: das Fakten- und Führungssystem weiterentwickeln.
 - Das NB-Bündel ist vorbereitet.
+
+**Nachtrag 26.10.2026 (80) — Weiterentwicklung** (E-156):
+- Die Einstiegssuche ist abgeschlossen.
+- Nächster Vorschlag W-1: Reihenbeginn der REGEL0 am NB prüfen (daran hängt das Plus) und den Vorbehalt „nicht robust“ in die REGEL0-Mail.

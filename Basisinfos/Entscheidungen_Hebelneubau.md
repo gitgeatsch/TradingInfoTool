@@ -2115,3 +2115,15 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Vorschlag (a):** Suche abschließen und das Fakten- und Führungssystem weiterentwickeln. Alternativen: (b) CryptoCompare mit kostenfreiem Schlüssel; (c) Projektregel *nur kostenfrei* (Nutzerentscheidung, nicht empfohlen).
 
 **Betrieb unverändert.**
+
+# E-156 · Suche nach einem Einstiegsvorsprung abgeschlossen; Weiterentwicklung des Fakten- und Führungssystems, Vorschlag W-1 (26.10.2026)
+
+**26.10.2026** · Nutzer: *„a - prüfen gegenprüfen und doku“*
+- **Abgeschlossen:** die Suche nach einem Einstiegsvorsprung mit freien Daten (E-155). Neue Einstiegsmessungen nur bei **neuer Information** (neue freie Quelle oder Änderung der Projektregel durch den Nutzer).
+- **Weiterentwickelt wird, was trägt:** Führung (B1/B3/B4, H15), Ordnung des Fortbestands, Lage als Fakt (`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`).
+- **Im Code gefundene Lücken:** Die Diagnose führt den REGEL0-Reihenbeginn `st0` nicht, obwohl das Plus nach E-139 daran hängt (Prüfbericht A.4). Die REGEL0-Mail trägt keinen Vorbehalt „nicht robust“.
+- **Vorschlag W-1:** F-1 (Diagnose `regel0_reihenbeginn`, Abgleich NB gegen Desktop) und F-2 (Fakt-Zeile in der REGEL0-Mail), in einem Bündel nach dem morgigen Export. Danach W-2 Doku-Lücken, W-3 Stilllegung der alten Kette (eigene Voranalyse).
+- **Plan bereinigt:** O1/O2 erledigt; O27(2) entfällt (E-148); O31/O46 beantwortet (E-155).
+- **NB-Export:** morgen nach 07:45 (nach `externe_reihen` 06:35 und Season-Ampel 07:30).
+
+**Betrieb unverändert.**
