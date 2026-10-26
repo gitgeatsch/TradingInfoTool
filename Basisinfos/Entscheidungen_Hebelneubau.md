@@ -2068,3 +2068,11 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Unberührt:** `asset_hebel_settings`, REGEL0, Watchlist-Einträge, Anzeige von Bestand und G/V.
 - **Prüfung:** Suite-Paket `Kernwerte` 10/10 mit Mutationsprobe. Sie fand eine zu schwache Prüfung, die ersetzt wurde.
 - **Betrieb:** Die Kette ist angehalten, sichtbar ändert sich nichts. NB-Kontrolle K-K4-1 nach dem nächsten Pull (gebündelt).
+
+# E-153 · L2-a festgehalten; zeitrichtiger Marktwert-Rang in den Messungen und A1 neu VORAB (26.10.2026)
+
+**26.10.2026** · Nutzer: *„1 ja, 2 ja - prüfen gegenprüfen und doku“*
+- **L2-a festgehalten:** Der Hebel bleibt bei REGEL0 (E-36/E-140). Die Marktphase BTC über/unter dem 200-T-Schnitt ist Fakt im Lagebild, kein Auslöser. Mit unseren Daten nicht entscheidbar, weil es nur 72 Regimewechsel in 12 Jahren gibt (E-151). Kein weiterer Trendfilter.
+- **Zeitrichtiger Rang:** Bau und Messplan A1 neu vorab (Voranalyse Vorsprungs-Atlas §9). `mk_messung.RANG_QUELLE` hat die Vorgabe `"cmc"`, `"eigen"` dient nur dem Nachrechnen.
+
+**Betrieb unverändert.**

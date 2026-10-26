@@ -283,3 +283,37 @@ Der Unterschied wächst mit dem Horizont, so wie es die langsame Auswahl erwarte
 | **L-1 (Empfehlung)** | **Die Auswahl als Asset-Filter auf Monatsebene**: welche Coins das System führt, kauft und hält (Spot, Bestand), Top 30 bzw. oberes Fünftel. Das ist die Nutzeridee | Die Auswahl wirkt dort, wo sie belegt ist (A1, 1 M, alle Jahre; Top 30 +3,5 Pp/M gegen die Gruppe) | gegen BTC nicht belegt; im heutigen Markt allein KEIN BEFUND (zu wenige Monate) → Voranalyse muss die Prüfbarkeit klären (alle Jahre gemeinsam, E3 als Auskunft; Season-Ampel als Lenkung) |
 | L-2 | **REGEL0 nur auf ausgewählte Coins** | schadet nicht (D ≥ 0), bringt aber in 24 h keinen messbaren Vorteil | für den Hebel keine Verbesserung belegt; ein längeres Halten gefilterter Coins wäre eine neue Regel (7/30 T sind schon gesehen; für Hebel kostet Halten 0,3–0,4 %/Tag, E-123) |
 | L-3 | 2023 als Bestätigung vergrößern | — | nicht möglich: Die REGEL0 feuert vor 2023 nicht (E-136) |
+
+## 9. A1 mit zeitrichtigem Marktwert-Rang — Bau und Messplan VORAB festgelegt 26.10.2026 (Nutzer: *„2 ja - prüfen gegenprüfen und doku“*, E-153)
+
+**Anlass:** E-151. `mk_messung.umlauf` nimmt vor dem 21.09.2025 die **heutige** Umlaufmenge. Dadurch stehen Tokens mit großen Freigaben historisch zu hoch (ENA 2024-06 Rang 9 statt 61).
+
+### 9.1 Bau in `mk_messung` (Messcode, kein Betrieb)
+
+- **Schalter `RANG_QUELLE`**, Vorgabe **`"cmc"`** (zeitrichtig). `"eigen"` ist der bisherige Rang; er bleibt **nur zum Nachrechnen** alter Befunde (R-R11).
+- **Zeitrichtiger Marktwert zu t:**
+  - Steht der Coin in der CMC-Woche w ≤ t: MW = CMC-Marktwert(w) × Binance-Schluss(t) ÷ Binance-Schluss(w). Das Skalieren über den Binance-Kurs macht die Rechnung unabhängig von Bündel-Einheiten (1000SATS).
+  - Zuordnung über das Symbol; bei Bündeln über den Grundnamen (`hole_umlaufmenge_cg.vervielfacher`).
+  - Bei doppeltem Symbol in der Woche gilt der Eintrag, dessen Preis dem Binance-Kurs (in Einzeltoken) am nächsten liegt.
+  - Steht der Coin **nicht** in den CMC Top 200 der Woche: eigener Marktwert, aber höchstens knapp unter dem Marktwert von CMC-Rang 200 derselben Woche. Wer nicht in den Top 200 steht, kann nicht über ihnen stehen.
+  - Vor der ersten CMC-Woche (2016-07) gilt der eigene Wert. Das betrifft die Messungen ab 2019 nicht.
+- **Klassen wie bisher** (H = Rang ≤ 30 an t, t−1M, t−2M und ≥ 730 T; M ≤ 100; S Rest). Es ändert sich nur der Marktwert.
+- Betrieb (`agent/spot_abbau`) unberührt: Er rechnet mit der CoinGecko-Historie ab 21.09.2025, die zeitrichtig ist.
+
+### 9.2 Prüfung des Baus (vor der Messung)
+
+| # | Prüfung | Soll |
+|---|---|---|
+| B1 | `RANG_QUELLE="eigen"` reproduziert A1 (`p86_a1_zerlegung.txt`) **bitgleich** | alle Zeilen gleich |
+| B2 | zeitrichtiger Rang gegen den CMC-Altcoin-Rang an den Monatsstichtagen 2019–26 (gemeinsame Coins) | Rangkorrelation im Mittel ≥ 0,95 |
+| B3 | Beispiele aus E-151: ENA/TIA 2024-06, WLD 2025-06 | nicht mehr in den Top 30 |
+| B4 | **Wirkung auf die Grundgesamtheit** (CLAUDE.md: *wer sie ändert, misst die Wirkung*) | Anteil der Anker mit anderer Klasse H/M/S, je Jahr, nur ausgewiesen |
+
+### 9.3 Messung A1 neu (`p94_a1_zeitrichtig.py`)
+
+- **Derselbe Code wie A1** (`p86`), nur mit `RANG_QUELLE="cmc"`: Horizonte 1 M und 12 M, Gruppen Top 30/50/100, H/M/S, Gesamt, Epochen E2/E3/alle, Band zirkulär mit Norm-Block, < 20 Blöcke KEIN BEFUND, Season-Ampel und Vola als Auskunft.
+- **Urteil wie A1:** **belastbar** = Band (1 M, alle) ohne 0. Sonst **NICHT TRENNBAR** bzw. KEIN BEFUND.
+- **Gegenprobe:** `p86_gegenprobe` mit `RANG_QUELLE="cmc"` (zweiter Rechenweg A1), gleiche Aussagen.
+- **Folge:**
+  - Die neuen Zahlen **ersetzen** E-143. Nach R-R11 ist das zulässig: Reproduktion B1 plus ein einziger getauschter Bestandteil.
+  - E-142, E-144 und E-145 bekommen einen Vorbehaltsvermerk. Neu gerechnet werden sie erst nach Abstimmung.
