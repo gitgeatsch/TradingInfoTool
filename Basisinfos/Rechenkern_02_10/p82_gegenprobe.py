@@ -26,13 +26,14 @@ try:
 except Exception:  # noqa: BLE001
     pass
 import p79_f1_fg_gier as P79  # noqa: E402
+sys.path.insert(0, WURZEL)
+import wegwerf  # noqa: E402  (26.10.: auf oberster Ebene - tempfile legt so unter D: an, Paket Wegwerf)
 
 GR = os.path.join("data", "_vergleich", "kern48jbz_gruppe_bestand.csv")
 
 
 def g1():
     import tempfile
-    import wegwerf
     T = tempfile.mkdtemp(prefix="p82g_")
     out = {}
     for name, ordner in (("Referenz", "data"), ("lang", os.path.join("data", "_hist"))):

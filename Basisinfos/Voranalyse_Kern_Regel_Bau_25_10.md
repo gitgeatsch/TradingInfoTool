@@ -108,3 +108,27 @@ Nutzer 26.10. (E-148): *„(b) nur K-4“*.
 - Ein Ausschluss **nur** in den Spot-Zellen der Rollen-Kette (`assetklassen`/`rollen_lauf`), weder über `dca_erlaubt` noch über die Hebelschalter.
 - Positionszeilen des Kerns (Bestand, G/V) bleiben als Information.
 - Suite-Prüfung: Kern erzeugt keine Spot-Zelle, Hebelzelle und REGEL0 unverändert.
+
+## 8. K-4 GEBAUT (26.10.2026; Nutzer: *„3a - prüfen gegenprüfen und doku“*, E-152)
+
+| Teil | Ort | Wirkung |
+|---|---|---|
+| **Eine Liste** | `agent/kernwerte.py` (`KERN`, `ist_kern`, `GRUND_SPOT`) | `spot_mitnahme.KERN` verweist darauf, B1/B3/B4 lesen also dieselbe Liste wie die Rollen-Kette |
+| **Keine Spot-Zelle** | `assetklassen.zellen()` | `spot × einstieg` und `spot × akkumulation` für BTC/ETH/SOL werden zu **gesperrten Zeilen mit Grund** (gezählt in der Spur, nicht still) |
+| **Kein Rückfall** | `rollen_lauf.paare_aus_zellen()` (neu, aus der Schleife herausgelöst) | liefert `zellen()` für einen Kernwert nichts (Hebelschalter aus, Abfrage ausgefallen), gibt es **keinen** Rückfall auf `strategie_fuer` (= alte Akkumulation); eine gesperrte Zeile kommt in die Spur |
+| **Hebel bleibt** | ebenda | der Kern-Einstieg ist **immer taktisch**: er läuft nur weiter, wenn die Rechnung einen Hebel ergibt, und fällt bei ausgeschaltetem altem Hebelweg wie bisher heraus. Damit wird aus dem Kern auch ohne Akkumulationszelle nie ein Spot-Einstieg mit Stop |
+| **Unberührt** | `asset_hebel_settings`, `regel0_*`, Watchlist-Einträge, Bestand/G/V-Anzeige, Positionsführung | REGEL0 und Hebel sind für den Kern weiter zugelassen |
+
+**Prüfung:** Suite-Paket **`Kernwerte`**, 10/10. Geprüft wird an den Helfern, nicht per Textsuche. Eine **Mutationsprobe** schaltet die Kern-Regel aus; dann schlagen alle vier Kern-Prüfungen an, die zwei Nicht-Kern-Prüfungen bleiben grün.
+- Sie hat eine **zu schwache Prüfung gefunden**: *„BTC taktisch“* blieb ohne die Regel grün, weil BTC dann wieder eine Akkumulationszelle bekam.
+- Ersetzt durch *„Kern-Einstieg ohne Akkumulationszelle ist taktisch“*.
+
+**Heute ändert das am Betrieb nichts Sichtbares.** Die Kette ist angehalten. K-4 wirkt, wenn sie wieder läuft, auch ungewollt, etwa wenn `regel0_betrieb.yaml` unlesbar ist.
+
+**NB:** K-K4-1 im nächsten Bündel.
+
+**Ganze Suite (26.10.2026):**
+- **3.395 Prüfungen**: zuerst 19 rot, davon **6 durch K-4**: 12c (2), Haltelage (1), Zellen (3). Diese Leser prüften noch den alten Sollzustand A2 (28.08.: *Kern bekommt Aufbau- und Einstiegszelle*). Sie sind auf K-4 nachgezogen, die alten Texte als *abgelöst* vermerkt, Zellen 19304 jetzt am Helfer statt per Textsuche.
+- Die übrigen 13 waren **schon vorher rot**. Nachgewiesen ist das mit einem Lauf derselben Pakete ohne die K-4-Änderungen.
+- Davon behoben: Wegwerf (`p82_gegenprobe.py`, eigenes Skript vom 24.10., `wegwerf` jetzt auf oberster Ebene) und Kontrollen (K-SP-6 mit Begründung neu befristet, das NB-Bündel steht aus).
+- **11 bleiben, nicht durch K-4:** GuiKette P15b, Hebelbuch p11b, Makro O54 M2 (NFCI-Revisionen, Aufgabe angelegt), Nennersperre, Neuaufnahme (3), Regel0Betrieb H15, Verfügbarkeit, Verwässerung P22c, WalletFührung p11c. Mehrere davon brauchen eine Produktionssicherung im Austauschordner.

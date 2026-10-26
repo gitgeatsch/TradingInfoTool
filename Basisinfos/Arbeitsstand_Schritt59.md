@@ -558,6 +558,13 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - **Kern-Regel:** Bau-Voranalyse liegt vor; offen K-1 bis K-4, Bauumfang B-1 bis B-3.
 - ➤ Zur Abstimmung: L1-c · Messplan L2-a · Kern-Regel K-1 bis K-4 und B-1.
 
+### Stand 26.10.2026 (E-148 bis E-152)
+
+- **Kern-Regel:** nur K-4 (Sparplan läuft beim Nutzer). K-4 ist gebaut, Paket `Kernwerte`, NB K-K4-1.
+- **L2-a:** nicht entscheidbar, weil es zu wenige Regimewechsel gibt; Ergebnis ungesehen.
+- **L1-c:** Vorgriff im Marktwert-Rang der Messungen (heutige Umlaufmenge); A1-Top-30 mit CMC-Rang nicht trennbar. Berichtigung E-149 (eigener Zeitversatz).
+- ➤ Zur Abstimmung: CMC-Rang in den Messungen und A1 neu · L2-a festhalten.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

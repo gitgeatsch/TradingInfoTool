@@ -631,3 +631,12 @@ fällt ohne Grund). Es heißt, dass ihr Beitrag **unbelegt** ist.
 ➔ **Schritt 44** ordnet (Trichter / Wächter / Entscheidungshilfe trennen),
 **Schritt 59** misst (Schritt 42 ist darin aufgegangen). In dieser Reihenfolge — sonst misst 59 auf einer
 Buchhaltung, die Bewertung und Betriebszustand vermengt.
+
+### 13. Kernwerte in der Rollen-Kette (K-4, 26.10.2026, E-152)
+
+| Stelle | Kernwerte BTC/ETH/SOL |
+|---|---|
+| `assetklassen.zellen()` | Spot-Zellen → **gesperrte Zeile** mit Grund (`kernwerte.GRUND_SPOT`); Hebelzelle bleibt |
+| `rollen_lauf.paare_aus_zellen()` | kein Rückfall auf `strategie_fuer`; Einstieg immer **taktisch** (fällt ohne Hebel bzw. bei altem Hebelweg aus heraus) |
+| REGEL0 · Hebel-Mail · H15 | unberührt (`asset_hebel_settings`) |
+| B1/B3/B4 · C1 | wie bisher ohne Kern (`spot_mitnahme.KERN` = `kernwerte.KERN`) |

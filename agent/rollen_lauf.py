@@ -51,6 +51,7 @@ from agent import assetklassen as _AKL
 # ⚠️ EIGENER NAME, keine Abkuerzung, die woanders belegt ist - der
 # Namensschatten aus T4c hat dieses Projekt schon achtmal gekostet.
 from agent.handelsauftrag import hebel_erlaubt_fuer as _HA_HEBEL_OK
+from agent import kernwerte as _KW
 
 logger = logging.getLogger(__name__)
 
@@ -270,6 +271,47 @@ def _ankertag(reihen: dict, mindest_deckung: float = MINDEST_DECKUNG,
     # NICHTS ERREICHT DIE SCHRANKE - der beste Tag wird trotzdem GENANNT, damit
     # die Fehlermeldung eine Zahl hat statt nur ein "zu wenig".
     return None, bester[1], gesamt
+
+
+_REIHENFOLGE = ("einstieg", "swing", "akkumulation")
+
+
+def paare_aus_zellen(symbole, zellen_je_symbol: dict) -> tuple[list, list]:
+    """Die (symbol, strategie, taktisch)-Paare des Laufs aus den Zellen - und die Kernwerte ohne Zelle.
+
+    ⚠️ DIE REIHENFOLGE IST FESTGELEGT, NICHT ZUFAELLIG: `einstieg` zuerst. Das Modellurteil wird EINMAL je Asset
+    geholt (Schritt 4) und von der zweiten Zelle wiederverwendet; geholt wird es mit der Einstiegsfrage, weil die
+    die Obermenge ist (sie fragt Einstieg und Stop, die Akkumulation braucht beides nicht).
+
+    ⚠️ DIE TAKTISCHE ZELLE - und was sie von der gewoehnlichen unterscheidet (Nutzerentscheidung 01.09.).
+    Ein Asset mit Akkumulation kauft auf der Spot-Seite gestaffelt; ein zusaetzlicher Spot-Einstieg mit Stop waere
+    dort eine dritte Frage, die es bisher nicht gab. Der Nutzer will sie nur, WENN daraus tatsaechlich ein
+    Hebelgeschaeft wird - woertlich: *„nur wenn die Rechnung tatsaechlich einen Hebel ergibt waere mir natuerlich
+    lieber."* Ob es einer wird, weiss erst die Rechnung (`hebel = verlustanteil / stop_rel`). Die Zelle laeuft
+    deshalb an und faellt in der Geometrie-Stufe wieder heraus, wenn kein Hebel anfaellt - gezaehlt und
+    begruendet, nicht still.
+
+    ⚠️ K-4 (26.10.2026, E-148/E-150, `agent/kernwerte.py`): FUER DIE KERNWERTE
+      - ist der Einstieg IMMER taktisch - auch ohne Akkumulationszelle (die gibt es fuer sie nicht mehr). Ohne
+        diese Regel waere aus BTC mit Hebelschalter eine gewoehnliche Spot-Einstiegszelle MIT Stop geworden;
+      - gibt es KEINEN Rueckfall auf `strategie_fuer`, wenn `zellen()` nichts liefert (Hebelschalter aus,
+        Schalterabfrage ausgefallen) - der Rueckfall waere die alte Akkumulation. Sie kommen in die zweite Liste
+        und bekommen eine gesperrte Zeile in der Spur.
+    """
+    paare, kern_ohne = [], []
+    for s in (symbole or ()):
+        st = zellen_je_symbol.get(s)
+        if not st:
+            if _KW.ist_kern(s):
+                kern_ohne.append(s)
+                continue
+            paare.append((s, None, False))   # Rueckfall: `strategie_fuer`
+            continue
+        st = sorted(set(st), key=lambda x: _REIHENFOLGE.index(x) if x in _REIHENFOLGE else 99)
+        for x in st:
+            taktisch = (x == "einstieg" and ("akkumulation" in st or _KW.ist_kern(s)))
+            paare.append((s, x, taktisch))
+    return paare, kern_ohne
 
 
 def fuehre_lauf(*, conn, reihen: dict, symbole: list,
@@ -748,37 +790,15 @@ def fuehre_lauf(*, conn, reihen: dict, symbole: list,
                            strategie=_g.get("strategie"),
                            grund=_g.get("warum") or "gesperrt")
 
-    # ⚠️ DIE REIHENFOLGE IST FESTGELEGT, NICHT ZUFAELLIG: `einstieg` zuerst.
-    # Das Modellurteil wird EINMAL je Asset geholt (Schritt 4) und von der
-    # zweiten Zelle wiederverwendet; geholt wird es mit der Einstiegsfrage,
-    # weil die die Obermenge ist (sie fragt Einstieg und Stop, die
-    # Akkumulation braucht beides nicht).
-    _REIHENFOLGE = ("einstieg", "swing", "akkumulation")
-    _paare = []
-    for _s in (symbole or ()):
-        _st = _zellen_je_symbol.get(_s)
-        if not _st:
-            _paare.append((_s, None, False))   # Rueckfall: `strategie_fuer`
-            continue
-        _st = sorted(set(_st), key=lambda x: _REIHENFOLGE.index(x)
-                     if x in _REIHENFOLGE else 99)
-        for _x in _st:
-            # ⚠️ DIE TAKTISCHE ZELLE - und was sie von der gewoehnlichen
-            # unterscheidet (Nutzerentscheidung 01.09.).
-            #
-            # Ein Asset mit Akkumulation kauft auf der Spot-Seite gestaffelt;
-            # ein zusaetzlicher Spot-Einstieg mit Stop waere dort eine dritte
-            # Frage, die es bisher nicht gab. Der Nutzer will sie nur, WENN
-            # daraus tatsaechlich ein Hebelgeschaeft wird - woertlich: *„nur
-            # wenn die Rechnung tatsaechlich einen Hebel ergibt waere mir
-            # natuerlich lieber."*
-            #
-            # Ob es einer wird, weiss erst die Rechnung (`hebel =
-            # verlustanteil / stop_rel`). Die Zelle laeuft deshalb an und
-            # faellt in der Geometrie-Stufe wieder heraus, wenn kein Hebel
-            # anfaellt - gezaehlt und begruendet, nicht still.
-            _taktisch = (_x == "einstieg" and "akkumulation" in _st)
-            _paare.append((_s, _x, _taktisch))
+    # Reihenfolge, taktische Zelle und Kernwerte (K-4): siehe `paare_aus_zellen` - dort pruefbar (Paket Kernwerte).
+    _paare, _kern_ohne = paare_aus_zellen(symbole, _zellen_je_symbol)
+    _schon = {str(_g.get("symbol") or "").upper() for _g in _gesperrt}
+    for _k in _kern_ohne:
+        # K-4: ohne Zelle KEIN Rueckfall auf `strategie_fuer` - die Zeile in der Spur nur, wenn `zellen()` sie
+        # nicht schon gesperrt gemeldet hat (dort fehlte sie z. B., weil die Schalterabfrage ausfiel).
+        if str(_k).upper() not in _schon:
+            durchlauf.gesperrt(_k, gruppe=assetklasse, instrument=instrument,
+                               strategie=None, grund=_KW.GRUND_SPOT)
     ergebnis["zellen"] = {"paare": len(_paare), "symbole": len(symbole or ()),
                           "je_symbol": {k: sorted(v)
                                         for k, v in _zellen_je_symbol.items()}}

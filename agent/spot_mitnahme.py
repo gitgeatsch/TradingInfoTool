@@ -23,7 +23,7 @@ import os
 import sqlite3
 from datetime import date, datetime, timedelta, timezone
 
-KERN = ("BTC", "ETH", "SOL")
+from agent.kernwerte import KERN  # noqa: E402  K-4 (26.10.2026): EINE Liste fuer alle Spot-Pfade
 FAKTOR = 3.0
 FENSTER_T = 365
 MAIL_HOECHSTENS_T = 3          # ausgeloest vor mehr Tagen (Ausfall) -> nur Protokoll "verpasst", keine Mail (wie REGEL0 N-1)

@@ -5364,3 +5364,11 @@ eine Messung einen Befund um, die ihn zuerst reproduziert (zuletzt 2.672,
 | 5 | Vor dem Urteil *trägt nicht* steht die **Auflösung** (Pflanzung). Reicht sie nicht für die gemessene Größe, heißt das Urteil *nicht entscheidbar* |
 
 ➤ Gilt für jede Messung mit langsamen Umfeldgrößen (Makro, Dominanz, Season-Ampel). Verwandt: Messstandard (Nullpunkt aus Ziehungen), R-R11.
+
+## Nachtrag 26.10.2026 — drei Prüfregeln aus L1-c und L2-a (E-149 bis E-151)
+
+| # | Regel | Woraus |
+|---|---|---|
+| 1 | **Reproduziert wird auf der GRÖSSE des registrierten Befunds**, nicht auf einer neuen. Wer als Schritt 0 eine andere Kennzahl ansetzt, hat nichts reproduziert. Er hat etwas Neues gemessen und hält den Unterschied fälschlich für einen Widerspruch | L2-a Schritt 0 (E-149/E-151): „an gegen alle“ statt E-126s S1 |
+| 2 | **Der Ertrag beginnt NACH dem Zeitpunkt der Information.** Bei Quellen mit gröberem Takt (Wochen gegen Tage) ist der Startpunkt die erste Beobachtung **nach** dem Stichtag, nie die letzte davor | p92b/V3: Der CMC-Ertrag begann bis zu 6 T vor dem Stichtag und drückte das Ergebnis künstlich (Berichtigung E-149) |
+| 3 | **Ein historischer Rang braucht die historische Größe.** Die heutige Umlaufmenge auf die Vergangenheit angewandt ist ein Vorgriff. Tokens mit großen Freigaben stehen dann zu hoch (ENA 2024-06: Rang 9 statt 61). Vor jeder Messung mit Marktwert-Klassen den Rang gegen eine zeitrichtige Quelle (CMC-Wochen) prüfen | L1-c-Ursache (E-151): A1-Top-30 ohne den Vorgriff nicht trennbar |

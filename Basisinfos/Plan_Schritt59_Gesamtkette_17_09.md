@@ -2716,3 +2716,8 @@ Schritt7 §23.24.
 - Der Asset-Filter lässt sich auf CMC auch bei gleicher Historie nicht direkt bestätigen; Binance- und CMC-Wert sind zwei Fassungen. Vorschlag: CMC als eigene Messbasis (L1-c).
 - Ein Regime-Hebel auf dem Kern ist auf der langen Historie nur mit dem 200-T-Schnitt messbar, und der ist mit E-126 schon einmal gescheitert. Die Top-Werte kommen als Stufe 2.
 - Die Kern-Regel ist aus dem bestehenden Schema baubar; offen sind Monatsrate, Tag, Altbestand und die Trennung von der alten Spot-Kette.
+
+**Nachtrag 26.10.2026 (77) — L2-a, L1-c, K-4** (E-148 bis E-152):
+- Der Hebel nur in guten Marktphasen ist mit unseren Daten **nicht entscheidbar**: In 12 Jahren gibt es zu wenige Regimewechsel (Selbsttest nicht bestanden, Ergebnis ungesehen). Der Hebel bleibt bei REGEL0.
+- Der belastbare Top-30-Vorsprung der Watchlist-Auswahl (E-143) trug einen **Datenvorgriff** in sich: Die heutige Umlaufmenge stand für die Vergangenheit. Mit dem zeitrichtigen CMC-Rang ist er nicht trennbar.
+- Die Kernwerte bekommen in der alten Spot-Kette keine Kauffrage mehr; der Nutzer führt dafür einen Sparplan. REGEL0 und Hebel bleiben.

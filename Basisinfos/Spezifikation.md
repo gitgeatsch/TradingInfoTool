@@ -1469,6 +1469,7 @@ mit Zeit zum Auflösen als Datengrundlage.
 
 **Nachtrag 09.10.2026 — Spot-Bauumfang abgestimmt (Voranalyse_Spot §39, E-89 bis E-91) und Bestandsabgleich (E-93):**
 - **Grundsatz der Mails (E-91):** Eine Mail enthält **nur Handlungen** (welcher Coin, was tun, bis wann, gemessene Begründung mit Belegstufe). Was keine Handlung ableitet, steht nur im App-Tab. Eine Monatsmail ist nur als Option vorgemerkt (Plan O35), wenn sie konkrete Bestandsentwicklung zeigt.
+- **Kernwerte (K-4, 26.10.2026):** eine Liste `agent/kernwerte.py`. Keine Spot-Kauffrage der alten Rollen-Kette (Aufbau per Sparplan des Nutzers); REGEL0 und Hebel bleiben zugelassen, der Kern-Einstieg ist immer taktisch.
 - **Rollen:** Kern BTC/ETH/SOL fest, alle anderen Krypto-Bestände automatisch L; K ruht, bis ein Einstieg gemessen trägt (§35–§40: bisher keiner).
 - **Spot-Handlungen Stufe 1:**
   - Mitnahme ×3 je L-Position (*„Hälfte verkaufen“*, trägt auf dem ganzen Bestand);

@@ -2518,8 +2518,9 @@ def paket_12c() -> None:
                 "dca_erlaubt INTEGER)")
     _zc.executemany("INSERT INTO asset_hebel_settings VALUES (?,?)",
                     [("BTC", 1), ("LINK", 1), ("XLM", 0)])
+    # K-4 (26.10.2026): die Kernwerte haben keine Spot-Zelle mehr - der Akkumulations-Schalter wird an LINK geprueft
     _zc.executemany("INSERT INTO asset_dca_settings VALUES (?,?)",
-                    [("BTC", 1)])
+                    [("BTC", 1), ("LINK", 1)])
     _z = _AKz.zellen(conn=_zc)
     _je = {}
     for x in _z:
@@ -2545,15 +2546,18 @@ def paket_12c() -> None:
            and ("hebel", "einstieg") not in _je.get("XLM", set()),
            "BTC und LINK stehen auf 1, XLM auf 0 - wer den Schalter nicht "
            "fragt, baut einen, der etwas verspricht, was nicht passiert")
+    import agent.kernwerte as _KWz
     pruefe(P, "und der AKKUMULATIONS-Schalter ebenso",
-           ("spot", "akkumulation") in _je.get("BTC", set())
-           and ("spot", "akkumulation") not in _je.get("LINK", set()),
-           "nur BTC hat `dca_erlaubt=1` in dieser Probe")
-    pruefe(P, "⚠️ JEDES Asset hat mindestens die Grundzelle",
+           ("spot", "akkumulation") in _je.get("LINK", set())
+           and ("spot", "akkumulation") not in _je.get("XLM", set()),
+           "LINK hat `dca_erlaubt=1` in dieser Probe, XLM nicht (seit K-4 nicht mehr an BTC geprueft: der Kern hat keine "
+           "Spot-Zelle)")
+    pruefe(P, "⚠️ JEDES Asset hat mindestens die Grundzelle - ausser den Kernwerten (K-4: kein Spot, Sparplan)",
            all(("spot", "einstieg") in p or
-               ("absicherung", "einstieg") in p for p in _je.values()),
+               ("absicherung", "einstieg") in p for s_, p in _je.items() if not _KWz.ist_kern(s_))
+           and not any(i == "spot" for s_, p in _je.items() if _KWz.ist_kern(s_) for i, _st in p),
            "ein Asset ohne Zelle koennte NIE ein Signal bekommen - und zwar "
-           "still")
+           "still; fuer BTC/ETH/SOL ist das seit K-4 (E-152) gewollt und steht als gesperrte Zeile in der Spur")
     # ⚠️ OHNE VERBINDUNG die vorsichtige Richtung
     _z0 = _AKz.zellen(conn=None)
     pruefe(P, "⚠️ ohne Datenbank entsteht KEINE Hebelzelle",
@@ -19125,12 +19129,11 @@ def paket_zellen() -> None:
     for _x in _z:
         if _x["instrument"] == "spot":
             _je.setdefault(_x["symbol"], []).append(_x["strategie"])
-    pruefe(P, "Kern-Assets bekommen ZWEI Spot-Zellen, die uebrigen eine",
-           sorted(_je.get("BTC") or []) == ["akkumulation", "einstieg"]
+    pruefe(P, "Kern-Assets bekommen KEINE Spot-Zelle (K-4), die uebrigen eine",
+           not any(_je.get(k) for k in ("BTC", "ETH", "SOL"))
            and (_je.get("LINK") or []) == ["einstieg"],
-           "BTC/ETH/SOL stehen in `_DCA_ERLAUBT_DEFAULT_SYMBOLS` und duerfen "
-           "beides - genau der Fall, den A2 (28.08.) gefordert hat: 'V1 "
-           "braucht ZWEI Bewertungen je Asset, mit VERSCHIEDENEN Fragen'. "
+           "ABGELOEST 26.10.2026 (K-4, E-152): bis dahin bekamen BTC/ETH/SOL zwei Spot-Zellen (A2 vom 28.08.). Den Spot-Aufbau "
+           "fuehrt der Nutzer per Sparplan; die alte Kette fragt ihn nicht mehr. Hebel/REGEL0 bleiben (Paket Kernwerte). "
            "Gemessen: %s" % _je)
     # ⚠️ UEBER DEN SYNTAXBAUM, NICHT ALS TEXTSUCHE. Meine erste Fassung
     # pruefte `"ERLAUBTE_PAARE" not in quelle` - und fiel um, weil der Name
@@ -19284,13 +19287,12 @@ def paket_zellen() -> None:
                 _aus.append(_zz["strategie"])
         return set(_aus)
 
-    pruefe(P, "ein Kern-Asset hat ZWEI Fragen, ein gewoehnliches EINE",
-           _strategien("BTC", _c) == {"einstieg", "akkumulation"}
+    pruefe(P, "ein Kern-Asset hat KEINE Aufbau-Frage mehr (K-4), hoechstens die taktische Einstiegsfrage; ein gewoehnliches EINE",
+           "akkumulation" not in _strategien("BTC", _c) and _strategien("BTC", _c) <= {"einstieg"}
            and _strategien("LINK", _c) == {"einstieg"},
-           "BTC: langfristig aufbauen UND kurzfristig taktisch - A2 im Plan "
-           "(28.08.): 'zwei Positionen, zwei Horizonte, zwei Fragen'. "
-           "LINK: eine Frage, das Instrument faellt aus der Rechnung an. "
-           "Gemessen BTC %s / LINK %s"
+           "ABGELOEST 26.10.2026 (K-4, E-152): A2 (28.08.) 'zwei Positionen, zwei Horizonte, zwei Fragen' - die langfristige "
+           "Position fuehrt der Nutzer jetzt per Sparplan. Die taktische Frage (nur mit Hebelschalter, nur mit echtem Hebel) "
+           "bleibt. Gemessen BTC %s / LINK %s"
            % (sorted(_strategien("BTC", _c)), sorted(_strategien("LINK", _c))))
     pruefe(P, "der Lauf sammelt die STRATEGIE, nicht das Instrument",
            'if _z["strategie"] not in _vorhandene' in _quelle
@@ -19301,11 +19303,14 @@ def paket_zellen() -> None:
            "taktische Frage weg")
 
     # ---- 7: die taktische Zelle faellt OHNE Hebel weg -------------------
+    import agent.rollen_lauf as _RLz
     pruefe(P, "die taktische Zelle wird als solche erkannt",
-           '_taktisch = (_x == "einstieg" and "akkumulation" in _st)' in _quelle,
-           "taktisch ist genau die zusaetzliche Einstiegszelle eines Assets, "
-           "das ohnehin akkumuliert wird - bei allen anderen ist der "
-           "Einstieg die gewoehnliche und einzige Kauffrage")
+           _RLz.paare_aus_zellen(["AVAX"], {"AVAX": ["akkumulation", "einstieg"]})[0][0] == ("AVAX", "einstieg", True)
+           and _RLz.paare_aus_zellen(["LINK"], {"LINK": ["einstieg"]})[0] == [("LINK", "einstieg", False)]
+           and _RLz.paare_aus_zellen(["BTC"], {"BTC": ["einstieg"]})[0] == [("BTC", "einstieg", True)],
+           "taktisch ist die zusaetzliche Einstiegszelle eines Assets, das ohnehin akkumuliert wird - und seit K-4 (E-152) "
+           "JEDE Einstiegszelle eines Kernwerts; bei allen anderen ist der Einstieg die gewoehnliche und einzige Kauffrage. "
+           "Seit 26.10. am Helfer `paare_aus_zellen` geprueft statt per Textsuche")
     _hat_abbruch = False
     for _k in _ast.walk(_baum):
         if not isinstance(_k, _ast.If):
@@ -22401,6 +22406,78 @@ def paket_makro() -> None:
            " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
+def paket_kernwerte() -> None:
+    """K-4 (26.10.2026, E-148/E-150): BTC/ETH/SOL bekommen in der alten Spot-Kette KEINE Kauffrage mehr (Sparplan des Nutzers);
+    REGEL0 und Hebel bleiben fuer sie zugelassen. Geprueft an den HELFERN (`assetklassen.zellen`, `rollen_lauf.paare_aus_zellen`),
+    nicht per Textsuche - und mit Mutationsprobe: ohne die Kern-Regel muessen die Pruefungen anschlagen."""
+    P = "Kernwerte"
+    import sqlite3 as _sq
+    from types import SimpleNamespace as _NS
+
+    import agent.assetklassen as _AK
+    import agent.kernwerte as _KW
+    import agent.rollen_lauf as _RL
+    import agent.spot_mitnahme as _SM
+
+    pruefe(P, "EINE Liste: spot_mitnahme.KERN ist kernwerte.KERN (B1/B3/B4 und Rollen-Kette lesen dieselbe)",
+           _SM.KERN is _KW.KERN and _KW.KERN == ("BTC", "ETH", "SOL"))
+    wl = [_NS(symbol=s, assetklasse="krypto") for s in ("BTC", "ETH", "LINK", "AVAX")]
+    c = _sq.connect(":memory:")                                  # Wegwerf im Speicher - keine Datei, keine Produktion
+    c.execute("CREATE TABLE asset_hebel_settings (symbol TEXT, hebel_pruefung_erlaubt INTEGER)")
+    c.executemany("INSERT INTO asset_hebel_settings VALUES (?, 1)", [("BTC",), ("LINK",)])
+    c.execute("CREATE TABLE asset_dca_settings (symbol TEXT, dca_erlaubt INTEGER)")
+    c.execute("INSERT INTO asset_dca_settings VALUES ('AVAX', 1)")
+
+    def lauf():
+        z = _AK.zellen(wl, c, mit_gesperrten=True)
+        zz = [x for x in z if not x.get("gesperrt")]
+        je = {}
+        for x in zz:
+            je.setdefault(x["symbol"], [])
+            if x["strategie"] not in je[x["symbol"]]:
+                je[x["symbol"]].append(x["strategie"])
+        paare, ohne = _RL.paare_aus_zellen(["AVAX", "BTC", "ETH", "LINK"], je)
+        return z, zz, paare, ohne
+
+    def befunde(z, zz, paare, ohne):
+        return {
+            "keine Spot-Zelle fuer BTC/ETH (auch nicht spot x akkumulation, obwohl dca_erlaubt-Vorgabe an)":
+                not any(x["symbol"] in ("BTC", "ETH") and x["instrument"] == "spot" for x in zz),
+            "gesperrte Zeilen mit Grund K-4 fuer BTC/ETH (gezaehlt, nicht still)":
+                {x["symbol"] for x in z if x.get("gesperrt") and x.get("warum") == _KW.GRUND_SPOT} == {"BTC", "ETH"},
+            "ETH ohne Hebelschalter: KEIN Rueckfall auf strategie_fuer, sondern in der Kern-Liste":
+                ohne == ["ETH"] and not any(p[0] == "ETH" for p in paare),
+            "Kern-Einstieg ohne Akkumulationszelle ist TAKTISCH (sonst Spot-Einstieg MIT Stop - die dca-Falle)":
+                _RL.paare_aus_zellen(["BTC"], {"BTC": ["einstieg"]})[0] == [("BTC", "einstieg", True)],
+            "Nicht-Kern: Hebelzelle BTC bleibt (Hebel fuer den Kern zugelassen)":
+                any(x["symbol"] == "BTC" and x["instrument"] == "hebel" for x in zz),
+            "Nicht-Kern unveraendert: LINK spot x einstieg nicht taktisch, AVAX mit Akkumulation taktisch, Reihenfolge einstieg zuerst":
+                ("LINK", "einstieg", False) in paare
+                and [p for p in paare if p[0] == "AVAX"] == [("AVAX", "einstieg", True), ("AVAX", "akkumulation", False)],
+        }
+
+    echt = befunde(*lauf())
+    for name, ok in echt.items():
+        pruefe(P, name, ok)
+    # MUTATIONSPROBE: ohne die Kern-Regel muessen die Kern-Pruefungen anschlagen (sonst pruefen sie nichts)
+    _alt = _KW.ist_kern
+    try:
+        _KW.ist_kern = lambda s: False
+        mut = befunde(*lauf())
+    finally:
+        _KW.ist_kern = _alt
+    kern_namen = [n for n in echt if not n.startswith("Nicht-Kern")]
+    pruefe(P, "Mutationsprobe: ohne Kern-Regel schlagen alle %d Kern-Pruefungen an, die Nicht-Kern-Pruefungen bleiben gruen" % len(kern_namen),
+           all(not mut[n] for n in kern_namen) and all(mut[n] for n in echt if n.startswith("Nicht-Kern")),
+           "mutiert: %s" % {n[:30]: v for n, v in mut.items()})
+    c.close()
+    # REGEL0 haengt NICHT an der Kern-Liste: der Hebelschalter wird weiter aus asset_hebel_settings gelesen
+    import agent.regel0_stundenlauf as _R0S
+    pruefe(P, "REGEL0 unberuehrt: _hebel_schalter liest asset_hebel_settings, kein Bezug auf kernwerte",
+           "asset_hebel_settings" in _quelltext("agent/regel0_stundenlauf.py") and "kernwerte" not in _quelltext("agent/regel0_stundenlauf.py")
+           and "kernwerte" not in _quelltext("agent/regel0_mail.py") and callable(getattr(_R0S, "_hebel_schalter", None)))
+
+
 def paket_gesamtmarkt() -> None:
     """L-A (24.10.2026, E-137): LAGEBILD GESAMTMARKT L1-L6 ALS FAKT - Statusseite (Makro-Karte), REGEL0, B1/B3/B4 und C1, GUI, Diagnose.
 
@@ -24432,7 +24509,13 @@ def paket_haltelage() -> None:
             self.assetklasse = "krypto"
             self.asset_type = "krypto"
 
-    _zellen = _AK.zellen([_W("BTC"), _W("ETH"), _W("LINK")], None)
+    # K-4 (26.10.2026): die Kernwerte haben keine Spot-Zelle mehr - die Akkumulation wird an LINK mit Schalter geprueft
+    import sqlite3 as _sqh
+    _ch = _sqh.connect(":memory:")
+    _ch.execute("CREATE TABLE asset_dca_settings (symbol TEXT, dca_erlaubt INTEGER)")
+    _ch.execute("INSERT INTO asset_dca_settings VALUES ('LINK', 1)")
+    _zellen = _AK.zellen([_W("BTC"), _W("ETH"), _W("LINK")], _ch)
+    _ch.close()
     _strat = sorted({z["strategie"] for z in _zellen})
     pruefe(P, "⚠️⚠️ `halten` erzeugt KEINE Zelle - es ist keine Handlung",
            "halten" not in _strat and _zellen,
@@ -33305,7 +33388,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

@@ -2060,3 +2060,11 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **Berichtigung E-149:** Die Aussage *„Es liegt nicht am Wert, selbst die Binance-Auswahl zeigt −0,0“* beruhte auf einem eigenen Zeitversatz: Der CMC-Ertrag begann bis zu 6 T **vor** dem Stichtag. Richtig ausgerichtet bleibt A1 auf CMC-Erträgen erhalten (+3,6).
 
 **Betrieb unverändert** (dort ist die Umlaufmenge aktuell).
+
+# E-152 · K-4 gebaut: keine Spot-Kauffrage der alten Kette für BTC/ETH/SOL, Hebel und REGEL0 unberührt (26.10.2026)
+
+**26.10.2026** · Nutzer: *„3a - prüfen gegenprüfen und doku“*
+- **Gebaut:** `agent/kernwerte.py` (eine Liste); `assetklassen.zellen()` sperrt die Spot-Zellen des Kerns mit Grund; `rollen_lauf.paare_aus_zellen()`: kein Rückfall auf `strategie_fuer` für den Kern, der Kern-Einstieg ist immer taktisch.
+- **Unberührt:** `asset_hebel_settings`, REGEL0, Watchlist-Einträge, Anzeige von Bestand und G/V.
+- **Prüfung:** Suite-Paket `Kernwerte` 10/10 mit Mutationsprobe. Sie fand eine zu schwache Prüfung, die ersetzt wurde.
+- **Betrieb:** Die Kette ist angehalten, sichtbar ändert sich nichts. NB-Kontrolle K-K4-1 nach dem nächsten Pull (gebündelt).

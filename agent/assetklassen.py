@@ -222,6 +222,7 @@ def zellen(watchlist=None, conn=None, *,
     nachgerechnet werden muss.
     """
     from agent import handelsauftrag as HA
+    from agent import kernwerte as KW
 
     nach_gruppe = gruppiere(watchlist)
     hebel_erlaubt, dca_erlaubt = _schalter(conn)
@@ -258,6 +259,18 @@ def zellen(watchlist=None, conn=None, *,
                     # SOFORT rund 40 zusaetzliche Zellen je Lauf, jede mit
                     # demselben Prompt wie der Einstieg (2.471).
                     if strategie == "halten":
+                        continue
+                    # ⚠️ K-4 (26.10.2026, E-148/E-150): KEINE SPOT-ZELLE FUER DIE KERNWERTE. Den Spot-Aufbau fuehrt
+                    # der Nutzer per Sparplan; eine Kauffrage der alten Kette waere ein zweiter Vorschlag fuer
+                    # denselben Wert. Gezaehlt und begruendet (gesperrte Zeile), nicht still. Die HEBELzelle
+                    # bleibt - REGEL0 und Hebel sind fuer den Kern immer zugelassen (agent/kernwerte.py).
+                    if instrument == "spot" and KW.ist_kern(sym):
+                        if mit_gesperrten:
+                            aus.append({
+                                "symbol": sym, "gruppe": gruppe,
+                                "instrument": instrument,
+                                "strategie": strategie, "gesperrt": True,
+                                "warum": KW.GRUND_SPOT})
                         continue
                     if strategie == "akkumulation" and sym not in dca_erlaubt:
                         # ⚠️ 18.09.2026 (Schritt 59 Phase 1, Paket 1.6,

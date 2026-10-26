@@ -380,7 +380,8 @@ kontrollen:
     commit: ff11b775
     art: manuell
     nachweis: "sofort nach Pull+Neustart: Log 'Season-Ampel: ok · Stufe ungewohnt ... · gemailt nein' OHNE '(Schalter aus - nur Anzeige)'; KEINE Season-Ampel-Mail (einzige Meldung ist die Startmarke ungewohnt vom 17.10.); Statusseite Schalter 'Season-Ampel (C1) - Mail beim Stufenwechsel: an', Untertitel 'gepr\u00fcft an zwei Zyklen'; Diagnose season_ampel.zeile mit 'zwei Zyklen'; Teilexport 'SEASON-AMPEL (C1): Schalter AN'. Als Ereignis: beim naechsten Wechsel der geltenden Stufe in Vorlauf/Season-Klima/Ueberhitzung/Ende genau EINE Mail 'Season-Ampel <Stufe> - <Handlung>'"
-    faellig_bis: "2026-10-25"
+    faellig_bis: "2026-11-09"
+    neu_befristet: "26.10.2026: der Teil 'Logzeile des naechsten Ampel-Laufs' braucht einen NB-Export; der naechste Pull/Export ist gebuendelt (K-GM-1, K-B4-D1, K-K4-1) und noch nicht gezogen - kein Befund dagegen"
     status: offen
     teilbeleg: "Diagnose 18.10. 13:11 (NB auf c2736201, keine lokalen Aenderungen, Neustart 12:49): regel0_betrieb.yaml ist versioniert und unveraendert -> season_ampel_aktiv true; season_ampel.zeile mit 'geprüft an zwei Zyklen ... Beginn nicht genau vorab'; einzige Meldung weiter die Startmarke ungewohnt (17.10.), KEINE Ampel-Mail; keine Job-Fehler. Offen: Logzeile des naechsten Ampel-Laufs 19.10. 07:30 ohne '(Schalter aus - nur Anzeige)' (heute lief der Job 07:30 noch vor dem Pull); ab dem naechsten Pull fuehrt die Diagnose season_ampel.schalter_mail"
   - id: K-SP-5
@@ -506,6 +507,15 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach Pull: Abschnitt spot_b4_fuenftel mit je_bestand (stichtag, fuenftel, klasse, grund) fuer alle gehaltenen Coins inkl. HYPE, KAS, SUPRA, XDC u. a.; universum_stichtag = juengster B4-Stichtag; oberes_fuenftel H/M/S gefuellt; kein 'fehler'"
     faellig_bis: "2026-11-08"
+    status: offen
+  - id: K-K4-1
+    titel: "K-4 Kernwerte: Pull + Neustart laeuft ohne Importfehler, Rollen-Kette weiter angehalten, B1/B3/B4/REGEL0 unveraendert"
+    seit: "2026-10-26"
+    paket: Kernwerte
+    commit: ""
+    art: manuell
+    nachweis: "Log nach Neustart: kein ImportError zu agent.kernwerte; 'Rollen-Kette ANGEHALTEN' weiter je Umlauf; Spot-Mitnahme/Upbit/Abbau-Laeufe wie vorher ohne Fehler; REGEL0-Stundenlauf mit Mails/Hebelschalter wie vorher; Diagnose ohne neuen Fehler"
+    faellig_bis: "2026-11-09"
     status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
