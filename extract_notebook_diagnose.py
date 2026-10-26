@@ -3097,6 +3097,33 @@ def _spot_b4_fuenftel() -> dict:
         return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
 
 
+def _regel0_reihenbeginn() -> dict:
+    """W-1 (26.10.2026, E-156/E-157, K-R0-ST0): der REIHENBEGINN je Asset, mit dem die REGEL0 am NB rechnet (`erster_anker` des
+    juengsten Monatspakets data/regel0_modelle/regel0_modell_<Monat>.pkl). Nach E-139 haengt das gemessene Plus an der Reife ab
+    diesem Beginn (>= 1 Jahr) - hier wird belegt, ob der NB denselben Beginn hat wie die Desktop-Referenz (Abgleich am Desktop,
+    `Rechenkern_02_10/p97_w1_reihenbeginn_abgleich.py`). Nur lesend; die Pruefsumme prueft `lade_paket`."""
+    try:
+        import glob as _gl
+        from datetime import datetime as _dt, timedelta as _td
+        from agent import regel0_nachlader as _NL
+        from agent import regel0_rechnung as _RR
+        from agent import regel0_stundenlauf as _RS
+        pfade = sorted(_gl.glob(os.path.join(_NL.DATEN_VORGABE, _RS.MODELL_ORDNER, "regel0_modell_*.pkl")))
+        if not pfade:
+            return {"fehler": "kein Monatspaket gefunden"}
+        try:
+            pk = _RR.lade_paket(pfade[-1])
+        except SystemExit as exc:                                        # lade_paket bricht bei falscher Pruefsumme mit SystemExit ab
+            return {"fehler": str(exc), "datei": os.path.basename(pfade[-1])}
+        b0 = _dt(2020, 1, 1)
+        je = {s: (b0 + _td(hours=int(h))).strftime("%Y-%m-%d %H:%M") for s, h in sorted((pk.get("erster_anker") or {}).items())}
+        return {"datei": os.path.basename(pfade[-1]), "monat": pk.get("monat"), "assets": len(je),
+                "reif_ab_tage": int(_RR.K2.JAHR_H // 24), "je_symbol": je,
+                "beginn_ab_2023_09": sorted(s for s, t in je.items() if t >= "2023-09-01")}
+    except Exception as exc:                                             # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _termine_vorschau() -> dict:
     """O52 (15.10.2026, K-TM-1): die naechsten Makro-Termine so, wie die REGEL0-Mail sie sieht (agent.termin_fakt) - CPI und
     Arbeitsmarkt aus FRED, FOMC aus der festen Liste. Belegt am NB, dass FRED kuenftige Termine liefert (bis 15.10. kam nie einer)
@@ -4170,6 +4197,7 @@ def main() -> None:
         "makro_lage": _makro_lage(),                       # O54 15.10.: wie Statusseite/Mail (K-ML-1)
         "season_ampel": _season_ampel(),                   # P19 17.10.: wie Statusseite/Mail (K-SP-4)
         "spot_b4_fuenftel": _spot_b4_fuenftel(),           # L-1 25.10.: B4-Fuenftel aller Bestaende, auch ausserhalb Binance (K-B4-D1)
+        "regel0_reihenbeginn": _regel0_reihenbeginn(),     # W-1 26.10.: Reihenbeginn je Asset aus dem Monatspaket (K-R0-ST0, E-139)
         "regel0_messstand": _regel0_messstand(),           # O21 17.10.: wie Statusseite/Mail (K-O21-1)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,

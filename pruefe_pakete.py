@@ -22478,6 +22478,65 @@ def paket_kernwerte() -> None:
            and "kernwerte" not in _quelltext("agent/regel0_mail.py") and callable(getattr(_R0S, "_hebel_schalter", None)))
 
 
+def paket_w1_reihenbeginn() -> None:
+    """W-1 (26.10.2026, E-156): Vorbehalt *nicht robust* in JEDER REGEL0-Signalmail (Text und HTML) und Diagnose-Abschnitt
+    regel0_reihenbeginn (Reihenbeginn je Asset aus dem Monatspaket, nur lesend). Geprueft an den Helfern mit Wegwerf-Ordner und
+    Mutationsprobe; die Produktion wird nicht beruehrt."""
+    P = "W1Reihenbeginn"
+    import datetime as _dt
+    import os as _os
+    import tempfile as _tf
+
+    import agent.regel0_groesse as _G
+    import agent.regel0_mail as _RM
+    import agent.regel0_nachlader as _NL
+    import agent.regel0_rechnung as _RR
+    import agent.regel0_stundenlauf as _RS
+    import extract_notebook_diagnose as _ED
+    import wegwerf as _W
+
+    _rf = dict(symbol="QNT", bitpanda="QNT", signalstunde="2026-10-04 08:00", einstieg="2026-10-04 09:00", ausstieg="2026-10-05 09:00",
+               kurs=259.64, kurs_markt="spot", p2=0.001, p3=0.007, p5=0.107, vh=0.0411, kurs_eur=222.5)
+    _gr = _G.rechne(3, 0, _G.lade())
+    _jt = _dt.datetime(2026, 10, 4, 9, 9, tzinfo=_dt.timezone.utc)
+
+    def mail_hat_vorbehalt():
+        t = _RM.signal_mail(_rf, 3, True, _gr, {}, _jt)[1]
+        h = str(_RM.signal_html(_rf, 3, True, _gr, {}, _jt))
+        kopf = t.split("EINSCHÄTZUNG")[1].split("Gefahr je Stufe")[0] if "EINSCHÄTZUNG" in t else ""
+        return "NICHT robust" in kopf and "E-136/E-139" in kopf and "NICHT robust" in h
+
+    pruefe(P, "jede REGEL0-Signalmail traegt den Vorbehalt im Block EINSCHAETZUNG (Text) und im HTML", mail_hat_vorbehalt())
+    _alt = _RM.VORBEHALT
+    try:
+        _RM.VORBEHALT = "x"
+        _mut = mail_hat_vorbehalt()
+    finally:
+        _RM.VORBEHALT = _alt
+    pruefe(P, "Mutationsprobe: ohne den Vorbehalt schlaegt die Pruefung an", not _mut)
+
+    _t = _tf.mkdtemp(prefix="w1_probe_")
+    _alt_d = _NL.DATEN_VORGABE
+    try:
+        _os.makedirs(_os.path.join(_t, _RS.MODELL_ORDNER))
+        _pf = _os.path.join(_t, _RS.MODELL_ORDNER, "regel0_modell_2026-10.pkl")
+        _RR.speichere_paket({"version": _RR.REGELVERSION, "monat": "2026-10",
+                             "erster_anker": {"BTC": 32376, "LINK": 17040}}, _pf)
+        _NL.DATEN_VORGABE = _t
+        d = _ED._regel0_reihenbeginn()
+        pruefe(P, "Diagnose liest den Reihenbeginn aus dem juengsten Monatspaket (Wegwerf-Ordner)",
+               d.get("je_symbol") == {"BTC": "2023-09-11 00:00", "LINK": "2021-12-11 00:00"} and d.get("beginn_ab_2023_09") == ["BTC"]
+               and d.get("reif_ab_tage") == int(_RR.K2.JAHR_H // 24) and d.get("monat") == "2026-10", str(d)[:300])
+        open(_pf, "ab").write(b"x")                               # Pruefsumme stimmt nicht mehr
+        d2 = _ED._regel0_reihenbeginn()
+        pruefe(P, "falsche Pruefsumme -> Fehlereintrag statt Abbruch der Diagnose", "fehler" in d2 and "Pruefsumme" in d2["fehler"], str(d2))
+    finally:
+        _NL.DATEN_VORGABE = _alt_d
+        _W.aufraeumen(_t)
+    pruefe(P, "der Abgleich NB gegen Desktop liegt als Werkzeug vor (p97, Desktop-Liste aus dem Monatsjob-Weg)",
+           _os.path.exists(_os.path.join("Basisinfos", "Rechenkern_02_10", "p97_w1_reihenbeginn_abgleich.py")))
+
+
 def paket_gesamtmarkt() -> None:
     """L-A (24.10.2026, E-137): LAGEBILD GESAMTMARKT L1-L6 ALS FAKT - Statusseite (Makro-Karte), REGEL0, B1/B3/B4 und C1, GUI, Diagnose.
 
@@ -33388,7 +33447,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

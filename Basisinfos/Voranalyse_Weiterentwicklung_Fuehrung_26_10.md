@@ -52,3 +52,19 @@ Nutzer 26.10.: *„a - prüfen gegenprüfen und doku“*, also die Suche nach ei
 - Der Abgleich `st0` NB gegen Desktop läuft auf der Kopie im Austauschordner.
 - Die Mailzeile geht über den Prüfstand mit echter `config.yaml`.
 - Suite-Paket mit Mutationsprobe; NB-Kontrolle K-R0-ST0.
+
+## 4. W-1 GEBAUT (26.10.2026; Nutzer: *„3 ja“*, E-159)
+
+| Teil | Ort | Wirkung |
+|---|---|---|
+| **F-2 Vorbehalt** | `agent/regel0_mail.py` (`VORBEHALT`, Zeile **Beleg** im Block EINSCHÄTZUNG vor „Gefahr je Stufe“) | jede REGEL0-Signalmail, Text und HTML: *„REGEL0-Plus in der Messung NICHT robust: mit Kursgeschichte ab 2019 verschwindet es (E-136/E-139). Das Signal ist ein Fakt der Regel, keine belegte Gewinnerwartung.“* |
+| **F-1 Reihenbeginn** | `extract_notebook_diagnose._regel0_reihenbeginn` → Abschnitt `regel0_reihenbeginn` | je Asset der `erster_anker` des jüngsten Monatspakets, nur lesend; Prüfsumme über `lade_paket`, ein Fehler wird Eintrag, kein Abbruch |
+| **Abgleich** | `Rechenkern_02_10/p97_w1_reihenbeginn_abgleich.py` | Desktop-Seite einmal gerechnet: **635 Assets**, davon **437** mit Beginn ab 2023-09; BTC/SOL/BNB/AVAX/XLM 2023-09-11, ETH/LINK/ADA 2021-12-11, XRP/DOGE 2023-01-11 (`data/_w1/desktop_erster_anker.json`). `--nb` gleicht nach dem Export ab |
+
+**Prüfung:**
+- Suite-Paket **`W1Reihenbeginn`** 6/6: Mail Text und HTML; **Mutationsprobe** ohne Vorbehalt schlägt an; Diagnose an einem Wegwerf-Ordner; falsche Prüfsumme wird ein Fehlereintrag; Produktion unberührt.
+- Die REGEL0- und Mail-Pakete laufen ohne **neuen** Fehler; rot sind nur die bekannten H15, O54 M2 und P22c.
+
+**Fakt am Rande (aus dem Abgleich):** Die großen Werte, die 2024 in der Referenz **unreif** waren (BTC, SOL, BNB, AVAX, XLM), sind im Betrieb seit 2024-09 reif. Der Betrieb rechnet für sie also schon wie **Lauf A**, die Fassung ohne Vorsprung.
+
+**NB:** K-R0-ST0 und K-W1-MAIL, im **morgigen** Pull mit dem übrigen Bündel.

@@ -2166,3 +2166,14 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **DVOL (Nutzerhinweis):** Die implizite Volatilität ist ein Angstmaß des Optionsmarkts und kann über V-1 hinaus tragen. Sie ist verwandt mit Fear & Greed, dem einzigen Atlas-Kandidaten (E-135), dessen Messung mit F-1 F2 abbrach (E-136). Vorschlag: Stufe-0-Machbarkeit DVOL und Varianzprämie (DVOL − gemessene Schwankung) als Lage für BTC/ETH **und** als Umfeld für die REGEL0-Einstiege aller Assets, zusammen mit Fear & Greed. Download der DVOL-Historie (Deribit, frei, wenige Abfragen) braucht ein Ja.
 
 **Betrieb unverändert.**
+
+# E-159 · W-1 gebaut: Vorbehalt „nicht robust“ in jeder REGEL0-Mail, Reihenbeginn je Asset in der Diagnose; Teil des morgigen Pulls (26.10.2026)
+
+**26.10.2026** · Nutzer: *„3 ja“* (die Anmerkung dazu betraf DVOL, siehe E-158).
+- **Gebaut:**
+  - `regel0_mail.VORBEHALT` als Zeile **Beleg** im Block EINSCHÄTZUNG;
+  - Diagnose `regel0_reihenbeginn`;
+  - Abgleichswerkzeug `p97` (Desktop: 635 Assets, 437 mit Beginn ab 2023-09).
+- **Prüfung:** Paket `W1Reihenbeginn` 6/6 mit Mutationsprobe und Wegwerf-Ordner; keine neuen roten Prüfungen in den REGEL0- und Mail-Paketen.
+- **NB:** K-R0-ST0 (Abgleich `p97 --nb`) und K-W1-MAIL. **Gebündelt in den morgigen Pull** (eine Diagnose für alle offenen Kontrollen).
+- **Fakt:** BTC/SOL/BNB/AVAX/XLM sind im Betrieb seit 2024-09 reif. Der Betrieb rechnet für sie wie Lauf A (ohne belegten Vorsprung).

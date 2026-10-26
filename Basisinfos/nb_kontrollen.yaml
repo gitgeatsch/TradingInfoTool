@@ -517,6 +517,24 @@ kontrollen:
     nachweis: "Log nach Neustart: kein ImportError zu agent.kernwerte; 'Rollen-Kette ANGEHALTEN' weiter je Umlauf; Spot-Mitnahme/Upbit/Abbau-Laeufe wie vorher ohne Fehler; REGEL0-Stundenlauf mit Mails/Hebelschalter wie vorher; Diagnose ohne neuen Fehler"
     faellig_bis: "2026-11-09"
     status: offen
+  - id: K-R0-ST0
+    titel: "W-1: Diagnose-Abschnitt regel0_reihenbeginn (Reihenbeginn je Asset aus dem Monatspaket) - Abgleich NB gegen Desktop"
+    seit: "2026-10-26"
+    paket: W1Reihenbeginn
+    commit: ""
+    art: manuell
+    nachweis: "NB-Export nach Pull: Abschnitt regel0_reihenbeginn mit datei regel0_modell_<Monat>.pkl, assets ~635, ohne 'fehler'; am Desktop 'python -X utf8 Basisinfos/Rechenkern_02_10/p97_w1_reihenbeginn_abgleich.py --nb' -> GLEICH (BTC/SOL/BNB/AVAX/XLM 2023-09-11, ETH/LINK/ADA 2021-12-11 wie Desktop)"
+    faellig_bis: "2026-11-09"
+    status: offen
+  - id: K-W1-MAIL
+    titel: "W-1: naechste REGEL0-Signalmail traegt im Block EINSCHAETZUNG die Zeile 'Beleg: REGEL0-Plus in der Messung NICHT robust ...'"
+    seit: "2026-10-26"
+    paket: W1Reihenbeginn
+    commit: ""
+    art: ereignis
+    nachweis: "erste echte REGEL0-Signalmail nach dem Pull: Zeile 'Beleg' vor 'Gefahr je Stufe' (Text) und im HTML"
+    faellig_bis: "2026-11-30"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

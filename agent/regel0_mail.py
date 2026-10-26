@@ -26,6 +26,11 @@ import agent.regel0_groesse as G
 
 from agent import regel0_messstand as MS_   # E1/E2 (18.10.2026): der gemessene Haltedauer-Fakt (Schritt7 §23.68)
 
+# W-1 (26.10.2026, E-136/E-139/E-156): Das gemessene Plus der REGEL0 ist NICHT robust - mit laengerer Kursgeschichte (ab 2019) verschwindet
+# es; es entstand aus der Reife-Regel am Datenbeginn. Die Mail sagt das bei jedem Signal, damit kein Signal als Gewinnerwartung gelesen wird.
+VORBEHALT = ("REGEL0-Plus in der Messung NICHT robust: mit Kursgeschichte ab 2019 verschwindet es (E-136/E-139). "
+             "Das Signal ist ein Fakt der Regel, keine belegte Gewinnerwartung.")
+
 NICHT_AELTER_H = 3        # ein Signal, dessen Einstieg laenger als so viele Stunden vorbei ist, wird nicht mehr gemailt
 ABGLEICH_GRENZE = 0.05    # S7-5b: Bitpanda gegen Binance zum selben Moment - gemessen 03.10.: gleiche Coins -0,1 %, Kollisionen +25 bis +428 %
 NL = chr(10)
@@ -185,6 +190,8 @@ def _signal_teile(r: dict, stufe: int, vorlaeufig: bool, groesse, werte: dict, j
     if isinstance(messstand, dict) and messstand.get("ein"):
         ein_z.append(("Messstand im Betrieb", messstand["ein"]))   # nicht "Messstand" - so heisst die Zeile des Pruefblocks
         ein_z += [tuple(x) for x in (messstand.get("zusatz") or [])]   # B1: "Deine Hebel-Trades" (Ergebnis zum Schlusskurs)
+    # W-1 (26.10.2026, E-156): was belegt ist und was nicht - als FAKT in JEDER Signalmail (Regel 4: ein Fakt ist keine Begruendung)
+    ein_z.append(("Beleg", VORBEHALT))
     ein_z.append(("Gefahr je Stufe", "2x %s · 3x %s · 5x %s binnen 24 h (Grenze 2 %%)" % (
         _pct(r.get("p2")), _pct(r.get("p3")), _pct(r.get("p5")))))
 
