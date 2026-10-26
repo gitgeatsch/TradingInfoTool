@@ -78,3 +78,33 @@ Kein Auslöser, keine automatische Handlung.
 | **B-3** | Kern aus der alten Spot-Kette nehmen (K-4), nach der Liste *was fehlt* |
 
 Der Bau läuft getrennt vom Hebel (T-1 bis T-6) und wird mit dem nächsten NB-Pull gebündelt.
+
+## 7. K-4 Bestandsaufnahme: Was die Spot-Seite heute für BTC/ETH/SOL tut (26.10.2026, nur gelesen)
+
+Nutzer 26.10. (E-148): *„(b) nur K-4“*.
+
+| Pfad | erzeugt für den Kern | heute schon ohne Kern? | läuft heute? |
+|---|---|---|---|
+| **Alte Rollen-Kette** (NACHKAUFEN/Akkumulation, Zelle `spot × akkumulation`; `rollen_lauf.py`, `assetklassen.py:262`) | Kauf-/Nachkaufsignale und Mails | **nein** | **angehalten** seit 05.10. (`regel0_betrieb.yaml:40 spot_kette_angehalten: true`, `background.py:5035`) |
+| Rollen-Kette: Verkaufs-Sammelmail, Positionsführung je Symbol | Verkaufsurteile, Positionszeile (Einstand, G/V) | nein | angehalten (mit der Kette) |
+| 07:15 Stop-Nachzieh-Mail (alte Spot-Signale) | Stop-Zeilen für offene alte Signale | über A6: mit `spot_mitnahme_aktiv` fallen **alle** Spot-Zeilen weg | Spot-Zeilen aus |
+| B1 Mitnahme, B3 Upbit, B4 Abbau | nichts | **ja** (`spot_mitnahme.KERN`, `spot_abbau.SONDER`) | ja |
+| C1 Season-Ampel | keine Handlung; BTC ist **Eingangsgröße** | Handlung ja | ja |
+| alter Budget-Allocator, Tranchen, signal_batch | Kauf/Tranchen | nein | tot gelegt |
+
+**Was NICHT berührt werden darf:**
+- `asset_hebel_settings.hebel_pruefung_erlaubt`: REGEL0, Hebel-Mail und Hebel-Tab hängen daran.
+- Watchlist-Einträge BTC/ETH/SOL: Kurse, Terminmarktdaten für REGEL0, H15, BTC-Vergleich in B1.
+- `dca_erlaubt` ist **kein** Ausschalter. Abgeschaltet macht er aus dem Kern normale Spot-Einstiege **mit Stop**; das ist eine Falle.
+
+**Befund:**
+- Heute erzeugt die Spot-Seite **keine** Kaufvorschläge für den Kern: Die alte Kette steht, und B1/B3/B4 nehmen ihn schon aus.
+- K-4 ist deshalb eine **Absicherung**. Sie wirkt nur, wenn die Kette wieder läuft.
+- ⚠️ Das kann **ungewollt** passieren: `spot_kette_angehalten` gilt im Zweifel als *false* (`regel0_groesse.py:137-143`). Ist `regel0_betrieb.yaml` unlesbar, läuft die Kette wieder **und** A6 fällt aus. Dann kämen NACHKAUFEN-Mails für den Kern zurück.
+- Eine zentrale Kern-Konstante gibt es nicht. Es gibt sieben verstreute Stellen, darunter `rolle: core` mit zehn weiteren Werten (anderer Begriff).
+
+**Vorschlag K-4 (zur Abstimmung):**
+- Eine zentrale Konstante `KERN = BTC, ETH, SOL`, auf die `spot_mitnahme.KERN` verweist.
+- Ein Ausschluss **nur** in den Spot-Zellen der Rollen-Kette (`assetklassen`/`rollen_lauf`), weder über `dca_erlaubt` noch über die Hebelschalter.
+- Positionszeilen des Kerns (Bestand, G/V) bleiben als Information.
+- Suite-Prüfung: Kern erzeugt keine Spot-Zelle, Hebelzelle und REGEL0 unverändert.

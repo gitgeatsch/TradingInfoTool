@@ -345,3 +345,23 @@ Nutzer 25.10.: *„die Einstiege und Bewertung soll vorerst neutral erfolgen, ob
 - **Auskunft:** 2019-07 bis 2026 auf 7 T (gesehen) · Zombie-Prüfpunkt (Filter-Mitglieder, die später aus den Top 200 fallen) · Klasse M & oberes Fünftel · 1 M auf 2017–19.
 - **Gegenprobe:** Filter-Ertrag je Woche über eine eigene Schleife; Band mit doppelter Blocklänge (gleiche Aussage).
 - **Folge:** TRÄGT → die CMC-Fassung ist bestätigt und gilt auch für Werte außerhalb von Binance (Bau-Voranalyse folgt nach Abstimmung) · sonst festhalten; Werte außerhalb Binance ohne bestätigten Wert.
+
+### 9.7 L1-c Ergebnis Schritt 0: A1 auf CMC NICHT reproduziert (26.10.2026; `p92_l1c_cmc_eigene_basis.py`, Ursache `p92b_ursache.py`)
+
+| oberes Fünftel − Gruppe, 1 M | CMC 2019-01..2026-08 (92 Stichtage, 31 Blöcke) | ohne Ausfaller | A1 Binance |
+|---|---|---|---|
+| **Top 30** | **+2,3 Pp [−0,3; +5,2]** | +1,9 | +3,5 [+0,7; +7,5] |
+| Top 100 | +1,2 [−0,9; +3,3] | +0,6 | +1,7 [−0,4; +4,2] |
+| Gesamt | +0,7 [−0,7; +2,2] | −0,3 | +1,5 [+0,3; +2,9] |
+
+Ausfaller aus den Top 200 binnen 4 Wochen: 7,4 % der Erträge (begrenzt gerechnet). ⇒ **Nicht reproduziert** (Band enthält 0). Nach §9.6: **keine Bestätigung**, Teil 2 wird nicht gerechnet, der Selbsttest von Teil 2 ist nicht gelaufen.
+
+**Ursache, erster Schritt** (gemeinsame Coins, ~115 je Stichtag, dieselben CMC-Erträge, nur das Fünftel wechselt):
+
+| Top 30 | Fünftel aus CMC-Wert | Fünftel aus **Binance-Wert** | beide oben |
+|---|---|---|---|
+| oberes Fünftel − Gruppe | +1,5 [−1,9; +4,7] | **−0,0 [−3,1; +3,3]** | +1,3 [−1,8; +4,8] |
+
+- **Es liegt nicht am CMC-Wert.** Selbst die Binance-Auswahl zeigt auf CMC-Erträgen und der CMC-Gruppe keinen Vorsprung.
+- Es liegt an **Gruppe, Ertrag oder Coin-Menge**: CMC-Top 30 (Marktwert-Rang der Woche, ohne Stabilitätsbedingung) gegen A1-Top 30 (`rang_mw`), 4 Wochen aus Wochenkursen gegen 30 T aus Tageskursen, nur Coins in beiden Quellen.
+- ⚠️ **Das betrifft auch A1 (E-143):** Der Top-30-Vorsprung hält eine andere, gleich vernünftige Abgrenzung nicht aus. Er ist **nicht robust**. Welche der drei Abgrenzungen es ist, ist noch nicht gemessen.

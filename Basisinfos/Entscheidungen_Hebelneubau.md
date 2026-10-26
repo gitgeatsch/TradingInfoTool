@@ -2017,3 +2017,21 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **L2-a:** Messplan vorab (Voranalyse L2-a §7), Schritt 0 = E-126 auf dem Prüfstand nachrechnen.
 
 **Betrieb unverändert.**
+
+# E-149 · Teilergebnisse 26.10.: L2-a Schritt 0 Halt geklärt (E-126 reproduziert, eigene Größe unscharf); L1-c Schritt 0 nicht reproduziert (A1-Top-30 nicht robust); K-4 ist Absicherung (26.10.2026)
+
+**Grundlage:** vorab 65c5a2a9 · `p93`, `p93b`, `p92`, `p92b` · Bestandsaufnahme K-4 (Voranalyse Kern-Regel §7).
+
+**L2-a:**
+- Schritt 0 ergab „TRÄGT“ (Rang 0,961) ⇒ Halt nach Plan, Stufe 1 nicht angesehen.
+- Klärung: E-126 reproduziert (draußen +0,9 % EUR, Rang 0,86). Mein Schritt 0 maß eine andere Größe (an gegen alle; in vier Fassungen positiv, Rang 0,91–0,96, nur USD-B über der Schwelle). Eigener Planungsfehler.
+- Lösung zur Abstimmung: Schritt 0 Fassung 1b auf E-126s Größen (erfüllt), dann Stufe 1.
+
+**L1-c:**
+- Top 30 auf CMC +2,3 Pp [−0,3; +5,2] gegen A1 +3,5 [+0,7; +7,5] ⇒ nicht reproduziert, keine Bestätigung.
+- Ursache, erster Schritt: Es liegt nicht am Wert (Binance-Fünftel auf CMC-Erträgen −0,0 Pp), sondern an Gruppe, Ertrag oder Coin-Menge.
+- ⚠️ Der Top-30-Vorsprung aus E-143 ist damit **nicht robust** gegen die Abgrenzung.
+
+**K-4:** Spot erzeugt heute keine Kern-Kaufvorschläge (Kette angehalten, B1/B3/B4 ohne Kern). K-4 = Absicherung. Fallstrick: Fällt `regel0_betrieb.yaml` aus, läuft die Kette wieder. Vorschlag: zentrale Konstante + Ausschluss nur in den Spot-Zellen.
+
+**Betrieb unverändert.**

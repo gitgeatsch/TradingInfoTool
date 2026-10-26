@@ -109,3 +109,24 @@ Wie §5, mit diesen Festlegungen:
 - **Ausweis:** je Hälfte, Epoche ab 11.01.2024 gesondert, BTC-Schwankung je Hälfte; R2 nur Auskunft.
 - **Gegenprobe:** Vorsprung über eine eigene Tagesschleife; über Monatsmittel statt Tageswerte (gleiche Richtung).
 - **Folgen:** wie §5 (trägt → Stufe 2 Top 30; sonst Hebel bleibt bei REGEL0, kein weiterer Trendfilter).
+
+## 8. Ergebnis Schritt 0: HALT nach Plan, geklärt — kein Widerspruch zu E-126 (26.10.2026; `p93_l2a_regime_hebel.py`, `p93b_schritt0_klaerung.py`)
+
+**p93 Schritt 0:** 10-Monats-Schnitt, BTC USD, 2017–2026: Vorsprung *an* − alle **+2,84 Pp je Monat**, Rang 0,961, Band [+0,40; +6,39] ⇒ „TRÄGT“. Plan §7: *Sonst Halt*. **Stufe 1 ist nicht angesehen.**
+
+**Klärung (je eine Sache variiert, dieselbe Größe):**
+
+| | Monate | Vorsprung | Rang Strecken-Perm. | Rang zirk. Verschiebung (E-126) | Stufe | Monate an / **draußen** |
+|---|---|---|---|---|---|---|
+| B 2017–26 USD | 117 | +2,84 | 0,950–0,961 | 0,872 | TRÄGT (an der Schwelle) | +9,0 % / +0,2 % |
+| B 2017–26 **EUR** | 117 | +2,48 | 0,934 | 0,862 | NICHT TRENNBAR | +8,5 % / **+0,9 %** |
+| A 2011–16 USD | 68 | +7,60 | 0,917 | 0,956 | NICHT TRENNBAR | +24,9 % / +2,4 % |
+| A 2011–16 EUR | 68 | +7,16 | 0,907 | 0,933 | NICHT TRENNBAR | +25,1 % / +4,0 % |
+
+Selbsttest des Schritt-0-Prüfstands: Fehlalarm 5,0 % (genau am Soll).
+
+**Befund:**
+- **E-126 ist reproduziert:** Monate draußen in EUR **+0,9 %** (E-126 Teil B: +0,9 %), Rang mit E-126s Nullwelt 0,86 (E-126 S3: 0,86).
+- **Mein Schritt 0 war unscharf festgelegt (eigener Fehler):** Ich hatte eine **andere Größe** als Reproduktion angesetzt (an gegen alle statt E-126s S1–S4). E-126 fragt *„lohnt der Ausstieg?“* — nein, die Monate draußen sind nicht negativ. Meine Größe fragt *„sind die Monate an besser?“* — in allen vier Fassungen positiv (+2,5 bis +7,6 Pp), aber nur in einer knapp über der Schwelle.
+- **Für den Hebel ist das die eigentliche Frage:** Ein Hebel nur in *an*-Phasen braucht keine negativen *aus*-Monate, sondern bessere *an*-Monate. E-126 schließt das nicht aus.
+- **Lösung (zur Abstimmung):** Schritt 0 Fassung 1b = Reproduktion auf E-126s eigenen Größen (S1 Monate draußen, Rang S3). Das ist mit p93b **erfüllt**. Danach Stufe 1 wie vorab festgelegt (R1, 7 T, Selbsttest vor dem Blick).

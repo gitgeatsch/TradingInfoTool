@@ -1,0 +1,8 @@
+P93b KLAERUNG SCHRITT 0 · Groesse: Vorsprung an - alle, Ertrag Folgemonat (t+1), Zustand 10-Monats-Schnitt
+
+Teil B 2017-2026 USD: 117 Monate · an 68 % · Vorsprung +2.84 Pp · Rang Strecken-Perm. 0.950 · Rang zirk. Verschiebung 0.872 (Nullpunkt -0.27) · Band [+0.20; +6.52] · TRAEGT · Monate an +9.0 % / draussen +0.2 % (S1: draussen < 0? nein)
+Teil B 2017-2026 EUR: 117 Monate · an 68 % · Vorsprung +2.48 Pp · Rang Strecken-Perm. 0.934 · Rang zirk. Verschiebung 0.862 (Nullpunkt -0.24) · Band [+0.19; +5.71] · NICHT TRENNBAR · Monate an +8.5 % / draussen +0.9 % (S1: draussen < 0? nein)
+Teil A 2011-2016 USD: 68 Monate · an 66 % · Vorsprung +7.60 Pp · Rang Strecken-Perm. 0.917 · Rang zirk. Verschiebung 0.956 (Nullpunkt -2.12) · Band [+0.04; +18.12] · NICHT TRENNBAR · Monate an +24.9 % / draussen +2.4 % (S1: draussen < 0? nein)
+Teil A 2011-2016 EUR: 68 Monate · an 66 % · Vorsprung +7.16 Pp · Rang Strecken-Perm. 0.907 · Rang zirk. Verschiebung 0.933 (Nullpunkt -2.07) · Band [-0.83; +17.34] · NICHT TRENNBAR · Monate an +25.1 % / draussen +4.0 % (S1: draussen < 0? nein)
+
+K5 Selbsttest Schritt-0-Pruefstand (Teil B USD): Fehlalarm 5.0 % auf 200 Zufallsregimen (Soll <= 5 %)

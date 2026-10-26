@@ -1,0 +1,8 @@
+P92b URSACHE · gemeinsame Coins je Stichtag im Mittel 115 · CMC-Ertraege 4 Wochen · oberes Fuenftel minus Gruppe (gemeinsame Coins)
+
+  Top 30  a CMC-Wert       92 Stichtage · +1.5 Pp [-1.9; +4.7]
+  Top 30  b Binance-Wert   92 Stichtage · -0.0 Pp [-3.1; +3.3]
+  Top 30  c beide oben     89 Stichtage · +1.3 Pp [-1.8; +4.8]
+  Gesamt  a CMC-Wert       92 Stichtage · +0.2 Pp [-2.3; +2.4]
+  Gesamt  b Binance-Wert   92 Stichtage · +0.4 Pp [-0.9; +1.8]
+  Gesamt  c beide oben     92 Stichtage · +0.3 Pp [-2.5; +2.7]

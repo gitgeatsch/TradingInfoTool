@@ -1,0 +1,9 @@
+P92 MESSPLAN L1-c · CMC als eigene Messbasis · Wochen 2016-07-03..2026-10-11
+
+SCHRITT 0 (R-R11) A1 auf CMC nachrechnen: oberes Fuenftel minus Gruppe, 1 M (4 Wochen), Monatsstichtage 2019-01..2026-08, Band zirkulaer Block 3 Stichtage
+  Top 30    92 Stichtage 31 Bloecke · F5 - Gruppe +2.3 Pp [-0.3; +5.2] · ohne Ausfaller +1.9 Pp · A1 (Binance) +3,5 [+0,7; +7,5] · AK -0.07
+  Top 100   92 Stichtage 31 Bloecke · F5 - Gruppe +1.2 Pp [-0.9; +3.3] · ohne Ausfaller +0.6 Pp · A1 (Binance) +1,7 [-0,4; +4,2] · AK -0.01
+  Gesamt    92 Stichtage 31 Bloecke · F5 - Gruppe +0.7 Pp [-0.7; +2.2] · ohne Ausfaller -0.3 Pp · A1 (Binance) +1,5 [+0,3; +2,9] · AK 0.09
+  Ausfaller aus den Top 200 binnen 4 Wochen: 7.38 % der Ertraege (begrenzt gerechnet)
+  -> NICHT REPRODUZIERT - keine Bestaetigung, Ursache und Loesung
+
