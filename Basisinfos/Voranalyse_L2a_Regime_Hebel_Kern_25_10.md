@@ -88,3 +88,24 @@ Nutzer 25.10.: *„ja L1-a, L2-a und Kern-Regel Voranalyse starten - was ist mit
 - **Stand:** Auf 2024–26 ist die Frage nicht entscheidbar (E-133). Auf der langen Historie ist sie messbar, aber nur für **einen** Kandidaten (R1), und der ist mit E-126 schon einmal gescheitert.
 - **Ehrliche Erwartung:** eher „trägt nicht“. Die Messung ist trotzdem billig (Minuten) und schließt die Frage auf dem 7-Tage-Horizont sauber ab.
 - **Alternative, falls R1 nicht trägt:** kein weiterer Trendfilter. Dann wird die Frage zum Ertrag des Kerns über die **Haltedauer im Regime** (L-2) nicht weiterverfolgt, und der Hebel bleibt bei REGEL0.
+
+## 7. Messplan L2-a Stufe 1 — VORAB festgelegt 26.10.2026 (Nutzer: *„weiter mit L1-c und L2-a“*) · `p93_l2a_regime_hebel.py`
+
+Wie §5, mit diesen Festlegungen:
+
+**Schritt 0 — R-R11, E-126 auf diesem Prüfstand nachrechnen**
+- BTC-USD Monatsschluss (CoinMetrics), *an* = Schluss über dem Mittel der letzten 10 Monatsschlüsse (wie R2 in §60.5), Zielgröße = Ertrag des Folgemonats (Schluss Monatsende+1 bis Schluss Folgemonatsende+1, t+1 wie M-A), 2017-01 bis 2026-09.
+- Vorsprung = Mittel *an* − Mittel alle; Nullwelt Strecken-Permutation 1.000, Nullpunkt = Mittel; Band zirkulär, Block 3 Monate.
+- **Reproduziert, wenn das Urteil NICHT „TRÄGT“ ist** (E-126: trägt nicht). Sonst Halt: Prüfstand und E-126 widersprechen sich, erst klären.
+
+**Stufe 1 — R1**
+- *an* = BTC-Tagesschluss am Vortag über seinem 200-T-Schnitt. Werte BTC, ETH, SOL einzeln; Tage ab 200 T nach Datenbeginn bzw. 2015-01-01 bis 2026-09; SOL aus `data/_hist` 23:00.
+- Zielgröße: Ertrag 7 T ab Schluss t, **vor Kosten**.
+- Vorsprung = Mittel *an* − Mittel alle; Rang gegen Strecken-Permutation (1.000), Nullpunkt = Mittel der Nullwelten.
+- Band: zirkulärer Tagesblock-Bootstrap, Block `messnorm._block(7)` = 21 T, 2.000 Ziehungen, AK beim Blockabstand ≤ 0,15; < 20 Blöcke KEIN BEFUND.
+- **Selbsttest vor dem ersten Blick** je Wert: Fehlalarm auf 100 Zufallsregimen (Strecken-Permutation von R1) ≤ 5 %; Pflanzung +0,5 / +1 / +2 / +3 Pp je 7 T auf *an*-Tagen eines Zufallsregimes, X = kleinste Stärke mit ≥ 80 % Fund. Fällt er durch, wird das echte Ergebnis nicht angesehen.
+- **Stufe je Wert:** TRÄGT = Rang ≥ 0,95 **und** Band (Vorsprung − Nullpunkt) unten > 0 · TRÄGT NICHT BIS X = Band oben < X · NICHT TRENNBAR · KEIN BEFUND.
+- **Gesamturteil TRÄGT** nur, wenn BTC trägt, mindestens einer von ETH/SOL trägt **und** BTC in beiden Hälften (2015–2020 / 2021–2026) einen Vorsprung > 0 hat.
+- **Ausweis:** je Hälfte, Epoche ab 11.01.2024 gesondert, BTC-Schwankung je Hälfte; R2 nur Auskunft.
+- **Gegenprobe:** Vorsprung über eine eigene Tagesschleife; über Monatsmittel statt Tageswerte (gleiche Richtung).
+- **Folgen:** wie §5 (trägt → Stufe 2 Top 30; sonst Hebel bleibt bei REGEL0, kein weiterer Trendfilter).

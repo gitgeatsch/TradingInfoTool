@@ -322,3 +322,26 @@ Nutzer 25.10.: *„die Einstiege und Bewertung soll vorerst neutral erfolgen, ob
 | **L1-c (Vorschlag)** | **CMC als eigene Messbasis:** die A1-Messung (E-143) auf CMC 2019–26 **reproduzieren** (R-R11). Hält das Ergebnis dort, ist 2017–19 die unberührte Bestätigung **dieser** Fassung, und sie gilt auch für Werte außerhalb von Binance | 1 Skript, Minuten | Bestätigung + Werte außerhalb von Binance; keine Brücke nötig |
 | L1-b | Ein gemeinsames Alter aus einer dritten Quelle (CoinGecko-Historie ab Handelsbeginn, frei, aber ~500 Abrufe mit Pausen) | Stunden, Download mit Ja | nur F8, F2 bleibt |
 | L1-d | Den Binance-Wert auf Wochenkurse umstellen | Änderung am Messwert | ⚠️ ändert die Grundgesamtheit der Merkmale, nicht empfohlen |
+
+### 9.6 L1-c Messplan — VORAB festgelegt 26.10.2026 (Nutzer: *„weiter mit L1-c und L2-a“*) · `p92_l1c_cmc_eigene_basis.py`
+
+**Vorab-Befund aus dem Mess-Regelwerk (vor jeder Rechnung):** Auf 1 Monat ist der Block `messnorm._block(30)` = 90 T. Die Bestätigung 2017-01 bis 2019-06 hätte damit nur ~10 Blöcke ⇒ **KEIN BEFUND per Regel**. Deshalb bleibt die Bestätigung, wie in §8.1 Teil 2 schon festgelegt, auf **7 T** (Block 21 T, ~43 Blöcke). 1 Monat 2017–19 ist nur Auskunft.
+
+**Schritt 0 — R-R11: A1 auf CMC nachrechnen (ersetzt die Brücke)**
+- Monatsstichtage 2019-01 bis 2026-08, je die CMC-Woche am oder vor dem Monatsersten; Ertrag bis zur Woche 4 Wochen später (28 T).
+- Universum, Klasse und Wert wie §8.1 (`p89.lade/merkmale/wert`). Gruppen: **Top 30** (= Klasse H), Top 100, Gesamt (CMC Top 200 ohne Kern).
+- Größe wie A1 (`p86`): je Stichtag gleich gewichtet, **oberes Fünftel minus Gruppe**; Band zirkulär, Block 3 Stichtage, 2.000 Ziehungen; < 20 Blöcke KEIN BEFUND.
+- **Fällt ein Coin aus den Top 200:** Ertrag nach oben begrenzt durch (Marktwert Rang 200 am Ende ÷ eigener Marktwert am Stichtag) − 1, wie §8.1; Anteil ausgewiesen, Rechnung ohne diese Coins zum Vergleich.
+- **Reproduziert, wenn** Top 30: Punktwert > 0 **und** Band schließt 0 aus (A1: +3,5 Pp [+0,7; +7,5]). Top 100/Gesamt nur Auskunft neben A1.
+- **Nicht reproduziert:** CMC-Fassung gilt nicht; keine Bestätigung; Ursache und Lösung. **Reproduziert:** weiter mit Teil 2 ohne Zwischenhalt (vorab so festgelegt).
+
+**Teil 2 — Bestätigung 2017-01 bis 2019-06 auf 7 T** (unverändert §8.1 Teil 2)
+- Wochen, Ertrag über die nächste Woche aus `preis`; Ausfaller wie oben.
+- Filter **Top 30 & oberes Fünftel**. (a) gegen Top 30 gesamt; (b) gegen BTC (`cmc_woche`, Auskunft gegen 0).
+- **Nullpunkt** = Mittel von 200 Zufallskörben gleicher Größe aus den Top 30 derselben Woche; Vorsprung = (Filter − Top 30) − Nullpunkt.
+- Band zirkulär, Block 3 Wochen, 2.000 Ziehungen, AK-Prüfung beim Blockabstand ≤ 0,15; < 20 Blöcke KEIN BEFUND.
+- **Selbsttest vor dem ersten Blick** (auf denselben Wochen, nur Zufallskörbe): Fehlalarm (Band unten > 0) ≤ 5 % auf 200 Zufallskörben; Pflanzung auf Zufallskörben +0,25 / +0,5 / +1,0 Pp je Woche, Auflösung X = kleinste Stärke mit ≥ 80 % Fund; Soll: +0,5 Pp ≥ 80 %. Besteht er nicht, wird das echte Ergebnis nicht angesehen.
+- **Stufen:** TRÄGT (Band unten > 0) · TRÄGT NICHT BIS X (Band oben < X) · NICHT TRENNBAR · KEIN BEFUND.
+- **Auskunft:** 2019-07 bis 2026 auf 7 T (gesehen) · Zombie-Prüfpunkt (Filter-Mitglieder, die später aus den Top 200 fallen) · Klasse M & oberes Fünftel · 1 M auf 2017–19.
+- **Gegenprobe:** Filter-Ertrag je Woche über eine eigene Schleife; Band mit doppelter Blocklänge (gleiche Aussage).
+- **Folge:** TRÄGT → die CMC-Fassung ist bestätigt und gilt auch für Werte außerhalb von Binance (Bau-Voranalyse folgt nach Abstimmung) · sonst festhalten; Werte außerhalb Binance ohne bestätigten Wert.

@@ -2007,3 +2007,13 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - Offene Nutzerfragen K-1 bis K-4 (Monatsrate, Tag, Altbestand, Kern aus der alten Spot-Kette); Bauumfang B-1 bis B-3.
 
 **Betrieb unverändert.**
+
+# E-148 · Kern-Regel nur K-4 (Kern aus der alten Spot-Kette); L1-c und L2-a vorab festgelegt (26.10.2026)
+
+**26.10.2026** · Nutzer: *„bin noch nicht bei 70/20/10 verhältnis - aktuell einmal pro monat einen kleinen betrag pro asset, (b) nur K-4, weiter mit L1-c und L2-a“*
+
+- **Kern-Regel:** Variante (b). Die Regel wäre ein Sparplan, den der Nutzer schon selbst führt (monatlich je Asset ein kleiner Betrag, noch nicht 70/20/10). **Nicht gebaut:** Raten-Mail, Ausgleich über die Raten, Klima-Ampel/K1 im Betrieb (B-1/B-2 entfallen). **Gebaut wird nur K-4:** BTC/ETH/SOL aus der alten Spot-Kette nehmen — zuerst die Liste, was dabei wegfällt (Rücksprache vor dem Entfernen). REGEL0 und Hebel bleiben für den Kern unberührt (§8.0).
+- **L1-c:** Messplan vorab (Voranalyse L1/L2 §9.6). Vorab-Befund: 1 M auf 2017–19 hätte nur ~10 Blöcke (KEIN BEFUND per Regel) → Bestätigung auf 7 T wie §8.1; Schritt 0 = A1 auf CMC nachrechnen.
+- **L2-a:** Messplan vorab (Voranalyse L2-a §7), Schritt 0 = E-126 auf dem Prüfstand nachrechnen.
+
+**Betrieb unverändert.**
