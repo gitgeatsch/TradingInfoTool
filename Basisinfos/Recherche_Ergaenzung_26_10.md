@@ -90,3 +90,12 @@ Diese Ergänzung sucht nur, was dort **fehlte**, und gleicht jeden Fund mit R-A 
 - Nach der Regel ist der Hauptfall **nicht messbar**, weil der Fehlalarm 7 % beträgt (Soll ≤ 5 %).
 - Der Wert stammt aus nur 100 Ziehungen (± 2,5 Pp); die Auflösung reicht dagegen klar.
 - **Fassung 1b (vorab, vor jedem Ergebnis):** Hauptfall mit **400** Fehlalarm-Ziehungen und 1.000 Permutationen je Rang. Messbar, wenn Fehlalarm ≤ 5 %. Das 1-T-Fenster bleibt Auskunft und wird nicht nachträglich zum Haupt.
+
+### 5.2 Ergebnis Fassung 1b (26.10.2026; `p96_etf_machbarkeit.py` → `.txt`, Fassung 1: `p96_etf_fassung1.txt`)
+
+- **Hauptfall** (3 T, Ertrag 1 T): Fehlalarm **6 %** bei 400 Ziehungen (± 1,2 Pp), Auflösung 0,50 Pp ⇒ nach der Regel **nicht messbar**.
+- Auskunft: 3 T / 7 T Fehlalarm 4 %, aber ohne Auflösung; 1 T 7 %; 5 T 2 %. Das 5-T-Fenster wird **nicht** nachträglich zum Hauptfall.
+
+**Folge (vorab):** ETF-Flüsse nur als Fakt im Lagebild (Vorschlag zur Abstimmung).
+
+**Lösungsweg, falls gewünscht:** Der Strecken-Rang ist bei dieser Struktur leicht großzügig (6 % statt 5 %). Eine **am Selbsttest geeichte Schwelle** (Rang-Schwelle so, dass der Fehlalarm ≤ 5 % ist) wäre Fassung 2. Danach müsste die Auflösung erneut geprüft werden. ⚠️ Erwartung: Flüsse laufen dem Kurs eher nach.

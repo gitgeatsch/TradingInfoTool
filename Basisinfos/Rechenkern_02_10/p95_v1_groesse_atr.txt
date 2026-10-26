@@ -1,7 +1,21 @@
 P95 MESSPLAN V-1 · Groesse nach ATR gegen festen Positionswert · Ertrag 24 h vor Kosten (neutral)
 
-SELBSTTEST Fassung 1b vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * m_Tag, je 100):
-  Referenz 10728 Handel an 670 Tagen (45 Bloecke) · Fehlalarm 0.5 % · Fund lambda 0.5 62 % · lambda 1.0 66 % · lambda 2.0 51 % -> NICHT BESTANDEN
-  Lauf A   11696 Handel an 700 Tagen (47 Bloecke) · Fehlalarm 2.0 % · Fund lambda 0.5 22 % · lambda 1.0 37 % · lambda 2.0 32 % -> NICHT BESTANDEN
+SELBSTTEST Fassung 1c vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * m_Tag, je 100):
+  Referenz 10728 Handel an 670 Tagen (45 Bloecke) · Fehlalarm 0.5 % · Fund lambda 0.5 77 % · lambda 1.0 89 % · lambda 2.0 89 % -> ok
+  Lauf A   11696 Handel an 700 Tagen (47 Bloecke) · Fehlalarm 0.0 % · Fund lambda 0.5 89 % · lambda 1.0 80 % · lambda 2.0 87 % -> ok
+  -> bestanden
 
-SELBSTTEST NICHT BESTANDEN - echtes Ergebnis wird nicht angesehen (Plan §4).
+Referenz G0: Rueckgang 8.36 · Schwankung 0.920 · Mittel je Tag +0.1017 | G1: Rueckgang 8.00 (Rang 0.547) · Schwankung 0.863 (Rang 1.000) · Mittel je Tag +0.1015
+         Auskunft Mittel je Tag G1-G0 -0.0002 · Band 15 T [-0.0158; +0.0154] · Band 30 T [-0.0174; +0.0158] -> Urteil NICHT TRENNBAR
+         Auskunft 2024: Rueckgang 5.25 -> 3.43 · Schwankung 0.728 -> 0.597 · Tage mit Verlust >= 3 % des Tagesengagements 8.1 % -> 7.5 %
+         Auskunft 2025: Rueckgang 7.91 -> 6.84 · Schwankung 1.120 -> 1.075 · Tage mit Verlust >= 3 % des Tagesengagements 10.9 % -> 10.2 %
+         Auskunft 2026: Rueckgang 5.11 -> 3.11 · Schwankung 0.746 -> 0.714 · Tage mit Verlust >= 3 % des Tagesengagements 5.6 % -> 6.6 %
+         Gegenprobe eigene Schleife G1: Rueckgang 8.002018 / 8.002018 · Verhaeltnis 0.862579 / 0.862579 -> gleich
+Lauf A   G0: Rueckgang 31.31 · Schwankung 1.051 · Mittel je Tag +0.0237 | G1: Rueckgang 26.18 (Rang 0.991) · Schwankung 1.015 (Rang 0.911) · Mittel je Tag +0.0218
+         Auskunft Mittel je Tag G1-G0 -0.0019 · Band 15 T [-0.0209; +0.0171] · Band 30 T [-0.0237; +0.0188] -> Urteil NICHT TRENNBAR
+         Auskunft 2024: Rueckgang 12.98 -> 15.81 · Schwankung 1.006 -> 1.035 · Tage mit Verlust >= 3 % des Tagesengagements 8.4 % -> 7.4 %
+         Auskunft 2025: Rueckgang 27.93 -> 22.12 · Schwankung 1.330 -> 1.250 · Tage mit Verlust >= 3 % des Tagesengagements 12.0 % -> 12.0 %
+         Auskunft 2026: Rueckgang 6.80 -> 6.86 · Schwankung 0.610 -> 0.586 · Tage mit Verlust >= 3 % des Tagesengagements 6.7 % -> 7.1 %
+         Gegenprobe eigene Schleife G1: Rueckgang 26.182867 / 26.182867 · Verhaeltnis 1.015326 / 1.015326 -> gleich
+
+GESAMTURTEIL (Plan §4): nicht in beiden Mengen -> fester Positionswert bleibt

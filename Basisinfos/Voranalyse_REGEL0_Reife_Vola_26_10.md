@@ -138,3 +138,24 @@ Eine Volatilitätssteuerung des **Bestands** hieße: in wilden Phasen verkaufen.
 - Urteil TRÄGT als Bremse: Rang (i) **und** Rang (ii) ≥ 0,95 in beiden Mengen; „schadet“ bei ≤ 0,05.
 - **Auskunft:** Mittel je Tag G1 gegen G0 mit Band (15 T). Eine Bremse, die das Mittel belastbar senkt, wird so ausgewiesen.
 - Selbsttest wie 1b (gemeinsamer Tagesschock).
+
+### 4.3 Ergebnis V-1 Fassung 1c (26.10.2026; `p95_v1_groesse_atr.py` → `.txt`; Fassung 1/1b: `p95_v1_fassung1.txt`, `p95_v1_fassung1b.txt`)
+
+**Selbsttest bestanden:** Fehlalarm 0,5 % / 0,0 %; Fund bei λ = 1: 89 % / 80 % (λ 0,5: 77 / 89 %, λ 2: 89 / 87 %).
+
+| Einheit: Positionswert 1.500 € | Rückgang G0 → G1 (Rang) | Schwankung je Tag G0 → G1 (Rang) | Mittel je Tag G0 / G1 · Differenz [Band 15 T] |
+|---|---|---|---|
+| **Referenz** (10.728 Handel, 45 Bl.) | 8,36 → 8,00 (0,547) | 0,920 → 0,863 **(1,000)** | +0,1017 / +0,1015 · −0,0002 [−0,016; +0,015] |
+| **Lauf A** (11.696 Handel, 47 Bl.) | 31,31 → 26,18 **(0,991)** | 1,051 → 1,015 (0,911) | +0,0237 / +0,0218 · −0,0019 [−0,021; +0,017] |
+
+Je Jahr (Auskunft): Der Rückgang sinkt 2024 und 2026 in der Referenz deutlich (5,25 → 3,43; 5,11 → 3,11) und 2025 in Lauf A (27,9 → 22,1); 2024 in Lauf A steigt er (13,0 → 15,8).
+
+**Gegenprobe:** eigene Schleife G1 gleich (Rückgang und Schwankung auf 1e-9); das Band mit doppelter Blocklänge sagt dasselbe.
+
+**Urteil nach Plan:** in beiden Mengen **NICHT TRENNBAR**. Je Menge ist nur **eines** der zwei Kriterien belastbar: Referenz die Schwankung, Lauf A der Rückgang. ⇒ **Der feste Positionswert bleibt** (Folge §4).
+
+**Einordnung:**
+- Die Richtung ist in allen vier Kennzahlen **gleich**: G1 senkt Risiko oder Rückgang, das Mittel bleibt gleich (Differenzen nahe null, Band um null).
+- Das passt genau zur Literatur (R-A: Bremse für die Ränder, keine Mehrrendite).
+- Belastbar „in beiden Mengen und beiden Kriterien“ ist es nicht.
+- Weil das Mittel nicht leidet, wäre G1 eine **kostenneutrale Wahl des Risikoprofils**. Das ist eine Nutzerentscheidung (Fakt), kein gemessener Vorteil.

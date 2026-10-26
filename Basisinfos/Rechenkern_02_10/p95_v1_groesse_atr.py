@@ -4,7 +4,7 @@
 
 G0 Gewicht 1 · G1 Gewicht c/ATR (c = Median der ATR der Einstiege der vorigen 90 T, kausal), gekappt [0,5; 2], auf gleiche Summe normiert.
 Ertrag 24 h vor Kosten aus den Stundenkursen data/_hist, ATR nach Betriebsformel (regel0_rechnung.E2._atr). Konto = Summe der Tages-P&L.
-(i) groesster Rueckgang, (ii) Mittel/Schwankung der Tages-P&L; Nullwelt: G1-Gewichte je Kalendermonat vertauscht (1.000).
+(i) groesster Rueckgang, (ii) Schwankung der Tages-P&L (Fassung 1c; Mittel nur Auskunft); Nullwelt: G1-Gewichte je Kalendermonat vertauscht (1.000).
 SELBSTTEST vor dem ersten Blick (Fehlalarm <= 5 %, Pflanzung lambda 0,5/1/2, Soll >= 80 % bei 1) - Fassung 1b: gemeinsamer Tagesschock. Gegenprobe eigene Schleife. Nur lesend.
 """
 import os
@@ -96,7 +96,7 @@ class Pruefstand:
     @staticmethod
     def kennzahlen(p):
         k = np.cumsum(p)
-        return float(np.max(np.maximum.accumulate(k) - k)), float(p.mean() / p.std())
+        return float(np.max(np.maximum.accumulate(k) - k)), float(p.std())     # FASSUNG 1c (§4.2): Schwankung statt Mittel/Schwankung
 
     def vertausche(self, w, rng):
         v = w.copy()
@@ -109,7 +109,7 @@ class Pruefstand:
         nd, nq = np.empty(k), np.empty(k)
         for i in range(k):
             nd[i], nq[i] = self.kennzahlen(self.tages(self.vertausche(w, rng), r))
-        return dd, q, float(np.mean(nd > dd)), float(np.mean(nq < q))
+        return dd, q, float(np.mean(nd > dd)), float(np.mean(nq > q))       # kleiner Rueckgang und kleinere Schwankung sind besser
 
 
 def bremse(r1, r2):
@@ -120,7 +120,7 @@ def band(p1, p0, block, rng, n=2000):
     m = len(p1)
     st = rng.integers(0, m, (n, int(np.ceil(m / block))))
     ix = ((st[:, :, None] + np.arange(block)) % m).reshape(n, -1)[:, :m]
-    d = p1[ix].mean(1) / p1[ix].std(1) - p0[ix].mean(1) / p0[ix].std(1)
+    d = p1[ix].mean(1) - p0[ix].mean(1)                                      # Auskunft 1c: Mittel je Tag G1 - G0
     return np.percentile(d, [2.5, 97.5])
 
 
@@ -134,14 +134,14 @@ def gegenprobe(e, w):
         k += x
         hoch = max(hoch, k)
         dd = max(dd, hoch - k)
-    return dd, p.mean() / p.std()
+    return dd, p.std()
 
 
 def main():
     print("P95 MESSPLAN V-1 · Groesse nach ATR gegen festen Positionswert · Ertrag 24 h vor Kosten (neutral)\n")
     daten = {name: handel(p) for name, p in MENGEN.items()}
     block = messnorm._block(1)
-    print("SELBSTTEST Fassung 1b vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * m_Tag, je 100):")
+    print("SELBSTTEST Fassung 1c vor dem ersten Blick (Fehlalarm 200 Nullwelt-Ziehungen statt G1; Pflanzung r' = r + lambda * ATR * m_Tag, je 100):")
     ok_alle = True
     for name, e in daten.items():
         P = Pruefstand(e)
@@ -174,10 +174,10 @@ def main():
         st = "TRAEGT als Bremse" if bremse(rg1, rg2) else ("TRAEGT NICHT (schadet)" if min(rg1, rg2) <= 0.05 else "NICHT TRENNBAR")
         urteile[name] = st
         eng = 1.0 * len(e) / P.nt
-        print("%-8s G0: Rueckgang %.2f · Mittel/Schwankung %.3f · Mittel je Tag %+.3f | G1: Rueckgang %.2f (Rang %.3f) · Mittel/Schwankung %.3f (Rang %.3f) · Mittel je Tag %+.3f" % (
+        print("%-8s G0: Rueckgang %.2f · Schwankung %.3f · Mittel je Tag %+.4f | G1: Rueckgang %.2f (Rang %.3f) · Schwankung %.3f (Rang %.3f) · Mittel je Tag %+.4f" % (
             name, dd0, q0, p0.mean(), dd1, rg1, q1, rg2, p1.mean()))
-        print("         Differenz Mittel/Schwankung G1-G0 %+.3f · Band 15 T [%+.3f; %+.3f] · Band 30 T [%+.3f; %+.3f] -> %s" % (
-            q1 - q0, lo, hi, lo2, hi2, st))
+        print("         Auskunft Mittel je Tag G1-G0 %+.4f · Band 15 T [%+.4f; %+.4f] · Band 30 T [%+.4f; %+.4f] -> Urteil %s" % (
+            p1.mean() - p0.mean(), lo, hi, lo2, hi2, st))
         for j in (2024, 2025, 2026):
             m = (e.zeit.dt.year == j).to_numpy()
             if m.sum() < 50:
@@ -187,7 +187,7 @@ def main():
             a1, b1 = Pj.kennzahlen(Pj.tages(w1[m], r[m]))
             s0 = np.mean(Pj.tages(w0[m], r[m]) <= -0.03 * eng)
             s1 = np.mean(Pj.tages(w1[m], r[m]) <= -0.03 * eng)
-            print("         Auskunft %d: Rueckgang %.2f -> %.2f · Mittel/Schwankung %.3f -> %.3f · Tage mit Verlust >= 3 %% des Tagesengagements %.1f %% -> %.1f %%" % (
+            print("         Auskunft %d: Rueckgang %.2f -> %.2f · Schwankung %.3f -> %.3f · Tage mit Verlust >= 3 %% des Tagesengagements %.1f %% -> %.1f %%" % (
                 j, a0, a1, b0, b1, 100 * s0, 100 * s1))
         g = gegenprobe(e, w1)
         print("         Gegenprobe eigene Schleife G1: Rueckgang %.6f / %.6f · Verhaeltnis %.6f / %.6f -> %s" % (

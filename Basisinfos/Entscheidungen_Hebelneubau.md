@@ -2148,3 +2148,21 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Neu und frei:** ETF-Flüsse mit Verzögerung (Farside erreichbar, ab 2024) ⇒ Stufe-0-Machbarkeit vorgeschlagen. DVOL (Deribit, frei) nur als V-1-Variante.
 
 **Betrieb unverändert.**
+
+# E-158 · V-1 Größe nach ATR: Bremse in der Richtung überall, nach Plan NICHT TRENNBAR; ETF-Flüsse nicht messbar (Fehlalarm 6 %); DVOL über V-1 hinaus vorgeschlagen (26.10.2026)
+
+**26.10.2026** · Nutzer: *„1 ja, 2 ja, 3 ja“* · Nachtrag: *„meine Anmerkung … betrifft eigentlich die Implizite Volatilität … u.U. kann der Indikator auch für andere Assets oder Strategien genutzt werden und bringen einen Vorteil“*
+
+**V-1** (vorab 857c9b9e; Fassungen 1b/1c vor dem ersten Blick, Ursachen gemessen):
+- Fassung 1 Pflanzung je Handel (wegdiversifiziert); 1b Kriterium Mittel ÷ Schwankung hängt am Zufallsmittel; **1c bestanden**.
+- **Ergebnis:**
+  - Referenz: Schwankung −6 % (Rang 1,000), Rückgang −4 % (0,55).
+  - Lauf A: Rückgang −16 % (Rang 0,991), Schwankung −3 % (0,91).
+  - Mittel je Tag gleich.
+- ⇒ **NICHT TRENNBAR**, der feste Positionswert bleibt. Die Richtung ist durchgehend eine Bremse ohne Ertragsverlust.
+
+**ETF-Flüsse Stufe 0** (vorab c2ac58d5, Fassung 1b): Fehlalarm 6 % bei 400 Ziehungen ⇒ **nicht messbar**. Vorschlag: nur Fakt im Lagebild; Fassung 2 mit geeichter Schwelle nur auf Wunsch.
+
+**DVOL (Nutzerhinweis):** Die implizite Volatilität ist ein Angstmaß des Optionsmarkts und kann über V-1 hinaus tragen. Sie ist verwandt mit Fear & Greed, dem einzigen Atlas-Kandidaten (E-135), dessen Messung mit F-1 F2 abbrach (E-136). Vorschlag: Stufe-0-Machbarkeit DVOL und Varianzprämie (DVOL − gemessene Schwankung) als Lage für BTC/ETH **und** als Umfeld für die REGEL0-Einstiege aller Assets, zusammen mit Fear & Greed. Download der DVOL-Historie (Deribit, frei, wenige Abfragen) braucht ein Ja.
+
+**Betrieb unverändert.**
