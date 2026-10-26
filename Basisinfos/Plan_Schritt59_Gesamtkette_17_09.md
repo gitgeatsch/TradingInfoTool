@@ -2727,3 +2727,8 @@ Schritt7 §23.24.
 - Die Messungen rechnen den Marktwert-Rang jetzt zeitrichtig aus den CMC-Wochen.
 - Damit ist die Watchlist-Auswahl auf 1 Monat **nirgends** belastbar besser als ihre Gruppe. Der frühere Top-30-Befund war der Datenvorgriff.
 - Die Ordnung des Fortbestands auf 12 Monate bleibt.
+
+**Nachtrag 26.10.2026 (79) — Restquellen** (E-155):
+- Mit freien Daten ist die Suche nach einem Einstiegsvorsprung erschöpft. Alle Inventare sind gemessen; der Freigabekalender ist jetzt kostenpflichtig, Wikipedia zu dünn.
+- Vorschlag: das Fakten- und Führungssystem weiterentwickeln.
+- Das NB-Bündel ist vorbereitet.

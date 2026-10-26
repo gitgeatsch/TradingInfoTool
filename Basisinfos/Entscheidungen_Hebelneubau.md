@@ -2096,3 +2096,22 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **Nachtrag zu E-142, E-144, E-145:** Sie rechneten mit dem alten Rang (Vorgriff). Ihre Urteile „nicht trennbar / trägt nicht“ sind davon nicht nach oben verzerrt. Sie gelten mit Vorbehalt und werden nur auf Wunsch neu gerechnet.
 
 **Betrieb unverändert.** `spot_abbau` rechnet zeitrichtig mit der CoinGecko-Historie ab 21.09.2025.
+
+# E-155 · NB-Bündel vorbereitet; Voranalyse (b): Mit freien Daten ist die Suche nach einem Einstiegsvorsprung erschöpft (26.10.2026)
+
+**26.10.2026** · Nutzer: *„c - prüfen gegenprüfen und doku“*
+
+**(a) NB-Bündel:**
+- 64 Commits seit dem letzten bekannten NB-Stand (Diagnose 19.10., `d3b45f94`).
+- Betriebscode ändern nur das Lagebild Gesamtmarkt mit HY (E-137) und K-4 (E-152).
+- `requirements.txt`, `config.yaml` und `regel0_betrieb.yaml` sind unverändert.
+- Alle geänderten Betriebsmodule laden am Desktop fehlerfrei.
+- Kontrollen nach Pull und Neustart: K-GM-1, K-B4-D1, K-K4-1, K-SP-6 (dazu K-O21-2, falls eine REGEL0-Signalmail kommt).
+
+**(b) Voranalyse** (`Voranalyse_Vorsprung_Restquellen_26_10.md`):
+- Alle freien Quellen der Inventare (Spot §27.2/§45, Schritt7 §23.22/§23.71/§23.72) sind gemessen.
+- Neu geprüft: DefiLlama-Freigaben jetzt **kostenpflichtig (402)**; Wikipedia nur 50 Coins mit Artikel, Reihen durch Umbenennungen gekappt (bestätigt U8).
+- ⇒ Kein unerschlossener freier Kandidat. Weitere Einstiegsmessungen wären Mehrfachtesten.
+- **Vorschlag (a):** Suche abschließen und das Fakten- und Führungssystem weiterentwickeln. Alternativen: (b) CryptoCompare mit kostenfreiem Schlüssel; (c) Projektregel *nur kostenfrei* (Nutzerentscheidung, nicht empfohlen).
+
+**Betrieb unverändert.**

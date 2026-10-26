@@ -571,6 +571,11 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - `mk_messung.RANG_QUELLE = "cmc"`: zeitrichtiger Rang, B1–B4 bestanden. A1 neu: Top 30 +1,4 [−1,1; +4,3], nicht trennbar (E-143 ersetzt). Die B4-Fortbestandsordnung bleibt.
 - ➤ Offen: das NB-Bündel (K-GM-1, K-B4-D1, K-K4-1, K-SP-6).
 
+### Stand 26.10.2026 spät (E-155)
+
+- NB-Bündel vorbereitet (64 Commits seit `d3b45f94`; Betriebsänderungen: Lagebild + HY, K-4). Kontrollen K-GM-1, K-B4-D1, K-K4-1, K-SP-6.
+- Voranalyse Restquellen: Mit freien Daten ist die Suche erschöpft. ➤ Zur Abstimmung: (a) Fakten-/Führungssystem weiterentwickeln · (b) CryptoCompare · (c) Projektregel.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
