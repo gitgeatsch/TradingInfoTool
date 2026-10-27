@@ -13,7 +13,7 @@
 #   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
 #      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
 #   4. eine Quelle: das Memory verweist nur noch hierher.
-stand: "2026-10-24"
+stand: "2026-10-27"
 kontrollen:
   # ---- offen ------------------------------------------------------------------------------------------------------------
   - id: K-ANK-1
@@ -104,6 +104,7 @@ kontrollen:
     nachweis: "naechste REGEL0-Signalmail: unter '2 · Chart' drei Bilder (Signal, Wochenchart, Tageschart); H15-Mail mit zwei Bildern je Position; Log 'Charts n'; kein 'Wochen-/Tageschart gescheitert'"
     faellig_bis: ""
     status: offen
+    teilbeleg_27_10: "NB-Export 27.10. 13:28 (72 h Log): REGEL0-Signalmails 26./27.10. (RENDER, NEAR, BTC, KAIA, MORPHO, KAS, LINK, VIRTUAL, BEAMX) zugestellt, KEIN 'REGEL0-Wochen-/Tageschart ... gescheitert'; Bilder nur in der Mail pruefbar (Nutzerblick BEAMX 27.10. 07:00); H15-Mail im Fenster keine (gemeldet 0)"
   - id: K-GUI-2
     titel: "P12 Hebel-Tab: drei Bereiche (Signale REGEL0, Positionen H15 mit Bitpanda-Abgleich, Freigabe je Asset), Schalter auch weiter in der Watchlist"
     seit: "2026-10-11"
@@ -200,6 +201,7 @@ kontrollen:
     beleg: "Zwischenstand Diagnose 13.10. 12:12: Lauf 11:40 'Spot-Upbit: ok - 28 L-Bestaende, ohne KRW 12 - Meldungen neu 0 - Faelle 0 - gemailt 0' OHNE '(Schalter aus)' - der Schalter wirkt (wird je Lauf aus regel0_betrieb.yaml gelesen, griff schon nach dem Pull, vor dem Neustart 11:45); bis 10:40 noch '(Schalter aus)'. Kein ERROR seit 12.10. 12:58. Offen: das Ereignis (erstes echtes Listing)"
     faellig_bis: ""
     status: offen
+    teilbeleg_27_10: "NB-Export 27.10. 13:28: Logzeilen 'Spot-Upbit: ok · 29 L-Bestaende ... gemailt 0' OHNE '(Schalter aus - nur Protokoll)' -> Teil 'eingeschaltet' erfuellt; offen nur das erste echte KRW-Listing"
   - id: K-WL-1
     titel: "Watchlist: HBAR neu (echter Trade wie XDC), XDC aus der NB-Ortsaenderung ins Repo, CT entfernt (Airdrop, geswapped) - 13.10., Nutzer-Ja; NB-config.yaml wieder gleich dem Repo"
     seit: "2026-10-13"
@@ -372,6 +374,7 @@ kontrollen:
     nachweis: "sofort nach Pull+Neustart: Diagnose hebelfuehrung[].haltedauer_text fuer BTC 'seit ~2xx h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)', Statusseite Hebel-Karte mit derselben Zeile, keine Job-Fehler (hebel_screening, regel0_mails); als Ereignis: naechste REGEL0-Ausstiegserinnerung mit 'Fakt: Gemessen auf den REGEL0-Einstiegen 2025-26' und ohne 'O13'; eine 72-h-Erinnerung nur, wenn eine REGEL0-Position nach 72 h noch offen ist (sonst erinnerung72_entfallen_am mit Grund)"
     faellig_bis: "2026-11-30"
     status: offen
+    teilbeleg_27_10: "NB-Export 27.10. 13:28: 24-h-Erinnerung 'REGEL0 AUSSTIEG faellig: BTC 5x' 27.10. 07:09 zugestellt (Signal 26.10. 07:00) - Wortlaut nur in der Mail pruefbar; 'Erinnerung entfallen (keine offene Position)' laufend im Log; BTC-Eigenposition haltedauer_text 'seit 440 h offen · eigene Entscheidung'"
     teilbeleg: "Diagnose 18.10. 07:35 (NB auf 02aeff17, Neustart 07:19): E3 ERFUELLT - paket_b.hebelfuehrung BTC haltedauer_text 'seit 217 h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)' (09.10. 04:38 UTC + 217 h = Diagnosezeit), Hebelfuehrung 07:19/07:34 ok, keine Job-Fehler seit 17.10. 18:20, REGEL0-Laeufe 07:25 ok. Offen als Ereignis: E1 (naechste 24-h-Erinnerung mit Fakt) und E2 - erster Kandidat ist die Erinnerung vom 17.10. 23:09 (Einstieg 16.10. ~20:00 UTC): am 19.10. gegen 23 Uhr entweder 72-h-Mail oder erinnerung72_entfallen mit Grund"
   - id: K-SP-6
     titel: "E-124: Season-Ampel-Mail eingeschaltet, Vorbehalt 'zwei Zyklen'"
@@ -404,6 +407,7 @@ kontrollen:
     nachweis: "Mail: beide Zeilen im Abschnitt Einschaetzung, kein 'realisiert'; Diagnose regel0_messstand: gemailt (n/Tage), trades_zeile, trade_summen seit_start (2 Trades, ETH -127,41 / BTC Teil -35,17) und seit_beginn (~38 Trades, ~-6.900 EUR), nicht_berechnet 0; Statusseite REGEL0-Bereich 'Deine Hebel-Trades'"
     faellig_bis: "2026-10-31"
     status: offen
+    teilbeleg_27_10: "NB-Export 27.10. 13:28: regel0_messstand.zeile 'deine gemailten Signale seit 03.10.: 57 an 15 Tagen ...', trades_zeile 'seit 03.10.: 2 Trades (1 offen) · Ergebnis zum Schlusskurs -162,57 EUR ... EURCV', seit_beginn 38 Trades -6.922,69 EUR, nicht_berechnet 0. Signalmails seit dem Teilbeleg: 9 am 26./27.10. - Wortlaut nur in der Mail pruefbar (Nutzerblick BEAMX 27.10. 07:00)"
     teilbeleg: "Diagnose 17.10. 12:31 (NB auf dc17e3cc): gemailt 27 an 8 Tagen, Zeile beginnt mit den gemailten Signalen; trades_zeile -162,57 EUR seit 03.10., seit Beginn 38 Trades -6.922,69 EUR, nicht berechnet 0; Statusseite-Daten vorhanden. Offen: naechste REGEL0-Signalmail nach dem Neustart 12:25 mit beiden Zeilen · Diagnose 18:22 (NB auf 8db1a7d9): seit 12:25 keine REGEL0-Signalmail; Messstand-Job laeuft einmal je Tag (09:12), naechster Lauf 18.10. 06:50"
   - id: K-O21-1
     titel: "O21 Messstand: Job regel0_messstand misst seit 03.10. (erster Lauf ~900 Signale), Statusseite zeigt den Messstand, die naechste REGEL0-Signalmail traegt die Zeile 'Messstand im Betrieb'"
@@ -544,6 +548,7 @@ kontrollen:
     nachweis: "erste echte REGEL0-Signalmail nach dem Pull: Zeile 'Beleg' vor 'Gefahr je Stufe' (Text) und im HTML"
     faellig_bis: "2026-11-30"
     status: offen
+    teilbeleg_27_10: "NB-Export 27.10. 13:28: Pull-Neustart 07:32; letzte REGEL0-Signalmail BEAMX 06:09 (VOR dem Pull), danach keine (neu_schalter_an 0) - noch nicht pruefbar"
   - id: K-DVOL-1
     titel: "E-161: Lagebild L7 DVOL - Statusseite/GUI/Diagnose zeigen 7 Zeilen, Mailzeile 'BTC-DVOL', kein 'DVOL nicht abrufbar' im Log"
     seit: "2026-10-27"
@@ -572,7 +577,9 @@ kontrollen:
     art: manuell
     nachweis: "Export nach Pull: Log je 15-min-Umlauf 'Alte Spot-Kette STILLGELEGT (W-3 S-1, E-164)' statt 'Rollen-Kette ANGEHALTEN'; weiter 'Hebelfuehrung'-Zeilen; keine 'Multi-Asset-Batch'-Laeufe; Statusseite Schalter-Karte erste Zeile 'Alte Spot-Kette (W-3 S-1, im Code): stillgelegt'; keine Terminmarkt-Frische-Fehlermail"
     faellig_bis: "2026-11-10"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "Statusseite vom Nutzer bestaetigt 27.10. (Schalter-Karte: Alte Spot-Kette stillgelegt); Log siehe teilbeleg"
     teilbeleg: "NB-Export 27.10. 13:28 (NB auf 037c6df7, keine lokalen Aenderungen, Neustart 12:48): Umlaeufe 12:48/13:03/13:18 je 'Alte Spot-Kette STILLGELEGT'; letztes 'Rollen-Kette ANGEHALTEN' 12:47 (vor dem Neustart); Multi-Asset-Batch 12:48 'uebersprungen - alte Kette STILLGELEGT'; Wallet-Abgleich und Hebelfuehrung (13:18 BTC HALTEN Abstand 21,5 %) laufen; REGEL0 stuendlich weiter (644 aktiv); nach dem Neustart keine WARNING/ERROR, keine Frische-Mail. Offen: Statusseite (Schalter steht nicht im Export) - Blick auf die Seite genuegt"
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
