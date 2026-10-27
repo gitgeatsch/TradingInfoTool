@@ -105,7 +105,7 @@ kontrollen:
     faellig_bis: ""
     status: erfuellt
     erfuellt_am: "2026-10-27"
-    beleg: "Nutzer 27.10.: Mail REGEL0 Hebel LONG BEAMX 3x (27.10. 07:00) mit drei Bildern unter '2 · Chart' (Signal, Wochenchart, Tageschart); kein 'gescheitert' im Log (teilbeleg_27_10). H15-Mailteil: Bilder je Position laufen ueber denselben Chartweg, eigener Nachweis bei der naechsten H15-Mail nicht mehr gefordert"
+    beleg: "Nutzer 27.10.: Mail REGEL0 Hebel LONG BEAMX 3x (27.10. 07:00) mit drei Bildern unter '2 · Chart' (Signal, Wochenchart, Tageschart); kein 'gescheitert' im Log (teilbeleg_27_10). H15-Mailteil: Bilder je Position laufen ueber denselben Chartweg, H15-Teil abgespalten als K-WC-1b (offen)"
     teilbeleg_27_10: "NB-Export 27.10. 13:28 (72 h Log): REGEL0-Signalmails 26./27.10. (RENDER, NEAR, BTC, KAIA, MORPHO, KAS, LINK, VIRTUAL, BEAMX) zugestellt, KEIN 'REGEL0-Wochen-/Tageschart ... gescheitert'; Bilder nur in der Mail pruefbar (Nutzerblick BEAMX 27.10. 07:00); H15-Mail im Fenster keine (gemeldet 0)"
   - id: K-GUI-2
     titel: "P12 Hebel-Tab: drei Bereiche (Signale REGEL0, Positionen H15 mit Bitpanda-Abgleich, Freigabe je Asset), Schalter auch weiter in der Watchlist"
@@ -587,6 +587,15 @@ kontrollen:
     erfuellt_am: "2026-10-27"
     beleg: "Statusseite vom Nutzer bestaetigt 27.10. (Schalter-Karte: Alte Spot-Kette stillgelegt); Log siehe teilbeleg"
     teilbeleg: "NB-Export 27.10. 13:28 (NB auf 037c6df7, keine lokalen Aenderungen, Neustart 12:48): Umlaeufe 12:48/13:03/13:18 je 'Alte Spot-Kette STILLGELEGT'; letztes 'Rollen-Kette ANGEHALTEN' 12:47 (vor dem Neustart); Multi-Asset-Batch 12:48 'uebersprungen - alte Kette STILLGELEGT'; Wallet-Abgleich und Hebelfuehrung (13:18 BTC HALTEN Abstand 21,5 %) laufen; REGEL0 stuendlich weiter (644 aktiv); nach dem Neustart keine WARNING/ERROR, keine Frische-Mail. Offen: Statusseite (Schalter steht nicht im Export) - Blick auf die Seite genuegt"
+  - id: K-WC-1b
+    titel: "O45 H15-Teil: die naechste Hebelfuehrungs-Mail (H15) zeigt je Position zwei Bilder (Wochen- und Tageschart)"
+    seit: "2026-10-27"
+    paket: Hebelfuehrung
+    commit: ""
+    art: ereignis
+    nachweis: "naechste H15-Mail (Liquidationsabstand unter Warnschwelle oder neue Meldung): je Position Wochen- und Tageschart; Log 'Hebelfuehrung: ... (Mail zugestellt, Charts n)' mit n = 2 x Positionen; kein 'Hebelfuehrung: Wochen-/Tageschart gescheitert'. Abgespalten aus K-WC-1 (Nutzer 27.10.: 'H15-Teil als eigene Kontrolle offen lassen')"
+    faellig_bis: "2026-12-31"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}
