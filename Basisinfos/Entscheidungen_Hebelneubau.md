@@ -2271,3 +2271,12 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Zur Abstimmung:** F1 Grundlage, F2 Leiter zuerst fachlich festlegen (Empfehlung), F3 Fakt-Dashboard parallel.
 
 **Betrieb:** unverändert.
+- **Nachtrag 27.10. abends (Nutzer: „1. beides … 2. nur Long, Short nachträglich als Option wie heute, 3 b, 4 a“):**
+  - Beide Stränge; die REGEL0 ist nur einer von mehreren Auslösern.
+  - Neuer §2a: vier Vorteilsquellen, geordnet nach Haltbarkeit in der Zukunft:
+    - V1 Risiko passend zur Lage (Mechanismus, zuerst);
+    - V2 Gewinner laufen lassen (größtes Potential, 2025–26 gegen 2024 umgekehrt);
+    - V3 mehrere Auslöser mit eigenem Zeitmaß;
+    - V4 Nicht-Handeln (getrennt ausgewiesen).
+  - Haltedauer 24 h bis 5 T plus „länger, bis die Führung schließt“, höchstens etwa 14 T. Die 24 h waren nur Messfenster (E-6, 2.642) und wurden über §23.68 netto zur Betriebsregel.
+  - Der Leiterentwurf §5.2 ist um Haltedauer- und Spot-Zeilen ergänzt; der Nutzer korrigiert ihn.

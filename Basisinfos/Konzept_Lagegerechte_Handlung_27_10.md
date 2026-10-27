@@ -47,6 +47,23 @@ Jede Handlung beantwortet vier Fragen: **Ob** (handeln überhaupt), **Welches** 
 
 Daraus folgt der Ansatz dieses Konzepts: **Die Gegebenheiten sollen vor allem das *Wie* bestimmen** – dort steckt messbare Information. Das *Ob* bleibt Fakt und Gewicht.
 
+### 2a. Woher der Vorteil kommen soll — und warum die REGEL0 allein nicht reicht
+
+**Nutzer 27.10.:** *„REGEL0 ist kein neuer Ansatz – was ist hier anders, wie entsteht ein Vorteil, und zwar für die Zukunft? Bei einem neuen Ansatz kann REGEL0 als Ausgangsbasis dienen, leistet alleine aber kaum etwas.“*
+
+**Einverstanden:** Die REGEL0 ist hier nur **einer von mehreren Auslösern**. Ihr eigener Vorsprung ist nicht robust (E-139). Neu ist nicht der Auslöser, sondern **was nach ihm geschieht**. Vier mögliche Vorteilsquellen, geordnet nach der Wahrscheinlichkeit, dass sie auch **künftig** halten:
+
+| # | Vorteilsquelle | Mechanismus | Warum es auch künftig halten könnte | ehrliche Erwartung |
+|---|---|---|---|---|
+| **V1** | **Risiko passend zur Lage** (Stufe und Größe nach ATR/DVOL) | gleicher Ertrag mit weniger Liquidationen und kleineren Rückgängen. **Mehr Ertrag je Risiko erlaubt bei gleichem Gesamtrisiko einen größeren Einsatz** – so wird ein Risikovorteil zum Ertragsvorteil | Volatilität clustert, ein **Mechanismus**, kein Muster; seit Jahrzehnten in allen Märkten belegt; bei uns 2.681 (ATR → Liquidationsgefahr) | am wahrscheinlichsten; V-1 zeigt die Richtung, war aber allein nicht trennbar |
+| **V2** | **Gewinner laufen lassen** (Haltedauer 24 h bis 5 T und länger, geführt) | Asymmetrie T2: kurz bei Gegenwind, lang bei Rückenwind, **beendet durch die Führung** statt durch eine Regimeprognose | Trendfolge lebt seit einem Jahrhundert davon (Hurst/Ooi/Pedersen); bei uns 2024 H168 brutto +3,4 bis +4,3 % gegen H24 +1 % | **größtes Potential, größte Unsicherheit:** 2025–26 war es umgekehrt (§23.68); feste Stops retteten längeres Halten dort nicht (2.702). Wie gut die Führung trennt, ist die eigentliche Frage |
+| **V3** | **Mehrere Auslöser, je mit der passenden Handlung** | die Extreme (`momentum_kurz`/`rsi`, 2.648) → kurz; Dominanz-Spitze (Spot §32.1) → Alt-Spot gestaffelt, 3–9 Wochen; Upbit-Listing → Mitnahme; REGEL0 → Prüffall | jeder Auslöser hat ein **eigenes Zeitmaß**. Bisher wurde jeder mit **einer** Handlung (Hebel 24 h) geprüft, das passte oft nicht | einzeln schwach; das Zusammenwirken ist nur über die Handlungswahl messbar, nicht additiv (E-142) |
+| **V4** | **Nicht handeln bei mehreren Gegenwinden** | Verluste vermeiden, T3 | Bremsen sind belegt (E-129) | am nächsten am Marktfilter; bisher nicht entscheidbar (E-133), daher **getrennt** ausweisen |
+
+**„Für die Zukunft“:** Ein Vorteil, der auf einem **Mechanismus** beruht (V1, die Führung in V2), hält eher als einer, der auf einem **Muster** der letzten drei Jahre beruht. Deshalb kommt V1 zuerst. Dazu kommt die Schicht **S7 Rückkopplung**: Jede Handlung wird im Betrieb weiter gemessen. Lässt eine Quelle nach, kommt eine **Fassung n+1** mit Ursachenbegründung, nie eine stille Nachjustierung.
+
+**Spot-Strang** (Nutzer: *„beides“*): Der Kauf am festen Sparplan-Tag bleibt, weil REGEL0 als Kaufzeitpunkt nicht trug (E-132, Wartedrift). Die Leiter betrifft im Spot die **zusätzlichen** Handlungen (Alt-Spot nach Dominanz-Spitze, gestaffelt; Teilmitnahme L; Abbau B4). Der Sparplan selbst ist **Planung** (§8).
+
 ---
 
 ## 3. Was dauerhaft erfolgreiche Trader anders machen
@@ -127,8 +144,17 @@ Daraus folgt der Ansatz dieses Konzepts: **Die Gegebenheiten sollen vor allem da
 | S1: Umfeld rot (Rezessionsampel, HY) | Größe kleiner, Haltedauer nicht länger | übergeordnete Kräfte **gewichten** (Nutzer 01.10.) |
 | S3: Kern | Spot-Handlungen (H1/H2) zusätzlich zulässig | Kern immer zugelassen |
 | S4: unteres B4-Fünftel | kein Spot-Aufbau; nur kurze Handlungen | Fortbestand schwach über Monate |
-| S5: Auslöser an einem Extrem (Lift) | Handlung nach oben möglich | Extreme ordenbar (2.648) |
+| S5: Auslöser an einem Extrem (Lift) | Handlung nach oben möglich, **Haltedauer kurz** | Extreme ordenbar (2.648); große Bewegungen kehren binnen 24 h um (Schritt7 §23.68, Vorwissen aus der Wucht-Messung zu 2.694) |
+| S1/S2: Rückenwind (BTC über seinem 200-T-Schnitt, Breite gut, Umfeld nicht rot) | **Haltedauer länger**, beendet durch die Führung (nachgezogener Abstand, H15), höchstens ≈ 14 T | V2; 2024 umgekehrt zu 2025–26 (§23.68) |
+| S1/S2: Gegenwind | Haltedauer 24 h | §23.68 (2025–26) |
+| S5: Dominanz-Spitze (BTCDOM ≥ +8,7 % in 30 T) | Alt-Spot **gestaffelt**, 3–9 Wochen | Spot §32.1 (Lift 1,65 gegen die Basisrate, 56 % Fehlalarm) |
 | mehrere Gegenwinde zugleich | H0 (beobachten) | T3 |
+
+**Festgelegt mit dem Nutzer 27.10.:**
+- **Beide Stränge**, mit der REGEL0 als ein Auslöser unter mehreren (§2a).
+- **Nur Long**; Short bleibt wie heute eine nachträgliche Option.
+- **Haltedauer** 24 h bis 5 T, dazu *länger, bis die Führung schließt*, höchstens etwa 14 T.
+- **Leiterzeilen:** Der Nutzer korrigiert diesen Entwurf, danach folgt der Messplan vorab.
 
 ⚠️ **Die Leiter ist eine Liste von Gewichten, keine Kette von Sperren** (Nutzer 28.09.: *„kein künstlicher Blocker“*). Welche Zeilen bleiben und wie stark sie verschieben, **entscheidet die Messung** (§6). Die Zeilen werden **vorab fachlich** festgelegt und nicht aus den Daten gesucht – sonst wäre es wieder Mehrfachtesten (2.645).
 
