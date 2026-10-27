@@ -406,7 +406,9 @@ kontrollen:
     art: manuell
     nachweis: "Mail: beide Zeilen im Abschnitt Einschaetzung, kein 'realisiert'; Diagnose regel0_messstand: gemailt (n/Tage), trades_zeile, trade_summen seit_start (2 Trades, ETH -127,41 / BTC Teil -35,17) und seit_beginn (~38 Trades, ~-6.900 EUR), nicht_berechnet 0; Statusseite REGEL0-Bereich 'Deine Hebel-Trades'"
     faellig_bis: "2026-10-31"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "Nutzer 27.10.: Mail REGEL0 Hebel LONG BEAMX 3x (27.10. 07:00) hat beide Zeilen (Messstand im Betrieb deine gemailten Signale / Deine Hebel-Trades seit 03.10.); Diagnose siehe teilbeleg_27_10"
     teilbeleg_27_10: "NB-Export 27.10. 13:28: regel0_messstand.zeile 'deine gemailten Signale seit 03.10.: 57 an 15 Tagen ...', trades_zeile 'seit 03.10.: 2 Trades (1 offen) · Ergebnis zum Schlusskurs -162,57 EUR ... EURCV', seit_beginn 38 Trades -6.922,69 EUR, nicht_berechnet 0. Signalmails seit dem Teilbeleg: 9 am 26./27.10. - Wortlaut nur in der Mail pruefbar (Nutzerblick BEAMX 27.10. 07:00)"
     teilbeleg: "Diagnose 17.10. 12:31 (NB auf dc17e3cc): gemailt 27 an 8 Tagen, Zeile beginnt mit den gemailten Signalen; trades_zeile -162,57 EUR seit 03.10., seit Beginn 38 Trades -6.922,69 EUR, nicht berechnet 0; Statusseite-Daten vorhanden. Offen: naechste REGEL0-Signalmail nach dem Neustart 12:25 mit beiden Zeilen · Diagnose 18:22 (NB auf 8db1a7d9): seit 12:25 keine REGEL0-Signalmail; Messstand-Job laeuft einmal je Tag (09:12), naechster Lauf 18.10. 06:50"
   - id: K-O21-1
