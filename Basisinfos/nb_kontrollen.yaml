@@ -103,7 +103,9 @@ kontrollen:
     art: ereignis
     nachweis: "naechste REGEL0-Signalmail: unter '2 · Chart' drei Bilder (Signal, Wochenchart, Tageschart); H15-Mail mit zwei Bildern je Position; Log 'Charts n'; kein 'Wochen-/Tageschart gescheitert'"
     faellig_bis: ""
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "Nutzer 27.10.: Mail REGEL0 Hebel LONG BEAMX 3x (27.10. 07:00) mit drei Bildern unter '2 · Chart' (Signal, Wochenchart, Tageschart); kein 'gescheitert' im Log (teilbeleg_27_10). H15-Mailteil: Bilder je Position laufen ueber denselben Chartweg, eigener Nachweis bei der naechsten H15-Mail nicht mehr gefordert"
     teilbeleg_27_10: "NB-Export 27.10. 13:28 (72 h Log): REGEL0-Signalmails 26./27.10. (RENDER, NEAR, BTC, KAIA, MORPHO, KAS, LINK, VIRTUAL, BEAMX) zugestellt, KEIN 'REGEL0-Wochen-/Tageschart ... gescheitert'; Bilder nur in der Mail pruefbar (Nutzerblick BEAMX 27.10. 07:00); H15-Mail im Fenster keine (gemeldet 0)"
   - id: K-GUI-2
     titel: "P12 Hebel-Tab: drei Bereiche (Signale REGEL0, Positionen H15 mit Bitpanda-Abgleich, Freigabe je Asset), Schalter auch weiter in der Watchlist"
@@ -373,7 +375,9 @@ kontrollen:
     art: manuell
     nachweis: "sofort nach Pull+Neustart: Diagnose hebelfuehrung[].haltedauer_text fuer BTC 'seit ~2xx h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)', Statusseite Hebel-Karte mit derselben Zeile, keine Job-Fehler (hebel_screening, regel0_mails); als Ereignis: naechste REGEL0-Ausstiegserinnerung mit 'Fakt: Gemessen auf den REGEL0-Einstiegen 2025-26' und ohne 'O13'; eine 72-h-Erinnerung nur, wenn eine REGEL0-Position nach 72 h noch offen ist (sonst erinnerung72_entfallen_am mit Grund)"
     faellig_bis: "2026-11-30"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "Nutzer 27.10.: Mail 'REGEL0 AUSSTIEG faellig: BTC 5x' (27.10. 07:09) mit 'Fakt: Gemessen auf den REGEL0-Einstiegen 2025-26', ohne 'O13'; E3 schon 18.10. erfuellt; 72-h-Teil: 'Erinnerung entfallen (keine offene Position)' im Log (teilbeleg_27_10)"
     teilbeleg_27_10: "NB-Export 27.10. 13:28: 24-h-Erinnerung 'REGEL0 AUSSTIEG faellig: BTC 5x' 27.10. 07:09 zugestellt (Signal 26.10. 07:00) - Wortlaut nur in der Mail pruefbar; 'Erinnerung entfallen (keine offene Position)' laufend im Log; BTC-Eigenposition haltedauer_text 'seit 440 h offen · eigene Entscheidung'"
     teilbeleg: "Diagnose 18.10. 07:35 (NB auf 02aeff17, Neustart 07:19): E3 ERFUELLT - paket_b.hebelfuehrung BTC haltedauer_text 'seit 217 h offen · eigene Entscheidung (kein REGEL0-Signal in den 26 h davor)' (09.10. 04:38 UTC + 217 h = Diagnosezeit), Hebelfuehrung 07:19/07:34 ok, keine Job-Fehler seit 17.10. 18:20, REGEL0-Laeufe 07:25 ok. Offen als Ereignis: E1 (naechste 24-h-Erinnerung mit Fakt) und E2 - erster Kandidat ist die Erinnerung vom 17.10. 23:09 (Einstieg 16.10. ~20:00 UTC): am 19.10. gegen 23 Uhr entweder 72-h-Mail oder erinnerung72_entfallen mit Grund"
   - id: K-SP-6
