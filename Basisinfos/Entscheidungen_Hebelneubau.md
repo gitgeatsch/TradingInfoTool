@@ -2218,3 +2218,17 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Weitere Doku:** Standblatt `hebel_neubau.py`, Übergabe, Regelwerk Hebel, Schritt7 §23.76 und die Liste der bekannten roten Prüfungen im Arbeitsstand.
 - **Betrieb (kosmetisch):** In B1/B3/B4/C1 kein doppelter Punkt mehr nach „Stand TT.MM.“. p81 G6 prüft es mit Mutationsprobe; NB K-W2-PUNKT.
 - Suite: Register 15/15, Hebelneubau 51/51, SpotMitnahme/SpotUpbit/SpotAbbau/SeasonAmpel/Gesamtmarkt/Mailstraffung grün; p81 9/9.
+
+# E-163 · Voranalyse W-3: Die alte Spot-Kette ist nur angehalten — ein Dateifehler schaltet sie wieder ein UND die Hebelführung ab; Vorschlag S-1 harte Sperre (27.10.2026)
+
+**27.10.2026** · Nutzer: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und doku“* · `Voranalyse_W3_Stilllegung_alte_Kette_27_10.md`
+- **Befund:**
+  - Ist `regel0_betrieb.yaml` unlesbar, läuft die Rollen-Kette scharf wieder an (Vorgabe False) und A6 fällt weg.
+  - Zugleich fällt **H15** aus, weil `lade()` ohne Rückfall aufgerufen wird.
+  - Fehlt `rollen_kette.aktiv_fuer`, läuft der noch ältere Weg (Allocator, Batch, GUI-Knöpfe).
+  - Der Wächter der Terminmarkt-Frische (für REGEL0) steht im Zweig der alten Kette.
+- **Heute:** Die Kette steht; die 07:15-Mail führt nichts mehr; die Ausstiegsverfolgung der Alt-Signale läuft aus (offen 50, ~3–4 T).
+- **Vorschlag S-1:** harte Sperre per Code-Konstante, unabhängig von yaml und `aktiv_fuer`; H15 robust gegen yaml-Fehler; Wächter vor jeder Verzweigung; Statusseite/GUI „stillgelegt“. Nichts Laufendes fällt weg, umkehrbar. Danach S-2 Jobs abmelden; S-3 Code entfernen nicht empfohlen.
+- **Offen:** H15-Plan für REGEL0-Positionen (Fachfrage).
+
+**Betrieb unverändert.**

@@ -620,6 +620,11 @@ Alle **vor** K-4 rot, nachgewiesen durch einen Lauf ohne die K-4-Änderungen (Vo
 
 Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet, inzwischen erfüllt).
 
+### Stand 27.10.2026 mittags (E-162/E-163)
+
+- W-2 erledigt (Doku-Lücken, Register, doppelter Punkt).
+- **W-3 Voranalyse:** Ein Dateifehler schaltet die alte Kette wieder ein und H15 ab. ➤ Zur Abstimmung: **S-1 harte Sperre** · S-2 Jobs abmelden nach Ende der Alt-Messung · S-3 nicht empfohlen · Fachfrage H15-Plan für REGEL0.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
