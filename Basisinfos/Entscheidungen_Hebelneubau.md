@@ -2249,3 +2249,25 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Fällt weg:** nichts, was heute läuft.
 - **NB:** K-W3-S1.
 - **Danach (S-2):** die alten Jobs einzeln abmelden, wenn die Messung der Alt-Signale fertig ist.
+
+# E-165 · Konzept „Lagegerechte Handlung“: Signale bleiben als Auslöser, Schichten verschieben die Handlung, gemessen im gepaarten Handlungsvergleich (27.10.2026)
+
+**27.10.2026** · Nutzer: *„ich will die SIGNALE nicht verwerfen, sondern diese sollen über mehrere Schichten anders gelagert sein … die Handlung aufgrund der passenden Gegebenheiten, das musst du primär als Ziel sehen – prüfen gegenprüfen und doku“*
+
+**Konzept:** `Konzept_Lagegerechte_Handlung_27_10.md`.
+- **Ziel:** Zu jedem Auslöser die Handlung, die zu den Gegebenheiten passt, mit Begründung je Schicht.
+- **Ausgangslage** nach Ob/Welches/Wann/Wie: Die Richtung ist kaum vorhersagbar (2.599, E-133, E-139), das Risiko schon (2.681, ATR → Liquidationsgefahr). Daher bestimmen die Gegebenheiten vor allem das *Wie*.
+- **Sieben Schichten:** Umfeld, Markt, Klasse, Asset, Auslöser, Ausführung, Rückkopplung. Sie sind Gewichte, keine Sperren. Nur **gemessene** Schichten verschieben die Handlung, die übrigen stehen als Fakt daneben.
+- **Handlungskatalog** H0–H4 und **Leiter**, als Hypothesen vorab fachlich festzulegen.
+- **Messung:** gepaarter Handlungsvergleich (gleicher Auslöser, gleicher Zeitpunkt). Der Markt fällt in der Differenz großteils heraus. Arme: A fest, B Leiter, C Zufallsleiter je Tagesblock, D Orakel. Brutto, Gebühren nachgelagert.
+- **Dashboard:** dieselben Schichten, Kennzeichnung Fakt/gemessen/ungeprüft; LLM als Erklärer mit eigener Frage und Quelle je Satz.
+- **Mischung:** Planung, keine Systemfunktion; das System zeigt Ist gegen Plan, Klumpen und Band.
+- **Gegenprüfung:**
+  - vier Regeln ✔, mit einem Vorbehalt: B4 darf den Hebel nicht verschieben (Regel 3);
+  - Abgrenzung zu 2.677/2.645/E-133/V-1/E-82;
+  - Quellenprüfung `p100_konzept_quellen.py`: 8 Befunde, 15 Entscheidungen und 2 Spot-Paragraphen vorhanden;
+  - Außenquellen per Websuche gegengelesen.
+- **Eigene Berichtigung:** Die Chat-Aussage *„Führung halbiert den Verlust“* war zu stark. Nachlauf/Notbremse sind knapp nicht bestätigt (Spot §21.6), belegt ist die Teilmitnahme L (§31.6).
+- **Zur Abstimmung:** F1 Grundlage, F2 Leiter zuerst fachlich festlegen (Empfehlung), F3 Fakt-Dashboard parallel.
+
+**Betrieb:** unverändert.

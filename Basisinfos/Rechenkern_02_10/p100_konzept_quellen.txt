@@ -1,0 +1,4 @@
+Befunde 8 geprueft: 2.597, 2.598, 2.599, 2.645, 2.648, 2.677, 2.678, 2.681
+Entscheidungen 15 geprueft: E-82, E-125, E-126, E-129, E-133, E-135, E-139, E-141, E-142, E-154, E-156, E-158, E-160, E-164, E-165
+Spot-Paragraphen 2 geprueft: 21.6, 31.6
+alle Quellen vorhanden
