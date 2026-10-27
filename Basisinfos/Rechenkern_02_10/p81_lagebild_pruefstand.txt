@@ -3,13 +3,13 @@ G2   bestanden Auskunft 1982-2026-09: ROT in 81 Monaten, 6 Strecken · nahe eine
 G3   bestanden fehlt / veraltet / ok / Vermerk: True / True / ok / True · O54-Zeile unveraendert True · 7 Zeilen True · L4 mit HY-Aufschlag True (Stand 2026-10-23)
 G4   bestanden O54 alt mit Vermerk True · Gesamtmarkt alt mit Vermerk 'RuntimeError: Makro-Reihen nicht abgerufen (2026-10-27)' · Schluessel verborgen True
 G5   bestanden O54 frisch True (Stand 2026-10-27) · Gesamtmarkt alter Stand 2026-10-23 mit Vermerk 'ConnectionError: gestellt: Gesamtmarkt-Quelle weg,' · Log ohne Schluessel True (DVOL-Pfad im Log True)
-G6   bestanden REGEL0 'Gesamtmarkt' unter 'Makro' + Technik + HTML True · B1/B3/B4 eigene Zeile True · Job viermal zeile_mail True
+G6   bestanden REGEL0 'Gesamtmarkt' unter 'Makro' + Technik + HTML True · B1/B3/B4 eigene Zeile True · Job viermal zeile_mail True · doppelter Punkt keiner
      Muster B1:
          Makro lang: Rückenwind · kurz: neutral – kurz ohne klare Richtung; die Hebelstufe berücksichtigt die Schwankung schon über die ATR · Stand 27.10.
-         Gesamtmarkt Kurve warnt, kein Rot · Nasdaq-Bull seit 19 Mon. (Median 60) · BTC -36 % vom Hoch (vor 13 Mon.) · 10J 5,00 % · Brent 115 $ · F&G 48 · Stand 27.10..
+         Gesamtmarkt Kurve warnt, kein Rot · Nasdaq-Bull seit 19 Mon. (Median 60) · BTC -36 % vom Hoch (vor 13 Mon.) · 10J 5,00 % · Brent 115 $ · F&G 48 · Stand 27.10.
 G7   bestanden Statusseite Block in der Makro-Karte True · Getter 7 Zeilen · GUI 7 Zeilen · Diagnose True
 G8   bestanden Desktop-Prod unveraendert True · echte Ablage unveraendert True
-G9   bestanden L7: BTC-DVOL 38,1: Optionsmarkt erwartet ±2,0 % je Tag, ±11 % in 30 T · im Jahresvergleich ruhig (Perzentil 27 %) · Angstprämie +12,8 Pp gegen gemessene 25 % · ETH-DVOL 53,2 (ruhig) | Tage 400 | ohne DVOL: DVOL nicht verfügbar
+G9   bestanden L7: BTC-DVOL 38,1: Optionsmarkt erwartet ±2,0 % je Tag, ±11 % in 30 T · im Jahresvergleich ruhig (Perzentil 27 %) · Angstprämie +12,8 Pp gegen gemessene 25 % · ETH-DVOL 52,9 (ruhig) | Tage 400 | ohne DVOL: DVOL nicht verfügbar
 
 Lagebild heute:
   L1 Rezessionsampel      Warnung der Zinskurve (10J–2J zuletzt 08/2024, 10J–3M zuletzt 08/2025 invertiert), Sahm 0,00 – kein Rot
@@ -18,7 +18,7 @@ Lagebild heute:
   L4 Zinsen und Anleihen  10J 5,00 % (+0,99 Pp in 12 M) · Laufzeitprämie 0,99 % · High-Yield-Aufschlag 3,38 % (+0,42 Pp in 12 M)
   L5 Öl                   Brent 115 $ (+90 % in 12 M)
   L6 Fear & Greed         F&G 48 (Neutral)
-  L7 Erwartete Schwankung (DVOL) BTC-DVOL 38,1: Optionsmarkt erwartet ±2,0 % je Tag, ±11 % in 30 T · im Jahresvergleich ruhig (Perzentil 27 %) · Angstprämie +12,8 Pp gegen gemessene 25 % · ETH-DVOL 53,2 (ruhig)
+  L7 Erwartete Schwankung (DVOL) BTC-DVOL 38,1: Optionsmarkt erwartet ±2,0 % je Tag, ±11 % in 30 T · im Jahresvergleich ruhig (Perzentil 27 %) · Angstprämie +12,8 Pp gegen gemessene 25 % · ETH-DVOL 52,9 (ruhig)
 Mailzeile: Kurve warnt, kein Rot · Nasdaq-Bull seit 19 Mon. (Median 60) · BTC -36 % vom Hoch (vor 13 Mon.) · 10J 5,00 % · Brent 115 $ · F&G 48 · Stand 27.10.
 
 9 von 9 bestanden

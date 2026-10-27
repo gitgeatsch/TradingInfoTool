@@ -11533,6 +11533,46 @@ BEFUNDE = (
                "Form hat - benachbarte Horizonte mit gleichgerichteter "
                "Wirkung", "gilt",
                "Schritt 4a; Befunde 2.491-horizontprofil, 2.208-n86"),
+    # ---- W-2 (27.10.2026): Befunde E-136 bis E-160 nachgetragen (Pruefbericht A.4: Register stand auf dem 16.10.) ----------------
+    Befundlage("E-139", "REGEL0 0.1 ist NICHT robust: ihr gemessenes Plus (Referenz +0,153 % je Handel nach 0,48 % Kosten, Band "
+               "[-0,23; +0,59]) entsteht allein aus der Reife-Regel am Datenbeginn der Terminmarktdaten (B1 Reife bildet die Referenz zu "
+               "99,9 % nach). Mit Kursgeschichte ab 2019 (Lauf A) 2024-26 -0,34 % statt +0,15 %; Z1 je Tag ueberall negativ", "gilt",
+               "Entscheidungen E-136, E-138, E-139; Voranalyse_REGEL0_Robustheit_24_10.md; p80, p82, p83",
+               basis="Binance-Archiv ab 2019-06 gegen REST abgeglichen; Referenz kern48jbz_einstiege_bestand.csv"),
+    Befundlage("E-141", "Pruefbericht vor der Gesamtbilanz: zwei fruehere ,traegt' halten nicht - E-36 (REGEL0-Vorteil) gilt nur je "
+               "Handel, nicht je Tag, und E-130 (Kraken-Perps) ist nicht von null zu trennen", "gilt",
+               "Entscheidungen E-141; Bilanz_Gesamt_25_10.md Teil A"),
+    Befundlage("E-143", "Watchlist-Auswahl (oberes B4-Fuenftel) schlaegt ihre Gruppe belastbar auf 1 M: Top 30 +3,5 Pp [+0,7; +7,5]",
+               "abgeloest", "Entscheidungen E-143; Voranalyse_Vorsprungs_Atlas_25_10.md §7; p86", abgeloest_durch="E-154",
+               warum="Datenvorgriff im Marktwert-Rang (heutige Umlaufmenge vor 21.09.2025); zeitrichtig +1,4 Pp [-1,1; +4,3]"),
+    Befundlage("E-144", "Auswahl x 24-h-Einstieg traegt nicht bis 0,50 Pp: die Auswahl verbessert den COIN (Monate), nicht den "
+               "ZEITPUNKT", "gilt", "Entscheidungen E-144; p87",
+               basis="alter Marktwert-Rang (Vorgriff, E-151) - Vorbehalt; das Urteil ,traegt nicht' ist davon nicht nach oben verzerrt"),
+    Befundlage("E-151-l2a", "Hebel nur in guten Marktphasen (BTC ueber 200-T-Schnitt) ist mit unseren Daten NICHT ENTSCHEIDBAR: "
+               "Selbsttest nicht bestanden, 72 Regimewechsel in 12 Jahren, Aufloesung erst +3 Pp je 7 T; echtes Ergebnis ungesehen",
+               "gilt", "Entscheidungen E-151, E-153; Voranalyse_L2a_Regime_Hebel_Kern_25_10.md §10; p93, p93b"),
+    Befundlage("E-154", "Mit zeitrichtigem Marktwert-Rang (CMC-Wochen, mk_messung.RANG_QUELLE='cmc') ist die Watchlist-Auswahl auf 1 M "
+               "in KEINER Gruppe belastbar besser als ihre Gruppe (Top 30 +1,4 Pp [-1,1; +4,3], Gesamt +1,2 [+0,0; +2,3]); die "
+               "Ordnung des Fortbestands auf 12 M bleibt (Fuenftel E3 -19,4 .. +11,4)", "gilt",
+               "Entscheidungen E-153, E-154; Voranalyse_Vorsprungs_Atlas_25_10.md §9; p94, p86_gegenprobe",
+               basis="B1 alter Rang bitgleich (82/82), B2 Rangkorrelation zu CMC 0,997, B4 8,2 % Anker in anderer Klasse"),
+    Befundlage("E-155", "Mit KOSTENFREIEN Daten ist die Suche nach einem Einstiegsvorsprung erschoepft: alle Inventare gemessen "
+               "(Spot §45/§46, Schritt7 §23.71/§23.72, E-125); DefiLlama-Freigabekalender seit 26.10. kostenpflichtig (402), "
+               "Wikipedia nur 50 Coins", "gilt", "Entscheidungen E-155, E-156; Voranalyse_Vorsprung_Restquellen_26_10.md"),
+    Befundlage("E-157", "Die REGEL0-Fassung mit vom Datenbeginn unabhaengiger Reife IST Lauf A (eigenes Normal rechnet schon rollend "
+               "1 Jahr) - ohne Vorsprung; Ballungstage (> 20 Signale) 172-192 Tage, aber nur 27-28 getrennte Episoden", "gilt",
+               "Entscheidungen E-157; Voranalyse_REGEL0_Reife_Vola_26_10.md §1"),
+    Befundlage("E-158-v1", "Positionsgroesse nach ATR (Positionswert ~ 1/ATR) gegen festen Positionswert: Bremse in der Richtung "
+               "ueberall (Referenz Schwankung -6 % Rang 1,000; Lauf A Rueckgang -16 % Rang 0,991), Mittel gleich - nach Plan NICHT "
+               "TRENNBAR (je Menge nur ein Kriterium belastbar); fester Positionswert bleibt", "gilt",
+               "Entscheidungen E-158; Voranalyse_REGEL0_Reife_Vola_26_10.md §4; p95 (Fassung 1c)"),
+    Befundlage("E-158-etf", "ETF-Fluesse BTC (Farside, 3-T-Nettofluss, Wirkung t+1) als Zustand NICHT MESSBAR: Fehlalarm 6 % bei "
+               "400 Ziehungen (Soll <= 5 %), Aufloesung 0,50 Pp je Tag", "gilt",
+               "Entscheidungen E-158; Recherche_Ergaenzung_26_10.md §5; p96"),
+    Befundlage("E-160", "Angstmasse (DVOL, Angstpraemie, Fear & Greed) als Lage fuer BTC/ETH und als Umfeld der REGEL0-Einstiege mit "
+               "unseren Daten NICHT AUFLOESBAR: zu wenige unabhaengige Angstphasen (16-44 Strecken 2024-26)", "gilt",
+               "Entscheidungen E-160; Voranalyse_DVOL_Angstmass_26_10.md; p98 (Fassung 1b, rollendes Fenster)",
+               basis="DVOL Deribit 2021-03-24..2026-10-26, Gegenprobe 5/5"),
 )
 
 

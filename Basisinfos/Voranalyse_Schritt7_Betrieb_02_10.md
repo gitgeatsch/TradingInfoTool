@@ -4346,3 +4346,17 @@ Festgelegt **vor** der ersten Abfrage (dieser Commit).
    - der Nebenbefund *Signalflut* (§23.72), der ohne LLM auf der Messbasis messbar ist.
 
 **Zur Abstimmung (eine Frage):** Wie geht es mit der LLM-Komponente im Betrieb weiter?
+
+### 23.76 Betriebspakete 24.–27.10.2026 und NB-Bestätigung (E-137, E-152, E-159, E-161)
+
+| Paket | Inhalt | Prüfung Desktop | NB 27.10. (Export 07:51, NB auf c581be8d) |
+|---|---|---|---|
+| **E-137 Lagebild Gesamtmarkt** (+ HY-Aufschlag) | L1–L6 als Fakt in Statusseite, REGEL0, B1/B3/B4, C1, GUI, Diagnose | p81, Paket Gesamtmarkt | K-GM-1 ✔ (7 Zeilen, ohne Fehler) |
+| **E-152 K-4 Kernwerte** | keine Spot-Kauffrage der alten Kette für BTC/ETH/SOL, Hebelzelle bleibt taktisch | Paket Kernwerte 10/10 mit Mutation; ganze Suite ohne neuen Fehler | K-K4-1 ✔ (Kette angehalten, keine Importfehler) |
+| **E-159 W-1** | Zeile *Beleg* (REGEL0 nicht robust) in jeder Signalmail; Diagnose `regel0_reihenbeginn` | Paket W1Reihenbeginn 6/6 mit Mutation | **K-R0-ST0 ✔ 635/635 gleich**; K-W1-MAIL offen (nächste Signalmail) |
+| **E-161 L7 DVOL** | erwartete Bewegung je Tag und 30 T, Jahresvergleich, Angstprämie, ETH; eigener Fehlerpfad | p81 9/9, Log ohne Schlüssel (G5) | K-DVOL-1 ✔ (L7, Datenstand 27.10.) |
+
+Nebenbefunde:
+- Das Abbau-Log zeigt bei einem schon fertigen Stichtag „0 L-Bestände“. Das ist der Startwert eines frühen Rücksprungs, kein Datenfehler; Mitnahme und Upbit zählen 29.
+- K-B4-D1: Die Universumstabelle füllt sich erst beim B4-Lauf am 02.11.
+- Auswertung: `Rechenkern_02_10/p99_nb_kontrollen_27_10.py` → `.txt`.

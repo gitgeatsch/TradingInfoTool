@@ -2210,3 +2210,11 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - p81 9/9, Suite Gesamtmarkt/Geheimnisse/Schlüsselwache grün. NB K-DVOL-1.
 
 **Betrieb:** neue Zeile im Lagebild, sonst unverändert.
+
+# E-162 · W-2 Doku-Lücken geschlossen: Register E-139 bis E-160, Standblatt, Übergabe, Regelwerk Hebel, §23.76, bekannte rote Prüfungen; doppelter Punkt in den Spot-Mails behoben (27.10.2026)
+
+**27.10.2026** · Nutzer: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und doku“*
+- **Register:** 11 Befunde nachgetragen; E-143 als *abgelöst durch E-154* geführt; E-144 mit dem Vorbehalt Rang-Vorgriff.
+- **Weitere Doku:** Standblatt `hebel_neubau.py`, Übergabe, Regelwerk Hebel, Schritt7 §23.76 und die Liste der bekannten roten Prüfungen im Arbeitsstand.
+- **Betrieb (kosmetisch):** In B1/B3/B4/C1 kein doppelter Punkt mehr nach „Stand TT.MM.“. p81 G6 prüft es mit Mutationsprobe; NB K-W2-PUNKT.
+- Suite: Register 15/15, Hebelneubau 51/51, SpotMitnahme/SpotUpbit/SpotAbbau/SeasonAmpel/Gesamtmarkt/Mailstraffung grün; p81 9/9.

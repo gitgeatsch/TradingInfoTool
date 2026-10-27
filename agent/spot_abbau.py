@@ -603,7 +603,7 @@ def mail(fall: dict, werte_eur: dict, ausserhalb_binance: set, verw: dict | None
     z += ["", "4  KONTEXT (keine Handlung)",
           "  Mitnahme ×3 (B1) und Upbit-Listing (B3) gelten weiter; kommt dort eine Mail, hat sie Vorrang (sie hat einen Termin).",
           *(["  " + __import__("agent.verwaesserung", fromlist=["MESSLAGE"]).MESSLAGE + "."] if verw is not None else []),
-          *(["  Makro " + makro_text + "."] if makro_text else []),               # O54 (15.10.2026): Fakt, Gewichtung beim Nutzer
+          *(["  Makro " + makro_text + ("" if makro_text.rstrip().endswith(".") else ".")] if makro_text else []),               # O54 (15.10.2026): Fakt, Gewichtung beim Nutzer
           *(["  Season-Ampel " + ampel_text + "."] if ampel_text else []),        # P19 (17.10.2026): Fakt, loest nichts aus
           "  Der Erlös: Wohin er geht, ist nicht gemessen – in der Messung lag er still (Dollar).",
           "", "5  TECHNIK", "  Spot B4 · Stichtag %s · Wert ohne TVL (F1, F2, F8) · Fünftel je Klasse · Spot §43/§48." % fall["stichtag"]]

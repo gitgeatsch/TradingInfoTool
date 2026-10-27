@@ -603,6 +603,23 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - **K-B4-D1 teilweise:** Bestände ✔; das Universum füllt sich erst beim B4-Lauf am 02.11.
 - Anzeige: „0 L-Bestände“ im Abbau-Log ist für einen schon fertigen Stichtag nur die Vorgabe (früher Rücksprung), kein Datenfehler.
 
+### ⚠️ Bekannte rote Suite-Prüfungen (Stand 26.10.2026, ganze Suite 3.395; Prüfbericht A.4: *stand nur im Memory*)
+
+Alle **vor** K-4 rot, nachgewiesen durch einen Lauf ohne die K-4-Änderungen (Voranalyse Kern-Regel §8). Keine ist durch die Arbeit vom 24.–27.10. entstanden.
+
+| Paket | Prüfung | Grund |
+|---|---|---|
+| Makro | Prüfstand O54 M2 | FRED-API gegen die Datei vom 14.10.: NFCI-Revisionen (Aufgabe *O54-Prüfstand gegen Revisionen robust machen* angelegt) |
+| Hebelbuch, WalletFührung | Prüfstände p11b/p11c | brauchen eine Produktionssicherung bzw. volle Buchungen im Austauschordner |
+| Regel0Betrieb | H15 Prüfstand am Pfad | dieselbe Ursache (Sicherung) |
+| Verwässerung | Prüfstand P22c C4/C5 | Rhythmus-Stand hängt am Datum (`stand()['verw_rhythmus']` heute leer) |
+| Neuaufnahme (3) | Messreihe je gehaltener Position, Messbasis veraltet, Kernwert ohne Beitrag (CANTON) | Messbasis am Desktop seit 09/2026 nicht aufgefrischt; ASTER/MON zu kurz |
+| Nennersperre | gesperrte Symbole ohne Sperre vorhanden | Anker der Probe fehlt in der heutigen Datenlage |
+| Verfügbarkeit | Helfer liefert Symbole | turnover-Helfer leer (Datenlage) |
+| GuiKette | P15b Mouseover jeder Spalte | neue Spalten ohne Erklärung |
+
+Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet, inzwischen erfüllt).
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

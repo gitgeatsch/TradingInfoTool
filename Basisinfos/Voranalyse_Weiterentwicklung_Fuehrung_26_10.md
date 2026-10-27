@@ -68,3 +68,17 @@ Nutzer 26.10.: *„a - prüfen gegenprüfen und doku“*, also die Suche nach ei
 **Fakt am Rande (aus dem Abgleich):** Die großen Werte, die 2024 in der Referenz **unreif** waren (BTC, SOL, BNB, AVAX, XLM), sind im Betrieb seit 2024-09 reif. Der Betrieb rechnet für sie also schon wie **Lauf A**, die Fassung ohne Vorsprung.
 
 **NB:** K-R0-ST0 und K-W1-MAIL, im **morgigen** Pull mit dem übrigen Bündel.
+
+## 5. W-2 ERLEDIGT — Doku-Lücken aus dem Prüfbericht A.4 (27.10.2026, E-162)
+
+| Lücke (Prüfbericht) | erledigt |
+|---|---|
+| `bestand.py` / Register stand auf dem 16.10. | **11 Befunde nachgetragen** (E-139, E-141, E-143 → *abgelöst durch E-154*, E-144 mit Vorbehalt Rang-Vorgriff, E-151, E-154, E-155, E-157, E-158 V-1/ETF, E-160). `REGISTER_Befunde.md` neu erzeugt (1.286), Selbstprüfung ✔, Paket Register 15/15 |
+| `hebel_neubau.py` NEUESTER_STAND | Eintrag **27.10.** (REGEL0 nicht robust, Lauf A, W-1, K-R0-ST0, E-151/E-158/E-160, Suche abgeschlossen), Paket Hebelneubau 51/51 |
+| `UEBERGABE_Hebelneubau_27_09.md` | Nachtrag 27.10. oben (zuerst lesen) |
+| `Regelwerk_Hebel_Bewertung_27_09.md` | Nachtrag 27.10.: Tabelle, was für den Hebel gilt, und die vier neuen Prüfregeln |
+| Schritt7 §23.x für das Betriebspaket E-137 | **§23.76**: Betriebspakete 24.–27.10. (E-137, E-152, E-159, E-161) mit NB-Bestätigung |
+| roter Suite-Lauf „Makro“ stand nur im Memory | `Arbeitsstand_Schritt59.md`: **Liste aller bekannten roten Prüfungen** mit Grund |
+| Kosmetisch: doppelter Punkt „Stand 24.10..“ in den Spot-Mails | **behoben** in B1/B3/B4/C1 (Punkt nur, wenn keiner da ist); p81 **G6** prüft es, die Mutationsprobe ohne Korrektur schlägt an (B1/B3/B4); NB-Kontrolle K-W2-PUNKT |
+
+**Nicht Teil von W-2** (Prüfbericht A.4, Werkzeuglage): fehlende Skripte für die M-L-Ursachensimulation und die E-133-Tabelle; Auslegungen nur im Skriptkopf (E-126). Sie betreffen abgeschlossene Messungen; Nachbau nur auf Wunsch.

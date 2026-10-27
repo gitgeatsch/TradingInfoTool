@@ -228,7 +228,7 @@ def mail(fall: dict, btc_faktor: float | None = None, ausserhalb_binance: bool =
         z.append("  " + verw_text + ".")
         z.append("  (" + _VW.MESSLAGE + ".)")
     if makro_text:                                               # O54 (15.10.2026): Makro-Lage als Fakt, Gewichtung beim Nutzer
-        z.append("  Makro " + makro_text + ".")
+        z.append("  Makro " + makro_text + ("" if makro_text.rstrip().endswith(".") else "."))
     if ampel_text:                                               # P19 (17.10.2026): Season-Ampel als Fakt, loest nichts aus
         z.append("  Season-Ampel " + ampel_text + ".")
     z += ["", "4  TECHNIK", "  Spot B1 Mitnahme ×3 · Fenster %s bis %s · Dollar-Tagesschluss (price_history_ohlc) · Verkauf am Folgetag wie gemessen." % (

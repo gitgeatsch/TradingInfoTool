@@ -190,8 +190,13 @@ eigene = all(any(z.strip().startswith("Gesamtmarkt ") for z in x.splitlines()) f
 qb = open("scheduler/background.py", encoding="utf-8").read()
 ok_job = qb.count('__import__("agent.makro_lage", fromlist=["zeile_mail"]).zeile_mail()') == 4 \
     and '__import__("agent.makro_lage", fromlist=["zeile"]).zeile()' not in qb
-pruefe("G6", ok_r and eigene and ok_job, "REGEL0 'Gesamtmarkt' unter 'Makro' + Technik + HTML %s · B1/B3/B4 eigene Zeile %s · Job viermal zeile_mail %s" % (
-    ok_r, eigene, ok_job))
+import re  # noqa: E402
+
+# W-2 (27.10.2026, Pruefbericht A.4 kosmetisch): kein doppelter Punkt nach "Stand 27.10." in B1/B3/B4 (C1 hat dieselbe Regel)
+punkt = [n for n, t in (("B1", b1), ("B3", b3), ("B4", b4)) if re.search(r"\d\d\.\d\d\.\.", t)]
+pruefe("G6", ok_r and eigene and ok_job and not punkt,
+       "REGEL0 'Gesamtmarkt' unter 'Makro' + Technik + HTML %s · B1/B3/B4 eigene Zeile %s · Job viermal zeile_mail %s · doppelter Punkt %s" % (
+           ok_r, eigene, ok_job, punkt or "keiner"))
 print("     Muster B1:\n" + "\n".join("       " + z for z in b1.splitlines() if "Makro" in z or "Gesamtmarkt" in z))
 
 # ══ G7 Statusseite, GUI, Diagnose ═════════════════════════════════════════════════════════════════════════════════════════════

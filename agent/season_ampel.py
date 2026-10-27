@@ -403,7 +403,7 @@ def mail(fall: dict, d: dict, kandidaten: dict | None = None, makro_text: str | 
                                                                 BEDEUTUNG.get(st, ""), (", vorher %s" % NAME.get(fall["von"], fall["von"])) if fall.get("von") else ""),
               ""]
     if makro_text:
-        zeilen += [("" if makro_text.startswith("Makro") else "Makro-Lage ") + makro_text + ".", ""]
+        zeilen += [("" if makro_text.startswith("Makro") else "Makro-Lage ") + makro_text + ("" if makro_text.rstrip().endswith(".") else "."), ""]
     zeilen += ["Bedingungen am %s:" % date.fromisoformat(t["datum"]).strftime("%d.%m.%Y")]
     zeilen += ["  %-17s %8s  %s  (Schwelle %s)" % (n, w, "erfüllt" if an else "nicht erfüllt", s) for n, w, an, s in bedingungen(t)]
     if t.get("breite") is not None:

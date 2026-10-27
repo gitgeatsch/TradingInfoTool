@@ -920,6 +920,12 @@ NEUESTER_STAND = (
     ("16.10.", "W3 (§23.62, O55): das kurzfristige BTC-Regime (7 T) ist als Gewicht fuer REGEL0 NICHT verwertbar - Vorpruefung "
                "vorab festgelegt, 0 von 4 Mengen, das Vorzeichen wechselt 2025/2026, keine Umkehr; die naiven z-Werte aus "
                "§23.52 sind berichtigt (Tagesblock -1,8 / +1,3). Flughoehe Ebene 2 bleibt Auskunft. REGEL0 UNVERAENDERT"),
+    ("27.10.", "REGEL0 NICHT ROBUST (E-136/E-139): das Plus entstand aus der Reife-Regel am Datenbeginn; mit Kursgeschichte ab "
+               "2019 (Lauf A, = die datenbeginn-unabhaengige Fassung, E-157) kein Vorsprung. Die Mail sagt das bei jedem Signal (W-1, "
+               "Zeile Beleg); der NB rechnet mit demselben Reihenbeginn wie der Desktop (K-R0-ST0, 635/635). Hebel nur in guten "
+               "Marktphasen NICHT entscheidbar (E-151, 72 Regimewechsel); Groesse nach ATR bremst, nach Plan nicht trennbar (E-158, "
+               "Positionswert bleibt 1.500 EUR); ETF-Fluesse und Angstmasse (DVOL, F&G) nicht aufloesbar (E-158/E-160). Suche nach "
+               "einem Einstiegsvorsprung mit freien Daten ABGESCHLOSSEN (E-155/E-156). REGEL0 selbst UNVERAENDERT"),
     ("weiter", "Markt-Massstab 2024 bis 2026. DIE ROLLEN (25.09., am 29.09. geprueft, "
                "Einordnung_Beitraege_29_09.md): A Richtung entscheidet OB (Signal), B "
                "Bewegungserwartung WIE WEIT (Potential), C Risikosperre mit der ATR WIE "

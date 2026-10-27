@@ -425,3 +425,21 @@ dieser Tabelle, **nicht** die `messnorm`-Kopfzeile. Die Anpassung selbst
 Bekanntheitszeitpunkts, Einstufung im Werkzeugregister) ist ein eigenes
 Paket mit Voranalyse.
 
+## ⭐⭐ NACHTRAG 27.10.2026 — was seit dem 15.10. für den Hebel gilt
+
+| | Stand | Quelle |
+|---|---|---|
+| REGEL0 0.1 | im Betrieb, **Vorteil nicht robust** (Reife-Regel am Datenbeginn) | E-136, E-139, E-141 |
+| Robuste Fassung | Lauf A (Reife ab echtem Handelsbeginn) **ohne** Vorsprung; Ballungstage nur 27–28 Episoden | E-157 |
+| Mail | Zeile **Beleg** mit dem Vorbehalt in jeder Signalmail | E-159 (W-1) |
+| Grundgesamtheit am NB | Reihenbeginn je Asset **gleich** wie Desktop (635/635) | K-R0-ST0, 27.10. |
+| Hebel nur in guten Marktphasen | nicht entscheidbar (Selbsttest: 72 Regimewechsel in 12 J.) | E-151, E-153 |
+| Positionsgröße | **fest 1.500 €**; nach ATR wäre es eine Bremse ohne Ertragsverlust, nach Plan aber nicht trennbar | E-158 |
+| Angstmaße, ETF-Flüsse | nicht auflösbar bzw. nicht messbar, nur Fakt (Lagebild L6/L7) | E-158, E-160, E-161 |
+| Kern BTC/ETH/SOL | für REGEL0 und Hebel immer zugelassen; die alte Spot-Kette fragt nicht mehr | §8.0 L1/L2, E-152 |
+
+**Prüfregeln, die seither für jede Hebel-Messung gelten** (Regelwerksmanual, Nachträge 26.10.):
+- Reproduktion auf der **Größe** des Befunds.
+- Ertrag **nach** dem Informationszeitpunkt.
+- Historischer Rang mit historischer Größe.
+- Perzentil-Zustand bei Niveauwechsel nur im **rollenden** Fenster; den Anteil *an* je Jahr ausweisen.

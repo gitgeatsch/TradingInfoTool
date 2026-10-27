@@ -1,5 +1,13 @@
 # Übergabe an die nächste Session — Hebelneubau
 
+> ⭐⭐ **NACHTRAG 27.10.2026 — zuerst lesen:**
+> - **REGEL0 ist im Betrieb, ihr gemessener Vorteil ist aber NICHT robust** (E-136/E-139). Die Mail sagt das bei jedem Signal (W-1).
+> - Eine robuste Fassung gibt es nicht: Lauf A ist sie, ohne Vorsprung (E-157).
+> - Regime, ETF-Flüsse und Angstmaße sind nicht auflösbar (E-151/E-158/E-160).
+> - Die Größe nach ATR bremst nur (E-158).
+> - **Die Suche nach einem Einstiegsvorsprung mit freien Daten ist abgeschlossen** (E-155/E-156). Weiterentwickelt werden Führung, Ordnung und Lage (`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`).
+> - Den laufenden Stand führt `Arbeitsstand_Schritt59.md`; die Befunde stehen im Register (`REGISTER_Befunde.md`, E-139 bis E-160).
+>
 > ⭐ **NACHTRAG 15.10.2026:** Der Hebel läuft seit 03.10. als **REGEL0 am NB** (Schritt 7). Der laufende Stand steht nicht mehr hier, sondern in `Basisinfos/Arbeitsstand_Schritt59.md` (HIER-ANFANGEN-Block) und `Voranalyse_Schritt7_Betrieb_02_10.md` §23. Neu bis 15.10.:
 > - LLM-Prüfblock trennt nicht, er bleibt markiert;
 > - Termin- und Makro-Zeile als Fakt;
