@@ -107,6 +107,18 @@ Daraus folgt der Ansatz dieses Konzepts: **Die Gegebenheiten sollen vor allem da
 
 **Bestand:** halten · Teilmitnahme (L) · abbauen (B4) · in EURCV parken · Hebel schließen (H15).
 
+**Eine Handlung ist der ganze Trade** (Nutzerfrage 27.10.): Der Auslöser (z. B. das REGEL0-Signal) gibt den **Einstiegszeitpunkt** vor. Die Leiter entscheidet **Instrument, Stufe, Größe und Haltedauer bzw. Ausstieg**. Das ist keine neue Einstiegssuche.
+
+**Haltedauer als Achse der Leiter, 0–5 Tage und länger** (Nutzer 27.10.: *„für Hebel ca. 0–5 Tage oder sogar länger vorgesehen“*):
+- **E-6** (27.09.) hat **24 h als Messfenster** gesetzt, weil sich gute und schlechte Einstiege bei 12–24 h am besten trennten (2.642). Ausdrücklich: *„H24 ist das Messfenster, nicht die Haltedauer“*.
+- Zur **Betriebsregel** wurden die 24 h erst durch Schritt7 §23.68 (18.10.): Auf den REGEL0-Einstiegen 2025–26 kostete längeres Halten **netto** −0,32 bis −0,42 % je weiterem Tag. Das war
+  - **netto**, mit 0,18 % je Tag Finanzierung, also Kosten, die nach Regel 2 nachgelagert gehören;
+  - im Vorab-Urteil je Jahr *nicht unterscheidbar*;
+  - **2024 umgekehrt** (H168 brutto +3,4 bis +4,3 % gegen H24 +0,95 bis +1,35 %);
+  - gemessen auf Einstiegen, die heute als nicht robust gelten (E-139).
+- ⇒ Die 0–5 Tage sind **nicht widerlegt**, ihr Vorzeichen **hängt am Regime**. Genau das ist eine Gegebenheit für die Leiter.
+- Im gepaarten Vergleich (§6) wird je Einstieg **24 h / 48 h / 72 h / 5 T / länger** brutto gegeneinander gemessen, Finanzierung nachgelagert. Die Schichten S1/S2 sollen dabei entscheiden, wann länger gehalten wird.
+
 ### 5.2 Die Leiter: wie Schichten verschieben (**HYPOTHESEN**, nicht gemessen)
 
 | Gegebenheit | Verschiebung | fachliche Begründung |
