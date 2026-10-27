@@ -14,6 +14,7 @@ Dateien (D:\\CLAUDE_Temp). Liest FRED und alternative.me live (frei, nur lesend)
       Job-Aufrufe zeile_mail() viermal
   G7  Statusseite (Block in der Makro-Karte vor Betrieb & Lage, Render liest m.gesamtmarkt), Getter, GUI (gesamt_zeilen), Diagnose
   G8  Desktop-Prod und die echte Ablage unveraendert
+  G9  L7 DVOL (E-161): live abrufbar, Werte plausibel, ohne DVOL 'nicht verfuegbar', Mailzeile und Datenstand
 """
 import hashlib
 import io
@@ -119,11 +120,11 @@ ohne = dict(d)
 ohne.pop("gesamtmarkt")
 pruefe("G3", ML.zustand_gesamtmarkt(None) == "fehlt" and ML.zustand_gesamtmarkt(alt) == "veraltet" and ML.zustand_gesamtmarkt(d) == "ok"
        and "NICHT VERFÜGBAR" in z_f and "VERALTET" in z_v and "VERALTET" not in z_ok and "letzter Abruf gescheitert" in z_e
-       and ML.stand(alt)["gesamtmarkt"]["zustand"] == "veraltet" and ML.zeile(d) == ML.zeile(ohne) and len(g["zeilen"]) == 6
+       and ML.stand(alt)["gesamtmarkt"]["zustand"] == "veraltet" and ML.zeile(d) == ML.zeile(ohne) and len(g["zeilen"]) == 7
        and "High-Yield-Aufschlag" in g["zeilen"][3][2] and g["datenstand"].get("HY"),
-       "fehlt / veraltet / ok / Vermerk: %s / %s / %s / %s · O54-Zeile unveraendert %s · 6 Zeilen %s · L4 mit HY-Aufschlag %s (Stand %s)" % (
+       "fehlt / veraltet / ok / Vermerk: %s / %s / %s / %s · O54-Zeile unveraendert %s · 7 Zeilen %s · L4 mit HY-Aufschlag %s (Stand %s)" % (
            "NICHT VERFÜGBAR" in z_f, "VERALTET" in z_v, ML.zustand_gesamtmarkt(d), "gescheitert" in z_e, ML.zeile(d) == ML.zeile(ohne),
-           len(g["zeilen"]) == 6, "High-Yield-Aufschlag" in g["zeilen"][3][2], g["datenstand"].get("HY")))
+           len(g["zeilen"]) == 7, "High-Yield-Aufschlag" in g["zeilen"][3][2], g["datenstand"].get("HY")))
 
 
 # ══ G4 / G5 lauf mit kaputtem Abruf ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -140,6 +141,11 @@ class NurO54:
         raise ConnectionError("gestellt: Gesamtmarkt-Quelle weg, api_key=%s" % KEY)
 
 
+import logging  # noqa: E402
+
+LOG = io.StringIO()                       # 27.10.2026 (E-161): auch das LOG darf den Schluessel nie tragen - der DVOL-Pfad trug ihn
+_h = logging.StreamHandler(LOG)           # zuerst ungefiltert (gefunden in diesem Pruefstand, vor dem Commit behoben)
+logging.getLogger(ML.__name__).addHandler(_h)
 z4 = os.path.join(T, "m.json")
 ML._schreibe(z4, d)
 r4 = ML.lauf(z4, KEY, HEUTE, http=Kaputt(), pause=0)
@@ -151,10 +157,14 @@ pruefe("G4", r4["gesamt_kurz"] == d["gesamt_kurz"] and r4["fehler"] and g4.get("
 z5 = os.path.join(T, "n.json")
 ML._schreibe(z5, alt)
 r5 = ML.lauf(z5, KEY, HEUTE, http=NurO54(), pause=0)
+logging.getLogger(ML.__name__).removeHandler(_h)
+log_txt = LOG.getvalue()
 pruefe("G5", r5.get("fehler") is None and r5["stand"] == HEUTE.isoformat() and r5["gesamtmarkt"].get("fehler")
-       and r5["gesamtmarkt"]["stand"] == alt["gesamtmarkt"]["stand"] and KEY not in r5["gesamtmarkt"]["fehler"],
-       "O54 frisch %s (Stand %s) · Gesamtmarkt alter Stand %s mit Vermerk '%s'" % (
-           r5.get("fehler") is None, r5["stand"], r5["gesamtmarkt"]["stand"], (r5["gesamtmarkt"].get("fehler") or "")[:50]))
+       and r5["gesamtmarkt"]["stand"] == alt["gesamtmarkt"]["stand"] and KEY not in r5["gesamtmarkt"]["fehler"]
+       and "DVOL nicht abrufbar" in log_txt and KEY not in log_txt,
+       "O54 frisch %s (Stand %s) · Gesamtmarkt alter Stand %s mit Vermerk '%s' · Log ohne Schluessel %s (DVOL-Pfad im Log %s)" % (
+           r5.get("fehler") is None, r5["stand"], r5["gesamtmarkt"]["stand"], (r5["gesamtmarkt"].get("fehler") or "")[:50],
+           KEY not in log_txt, "DVOL nicht abrufbar" in log_txt))
 
 # ══ G6 Mails ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 _fl = lambda x: " ".join(x.split())  # noqa: E731
@@ -197,7 +207,7 @@ try:
 finally:
     ML.ABLAGE = _alt_ab
 ok_s = qs.index('id="makro-kopf"') < qs.index('id="gesamt-kopf"') < qs.index("section-header section-system") and "m.gesamtmarkt" in qs
-pruefe("G7", ok_s and (gt.get("gesamtmarkt") or {}).get("zeilen") and len(MT.gesamt_zeilen(gt)) == 6 and "gesamtmarkt" in dg,
+pruefe("G7", ok_s and (gt.get("gesamtmarkt") or {}).get("zeilen") and len(MT.gesamt_zeilen(gt)) == 7 and "gesamtmarkt" in dg,
        "Statusseite Block in der Makro-Karte %s · Getter %d Zeilen · GUI %d Zeilen · Diagnose %s" % (
            ok_s, len((gt.get("gesamtmarkt") or {}).get("zeilen") or []), len(MT.gesamt_zeilen(gt)), "gesamtmarkt" in dg))
 
@@ -205,8 +215,31 @@ pruefe("G7", ok_s and (gt.get("gesamtmarkt") or {}).get("zeilen") and len(MT.ges
 NACH = {"prod": summe(db.DB_PATH), "ablage": summe(ML.ABLAGE)}
 pruefe("G8", NACH == VOR, "Desktop-Prod unveraendert %s · echte Ablage unveraendert %s" % (NACH["prod"] == VOR["prod"], NACH["ablage"] == VOR["ablage"]))
 
+# ══ G9 L7 DVOL (27.10.2026, E-161): live abrufbar, Werte plausibel, eigener Fehlerpfad ══════════════════════════════════════
+dv_live = ML.hole_dvol()
+gd = ML.gesamtmarkt(roh, ex, fg, HEUTE, dv_live)
+l7 = gd["zeilen"][6]
+f = gd["werte"]["dvol"]
+
+
+class _Kaputt:
+    def get(self, *a, **k):
+        raise RuntimeError("Deribit nicht erreichbar")
+
+
+try:
+    ML.hole_dvol(_Kaputt())
+    kaputt_wirft = False
+except RuntimeError:
+    kaputt_wirft = True
+g0 = ML.gesamtmarkt(roh, ex, fg, HEUTE, None)
+pruefe("G9", l7[0] == "L7" and "BTC-DVOL" in l7[2] and "je Tag" in l7[2] and 10 < f["btc"] < 200 and abs(f["tag"] - f["btc"] / 365 ** 0.5) < 1e-9
+       and len(dv_live["btc"]) >= 365 and kaputt_wirft and g0["zeilen"][6][2] == "DVOL nicht verfügbar" and len(g0["zeilen"]) == 7
+       and "BTC-DVOL" in gd["kurz"] and "BTC-DVOL" not in g0["kurz"] and gd["datenstand"]["DVOL"] == f["datum"],
+       "L7: %s | Tage %d | ohne DVOL: %s" % (l7[2], len(dv_live["btc"]), g0["zeilen"][6][2]))
+
 print("\nLagebild heute:")
-for z in g["zeilen"]:
+for z in gd["zeilen"]:
     print("  %s %-20s %s" % (z[0], z[1], z[2]))
 print("Mailzeile: " + ML.zeile_gesamtmarkt(d))
 wegwerf.aufraeumen(T)

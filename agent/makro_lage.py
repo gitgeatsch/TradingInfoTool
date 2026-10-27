@@ -172,7 +172,12 @@ def lauf(ziel: str | None = None, fred_key: str | None = None, heute: date | Non
     try:
         if roh is None:
             raise RuntimeError("Makro-Reihen nicht abgerufen")
-        d["gesamtmarkt"] = gesamtmarkt(roh, hole_gesamt(fred_key, heute, http, pause), hole_fg(http), heute)
+        try:                                                                        # L7: DVOL mit EIGENEM Fehlerpfad (E-161)
+            _dv = hole_dvol(http, heute)
+        except Exception as exc_dv:                                                 # noqa: BLE001
+            _dv = None
+            logger.warning("DVOL nicht abrufbar - L7 'nicht verfügbar': %s", str(exc_dv).replace(fred_key or "\0", "***")[:200])
+        d["gesamtmarkt"] = gesamtmarkt(roh, hole_gesamt(fred_key, heute, http, pause), hole_fg(http), heute, _dv)
     except Exception as exc:                                                        # noqa: BLE001
         g = dict((alt or {}).get("gesamtmarkt") or {})
         g["fehler"] = "%s: %s (%s)" % (type(exc).__name__, str(exc).replace(fred_key or "\0", "***")[:200], heute.isoformat())
@@ -258,7 +263,7 @@ def stand(d: dict | None = None, heute: date | None = None) -> dict:
 
 
 # ══ Lagebild Gesamtmarkt (L-A Teil 1, E-137, 24.10.2026) ═════════════════════════════════════════════════════════════════
-# Nutzer 24.10.: *"E2 alle"* (L1-L6) · *"E3 ja"* (rot nur bei Kurve UND Sahm) · *"E4 alle"* (Zeile in REGEL0, B1, B3, B4).
+# Nutzer 24.10.: *"E2 alle"* (L1-L6; L7 DVOL seit 27.10., E-161) · *"E3 ja"* (rot nur bei Kurve UND Sahm) · *"E4 alle"* (Zeile in REGEL0, B1, B3, B4).
 # Grundlage: Indikator-Atlas E-135 (Messplan_Indikator_Atlas_23_10.md, p73/p75). ⚠️ FAKT, KEIN SIGNAL - keine Makrogroesse laeuft den
 # BTC-Wenden voraus (T1); die Zeile sperrt nichts und aendert nichts. Einzige Farbe: Rezessionsampel ROT.
 GESAMT_AB = {"T10Y3M": 6, "SAHMREALTIME": 6, "NASDAQCOM": 60, "DGS10": 6, "THREEFYTP10": 6, "DCOILBRENTEU": 6, "CBBTCUSD": 15,
@@ -278,8 +283,15 @@ GEMESSEN = {
     "L3": "Geldausweitung ist keine Voraussetzung für BTC oder Aktien (Atlas E-135)",
     "L4": "Fakt, keine gemessene Regel (den High-Yield-Aufschlag liefert FRED nur ~3 Jahre – keine eigene Messung möglich)",
     "L5": "Fakt, keine gemessene Regel (Ölschocks gingen Inflations- und Rezessionsschüben voraus)",
-    "L6": "einziger gemessener Vorläufer der BTC-Wenden (Rang 0,97), zum Teil aus dem Kurs; als Regel offen",
+    "L6": "einziger gemessener Vorläufer der BTC-Wenden (Rang 0,97), zum Teil aus dem Kurs; als Signal und als Umfeld der Einstiege "
+          "mit unseren Daten nicht auflösbar (E-160)",
+    "L7": "Fakt, keine Regel: als Signal und als Umfeld der Einstiege nicht auflösbar (E-160). Zur Einordnung: liegt ein Stop oder die "
+          "Liquidation innerhalb der erwarteten Tagesbewegung, ist er bei normalem Markt schnell erreicht",
 }
+# L7 (27.10.2026, E-161, Nutzer: *"DVOL-Zeile ins Lagebild wenn sinnvoll so das ich etwas damit anfange als information"*):
+# Deribit-Volatilitaetsindex (frei, ohne Schluessel) - die vom Optionsmarkt ERWARTETE 30-T-Schwankung, aufs Jahr in %.
+DVOL_URL = "https://www.deribit.com/api/v2/public/get_volatility_index_data"
+DVOL_TAGE = 400               # Abruf: ein rollendes Jahr fuer das Perzentil (365 T) mit Reserve - eine Abfrage je Waehrung
 
 
 def hole_gesamt(fred_key: str, heute: date | None = None, http=None, pause: float = 0.3) -> dict:
@@ -290,6 +302,48 @@ def hole_gesamt(fred_key: str, heute: date | None = None, http=None, pause: floa
             time.sleep(pause)
         aus[sid] = hole_reihe(sid, fred_key, (heute - timedelta(days=int(jahre * 365.25))).isoformat(), http)
     return aus
+
+
+def hole_dvol(http=None, heute: date | None = None) -> dict:
+    """DVOL BTC und ETH als Tagesschluss der letzten DVOL_TAGE Tage: {'btc': Series, 'eth': Series} (Index Datum UTC)."""
+    import requests
+    heute = heute or date.today()
+    ende = int(datetime(heute.year, heute.month, heute.day, tzinfo=timezone.utc).timestamp() * 1000) + 86_400_000
+    aus = {}
+    for w in ("BTC", "ETH"):
+        j = (http or requests).get(DVOL_URL, params={"currency": w, "start_timestamp": ende - DVOL_TAGE * 86_400_000,
+                                                      "end_timestamp": ende, "resolution": "1D"}, timeout=30).json()
+        d = (j.get("result") or {}).get("data") or []
+        if not d:
+            raise RuntimeError("DVOL %s ohne Daten" % w)
+        aus[w.lower()] = pd.Series([float(x[4]) for x in d], index=pd.to_datetime(
+            [datetime.fromtimestamp(x[0] / 1000, tz=timezone.utc).date() for x in d])).sort_index()
+    return aus
+
+
+def dvol_fakt(dv: dict | None, btc_kurs: pd.Series) -> dict | None:
+    """-> Werte fuer L7: Stand, erwartete Bewegung je Tag und 30 T (1 Sigma), Perzentil im letzten Jahr, Angstpraemie gegen die
+    gemessene 30-T-Schwankung (BTC, Coinbase-Tagesschluss aus FRED). None, wenn DVOL fehlt."""
+    if not dv or "btc" not in dv:
+        return None
+    b = dv["btc"].dropna()
+    v = float(b.iloc[-1])
+    jahr = b[b.index > b.index[-1] - pd.Timedelta(days=365)]
+    r = np.log(btc_kurs.dropna()).diff().dropna().iloc[-30:]
+    rv = float(r.std() * np.sqrt(365) * 100) if len(r) >= 25 else None
+    e = dv.get("eth")
+    ej = None if e is None or e.dropna().empty else e.dropna()
+    ejj = None if ej is None else ej[ej.index > ej.index[-1] - pd.Timedelta(days=365)]
+    return {"btc": v, "datum": b.index[-1].date().isoformat(), "tag": v / np.sqrt(365), "monat": v * np.sqrt(30 / 365),
+            "perzentil": float((jahr < v).mean()) if len(jahr) >= 180 else None, "gemessen": rv,
+            "praemie": None if rv is None else v - rv, "eth": None if ej is None else float(ej.iloc[-1]),
+            "eth_perzentil": None if ejj is None or len(ejj) < 180 else float((ejj < ej.iloc[-1]).mean())}
+
+
+def _lage_wort(p) -> str:
+    if p is None:
+        return "ohne Jahresvergleich"
+    return "hoch" if p >= 0.8 else ("erhöht" if p >= 0.6 else ("mittel" if p > 0.4 else ("ruhig" if p > 0.2 else "sehr ruhig")))
 
 
 def hole_fg(http=None) -> dict:
@@ -359,8 +413,8 @@ def _p(x: float, n: int = 0) -> str:
     return ("%+.*f %%" % (n, 100 * x)).replace(".", ",")
 
 
-def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
-    """L1-L6 als Fakt -> {'stand', 'rot', 'zeilen': [(Nr, Stichwort, Wert, gemessen)], 'kurz': Mailzeile, 'werte': {...}, 'fehler': None}."""
+def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date, dvol: dict | None = None) -> dict:
+    """L1-L7 als Fakt -> {'stand', 'rot', 'zeilen': [(Nr, Stichwort, Wert, gemessen)], 'kurz': Mailzeile, 'werte': {...}, 'fehler': None}."""
     t2 = roh["T10Y2Y"].copy()
     t2.index = t2.index - pd.Timedelta(days=REIHEN["T10Y2Y"])                            # zurueck aufs Beobachtungsdatum (wie p73)
     L1 = rezession(t2, ex["T10Y3M"], ex["SAHMREALTIME"], heute)
@@ -393,7 +447,8 @@ def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
          "anleihen": {"zehn": (d10, d10_dat), "zehn_12m": None if d10_vor is None else d10 - d10_vor, "praemie": (tp, tp_dat),
                       "hy": (hy, hy_dat), "hy_12m": None if hy_vor is None else hy - hy_vor},
          "oel": {"brent": (br, br_dat), "brent_12m": None if not br_vor else br / br_vor - 1},
-         "fg": fg}
+         "fg": fg,
+         "dvol": dvol_fakt(dvol, btc)}
     # Texte
     inv = [("%s zuletzt %s" % (k, v[5:] + "/" + v[:4])) for k, v in L1["inversion_zuletzt"].items() if v]
     if L1["rot"]:
@@ -419,15 +474,29 @@ def gesamtmarkt(roh: dict, ex: dict, fg: dict | None, heute: date) -> dict:
     o = W["oel"]
     t5 = "Brent %s $%s" % (_z(o["brent"][0], 0), (" (%s in 12 M)" % _p(o["brent_12m"])) if o["brent_12m"] is not None else "")
     t6 = ("F&G %d (%s%s)" % (fg["wert"], fg.get("klasse") or "", ", Extrem" if fg["wert"] < 25 or fg["wert"] > 75 else "")) if fg else "F&G nicht verfügbar"
+    dv = W["dvol"]
+    if dv:
+        t7 = "BTC-DVOL %s: Optionsmarkt erwartet ±%s je Tag, ±%s in 30 T · im Jahresvergleich %s%s%s" % (
+            _z(dv["btc"], 1), _p(dv["tag"] / 100, 1).lstrip("+"), _p(dv["monat"] / 100, 0).lstrip("+"), _lage_wort(dv["perzentil"]),
+            (" (Perzentil %.0f %%)" % (100 * dv["perzentil"])) if dv["perzentil"] is not None else "",
+            (" · Angstprämie %s Pp gegen gemessene %s %%" % (("%+.1f" % dv["praemie"]).replace(".", ","), _z(dv["gemessen"], 0)))
+            if dv["praemie"] is not None else "")
+        if dv.get("eth") is not None:
+            t7 += " · ETH-DVOL %s (%s)" % (_z(dv["eth"], 1), _lage_wort(dv.get("eth_perzentil")))
+    else:
+        t7 = "DVOL nicht verfügbar"
     zeilen = [("L1", "Rezessionsampel", t1, GEMESSEN["L1"]), ("L2", "Reifegrad", t2n + " · " + t2b, GEMESSEN["L2"]),
               ("L3", "Geld", t3, GEMESSEN["L3"]), ("L4", "Zinsen und Anleihen", t4, GEMESSEN["L4"]),
-              ("L5", "Öl", t5, GEMESSEN["L5"]), ("L6", "Fear & Greed", t6, GEMESSEN["L6"])]
+              ("L5", "Öl", t5, GEMESSEN["L5"]), ("L6", "Fear & Greed", t6, GEMESSEN["L6"]),
+              ("L7", "Erwartete Schwankung (DVOL)", t7, GEMESSEN["L7"])]
     kurz = " · ".join(["Rezessionsampel ROT" if L1["rot"] else ("Kurve warnt, kein Rot" if L1["kurve_an"] else
                                                                 ("Sahm schlägt an, kein Rot" if L1["sahm_an"] else "keine Rezessionssignale")),
-                       t2n, t2b, "10J %s %%" % _z(a["zehn"][0]), "Brent %s $" % _z(o["brent"][0], 0)] + ([t6.split(" (")[0]] if fg else []))
+                       t2n, t2b, "10J %s %%" % _z(a["zehn"][0]), "Brent %s $" % _z(o["brent"][0], 0)] + ([t6.split(" (")[0]] if fg else [])
+                      + (["BTC-DVOL %s (±%s/Tag)" % (_z(dv["btc"], 0), _p(dv["tag"] / 100, 1).lstrip("+"))] if dv else []))
     return {"stand": heute.isoformat(), "rot": L1["rot"], "zeilen": zeilen, "kurz": kurz, "werte": W,
             "datenstand": {"Kurve": L1["kurve_3m"][1], "Sahm": L1["sahm"][1], "Nasdaq": n["stand"][1], "BTC": b["stand"][1],
-                           "10J": d10_dat, "Prämie": tp_dat, "HY": hy_dat, "Brent": br_dat, "F&G": (fg or {}).get("datum")},
+                           "10J": d10_dat, "Prämie": tp_dat, "HY": hy_dat, "Brent": br_dat, "F&G": (fg or {}).get("datum"),
+                           "DVOL": (dv or {}).get("datum")},
             "berechnet_am": datetime.now(timezone.utc).isoformat(timespec="seconds"), "fehler": None}
 
 

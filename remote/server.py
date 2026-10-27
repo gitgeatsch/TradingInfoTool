@@ -109,10 +109,10 @@ _INDEX_HTML = """<!doctype html>
   <div class="row"><strong>lang / kurz</strong><span id="makro-kopf">-</span></div>
   <div id="makro-body"></div>
   <details><summary class="muted-text">Kanäle K1&ndash;K9 (lang / kurz) und Datenstand</summary><div id="makro-kanaele"></div></details>
-  <!-- L-A (24.10.2026, E-137): Lagebild Gesamtmarkt L1-L6 als FAKT, einzige Farbe: Rezessionsampel rot (Kurve UND Sahm) -->
+  <!-- L-A (24.10.2026, E-137): Lagebild Gesamtmarkt L1-L7 als FAKT, einzige Farbe: Rezessionsampel rot (Kurve UND Sahm) -->
   <div class="row"><strong>Gesamtmarkt</strong><span id="gesamt-kopf">-</span></div>
   <div id="gesamt-body"></div>
-  <details><summary class="muted-text">Lagebild L1&ndash;L6 mit Messbefund und Datenstand</summary><div id="gesamt-zeilen"></div></details>
+  <details><summary class="muted-text">Lagebild L1&ndash;L7 mit Messbefund und Datenstand</summary><div id="gesamt-zeilen"></div></details>
 </div>
 </div>
 <!-- P19 (17.10.2026, Spot §49): Season-Ampel (E-124: geprueft an zwei Zyklen, Mail beim Stufenwechsel), dazu die Einstiegs-Kandidaten aus B4 (A3) -->

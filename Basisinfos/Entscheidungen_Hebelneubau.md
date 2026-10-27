@@ -2195,3 +2195,18 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **Ursache:** zu wenige unabhängige Angstphasen (16–44 Strecken in 2024–26). Das ist dieselbe Grenze wie bei L2-a, Ballungstagen und ETF-Flüssen.
 
 **Folge:** DVOL, Angstprämie und Fear & Greed nur als Fakt im Lagebild (DVOL-Zeile auf Wunsch). **Betrieb unverändert.**
+
+# E-161 · Lagebild L7 „Erwartete Schwankung (DVOL)“ gebaut, als Information, kein Signal (27.10.2026)
+
+**27.10.2026** · Nutzer: *„ok DVOL-Zeile ins Lagebild wenn sinnvoll so das ich etwas damit anfange als information“*
+- **L7:**
+  - die erwartete Bewegung je Tag und je 30 T (1 σ aus der DVOL);
+  - der Jahresvergleich (Perzentil im rollenden Jahr);
+  - die Angstprämie gegen die gemessene Schwankung;
+  - ETH-DVOL;
+  - Einordnung „Fakt, keine Regel (E-160)“ samt Hinweis zur Einordnung von Stop und Liquidation.
+- Eigener Fehlerpfad (Deribit weg ⇒ „nicht verfügbar“). L6 auf E-160 nachgezogen.
+- ⚠️ Beim Bau gefunden und vor dem Commit behoben: Der DVOL-Fehlerpfad schrieb den FRED-Schlüssel ungefiltert ins Log (nur lokale Testausgabe). Jetzt maskiert; p81 G5 prüft das Log.
+- p81 9/9, Suite Gesamtmarkt/Geheimnisse/Schlüsselwache grün. NB K-DVOL-1.
+
+**Betrieb:** neue Zeile im Lagebild, sonst unverändert.

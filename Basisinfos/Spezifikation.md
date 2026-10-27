@@ -1469,6 +1469,7 @@ mit Zeit zum Auflösen als Datengrundlage.
 
 **Nachtrag 09.10.2026 — Spot-Bauumfang abgestimmt (Voranalyse_Spot §39, E-89 bis E-91) und Bestandsabgleich (E-93):**
 - **Grundsatz der Mails (E-91):** Eine Mail enthält **nur Handlungen** (welcher Coin, was tun, bis wann, gemessene Begründung mit Belegstufe). Was keine Handlung ableitet, steht nur im App-Tab. Eine Monatsmail ist nur als Option vorgemerkt (Plan O35), wenn sie konkrete Bestandsentwicklung zeigt.
+- **Lagebild Gesamtmarkt L1–L7** (E-137, L7 seit 27.10.2026, E-161): L7 DVOL = erwartete Bewegung je Tag und 30 T, Jahresvergleich, Angstprämie; Fakt, kein Signal (E-160).
 - **REGEL0-Signalmail (W-1, 26.10.2026):** Zeile *Beleg* mit dem Vorbehalt „Plus in der Messung nicht robust (E-136/E-139), Signal ist Fakt, keine belegte Gewinnerwartung“. Die Diagnose führt den Reihenbeginn je Asset (`regel0_reihenbeginn`).
 - **Kernwerte (K-4, 26.10.2026):** eine Liste `agent/kernwerte.py`. Keine Spot-Kauffrage der alten Rollen-Kette (Aufbau per Sparplan des Nutzers); REGEL0 und Hebel bleiben zugelassen, der Kern-Einstieg ist immer taktisch.
 - **Rollen:** Kern BTC/ETH/SOL fest, alle anderen Krypto-Bestände automatisch L; K ruht, bis ein Einstieg gemessen trägt (§35–§40: bisher keiner).

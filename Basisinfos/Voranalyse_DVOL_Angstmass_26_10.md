@@ -81,3 +81,33 @@ Nutzer 26.10.: *„ja DVOL Stufe 0 starten - prüfen gegenprüfen und doku“*. 
 - DVOL, Angstprämie und Fear & Greed nur als **Fakt** im Lagebild, nicht als Auslöser oder Gewicht.
 - DVOL ist neu im Fakt-Teil und würde als Zeile gebaut, wenn du das willst.
 - Fear & Greed steht dort schon.
+
+## 4. L7 im Lagebild GEBAUT (27.10.2026; Nutzer: *„DVOL-Zeile ins Lagebild wenn sinnvoll so das ich etwas damit anfange als information“*, E-161)
+
+**Was die Zeile sagt** (Beispiel vom 27.10.):
+
+> **L7 Erwartete Schwankung (DVOL):** BTC-DVOL 38,1: Optionsmarkt erwartet ±2,0 % je Tag, ±11 % in 30 T · im Jahresvergleich ruhig (Perzentil 27 %) · Angstprämie +12,8 Pp gegen gemessene 25 % · ETH-DVOL 53,1 (ruhig)
+
+| Teil | Bedeutung | Wozu |
+|---|---|---|
+| ±x % je Tag / in 30 T | DVOL ÷ √365 bzw. × √(30/365): die vom Optionsmarkt **erwartete** Bewegung (1 σ) | Stop- und Liquidationsabstand einordnen: Liegt er innerhalb der erwarteten Tagesbewegung, ist er bei normalem Markt schnell erreicht |
+| Jahresvergleich | Perzentil im rollenden Jahr: sehr ruhig ≤ 20 % · ruhig · mittel · erhöht ≥ 60 % · hoch ≥ 80 % | Ist die Erwartung **für die jüngste Zeit** hoch oder niedrig? |
+| Angstprämie | DVOL minus gemessene 30-T-Schwankung (Coinbase-Kurs, FRED) | positiv und groß: Der Markt zahlt für Absicherung mehr, als sich der Kurs bewegt |
+| Einordnung (Spalte „gemessen“) | *Fakt, keine Regel: als Signal und als Umfeld der Einstiege nicht auflösbar (E-160)* | kein Auslöser, kein Gewicht |
+
+**Bau** (`agent/makro_lage.py`):
+- `hole_dvol` (Deribit, frei, eine Abfrage je Währung, 400 T); `dvol_fakt`; Zeile L7 in `gesamtmarkt`; Kurzform „BTC-DVOL 38 (±2,0 %/Tag)“ in der Mailzeile; Datenstand „DVOL“.
+- **Eigener Fehlerpfad:** Ist Deribit nicht erreichbar, steht dort *„DVOL nicht verfügbar“*, und alles andere bleibt unverändert.
+- Statusseite und GUI zeigen die Zeilen allgemein an; nur die Beschriftung ist auf L1–L7 geändert.
+- L6 (Fear & Greed): Die Einordnung ist auf E-160 nachgezogen (*als Signal und als Umfeld nicht auflösbar* statt *als Regel offen*).
+
+⚠️ **Fehler beim Bau gefunden und vor dem Commit behoben:** Die neue Warnmeldung des DVOL-Fehlerpfads schrieb den Ausnahmetext **ungefiltert** ins Log. Im Prüfstand-Fall „Quelle weg“ stand darin der **FRED-Schlüssel**: in der lokalen Testausgabe, nicht im Repository und nicht am NB.
+- Jetzt ist er maskiert wie in den übrigen Fehlerpfaden (`***`).
+- Der Prüfstand **p81 G5** liest das Log mit und verlangt, dass der Schlüssel darin nicht vorkommt.
+- In keiner versionierten Datei steht der Schlüssel (geprüft mit `git grep`).
+
+**Prüfung:**
+- p81 **9/9**: G3/G7 auf 7 Zeilen nachgezogen; neu **G9** prüft L7 live, die Plausibilität, den Pfad ohne DVOL, Mailzeile und Datenstand; G5 prüft das Log ohne Schlüssel.
+- Suite: Gesamtmarkt, Geheimnisse und Schlüsselwache grün; Makro zeigt nur den bekannten NFCI-Fall.
+
+**NB:** K-DVOL-1 im nächsten Export (Statusseite L7, Log ohne „DVOL nicht abrufbar“).

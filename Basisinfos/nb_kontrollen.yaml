@@ -535,6 +535,15 @@ kontrollen:
     nachweis: "erste echte REGEL0-Signalmail nach dem Pull: Zeile 'Beleg' vor 'Gefahr je Stufe' (Text) und im HTML"
     faellig_bis: "2026-11-30"
     status: offen
+  - id: K-DVOL-1
+    titel: "E-161: Lagebild L7 DVOL - Statusseite/GUI/Diagnose zeigen 7 Zeilen, Mailzeile 'BTC-DVOL', kein 'DVOL nicht abrufbar' im Log"
+    seit: "2026-10-27"
+    paket: Gesamtmarkt
+    commit: ""
+    art: manuell
+    nachweis: "Diagnose nach Pull: makro_lage.gesamtmarkt.zeilen mit L7 'BTC-DVOL ... je Tag ...', datenstand.DVOL = Vortag/heute; Log des Jobs externe_reihen ohne 'DVOL nicht abrufbar'"
+    faellig_bis: "2026-11-10"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

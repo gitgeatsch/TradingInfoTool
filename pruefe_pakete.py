@@ -22573,7 +22573,7 @@ def paket_gesamtmarkt() -> None:
     _rp = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "p81_lagebild_pruefstand.py")],
                   capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
     pruefe(P, "⚠️⚠️ Pruefstand p81: R-R11 zu p73, Rueckschau 1982-2026, drei Zustaende, kaputter Abruf (gesamt und nur Gesamtmarkt), "
-              "Mails, Statusseite/GUI/Diagnose, Prod unveraendert", "8 von 8 bestanden" in (_rp.stdout or ""),
+              "Mails, Statusseite/GUI/Diagnose, Prod unveraendert, L7 DVOL", "9 von 9 bestanden" in (_rp.stdout or ""),
            " | ".join(z for z in (_rp.stdout or "").splitlines() if " FEHLER " in z) or (_rp.stderr or "")[-300:])
 
 
