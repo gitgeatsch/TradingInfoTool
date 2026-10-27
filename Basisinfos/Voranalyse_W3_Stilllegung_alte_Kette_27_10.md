@@ -44,7 +44,7 @@ Nutzer 27.10.: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und d
 |---|---|---|
 | REGEL0, Messstand, Betriebslage | **unberührt**: lesen keine Tabelle der Kette | ✔ |
 | `_regel0_spot_hinweis` (Satz in der REGEL0-Mail) | immer leer | harmlos |
-| H15 `plan_zu` (liest Rollen-Signale) | Plan bleibt leer; REGEL0-Positionen haben ihn **schon heute** nicht | eigene Fachfrage (H15 aus der REGEL0-Ablage?) |
+| H15 `plan_zu` (liest Rollen-Signale) | Plan bleibt leer; REGEL0-Positionen brauchen ihn nicht (kein Stop/Ziel, die 24-h-Regel führt `haltedauer_text`) | ✔ kein Handlungsbedarf |
 | Statusseite: Rollen-Topf, offene Signale, Sendezähler, Ausstieg | veraltet bzw. leer | Karte ausblenden oder „stillgelegt“ zeigen |
 | GUI Signale-Tab, Watchlist-Tipp, Hebel-Tab Rollen-Signale | veraltet | Hinweis „stillgelegt“ |
 | Diagnose `_rollen_kette` | veraltet | als Historie lassen |
@@ -64,7 +64,7 @@ Nutzer 27.10.: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und d
 
 ## 5. Offene Fachfragen (nicht Teil von S-1)
 
-1. **H15-Plan für REGEL0-Positionen:** Soll `plan_zu` die REGEL0-Ablage lesen? Heute haben REGEL0-Positionen keinen Plan.
+1. ~~H15-Plan für REGEL0-Positionen~~ **zurückgezogen (27.10., nachgelesen):** `plan_zu` sucht Stop und Ziel eines Signals der alten Kette, für *Schließen / Stop nachziehen / Hebel senken*. Die REGEL0 hat weder Stop noch Ziel, ihre Regel ist *24 h halten*. Die kennt H15 schon: `regel0_messstand.haltedauer_text` (E3, 18.10.) ordnet jeder Position ihr REGEL0-Signal zu (*„seit … h offen (Regel 24 h, überschritten) · REGEL0-Signal …“* bzw. *„eigene Entscheidung“*). Liquidation und Finanzierung laufen ohne Plan. **Für REGEL0-Positionen fehlt nichts.**
 2. **Ende der Alt-Messung:** Backward-Tracking und Ausstiegsverfolgung sind nach den letzten 20 Handelstagen fertig. Danach können sie in S-2 abgemeldet werden.
 3. `_melde_datenfrische` prüft auch Quellen, die nur die alte Kette brauchte. Bei S-2 dürfen keine Frische-Warnungen für abgemeldete Zulieferer kommen.
 

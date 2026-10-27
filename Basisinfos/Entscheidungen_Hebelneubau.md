@@ -2229,6 +2229,6 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
   - Der Wächter der Terminmarkt-Frische (für REGEL0) steht im Zweig der alten Kette.
 - **Heute:** Die Kette steht; die 07:15-Mail führt nichts mehr; die Ausstiegsverfolgung der Alt-Signale läuft aus (offen 50, ~3–4 T).
 - **Vorschlag S-1:** harte Sperre per Code-Konstante, unabhängig von yaml und `aktiv_fuer`; H15 robust gegen yaml-Fehler; Wächter vor jeder Verzweigung; Statusseite/GUI „stillgelegt“. Nichts Laufendes fällt weg, umkehrbar. Danach S-2 Jobs abmelden; S-3 Code entfernen nicht empfohlen.
-- **Offen:** H15-Plan für REGEL0-Positionen (Fachfrage).
+- ~~Offen: H15-Plan für REGEL0-Positionen~~ **zurückgezogen 27.10.:** Die REGEL0 hat keinen Stop und kein Ziel; ihre 24-h-Regel führt H15 schon über `haltedauer_text` (E3). Es fehlt nichts.
 
 **Betrieb unverändert.**
