@@ -568,11 +568,12 @@ kontrollen:
     titel: "W-3 S-1: alte Spot-Kette fest stillgelegt - Log 'Alte Spot-Kette STILLGELEGT' je Umlauf, H15/Abgleich laufen, Statusseite Schalter 'stillgelegt', Terminmarkt-Waechter ohne Fehlalarm"
     seit: "2026-10-27"
     paket: W3Stilllegung
-    commit: ""
+    commit: 037c6df7
     art: manuell
     nachweis: "Export nach Pull: Log je 15-min-Umlauf 'Alte Spot-Kette STILLGELEGT (W-3 S-1, E-164)' statt 'Rollen-Kette ANGEHALTEN'; weiter 'Hebelfuehrung'-Zeilen; keine 'Multi-Asset-Batch'-Laeufe; Statusseite Schalter-Karte erste Zeile 'Alte Spot-Kette (W-3 S-1, im Code): stillgelegt'; keine Terminmarkt-Frische-Fehlermail"
     faellig_bis: "2026-11-10"
     status: offen
+    teilbeleg: "NB-Export 27.10. 13:28 (NB auf 037c6df7, keine lokalen Aenderungen, Neustart 12:48): Umlaeufe 12:48/13:03/13:18 je 'Alte Spot-Kette STILLGELEGT'; letztes 'Rollen-Kette ANGEHALTEN' 12:47 (vor dem Neustart); Multi-Asset-Batch 12:48 'uebersprungen - alte Kette STILLGELEGT'; Wallet-Abgleich und Hebelfuehrung (13:18 BTC HALTEN Abstand 21,5 %) laufen; REGEL0 stuendlich weiter (644 aktiv); nach dem Neustart keine WARNING/ERROR, keine Frische-Mail. Offen: Statusseite (Schalter steht nicht im Export) - Blick auf die Seite genuegt"
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}
