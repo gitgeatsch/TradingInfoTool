@@ -591,6 +591,18 @@ Die Anwendung war **14:06–20:29 lokal** weg (2.482-stillstand). Vier Spuren br
 - V-1 Bremse nicht trennbar · ETF nicht messbar · DVOL/Angstprämie/F&G nicht auflösbar · W-1 gebaut (im morgigen Pull).
 - ➤ Morgen: Pull + Neustart (falls noch nicht), Export nach 07:45 → K-GM-1, K-B4-D1, K-K4-1, K-SP-6, K-R0-ST0 (`p97 --nb`).
 
+### Stand 27.10.2026 früh — NB-Bündel bestätigt
+
+- NB auf **c581be8d** (Lagebild + HY, K-4, W-1, L7 DVOL). Export 27.10. 07:51, Auswertung `Rechenkern_02_10/p99_nb_kontrollen_27_10.py`.
+- **Erfüllt:**
+  - K-GM-1 (7 Zeilen);
+  - K-DVOL-1;
+  - K-K4-1 (Kette angehalten, keine Importfehler);
+  - K-SP-6;
+  - **K-R0-ST0** (Reihenbeginn 635/635 gleich wie Desktop).
+- **K-B4-D1 teilweise:** Bestände ✔; das Universum füllt sich erst beim B4-Lauf am 02.11.
+- Anzeige: „0 L-Bestände“ im Abbau-Log ist für einen schon fertigen Stichtag nur die Vorgabe (früher Rücksprung), kein Datenfehler.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

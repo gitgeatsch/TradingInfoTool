@@ -382,7 +382,9 @@ kontrollen:
     nachweis: "sofort nach Pull+Neustart: Log 'Season-Ampel: ok · Stufe ungewohnt ... · gemailt nein' OHNE '(Schalter aus - nur Anzeige)'; KEINE Season-Ampel-Mail (einzige Meldung ist die Startmarke ungewohnt vom 17.10.); Statusseite Schalter 'Season-Ampel (C1) - Mail beim Stufenwechsel: an', Untertitel 'gepr\u00fcft an zwei Zyklen'; Diagnose season_ampel.zeile mit 'zwei Zyklen'; Teilexport 'SEASON-AMPEL (C1): Schalter AN'. Als Ereignis: beim naechsten Wechsel der geltenden Stufe in Vorlauf/Season-Klima/Ueberhitzung/Ende genau EINE Mail 'Season-Ampel <Stufe> - <Handlung>'"
     faellig_bis: "2026-11-09"
     neu_befristet: "26.10.2026: der Teil 'Logzeile des naechsten Ampel-Laufs' braucht einen NB-Export; der naechste Pull/Export ist gebuendelt (K-GM-1, K-B4-D1, K-K4-1) und noch nicht gezogen - kein Befund dagegen"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "NB-Export 27.10. 07:51: Logzeile 2026-10-27 07:30 'Season-Ampel: ok · Stufe ungewohnt ... · gemailt nein' OHNE '(Schalter aus - nur Anzeige)'; Diagnose schalter_mail True (schon im Export 19.10. 07:30 so, p99)"
     teilbeleg: "Diagnose 18.10. 13:11 (NB auf c2736201, keine lokalen Aenderungen, Neustart 12:49): regel0_betrieb.yaml ist versioniert und unveraendert -> season_ampel_aktiv true; season_ampel.zeile mit 'geprüft an zwei Zyklen ... Beginn nicht genau vorab'; einzige Meldung weiter die Startmarke ungewohnt (17.10.), KEINE Ampel-Mail; keine Job-Fehler. Offen: Logzeile des naechsten Ampel-Laufs 19.10. 07:30 ohne '(Schalter aus - nur Anzeige)' (heute lief der Job 07:30 noch vor dem Pull); ab dem naechsten Pull fuehrt die Diagnose season_ampel.schalter_mail"
   - id: K-SP-5
     titel: "Spot-Mails B1/B3/B4: Wortlaut 'verkaufen oder in EURCV tauschen'"
@@ -498,7 +500,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach Start bzw. 06:35: 'Lagebild Gesamtmarkt: ... · Stand <heute>' ohne 'Fehler'; Diagnose makro_lage.gesamtmarkt: zustand ok, 6 Zeilen L1-L6 (L4 mit High-Yield-Aufschlag), datenstand je Reihe (Sahm ~1 Monat alt ist normal); Statusseite: Makro-Karte mit Zeile 'Gesamtmarkt' und aufklappbaren L1-L6; naechste REGEL0-/Spot-Mail: Zeile 'Gesamtmarkt' direkt unter 'Makro'"
     faellig_bis: "2026-10-31"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "NB-Export 27.10. 07:51 (NB auf c581be8d): makro_lage.gesamtmarkt Zustand ok, 7 Zeilen, Stand 2026-10-27, ohne Fehler; Log 'Lagebild Gesamtmarkt' vorhanden (p99_nb_kontrollen_27_10.txt)"
   - id: K-B4-D1
     titel: "Diagnose-Abschnitt spot_b4_fuenftel: B4-Fuenftel ALLER Bestaende (auch ausserhalb Binance) und oberes Fuenftel je Klasse"
     seit: "2026-10-25"
@@ -508,6 +512,7 @@ kontrollen:
     nachweis: "Diagnose nach Pull: Abschnitt spot_b4_fuenftel mit je_bestand (stichtag, fuenftel, klasse, grund) fuer alle gehaltenen Coins inkl. HYPE, KAS, SUPRA, XDC u. a.; universum_stichtag = juengster B4-Stichtag; oberes_fuenftel H/M/S gefuellt; kein 'fehler'"
     faellig_bis: "2026-11-08"
     status: offen
+    teilbeleg: "NB-Export 27.10. 07:51: je_bestand mit 29 Bestaenden, auch HYPE, KAS, SUPRA, XDC (ausserhalb Binance), ohne Fehler. OFFEN nur universum_stichtag/oberes_fuenftel: die Tabelle abbau_universum entstand mit P19 (17.10.), der B4-Lauf fuer den Stichtag 01.10. lief davor (Status schon) - sie fuellt sich beim Lauf 02.11. (mit K-SP-3c pruefen)"
   - id: K-K4-1
     titel: "K-4 Kernwerte: Pull + Neustart laeuft ohne Importfehler, Rollen-Kette weiter angehalten, B1/B3/B4/REGEL0 unveraendert"
     seit: "2026-10-26"
@@ -516,7 +521,9 @@ kontrollen:
     art: manuell
     nachweis: "Log nach Neustart: kein ImportError zu agent.kernwerte; 'Rollen-Kette ANGEHALTEN' weiter je Umlauf; Spot-Mitnahme/Upbit/Abbau-Laeufe wie vorher ohne Fehler; REGEL0-Stundenlauf mit Mails/Hebelschalter wie vorher; Diagnose ohne neuen Fehler"
     faellig_bis: "2026-11-09"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "NB-Export 27.10. 07:51: K-4 (a7b0000a) am NB, Log 'Rollen-Kette ANGEHALTEN', keine Import-/Kernwerte-Fehler; Spot-Mitnahme/Upbit 29 L-Bestaende wie vorher, Spot-Abbau ohne Fehler (p99)"
   - id: K-R0-ST0
     titel: "W-1: Diagnose-Abschnitt regel0_reihenbeginn (Reihenbeginn je Asset aus dem Monatspaket) - Abgleich NB gegen Desktop"
     seit: "2026-10-26"
@@ -525,7 +532,9 @@ kontrollen:
     art: manuell
     nachweis: "NB-Export nach Pull: Abschnitt regel0_reihenbeginn mit datei regel0_modell_<Monat>.pkl, assets ~635, ohne 'fehler'; am Desktop 'python -X utf8 Basisinfos/Rechenkern_02_10/p97_w1_reihenbeginn_abgleich.py --nb' -> GLEICH (BTC/SOL/BNB/AVAX/XLM 2023-09-11, ETH/LINK/ADA 2021-12-11 wie Desktop)"
     faellig_bis: "2026-11-09"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "NB-Export 27.10. 07:51: regel0_reihenbeginn aus regel0_modell_2026-10.pkl, 635 Assets; p97 --nb: 635 gemeinsam, 635 GLEICH, 0 anders, 0 nur NB/Desktop (p99)"
   - id: K-W1-MAIL
     titel: "W-1: naechste REGEL0-Signalmail traegt im Block EINSCHAETZUNG die Zeile 'Beleg: REGEL0-Plus in der Messung NICHT robust ...'"
     seit: "2026-10-26"
@@ -543,7 +552,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach Pull: makro_lage.gesamtmarkt.zeilen mit L7 'BTC-DVOL ... je Tag ...', datenstand.DVOL = Vortag/heute; Log des Jobs externe_reihen ohne 'DVOL nicht abrufbar'"
     faellig_bis: "2026-11-10"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-10-27"
+    beleg: "NB-Export 27.10. 07:51: L7 'BTC-DVOL 38,1: Optionsmarkt erwartet ±2,0 % je Tag, ±11 % in 30 T ...', Datenstand DVOL 2026-10-27, kein 'DVOL nicht abrufbar' im Log (p99)"
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}
