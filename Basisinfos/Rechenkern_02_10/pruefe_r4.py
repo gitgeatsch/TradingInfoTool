@@ -10,6 +10,7 @@ import scheduler.rollen_job as RJ
 import agent.regel0_groesse as R0G
 import agent.krypto.budget_allocator as BA
 
+RJ.ALTE_KETTE_STILLGELEGT = False   # R-4 prueft den HALT-SCHALTER selbst; die feste Sperre (W-3 S-1, E-164) prueft pruefe_w3_s1.py
 aufrufe = {"umlauf": 0, "allocator": 0, "fehler": []}
 CFG.load_config = lambda *a, **k: {"hebel_screening": {"aktiv": False}, "watchlist": []}
 CFG.get_watchlist = lambda *a, **k: []

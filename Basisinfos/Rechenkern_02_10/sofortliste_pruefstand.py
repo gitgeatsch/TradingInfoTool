@@ -36,6 +36,7 @@ from database.models import Holding, PriceSnapshot  # noqa: E402
 import importer.bitpanda_avg_cost as AC  # noqa: E402
 import importer.excel_import as XI  # noqa: E402
 from scheduler import rollen_job as RJ  # noqa: E402
+RJ.ALTE_KETTE_STILLGELEGT = False   # S4/S5 pruefen den HALT-SCHALTER selbst; die feste Sperre (W-3 S-1, E-164) prueft pruefe_w3_s1.py
 from agent import regel0_groesse as G  # noqa: E402
 
 ok = n = 0

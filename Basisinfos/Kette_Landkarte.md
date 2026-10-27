@@ -640,3 +640,12 @@ Buchhaltung, die Bewertung und Betriebszustand vermengt.
 | `rollen_lauf.paare_aus_zellen()` | kein Rückfall auf `strategie_fuer`; Einstieg immer **taktisch** (fällt ohne Hebel bzw. bei altem Hebelweg aus heraus) |
 | REGEL0 · Hebel-Mail · H15 | unberührt (`asset_hebel_settings`) |
 | B1/B3/B4 · C1 | wie bisher ohne Kern (`spot_mitnahme.KERN` = `kernwerte.KERN`) |
+
+### 14. Alte Spot-Kette stillgelegt (W-3 S-1, 27.10.2026, E-164)
+
+| Stelle | Zustand |
+|---|---|
+| `hebel_screening_job` | Abgleich → Wallet → H15 → **Terminmarkt-Wächter** → **feste Sperre** (Ende). `fuehre_umlauf` und Allocator nur bei `ALTE_KETTE_STILLGELEGT = False` |
+| `multi_asset_batch_job` | übersprungen |
+| GUI-Knöpfe der alten Pipelines | gesperrt (`alte_analyse_hinweis`) |
+| `spot_kette_angehalten` (yaml) | bleibt als zweite Sperre; wirkt nur bei aufgehobener fester Sperre |

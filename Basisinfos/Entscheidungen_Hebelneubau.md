@@ -2232,3 +2232,20 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - ~~Offen: H15-Plan für REGEL0-Positionen~~ **zurückgezogen 27.10.:** Die REGEL0 hat keinen Stop und kein Ziel; ihre 24-h-Regel führt H15 schon über `haltedauer_text` (E3). Es fehlt nichts.
 
 **Betrieb unverändert.**
+
+# E-164 · W-3 S-1 gebaut: alte Spot-Kette FEST stillgelegt (unabhängig von yaml und aktiv_fuer), H15 robust, Terminmarkt-Wächter vorgezogen (27.10.2026)
+
+**27.10.2026** · Nutzer: *„ja S-1 bauen - prüfen gegenprüfen und doku“*
+- **Gebaut:**
+  - `rollen_job.ALTE_KETTE_STILLGELEGT = True` (umkehrbar) sperrt Umlauf, Allocator, Multi-Asset-Batch und die Knöpfe der alten Pipelines;
+  - der Terminmarkt-Wächter läuft vor jeder Verzweigung;
+  - H15 läuft bei unlesbarer yaml mit den Code-Vorgaben;
+  - die Statusseite zeigt die Stilllegung als erste Schalter-Zeile.
+- **Prüfung:**
+  - `pruefe_w3_s1.py` 8/8 am Seiteneffekt, einschließlich der Umkehrbarkeit.
+  - R-4, die Sofortliste und GuiKette sind auf „bei aufgehobener Sperre“ nachgezogen.
+  - Neues Paket W3Stilllegung.
+  - Regel0Betrieb/GuiKette ohne neuen roten Fall.
+- **Fällt weg:** nichts, was heute läuft.
+- **NB:** K-W3-S1.
+- **Danach (S-2):** die alten Jobs einzeln abmelden, wenn die Messung der Alt-Signale fertig ist.

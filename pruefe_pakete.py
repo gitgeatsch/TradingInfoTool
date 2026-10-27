@@ -21944,7 +21944,14 @@ def paket_guikette() -> None:
            and _RJ.bedient_neue_kette("krypto", None) is False,
            "`aktiv_fuer(None)` ist die leere Code-Vorgabe - die erste Fassung "
            "liess dadurch jeden Knopf frei")
-    pruefe(P, "⚠️ REGEL faellt eine Klasse aus aktiv_fuer, ist ihr Knopf wieder frei",
+    # W-3 S-1 (27.10.2026, E-164): mit der FESTEN Sperre sind alle Knoepfe zu - auch ohne aktiv_fuer (das ist neu und gewollt)
+    pruefe(P, "⚠️⚠️ W-3 S-1: alte Kette fest stillgelegt -> jeder Knopf gesperrt, auch bei leerer bzw. fehlender aktiv_fuer",
+           _RJ.alte_kette_stillgelegt() and all(_RJ.alte_analyse_hinweis(k, {}) for k in ("krypto", "aktien", "etf", "hedge")),
+           "vor S-1 waere der Knopf bei fehlendem Schluessel frei gewesen (Vorgabe leer)")
+    # Die folgenden Regeln gelten fuer den Fall, dass die Sperre AUFGEHOBEN wird (umkehrbar) - so geprueft, nicht gestrichen
+    _alt_s1 = _RJ.ALTE_KETTE_STILLGELEGT
+    _RJ.ALTE_KETTE_STILLGELEGT = False
+    pruefe(P, "⚠️ REGEL faellt eine Klasse aus aktiv_fuer, ist ihr Knopf wieder frei (bei aufgehobener S-1-Sperre)",
            _RJ.alte_analyse_hinweis("krypto", {"rollen_kette": {"aktiv_fuer": ["aktien"]}}) is None
            and _RJ.alte_analyse_hinweis("aktien", {"rollen_kette": {"aktiv_fuer": ["aktien"]}}),
            "keine feste Sperre: der dokumentierte Rueckfallweg bleibt bedienbar")
@@ -21964,6 +21971,7 @@ def paket_guikette() -> None:
            and _RJ.alte_analyse_hinweis("themen_etf", _nur("hedge")) is None
            and _RJ.alte_analyse_hinweis("hedge", _nur("hedge")) is not None,
            "der Rueckfallweg je Gruppe bleibt ueber die genaue Gruppe bedienbar")
+    _RJ.ALTE_KETTE_STILLGELEGT = _alt_s1
     import config as _cfg_g
     from agent import assetklassen as _AKg
     _wl = {a.symbol.upper(): a for a in _cfg_g.get_watchlist()}
@@ -22535,6 +22543,23 @@ def paket_w1_reihenbeginn() -> None:
         _W.aufraeumen(_t)
     pruefe(P, "der Abgleich NB gegen Desktop liegt als Werkzeug vor (p97, Desktop-Liste aus dem Monatsjob-Weg)",
            _os.path.exists(_os.path.join("Basisinfos", "Rechenkern_02_10", "p97_w1_reihenbeginn_abgleich.py")))
+
+
+def paket_w3_stilllegung() -> None:
+    """W-3 S-1 (27.10.2026, E-164): die alte Spot-Kette ist FEST im Code stillgelegt - unabhaengig von regel0_betrieb.yaml und
+    `rollen_kette.aktiv_fuer`; H15 laeuft bei unlesbarer yaml weiter; der Terminmarkt-Waechter laeuft vor jeder Verzweigung;
+    umkehrbar. Geprueft am SEITENEFFEKT (pruefe_w3_s1.py, eigener Prozess, nur Modulwerte ersetzt)."""
+    P = "W3Stilllegung"
+    import os as _os
+    import subprocess as _sp
+
+    import scheduler.rollen_job as _RJ
+    pruefe(P, "die Sperre steht im Code und ist an", _RJ.ALTE_KETTE_STILLGELEGT is True and _RJ.alte_kette_stillgelegt())
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_w3_s1.py")],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    pruefe(P, "⚠️⚠️ am Seiteneffekt: yaml kaputt / aktiv_fuer leer -> kein Umlauf, kein Allocator, kein Batch; Waechter 1x; H15 laeuft; "
+              "GUI gesperrt; Statusseite zeigt es; umkehrbar", "8 von 8 bestanden" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
 def paket_gesamtmarkt() -> None:
@@ -33447,7 +33472,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "SpotMitnahme": paket_spot_mitnahme,
-          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
+          "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
           "Register": paket_register,
           "Terminmarkt": paket_terminmarkt,

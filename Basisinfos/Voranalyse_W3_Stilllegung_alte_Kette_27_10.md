@@ -73,3 +73,33 @@ Nutzer 27.10.: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und d
 - ✔ selbst nachgelesen: Halt-Stelle und Wächter (`background.py:5005-5040`), `VORGABE_AKTIV_FUER = ()` (`rollen_job.py:45`), `bedient_neue_kette`, `_hebelfuehrung_lauf` mit `_G.lade()` (`background.py:4730-4740`), `spot_kette_angehalten` im Zweifel False (`regel0_groesse.py:137-143`).
 - ✔ NB-Export 27.10.: 07:15 „keine Empfehlung offen“; Ausstiegsverfolgung offen 85 → 68 → 50; „Rollen-Kette ANGEHALTEN“ je Umlauf.
 - Die Leserliste (§3) stammt aus der Bestandsaufnahme. Bei S-1 entfernt nichts einen Leser, deshalb reicht sie als Grundlage; bei S-2/S-3 wird sie je Job erneut nachgeprüft.
+
+## 7. S-1 GEBAUT (27.10.2026; Nutzer: *„ja S-1 bauen - prüfen gegenprüfen und doku“*, E-164)
+
+| Teil | Ort | Wirkung |
+|---|---|---|
+| **Feste Sperre** | `scheduler/rollen_job.py`: `ALTE_KETTE_STILLGELEGT = True`, `alte_kette_stillgelegt()`, `STILLGELEGT_TEXT` | gilt **unabhängig** von `regel0_betrieb.yaml` und `rollen_kette.aktiv_fuer`; zurück mit `False` (umkehrbar, der Code bleibt) |
+| Umlauf und Allocator | `hebel_screening_job`: nach Abgleich, Wallet und H15 zuerst der **Terminmarkt-Wächter**, dann die Sperre (Log *„Alte Spot-Kette STILLGELEGT …“*) | kein `fuehre_umlauf`, kein `run_budget_allocator` |
+| Multi-Asset-Batch | `multi_asset_batch_job` (damit auch das Nachholen beim Start) | übersprungen mit Logzeile |
+| GUI-Knöpfe und Hinweis | `alte_analyse_hinweis`, `kette_angehalten_hinweis` | jeder Knopf der alten Pipelines gesperrt, auch ohne `aktiv_fuer`; der Hinweis *NICHT AKTUELL* nennt die Stilllegung |
+| **H15 robust** | `_hebelfuehrung_lauf`: Ist die yaml unlesbar, gelten `regel0_groesse.VORGABE` (H15 an, Warnschwelle 15 %) | die Hebelführung echter Positionen fällt nicht mehr mit einem Dateifehler aus |
+| Statusseite | `betriebslage.schalter()` erste Zeile `alte_kette_stillgelegt`; Schalter-Karte *„Alte Spot-Kette (W-3 S-1, im Code): stillgelegt“* | sichtbar |
+
+**Prüfung am Seiteneffekt** (`Rechenkern_02_10/pruefe_w3_s1.py`, eigener Prozess, nur Modulwerte ersetzt) **8/8**:
+- T1: yaml kaputt (Halt fällt auf False) ⇒ kein Umlauf.
+- T2: `aktiv_fuer` leer ⇒ kein Allocator.
+- T3: **umkehrbar**, mit der Konstante auf False läuft der Umlauf wie vor S-1, der Wächter genau einmal.
+- T4: Konstante False und Halt an ⇒ wie R-4.
+- T5: Batch übersprungen.
+- T6: H15 läuft bei kaputter yaml mit den Vorgaben.
+- T7: Knöpfe gesperrt ohne `aktiv_fuer`.
+- T8: Statusseite zeigt es.
+
+**Leser nachgezogen** (umgedeutete Regel: *keine feste Sperre* → *feste Sperre*):
+- R-4 (`pruefe_r4.py`), die Sofortliste (S4/S5) und GuiKette (zwei Regelprüfungen) prüfen die Halt- bzw. Rückfall-Logik jetzt **bei aufgehobener Sperre**. Sie bleibt für den Fall der Umkehr gültig.
+- Neu in GuiKette: *mit der festen Sperre ist jeder Knopf zu*.
+- Neues Paket **W3Stilllegung**.
+
+**Was wegfällt:** nichts, was heute läuft. Die Kette steht seit 05.10.
+
+**NB:** K-W3-S1 im nächsten Pull.

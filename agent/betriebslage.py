@@ -426,8 +426,11 @@ SCHALTER = ("testwoche_freigegeben", "alter_hebelweg_aus", "spot_kette_angehalte
 def schalter() -> dict:
     from agent import regel0_groesse as G
 
+    from scheduler import rollen_job as RJ
+    aus = {"alte_kette_stillgelegt": RJ.alte_kette_stillgelegt()}        # W-3 S-1 (E-164): fest im Code, nicht in der Datei
     w = G.lade()
-    return {k: w.get(k) for k in SCHALTER}
+    aus.update({k: w.get(k) for k in SCHALTER})
+    return aus
 
 
 def jobs(c) -> list:

@@ -564,6 +564,15 @@ kontrollen:
     nachweis: "erste B1-, B3-, B4- oder C1-Mail nach dem Pull: Zeile 'Makro ... · Stand TT.MM.' endet mit genau einem Punkt"
     faellig_bis: "2026-12-31"
     status: offen
+  - id: K-W3-S1
+    titel: "W-3 S-1: alte Spot-Kette fest stillgelegt - Log 'Alte Spot-Kette STILLGELEGT' je Umlauf, H15/Abgleich laufen, Statusseite Schalter 'stillgelegt', Terminmarkt-Waechter ohne Fehlalarm"
+    seit: "2026-10-27"
+    paket: W3Stilllegung
+    commit: ""
+    art: manuell
+    nachweis: "Export nach Pull: Log je 15-min-Umlauf 'Alte Spot-Kette STILLGELEGT (W-3 S-1, E-164)' statt 'Rollen-Kette ANGEHALTEN'; weiter 'Hebelfuehrung'-Zeilen; keine 'Multi-Asset-Batch'-Laeufe; Statusseite Schalter-Karte erste Zeile 'Alte Spot-Kette (W-3 S-1, im Code): stillgelegt'; keine Terminmarkt-Frische-Fehlermail"
+    faellig_bis: "2026-11-10"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

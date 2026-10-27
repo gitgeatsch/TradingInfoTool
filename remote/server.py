@@ -896,6 +896,7 @@ function renderBetrieb(b) {
 // Je Schalter: Beschriftung, Text bei true, Text bei false. Der ZUSTAND steht rechts, nicht der Rohwert - "alter Hebelweg aus:
 // an" las sich als das Gegenteil dessen, was gilt.
 const SCHALTER_TEXT = {
+  alte_kette_stillgelegt: ["Alte Spot-Kette (W-3 S-1, im Code)", "stillgelegt", "NICHT stillgelegt"],
   testwoche_freigegeben: ["REGEL0-Testwoche (E-94)", "freigegeben", "nicht freigegeben"],
   alter_hebelweg_aus: ["Alter Hebelweg (Rollen-Kette)", "aus", "AN"],
   spot_kette_angehalten: ["Rollen-Kette (Spot, alle Gruppen)", "angehalten", "läuft"],

@@ -4733,7 +4733,14 @@ def _hebelfuehrung_lauf(conn_factory, versand=None) -> dict:
         import agent.hebelfuehrung as _HF
         import agent.regel0_groesse as _G
         import agent.regel0_nachlader as _NL
-        werte = _G.lade()
+        try:
+            werte = _G.lade()
+        except Exception as exc_lade:                                   # noqa: BLE001
+            # W-3 S-1 (E-164): eine unlesbare regel0_betrieb.yaml darf die Fuehrung ECHTER Positionen nicht abschalten -
+            # mit den Code-Vorgaben weiter (H15 an, Warnschwelle wie Vorgabe), laut im Log.
+            werte = dict(_G.VORGABE)
+            logger.warning("Hebelfuehrung: regel0_betrieb.yaml nicht lesbar (%s: %s) - H15 laeuft mit den Code-Vorgaben weiter",
+                           type(exc_lade).__name__, str(exc_lade)[:160])
         if not werte["hebelfuehrung_aktiv"]:
             aus["grund"] = "Schalter aus"
             return aus
@@ -4991,6 +4998,16 @@ def hebel_screening_job(
         #
         # Der Schalter steht in `config.yaml` unter `rollen_kette.aktiv_fuer`.
         # Vorgabe ist LEER: das blosse Einspielen dieses Codes stellt nichts um.
+        #
+        # ⚠️⚠️ W-3 S-1 (27.10.2026, E-164): ZUERST der Waechter der Terminmarkt-Frische - die REGEL0 liest `open_interest_snapshot`
+        # (LLM-Block). Er stand im Zweig der alten Kette und haette bei deren Stilllegung gefehlt. DANACH die feste Sperre: kein
+        # Umlauf, kein Allocator - unabhaengig von regel0_betrieb.yaml und `aktiv_fuer`. Abgleich, Wallet und H15 liefen oben.
+        _pruefe_terminmarkt_frische(conn_factory, watchlist)
+        from scheduler import rollen_job as _RJ_s1
+        if _RJ_s1.alte_kette_stillgelegt():
+            logger.info("Alte Spot-Kette STILLGELEGT (W-3 S-1, E-164) - kein Umlauf, kein Allocator; Abgleich und H15 liefen, "
+                        "die REGEL0 laeuft weiter.")
+            return True        # der Job ist gelaufen; `finally` gibt die Sperre frei
         from scheduler.rollen_job import bedient_neue_kette
         # `config_dict` heisst die Variable in diesem Gueltigkeitsbereich -
         # nachgesehen, nicht geraten.
@@ -5015,7 +5032,7 @@ def hebel_screening_job(
             # DER VERBRAUCHER PRUEFT SEINE EINGABE (Schritt 54): sind die
             # Terminmarkt-Daten ausgefallen, kommt eine Mail - hier und nicht im
             # Sammeljob, der sonst mit dem Bewachten ausfiele.
-            _pruefe_terminmarkt_frische(conn_factory, watchlist)
+            # W-3 S-1 (E-164): der Aufruf steht jetzt VOR der Verzweigung (oben), damit er auch ohne alte Kette laeuft.
             art = betriebsart_aus_config(config_dict)
             logger.info(
                 "Budget-Allocator uebersprungen - die umgestellten Bereiche "
@@ -5182,6 +5199,10 @@ def multi_asset_batch_job(
         #
         # GEPRUEFT WIRD JE GRUPPE, nicht pauschal: solange EINE der vier noch
         # auf der alten Kette steht, laeuft der Batch fuer sie weiter.
+        from scheduler import rollen_job as _RJ_s1b
+        if _RJ_s1b.alte_kette_stillgelegt():                # W-3 S-1 (E-164): fest gesperrt, unabhaengig von `aktiv_fuer`
+            logger.info("Multi-Asset-Batch uebersprungen - alte Kette STILLGELEGT (W-3 S-1, E-164).")
+            return True
         import config as _cfgm
         from agent import assetklassen as _AK
         from scheduler.rollen_job import bedient_neue_kette as _neu

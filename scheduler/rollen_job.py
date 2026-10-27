@@ -45,6 +45,22 @@ logger = logging.getLogger(__name__)
 VORGABE_AKTIV_FUER: tuple[str, ...] = ()
 
 
+# ⚠️⚠️ W-3 S-1 (27.10.2026, E-164, Nutzer: *"ja S-1 bauen"*): DIE ALTE KETTE IST STILLGELEGT - FEST IM CODE.
+# Bis heute hing alles an Dateien: `spot_kette_angehalten` (regel0_betrieb.yaml, im Zweifel False) und `aktiv_fuer` (config.yaml,
+# Vorgabe leer). Ein einziger Dateifehler haette die als falsch gemessene Kette scharf wieder angeschaltet (Umlauf, NACHKAUFEN,
+# Sammelmail) bzw. den noch aelteren Weg (Allocator, Multi-Asset-Batch, GUI-Knoepfe) - Voranalyse W-3 §2. Diese Konstante sperrt
+# Umlauf, Allocator, Batch und die Knoepfe UNABHAENGIG von beiden Dateien. Der Code bleibt vorhanden: zurueck mit False (umkehrbar).
+ALTE_KETTE_STILLGELEGT = True
+STILLGELEGT_TEXT = ("die alte Spot-Kette ist stillgelegt (W-3 S-1, E-164): Hebel-Signale kommen aus der REGEL0, die Spot-Fuehrung "
+                    "aus B1/B3/B4")
+
+
+def alte_kette_stillgelegt() -> bool:
+    """W-3 S-1: True = Umlauf, Allocator, Multi-Asset-Batch und die Knoepfe der alten Pipelines laufen NICHT - egal was in
+    regel0_betrieb.yaml oder config.yaml steht."""
+    return bool(ALTE_KETTE_STILLGELEGT)
+
+
 def aktiv_fuer(config: dict | None = None) -> tuple[str, ...]:
     """Die Assetklassen, die die neue Kette bedient."""
     wert = ((config or {}).get("rollen_kette") or {}).get("aktiv_fuer")
@@ -79,6 +95,9 @@ def alte_analyse_hinweis(assetklasse: str = "krypto",
     ⚠️ KEINE FESTE SPERRE, SONDERN DIESELBE REGEL: faellt eine Klasse aus
     `aktiv_fuer` (der dokumentierte Rueckfallweg), sind ihre Knoepfe von
     selbst wieder frei - so wie der alte Weg dann wieder uebernimmt."""
+    if alte_kette_stillgelegt():               # W-3 S-1: fest gesperrt, ohne Konfiguration - auch wenn `aktiv_fuer` fehlt
+        return ("Stillgelegt: %s. Dieser Knopf wuerde die ALTE Pipeline starten und ein Signal der alten Kette schreiben." %
+                STILLGELEGT_TEXT)
     # ⚠️ DIE ECHTE KONFIGURATION, NICHT DIE CODE-VORGABE. `aktiv_fuer(None)`
     # liefert `VORGABE_AKTIV_FUER` - und die ist LEER. Die erste Fassung
     # reichte `None` durch; die Oberflaechenprobe zeigte: jeder Knopf blieb
@@ -115,7 +134,10 @@ def alte_analyse_hinweis(assetklasse: str = "krypto",
 
 def kette_angehalten_hinweis() -> str:
     """S-4/S-5 (10.10.2026, Plan Schritt 53 G-E): "" oder der Satz fuer die Oberflaeche, dass die Rollen-Kette angehalten ist
-    (Schalter `spot_kette_angehalten`, E-67, seit 05.10.2026). Im Zweifel "" - wie `regel0_groesse.spot_kette_angehalten`."""
+    (Schalter `spot_kette_angehalten`, E-67, seit 05.10.2026). Im Zweifel "" - wie `regel0_groesse.spot_kette_angehalten`.
+    Seit W-3 S-1 (E-164) zuerst die feste Stilllegung - sie gilt auch, wenn die Datei nicht lesbar ist."""
+    if alte_kette_stillgelegt():
+        return STILLGELEGT_TEXT
     try:
         from agent import regel0_groesse as _G
         if _G.spot_kette_angehalten():
