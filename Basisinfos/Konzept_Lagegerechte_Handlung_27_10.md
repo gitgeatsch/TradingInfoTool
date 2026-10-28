@@ -269,6 +269,8 @@ Empfehlung **a**: Die Literatur findet die Fortsetzung in Krypto über **Wochen*
 
 **Vor dem ersten Blick:** Vorprüfung der Fallzahlen je Zustand (Blöcke ≥ 20 je Epoche?), Selbsttest mit Ballung (Fehlalarm, Pflanzung, Positivkontrolle D).
 
+**Festgelegt 28.10. (Nutzer: *„ja a … aber B und C finde ich nicht falsch“*):** **a** ist die Hauptfrage, **b** der zweite Weg (Bedingung für TRÄGT), **c** Auskunft. ⚠ **Berichtigung H-1a:** Die Hebel**stufe** hängt im Betrieb schon an der ATR (K6: höchste Stufe mit P(Liquidation 24 h) ≤ 2 %, `agent/regel0_rechnung.py` `hebelstufe`). H-1a misst deshalb die **Größe** nach Schwankung. **Vollständiger Messplan:** `Basisinfos/Messplan_H1_Lagegerechte_Handlung_28_10.md`.
+
 ---
 
 ## 7. Das Dashboard (Idee 2) — dieselben Schichten als Ansicht
