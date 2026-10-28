@@ -186,3 +186,38 @@ Reihenfolge: Vorprüfung → Selbsttest → **Zwischenstand an den Nutzer** → 
 | **NICHT TRENNBAR / KEIN BEFUND** | Fakt; offen ist, wie die Frage anders messbar wird (kein Abbruch ohne Ursache). Erst Ursache, dann Lösung |
 
 ⚠️ **Ehrliche Erwartung:** Am ehesten trägt H-1a, weil der Mechanismus fast zwangsläufig wirkt (Risiko sinkt, die Frage ist nur je Risiko). H-1b hat das größte Potential und die größte Unsicherheit (2.702, Umkehr 2024 gegen 2025–26). H-1c könnte an der Fallzahl scheitern.
+
+---
+
+## 9. ERGEBNIS (28.10.2026, `p101_h1_messung.txt`, Gegenprobe `p101_h1_gegenprobe.txt` ✔)
+
+**Geltungsbereich:** REGEL0-Einstiege, vier Mengen, lückenlose 168 h, 2025-01 bis 2026-08, Tagesklammer, Log-Differenz brutto, Spot-Stundenkurse. Auflösung X = 1–2 Pp.
+
+### H-1b — Haltedauer nach dem Trend dieses Assets: **TRÄGT NICHT** (nach Vorab-Regel)
+
+| Zelle | Zustand a (Haupt), Mittel je Menge in Pp | Stufen | zweiter Weg b |
+|---|---|---|---|
+| D72 (72 h − 24 h) | +0,06 / −0,19 / +0,35 / −0,23 | 2× NICHT TRENNBAR, 2× TRÄGT NICHT BIS 2 Pp | Vorzeichen gemischt |
+| D120 (5 T − 24 h) | +0,44 / −0,13 / +0,43 / −0,45 | 3× TRÄGT NICHT BIS 2 Pp, 1× NICHT TRENNBAR | gemischt |
+| DF (Führung − 24 h) | −0,42 / −0,53 / +0,05 / −0,64 | 3× NICHT TRENNBAR, 1× TRÄGT NICHT BIS 2 Pp | gemischt |
+
+⇒ Ob das Asset über seinem 50-T-Schnitt liegt, ändert den Wert des längeren Haltens **nicht erkennbar** (Vorzeichen wechseln zwischen Mengen und Jahren). **L6/L7 bleiben Fakt.**
+
+**Auskunft c (Stärke gegen BTC über 30 T), KEIN Urteil (nicht vorab als Hypothese, Mehrfachtesten):** durchgehend **negativ**: D72 −0,36 / −1,05 / −0,04 / −0,77 (2× TRÄGT niedriger), DF −0,92 / −1,25 / −0,46 / −1,16 (3× TRÄGT niedriger). Lesart: Bei Assets, die vorher **stärker als BTC** waren, ist längeres Halten **schlechter**. Das ist eher das Gegenteil von „Gewinner laufen lassen“. Nur ein **Hinweis** für eine eigene Vorab-Hypothese auf **anderen** Daten (vorwärts oder Lauf A).
+
+**Marktweit m:** KEIN BEFUND (keine Klammertage, wie erwartet; L2-a).
+
+### H-1c — kurz halten bei einem Extrem: **TRÄGT NICHT** (nach Vorab-Regel), D6 an der Nachweisgrenze
+
+| Zelle | extrem (Haupt), Mittel je Menge in Pp | Stufen | je Jahr 2024/25/26 | zweiter Weg mom / rsi | gepoolt je Handel (Unterschied) |
+|---|---|---|---|---|---|
+| **D6** (6 h − 24 h) | +0,60 / **+1,21** / **+1,07** / +1,26 | **2× TRÄGT (höher)**, 2× NICHT TRENNBAR | **alle 12 positiv** | **alle 8 positiv** | −0,48 / −0,04 / −0,30 / +0,18 |
+| D72 (72 h − 24 h) | +0,73 / +0,59 / +0,44 / +0,55 | 3× TRÄGT NICHT BIS 2 Pp, 1× NICHT TRENNBAR | gemischt | gemischt | gemischt |
+
+⚠ **D6 knapp:** In `unverzerrt_3` liegt die Untergrenze des Bandes bei +0,03 Pp, der Nullpunkt aus 40 Ziehungen bei +0,10 Pp (Gegenprobe mit eigener Nullwelt: −0,02). Mit einem anderen Zufallszug wäre das ein drittes TRÄGT und damit alle vier Punkte erfüllt. Das Urteil steht nach der Vorab-Regel; die 40 Ziehungen sind der Messstandard. Eine Änderung **nach** dem Ergebnis wäre nachträglich und braucht eine Nutzerentscheidung.
+
+⚠ **Fachlich:** Die Tagesklammer misst **gegen die anderen Einstiege desselben Tages**. Gepoolt je Handel (das absolute D6 der Extrem-Einstiege) ist **kein** Vorteil zu sehen: Extrem-Einstiege geben zwischen 6 h und 24 h nicht mehr ab, die übrigen gewinnen in dieser Zeit dazu. Als **Handlung** („bei Extrem nach 6 h aussteigen“) ergibt das kein erkennbares Plus im Geld.
+
+### Zwischenfazit zum Ziel
+
+Auf den REGEL0-Einstiegen 2025–26 verschiebt **keine** der gemessenen Gegebenheiten die **Haltedauer** messbar (Auflösung 1–2 Pp). Mit K6 (Stufe nach ATR, im Betrieb) und V-1 (Größe nach ATR: Bremse, nicht trennbar) ist die **Wie-Schicht** damit in ihren drei messbaren Achsen geprüft: **Risiko** ja (Stufe), **Ertrag** nein.

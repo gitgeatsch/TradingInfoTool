@@ -2,5 +2,25 @@ P101 GEGENPROBE H-1 · zweiter Rechenweg aus den Rohdaten
 
 G1 Stichprobe 1200 Einstiege: ✔ alle Groessen gleich
 G4 Mutationen (Vorgriff Tageszustand a, Stop-Linie mit laufendem Hoch): ✔ erkannt: a 73 Abweichungen, rF 28 Abweichungen
+   G2 H-1b D72   bestand       Klammer eigen +0.058506 % / Werkzeug +0.058506 % ✔ · Tage 287 · Nullpunkt eigen +0.1420 / Werkzeug +0.0336 % ✔
+   G2 H-1b D72   unverzerrt_1  Klammer eigen -0.190214 % / Werkzeug -0.190214 % ✔ · Tage 310 · Nullpunkt eigen +0.0163 / Werkzeug +0.0467 % ✔
+   G2 H-1b D72   unverzerrt_2  Klammer eigen +0.349067 % / Werkzeug +0.349067 % ✔ · Tage 302 · Nullpunkt eigen -0.0498 / Werkzeug -0.0897 % ✔
+   G2 H-1b D72   unverzerrt_3  Klammer eigen -0.234629 % / Werkzeug -0.234629 % ✔ · Tage 308 · Nullpunkt eigen -0.0220 / Werkzeug -0.0479 % ✔
+   G2 H-1b D120  bestand       Klammer eigen +0.435073 % / Werkzeug +0.435073 % ✔ · Tage 287 · Nullpunkt eigen +0.0580 / Werkzeug +0.0684 % ✔
+   G2 H-1b D120  unverzerrt_1  Klammer eigen -0.131524 % / Werkzeug -0.131524 % ✔ · Tage 310 · Nullpunkt eigen +0.0305 / Werkzeug -0.0475 % ✔
+   G2 H-1b D120  unverzerrt_2  Klammer eigen +0.432033 % / Werkzeug +0.432033 % ✔ · Tage 302 · Nullpunkt eigen -0.0415 / Werkzeug -0.1514 % ✔
+   G2 H-1b D120  unverzerrt_3  Klammer eigen -0.447329 % / Werkzeug -0.447329 % ✔ · Tage 308 · Nullpunkt eigen +0.0373 / Werkzeug -0.1183 % ✔
+   G2 H-1b DF    bestand       Klammer eigen -0.418949 % / Werkzeug -0.418949 % ✔ · Tage 287 · Nullpunkt eigen -0.0213 / Werkzeug +0.0475 % ✔
+   G2 H-1b DF    unverzerrt_1  Klammer eigen -0.533905 % / Werkzeug -0.533905 % ✔ · Tage 310 · Nullpunkt eigen -0.0619 / Werkzeug +0.0329 % ✔
+   G2 H-1b DF    unverzerrt_2  Klammer eigen +0.049848 % / Werkzeug +0.049848 % ✔ · Tage 302 · Nullpunkt eigen +0.0034 / Werkzeug -0.0280 % ✔
+   G2 H-1b DF    unverzerrt_3  Klammer eigen -0.636703 % / Werkzeug -0.636703 % ✔ · Tage 308 · Nullpunkt eigen -0.0253 / Werkzeug -0.0067 % ✔
+   G2 H-1c D6    bestand       Klammer eigen +0.597434 % / Werkzeug +0.597434 % ✔ · Tage 154 · Nullpunkt eigen +0.1396 / Werkzeug -0.1136 % ✔
+   G2 H-1c D6    unverzerrt_1  Klammer eigen +1.206737 % / Werkzeug +1.206737 % ✔ · Tage 168 · Nullpunkt eigen -0.0513 / Werkzeug -0.1128 % ✔
+   G2 H-1c D6    unverzerrt_2  Klammer eigen +1.068122 % / Werkzeug +1.068122 % ✔ · Tage 168 · Nullpunkt eigen +0.0087 / Werkzeug -0.1888 % ✔
+   G2 H-1c D6    unverzerrt_3  Klammer eigen +1.262150 % / Werkzeug +1.262150 % ✔ · Tage 177 · Nullpunkt eigen -0.0218 / Werkzeug +0.0186 % ✔
+   G2 H-1c D72   bestand       Klammer eigen +0.728021 % / Werkzeug +0.728021 % ✔ · Tage 154 · Nullpunkt eigen +0.0273 / Werkzeug -0.0060 % ✔
+   G2 H-1c D72   unverzerrt_1  Klammer eigen +0.585997 % / Werkzeug +0.585997 % ✔ · Tage 168 · Nullpunkt eigen -0.0930 / Werkzeug -0.0300 % ✔
+   G2 H-1c D72   unverzerrt_2  Klammer eigen +0.444197 % / Werkzeug +0.444197 % ✔ · Tage 168 · Nullpunkt eigen -0.0414 / Werkzeug -0.0735 % ✔
+   G2 H-1c D72   unverzerrt_3  Klammer eigen +0.550333 % / Werkzeug +0.550333 % ✔ · Tage 177 · Nullpunkt eigen -0.1481 / Werkzeug +0.0658 % ✔
 
 GEGENPROBE: ✔ BESTANDEN

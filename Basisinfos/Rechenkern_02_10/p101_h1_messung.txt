@@ -1,0 +1,120 @@
+P101 MESSUNG H-1 (Fassung 4) · 28.10.2026 08:58 · Desktop · brutto, LOG-Differenz in Pp, Tagesklammer, t-Band ueber 15-T-Bloecke, zweiseitig nach Bonferroni
+
+======================================================================================================================
+H-1b D72 = r72 - r24 · Hauptzustand a · zweiter Weg b · Auskunft c/m
+   Menge         Zust.    Mittel               Band     Null   Tage    Bl.  Stufe
+   bestand       a         +0.06 [  -0.85;  +0.97]    -0.05    287     41  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 -0.42 · 2025 +0.19 · 2026 -0.06  |  gepoolt je Handel: Zustand -1.31 / sonst -1.14 Pp (Unterschied -0.18) · netto-Niveau je Zustand -1.67 / -1.50 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   bestand       b         +0.37 [  -0.71;  +1.45]    -0.05    273     40  NICHT TRENNBAR
+   bestand       c         -0.36 [  -1.26;  +0.54]    -0.04    349     41  NICHT TRENNBAR
+   bestand       m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_1  a         -0.19 [  -1.21;  +0.83]    -0.11    310     41  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.59 · 2025 -0.06 · 2026 -0.31  |  gepoolt je Handel: Zustand -0.83 / sonst -1.00 Pp (Unterschied +0.16) · netto-Niveau je Zustand -1.19 / -1.36 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   unverzerrt_1  b         +0.13 [  -0.94;  +1.20]    -0.02    265     40  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_1  c         -1.05 [  -1.80;  -0.29]    +0.06    382     41  TRAEGT (Differenz im Zustand NIEDRIGER)
+   unverzerrt_1  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_2  a         +0.35 [  -0.99;  +1.69]    +0.01    302     41  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.37 · 2025 +0.86 · 2026 -0.17  |  gepoolt je Handel: Zustand -0.75 / sonst -1.09 Pp (Unterschied +0.34) · netto-Niveau je Zustand -1.11 / -1.45 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   unverzerrt_2  b         +0.45 [  -1.10;  +1.99]    +0.01    262     39  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_2  c         -0.04 [  -1.24;  +1.15]    +0.06    360     41  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_2  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_3  a         -0.23 [  -1.04;  +0.57]    +0.06    308     41  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 -0.14 · 2025 -0.62 · 2026 +0.12  |  gepoolt je Handel: Zustand -0.87 / sonst -1.10 Pp (Unterschied +0.23) · netto-Niveau je Zustand -1.23 / -1.46 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   unverzerrt_3  b         -0.07 [  -1.04;  +0.91]    -0.02    266     40  NICHT TRENNBAR
+   unverzerrt_3  c         -0.77 [  -1.40;  -0.13]    -0.05    376     41  TRAEGT (Differenz im Zustand NIEDRIGER)
+   unverzerrt_3  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+======================================================================================================================
+H-1b D120 = r120 - r24 · Hauptzustand a · zweiter Weg b · Auskunft c/m
+   Menge         Zust.    Mittel               Band     Null   Tage    Bl.  Stufe
+   bestand       a         +0.44 [  -0.77;  +1.64]    -0.04    287     41  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.76 · 2025 +0.10 · 2026 +0.74  |  gepoolt je Handel: Zustand -1.89 / sonst -1.91 Pp (Unterschied +0.02) · netto-Niveau je Zustand -2.61 / -2.63 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   bestand       b         +0.51 [  -0.73;  +1.74]    -0.13    273     40  TRAEGT NICHT BIS 2.00 Pp
+   bestand       c         -0.11 [  -1.12;  +0.91]    +0.05    349     41  TRAEGT NICHT BIS 2.00 Pp
+   bestand       m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_1  a         -0.13 [  -1.57;  +1.31]    +0.08    310     41  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.76 · 2025 -0.40 · 2026 +0.13  |  gepoolt je Handel: Zustand -1.91 / sonst -1.68 Pp (Unterschied -0.23) · netto-Niveau je Zustand -2.63 / -2.40 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   unverzerrt_1  b         +0.24 [  -1.37;  +1.84]    -0.01    265     40  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_1  c         -0.89 [  -1.85;  +0.08]    -0.01    382     41  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_1  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_2  a         +0.43 [  -1.26;  +2.12]    -0.03    302     41  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 -0.34 · 2025 +0.77 · 2026 +0.09  |  gepoolt je Handel: Zustand -1.86 / sonst -1.99 Pp (Unterschied +0.13) · netto-Niveau je Zustand -2.58 / -2.71 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   unverzerrt_2  b         +0.69 [  -1.04;  +2.42]    +0.02    262     39  NICHT TRENNBAR
+   unverzerrt_2  c         +0.29 [  -1.04;  +1.62]    +0.07    360     41  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_2  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_3  a         -0.45 [  -1.58;  +0.68]    +0.03    308     41  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 +0.22 · 2025 -0.90 · 2026 -0.03  |  gepoolt je Handel: Zustand -1.90 / sonst -1.70 Pp (Unterschied -0.21) · netto-Niveau je Zustand -2.62 / -2.42 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   unverzerrt_3  b         +0.31 [  -1.19;  +1.80]    +0.09    266     40  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_3  c         -0.92 [  -1.70;  -0.13]    -0.15    376     41  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_3  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+======================================================================================================================
+H-1b DF = rF - r24 · Hauptzustand a · zweiter Weg b · Auskunft c/m
+   Menge         Zust.    Mittel               Band     Null   Tage    Bl.  Stufe
+   bestand       a         -0.42 [  -1.28;  +0.44]    -0.04    287     41  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 -1.02 · 2025 -0.50 · 2026 -0.34  |  gepoolt je Handel: Zustand -1.12 / sonst -1.16 Pp (Unterschied +0.04) · netto-Niveau je Zustand -1.84 / -1.88 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   bestand       b         +0.28 [  -0.67;  +1.22]    +0.10    273     40  NICHT TRENNBAR
+   bestand       c         -0.92 [  -1.71;  -0.13]    -0.01    349     41  TRAEGT (Differenz im Zustand NIEDRIGER)
+   bestand       m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_1  a         -0.53 [  -1.65;  +0.58]    +0.02    310     41  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 -0.62 · 2025 -0.75 · 2026 -0.32  |  gepoolt je Handel: Zustand -0.90 / sonst -0.80 Pp (Unterschied -0.11) · netto-Niveau je Zustand -1.62 / -1.52 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   unverzerrt_1  b         +0.41 [  -0.59;  +1.41]    -0.12    265     40  NICHT TRENNBAR
+   unverzerrt_1  c         -1.25 [  -2.00;  -0.49]    +0.00    382     41  TRAEGT (Differenz im Zustand NIEDRIGER)
+   unverzerrt_1  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_2  a         +0.05 [  -1.21;  +1.31]    -0.06    302     41  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.33 · 2025 +0.26 · 2026 -0.16  |  gepoolt je Handel: Zustand -0.82 / sonst -0.70 Pp (Unterschied -0.13) · netto-Niveau je Zustand -1.54 / -1.42 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   unverzerrt_2  b         +0.74 [  -0.36;  +1.85]    -0.08    262     39  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_2  c         -0.46 [  -1.58;  +0.65]    +0.03    360     41  TRAEGT NICHT BIS 2.00 Pp
+   unverzerrt_2  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+   unverzerrt_3  a         -0.64 [  -1.66;  +0.39]    -0.08    308     41  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 +0.08 · 2025 -1.00 · 2026 -0.30  |  gepoolt je Handel: Zustand -0.88 / sonst -0.84 Pp (Unterschied -0.04) · netto-Niveau je Zustand -1.60 / -1.56 (Mehrkosten 0.72 Pp, in der Klammer gleich)
+   unverzerrt_3  b         +0.42 [  -0.64;  +1.49]    +0.05    266     40  NICHT TRENNBAR
+   unverzerrt_3  c         -1.16 [  -1.72;  -0.60]    +0.00    376     41  TRAEGT (Differenz im Zustand NIEDRIGER)
+   unverzerrt_3  m           -   [    -  ;    -  ]      -        0      0  KEIN BEFUND - keine Klammertage
+======================================================================================================================
+H-1c D6 = r6 - r24 · Hauptzustand extrem · zweiter Weg ext_mom/ext_rsi · Auskunft -
+   Menge         Zust.    Mittel               Band     Null   Tage    Bl.  Stufe
+   bestand       extrem    +0.60 [  -0.74;  +1.93]    +0.09    154     39  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 +1.03 · 2025 +0.30 · 2026 +0.92  |  gepoolt je Handel: Zustand -0.73 / sonst -0.25 Pp (Unterschied -0.48) · netto-Niveau je Zustand -0.59 / -0.12 (Mehrkosten -0.13 Pp, in der Klammer gleich)
+   bestand       ext_mom    +0.85 [  -0.73;  +2.42]    +0.06    123     35  NICHT TRENNBAR
+   bestand       ext_rsi    +1.06 [  -0.74;  +2.86]    -0.04     86     33  NICHT TRENNBAR
+   unverzerrt_1  extrem    +1.21 [  +0.15;  +2.26]    +0.02    168     38  TRAEGT (Differenz im Zustand HOEHER)
+                        je Jahr (Klammer): 2024 +0.93 · 2025 +1.20 · 2026 +1.22  |  gepoolt je Handel: Zustand -0.09 / sonst -0.05 Pp (Unterschied -0.04) · netto-Niveau je Zustand +0.05 / +0.08 (Mehrkosten -0.13 Pp, in der Klammer gleich)
+   unverzerrt_1  ext_mom    +1.47 [  +0.11;  +2.82]    +0.10    132     38  TRAEGT (Differenz im Zustand HOEHER)
+   unverzerrt_1  ext_rsi    +1.56 [  +0.08;  +3.04]    +0.03     97     36  TRAEGT (Differenz im Zustand HOEHER)
+   unverzerrt_2  extrem    +1.07 [  -0.03;  +2.17]    -0.04    168     38  TRAEGT (Differenz im Zustand HOEHER)
+                        je Jahr (Klammer): 2024 +2.27 · 2025 +1.17 · 2026 +0.94  |  gepoolt je Handel: Zustand -0.32 / sonst -0.02 Pp (Unterschied -0.30) · netto-Niveau je Zustand -0.18 / +0.11 (Mehrkosten -0.13 Pp, in der Klammer gleich)
+   unverzerrt_2  ext_mom    +1.04 [  -0.28;  +2.36]    +0.04    131     38  KEIN BEFUND - Block 15 zu kurz (AK -0.165)
+   unverzerrt_2  ext_rsi    +1.47 [  -0.20;  +3.15]    -0.14     95     35  NICHT TRENNBAR
+   unverzerrt_3  extrem    +1.26 [  +0.03;  +2.49]    +0.10    177     38  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 +1.52 · 2025 +0.65 · 2026 +1.94  |  gepoolt je Handel: Zustand +0.12 / sonst -0.06 Pp (Unterschied +0.18) · netto-Niveau je Zustand +0.25 / +0.07 (Mehrkosten -0.13 Pp, in der Klammer gleich)
+   unverzerrt_3  ext_mom    +1.30 [  -0.18;  +2.77]    +0.04    140     38  NICHT TRENNBAR
+   unverzerrt_3  ext_rsi    +1.40 [  +0.04;  +2.75]    -0.00    101     35  TRAEGT (Differenz im Zustand HOEHER)
+======================================================================================================================
+H-1c D72 = r72 - r24 · Hauptzustand extrem · zweiter Weg ext_mom/ext_rsi · Auskunft -
+   Menge         Zust.    Mittel               Band     Null   Tage    Bl.  Stufe
+   bestand       extrem    +0.73 [  -0.87;  +2.33]    +0.01    154     39  NICHT TRENNBAR
+                        je Jahr (Klammer): 2024 +0.12 · 2025 +1.05 · 2026 +0.38  |  gepoolt je Handel: Zustand -0.77 / sonst -1.19 Pp (Unterschied +0.42) · netto-Niveau je Zustand -1.13 / -1.55 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   bestand       ext_mom    +1.37 [  -0.49;  +3.22]    -0.12    123     35  NICHT TRENNBAR
+   bestand       ext_rsi    +0.19 [  -1.69;  +2.06]    -0.15     86     33  NICHT TRENNBAR
+   unverzerrt_1  extrem    +0.59 [  -0.70;  +1.87]    -0.01    168     38  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.16 · 2025 +1.13 · 2026 -0.01  |  gepoolt je Handel: Zustand -1.18 / sonst -0.91 Pp (Unterschied -0.26) · netto-Niveau je Zustand -1.54 / -1.27 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   unverzerrt_1  ext_mom    +0.92 [  -0.59;  +2.43]    +0.18    132     38  NICHT TRENNBAR
+   unverzerrt_1  ext_rsi    +0.62 [  -0.98;  +2.22]    -0.03     97     36  NICHT TRENNBAR
+   unverzerrt_2  extrem    +0.44 [  -0.95;  +1.84]    -0.00    168     38  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 -0.42 · 2025 +1.21 · 2026 -0.46  |  gepoolt je Handel: Zustand -0.84 / sonst -0.96 Pp (Unterschied +0.13) · netto-Niveau je Zustand -1.20 / -1.32 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   unverzerrt_2  ext_mom    +0.96 [  -0.69;  +2.62]    +0.02    131     38  NICHT TRENNBAR
+   unverzerrt_2  ext_rsi    -0.13 [  -1.98;  +1.73]    +0.04     95     35  KEIN BEFUND - Block 15 zu kurz (AK 0.227)
+   unverzerrt_3  extrem    +0.55 [  -0.59;  +1.70]    +0.03    177     38  TRAEGT NICHT BIS 2.00 Pp
+                        je Jahr (Klammer): 2024 +0.26 · 2025 +0.96 · 2026 +0.09  |  gepoolt je Handel: Zustand -1.04 / sonst -1.02 Pp (Unterschied -0.03) · netto-Niveau je Zustand -1.40 / -1.38 (Mehrkosten 0.36 Pp, in der Klammer gleich)
+   unverzerrt_3  ext_mom    +0.88 [  -0.33;  +2.10]    -0.06    140     38  NICHT TRENNBAR
+   unverzerrt_3  ext_rsi    -0.03 [  -1.63;  +1.56]    -0.13    101     35  KEIN BEFUND - Block 15 zu kurz (AK -0.172)
+
+======================================================================================================================
+GESAMTURTEIL je Hypothese (vorab: alle Punkte; >= 3 von 4 Mengen)
+   H-1b_D72   (1) Band 0/4 ✖ · (2) 2025 und 2026 gleich ✖ · (3) zweiter Weg ✖ · (4) Selbsttest ✔  ->  traegt nicht
+   H-1b_D120  (1) Band 0/4 ✖ · (2) 2025 und 2026 gleich ✖ · (3) zweiter Weg ✖ · (4) Selbsttest ✔  ->  traegt nicht
+   H-1b_DF    (1) Band 0/4 ✖ · (2) 2025 und 2026 gleich ✖ · (3) zweiter Weg ✖ · (4) Selbsttest ✔  ->  traegt nicht
+   H-1c_D6    (1) Band 2/4 ✖ · (2) 2025 und 2026 gleich ✖ · (3) zweiter Weg ✖ · (4) Selbsttest ✔  ->  traegt nicht
+   H-1c_D72   (1) Band 0/4 ✖ · (2) 2025 und 2026 gleich ✖ · (3) zweiter Weg ✖ · (4) Selbsttest ✔  ->  traegt nicht
+
+Seiteneffekt Produktionsdatei: ✔ unveraendert
+Geltungsbereich: REGEL0-Einstiege (vier Mengen) mit lueckenlosen 168 h, 2025-01 bis 2026-08, Tagesklammer (jeder Tag mit beiden Zustaenden gleich gewichtet), brutto, Spot-Stundenkurse.
