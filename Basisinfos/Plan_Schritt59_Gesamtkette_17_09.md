@@ -2746,3 +2746,16 @@ Schritt7 §23.24.
 - Die Größe nach Schwankung wirkt als Bremse, ist nach Plan aber nicht trennbar.
 - ETF-Flüsse und Angstmaße (DVOL, Fear & Greed) sind mit unseren Daten **nicht auflösbar**: Es fehlen unabhängige Wechsel, nicht Tage.
 - W-1 ist gebaut (Vorbehalt in der REGEL0-Mail, Reihenbeginn in der Diagnose) und im morgigen Pull.
+
+**Nachtrag 27.10.2026 (83) — L7, W-2, W-3** (E-161 bis E-164):
+- L7 „Erwartete Schwankung (DVOL)“ im Lagebild, als Information, kein Signal (E-161).
+- W-2: Doku-Lücken geschlossen (E-162). W-3: Die alte Spot-Kette ist **fest stillgelegt** (S-1), H15 robust (E-163/E-164). NB-Bündel bestätigt.
+
+**Nachtrag 27./28.10.2026 (84) — Richtungswechsel: „Lagegerechte Handlung“** (E-165; `Konzept_Lagegerechte_Handlung_27_10.md`):
+- **Anlass (Nutzer 27.10.):** Die Versuche, auf Assetebene einen Vorteil über die Daten zu finden, sind gescheitert, die Mails ohne Essenz. Gefragt ist **die Handlung aufgrund der passenden Gegebenheiten**. Die Signale bleiben, aber in Schichten anders gelagert; die Mischung von Strategien ist Planung, keine Systemfunktion.
+- **Einordnung in diesen Plan:** Das folgt Nachtrag 79/80 (Einstiegssuche abgeschlossen → Fakten- und Führungssystem weiterentwickeln). Gesucht wird **kein Einstieg**, sondern das **Wie** nach dem Einstieg (Instrument, Stufe, Größe, Haltedauer).
+- **Sieben Schichten** (Umfeld, Markt, Klasse, Asset, Auslöser, Ausführung, Rückkopplung) als Gewichte; nur gemessene verschieben die Handlung. Gemessen im **gepaarten Handlungsvergleich** (gleicher Auslöser, gleicher Zeitpunkt).
+- **Leiter** (Konzept §5.3, Nutzer 28.10.: *„unsicher bei allen Punkten“*, die Messung entscheidet): L1 ist durch K6 + V-1 beantwortet, L2 nur Fakt, L3/L4 Regeln, L8 Spot-Strang, L6 marktweit = L2-a (nicht entscheidbar).
+- **Messplan H-1 vorab** (`Messplan_H1_Lagegerechte_Handlung_28_10.md`, **Fassung 2** nach dem Abgleich mit diesem Plan: H-1a gestrichen, weil sie V-1 wiederholt): **H-1b** Haltedauer nach dem Trend des Assets (50-T-Schnitt; 200 T zweiter Weg; Stärke gegen BTC Auskunft), **H-1c** kurz halten bei einem Extrem.
+- **Betrieb unverändert.** Bauentscheid (Umbau oder neues Projekt) erst nach einer tragenden Messung.
+

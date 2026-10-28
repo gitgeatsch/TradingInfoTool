@@ -625,6 +625,17 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - W-2 erledigt (Doku-Lücken, Register, doppelter Punkt).
 - **W-3 Voranalyse:** Ein Dateifehler schaltet die alte Kette wieder ein und H15 ab. ➤ Zur Abstimmung: **S-1 harte Sperre** · S-2 Jobs abmelden nach Ende der Alt-Messung · S-3 nicht empfohlen · Fachfrage H15-Plan für REGEL0.
 
+### Stand 27.10.2026 abends (E-164)
+
+- W-3 S-1 gebaut: alte Spot-Kette **fest stillgelegt**, H15 robust, Terminmarkt-Wächter vorgezogen. NB-Kontrollen 27.10.: K-W3-S1, K-O21-2, K-WC-1, K-HD-1 erfüllt; H15-Teil als K-WC-1b offen.
+
+### Stand 28.10.2026 (E-165) — Richtungswechsel „Lagegerechte Handlung“
+
+- **Konzept** `Konzept_Lagegerechte_Handlung_27_10.md`: Signale bleiben als Auslöser, sieben Schichten verschieben die **Handlung** (Wie), gemessen im gepaarten Handlungsvergleich. Leiter mit Herkunft je Zeile (§5.3).
+- **Messplan H-1 vorab, Fassung 2** (`Messplan_H1_Lagegerechte_Handlung_28_10.md`): Nach dem Abgleich mit dem Gesamtplan ist H-1a gestrichen (= V-1, E-158). Gemessen werden **H-1b** (Haltedauer nach eigenem Trend, Tagesklammer) und **H-1c** (kurz bei Extrem).
+- ➤ **Nächster Schritt:** Werkzeuge `p101_h1_*` bauen → Vorprüfung → Selbsttest → **Zwischenstand an den Nutzer** vor dem ersten Blick → Messung → Gegenprobe.
+- NB offen: K-W1-MAIL/K-W2-PUNKT (nächste Mail), K-SP-3c/K-B4-D1 (nach 02.11.), K-WC-1b (nächste H15-Mail), S-2 Anfang November nur nach Voranalyse.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

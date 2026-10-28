@@ -271,6 +271,12 @@ Empfehlung **a**: Die Literatur findet die Fortsetzung in Krypto über **Wochen*
 
 **Festgelegt 28.10. (Nutzer: *„ja a … aber B und C finde ich nicht falsch“*):** **a** ist die Hauptfrage, **b** der zweite Weg (Bedingung für TRÄGT), **c** Auskunft. ⚠ **Berichtigung H-1a:** Die Hebel**stufe** hängt im Betrieb schon an der ATR (K6: höchste Stufe mit P(Liquidation 24 h) ≤ 2 %, `agent/regel0_rechnung.py` `hebelstufe`). H-1a misst deshalb die **Größe** nach Schwankung. **Vollständiger Messplan:** `Basisinfos/Messplan_H1_Lagegerechte_Handlung_28_10.md`.
 
+**Abgleich mit dem Gesamtplan (28.10., Nutzerfrage; Messplan Fassung 2):**
+- **H-1a gestrichen:** Sie ist **V-1** (E-157/E-158): Positionswert nach 1/ATR gegen fest, Ergebnis Bremse ohne Ertragsverlust, **nicht trennbar**. L1 ist damit beantwortet, die Stufe folgt der ATR (K6), die Größe bleibt fest.
+- **Marktweiter Rückenwind** ist **L2-a** (E-151/E-153), nicht entscheidbar; nur Auskunft.
+- **Neu und gemessen werden:** H-1b (Haltedauer nach dem Trend **dieses** Assets, Tagesklammer; kein Einstiegsfilter, daher kein Widerspruch zu E-153) und H-1c (kurz bei Extrem).
+- **Einordnung in den Gesamtplan:** Nachträge 79/80 (E-155/E-156) hatten die **Einstiegssuche abgeschlossen** und vorgeschlagen, das **Fakten- und Führungssystem** weiterzuentwickeln. Das Konzept folgt dem: Es sucht keinen Einstieg, sondern die passende **Handlung** nach dem Einstieg.
+
 ---
 
 ## 7. Das Dashboard (Idee 2) — dieselben Schichten als Ansicht
@@ -332,8 +338,9 @@ Das Band ist ein **Zustand**, kein Takt (Regel 1).
 | Früher | Unterschied hier |
 |---|---|
 | K1 Kombination 2.677/2.678, A-Faktoren 2.645 | gefragt war **q / Richtung** (Ob/Wann). Hier ist die Frage die **Handlungswahl im gepaarten Vergleich** (Wie). Die Leiter wird vorab fachlich festgelegt, nicht gesucht |
+| L2-a E-151/E-153 | marktweites Regime (BTC 200 T) für längeres Halten: nicht entscheidbar → L6 marktweit nur Auskunft; H-1b misst je Asset |
 | F-1 Marktfilter E-133 | Filter = *ob handeln*. Hier verschiebt das Umfeld nur das *Wie*, H0 entsteht nur aus mehreren Gegenwinden. ⚠ Der H0-Anteil ist der Teil, der dem Marktfilter am nächsten kommt; er wird **getrennt** ausgewiesen |
-| V-1 E-158 | Vorläufer mit einer Dimension; Ergebnis ehrlich als Erwartung genannt (§6.4) |
+| V-1 E-158 | ⚠ **dieselbe Messung wie L1/H-1a** (Größe nach 1/ATR), nicht nur ein Vorläufer: H-1a gestrichen (Messplan Fassung 2, 28.10.) |
 | Trichter der alten Kette (stillgelegt E-164) | Schichten sind Gewichte, keine Sperren (§5.2) |
 | Entscheider E-82, LLM E-125 | Das LLM erklärt, es urteilt nicht. Es bekommt eine eigene Frage |
 

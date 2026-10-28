@@ -8,6 +8,22 @@
 - 28.10.: L5 ohne „nach oben“, L2 nur Fakt, L8 in den Spot-Strang, *„unsicher bei allen Punkten“* (die Messung entscheidet).
 - 28.10. zu Rückenwind je Trade: *„ja a – ist sicher der kurzfristig relevantere Bereich, aber B und C finde ich nicht falsch“*.
 
+
+> ## ⚠️ FASSUNG 2 (28.10.2026, vor jedem Werkzeug und jedem Ergebnis)
+>
+> **Anlass:** Nutzerfrage *„hast du unser Konzept mit dem Gesamtplan abgeglichen bzw. adaptiert?“*. Der Abgleich mit `Plan_Schritt59` (Nachträge 79–82) und den Entscheidungen fand zwei Überschneidungen:
+>
+> | | Fassung 1 | Abgleich | Fassung 2 |
+> |---|---|---|---|
+> | **H-1a** Größe nach Schwankung | Positionswert ∝ ATR̄/ATR gegen fest | **ist V-1** (E-157/E-158, vorab 857c9b9e): Positionswert ∝ 1/ATR gegen fest, Nullwelt Größen je Tag vertauscht. Ergebnis: Bremse ohne Ertragsverlust, **NICHT TRENNBAR**. Eine Wiederholung auf derselben Basis brächte nichts Neues (R-R11; Nutzer 27.10.: *„es macht keinen Sinn die Messungen zu wiederholen“*) | **gestrichen.** L1 ist beantwortet: Die **Stufe** folgt im Betrieb der ATR (K6), die **Größe** nach ATR ist eine Bremse, nicht trennbar → Fakt (Risikodisziplin) |
+> | **marktweiter Rückenwind** | Auskunft | **ist L2-a** (E-151/E-153): BTC über/unter 200-T-Schnitt als Regime für längeres Halten, *nicht entscheidbar* (zu wenige Regimewechsel). E-153: *„Kein weiterer Trendfilter.“* Die Vorprüfung §2 hat das nur bestätigt | bleibt **Auskunft**, ohne Urteil |
+> | **H-1b** je Trade | Hauptfrage | **neu**: L2-a fragte das Regime des **Marktes** als Bedingung auf dem Kern. H-1b fragt den Trend des **Assets** im Querschnitt, am selben Tag (Tagesklammer), und setzt keinen Filter auf den Einstieg, sondern wählt die **Haltedauer**. ⚠ Zu E-153 „kein weiterer Trendfilter“: H-1b ist kein Filter, der Einstieg bleibt unverändert | bleibt |
+> | **H-1c** Extrem kurz | Hauptfrage | **neu**: 2.694 hat die Wucht nur als Auskunft (mehr Hoch binnen 24 h), keine Haltedauer je Zustand | bleibt |
+>
+> **Damit gilt:** H-1 = **H-1b** (drei Hypothesen) und **H-1c** (zwei Hypothesen). Die Abschnitte zu H-1a und S4 unten gelten **nicht mehr** und bleiben nur zur Nachvollziehbarkeit stehen.
+>
+> ⚠️ **Lehre:** Der Abgleich mit dem Gesamtplan gehört **vor** den Messplan, nicht danach. Das Konzept (§9.2) hatte V-1 genannt, aber als „Vorläufer mit einer Dimension“ eingeordnet statt als dieselbe Messung.
+
 ---
 
 ## 1. Die Frage
@@ -49,7 +65,7 @@ Kein Download. **Keine Produktion:** Das Notebook ist nicht beteiligt, `data/tra
 - **vier Mengen**, Urteil ≥ 3 von 4;
 - Einstiege nur mit lückenlosen 168 h danach (gleiche Menge in jeder Zelle).
 
-### H-1a — Größe nach Schwankung (L1, V1)
+### ~~H-1a — Größe nach Schwankung (L1, V1)~~ (gestrichen in Fassung 2: ist V-1, E-158)
 
 | | |
 |---|---|
@@ -115,7 +131,7 @@ Läuft auf den **echten** Renditen mit **künstlichen** Zuständen bzw. Gewichte
 | S1 Fehlalarm | 200 Welten, Zustand zufällig je Einstieg (Anteil wie echt) | TRÄGT in ≤ 5 % (zweiseitig); Dreierregel ausgewiesen |
 | S2 Ballung | 100 Welten, Zustand je **Tagesblock** einheitlich (Regime-Etikett) | **kein** Fehlalarm über 5 %; Klammertage fallen weg → KEIN BEFUND ist richtig |
 | S3 Auflösung | Pflanzung Δ += k für RW-Einstiege, k = 0,1 / 0,25 / 0,5 / 1,0 / 2,0 % | Fundquote je k; **X** = kleinstes k mit ≥ 80 %. Ausgewiesen als Auflösungskurve |
-| S4 H-1a bekannte Wahrheit | künstliche Renditen r = μ + (ATR/ATR̄)^κ · z, κ = 0 / 0,5 / 1 | κ = 0: B nicht besser (Fehlalarm ≤ 5 %); κ = 1: B klar besser (≥ 80 %) |
+| ~~S4 H-1a bekannte Wahrheit~~ (entfällt, Fassung 2) | künstliche Renditen r = μ + (ATR/ATR̄)^κ · z, κ = 0 / 0,5 / 1 | κ = 0: B nicht besser (Fehlalarm ≤ 5 %); κ = 1: B klar besser (≥ 80 %) |
 | D Orakel | Zustand bzw. Gewicht mit Zukunftswissen (z. B. RW := Δ > 0) | muss TRÄGT ergeben, sonst sieht der Aufbau nichts (Lehre E-133) |
 
 ## 7. Werkzeuge (gebaut erst nach Nutzer-Ja zu diesem Plan)
