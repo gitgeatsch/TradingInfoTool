@@ -663,7 +663,19 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
   - Inventar: abgerufen / berechnet / LLM-Bedarf.
   - Acht Sichten, Lücken: KOSPI/Nikkei, Frankreich-Spread, Nachrichten live am NB.
   - §3a Fragestellung je Sicht und finales LLM (Bedenken-Stufe 0/1/2, Gewicht erst nach Messung).
-  - Offen §7: welche Sichten zuerst (Empfehlung A: S1–S4, S7, S8).
+  - §7: Sichten-Vorschlag passt (Nutzer), **vorher** Lücken, Prompt-Umfang und Gesamtplan prüfen.
+- **Vor dem Bau geprüft** → `Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`:
+  - A, Lücken je Sicht:
+    - yfinance-Weltmärkte nachgewiesen, Bundesbank DE 10J täglich nachgewiesen.
+    - Frankreich/Italien täglich: kein freier Weg.
+    - Token-Freigaben, ETF-Zuflüsse, Hacks: nicht frei.
+    - ECOS-Schlüssel leer, der Nutzer registriert.
+  - B, Token gemessen:
+    - Stufung Pflicht; Groq hart ≤ 8.000 Token/Anfrage (413).
+    - Töpfe je Modell (20b = zweiter sauberer Topf).
+    - Rückspiel Dez. 2025+ auf Gemini, Desktop-Schlüssel 2.
+  - C: Umbau des alten Plans nicht sauber → Vorschlag neuer `Gesamtplan.md`, nur Zustand.
+  - **Offene Frage D:** neuer Gesamtplan ja/nein.
 
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
