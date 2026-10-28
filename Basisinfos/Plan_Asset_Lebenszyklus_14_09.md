@@ -1,5 +1,7 @@
 # Schritt 53 — GUI und Anwendungsfälle: der Lebenszyklus eines Assets
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Stand 14.09.2026 · Befund 2.450 · Nutzervorgabe 07.09. (Gesamtplan 28.08., E1)**
 
 > *„Die umfangreiche Planung mit GUI, Funktionalitäten und Anwendungsfällen —

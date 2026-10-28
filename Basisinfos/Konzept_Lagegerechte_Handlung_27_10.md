@@ -1,5 +1,7 @@
 # Konzept „Lagegerechte Handlung“ — die Signale in Schichten, die Handlung nach den Gegebenheiten (27.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer 27.10.2026:**
 - *„… ich will die SIGNALE nicht verwerfen, sondern diese sollen über mehrere Schichten anders gelagert sein“*
 - *„die Mischung von Strategien und Assetklassen soll ohnehin passieren – das kann man zwar planen, ist aber keine Systemfunktion per se“*

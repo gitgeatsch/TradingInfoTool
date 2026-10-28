@@ -1,5 +1,7 @@
 # Schritt 59 – Gesamtkette messen und bewerten
 
+> ⛔ **HISTORIE – nicht fortschreiben** (bis Nachtrag 85). Abgelöst am 28.10.2026 durch den laufenden Plan [`Gesamtplan.md`](Gesamtplan.md). Verweise auf Abschnitte dieses Dokuments bleiben gültig.
+
 **Stand:** 17.09.2026 · **Status:** ABGESTIMMT – Nutzer 17.09.: *„ja N1 bis N10 wie empfohlen, committen und mit Phase 0 starten“*. Dazu: *„schritt für schritt vorgehen wie immer mit Abstimmung, Details im Plan können sich u.U. noch ändern. Berücksichtige auch erforderlichen Stillstand der Produktion für Messungen und Simulationen im LLM-Bereich“* (→ § 6a) und *„prüfe den Plan, ob wir zuerst die Krypto-Kette und Themen vollständig abschließen und erst danach die noch offene Multiasset-Schiene machen sollten … damit haben wir einen funktionierenden Teilbereich und keine unvollständige Gesamtlösung“* (→ § 1a). **Jede Phase und jedes Paket bekommt vor dem Bau eine eigene Voranalyse mit Abstimmung.**
 
 **Grundlage:** drei unabhängige Recherchen am Code (LLM-Rollen · Stufen und Datenlage · Plan, Register, Methodik), jede Kernaussage von Charlie am Code bzw. an einer Kopie der NB-Sicherung 2026-09-17 04:41 UTC nachgeprüft (§ 10).

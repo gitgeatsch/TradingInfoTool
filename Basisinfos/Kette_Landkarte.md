@@ -1,5 +1,7 @@
 # Die Landkarte der Kette — was rechnet, was urteilt, und wo
 
+> ⛔ **HISTORIE – nicht fortschreiben** (beschreibt die alte, seit E-164 stillgelegte Kette). Abgelöst am 28.10.2026 durch den laufenden Plan [`Gesamtplan.md`](Gesamtplan.md). Verweise auf Abschnitte dieses Dokuments bleiben gültig.
+
 *Erstellt 12.09.2026 auf Nutzerfrage: „zeige mir den vollständigen Ablauf der
 Kette — was wird wo deterministisch berechnet, wie und wo bewerten die
 LLM1-Rollen, und wo ist die Gegenprüfung von LLM2 (Z.ai)?"*

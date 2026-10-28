@@ -1,5 +1,7 @@
 # Voranalyse Dashboard mit Fakten und LLM-Bewertung — Bestandsaufnahme und Expertenkonzept (28.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 28.10.):**
 - *„das Dashboard mit Fakten und LLM Bewertungen brauchen wir ohnehin … mir fehlt die Intelligenz in der Bewertung, mit statischen mathematischen Berechnungen kommen wir nicht weiter.“*
 - *„bereite alles für die Bestandsaufnahme vor und wie wir die LLM mit unseren Mitteln optimal nutzen können, du in der Rolle des Experten“*

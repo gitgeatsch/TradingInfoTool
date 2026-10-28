@@ -1,5 +1,7 @@
 # Bilanz der LLM-Komponente (Stand 21.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 21.10.: *„Die LLM-Komponente sollte hier einen Mehrwert und Nutzen liefern – was wir offenbar nicht schaffen … Wenn sich das als Deadend herausstellt, brauchen wir das System so nicht weiterverfolgen. Halte alle Ergebnisse und Messungen fest.“*
 
 Dieses Blatt fasst **jeden** geprüften Weg zusammen: was gefragt war, wie gemessen wurde, was herauskam und warum. Die Einzelheiten stehen in den genannten Abschnitten von `Voranalyse_Schritt7_Betrieb_02_10.md` (Schritt7) und in den Entscheidungen E-n.

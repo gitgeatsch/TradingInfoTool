@@ -1,5 +1,7 @@
 # Der Hebel in fünf Phasen — Planung und Stand
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · Nutzervorgabe wörtlich, danach der Abgleich
 
 > Dieses Blatt löst `Bauplan_Hebel_27_09.md` als oberste Liste ab. Der

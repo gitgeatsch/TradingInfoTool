@@ -1,5 +1,7 @@
 # Bauplan Weg a — Fakt-Teil, Befund-Gedächtnis (A3), Gegenanwalt (A4) (28.10.2026 abends)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Grundlage:** `Voranalyse_Dashboard_LLM_28_10.md` (§4 Aufgaben, §5 Prinzipien, §1.5a Anbieter gemessen).
 **Entscheid:** Nutzer 28.10. abends: *„ok a, Binance-Historie laden ist freigegeben“*.
 **Stand:** Vorlage zur Abstimmung. **Nichts am Betrieb geändert.** Gebaut wird erst nach dem Ja zu §8.

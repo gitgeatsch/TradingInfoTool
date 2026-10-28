@@ -1,5 +1,7 @@
 # Voranalyse Spot-Neubau — die Grundlage aus fachlicher und technischer Sicht
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **04.10.2026** · E-54, Plan Hebel **O23** (dazu O14, O19, O24) · Nutzer: *„Ich würde gerne den Spot-Ast neu umbauen, analog dem Hebelablauf“* — *„vorerst nur eine Voranalyse und Analyse, damit wir die Grundlage aus fachlicher und technischer Sicht haben“*.
 
 > ▶ **05.10.2026: M-0 Machbarkeit gestartet, parallel zum Hebel und sauber getrennt (E-59, §7).** Vorher:

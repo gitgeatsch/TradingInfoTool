@@ -1,5 +1,7 @@
 # Vor dem Bau: Lücken und Quellen, Prompt-Umfang, Gesamtplan (28.10.2026 spät)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 28.10. spät):** *„bevor wir wieder scheitern …“*
 1. *„recherchieren, was uns fehlt und wo wir uns auf die Suche nach Datenquellen begeben müssen“*
 2. *„vorher prüfen, ob und wie wir mit dem Prompt auskommen aufgrund der Menge an Informationen“*
@@ -110,6 +112,24 @@ Beide Modelle zählen fast gleich, die Abweichung liegt unter 6 %. Faustregel: *
 | T7a | **Ausweg 5: Groq führt die Töpfe JE MODELL. NACHGEWIESEN am 28.10.** Je ein Aufruf an gpt-oss-120b und gpt-oss-20b ergab für **beide** `remaining-requests 999` von 1.000 und `limit-tokens 8000` je Minute. Bei einem gemeinsamen Topf hätte der zweite Aufruf 998 gezeigt. Damit ist **gpt-oss-20b ein zweiter sauberer Topf** (gleicher Wissensstand ~Mitte 2024, schwächeres Modell) | **A1, also das Einordnen von Meldungen, auf 20b** und die Abwägungen auf 120b. Vorher eine Positivkontrolle des Wissensstands für 20b. Die Tagesgrenze für Token (200.000) zeigt der Header nicht, sie ist beim Lauf zu messen |
 | T7c | **OpenRouter scheidet für das Rückspiel aus.** `gpt-oss-120b:free` antwortet am 28.10. mit **404**; der Free-Bereich hat kein brauchbares Modell mit Wissensstand vor 2025 [B, Stichprobe] | nur noch Reserve im Betrieb |
 | T8 | **Ausgabe zählt mit.** gpt-oss denkt vor der Antwort (Reasoning-Token). Ohne Begrenzung (`reasoning_effort: low`) wächst jede Anfrage um 500–2.000 Token | im Messplan festlegen |
+
+### B2. Warum überhaupt Groq? (Nutzerfrage 28.10.: *„Gemini haben wir zwei Schlüssel und damit gesamt 2 plus 2 Modelle oder?“*)
+
+Geprüft am 28.10. mit beiden Schlüsseln:
+
+| | |
+|---|---|
+| **Schlüssel** | zwei Projekte. **Schlüssel 1 = NB-Betrieb**, Schlüssel 2 = Desktop. Grenzen gelten **je Projekt und je Modell** |
+| **Modelle** | mehr als zwei. Antworten können 3.1-flash-lite, 3.5-flash-lite, 3.5-flash, 3.6-, 3.7- und 3.8-flash sowie 3-flash-preview. Jedes hat einen **eigenen** Topf. Die Größe des Topfs ist je Modell verschieden und nur bei den flash-lite-Modellen gemessen (500/Tag) |
+| **Ältere Modelle 2.5** (die 2025 noch nicht kennen würden) | **für beide Schlüssel gesperrt**: *„no longer available to new users“* (404) |
+| **Wissensstand** | 3.5-flash-lite kennt Kurse bis ~Okt. 2025 (gemessen). Die **neueren** Modelle (3.6–3.8) kennen vermutlich **noch mehr**, nicht weniger. Dann wäre ihr sauberer Zeitraum kürzer. Ungemessen, also vorher prüfen |
+
+**Antwort:**
+- Für den **Betrieb** und für ein **Rückspiel ab Dez. 2025** brauchen wir Groq **nicht**. Gemini reicht, mit Schlüssel 1 für den NB und Schlüssel 2 für den Desktop, und mehrere Modelltöpfe.
+- Groq brauchen wir nur für zwei Dinge:
+  1. ein **sauberes Rückspiel auf 2025**, denn alle erreichbaren Gemini-Modelle kennen 2025;
+  2. eine **zweite Modellfamilie** für den Gegenanwalt (Ü7: verschiedene Modelle, damit die Irrtümer nicht gleich sind).
+- **Vorschlag (Gesamtplan G3):** zuerst Gemini auf Dez. 2025 – Okt. 2026; Groq auf 2025 danach als zweiter Zeitraum, als Gegenprobe des Geltungsbereichs.
 
 ### Fazit B — so kommen wir aus
 

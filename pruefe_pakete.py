@@ -33430,6 +33430,53 @@ def paket_alarmmail(B=None) -> None:
         c.close()
 
 
+def paket_gesamtplan() -> None:
+    """Der LAUFENDE PLAN Basisinfos/Gesamtplan.md (28.10.2026, Nutzer: *"ja 1, neuer Gesamtplan - bau auf allen Ebenen einen Link-Verweis
+    ein, damit wir die Plaene und Informationen immer finden und beruecksichtigen koennen"*).
+
+    Geprueft wird, was den Plan still veralten liesse: ein Verweis, der ins Leere zeigt; ein Zentraldokument ohne Rueckverweis; ein
+    Befund, der abgeloest ist, aber im Plan steht; ein Betriebsschalter, der im Plan als laufend steht und aus ist; die alte Kette,
+    die wieder liefe. Der Zustand wird aus der QUELLE gelesen (yaml, rollen_job), nicht aus einer Aufzaehlung im Text."""
+    P = "Gesamtplan"
+    import os as _os
+    import re as _re
+
+    import yaml as _y
+
+    import bestand as _B
+    from scheduler import rollen_job as _RJ
+
+    gp = _os.path.join("Basisinfos", "Gesamtplan.md")
+    pruefe(P, "Basisinfos/Gesamtplan.md vorhanden", _os.path.exists(gp))
+    if not _os.path.exists(gp):
+        return
+    text = open(gp, encoding="utf-8").read()
+    ziele = _re.findall(r"\]\(([^)#]+)\)", text)
+    fehlt = [z for z in ziele if not _os.path.exists(_os.path.normpath(_os.path.join("Basisinfos", z)))]
+    pruefe(P, "jeder Verweis im Plan zeigt auf eine vorhandene Datei", not fehlt, ", ".join(fehlt[:8]))
+    md = sorted({_os.path.normpath(_os.path.join("Basisinfos", z)) for z in ziele if z.endswith(".md")
+                 and _os.path.basename(z) not in ("CLAUDE.md", "Gesamtplan.md") and not _os.path.basename(z).startswith("REGISTER_")})
+    ohne = [_os.path.basename(m) for m in md if _os.path.exists(m) and "](Gesamtplan.md)" not in open(m, encoding="utf-8").read()[:3000]]
+    pruefe(P, "⚠️ jedes verlinkte Dokument traegt oben den Rueckverweis auf Gesamtplan.md", not ohne, ", ".join(ohne[:8]))
+    hist = ("Plan_Schritt59_Gesamtkette_17_09.md", "Gesamtplan_Wo_wir_stehen_28_08.md", "Kette_Landkarte.md")
+    ohne_h = [h for h in hist if "HISTORIE – nicht fortschreiben" not in open(_os.path.join("Basisinfos", h), encoding="utf-8").read()[:3000]]
+    pruefe(P, "die alten Plaene sind oben als HISTORIE gekennzeichnet", not ohne_h, ", ".join(ohne_h))
+    pruefe(P, "CLAUDE.md verweist auf den laufenden Plan", "Basisinfos/Gesamtplan.md" in open("CLAUDE.md", encoding="utf-8").read()[:2000])
+    stand = {b.kennung: b.stand for b in _B.BEFUNDE}
+    genannt = sorted({k for k in _re.findall(r"\b(E-\d+(?:-[a-z0-9]+)?|\d\.\d{3}(?:-[a-z0-9-]+)?)\b", text) if k in stand})
+    alt = [k for k in genannt if stand[k] != "gilt"]
+    pruefe(P, "jeder im Plan genannte REGISTRIERTE Befund gilt (%d genannt)" % len(genannt), not alt, ", ".join(alt))
+    sch = _y.safe_load(open(_os.path.join("Basisinfos", "regel0_betrieb.yaml"), encoding="utf-8")) or {}
+    laufend = _re.findall(r"`(\w+_aktiv)`", text)
+    aus = [k for k in set(laufend) if k in sch and sch.get(k) is not True]
+    unbekannt = [k for k in set(laufend) if k not in sch and k != "spot_*_aktiv"]
+    pruefe(P, "⚠️ jeder im Plan als laufend genannte Schalter steht in regel0_betrieb.yaml auf true", not aus and not unbekannt,
+           "aus: %s · unbekannt: %s" % (", ".join(aus) or "-", ", ".join(unbekannt) or "-"))
+    for k in ("spot_mitnahme_aktiv", "spot_upbit_aktiv", "spot_abbau_aktiv"):
+        pruefe(P, "Spot-Schalter %s steht auf true (Plan §2: B1/B3/B4 laufen)" % k, sch.get(k) is True)
+    pruefe(P, "⛔ die alte Kette ist stillgelegt, wie Plan §2 sagt (rollen_job.ALTE_KETTE_STILLGELEGT)", _RJ.ALTE_KETTE_STILLGELEGT is True)
+
+
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
@@ -33471,6 +33518,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Mailstraffung": paket_mailstraffung,
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
+          "Gesamtplan": paket_gesamtplan,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,

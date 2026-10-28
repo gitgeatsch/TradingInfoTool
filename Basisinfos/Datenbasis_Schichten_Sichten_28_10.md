@@ -1,5 +1,7 @@
 # Datenbasis für Dashboard und LLM — Ebenen, Sichten, Inventar (28.10.2026 spät)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 28.10. spät):**
 1. *„bevor wir starten reden wir über das Konzept und wie die LLMs gefüttert werden … Schichten … Sichten und Ereignisse … in optimaler Form zur Bewertung übergeben“*
 2. *„bevor wir bauen und messen brauchen wir eine Basis: was wird nur abgerufen und angezeigt, was berechnen wir selbst und was benötigen die LLMs“*

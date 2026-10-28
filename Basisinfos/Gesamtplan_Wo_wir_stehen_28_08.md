@@ -1,5 +1,7 @@
 # Wo wir stehen — und warum jede Änderung an derselben Stelle endet
 
+> ⛔ **HISTORIE – nicht fortschreiben** (Stand 12.09.2026). Abgelöst am 28.10.2026 durch den laufenden Plan [`Gesamtplan.md`](Gesamtplan.md). Verweise auf Abschnitte dieses Dokuments bleiben gültig.
+
 **Angelegt 28.08.2026.** Nutzerfrage nach zwei Tagen Umbau:
 
 > *„Wir landen wieder bei derselben Problemstellung — jede Änderung scheitert

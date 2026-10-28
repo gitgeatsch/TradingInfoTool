@@ -1,4 +1,6 @@
 <!-- STAND: 2026-07-24 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # Memory & CLAUDE.md Sync Strategy
 
 ## Drei Sync-Ebenen (Stand 2026-07-16, Priorität aktualisiert 2026-07-24)

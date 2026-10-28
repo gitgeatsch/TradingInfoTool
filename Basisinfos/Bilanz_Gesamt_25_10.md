@@ -1,5 +1,7 @@
 # Gesamtbilanz R-3 — TradingInfoTool (Stand 25.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 25.10.: *„ja R-3 so schreiben, prüfen gegenprüfen und doku – lege mir das Ergebnis als docx Datei auf den Desktop, zuvor prüfe aber ob Fehler und wo Fehler passiert sind, wurden alle Prüfregeln eingehalten?“*
 
 **Aufbau:**

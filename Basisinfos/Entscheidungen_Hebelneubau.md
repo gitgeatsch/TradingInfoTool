@@ -1,5 +1,7 @@
 # Fachliche Entscheidungen im Hebelneubau
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Ab 27.09.2026.** Nutzervorgabe: *„ich kann diese Unterscheidungen nicht
 mehr treffen — du musst hier fachlich und technisch korrekt vorgehen."*
 

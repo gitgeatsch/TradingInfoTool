@@ -1,5 +1,7 @@
 # Regelwerk: Bewertung von Einstieg und Hebel
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · gehört zu `Plan_Hebel_fuenf_Phasen_27_09.md`, Phase 1
 Faktenteil: `python hebel_neubau.py`
 
