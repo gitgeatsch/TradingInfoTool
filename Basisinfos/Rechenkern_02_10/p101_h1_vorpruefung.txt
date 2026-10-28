@@ -1,0 +1,85 @@
+P101 VORPRUEFUNG H-1 (Fassung 2) · nur Zaehlungen und R-R11, kein Ergebnis je Zustand
+
+==============================================================================================================
+bestand: 10725 Einstiege mit 168 h (p62 10725) · brutto 2025-26 H24 +0.545 % (p62 +0.545) · H72 -0.373 (-0.373) · H120 -0.849 (-0.849) -> R-R11 ✔
+   Abdeckung: ohne a 233 · ohne b 1007 · ohne c 152 · ohne ATR (F) 0 · ohne Extrem-Merkmal 0
+   Zustand Jahr  Einstiege  Anteil=1 Klammertage  Einst. dort   Bloecke
+   a       2024       2295     53.2%          90         1811        15   ⚠ unter 20 Bloecken
+   a       2025       4620     25.3%         136         3368        25
+   a       2026       3577     26.1%         151         3026        17   ⚠ unter 20 Bloecken
+   a       25-26      8197     25.6%         287         6394        41
+   b       2024       2048     52.3%          84         1587        15   ⚠ unter 20 Bloecken
+   b       2025       4094     22.3%         147         3279        25
+   b       2026       3576      8.7%         126         2634        14   ⚠ unter 20 Bloecken
+   b       25-26      7670     15.9%         273         5913        40
+   c       2024       2319     37.5%         126         2189        17   ⚠ unter 20 Bloecken
+   c       2025       4677     23.5%         174         3965        25
+   c       2026       3577     29.1%         175         3462        17   ⚠ unter 20 Bloecken
+   c       25-26      8254     25.9%         349         7427        41
+   extrem  2024       2324      6.7%          55         1473        13   ⚠ unter 20 Bloecken
+   extrem  2025       4715      6.3%          80         2269        23
+   extrem  2026       3686      4.9%          74         1915        17   ⚠ unter 20 Bloecken
+   extrem  25-26      8401      5.7%         154         4184        39
+==============================================================================================================
+unverzerrt_1: 11151 Einstiege mit 168 h (p62 11151) · brutto 2025-26 H24 +0.304 % (p62 +0.304) · H72 -0.302 (-0.302) · H120 -0.794 (-0.794) -> R-R11 ✔
+   Abdeckung: ohne a 322 · ohne b 953 · ohne c 248 · ohne ATR (F) 0 · ohne Extrem-Merkmal 0
+   Zustand Jahr  Einstiege  Anteil=1 Klammertage  Einst. dort   Bloecke
+   a       2024       1966     59.6%          75         1671        12   ⚠ unter 20 Bloecken
+   a       2025       5201     23.1%         153         3925        25
+   a       2026       3662     25.3%         157         3044        17   ⚠ unter 20 Bloecken
+   a       25-26      8863     24.0%         310         6969        41
+   b       2024       1811     47.2%          59         1424        13   ⚠ unter 20 Bloecken
+   b       2025       4727     18.3%         153         3666        24
+   b       2026       3660      7.2%         112         2302        16   ⚠ unter 20 Bloecken
+   b       25-26      8387     13.5%         265         5968        40
+   c       2024       1986     38.1%          98         1890        13   ⚠ unter 20 Bloecken
+   c       2025       5255     22.7%         193         4754        25
+   c       2026       3662     27.7%         189         3549        17   ⚠ unter 20 Bloecken
+   c       25-26      8917     24.8%         382         8303        41
+   extrem  2024       2051      7.6%          43         1378        11   ⚠ unter 20 Bloecken
+   extrem  2025       5320      5.4%          88         2175        22
+   extrem  2026       3780      4.8%          80         2002        16   ⚠ unter 20 Bloecken
+   extrem  25-26      9100      5.2%         168         4177        38
+==============================================================================================================
+unverzerrt_2: 10447 Einstiege mit 168 h (p62 10447) · brutto 2025-26 H24 +0.312 % (p62 +0.312) · H72 -0.342 (-0.342) · H120 -1.018 (-1.018) -> R-R11 ✔
+   Abdeckung: ohne a 379 · ohne b 1042 · ohne c 300 · ohne ATR (F) 0 · ohne Extrem-Merkmal 0
+   Zustand Jahr  Einstiege  Anteil=1 Klammertage  Einst. dort   Bloecke
+   a       2024       1798     60.2%          71         1493        13   ⚠ unter 20 Bloecken
+   a       2025       5058     23.6%         152         3815        25
+   a       2026       3212     27.4%         150         2789        17   ⚠ unter 20 Bloecken
+   a       25-26      8270     25.1%         302         6604        41
+   b       2024       1640     45.7%          57         1206        12   ⚠ unter 20 Bloecken
+   b       2025       4555     18.3%         154         3476        24
+   b       2026       3210      7.9%         108         2069        15   ⚠ unter 20 Bloecken
+   b       25-26      7765     14.0%         262         5545        39
+   c       2024       1820     36.9%          98         1712        13   ⚠ unter 20 Bloecken
+   c       2025       5115     22.3%         185         4476        25
+   c       2026       3212     28.3%         175         3085        17   ⚠ unter 20 Bloecken
+   c       25-26      8327     24.7%         360         7561        41
+   extrem  2024       1896      7.3%          39         1169        10   ⚠ unter 20 Bloecken
+   extrem  2025       5207      5.6%          91         2292        22
+   extrem  2026       3344      5.1%          77         1868        16   ⚠ unter 20 Bloecken
+   extrem  25-26      8551      5.4%         168         4160        38
+==============================================================================================================
+unverzerrt_3: 10767 Einstiege mit 168 h (p62 10767) · brutto 2025-26 H24 +0.310 % (p62 +0.310) · H72 -0.386 (-0.386) · H120 -0.828 (-0.828) -> R-R11 ✔
+   Abdeckung: ohne a 381 · ohne b 1023 · ohne c 300 · ohne ATR (F) 0 · ohne Extrem-Merkmal 0
+   Zustand Jahr  Einstiege  Anteil=1 Klammertage  Einst. dort   Bloecke
+   a       2024       1780     60.3%          70         1499        12   ⚠ unter 20 Bloecken
+   a       2025       4937     23.8%         148         3622        25
+   a       2026       3669     25.7%         160         3087        17   ⚠ unter 20 Bloecken
+   a       25-26      8606     24.6%         308         6709        41
+   b       2024       1634     47.7%          57         1195        11   ⚠ unter 20 Bloecken
+   b       2025       4443     18.6%         150         3348        24
+   b       2026       3667      7.0%         116         2347        16   ⚠ unter 20 Bloecken
+   b       25-26      8110     13.4%         266         5695        40
+   c       2024       1801     37.3%          93         1693        12   ⚠ unter 20 Bloecken
+   c       2025       4997     22.7%         185         4360        25
+   c       2026       3669     27.9%         191         3563        17   ⚠ unter 20 Bloecken
+   c       25-26      8666     24.9%         376         7923        41
+   extrem  2024       1873      7.4%          43         1232        11   ⚠ unter 20 Bloecken
+   extrem  2025       5083      5.6%          93         2241        22
+   extrem  2026       3811      5.2%          84         2181        16   ⚠ unter 20 Bloecken
+   extrem  25-26      8894      5.5%         177         4422        38
+
+Seiteneffekt Produktionsdatei: ✔ unveraendert
+R-R11 gesamt: ✔ alle vier Mengen reproduziert

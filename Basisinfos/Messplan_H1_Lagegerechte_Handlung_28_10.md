@@ -24,6 +24,15 @@
 >
 > ⚠️ **Lehre:** Der Abgleich mit dem Gesamtplan gehört **vor** den Messplan, nicht danach. Das Konzept (§9.2) hatte V-1 genannt, aber als „Vorläufer mit einer Dimension“ eingeordnet statt als dieselbe Messung.
 
+> ## ⚠️ FASSUNG 3 (28.10.2026, beim Bau, vor jedem echten Ergebnis)
+>
+> | | Lücke | Festlegung |
+> |---|---|---|
+> | **Zweiter Weg H-1c** | Fassung 1/2 nannten keinen. TRÄGT braucht ihn aber (E-141, §5 Punkt 3) | die beiden Extrem-Merkmale **getrennt**: `momentum_kurz` ≥ 0,8509 allein und `rsi` ≥ 85,6631 allein. TRÄGT braucht in **beiden** dasselbe Vorzeichen wie die Hauptfrage (Mittel), in ≥ 3 von 4 Mengen |
+> | **„sein Band schließt das Gegenteil aus“** (§5 Punkt 3, H-1b) | mehrdeutig | **wörtlich und streng:** Das Band des zweiten Wegs b liegt ganz auf **derselben** Seite des eigenen Nullpunkts wie die Hauptfrage (b trägt selbst in dieselbe Richtung), in ≥ 3 von 4 Mengen |
+> | **Kosten** | §4 „nachgelagert“ | In der Tagesklammer heben sich Gebühr und Finanzierung **auf**, weil beide Zustände dieselbe Haltedauer haben. Ausgewiesen wird das Netto-Niveau je Zustand als Auskunft (0,30 % + 0,18 %/T) |
+> | **Führung F** | §4 | ATR wie 2.702 und Betrieb (24 Stundenspannen ÷ Schluss × √24, bis einschließlich Einstiegsstunde), Linie = höchstes Hoch seit Einstieg **bis zur Vorstunde** − 1,5 × ATR, Ausstieg an der Linie. Abweichend von 2.702: **Spot-Stundenkurse statt Markpreis** und Verzug 0 statt 1 h (wie §4 festgelegt) |
+
 ---
 
 ## 1. Die Frage
