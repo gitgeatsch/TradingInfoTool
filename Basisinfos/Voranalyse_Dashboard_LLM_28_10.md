@@ -76,6 +76,28 @@ Kennzeichnung der externen Angaben: **[B]** belegt auf der Primärquelle, **[S]*
 | OpenRouter :free | wechselnd | 50/Tag [B] | je Modell | Reserve |
 | Cerebras, Mistral, GitHub Models | – | Cerebras: nur Testguthaben mit Zahlungsmittel [B]; Mistral: 402; GitHub Models: eingestellt 30.07.2026 [B] | – | **scheiden aus** |
 
+#### 1.5a Nachtrag 28.10. abends — was WIR je Anbieter gemessen haben (Nutzer: *„dies musst du in der Doku oder Memory erheben“*)
+
+⚠️ Die Tabelle oben ist **Recherche**. Maßgeblich ist, was das Projekt selbst gemessen hat — Quellen: Code `api/*.py`, `Basisinfos/regel0_llm.yaml`, Schritt7 §23.73–§23.75, `p66_horizont*.txt`, Memory. **[M]** gemessen · **[F]** Fehlerkörper des Anbieters · **[D]** Dashboard des Nutzers · **[R]** Recherche.
+
+| Anbieter | Modelle bei uns | Grenzen | Tempo | Fehlerbilder | Wissenshorizont (19.10.) | Rolle heute |
+|---|---|---|---|---|---|---|
+| **Gemini** | 3.5-flash-lite (Prüfblock), 3.1-flash-lite (alte Spot-Kette) | **500/Tag je Projekt UND je Modell** [F, 09.08.] — jedes Modell ein eigener Topf, der Topf hängt am **Schlüssel** (Desktop-Läufe zehren am NB-Topf); ~15/min [M]; Prüfblock-Deckel 150/Tag | Median 5,5 s; Trader 5 Stimmen Ø 27 s, max 52 s [M] | 503 bei ~8 % (13.08.), 429 bei verbranntem Tagestopf | 3.5 kennt Kurse bis **~Okt. 2025** → kontaminiert für 2025 [M] | **Betrieb** (Prüfblock „trennt nicht“) |
+| **Groq** | gpt-oss-120b, qwen3.8-27b (Messung); `llama-3.3-70b` im Code | **200.000 Token/Tag** [M, 19.10. bei 199.847 erreicht]; danach ~1 Abfrage je 10–11 min | L-C2: 497 Abfragen in ~2 Tagen, **0 Ausfälle** [M] | 413 (26.07., alte Nutzlast); `llama-3.3-70b` lieferte 19.10. keine Antwort und fehlt in der Modellliste — **`api/groq.DEFAULT_MODEL` ist veraltet** | gpt-oss-120b **sauber** (~Mitte 2024); qwen3.8 kontaminiert (~Aug. 2025) [M] | **Messarm** für saubere Rückspiele |
+| **OpenRouter :free** | nemotron-3-super-120b, gpt-oss-20b, gemma-4-31b | **1.000/Tag** (10 $ Einmalkauf 08.08. hebt 50 → 1.000; die „50“ oben gilt ohne Kauf), 20/min [R] | nemotron 21–48 s, gpt-oss-20b 125 s [M] | 429 bei gemma, 404 bei entfernten Modellen | nicht gemessen | Reserve |
+| **Mistral** | mistral-small-2506 (Code), ministral-8b-2512 (Messung) | — | — | **402 seit 07.08.**; am 19.10. antwortete aber ministral-8b — ob 402 für alle Modelle gilt, ist **ungeklärt** | ministral-8b sauber, aber schwach [M] | ausgeschieden (Rest ungeklärt) |
+| **Z.ai** | glm-4.5-flash | Gleichzeitigkeit 2; >8K Kontext auf 1 % gedrosselt [D] | ~105–110 s, ~35 Token/s [M] | Zeitüberschreitungen, 429 am NB (28.07.) | nicht gemessen | stillgelegt (alte Kette) |
+| **Cerebras** | — | — | — | 402, nicht kostenfrei (19.10.) | — | ausgeschieden |
+| **Cloudflare** | — | 10.000 Neurons/Tag [R] | — | — | — | **nie angebunden, kein Schlüssel** |
+| **Lokal (Ollama)** | Platzhalter `api/local_model.py` | — | — | — | — | **scheidet aus**: NB = i5-4300U (2 Kerne), **8 GB RAM** (`project_dev_setup`), gpt-oss-20b braucht ~16 GB. Damit sind **V3 erledigt** und alle Aufgaben auf den freien Diensten |
+
+**Schlüssel am NB** (V2): Gemini ist belegt (Prüfblock-Urteile in den NB-Mails, K-LLM-1). Für Groq und OpenRouter ist es **nicht dokumentiert**. Für den Bau ist das kein Hindernis, weil A3/A4 auf Gemini laufen (§9 im Bauplan). A1 läuft als Messung am **Desktop**.
+
+**Was daraus für die Aufgaben folgt:**
+- **Live (A3, A4, A6) auf Gemini, auf einem EIGENEN Modelltopf** — nicht 3.5-flash-lite (Prüfblock). `regel0_llm.yaml` vermerkt *„3.1 ist durch die Spot-Kette ausgelastet“*; die Spot-Kette gehört zur alten Kette, die seit E-164 stillgelegt ist. Der 3.1-Topf sollte damit frei sein. Das ist **nachzuweisen** (NB-Zähler `gemini:3.1` je Tag) und nicht anzunehmen.
+- **Rückspiel und Klassifikation zur Messung (A1, später A2) auf Groq gpt-oss-120b.** Der Engpass sind die **200.000 Token/Tag**, nicht die Anfragen: bei ~300 Token je Meldung sind das ~600 Meldungen/Tag. Deshalb ordnen **Regeln zuerst** ein (Binance-Titel sind formelhaft, E-1 tut das schon), und das LLM bekommt nur den Rest und die Prüfstichprobe.
+- **Gemini nie für ein Rückspiel 2025**, aus demselben Grund wie bisher (Kontamination).
+
 ---
 
 ## 2. Was schon geprüft ist — die Lage ehrlich
@@ -162,9 +184,9 @@ Die Messung wird damit nicht überflüssig. Sie **wechselt die Rolle**: Sie prü
 
 | # | Punkt | wer / wann |
 |---|---|---|
-| V1 | **Binance-Ankündigungshistorie** 2023–26 einmalig sichern (inoffizieller Endpunkt, gedrosselt) | Download → **dein Ja** |
-| V2 | NB-`.env`: welche LLM-Schlüssel sind dort gesetzt? Groq vorhanden? | beim nächsten NB-Export |
-| V3 | NB-Hardware: reicht RAM für Ollama gpt-oss-20b? (sonst nur Groq/Cloudflare) | NB-Export |
+| V1 | **Binance-Ankündigungshistorie** 2023–26 einmalig sichern (inoffizieller Endpunkt, gedrosselt) | ✔ **Ja 28.10.**, läuft: `Rechenkern_02_10/a1_lade_binance.py` → `data/_a1/` (6 Kataloge, ~9.000 Meldungen, fortsetzbar) |
+| V2 | NB-`.env`: welche LLM-Schlüssel sind dort gesetzt? Groq vorhanden? | Gemini belegt; Groq/OpenRouter am NB **nicht nötig** für a (§1.5a) |
+| V3 | NB-Hardware: reicht RAM für Ollama gpt-oss-20b? (sonst nur Groq/Cloudflare) | ✔ **erledigt**: 8 GB, 2 Kerne → kein lokales LLM (Nutzer 28.10.) |
 | V4 | Handgeprüfte Stichprobe für A1 (~200 Meldungen): von mir vorbereitet, **von dir stichprobenartig gegengeprüft** | nach Ja |
 | V5 | GDELT GKG und Arctic Shift erst, wenn A1 auf den vorhandenen Feeds trägt (Download nur mit Ja) | später |
 | V6 | Protokolltabelle für Dashboard-Einschätzungen in eigener Datei, **nicht** in `tradinginfotool.db` | beim Bau |
@@ -182,3 +204,5 @@ Die Messung wird damit nicht überflüssig. Sie **wechselt die Rolle**: Sie prü
 | c | **Lagebild (A5) gleich mit**, auf den heutigen Fakten | volle Einschätzung je Asset | ~Tage | wirkt am „intelligentesten“, ist aber ohne neue Information N5 noch einmal, nur hübscher |
 
 Nach deinem Entscheid folgen Messplan bzw. Bauplan als eigene Vorlage. Betrieb und Mails bleiben bis dahin unverändert.
+
+✔ **Entschieden 28.10. abends: a** (Nutzer: *„ok a, Binance-Historie laden ist freigegeben“*). Bauplan: `Bauplan_Dashboard_A3_A4_28_10.md`.

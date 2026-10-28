@@ -642,6 +642,23 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Voranalyse** `Voranalyse_Dashboard_LLM_28_10.md`: Bestandsaufnahme (Statusseite, LLM-Rollen, Fakten mit/ohne PIT, freie Quellen und LLM-Zugänge) und Expertenkonzept A1–A6. ➤ **Zur Abstimmung:** Womit beginnen? a (Empfehlung) / b / c.
 - Vorarbeiten: V1 Binance-Ankündigungshistorie (Download, Ja nötig), V2/V3 NB-`.env` und RAM beim nächsten Export.
 
+
+### Stand 28.10.2026 spät — Entscheid a, Anbieter erhoben, Bauplan A3/A4
+
+- **Nutzer:** *„ok a, Binance-Historie laden ist freigegeben“*; auf dem NB läuft kein LLM in der benötigten Form, also bleiben nur die bestehenden freien Dienste.
+- **Anbieter gemessen** (aus Doku und Memory, nicht recherchiert): `Voranalyse_Dashboard_LLM_28_10.md` §1.5a.
+  - Gemini: 500/Tag je Modell, der Topf hängt am Schlüssel.
+  - Groq gpt-oss-120b: 200.000 Token/Tag, sauber; `llama-3.3-70b` im Code ist veraltet.
+  - OpenRouter: 1.000/Tag nach dem Kauf.
+  - Mistral 402, Rest ungeklärt.
+  - Lokal scheidet aus (8 GB, 2 Kerne).
+- **V1 läuft:** `Rechenkern_02_10/a1_lade_binance.py` → `data/_a1/` (6 Kataloge ab 2023).
+- **Bauplan** `Bauplan_Dashboard_A3_A4_28_10.md`:
+  - Asset-Karte mit Fakten, A3 und A4; Befund-Karte als Auswahl aus dem Register.
+  - Gemini auf einem eigenen Modelltopf (3.1, Nachweis K-AL-0), ≤ 60 Aufrufe/Tag.
+  - Jede Angabe maschinell geprüft.
+  - **Offene Frage §8:** Trader-Block in der Mail durch A3/A4 ersetzen (Empfehlung 1) / zusätzlich / Mail unverändert.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
