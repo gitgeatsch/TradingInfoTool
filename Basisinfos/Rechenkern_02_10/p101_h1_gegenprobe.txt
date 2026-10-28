@@ -1,0 +1,6 @@
+P101 GEGENPROBE H-1 · zweiter Rechenweg aus den Rohdaten
+
+G1 Stichprobe 1200 Einstiege: ✔ alle Groessen gleich
+G4 Mutationen (Vorgriff Tageszustand a, Stop-Linie mit laufendem Hoch): ✔ erkannt: a 73 Abweichungen, rF 28 Abweichungen
+
+GEGENPROBE: ✔ BESTANDEN

@@ -6,7 +6,7 @@ G1  Stichprobe 300 Einstiege je Menge aus den ROHDATEN nachgerechnet (eigene SQL
     (nachgezogener Stop), Zustaende a/b/c (Vortag, eigene Schnitte), ext_mom/ext_rsi (eigene ATR, eigener RSI)
 G4  Mutationen, die G1 erkennen MUSS: Zustand a mit dem Schluss DESSELBEN Tages (Vorgriff) · Stop-Linie mit dem Hoch der
     LAUFENDEN Stunde (Vorgriff) - weicht nichts ab, ist G1 blind
-G2  (--ergebnis, erst nach der Messung) Tagesklammer je Hypothese und Menge mit reinen Python-Schleifen = Werkzeug (1e-12);
+G2  (--ergebnis, erst nach der Messung) Tagesklammer der LOG-Differenz (Fassung 4) je Hypothese und Menge mit reinen Python-Schleifen = Werkzeug (1e-12);
     Nullpunkt mit eigener Vertauschung (random.shuffle je Tag, 40 Ziehungen) innerhalb der Zufallsstreuung
 Nur lesend (mode=ro).
 """
@@ -89,9 +89,11 @@ def nachrechnen(sym, std, vorgriff=False):
     # Tageszustaende, Stand Vortag (Mutation: derselbe Tag)
     tag = (B0 + timedelta(hours=std)).strftime("%Y-%m-%d")
     t = tage(sym)
-    idx = [k for k, (d, _c) in enumerate(t) if (d <= tag if vorgriff else d < tag)]
-    if idx:
-        k = idx[-1]
+    # Vortag = die Zeile VOR dem Einstiegstag, und der Einstiegstag muss in der Reihe stehen - sonst gaebe ein Asset, dessen
+    # Tagesreihe frueher endet (AERGO bis 03/2025, Einstieg 02/2026), einen Monate alten Schluss als "Vortag" aus
+    pos = {d: k for k, (d, _c) in enumerate(t)}
+    k = (pos[tag] if vorgriff else pos[tag] - 1) if tag in pos else -1
+    if k >= 0:
         cl = [c for _d, c in t[:k + 1]]
         r["a"] = float(cl[-1] > sum(cl[-50:]) / 50) if len(cl) >= 50 else float("nan")
         r["b"] = float(cl[-1] > sum(cl[-200:]) / 200) if len(cl) >= 200 else float("nan")
@@ -146,7 +148,8 @@ def g2():
             for menge in MENGEN:
                 T = pd.read_csv(os.path.join(DATA, "_h1", "h1_%s.csv" % menge), sep=";")
                 U = T[T.jahr >= 2025]
-                d = (U[lang] - U[kurz]).tolist()
+                d = [math.log1p(max(x, -0.99)) - math.log1p(max(y, -0.99)) if not (math.isnan(x) or math.isnan(y)) else float("nan")
+                     for x, y in zip(U[lang].tolist(), U[kurz].tolist())]          # Fassung 4: Log-Differenz, eigene Rechnung
                 z = U[zst].astype(float).tolist()
                 dts, g = je_tag_py(U.tag.tolist(), z, d)
                 eigen = sum(dts) / len(dts)

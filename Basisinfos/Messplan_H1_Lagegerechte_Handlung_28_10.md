@@ -33,6 +33,27 @@
 > | **Kosten** | §4 „nachgelagert“ | In der Tagesklammer heben sich Gebühr und Finanzierung **auf**, weil beide Zustände dieselbe Haltedauer haben. Ausgewiesen wird das Netto-Niveau je Zustand als Auskunft (0,30 % + 0,18 %/T) |
 > | **Führung F** | §4 | ATR wie 2.702 und Betrieb (24 Stundenspannen ÷ Schluss × √24, bis einschließlich Einstiegsstunde), Linie = höchstes Hoch seit Einstieg **bis zur Vorstunde** − 1,5 × ATR, Ausstieg an der Linie. Abweichend von 2.702: **Spot-Stundenkurse statt Markpreis** und Verzug 0 statt 1 h (wie §4 festgelegt) |
 
+> ## ⚠️ FASSUNG 4 (28.10.2026, nach dem nicht bestandenen Selbsttest, vor jedem echten Ergebnis)
+>
+> **Selbsttest Fassung 3 NICHT bestanden** (`p101_h1_selbsttest_fassung3_nicht_bestanden.txt`): Fehlalarm etwa **doppelt** so hoch wie das Nennniveau (H-1c bis 7 %, Soll ≤ 5 %), Auflösung in `unverzerrt_3` selbst bei 2 Pp nur 66 %.
+>
+> **Ursache gemessen:** Einzelne echte Kursexplosionen beherrschen ihren Tag. Wölbung D72 58 (`bestand`) bzw. **958** (`unverzerrt_3`). Größter Fall **ALPACA** 24.04.2025: +96 % in 24 h, +537 % in 72 h (Squeeze vor der Einstellung, in den Rohkursen bestätigt, **kein Datenfehler**, bleibt drin). An den äußeren Quantilen wird das Perzentil-Band zu eng, um den Ausreißertag zu breit.
+>
+> **Wahl auf künstlichen Zuständen** (`p101_h1_fassung4_wahl.py`/`.txt`, Vorab-Regel im Docstring: höchste Fundquote bei 1 Pp unter der Bedingung S1/S2 ≤ 5 %):
+>
+> | Fassung | S1/S2 höchstens | Mittel | Fundquote 1 Pp |
+> |---|---|---|---|
+> | einfach + Bootstrap (Fassung 3) | 9,5 % | 3,9 % | 68 % |
+> | log + Bootstrap | 7,0 % | 3,2 % | 79 % |
+> | einfach + t-Band | 6,0 % | 2,4 % | 66 % |
+> | **log + t-Band** | **5,0 %** | **2,0 %** | **74 %** |
+>
+> ⇒ **Fassung 4:** Zielgröße ist die **Differenz der Log-Erträge** ln(1 + r_lang) − ln(1 + r_kurz), wie „Konto log“ in 2.702. Das **Band** ist cluster-robust über die 15-T-Blöcke, mit t-Quantil (nb − 1 Freiheitsgrade) und Faktor √(nb/(nb − 1)), also derselben Kleinstichproben-Korrektur wie `agent.regel0_messstand._kennzahl`. Nullpunkt, Nullwelt, Blöcke und Urteilsregeln bleiben unverändert. ⚠ Einzige Fassung ohne Wert über 5 %; die Grundgesamtheit bleibt **vollständig** (nichts gekappt, nichts entfernt).
+>
+> **Gegenprobe ohne Ergebnis** (`p101_h1_gegenprobe.txt`): 1.200 Stichproben aus den Rohdaten gleich (Erträge, Stop, Zustände, Extrem-Merkmale). Beide Vorgriff-Mutationen werden erkannt (a 73, rF 28 Abweichungen). Ein Fehler lag **in der Gegenprobe** selbst: Sie nahm bei einer früher endenden Tagesreihe (AERGO bis 03/2025) einen Monate alten Schluss als „Vortag“. Behoben, jetzt dieselbe Regel wie das Werkzeug: Der Einstiegstag muss in der Reihe stehen. Ohne Zustand a bleiben **1.315 von 43.090** Einstiegen (3 %).
+>
+> **Selbsttest Fassung 4 mit 200/100 Welten** (`p101_h1_selbsttest_fassung4_100welten.txt`): 19 von 20 Zellen bestanden, eine mit S2 6,0 % (6 von 100; Zufallsstreuung bei 100 Welten ≈ ±2 Pp). ⚠ **Eigener Parameterfehler:** §6 setzte 200/100 Ziehungen, der Projektstandard verlangt **mindestens 1.000** (Lehre B4 11.10.). Korrigiert: S1 und S2 mit je 1.000 Welten wiederholt. Soll bleibt das vorab festgelegte ≤ 5 %; die strengere Grenze aus der Stufung (Nennniveau je Hypothese + 2 Standardfehler) wird zusätzlich ausgewiesen.
+
 ---
 
 ## 1. Die Frage

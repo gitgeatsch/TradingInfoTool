@@ -1,4 +1,4 @@
-"""P101 Messung H-1 (Messplan Basisinfos/Messplan_H1_Lagegerechte_Handlung_28_10.md, Fassungen 2 und 3). Nur lesend.
+"""P101 Messung H-1 (Messplan Basisinfos/Messplan_H1_Lagegerechte_Handlung_28_10.md, Fassungen 2 bis 4). Nur lesend.
 
     python -X utf8 Basisinfos/Rechenkern_02_10/p101_h1_messung.py
 
@@ -49,7 +49,7 @@ def main():
     X = json.load(open(os.path.join(B.ABLAGE, "aufloesung.json"), encoding="utf-8"))
     vorher = B.fingerabdruck()
     rng = np.random.default_rng(20261029)
-    print("P101 MESSUNG H-1 (Fassung 2/3) · %s · Desktop · brutto, Tagesklammer, Band zweiseitig nach Bonferroni\n"
+    print("P101 MESSUNG H-1 (Fassung 4) · %s · Desktop · brutto, LOG-Differenz in Pp, Tagesklammer, t-Band ueber 15-T-Bloecke, zweiseitig nach Bonferroni\n"
           % datetime.now().strftime("%d.%m.%Y %H:%M"))
     gesamt = {}
     for teil, hyps, haupt, zweite, auskunft in (("H-1b", B.H1B, "a", ("b",), ("c", "m")),

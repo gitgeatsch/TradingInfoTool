@@ -1,0 +1,51 @@
+P101 FASSUNG-4-WAHL · kuenstliche Zustaende auf echten Renditen 2025-26 · kein echtes Ergebnis
+
+   einfach+boot  bestand       H-1b D72   S1  0.5 % · S2  3.0 % · Fund 0,5/1/2 Pp  26 /  90 / 100 %
+   einfach+boot  bestand       H-1b D120  S1  3.5 % · S2  5.0 % · Fund 0,5/1/2 Pp  14 /  66 /  98 %
+   einfach+boot  bestand       H-1b DF    S1  2.5 % · S2  2.0 % · Fund 0,5/1/2 Pp   8 /  86 / 100 %
+   einfach+boot  bestand       H-1c D6    S1  2.0 % · S2  4.0 % · Fund 0,5/1/2 Pp  42 /  70 /  98 %
+   einfach+boot  bestand       H-1c D72   S1  5.0 % · S2  4.0 % · Fund 0,5/1/2 Pp  14 /  66 /  94 %
+   einfach+boot  unverzerrt_3  H-1b D72   S1  6.5 % · S2  6.0 % · Fund 0,5/1/2 Pp  16 /  54 /  70 %
+   einfach+boot  unverzerrt_3  H-1b D120  S1  3.0 % · S2  1.0 % · Fund 0,5/1/2 Pp   8 /  38 /  72 %
+   einfach+boot  unverzerrt_3  H-1b DF    S1  2.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  18 /  86 / 100 %
+   einfach+boot  unverzerrt_3  H-1c D6    S1  5.5 % · S2  6.0 % · Fund 0,5/1/2 Pp  38 /  70 /  96 %
+   einfach+boot  unverzerrt_3  H-1c D72   S1  9.5 % · S2  6.0 % · Fund 0,5/1/2 Pp  24 /  56 /  90 %
+   -> einfach+boot: S1/S2 hoechstens 9.5 % (Mittel 3.9 %), Fundquote bei 1 Pp im Mittel 68 %
+
+   log+boot      bestand       H-1b D72   S1  4.5 % · S2  4.0 % · Fund 0,5/1/2 Pp  48 /  84 / 100 %
+   log+boot      bestand       H-1b D120  S1  4.0 % · S2  1.0 % · Fund 0,5/1/2 Pp  26 /  70 / 100 %
+   log+boot      bestand       H-1b DF    S1  1.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  22 /  94 / 100 %
+   log+boot      bestand       H-1c D6    S1  4.0 % · S2  6.0 % · Fund 0,5/1/2 Pp  28 /  86 / 100 %
+   log+boot      bestand       H-1c D72   S1  3.5 % · S2  3.0 % · Fund 0,5/1/2 Pp  24 /  78 /  98 %
+   log+boot      unverzerrt_3  H-1b D72   S1  3.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  32 /  76 / 100 %
+   log+boot      unverzerrt_3  H-1b D120  S1  5.0 % · S2  0.0 % · Fund 0,5/1/2 Pp  20 /  60 / 100 %
+   log+boot      unverzerrt_3  H-1b DF    S1  3.0 % · S2  3.0 % · Fund 0,5/1/2 Pp  32 /  86 /  98 %
+   log+boot      unverzerrt_3  H-1c D6    S1  3.5 % · S2  7.0 % · Fund 0,5/1/2 Pp  42 /  90 /  96 %
+   log+boot      unverzerrt_3  H-1c D72   S1  3.0 % · S2  3.0 % · Fund 0,5/1/2 Pp  26 /  70 /  96 %
+   -> log+boot: S1/S2 hoechstens 7.0 % (Mittel 3.2 %), Fundquote bei 1 Pp im Mittel 79 %
+
+   einfach+t     bestand       H-1b D72   S1  1.0 % · S2  6.0 % · Fund 0,5/1/2 Pp  22 /  82 /  98 %
+   einfach+t     bestand       H-1b D120  S1  1.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  22 /  66 /  98 %
+   einfach+t     bestand       H-1b DF    S1  2.5 % · S2  2.0 % · Fund 0,5/1/2 Pp   6 /  78 / 100 %
+   einfach+t     bestand       H-1c D6    S1  1.0 % · S2  2.0 % · Fund 0,5/1/2 Pp  34 /  92 / 100 %
+   einfach+t     bestand       H-1c D72   S1  4.0 % · S2  5.0 % · Fund 0,5/1/2 Pp   6 /  62 /  96 %
+   einfach+t     unverzerrt_3  H-1b D72   S1  0.5 % · S2  1.0 % · Fund 0,5/1/2 Pp   8 /  38 /  62 %
+   einfach+t     unverzerrt_3  H-1b D120  S1  0.5 % · S2  1.0 % · Fund 0,5/1/2 Pp   4 /  26 /  68 %
+   einfach+t     unverzerrt_3  H-1b DF    S1  1.5 % · S2  3.0 % · Fund 0,5/1/2 Pp  14 /  78 / 100 %
+   einfach+t     unverzerrt_3  H-1c D6    S1  2.5 % · S2  4.0 % · Fund 0,5/1/2 Pp  40 /  78 /  96 %
+   einfach+t     unverzerrt_3  H-1c D72   S1  3.5 % · S2  5.0 % · Fund 0,5/1/2 Pp   6 /  56 /  84 %
+   -> einfach+t: S1/S2 hoechstens 6.0 % (Mittel 2.4 %), Fundquote bei 1 Pp im Mittel 66 %
+
+   log+t         bestand       H-1b D72   S1  2.0 % · S2  2.0 % · Fund 0,5/1/2 Pp  28 /  96 / 100 %
+   log+t         bestand       H-1b D120  S1  0.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  28 /  56 /  98 %
+   log+t         bestand       H-1b DF    S1  3.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  24 /  74 / 100 %
+   log+t         bestand       H-1c D6    S1  3.0 % · S2  3.0 % · Fund 0,5/1/2 Pp  38 /  86 /  96 %
+   log+t         bestand       H-1c D72   S1  1.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  12 /  66 /  94 %
+   log+t         unverzerrt_3  H-1b D72   S1  0.5 % · S2  1.0 % · Fund 0,5/1/2 Pp  18 /  66 / 100 %
+   log+t         unverzerrt_3  H-1b D120  S1  1.5 % · S2  1.0 % · Fund 0,5/1/2 Pp   6 /  46 /  98 %
+   log+t         unverzerrt_3  H-1b DF    S1  4.0 % · S2  1.0 % · Fund 0,5/1/2 Pp  28 /  90 / 100 %
+   log+t         unverzerrt_3  H-1c D6    S1  3.5 % · S2  5.0 % · Fund 0,5/1/2 Pp  42 /  88 /  94 %
+   log+t         unverzerrt_3  H-1c D72   S1  0.5 % · S2  4.0 % · Fund 0,5/1/2 Pp  12 /  68 /  92 %
+   -> log+t: S1/S2 hoechstens 5.0 % (Mittel 2.0 %), Fundquote bei 1 Pp im Mittel 74 %
+
+WAHL nach Vorab-Regel: log+t

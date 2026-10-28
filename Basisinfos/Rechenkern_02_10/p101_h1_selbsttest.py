@@ -24,8 +24,13 @@ try:
 except Exception:  # noqa: BLE001
     pass
 
-N_S1, N_S2, N_S3, N_D = 200, 100, 50, 20
+N_S1, N_S2, N_S3, N_D = 1000, 1000, 50, 20   # Fehlalarm mit 1.000 Ziehungen (Projektstandard 11.10., Lehre B4)
 KS = (0.001, 0.0025, 0.005, 0.01, 0.02)
+
+
+def ALPHA_H(nh):
+    """Nennniveau je Hypothese (zweiseitig, Bonferroni) - erwartete Fehlalarmquote."""
+    return B.ALPHA / nh
 
 
 def quote(tag, deltas, hyp, welt, n, rng, k=0.0, richtung=+1):
@@ -43,7 +48,7 @@ def quote(tag, deltas, hyp, welt, n, rng, k=0.0, richtung=+1):
 def main():
     vorher = B.fingerabdruck()
     rng = np.random.default_rng(20261028)
-    print("P101 SELBSTTEST H-1 (Fassung 2) · echte Renditen 2025-26, kuenstliche Zustaende · KEIN echtes Ergebnis\n")
+    print("P101 SELBSTTEST H-1 (Fassung 4: Log-Differenz, t-Band ueber Bloecke) · echte Renditen 2025-26, kuenstliche Zustaende · KEIN echtes Ergebnis\n")
     X = {}
     durch = []
     for menge in B.MENGEN:
@@ -84,9 +89,10 @@ def main():
                 if xk is None:
                     fehler.append("S3 ohne Aufloesung")
                 durch += ["%s %s %s %s" % (menge, teil, name, f) for f in fehler]
-                print("   %s %-5s Anteil %4.1f %% · S1 Fehlalarm %4.1f %% (Dreierregel bei 0: <1,5 %%) · S2 Ballung %4.1f %% · "
+                streng = ALPHA_H(nh) + 2 * np.sqrt(ALPHA_H(nh) * (1 - ALPHA_H(nh)) / N_S1)
+                print("   %s %-5s Anteil %4.1f %% · S1 Fehlalarm %4.1f %% · S2 Ballung %4.1f %% (Soll <= 5 %%; Stufung streng <= %.1f %%: %s) · "
                       "D Orakel %3.0f %% · S3 Fundquote %s -> X = %s  %s" % (
-                          teil, name, 100 * p, 100 * q1, 100 * q2, 100 * qd,
+                          teil, name, 100 * p, 100 * q1, 100 * q2, 100 * streng, "✔" if max(q1, q2) <= streng else "ueber", 100 * qd,
                           " ".join("%.2f:%.0f%%" % (100 * k, 100 * v) for k, v in fund.items()),
                           "%.2f Pp" % (100 * xk) if xk else "keine", "✔" if not fehler else "✖ " + ",".join(fehler)))
     os.makedirs(B.ABLAGE, exist_ok=True)
