@@ -11573,6 +11573,18 @@ BEFUNDE = (
                "unseren Daten NICHT AUFLOESBAR: zu wenige unabhaengige Angstphasen (16-44 Strecken 2024-26)", "gilt",
                "Entscheidungen E-160; Voranalyse_DVOL_Angstmass_26_10.md; p98 (Fassung 1b, rollendes Fenster)",
                basis="DVOL Deribit 2021-03-24..2026-10-26, Gegenprobe 5/5"),
+    # ---- 28.10.2026: Ergebnis H-1 (lagegerechte Haltedauer, E-165), Nutzer *auf Basis der Durchfuehrung sicher nicht falsch* ----
+    Befundlage("E-165-h1b", "Haltedauer nach dem Trend DIESES Assets (Kurs ueber 50-T-Schnitt; zweiter Weg 200-T) traegt NICHT: "
+               "72 h / 5 T / nachgezogener Stop gegen 24 h je Menge und Jahr wechselnd, Stufe NICHT TRENNBAR bzw. TRAEGT NICHT BIS "
+               "2 Pp; Auskunft (kein Befund): nach 30 T Staerke gegen BTC war laengeres Halten durchgehend schlechter", "gilt",
+               "Entscheidungen E-165; Messplan_H1_Lagegerechte_Handlung_28_10.md §9; p101_h1_messung",
+               basis="REGEL0-Einstiege 4 Mengen, 2025-01..2026-08, Log-Differenz, Tagesklammer, t-Band 15-T-Bloecke; Selbsttest "
+                     "1.000 Welten 20/20, Gegenprobe bestanden"),
+    Befundlage("E-165-h1c", "Kurz halten (6 h statt 24 h) bei einem Extrem (momentum_kurz >= 0,8509 oder rsi >= 85,66) traegt nach "
+               "der Vorab-Regel NICHT (2 von 4 Mengen, Soll 3); an der Nachweisgrenze: alle Jahreswerte und der zweite Weg positiv "
+               "(~+1 Pp gegen dieselben Tage), je Handel gepoolt aber KEIN Vorteil; 72 h ohne Unterschied", "gilt",
+               "Entscheidungen E-165; Messplan_H1_Lagegerechte_Handlung_28_10.md §9; p101_h1_messung, p101_h1_gegenprobe",
+               basis="wie E-165-h1b; Nullpunkt nicht nachtraeglich neu gezogen (Vorab-Regel)"),
 )
 
 

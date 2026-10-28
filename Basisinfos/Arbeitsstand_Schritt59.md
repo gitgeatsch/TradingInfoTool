@@ -636,6 +636,12 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - ➤ **Nächster Schritt:** Werkzeuge `p101_h1_*` bauen → Vorprüfung → Selbsttest → **Zwischenstand an den Nutzer** vor dem ersten Blick → Messung → Gegenprobe.
 - NB offen: K-W1-MAIL/K-W2-PUNKT (nächste Mail), K-SP-3c/K-B4-D1 (nach 02.11.), K-WC-1b (nächste H15-Mail), S-2 Anfang November nur nach Voranalyse.
 
+### Stand 28.10.2026 abends — H-1 abgeschlossen, Voranalyse Dashboard/LLM
+
+- **H-1 trägt nicht** (E-165-h1b, E-165-h1c im Register). Messung, Selbsttest (1.000 Welten) und Gegenprobe bestanden.
+- **Voranalyse** `Voranalyse_Dashboard_LLM_28_10.md`: Bestandsaufnahme (Statusseite, LLM-Rollen, Fakten mit/ohne PIT, freie Quellen und LLM-Zugänge) und Expertenkonzept A1–A6. ➤ **Zur Abstimmung:** Womit beginnen? a (Empfehlung) / b / c.
+- Vorarbeiten: V1 Binance-Ankündigungshistorie (Download, Ja nötig), V2/V3 NB-`.env` und RAM beim nächsten Export.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

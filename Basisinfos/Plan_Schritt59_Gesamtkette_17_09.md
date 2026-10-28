@@ -2759,3 +2759,9 @@ Schritt7 §23.24.
 - **Messplan H-1 vorab** (`Messplan_H1_Lagegerechte_Handlung_28_10.md`, **Fassung 2** nach dem Abgleich mit diesem Plan: H-1a gestrichen, weil sie V-1 wiederholt): **H-1b** Haltedauer nach dem Trend des Assets (50-T-Schnitt; 200 T zweiter Weg; Stärke gegen BTC Auskunft), **H-1c** kurz halten bei einem Extrem.
 - **Betrieb unverändert.** Bauentscheid (Umbau oder neues Projekt) erst nach einer tragenden Messung.
 
+**Nachtrag 28.10.2026 (85) — Ergebnis H-1 und Wechsel der LLM-Aufgabe** (E-165; `Messplan_H1_Lagegerechte_Handlung_28_10.md` §9, `Voranalyse_Dashboard_LLM_28_10.md`):
+- **H-1 trägt nicht** (Register E-165-h1b, E-165-h1c). Haltedauer nach eigenem Trend: kein Unterschied. Kurz halten bei Extrem: nach der Vorab-Regel nicht, an der Nachweisgrenze, je Handel kein Vorteil. Nutzer: *„auf Basis der Durchführung sicher nicht falsch“*.
+- **Nutzerkritik:** *„mir fehlt die Intelligenz in der Bewertung, mit statischen mathematischen Berechnungen kommen wir nicht weiter“*. Das Dashboard mit Fakten und LLM-Bewertung *„brauchen wir ohnehin“*.
+- **Voranalyse (Expertensicht):** Das LLM bekommt **neue Aufgaben statt derselben Prognose**: A1 Ereignis-Leser, A2 Risiko-Wächter, A3 Befund-Gedächtnis, A4 Gegenanwalt, A5 Lagebild, A6 Erklärer. Geprüft wird je Aufgabe (Faktentreue, Erkennungsquote) und erst danach der Ertrag. **Zur Abstimmung:** a Fakt-Teil + A3/A4 zuerst (Empfehlung) · b A1/A2 zuerst · c A5 gleich mit.
+- **Betrieb unverändert.**
+

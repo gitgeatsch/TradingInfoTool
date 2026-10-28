@@ -299,6 +299,8 @@ Empfehlung **a**: Die Literatur findet die Fortsetzung in Krypto über **Wochen*
 
 **Ort:** Ausbau der Statusseite am NB (`remote/server.py`). Das erfüllt *„Information nie nur in die GUI“*. Die Mail trägt die Handlung und verweist auf den Prüffall. **Der Fakt-Teil braucht keine Messung**, weil er keinen Vorteil behauptet, und kann parallel zu §6 entstehen.
 
+➤ **28.10. abends:** Bestandsaufnahme und Expertenkonzept für Fakten und LLM-Bewertung in `Voranalyse_Dashboard_LLM_28_10.md` (Aufgaben A1–A6, Prüfung je Aufgabe, Abstimmung §8).
+
 ---
 
 ## 8. Mischung von Strategien und Anlageklassen — Planung, keine Systemfunktion

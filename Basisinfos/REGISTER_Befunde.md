@@ -4389,6 +4389,14 @@
 
 - Quelle: Entscheidungen E-160; Voranalyse_DVOL_Angstmass_26_10.md; p98 (Fassung 1b, rollendes Fenster)
 
+**E-165-h1b** — Haltedauer nach dem Trend DIESES Assets (Kurs ueber 50-T-Schnitt; zweiter Weg 200-T) traegt NICHT: 72 h / 5 T / nachgezogener Stop gegen 24 h je Menge und Jahr wechselnd, Stufe NICHT TRENNBAR bzw. TRAEGT NICHT BIS 2 Pp; Auskunft (kein Befund): nach 30 T Staerke gegen BTC war laengeres Halten durchgehend schlechter
+
+- Quelle: Entscheidungen E-165; Messplan_H1_Lagegerechte_Handlung_28_10.md §9; p101_h1_messung
+
+**E-165-h1c** — Kurz halten (6 h statt 24 h) bei einem Extrem (momentum_kurz >= 0,8509 oder rsi >= 85,66) traegt nach der Vorab-Regel NICHT (2 von 4 Mengen, Soll 3); an der Nachweisgrenze: alle Jahreswerte und der zweite Weg positiv (~+1 Pp gegen dieselben Tage), je Handel gepoolt aber KEIN Vorteil; 72 h ohne Unterschied
+
+- Quelle: Entscheidungen E-165; Messplan_H1_Lagegerechte_Handlung_28_10.md §9; p101_h1_messung, p101_h1_gegenprobe
+
 ## ○ WAS OFFEN IST
 
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
