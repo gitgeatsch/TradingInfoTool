@@ -657,7 +657,13 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
   - Asset-Karte mit Fakten, A3 und A4; Befund-Karte als Auswahl aus dem Register.
   - Gemini auf einem eigenen Modelltopf (3.1, Nachweis K-AL-0), ≤ 60 Aufrufe/Tag.
   - Jede Angabe maschinell geprüft.
-  - **Offene Frage §8:** Trader-Block in der Mail durch A3/A4 ersetzen (Empfehlung 1) / zusätzlich / Mail unverändert.
+  - §8 entschieden: **beide Blöcke** in der Mail (stufenweise Ablösung).
+- **Vor dem Bau (Nutzer):** zuerst das Konzept der Fütterung, dann die Datenbasis → `Datenbasis_Schichten_Sichten_28_10.md`:
+  - Ebenen 0–4; Übergaberegeln Ü1–Ü9.
+  - Inventar: abgerufen / berechnet / LLM-Bedarf.
+  - Acht Sichten, Lücken: KOSPI/Nikkei, Frankreich-Spread, Nachrichten live am NB.
+  - §3a Fragestellung je Sicht und finales LLM (Bedenken-Stufe 0/1/2, Gewicht erst nach Messung).
+  - Offen §7: welche Sichten zuerst (Empfehlung A: S1–S4, S7, S8).
 
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 

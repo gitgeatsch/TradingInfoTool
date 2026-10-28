@@ -116,3 +116,13 @@ Aufwand: B1–B3 etwa 1–2 Tage, B4–B6 etwa 1 Tag.
 | 3 | Mail **unverändert**, A3/A4 zwei Wochen nur auf der Statusseite, dann neu entscheiden | vorsichtiger, aber die Intelligenz ist dort, wo du sie unterwegs nicht siehst | nur sinnvoll, wenn du der Faktentreue erst im Protokoll trauen willst |
 
 Bestände ohne Handlung bekommen **keine Mail**, nur die Karte (*jede Mail eine Handlung*). Gilt für alle drei Wege.
+
+✔ **Entschieden 28.10. spät: Weg 2, vorerst beide Blöcke** (Nutzer: *„um eine stufenweise Ablöse und den visuellen Effekt zu sehen“*).
+
+⚠️ **Der Bau wartet** auf zwei Dinge (Nutzer 28.10. spät):
+1. das **Konzept der Fütterung** (Schichten, Sichten und Ereignisse);
+2. die **Datenbasis** (was nur abgerufen und angezeigt wird, was wir berechnen, was die LLMs brauchen).
+
+Beides kommt **vor** B1.
+
+⚠️ **Korrektur zu §4:** Der Desktop hat ein **eigenes** Gemini-Kontingent, den zweiten Schlüssel `GEMINI_API_KEY_2` mit eigenem Projekt (seit 05.10., N4 mit Deckel 480/Tag). Tests und Messungen am Desktop zehren also **nicht** am NB-Kontingent, solange sie Schlüssel 2 nehmen. Die Aussage in Voranalyse §1.5a („Desktop-Läufe zehren am NB-Topf“) gilt nur für Schlüssel 1.
