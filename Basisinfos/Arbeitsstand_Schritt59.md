@@ -682,6 +682,11 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
   - Rückverweise in 21 Zentraldokumenten, in CLAUDE.md und in der Memory.
   - Plan_Schritt59, Gesamtplan_Wo_wir_stehen und Kette_Landkarte sind als HISTORIE gekennzeichnet.
   - Neues Prüfpaket `Gesamtplan` (Verweise, Rückverweise, Befunde, Schalter, alte Kette), Gegenprobe 3/3 erkannt.
+- **Verweise auf ALLE Dokumente** (Nutzer: *„weitere Zentraldokumente, Messpläne und Regelwerke … damit nichts verloren geht“*):
+  - Alle 224 Dokumente unter Basisinfos/ tragen den Rückverweis.
+  - Bei 8 zeilentreuen Dokumenten steht er am Ende, damit zitierte Zeilennummern stimmen; nachgewiesen, 0 Zeilen verschoben.
+  - Neu: `REGISTER_Dokumente.md`, erzeugt von `dokumente.py`, nach Art (Pläne 21, Messpläne/Vorabfestlegungen 39, Regelwerke 9, Konzepte 20, Voranalysen 84 …) und Einstufung.
+  - Paket Gesamtplan prüft beides.
 - Gemini/Groq geklärt (Voranalyse B2): Groq nur für das saubere Rückspiel 2025 und als zweite Modellfamilie; die Gemini-Modelle 2.5 sind für beide Schlüssel gesperrt.
 
 ## Feste Regeln für die Zusammenarbeit (Kurzform)

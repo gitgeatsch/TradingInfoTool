@@ -1,5 +1,7 @@
 # Voranalyse — die Messbasis vervollständigen: eingestellte Paare und BTC ab 2021-12 (27.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Auslöser:** Befund **2.668** — `stundenkurse.db` enthält nur heute
 > gehandelte Paare, kein einziges eingestelltes; BTC erst ab 2023-09.
 > Stehende Regel (CLAUDE.md, Kap. 120.3): *„Eingestellte Werte gehören dazu.

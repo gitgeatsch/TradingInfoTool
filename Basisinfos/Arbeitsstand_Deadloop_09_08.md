@@ -3214,3 +3214,7 @@ nichts. Steht in der Ausroll-Checkliste 8e.3.
 > eine `sqlite3.Row`-Factory voraussetzt. Der Abbruch kam in der
 > Schema-Migration — **vor** jedem Schreibzugriff. Der Bestand war danach
 > unverändert bei 733 Zeilen, nachgeprüft.
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

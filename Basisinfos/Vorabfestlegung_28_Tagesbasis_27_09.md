@@ -1,5 +1,7 @@
 # Vorabfestlegung 28 — trägt die Achse auf TAGESBASIS?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026**, vor der Messung · `messe_tagesbasis.py` ·
 Frageart **`markt`**
 

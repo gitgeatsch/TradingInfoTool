@@ -1,5 +1,7 @@
 # Voranalyse: Neuaufnahme eines Assets über alle Datenquellen — der Stammsatz
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · Fortsetzung von `Voranalyse_Stammsatz_26_09.md` (Entwurf
 `asset_stamm`, Befunde 2.612 bis 2.615) · **nichts gebaut, zur Abstimmung**
 

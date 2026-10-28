@@ -1,5 +1,7 @@
 # Voranalyse — trifft `q` die tatsächliche Trefferquote?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **23.09.2026.** Nutzerauftrag: *„mach die Voranalyse für die Kalibrierung
 von q"* — mit der Warnung, die diese Voranalyse geprägt hat:
 

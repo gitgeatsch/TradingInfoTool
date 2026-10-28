@@ -1,5 +1,7 @@
 # Arbeitsplan — die LAGE des Hebels, in zwei Schritten
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Nutzervorgabe, wörtlich:
 
 > *„1. ZUERST alle schiefen Beiträge aus der ALTEN (spot)Hebel sauber und

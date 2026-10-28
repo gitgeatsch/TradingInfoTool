@@ -1,4 +1,6 @@
 <!-- STAND: 2026-07-24 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # Kategorie-Taxonomie — Basisinformationen für Release 2 (Schwerpunkte/Thesen-Verwaltung)
 
 **Zweck dieses Dokuments:** Diskussionsgrundlage für den Aufbau der

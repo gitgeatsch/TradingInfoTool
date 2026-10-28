@@ -1,5 +1,7 @@
 # Voranalyse — REGEL0 auf der HEBEL-ASSETLISTE des Nutzers (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ja, Messung auf meiner Hebel-Assetliste vorbereiten, prüfen und gegenprüfen. Bei 3. zu den
 Mindestbedingungen reden wir noch einmal, wenn wir zu diesem Schritt kommen. Ich denke, wir können und müssen die bestehende Hebel-
 und Spot-Achse (laut Plan) ersetzen, ein Parallelbetrieb wird schwierig. Nach der Assetliste gehen wir nach deinem korrigierten

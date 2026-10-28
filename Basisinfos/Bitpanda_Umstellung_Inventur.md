@@ -1,5 +1,7 @@
 # Bitpanda-Umstellung — Inventur aller betroffenen Code-Stellen (Schritt 61, Stufe 0.6)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Wozu:** Nutzervorgabe 15.09.2026 — *„der Umbau ist massiv und du musst hier wirklich detailliert in Code und Doku, damit wir nichts vergessen“*.
 > Jede Datei, die Bitpanda abfragt, `holdings`/`staked_quantity`/Einstand/Cash-Schluessel/Sync-Stempel oder `hebel_positions` liest oder schreibt, steht hier — mit Rolle und Umstellungsschritt.
 

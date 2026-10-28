@@ -1,5 +1,7 @@
 # Punkt B — `q` aus beiden Seiten: Ergebnis
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Befund **2.595-lage-traegt-richtung-aber-kein-hebel** ·
 Vorabfestlegung 16 · Werkzeug `messe_q_beide_seiten.py`
 

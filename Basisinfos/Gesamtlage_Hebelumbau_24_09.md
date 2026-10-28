@@ -1,5 +1,7 @@
 # Gesamtlage — der HEBELUMBAU, sortiert nach dem abgestimmten Plan
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzervorgabe, wörtlich:
 
 > *„Wir haben abgestimmt 1. eine Prüfung durch einen TAKT 2. Dann die

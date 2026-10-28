@@ -1,5 +1,7 @@
 # Voranalyse W2 — ist das Wetter ein Gewicht auf rsi? Der Nachweis ab 2024 (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, W2 Voranalyse schreiben — prüfen und gegenprüfen."* Dazu: *„Das Wetter ist grundsätzlich immer
 dasselbe — ABER unser Problem ist das Datenproblem von Krypto generell: der Handel und Markt hat sich seit 2021 massiv
 geändert, und eigentlich sollte unser Mess- und Bewertungsfokus auf ab 2023 bzw. 2024 liegen."* Dazu ein Bild: der

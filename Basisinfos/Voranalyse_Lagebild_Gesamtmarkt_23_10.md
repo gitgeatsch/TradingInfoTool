@@ -1,5 +1,7 @@
 # Voranalyse Lagebild Gesamtmarkt (L-A Teil 1) — Bauvorschlag zur Abstimmung (23.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 23.10.: *„L-A“*. Teil 1 ist das **Lagebild Gesamtmarkt als Fakt** auf der Statusseite und in den Handlungsmails. Grundlage ist der Indikator-Atlas (E-135). **Kein Bau vor dem Ja**; dies ist der Vorschlag.
 
 ## 1. Was es schon gibt (zuerst das Bestehende)

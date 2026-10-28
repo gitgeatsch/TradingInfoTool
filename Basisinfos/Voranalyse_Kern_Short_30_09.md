@@ -1,5 +1,7 @@
 # Voranalyse KERN-SHORT (W3) — der Kern gespiegelt, Schritt 1: der Einstieg (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ja, in Doku, Plan, Ergebnis und Zentraldokumente übernehmen"* (zur Voranalyse Kern-Short),
 vorher *„gute Idee mit Short-Kern — bitte abgrenzen zur Short-Strategie Krypto, damit keine Verwechslung passiert"*.
 **Vorher:** 2.688 (Kern Schritt 1), 2.694 (Verlust im Gegenwind, Juli–Dezember 2025), 2.695 (die Effekte drehen mit dem Regime).

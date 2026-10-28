@@ -1,4 +1,6 @@
 <!-- STAND: 2026-08-27 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 > ⚠⚠ **WIDERRUFEN am 27.08.2026, noch am selben Tag — die Regel hält der
 > richtigen Kontrolle nicht stand.**
 >

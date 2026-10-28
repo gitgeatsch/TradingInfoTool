@@ -1,5 +1,7 @@
 # Die Neudimensionierung des Hebels — Ergebnis
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.620, 2.621 · `messe_hebel_neudimension.py` ·
 Vorabfestlegung 22
 

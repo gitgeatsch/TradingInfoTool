@@ -1,5 +1,7 @@
 # Voranalyse Stammsatz — was da ist, was fehlt, wer führt
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Nutzerauftrag: *„Stammsatz bauen - Voranalyse zuerst
 prüfen und gegenprüfen"* · **nichts gebaut**
 

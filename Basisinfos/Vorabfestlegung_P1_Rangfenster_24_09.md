@@ -1,5 +1,7 @@
 # Vorabfestlegung 11 — P-1: das Rangfenster für den Hebel
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026, geschrieben VOR der Messung.**
 
 **Nutzeraufträge:** *„ja Vorabfestlegung für P-1 aufsetzen - prüfen und

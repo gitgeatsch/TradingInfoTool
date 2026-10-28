@@ -1,5 +1,7 @@
 # Die Fallback-Stufen — Entwurf
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Nutzerauftrag: *„wir benötigen auch eine fallback lösung
 wenn eine Bewertung nicht oder nur zum Teil gedeckt ist"* · **Entwurf,
 nichts gebaut**

@@ -1,5 +1,7 @@
 # Voranalyse KERN Schritt 2 — H0 und das ZEITFENSTER: gilt die ATR-Hebeltabelle auf den Einstiegen, und in welchem Fenster messen wir? (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, H0 Voranalyse schreiben — prüfen und gegenprüfen. Wichtig: das Thema Liquidation hatten wir schon, ja,
 kann man prüfen, aber die Erfolgsmessung kann man als Vergleich heranziehen, aber nicht als Kalibrierung. Wichtig: wie
 lange oder welches Fenster hast du genutzt, um zu messen — 12 h oder Tage? Hebel ist kurz, schnell, hoch — hier

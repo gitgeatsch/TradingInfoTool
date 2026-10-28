@@ -1,5 +1,7 @@
 # Die Hebelhöhe — die Statistik liefert keine Obergrenze
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befund 2.627 · auf der inversen Achse (2.626)
 
 > **Nutzerhinweis, der den Rahmen klärt:** *„was hat die Kapitalbindung in

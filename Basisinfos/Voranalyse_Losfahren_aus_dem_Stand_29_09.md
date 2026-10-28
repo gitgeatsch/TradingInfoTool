@@ -1,5 +1,7 @@
 # Voranalyse — Losfahren aus dem Stand: die Anfahr-Kurve und die Lage auf stehenden Ankern (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, Voranalyse schreiben — prüfen und gegenprüfen, abstimmen, wenn Bedarf besteht."* Dazu die Analogie
 (ausdrücklich *kein Gesetz*): *„Auto steht noch, wann fahren wir los? — Sweet Spot (Kurve oder Schwelle) — das Auto
 hat sich in Bewegung gesetzt, nicht von 0 auf 200, sondern 0 auf 20 (Auslöser, geht?)."*

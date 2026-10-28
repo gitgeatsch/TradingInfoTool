@@ -1,5 +1,7 @@
 # Bauplan Hebel — Stand 27.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Nutzerauftrag:** *„vorher alles in die Doku und Plan, damit du nichts
 > vergisst"*
 

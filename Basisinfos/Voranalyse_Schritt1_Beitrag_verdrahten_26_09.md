@@ -1,5 +1,7 @@
 # Voranalyse Schritt 1 — den Hebel-Beitrag verdrahten
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · vor dem Bau · Nutzerauftrag *„mit Schritt 1 beginnen —
 Voranalyse zuerst prüfen und gegenprüfen"*
 

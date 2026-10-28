@@ -1,5 +1,7 @@
 # Einordnung der Beiträge — wo wir stehen und wie die Erkenntnisse ins System gehören (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„Langsam und vorsichtig … Ich denke, es ist der richtige Zeitpunkt, kurz zurück zur aktuellen Lage der
 Ergebnisse und Messungen zu gehen. Prüfe, welche Beiträge aus den Messungen je Lage (Kurve, Schwellen?) für uns
 geeignet sind und wie wir diese einordnen sollten im System. Die langen Messungen bringen wenig, wenn wir keinen

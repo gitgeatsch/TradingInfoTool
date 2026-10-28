@@ -1,5 +1,7 @@
 # Voranalyse M1 / Hebel — der Hebel ist heute ein Ein-Aus-Schalter
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **23.09.2026.** Nutzerfokus: *„jetzt sind wir bei M1 Hebel."*
 M1-Kriterium 2 lautet *„Hebel gemessen"*, offen ist laut 2.533 *„der
 Faktor unter der JETZIGEN Schwelle"*.

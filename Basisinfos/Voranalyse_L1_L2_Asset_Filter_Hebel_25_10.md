@@ -1,5 +1,7 @@
 # Voranalyse L-1 (Asset-Filter auf Monatsebene) und L-2 (Hebel: RegelXY mit anderer Haltedauer) (25.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 25.10.: *„ja L-1 Voranalyse starten, prüfen gegenprüfen und doku - auch L-2 wir brauchen auch für Hebel eine Lösung, diese kann nicht wie spot sein, auch auf mein bestehendes Portfolio prüfen und eine andere Haltedauer prüfen, was eine neue RegelXY wäre und ggf. für bestimmte Assets geeignet?“*
 
 **Herkunft:**

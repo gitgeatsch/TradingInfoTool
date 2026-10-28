@@ -1,5 +1,7 @@
 # Voranalyse Robustheit der REGEL0 (24.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Die REGEL0 0.1 ergibt mit Kursdaten ab 2019 für 2024–26 −0,34 % statt +0,15 % je Handel nach Kosten (E-136). Zu klären ist:
 - Ist der **Vorsprung** der REGEL0 robust gegen den Datenbeginn?
 - Welcher Baustein trägt die Abhängigkeit?

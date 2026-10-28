@@ -1,5 +1,7 @@
 # Bestandsaufnahme vor dem Hebelbau — Stand 26.09.2026 abends
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Nutzerauftrag:** *„erst festhalten, was von den Befunden des Tages
 > tatsächlich baurelevant ist und was nur Zwischenschritt war — damit der
 > Umbau nicht wieder chaotisch wird"* — dieselbe Forderung wie vor dem

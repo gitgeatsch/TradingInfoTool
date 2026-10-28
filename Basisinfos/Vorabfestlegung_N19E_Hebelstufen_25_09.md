@@ -1,5 +1,7 @@
 # Vorabfestlegung 13 — N19-E: die Hebelstufen gegen `barriere`
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026, geschrieben VOR der Messung.**
 Nutzerauftrag: *„ja Vorabfestlegung für N19-E aufsetzen - prüfen und
 gegenprüfen"*

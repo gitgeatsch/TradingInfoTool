@@ -1,5 +1,7 @@
 # Messplan Indikator-Atlas (V-1) — Was bewegt den Gesamtmarkt? Fassung 1, VORAB festgelegt (23.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 23.10.: *„ja V-1“*. Seine Gedanken dazu:
 > *„Hier sollte man unterscheiden zwischen Marktindikatoren, z. B. Geldausweitung – steigt BTC auch ohne, oder ist dies Voraussetzung? Und ich denke, Krypto-Indikatoren hängen im Wesentlichen davon ab. Rezession? Wie lange haben wir die Geldmengenausweitung, wie lange haben wir bereits Bullenmarkt im Indexbereich? Die aktuelle Phase ist generell problematisch – Anleihen im kritischen Bereich, Währungen in der Krise, KI-Investitionen tragen nicht, Krisen (z. B. Corona) haben zu massiver Geldausweitung geführt. Das solltest du gesondert messen und ggf. recherchieren, da wir dies u. U. für die letzten 10 Jahre kaum messen können.“*
 

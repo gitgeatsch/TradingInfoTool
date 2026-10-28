@@ -154,5 +154,10 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | Spot | [`Voranalyse_Spot_Neubau_04_10.md`](Voranalyse_Spot_Neubau_04_10.md) · [`Plan_Asset_Lebenszyklus_14_09.md`](Plan_Asset_Lebenszyklus_14_09.md) | Referenz |
 | Geräte | [`MEMORY_SYNC_STRATEGY.md`](MEMORY_SYNC_STRATEGY.md) | Zustand |
 | Betriebsschalter | [`regel0_betrieb.yaml`](regel0_betrieb.yaml) · [`regel0_llm.yaml`](regel0_llm.yaml) · [`nb_kontrollen.yaml`](nb_kontrollen.yaml) | Zustand |
+| **Alle Dokumente** | [`REGISTER_Dokumente.md`](REGISTER_Dokumente.md): **jedes** Dokument unter `Basisinfos/`, nach Art geordnet (Pläne, Messpläne/Vorabfestlegungen, Regelwerke, Entscheidungen, Konzepte, Voranalysen, Befunde), mit Einstufung laufend / Historie / vor Messstandard / Arbeitsblatt | **erzeugt** von `python dokumente.py` |
+| Messpläne | [`Messplan_H1_Lagegerechte_Handlung_28_10.md`](Messplan_H1_Lagegerechte_Handlung_28_10.md) · [`Messplan_Indikator_Atlas_23_10.md`](Messplan_Indikator_Atlas_23_10.md) · die 33 Vorabfestlegungen im Register · viele Messpläne stehen als Abschnitt in [`Voranalyse_Schritt7_Betrieb_02_10.md`](Voranalyse_Schritt7_Betrieb_02_10.md) (§23.x) | Historie je Messung |
+| Messstandard und Methodik | `messnorm.py` (`messnorm.standardzeile()`) · [`Test_und_Verifikationsmethodik.md`](Test_und_Verifikationsmethodik.md) · [`Regelwerk_Entscheidungslog.md`](Regelwerk_Entscheidungslog.md) | Zustand im Code |
+| Fakten und Befunde | [`Fakten_Entscheidungsmappe.md`](Fakten_Entscheidungsmappe.md) · [`Befundkarte.md`](Befundkarte.md) · die fünf `REGISTER_*.md` (§3) | erzeugt bzw. Historie |
+| Messwerkzeuge und Ergebnisse | `Basisinfos/Rechenkern_02_10/` (Skripte und `.txt`-Ausgaben) → [`REGISTER_Werkzeuge.md`](REGISTER_Werkzeuge.md) | – |
 | **Historie — nicht fortschreiben** | [`Plan_Schritt59_Gesamtkette_17_09.md`](Plan_Schritt59_Gesamtkette_17_09.md) (bis Nachtrag 85) · [`Gesamtplan_Wo_wir_stehen_28_08.md`](Gesamtplan_Wo_wir_stehen_28_08.md) · [`Kette_Landkarte.md`](Kette_Landkarte.md) (alte Kette) | Historie |
 | Memory | `MEMORY.md` → Zeile *Gesamtplan* ganz oben | Zeiger |

@@ -1,5 +1,7 @@
 # Umbauplan — der Hebel bekommt seine eigene Bewertung
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzerauftrag: *„bevor wir aufsetzen mach noch eine Runde
 (Recherche und Analyse) zum Umbau — **wichtig: das Konzept und der Umbau
 darf nicht durch eine fehlende Prüfung oder falsche Annahme etc. während

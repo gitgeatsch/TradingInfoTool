@@ -1,5 +1,7 @@
 # Vorabfestlegung 12 — P-9 Schicht 3: ist die Basisrate VORHERSAGBAR?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026, geschrieben VOR der Messung.**
 Nutzerauftrag: *„dann Schicht 3 zu Ende messen"*
 

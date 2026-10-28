@@ -1,5 +1,7 @@
 # Voranalyse K5 neu — Lage mit Vorlauf und rsi jetzt (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:**
 - *„ja, Voranalyse schreiben — prüfen und gegenprüfen"*
 - *„zeitversetzt zum Prüfzeitpunkt schauen wir in die Vergangenheit & RSI (und dies mit den richtigen Beiträgen) — das könnte klappen"*

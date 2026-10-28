@@ -1,5 +1,7 @@
 # Übergabe an die nächste Session — Hebelneubau
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > ⭐⭐ **NACHTRAG 27.10.2026 — zuerst lesen:**
 > - **REGEL0 ist im Betrieb, ihr gemessener Vorteil ist aber NICHT robust** (E-136/E-139). Die Mail sagt das bei jedem Signal (W-1).
 > - Eine robuste Fassung gibt es nicht: Lauf A ist sie, ohne Vorsprung (E-157).

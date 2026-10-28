@@ -1,5 +1,7 @@
 # Die Kalibrierung von `q` — das fehlende Stück der Hebelerzeugung
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befund 2.622 · löst **2.558** (*„der Hebel hängt an einem
 `q`, das nie kalibriert wurde"*)
 

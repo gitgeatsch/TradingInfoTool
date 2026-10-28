@@ -1,5 +1,7 @@
 # Voranalyse Vorsprungs-Atlas (25.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 25.10.:
 - *„wir müssen den Vorsprung ausbauen und das ist unabhängig von den Kosten“*
 - *„der Drift muss über die besseren assets und optimale Einstiege ausgeglichen werden, es gibt Assets und Einstiege welche dies ermöglichen wir wissen nicht wie“*

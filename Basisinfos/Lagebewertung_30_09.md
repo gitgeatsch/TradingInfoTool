@@ -1,5 +1,7 @@
 # Lagebewertung Hebel-Neubau — 30.09.2026 (nach M1)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Nach M1 gehen wir in Abstimmung und Bewertung der Lage und Ergebnisse."*
 Grundlage: Befunde **2.688–2.697**, alle mit Vorab-Festlegung, R-R11 und vier Mengen. Stand im Code: `python hebel_neubau.py`.
 

@@ -1,5 +1,7 @@
 # Vorabfestlegung 4 — tragen die unteren vier Fünftel eine Ordnung?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **23.09.2026, geschrieben VOR der Messung.** Nutzerhaltung, die sie
 auslöst: *„entweder ich verstehe den Schalter nicht oder wir wenden den
 Beitrag falsch an."*

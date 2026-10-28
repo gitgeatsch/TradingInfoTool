@@ -5021,3 +5021,7 @@ und `turnover` tragen `klassen=("krypto",)` — und das ist kein Versehen,
 sondern die Datenlage.
 
 **Vollständige Darstellung:** `Basisinfos/Standort_Krypto_07_09_2026.docx`
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

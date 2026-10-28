@@ -1,5 +1,7 @@
 # Voranalyse F-1 — REGEL0 nur handeln, wenn der Gesamtmarkt nicht gegen uns steht (Marktfilter, auf Bitpanda) — ab 23.10.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 23.10.: *„ja F-1 Messplan festlegen, prüfen, gegenprüfen und Doku“*. Sein Hinweis:
 > *„wir sollten diese Themen breiter denken und berücksichtigen, z. B. ist die größte Bremse scheinbar nicht im einzelnen Asset-Bereich, Strategie etc., sondern offenbar müssen wir mehr und besser im Bereich Gesamtmarkt sein, z. B. wie lange und warum steigt der Markt, und wann und warum fällt dieser – hier wären wir wieder bei Makro und traditionellen Märkten (Nasdaq, Zinsen, Anleihen etc.).“*
 

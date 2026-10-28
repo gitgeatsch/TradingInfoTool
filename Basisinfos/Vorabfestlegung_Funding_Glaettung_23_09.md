@@ -1,5 +1,7 @@
 # Vorabfestlegung 6 — die Kante ist nicht das Problem, die Schwankung ist es
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **23.09.2026, geschrieben VOR der Messung.** Nutzerkritik, die sie
 auslöst:
 

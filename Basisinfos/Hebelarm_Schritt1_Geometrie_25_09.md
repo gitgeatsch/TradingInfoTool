@@ -1,5 +1,7 @@
 # Der neue Hebel-Arm, Schritt 1: die lageneutrale Geometrie
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026** · Werkzeug `messe_hebel_geometrie_neutral.py` ·
 **116 Symbole · 3.237.922 Anker · nur lesend**
 

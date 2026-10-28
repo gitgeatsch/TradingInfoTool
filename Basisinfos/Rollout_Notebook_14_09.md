@@ -1,5 +1,7 @@
 # Rollout am Notebook — Gesamtpaket vom 14.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Ein Durchgang, in dieser Reihenfolge.** Das Notebook läuft bis dahin auf dem
 > Stand vom 13.09. früh (Commit `2f0c73f`). Dieses Paket bringt die Arbeit von
 > zwei Tagen — nicht nur eine Reparatur.

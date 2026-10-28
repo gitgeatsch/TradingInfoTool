@@ -1,5 +1,7 @@
 # Voranalyse A — Positionsführung als erste Optimierung der REGEL0 (ENTWURF 01.10.2026, zur Abstimmung)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag:** Nutzer 30.09. (E-33): *„A und B sind Optionen, die ohnehin sinnvoll sind"*, und 01.10.: *„wie können wir in der Zwischenzeit
 weitermachen bzw. parallel du eigenständig Punkte abarbeiten kannst"*. ⚠️ **Das ist nur ein Entwurf.** Es wird nichts gemessen und nichts gebaut,
 bevor du Ja sagst.

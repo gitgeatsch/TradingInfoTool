@@ -1,5 +1,7 @@
 # Die Geometrie, der Horizont und die Nachweisgrenze — 25.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Befunde 2.591-messgeometrie-ist-nicht-betrieb · 2.591-kelly-sitzt-auf-der-null ·
 2.592-tagesstreuung-erklaert-die-grenze**
 

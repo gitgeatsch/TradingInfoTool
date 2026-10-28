@@ -1,5 +1,7 @@
 # CoinGecko gegen Binance — die Quelle trägt, und BTC auch
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.618, 2.619 · `messe_coingecko_gegen_binance.py`
 
 > **Nutzerauftrag:** *„dann CoinGecko gegen Binance messen"*

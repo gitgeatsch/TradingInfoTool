@@ -1,5 +1,7 @@
 # Vorabfestlegung 27 — die vier Hebelstufen auf der inversen Achse
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung · `messe_vier_hebelstufen.py` ·
 Frageart **`markt`**
 

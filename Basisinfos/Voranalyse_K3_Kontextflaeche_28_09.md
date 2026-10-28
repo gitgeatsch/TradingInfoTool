@@ -1,5 +1,7 @@
 # Voranalyse K3 — die Kontextfläche BTC × Dominanz (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Abgestimmt (K3, 27.09.):** Kontext ist marktweit, kein Beitrag je Asset.
 > Zuerst die **Kontextfläche** BTC-Rendite × Dominanz-Änderung, 3 × 3,
 > 24 / 72 / 120 h; Zeitverschiebungs-Nullwelt, Fallzahl = Tage; addieren sich

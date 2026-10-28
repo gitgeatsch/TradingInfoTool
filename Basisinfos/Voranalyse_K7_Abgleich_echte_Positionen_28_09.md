@@ -1,5 +1,7 @@
 # Voranalyse K7 — der Abgleich an den echten Positionen (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, 1 und 2 wie empfohlen — prüfen und gegenprüfen."*
 (2 = Voranalyse K7, parallel zu K6 und K1 Schritt 2c.)
 

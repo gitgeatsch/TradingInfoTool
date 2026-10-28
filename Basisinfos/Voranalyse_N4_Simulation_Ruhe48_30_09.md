@@ -1,5 +1,7 @@
 # Voranalyse N4 — Simulation: Kern + Ruhe 48 h als Erfolgsmessung (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ja gut, sauber und schrittweise vorgehen, prüfen und gegenprüfen."*
 **Vorher:** 2.690 (Simulation des Kerns mit 24 h Ruhe verliert an den Kosten), 2.691/2.692 (Ruhe 48 h trägt eigen), 2.693
 (die Wucht ist Bewegung, keine Richtung).

@@ -1,5 +1,7 @@
 # Voranalyse K1 Schritt 2c — die Kombination nach dem BEITRAG gegen rsi allein (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, Voranalyse schreiben — prüfen und gegenprüfen."*
 Grundlage: **K5 geändert** (28.09., vorläufig): die Schwelle liegt auf dem
 **Beitrag** — dem Vorsprung gegen das eigene Normal. *„Wenn das auch nicht

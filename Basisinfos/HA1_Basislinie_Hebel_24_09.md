@@ -1,5 +1,7 @@
 # H-A1 — die Basislinie des Hebeltrades
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Vorabfestlegung 10 · Plan Gesamtlage § 4, Schritt H-A.
 ⚠️ **Zwischenstand** — A2 (die Kandidaten) läuft noch.
 

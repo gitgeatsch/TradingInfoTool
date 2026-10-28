@@ -1,5 +1,7 @@
 # Voranalyse: REGEL0 robust machen (Ansatz 1) und Größe nach Schwankung (Ansatz 2) — 26.10.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 26.10.: *„beides - prüfen gegenprüfen und doku danach prüfe noch einmal auf recherchebasis welche Möglichkeiten noch bestehen …“*
 
 ⚠️ Das ist eine Voranalyse. Es ist **nichts** gegen ein Ergebnis gerechnet. Gezählt wurden nur Einstiege und Tage.

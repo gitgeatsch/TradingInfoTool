@@ -1,5 +1,7 @@
 # Voranalyse L4 — die Summe auf dem Kern (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ja"* zur L4-Voranalyse mit volumenschub als Vergleichsarm, danach ein Zwischenfazit.
 **Vorher:** 2.688 (Kern), 2.690 (Simulation verliert an den Kosten), 2.691 (L2), **2.692 (N3)**.
 

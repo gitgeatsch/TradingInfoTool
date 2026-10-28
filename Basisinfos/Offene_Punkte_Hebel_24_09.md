@@ -1,5 +1,7 @@
 # Alle offenen Punkte — Hebel, Stand 24.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzerauftrag:** *„Nein zuerst müssen wir alle Fakten am tisch haben bevor
 wir vom Ziel abweichen, zuerst alle offenen Punkte klären."*
 

@@ -1,5 +1,7 @@
 # Reverse Engineering — Ergebnis und LAGE
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Befund **2.594-reverse-momentum-traegt-mit-richtung** ·
 Vorabfestlegung 15 · Werkzeug `messe_reverse_scharfe_anstiege.py`
 

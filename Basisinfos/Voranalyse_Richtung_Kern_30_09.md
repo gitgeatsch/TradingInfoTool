@@ -1,5 +1,7 @@
 # Voranalyse RICHTUNG — Rolle A auf dem Kern ausreizen (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ok, ja bitte. Kurz Info zur rsi-Stärke, wie und warum soll dies etwas bringen. Was sind die
 aktuellen Richtungsbeiträge bzw. möglichen Kernheber?"* Dazu der Hinweis vom Vormittag: *„Dein Hinweis zur Stärke ist wichtig,
 als Prüfung, wie weit die Richtung noch optimiert werden kann."*

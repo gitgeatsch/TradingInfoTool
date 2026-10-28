@@ -1,5 +1,7 @@
 # Vorabfestlegung 8 — B0: trägt `oi_aenderung` auch **ohne** Fünftel 4?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026, geschrieben VOR der Messung.** Pflichtschritt B0 aus
 `Umbauplan_Hebel_eigene_Bewertung_24_09.md`, Blocker A (Befund 2.574).
 

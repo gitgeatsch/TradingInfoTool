@@ -1,5 +1,7 @@
 # Bilanz des Hebelneubaus — Stand 27.09.2026 abends
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzerauftrag:** bilanzieren, bevor der nächste Zweig aufgemacht wird.
 
 ---

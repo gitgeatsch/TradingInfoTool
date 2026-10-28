@@ -1,5 +1,7 @@
 # Vorabfestlegung 20 — Die Selektion: gute Einstiege statt guter Fünftel
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung · `messe_selektion.py` · Frageart **`markt`**
 
 **Nutzervorgabe, wörtlich:**

@@ -1,5 +1,7 @@
 # Voranalyse — Datenbasis: alle abrufbaren Krypto-Assets stündlich (01.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 01.10.):** *„Ja, wir benötigen die notwendige Datenbasis. Eine Selektion auf bestimmte Assets ist nicht sehr sinnvoll, es
 sollen ja u. U. welche hinzu- oder wegkommen."* — dann: *„Die Ausnahmen waren nur als unwichtiger deklariert, wir nehmen alles, was es gibt,
 vor allem, wenn es im Bestand ist. 1. … das selektive Nachladen macht auch Probleme, oder ist das kein Problem? Dachte, wir halten alle Daten.

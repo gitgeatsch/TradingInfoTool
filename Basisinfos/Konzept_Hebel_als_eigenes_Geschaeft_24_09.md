@@ -1,5 +1,7 @@
 # Konzept — Spot, Hebel und Akkumulation als DREI Geschäfte
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzerentscheidung: *„Spot bleibt vorerst als eigener
 offener Punkt. Und Hebel muss neu gedacht werden."* · Auftrag:
 *„bevor wir irgendetwas anfassen muss ein tragfähiger Plan stehen."*

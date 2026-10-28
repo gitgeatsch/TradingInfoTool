@@ -1,5 +1,7 @@
 # Vorabfestlegung 24 — die Geometrie auf der inversen Achse
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung · `messe_geometrie_invers.py` ·
 Frageart **`geometrie`**
 

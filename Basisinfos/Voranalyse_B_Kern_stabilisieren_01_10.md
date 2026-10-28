@@ -1,5 +1,7 @@
 # Voranalyse B — den Kern stabilisieren (M1-3), mit der Ursache der Verluste als Auskunft (ENTWURF 01.10.2026, zur Abstimmung)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag:** Nutzer 01.10. nach 2.702: *„deine Empfehlung – A, dann B, und eigentlich kannst du, wenn es passt, die Ursache für die
 Verluste behandeln – aber du bist hier der Experte."* Dazu: *„die Minus-Trades und die Marktphasen sind ohnehin ein eigenes Thema
 und können nicht vollends durch eine einfache mathematische Rechnung gelöst werden."*

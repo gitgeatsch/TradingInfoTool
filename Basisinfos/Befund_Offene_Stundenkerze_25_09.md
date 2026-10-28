@@ -1,5 +1,7 @@
 # Die letzte Stundenkerze bleibt für immer offen
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026** · gefunden beim Gegenprüfen der neu geladenen BTC-Reihe ·
 Prüfung `pruefe_leitwert_und_regimeform.py` (P1 und P5)
 

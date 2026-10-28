@@ -1,5 +1,7 @@
 # Konzept — Spot und Hebel sind **nicht** dieselbe Bewertung
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzerthese: *„deine Aussage ist für mich der Nachweis, dass
 deine Bewertung HEBEL und SPOT sind dasselbe **FALSCH** ist. Auch der
 Einstieg von Spot und Hebel muss unterschiedlich erfolgen — zumindest

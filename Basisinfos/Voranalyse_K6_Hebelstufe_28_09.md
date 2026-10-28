@@ -1,5 +1,7 @@
 # Voranalyse K6 — die Hebelstufe aus der Liquidationsgefahr (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, Voranalyse K6 schreiben — prüfen und gegenprüfen."*
 Anlass: K1 Schritt 2b rechnet; K6 (erst **R**, nur Risiko) hängt an der
 Kursbewegung und der ATR zum Einstieg, nicht am Ergebnis der Kombination —

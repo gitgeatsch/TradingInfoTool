@@ -1,5 +1,7 @@
 # Umbaukonzept — Nennerwechsel `turnover` (22.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Nutzervorgabe:** *„beim Umbau und austausch von Turnover zu
 > Umlaufmenge sauber trennen damit nichts passiert, berücksichtige den
 > Fingerprint, etc. gleiche den Code sauber mit der Doku ab und teste und

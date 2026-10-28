@@ -1,5 +1,7 @@
 # Voranalyse (b): Was könnte überhaupt noch einen Vorsprung liefern? (26.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 26.10.: *„c - prüfen gegenprüfen und doku“* (zuerst das NB-Bündel, dann diese Voranalyse).
 
 **Frage:** Welche **kostenfreien** Daten haben wir für einen Vorsprung je Asset und Handlung noch nicht genutzt? Und ist die Frage mit ihnen **fachlich beantwortbar**, bevor gemessen wird?

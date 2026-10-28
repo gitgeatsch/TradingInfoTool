@@ -1,5 +1,7 @@
 # Voranalyse DVOL / Angstmaß — Stufe 0 Machbarkeit (26.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 26.10.: *„ja DVOL Stufe 0 starten - prüfen gegenprüfen und doku“*. Vorher: *„u.U. kann der Indikator auch für andere Assets oder Strategien genutzt werden und bringen einen Vorteil“*.
 
 **Was DVOL ist:** Der Deribit-Volatilitätsindex ist die **implizite** 30-Tage-Schwankung aus BTC- bzw. ETH-Optionen. Er sagt, wie viel Bewegung der Optionsmarkt erwartet und wofür er bezahlt; er ist ein **Angstmaß**. Die **Angstprämie** (Varianzprämie) ist DVOL minus der tatsächlich gemessenen Schwankung.

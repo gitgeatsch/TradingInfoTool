@@ -1,5 +1,7 @@
 # Voranalyse L2-a — Regime-Hebel auf dem Kern (25.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 25.10.: *„ja L1-a, L2-a und Kern-Regel Voranalyse starten - was ist mit den andern Werten also den aussichtsreichsten TOP Werten, diese wollen wir auch hebeln bzw. wenn die Strategie für Kern funktionieren sollte wäre dies auch eine Variante für andere Hebelpositionen oder?“*
 
 **Herkunft:** Lösungsvorschlag L2-a aus E-146 (Voranalyse L1/L2 §9.2). Den Kern länger zu halten trug 2024–26 nicht, 2023 war es deutlich positiv. Das Vorzeichen hängt am Regime. Die Frage lautet also: **Lässt sich das Regime vorab erkennen, sodass der Hebel nur dann läuft?**

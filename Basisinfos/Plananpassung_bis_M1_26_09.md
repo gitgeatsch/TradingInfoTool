@@ -1,5 +1,7 @@
 # Plananpassung bis M1 — der Weg vom Messen zum Betrieb
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Nutzerauftrag: *„wenn du der Meinung bist wir haben genug
 informationen sollten wir eine saubere Plananpassung bis zum Ende von M1
 vornehmen"*

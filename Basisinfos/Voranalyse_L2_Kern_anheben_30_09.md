@@ -1,5 +1,7 @@
 # Voranalyse L2 — den Kern anheben: was leistet die Regel maximal, und was hebt sie weiter? (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, L2 Voranalyse schreiben — prüfen und gegenprüfen. L2 ist der eigentliche Hauptteil der Aufgabe und
 sollte meines Erachtens u. U. erweitert werden, wie bereits besprochen: 1. Was kann die Kernmessung (Bewertung) maximal
 mit der aktuellen REGEL leisten (optimieren, kalibrieren)? 2. Welche weiteren Beiträge oder Gewichte können den Kern

@@ -1,5 +1,7 @@
 # Bestandsaufnahme: Was trägt vor Kosten, was nach Kosten? (Stand 22.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 22.10.: *„ja A1 Bestandsaufnahme starten, prüfen, gegenprüfen und Doku – mit Alternativen meine ich nicht nur Anpassungen der bestehenden Strategien, sondern auch neue Ansätze, welche wir nicht betrachtet haben – aber mach zuerst die Prüfung A1.“*
 
 Dieses Blatt stellt jeden Strang auf **eine** Zeile:

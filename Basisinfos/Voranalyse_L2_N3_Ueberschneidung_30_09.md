@@ -1,5 +1,7 @@
 # Voranalyse L2 · N3 — Überschneidung der tragenden Beiträge (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„ja, N3 Voranalyse schreiben — prüfen und gegenprüfen"*
 **Vorher:** Befund **2.691** (L2-Bestätigung), `Voranalyse_L2_Kern_anheben_30_09.md` Abschnitte 14–15.
 

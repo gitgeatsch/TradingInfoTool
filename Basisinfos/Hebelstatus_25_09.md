@@ -1,5 +1,7 @@
 # HEBELSTATUS — wo wir stehen, und wo es weitergeht
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Nutzerauftrag: *„nach der nächsten größeren runde brauchen
 wir einen Status wie wir bei der Hebelfrage stehen und weitermachen ohne
 falsch abzubiegen."*

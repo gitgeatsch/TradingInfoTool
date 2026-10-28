@@ -1,5 +1,7 @@
 # Vorabfestlegung 17 — Ist der Marktzustand vorab erkennbar?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026**, vor der Messung geschrieben · Schritt 3 des Hebel-Neubaus ·
 Werkzeug `messe_regime_rollierend.py`
 

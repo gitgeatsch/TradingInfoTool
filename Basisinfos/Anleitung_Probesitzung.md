@@ -1,5 +1,7 @@
 # Probelauf einer neuen Sitzung — Anleitung für den Nutzer
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 *Erstellt 18.09.2026 auf Nutzerwunsch (17.09.: „zu deiner Idee mit der
 Probesitzung finde ich gut — brauche aber deine Anleitung dazu").*
 

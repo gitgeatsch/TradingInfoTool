@@ -1,5 +1,7 @@
 # Voranalyse: Das Fakten- und Führungssystem weiterentwickeln (26.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 26.10.: *„a - prüfen gegenprüfen und doku“*, also die Suche nach einem Einstiegsvorsprung abschließen (E-155) und weiterentwickeln, was trägt.
 
 **Grundlage:**

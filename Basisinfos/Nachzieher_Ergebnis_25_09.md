@@ -1,5 +1,7 @@
 # Der Nachzieher — doppelt widerlegt, aber die Dominanz trägt als Achse
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026** · Befund **2.601** · Vorabfestlegung 18 · `messe_nachzieher.py`
 **116 Symbole (BTC ausgeschlossen) · 3.131.754 Anker · zwei Fenster**
 

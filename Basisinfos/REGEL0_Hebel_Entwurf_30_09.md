@@ -1,5 +1,7 @@
 # REGEL0 — die festgeschriebene Ausgangslage des Hebel-Neubaus — ✔ FESTGESCHRIEBEN 01.10.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > ⭐ **Stand: FESTGESCHRIEBEN 01.10.2026** (Nutzer: *„Ja, REGEL0 festschreiben, prüfen und gegenprüfen“*, E-36), mit **J** (2.698) und der bestätigten
 > **Schwellenwahl** (2.699). Im Code: `hebel_neubau.REGEL0`. Die Wache vergleicht die Referenzzahlen mit den Belegdateien.
 > Der Dateiname mit *Entwurf* ist historisch und bleibt, damit die Verweise gelten. Entstanden als Entwurf am 30.09.2026.

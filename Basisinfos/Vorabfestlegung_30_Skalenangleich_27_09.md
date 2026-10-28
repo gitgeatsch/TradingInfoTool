@@ -1,5 +1,7 @@
 # Vorabfestlegung 30 — lässt sich die Skala von Stufe D angleichen?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026**, vor der Messung · `messe_skalenangleich.py` ·
 Frageart **`markt`**
 

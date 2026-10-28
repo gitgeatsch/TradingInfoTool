@@ -265,3 +265,7 @@ besetzt** — auf Datenlage, nicht auf Messung.
 Verwandt: `Entscheidung_Kern_Staffelung_27_08.md` ·
 `Bestandsaufnahme_Positionsfuehrung_26_08.md` · `agent/positionsfuehrung.py` ·
 `agent/wahrscheinlichkeit.py` · `agent/handelsauftrag.py`
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

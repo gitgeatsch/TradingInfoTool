@@ -1,4 +1,6 @@
 <!-- STAND: 2026-08-31 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # A1 — die Auswahl: was das Wort verdeckt, und wie sie zu dimensionieren ist
 
 *Nutzerfrage 23.08.: „Was meinst du konkret mit **Auswahl**? Hier versteckst du

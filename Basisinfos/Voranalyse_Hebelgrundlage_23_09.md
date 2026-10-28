@@ -1,5 +1,7 @@
 # Voranalyse — woraus darf der Hebel kommen?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **23.09.2026.** Nutzerauftrag: *„bau die Voranalyse für eine andere
 Hebelgrundlage, aber **nach der Zielvorgabe** — wir haben gerade ein
 Problem oder?"*

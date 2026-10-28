@@ -1,5 +1,7 @@
 # Voranalyse REGEL0 – Kosten: (P-A) auf einer Perp-Börse und (P-O) weitere Optimierung auf Bitpanda (ab 23.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 23.10.: *„ja P-A Voranalyse starten, prüfen, gegenprüfen und Doku – ich hätte gerne noch REGEL0 weiter optimiert, bis wir auch auf BP tragen.“*
 
 **Ausgangslage** (`Bestandsaufnahme_brutto_netto_22_10.md`, E-128):

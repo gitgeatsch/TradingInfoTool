@@ -1,5 +1,7 @@
 # Status und Messplan — der Hebel, nach Standards und Regeln
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Nutzerauftrag: *„status und weitere messungen nach standards
 und regeln"*
 

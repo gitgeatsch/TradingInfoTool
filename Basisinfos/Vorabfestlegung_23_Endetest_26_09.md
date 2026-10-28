@@ -1,5 +1,7 @@
 # Vorabfestlegung 23 — der Ende-zu-Ende-Test vor der Verdrahtung
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung · Frageart **`beitrag`** (selektierte
 Menge, nach `messnorm.FRAGEARTEN`)
 

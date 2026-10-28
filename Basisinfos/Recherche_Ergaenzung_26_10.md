@@ -1,5 +1,7 @@
 # Recherche-Ergänzung: Elliott-Wellen, Chart + Makro, weitere Ansätze (26.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 26.10.: *„danach prüfe noch einmal auf recherchebasis welche Möglichkeiten noch bestehen und wir nicht berücksichtigt haben: Eliot Wellen Methode, Kombinationen chart und Makro, sonstiges“*
 
 **Abgrenzung:** Die Recherche R-A vom 22.10. (`Recherche_Neue_Ansaetze_22_10.md`, E-129) hat schon bewertet:

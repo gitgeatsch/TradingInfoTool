@@ -1,5 +1,7 @@
 # ENTWURF · Altcoins — Fortbestand und Gelegenheit · Monatserster 01.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 *Datenstand Kurse 20.09.2026 · Bestand: Desktop-Kopie vom 19.07.2026 (im Betrieb der aktuelle Stand) · Anschauung, **kein Kaufsignal**.*
 
 **So ist dieser Abschnitt zu lesen.** Jeder Coin hat zwei Ebenen.

@@ -1,5 +1,7 @@
 # Vorabfestlegung — hat der Funding-Beitrag die richtige FORM?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 *Geschrieben am 23.09.2026, **vor** der Messung. Nutzervorgabe: „wir
 benötigen vorab die richtige Fragestellung und Hypothese".*
 

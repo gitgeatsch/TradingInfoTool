@@ -1,5 +1,7 @@
 # Vorabfestlegung 34 — die Bewertung ohne Ertrag (Weg C)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · Phase 1b · `messe_bewertung_c.py` · Frageart **`markt`**
 
 > **Nutzerentscheidung:** Weg **C** — *„welche der drei ist die beste

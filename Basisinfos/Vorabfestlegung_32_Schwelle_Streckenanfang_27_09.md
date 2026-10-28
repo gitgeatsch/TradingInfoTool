@@ -1,5 +1,7 @@
 # Vorabfestlegung 32 — die Schwelle auf Streckenanfängen
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026**, vor der Messung · `messe_schwelle_anfang.py` ·
 Frageart **`markt`**
 

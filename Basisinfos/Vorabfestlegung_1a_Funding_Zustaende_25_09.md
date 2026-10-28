@@ -1,5 +1,7 @@
 # Vorabfestlegung 14 — 1a: `funding` als ökonomische Zustände auf `barriere`
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026, geschrieben VOR der Messung.** Arbeitsplan § 2, Schritt 1a.
 
 ---

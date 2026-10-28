@@ -1,5 +1,7 @@
 # Messplan H-1 „Lagegerechte Handlung“ — VORAB festgelegt (28.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Bezug:** Konzept `Basisinfos/Konzept_Lagegerechte_Handlung_27_10.md` §5.3 und §6.5 · Entscheidung E-165.
 **Stand:** vorab committet, **bevor** ein Werkzeug gebaut oder ein Ergebnis angesehen wird. Jede spätere Änderung erscheint als **Fassung 2** mit Ursachenbegründung und nicht still.
 

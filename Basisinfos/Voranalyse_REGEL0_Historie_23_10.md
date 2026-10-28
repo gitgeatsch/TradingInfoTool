@@ -1,5 +1,7 @@
 # Voranalyse H-A — REGEL0-Historie verlängern und Marktphasen auf zwei Ebenen (23.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 23.10.: *„ja H-A Voranalyse starten, prüfen, gegenprüfen und Doku“*. Seine zwei Hinweise:
 1. Wie schon erwähnt, ist eine Unterscheidung **übergeordneter und kleinerer Marktphasen** erforderlich.
 2. Ja, statistisch problematisch; wir müssen **rückwirkend prüfen, welche Indikatoren in welchen Phasen relevant sind**, also welche Signale die Märkte in welche Richtung bewegt oder neutral gelassen haben.

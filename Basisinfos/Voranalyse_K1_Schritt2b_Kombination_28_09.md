@@ -1,5 +1,7 @@
 # Voranalyse K1 Schritt 2b — die Kombination, zweiter Anlauf (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja committen und pushen, dann Voranalyse schreiben — prüfen und
 gegenprüfen."*
 

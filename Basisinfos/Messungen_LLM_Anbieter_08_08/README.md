@@ -1,5 +1,7 @@
 # Messungen zur LLM-Anbieterfrage (08.–09.08.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Rohdaten und Werkzeuge der Anbieter-Untersuchung. Die **Befunde** stehen im
 `Regelwerk_Entscheidungslog.md` (vier Nachträge vom 08./09.08.) — hier liegen
 die Skripte und Protokolle, damit sich nichts neu bauen muss, wer eine Zahl

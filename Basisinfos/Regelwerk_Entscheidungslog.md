@@ -22716,3 +22716,7 @@ Uebergang fest, statt ihn zu verwischen:
 Wer die Chronologie eines Themas sucht, findet sie ueber die F-Nummern und
 ihre "Verwandt"-Zeilen. ENTSCHEIDUNG DARUEBER STEHT BEIM NUTZER - diese
 Zeile stellt nur fest, was ist.
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

@@ -1,5 +1,7 @@
 # Recherche neue Ansätze — Krypto und Multi-Asset (R-A), Plan und Ergebnis (ab 22.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 22.10.: *„ja R-A Recherche starten, prüfen, gegenprüfen und Doku – nachdem dies ein umfangreicheres Prüfvorhaben ist, bitte im Detail durchplanen und analysieren“*. Vorher: *„mit Alternativen meine ich nicht nur Anpassungen der bestehenden Strategien, sondern auch neue Ansätze, welche wir nicht betrachtet haben“*.
 
 **Ausgangslage:** E-125 (LLM ohne Mehrwert), §60 (Trendallokation BTC trägt nicht), E-127 (Grid), E-128 (Bestandsaufnahme: bestehende Ansätze ohne Weg). **Keine Anlageberatung, keine steuerliche Einordnung**: Gesucht wird, was **nachweisbar** trägt und **umsetzbar** ist.

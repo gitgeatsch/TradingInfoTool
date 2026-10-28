@@ -1,5 +1,7 @@
 # P-9 auf der Stundenbasis — der Befund
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzerauftrag: *„zuerst P-9 - prüfen und gegenprüfen"* ·
 *„ja Stundenbasis zuerst - prüfen und gegenprüfen"*
 

@@ -1,5 +1,7 @@
 # Hypothese — `vola` ist keine Richtung, sondern die Geometriegröße
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzeridee: *„vola wäre ein geeigneter Kandidat — allein
 u. U. nicht ok, aber prüfe ob und wie fachlich vola **mit den anderen
 Beiträgen kombiniert** als Beitrag in Frage kommt. Mach zuvor eine

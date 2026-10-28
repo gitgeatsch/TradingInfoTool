@@ -62,7 +62,7 @@ MARKE = re.compile(r"^<!-- STAND: (\d{4}-\d{2}-\d{2}) ", re.M)
 # ⚠️ Erzeugte Blaetter bekommen keinen Kopf - `bestand.py` schreibt sie neu.
 ERZEUGT = ("REGISTER_Kandidaten.md", "REGISTER_Befunde.md",
            "REGISTER_Werkzeuge.md", "REGISTER_Methodik_Themen.md",
-           "REGISTER_Fakten.md")
+           "REGISTER_Fakten.md", "REGISTER_Dokumente.md")
 # Zaehlt Messwerte: R-Zahlen, Baender, Trage-Urteile.
 MESSWERT = re.compile(r"[+−-]0,0\d{2,}|\[\s*[+−-]?0,\d+\s*\.\.|"
                       r"tr[aä]e?gt nicht|R \[")

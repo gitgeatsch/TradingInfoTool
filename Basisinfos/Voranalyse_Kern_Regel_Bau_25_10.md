@@ -1,5 +1,7 @@
 # Bau-Voranalyse Kern-Regel (E-68/E-69) — 25.10.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 25.10.: *„ja L1-a, L2-a und Kern-Regel Voranalyse starten“* · vorher: *„es sind kernwerte und wenn dann fallen diese aus der normalen spot regel raus nur diese ist bisher noch nicht zustande gekommen, prüfe welche Regel für kern zählt“*.
 
 ⚠️ **Nur Voranalyse.** Kein Betriebscode, bis du den Bauumfang (§6) abgestimmt hast. Gemessen ist die Regel schon (Spot §12.6–§12.10), beschlossen mit E-69. Es fehlt nur der Bau.

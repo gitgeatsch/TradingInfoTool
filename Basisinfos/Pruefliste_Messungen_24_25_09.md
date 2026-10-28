@@ -1,5 +1,7 @@
 # Prüfliste — alle Messungen vom 24./25.09. gegen den Messstandard
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzerauftrag 25.09.2026:** *„gehe alle bisherigen prüfungen auf fehler
 oder nicht einhaltung der messtandards durch - wir können uns keine Fehler
 leisten"*

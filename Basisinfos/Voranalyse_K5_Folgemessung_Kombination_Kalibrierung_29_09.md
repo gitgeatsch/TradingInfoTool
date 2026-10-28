@@ -1,5 +1,7 @@
 # Voranalyse K5-Folgemessung — Kombination, Kalibrierung, Normal-Schrumpfung, PBO, Wirkungskurven (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„JA, dein Vorschlag 1 und 3, und wenn möglich noch weitere Punkte — baue die Messung und führe diese auch gleich aus, ich bin dann einige Stunden nicht am Rechner."*
 Dazu, zum Funding: *„oft sind Extremwerte eher als Risiko zu bewerten, aber der Beitrag selbst hat bis zu einem Bereich einen positiven Einfluss — das ist sauber einzuordnen."*
 

@@ -1,5 +1,7 @@
 # N19-E — die Hebelstufen: das Ergebnis
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Vorabfestlegung 13 · Werkzeug `n19e_hebelstufen.py`
 (10 `messnorm`-Verweise — **Neubestand**, keine eigenen Konstanten).
 

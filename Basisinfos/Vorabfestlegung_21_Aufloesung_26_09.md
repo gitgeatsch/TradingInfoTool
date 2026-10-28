@@ -1,5 +1,7 @@
 # Vorabfestlegung 21 — hält die Bewertung eine gröbere Auflösung?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung · `messe_aufloesung_und_fallback.py` ·
 Frageart **`markt`** (Messuniversum, nach `messnorm.FRAGEARTEN`)
 

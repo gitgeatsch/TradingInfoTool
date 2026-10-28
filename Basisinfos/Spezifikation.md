@@ -1,6 +1,4 @@
 <!-- STAND: 2026-08-03 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
-
-> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # TradingInfoTool — Spezifikation (fachliche Grundlage)
 
 > **Eigentümer:** Gernot Spiessmaier · **Version:** 1.6 · **Stand:** 2026-07-08
@@ -1483,3 +1481,6 @@ mit Zeit zum Auflösen als Datengrundlage.
   - Season-Ampel nur beim Wechsel in eine Stufe mit Handlung.
 - **Bestand = frei + gestakt.** Gestakte Werte sind normale Spot-Positionen, nur ETH braucht Tage zum Entstaken. **Spot und Hebel** werden im Bitpanda-Abgleich nach Wallet-Art getrennt; der Hebel gehört nie zum Spot-Bestand.
 
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

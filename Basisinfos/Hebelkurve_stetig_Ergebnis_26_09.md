@@ -1,5 +1,7 @@
 # Die stetige Hebelkurve — Ergebnis
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befund **2.630** · `messe_hebelkurve_stetig.py` ·
 Vorabfestlegung 26
 

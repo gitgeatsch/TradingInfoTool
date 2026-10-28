@@ -1,5 +1,7 @@
 # Vorabfestlegung 10 — der Hebel auf der Stundenbasis
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026, geschrieben VOR der Messung.** Nachfolger von
 Vorabfestlegung 9, nachdem 2.582 die Zielgröße korrigiert hat.
 

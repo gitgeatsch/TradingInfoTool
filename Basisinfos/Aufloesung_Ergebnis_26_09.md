@@ -1,5 +1,7 @@
 # Hält die Bewertung eine gröbere Auflösung? — ja, mit Verlust
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.616, 2.617 · `messe_aufloesung_und_fallback.py`
 · Vorabfestlegung 21
 

@@ -1,5 +1,7 @@
 # Lösungskonzept `umschlag` — Stand 21.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Auftrag (Nutzer, 21.09.):** *„wir brauchen einen Ersatz für die
 > aktuelle Turnover Situation"* — nachdem die Abdeckung als das
 > eigentliche Problem erkannt war.

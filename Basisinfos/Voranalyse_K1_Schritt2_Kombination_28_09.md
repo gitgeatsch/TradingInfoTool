@@ -1,5 +1,7 @@
 # Voranalyse K1 Schritt 2 — die Kombination: Kurven gemeinsam schätzen (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„Weiter mit der Voranalyse K1 — prüfen und gegenprüfen."*
 Dazu die stehenden Vorgaben: *„ein Beitrag ist selbst schwach, in
 Kombination stärker"* · *„was mir reicht, steht nicht zur Diskussion — ich

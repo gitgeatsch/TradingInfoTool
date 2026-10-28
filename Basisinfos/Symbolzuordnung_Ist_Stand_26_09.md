@@ -1,5 +1,7 @@
 # Die Symbolzuordnung — Ist-Stand und was für den Stammsatz fehlt
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.612, 2.613, 2.614 · Voranalyse, **nichts gebaut**
 
 > **Nutzerbefund:** *„Es müssen Bitpanda Symbole mit den Datenquellen —

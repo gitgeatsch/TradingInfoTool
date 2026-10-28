@@ -1,6 +1,4 @@
-# Wo wir stehen — und warum jede Änderung an derselben Stelle endet
-
-> ⛔ **HISTORIE – nicht fortschreiben** (Stand 12.09.2026). Abgelöst am 28.10.2026 durch den laufenden Plan [`Gesamtplan.md`](Gesamtplan.md). Verweise auf Abschnitte dieses Dokuments bleiben gültig.
+# Wo wir stehen — und warum jede Änderung an derselben Stelle endet — ⛔ HISTORIE – nicht fortschreiben, abgelöst am 28.10.2026 durch [`Gesamtplan.md`](Gesamtplan.md)
 
 **Angelegt 28.08.2026.** Nutzerfrage nach zwei Tagen Umbau:
 
@@ -5252,3 +5250,7 @@ der Ausstiegsseite für 100 % der Entscheidungen.
 war), dann die **stummen Ausstiege**, dann die **Wiederholung** (SUPRA 12×
 VERKAUFEN, MON 10× REDUZIEREN in sieben Tagen) — erst danach die Frage nach
 einer eigenen Bewertungsstufe.
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

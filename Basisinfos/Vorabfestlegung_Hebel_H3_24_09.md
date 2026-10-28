@@ -1,5 +1,7 @@
 # Vorabfestlegung 7 — 2.490 auf dem Hebel-Horizont
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026, geschrieben VOR der Messung.** Nutzerauftrag: *„Schritt 2
 aufsetzen — vorher detaillierte Recherche, Voranalyse, Planung, messen,
 testen, simulieren."* Schritt 2 aus

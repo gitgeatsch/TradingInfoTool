@@ -1,5 +1,7 @@
 # Voranalyse — `umschlag_naeherung` im Betrieb nutzen (22.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Nutzerauftrag 21.09.:** *„führe eine Fachliche prüfung durch ob das
 > Ergebnis und die Simulation ein besseres Ergebnis ist **und eine
 > Voranalyse da wir auch die Qualität prüfen müssen wenn wir den Beitrag

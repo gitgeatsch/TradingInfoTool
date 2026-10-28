@@ -1,5 +1,7 @@
 # R-R11 — die Terminmarkt-Kanäle reproduziert
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Nutzerauftrag: *„R-R11 und rsi zuerst"* · *„du musst jetzt
 bei der hebelmessung genau arbeiten - hole dir die informationen aus den
 zentraldokumenten und Standards"*

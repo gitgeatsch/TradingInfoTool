@@ -1,4 +1,6 @@
 <!-- STAND: 2026-08-24 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # Reparaturliste — was der Umbau offen gelassen hat
 
 *Nutzervorgabe 23.08.: „zuerst sollte feststehen was ist alles zu reparieren."*

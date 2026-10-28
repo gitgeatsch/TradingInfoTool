@@ -1,5 +1,7 @@
 # H-K1 — den Hebel-Lauf reaktivieren
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzerauftrag: *„wir machen jetzt und zuerst den Hebel
 Einstieg von Anfang bis zum Ende — Ganze Ablaufkette mit LLM — getestet und
 simuliert."*

@@ -1,5 +1,7 @@
 # Voranalyse K1 Schritt 1 — die Wirkungskurven je Beitrag (28.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Abgestimmt (K1, 27.09.):** je Beitrag eine **feste Wirkungskurve** über den
 > ganzen Wertebereich (Regler, kein Schalter; ein Optimum ist erlaubt);
 > Merkmal **roh und selbstbezogen** (gegen die eigenen letzten 30 Tage)

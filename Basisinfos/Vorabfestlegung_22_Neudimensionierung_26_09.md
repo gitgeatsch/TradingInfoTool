@@ -1,5 +1,7 @@
 # Vorabfestlegung 22 — die Neudimensionierung des Hebels
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung · `messe_hebel_neudimension.py` ·
 Frageart **`geometrie`** (Messuniversum, nach `messnorm.FRAGEARTEN`)
 

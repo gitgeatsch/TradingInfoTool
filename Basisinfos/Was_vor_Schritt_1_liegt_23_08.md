@@ -1,4 +1,6 @@
 <!-- STAND: 2026-08-23 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # Was vor Schritt 1 liegt — der übergeordnete Plan, durchgesehen
 
 *Nutzerfrage 23.08.: „sollen wir vor Schritt 1 noch wichtige und essentielle

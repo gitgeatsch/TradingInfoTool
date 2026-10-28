@@ -33454,10 +33454,28 @@ def paket_gesamtplan() -> None:
     ziele = _re.findall(r"\]\(([^)#]+)\)", text)
     fehlt = [z for z in ziele if not _os.path.exists(_os.path.normpath(_os.path.join("Basisinfos", z)))]
     pruefe(P, "jeder Verweis im Plan zeigt auf eine vorhandene Datei", not fehlt, ", ".join(fehlt[:8]))
-    md = sorted({_os.path.normpath(_os.path.join("Basisinfos", z)) for z in ziele if z.endswith(".md")
-                 and _os.path.basename(z) not in ("CLAUDE.md", "Gesamtplan.md") and not _os.path.basename(z).startswith("REGISTER_")})
-    ohne = [_os.path.basename(m) for m in md if _os.path.exists(m) and "](Gesamtplan.md)" not in open(m, encoding="utf-8").read()[:3000]]
-    pruefe(P, "⚠️ jedes verlinkte Dokument traegt oben den Rueckverweis auf Gesamtplan.md", not ohne, ", ".join(ohne[:8]))
+    import dokumente as _DK
+
+    # Nutzer 28.10.: *"weitere Zentraldokumente, Messplaene und Regelwerke ... die Verweise, damit nichts verloren geht"* - darum JEDES
+    # Dokument, nicht nur die verlinkten. ZEILENTREUE Dokumente (anderswo mit Zeilennummer zitiert) tragen den Verweis am ENDE.
+    ohne, verschoben = [], []
+    for m in _DK.dokumente():
+        n = _os.path.basename(m)
+        if n.startswith("REGISTER_") or n == "Gesamtplan.md":
+            continue
+        t = open(m, encoding="utf-8").read()
+        if n in _DK.ZEILENTREU:
+            if "](Gesamtplan.md)" not in t[-600:]:
+                ohne.append(n)
+            if t.split("\n", 2)[1:2] and "Laufender Plan" in t.split("\n", 2)[1]:
+                verschoben.append(n)
+        elif "](Gesamtplan.md)" not in t[:3000]:
+            ohne.append(n)
+    pruefe(P, "⚠️ JEDES Dokument unter Basisinfos/ traegt den Rueckverweis auf Gesamtplan.md (%d Dokumente)" % len(_DK.dokumente()),
+           not ohne, ", ".join(ohne[:8]))
+    pruefe(P, "⚠️ zeilentreue Dokumente: der Verweis steht am ENDE, keine Zeile verschoben", not verschoben, ", ".join(verschoben))
+    pruefe(P, "das Dokumenten-Register ist aktuell (python dokumente.py)",
+           _os.path.exists(_DK.ZIEL) and open(_DK.ZIEL, encoding="utf-8").read() == _DK.erzeuge())
     hist = ("Plan_Schritt59_Gesamtkette_17_09.md", "Gesamtplan_Wo_wir_stehen_28_08.md", "Kette_Landkarte.md")
     ohne_h = [h for h in hist if "HISTORIE – nicht fortschreiben" not in open(_os.path.join("Basisinfos", h), encoding="utf-8").read()[:3000]]
     pruefe(P, "die alten Plaene sind oben als HISTORIE gekennzeichnet", not ohne_h, ", ".join(ohne_h))

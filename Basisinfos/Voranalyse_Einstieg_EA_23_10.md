@@ -1,5 +1,7 @@
 # Voranalyse E-A — REGEL0 als Kaufzeitpunkt für ohnehin geplante Spot-Käufe auf Bitpanda (ab 23.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 23.10.: *„ja E-A Messplan festlegen, prüfen, gegenprüfen und Doku, auf BP“*. Seine Hinweise:
 
 1. Du hast REGEL0 schon bei Spot geprüft, und das wurde als Einstieg negativ bewertet? Also prüfen, was wir schon wissen.

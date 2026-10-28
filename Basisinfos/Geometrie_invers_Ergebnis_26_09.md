@@ -1,5 +1,7 @@
 # Die Geometrie auf der inversen Achse — und die Kalibriergrenze
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.628, 2.629 · `messe_geometrie_invers.py` ·
 Vorabfestlegung 24
 

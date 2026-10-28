@@ -1,5 +1,7 @@
 # Voranalyse — Beitrag, Kontext, Gewicht: die Begriffe und das Messprogramm W1–W5 (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„Wir müssen hier noch präziser werden … ob die fachliche Annahme, was ist Beitrag und was ist Gewicht,
 ist meines Erachtens nicht vollständig geklärt, und wir müssen u. U. dazu eigene Messungen vornehmen — das können oder
 sollten mehrere Messungen sein, um das zu belegen."* Und: *„Das Regelwerk muss langsam und sauber auf den bisherigen

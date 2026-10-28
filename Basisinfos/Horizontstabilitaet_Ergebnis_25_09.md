@@ -1,5 +1,7 @@
 # Horizontstabilität — das Ergebnis, und warum H3 richtig ist
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Nutzerhypothese: *„Die Bewertung sollte auch die
 Horizontachse bei der Hebelentstehung berücksichtigen (bei Einstieg musst du
 das als Experte bewerten ob das erforderlich ist)?"*

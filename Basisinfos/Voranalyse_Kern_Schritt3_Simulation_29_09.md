@@ -1,5 +1,7 @@
 # Voranalyse KERN Schritt 3 — die SIMULATION: verdient der Kern mit Hebel nach Kosten Geld? (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, Voranalyse Schritt 3 schreiben — prüfen und gegenprüfen."* Dazu: *„ich war der Meinung, die Beiträge wären
 optimiert, um genau dies über die Niveaus 2x, 3x und 5x abzudecken — hier stelle ich das Risiko ein über den Hebel. Also
 ich hoffe, das ergibt sich aus der Messung für Schritt 3."*

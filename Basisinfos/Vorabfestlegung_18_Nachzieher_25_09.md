@@ -1,5 +1,7 @@
 # Vorabfestlegung 18 — Der Nachzieher: welches Asset hat noch nicht reagiert?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026**, vor der Messung geschrieben · Werkzeug
 `messe_nachzieher.py` · Frageart **`beitrag`**
 

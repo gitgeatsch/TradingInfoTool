@@ -1,5 +1,7 @@
 # Die Spiegelprobe war falsch konstruiert — geeicht und neu bewertet
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befund **2.603** · Vorabfestlegung 19 ·
 `pruefe_spiegelprobe.py` + `messe_kandidaten_spiegel.py`
 

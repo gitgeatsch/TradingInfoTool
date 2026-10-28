@@ -1,5 +1,7 @@
 # Voranalyse K6 R+S — Signalstärke und Extreme der Lage in der Hebelstufe (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, K6 R+S Voranalyse schreiben — prüfen und gegenprüfen."* Dazu: *„Was ist das Zwischenfazit zu unserem
 Ziel? Das musst du immer je Messung und Ergebnis festhalten und mit mir abstimmen."*
 

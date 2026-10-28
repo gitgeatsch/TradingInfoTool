@@ -1,5 +1,7 @@
 # Lagebestimmung Hebel-Arm — Stand 26.09.2026
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Zwei Tage, acht registrierte Befunde (2.597 bis 2.604), rund 30 Messungen
 über 3,2 Mio Anker.** Dieses Blatt gliedert auf, was gemessen ist, was
 davon gilt, und was daraus folgt.

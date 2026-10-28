@@ -1,5 +1,7 @@
 # Voranalyse K5 — die Schwelle: ab wann ist ein rsi-Signal ein Signal? (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, K5 Voranalyse schreiben — prüfen und gegenprüfen. Ich stimme dir nur unter Protest zu: wenn das die
 Realität ist, dass wir nur die Tachonadel als Einstieg nutzen, dann soll es so sein. Im Umkehrschluss bedeutet es, in
 ein fahrendes Auto aufzuspringen und zu hoffen, dass man es schafft."*

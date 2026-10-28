@@ -1,5 +1,7 @@
 # Voranalyse J — der SHOWSTOPPER Mindesthistorie beheben (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ja, Voranalyse schreiben, prüfen und gegenprüfen."* Vorher: *„Die erforderliche Mindesthistorie ist
 eigentlich ein Showstopper und keine Schwäche, und war so nicht geplant und gewünscht, vor allem wenn man unsere Datenlage
 berücksichtigt."*

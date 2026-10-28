@@ -1,5 +1,7 @@
 # Voranalyse — die KERNMESSUNG: trägt der Kern aus rsi-Einstieg und ATR-Hebel? (29.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Nutzer:** *„ja, Kern zuerst — prüfen und gegenprüfen. Die Kernmessung ist jetzt essentiell, und wir müssen extrem
 sauber arbeiten und langsam, nicht überstürzen durch die Ergebnisse."*
 

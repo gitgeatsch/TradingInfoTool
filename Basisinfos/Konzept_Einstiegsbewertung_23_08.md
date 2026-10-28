@@ -1,5 +1,7 @@
 <!-- STAND: 2026-08-24 · VOR dem Messstandard vom 2026-09-09 -->
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > ⚠️ **DIESES DOKUMENT SAH DEN UMBAU NICHT.** Zuletzt geaendert
 > **2026-08-24**; der Messstandard gilt ab **2026-09-09**.
 >

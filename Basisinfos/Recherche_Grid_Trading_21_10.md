@@ -1,5 +1,7 @@
 # Recherche Grid-Trading (Stand 21.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Wozu:** Nutzer 21.10.: *„Danach gehe in Recherche und prüfe, wie automatisiertes GRID-Trading funktioniert und ob wir so eine Lösung mit oder ohne LLM bauen können – Start: nur BTC und ein Altcoin meiner Wahl, kann wechseln.“* Anlass ist die Bilanz der LLM-Komponente (E-125, `Bilanz_LLM_Komponente_21_10.md`).
 
 Grundlage sind zwei Recherchen vom 21.10.: A zu Funktionsweise, Belegen und Risiken, B zu Börsen, APIs und Werkzeugen für einen Kunden in Österreich. Abgeglichen ist das mit unserer Datenlage und unseren Befunden. **Keine Anlageempfehlung, keine steuerliche Einordnung.**

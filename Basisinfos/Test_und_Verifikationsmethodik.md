@@ -1,5 +1,7 @@
 # Test- und Verifikationsmethodik
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > 📇 **Dieses Dokument hat 132 nummerierte Abschnitte und ist
 > CHRONOLOGISCH gewachsen** — es steht nicht einmal in numerischer
 > Reihenfolge. Der thematische Zugang steht in

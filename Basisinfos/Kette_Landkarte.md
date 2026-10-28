@@ -1,6 +1,4 @@
-# Die Landkarte der Kette — was rechnet, was urteilt, und wo
-
-> ⛔ **HISTORIE – nicht fortschreiben** (beschreibt die alte, seit E-164 stillgelegte Kette). Abgelöst am 28.10.2026 durch den laufenden Plan [`Gesamtplan.md`](Gesamtplan.md). Verweise auf Abschnitte dieses Dokuments bleiben gültig.
+# Die Landkarte der Kette — was rechnet, was urteilt, und wo — ⛔ HISTORIE – nicht fortschreiben, abgelöst am 28.10.2026 durch [`Gesamtplan.md`](Gesamtplan.md)
 
 *Erstellt 12.09.2026 auf Nutzerfrage: „zeige mir den vollständigen Ablauf der
 Kette — was wird wo deterministisch berechnet, wie und wo bewerten die
@@ -651,3 +649,7 @@ Buchhaltung, die Bewertung und Betriebszustand vermengt.
 | `multi_asset_batch_job` | übersprungen |
 | GUI-Knöpfe der alten Pipelines | gesperrt (`alte_analyse_hinweis`) |
 | `spot_kette_angehalten` (yaml) | bleibt als zweite Sperre; wirkt nur bei aufgehobener fester Sperre |
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

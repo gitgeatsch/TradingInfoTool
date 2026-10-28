@@ -1,5 +1,7 @@
 # Voranalyse 1b — die Bewertungsebene neu aufsetzen
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · vor der Messung · Phase 1b
 
 > **Auftrag:** Chance-Risiko-Verhältnis aus Stop- und Zielabstand, **ohne

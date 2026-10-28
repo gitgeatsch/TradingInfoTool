@@ -1,5 +1,7 @@
 # Die Selektion trägt — der erste positive Befund der Messreihe
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befund **2.605** · Vorabfestlegung 20 · `messe_selektion.py`
 **116 Symbole · 3.211.104 Anker · vier Horizonte · vier Schärfegrade**
 

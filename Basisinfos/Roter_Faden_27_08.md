@@ -1,4 +1,6 @@
 <!-- STAND: 2026-09-02 · VOR dem Messstandard vom 2026-09-09 · keine Messwerte, deshalb ohne sichtbaren Kopf -->
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
 # Der rote Faden — wo wir stehen und was zusammenhängt
 
 **Angelegt 27.08.2026.** Nutzerauftrag: *„Nach der Teilumsetzung bringe die

@@ -19438,3 +19438,7 @@ Zwei Dauerprüfungen halten beides fest.
 
 **Suite 1.606 · Rollen-Gegenprüfung 25 · Instrument-Verzweigungen 15 (9 tot)
 · `simuliere_kette` 6 Signale / 0 Fehler · freie Namen 0.**
+
+---
+
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). *(Verweis am Ende, weil dieses Dokument mit Zeilennummern zitiert wird.)*

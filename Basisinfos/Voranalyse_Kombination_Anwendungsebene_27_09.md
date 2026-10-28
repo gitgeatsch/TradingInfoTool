@@ -1,5 +1,7 @@
 # Voranalyse — die ANWENDUNGSEBENE: Beiträge kombinieren (27.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Nutzer 27.09.:** *„Was mir reicht, steht nicht zur Diskussion, ich
 > möchte ein funktionierendes System. [...] Das System basiert grundsätzlich
 > darauf, dass ein Beitrag selbst schwach ist, aber in Kombination der Effekt

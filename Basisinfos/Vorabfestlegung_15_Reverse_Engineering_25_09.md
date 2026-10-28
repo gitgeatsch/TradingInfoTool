@@ -1,5 +1,7 @@
 # Vorabfestlegung 15 — Reverse Engineering der scharfen Anstiege
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026, geschrieben VOR der Messung.** Nutzervorgabe, wörtlich:
 
 > *„Es gibt Assets welche an einem Tag in 3 Stunden 20 oder mehr Prozent

@@ -1,5 +1,7 @@
 # Voranalyse M1-2 — der INFORMATIONSGEWINN des rsi-Modells als Regime-Kontext (30.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag (Nutzer 30.09.):** *„Ja bitte, prüfen und gegenprüfen. Nach M1 gehen wir in Abstimmung und Bewertung der Lage und
 Ergebnisse."* Vorher: *„wir müssen u. U. zwischen Regime und kürzeren Wetterwechseln, also Trendumkehr, unterscheiden können"* und
 *„deine Auslegung teile ich"*.

@@ -1,5 +1,7 @@
 # Voranalyse W-3: Die alte Spot-Kette stilllegen statt nur anhalten (27.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 Nutzer 27.10.: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und doku“*
 
 **Grundlage:**

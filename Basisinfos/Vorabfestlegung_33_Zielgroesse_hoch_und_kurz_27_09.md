@@ -1,5 +1,7 @@
 # Vorabfestlegung 33 — welche Zielgröße bildet „hoch und kurz" ab?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · Phase 1a · `messe_zielgroesse.py` · Frageart **`markt`**
 
 > **Nutzervorgabe, die den Horizont-Widerspruch auflöst:**

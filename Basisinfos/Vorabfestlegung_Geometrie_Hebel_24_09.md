@@ -1,5 +1,7 @@
 # Vorabfestlegung 9 — die Hebelerzeugung (N19-E über die Horizontachse)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026, geschrieben VOR der Messung.** Phase 2 aus
 `Bauplan_Hebel_einpflanzen_24_09.md`.
 

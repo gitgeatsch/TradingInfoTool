@@ -1,5 +1,7 @@
 # Voranalyse — Phase 3 nach dem Nennerwechsel (22.09.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > **Nutzerauftrag:** *„ja mach die Voranalyse zu Phase 3"*
 
 ⚠️ **Sie entscheidet nichts und baut nichts.** Ist-Stand am Code, offene

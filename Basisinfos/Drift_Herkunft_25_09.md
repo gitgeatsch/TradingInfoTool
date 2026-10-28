@@ -1,5 +1,7 @@
 # Woher kommt die negative Drift? — Schritt 2 des Hebel-Neubaus
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026** · Werkzeug `messe_drift_herkunft.py` · Befund **2.598** ·
 **116 Symbole · 3.157.882 Anker · k = 1,0 × ATR · nur lesend**
 

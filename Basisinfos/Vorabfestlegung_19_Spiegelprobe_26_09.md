@@ -1,5 +1,7 @@
 # Vorabfestlegung 19 — Womit trennt man Richtung von Bewegung?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026**, vor der Messung geschrieben · `pruefe_spiegelprobe.py`
 **Nutzerauftrag:** *„vorher noch eine Recherche zu den Messstandards und
 Regelwerken — mache eine Fragestellung und Hypothese, sauber konstruieren,

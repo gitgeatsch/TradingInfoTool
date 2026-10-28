@@ -1,5 +1,7 @@
 # Bauplan — den Hebel gekapselt neu einpflanzen
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **24.09.2026.** Nutzerauftrag: *„plane die zukünftige Architektur so, dass
 wir flexibel arbeiten können und mit dem aktuellen Code den HEBEL neu
 einpflanzen können, gekapselt sauber vom SPOT neu dimensioniert — wenn das

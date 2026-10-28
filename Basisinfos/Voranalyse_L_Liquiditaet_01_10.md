@@ -1,5 +1,7 @@
 # Voranalyse L — Liquidität zum Zeitpunkt (ENTWURF 01.10.2026, zur Abstimmung)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **Auftrag:** Nutzer 01.10. (E-39): *„Ja, Voranalyse L."* Nach dem Gespräch: *„Ja, finde den Ansatz gut. Setze die Messungen so auf,
 dass wir daraus Erkenntnisse und ggf. Lösungsansätze für unsere Probleme erhalten."*
 ⚠️ **Das ist nur ein Entwurf.** Es wird nichts gemessen, bevor du Ja sagst.

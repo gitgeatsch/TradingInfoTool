@@ -1,5 +1,7 @@
 # Voranalyse: Neudimensionierung des Hebels
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · überarbeitet nach zwei Nutzerkorrekturen ·
 **nichts gebaut, nichts geändert**
 

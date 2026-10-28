@@ -1,5 +1,7 @@
 # Die inverse Achse — belegt, und auf kurzen Horizonten am stärksten
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 > ⛔⛔⛔ **Hier stand ein eigener Fehler, korrigiert am selben Tag.**
 >
 > Der Nutzer hatte als **Vermutung** eingeordnet: *„sollte für Hebel nur

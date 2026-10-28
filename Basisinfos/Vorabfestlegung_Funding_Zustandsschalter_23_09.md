@@ -1,5 +1,7 @@
 # Vorabfestlegung 5 — ist `funding` ein zustandsabhängiger Schalter?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **23.09.2026, geschrieben VOR der Messung.** Nutzerauftrag: *„mach eine
 genaue Vorbereitung, Recherche, Messstandards, prüfe welche Zustände
 zulässig sind oder nicht (Monotonie, etc.) — **wir müssen hier erfolgreich

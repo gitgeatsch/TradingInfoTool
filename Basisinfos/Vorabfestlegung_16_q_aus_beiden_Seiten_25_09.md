@@ -1,5 +1,7 @@
 # Vorabfestlegung 16 — Punkt B: `q` aus **beiden** Seiten
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026, geschrieben VOR der Messung.** Nutzerauftrag:
 
 > *„B messen — prüfen und gegenprüfen, zuerst validiere die aktuelle Prüfung

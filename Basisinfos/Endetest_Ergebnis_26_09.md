@@ -1,5 +1,7 @@
 # Der Ende-zu-Ende-Test — die Bewertung läuft in die falsche Richtung
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.624, 2.625 ·
 `messe_endetest_out_of_sample.py` · Vorabfestlegung 23
 

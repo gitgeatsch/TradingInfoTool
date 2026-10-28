@@ -1,5 +1,7 @@
 # Voranalyse — Stundendaten in den Betrieb
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026** · vor dem Bau · Nutzerfrage *„ich dachte wir brauchen
 nicht alle Stundendaten in der Produktion, jetzt doch?"*
 

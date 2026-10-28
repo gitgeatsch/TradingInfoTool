@@ -1,5 +1,7 @@
 # Vorabfestlegung 29 — was kostet ein veralteter Merkmalswert?
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **27.09.2026**, vor der Messung · `messe_altersabschlag.py` ·
 Frageart **`markt`**
 

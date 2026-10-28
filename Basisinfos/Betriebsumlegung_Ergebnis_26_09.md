@@ -1,5 +1,7 @@
 # Die Umlegung auf den Echtbetrieb — und warum „Rangfolge" der falsche Ansatz war
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **26.09.2026** · Befunde 2.608, 2.609, 2.610 · `messe_betrieb_umlegung.py`
 
 Nutzerauftrag: *„dann simulation auf unser System — Watchlist mit Hebel

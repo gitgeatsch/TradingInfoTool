@@ -1,5 +1,7 @@
 # H-A — die Hebel-Dimension: das Ergebnis
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 **25.09.2026.** Vorabfestlegung 10 · Plan `Gesamtlage_Hebelumbau_24_09.md`
 Schritt H-A. Vorlauf: `HA1_Basislinie_Hebel_24_09.md`.
 
