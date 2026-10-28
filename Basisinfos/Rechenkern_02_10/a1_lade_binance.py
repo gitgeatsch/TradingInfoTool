@@ -5,6 +5,9 @@ Produktion, keine Messbasis). Fortsetzbar: bereits geholte Meldungen mit Text we
 
     python -X utf8 Basisinfos/Rechenkern_02_10/a1_lade_binance.py            # laden bzw. fortsetzen
     python -X utf8 Basisinfos/Rechenkern_02_10/a1_lade_binance.py --stand    # nur Bestand ausgeben
+    python -X utf8 Basisinfos/Rechenkern_02_10/a1_lade_binance.py --katalog 93 --ab-seite 32   # direkt dort fortsetzen
+      (Binance drosselt tiefe Seiten; ein Neustart von Seite 1 erreicht den Abbruchpunkt sonst nie)
+    python -X utf8 Basisinfos/Rechenkern_02_10/a1_lade_binance.py --texte    # nur fehlende Texte nachholen, ohne Listen
 
 KATALOGE (Abfrage 28.10.2026, Gesamtzahl seit Beginn):
   48  New Cryptocurrency Listing  2.290   Text holen  - Listing, Launchpool, HODLer-Airdrop, Futures-Neuaufnahme
@@ -61,7 +64,7 @@ def hole(url, params, versuche=6):
                 return r.json()["data"]
         except Exception:                                      # noqa: BLE001
             pass
-        time.sleep(5 * (v + 1))
+        time.sleep(15 * (v + 1))
     return None
 
 
@@ -83,9 +86,28 @@ def main():
     if "--stand" in sys.argv:
         stand(c)
         return 0
+    if "--texte" in sys.argv:
+        offen = c.execute("SELECT code FROM meldung WHERE katalog IN (%s) AND text IS NULL"
+                          % ",".join(str(k) for k, t in KATALOGE.items() if t)).fetchall()
+        geholt = 0
+        for (code,) in offen:
+            dd = hole(DETAIL, {"articleCode": code}, versuche=3)
+            if dd:
+                c.execute("UPDATE meldung SET text=?, geholt=? WHERE code=?",
+                          (text(dd.get("body") or ""), datetime.now(timezone.utc).isoformat(), code))
+                geholt += 1
+                c.commit()
+            time.sleep(0.5)
+        print("Texte nachgeholt %d von %d" % (geholt, len(offen)))
+        stand(c)
+        return 0
     neu = 0
+    arg = lambda n, vorgabe: int(sys.argv[sys.argv.index(n) + 1]) if n in sys.argv else vorgabe   # noqa: E731
+    nur_kat, ab_seite = arg("--katalog", None), arg("--ab-seite", 1)
     for kat, mit_text in KATALOGE.items():
-        for seite in range(1, 400):
+        if nur_kat is not None and kat != nur_kat:
+            continue
+        for seite in range(ab_seite if nur_kat is not None else 1, 400):
             d = hole(LISTE, {"type": 1, "catalogId": kat, "pageNo": seite, "pageSize": SEITE})
             if d is None:
                 c.commit()

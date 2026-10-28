@@ -113,7 +113,7 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | **G6** | Frankreich/Italien 10J **täglich** — kein freier Weg gefunden | Suche läuft weiter | – |
 | **G7** | **Messplan** Faktentreue (Selbsttest der Prüfer, 1.000 Fälle) und Wert der Sichten (Rückspiel) | nach G2–G4 | Voranalyse → Abstimmung |
 | **G8** | **Bau** B1–B6 + Ebenen 2/3, Mail mit beiden Blöcken | nach G7 | Abstimmung |
-| **G9** | V1 Binance-Ankündigungen 2023–26 laden | läuft (`Rechenkern_02_10/a1_lade_binance.py`) | – |
+| **G9** | V1 Binance-Ankündigungen 2023–26 laden | ✔ geladen 28.10.: 6.276 Meldungen ab 01/2023, 4.097 mit Text (2 Texte nicht abrufbar), Katalog 93 nur Titel · `data/_a1/binance_ankuendigungen_alle.db` (`Rechenkern_02_10/a1_lade_binance.py`) · nächster Schritt: Voranalyse A1 (Regeln zuerst, LLM für den Rest, Stichprobe ~200) | – |
 | **G10** | `soll_ist.py` (maschinelle Schrittliste, Paket Plan) ist seit 21.09. **nicht fortgeschrieben**: 29 offene Schritte, die meisten der alten Kette | als Historie kennzeichnen oder bereinigen | Rücksprache vor dem Entfernen |
 | **G11** | Verwässerung am NB: 90-T-Vergleich vermutlich ohne Wert bis ~Dez. (Reihe ab ~08.09.) | ungeprüft | nächster NB-Export |
 | **G12** | NB-Kontrollen ausstehend: K-W1-MAIL, K-W2-PUNKT (nächste Mail) · K-SP-3c, K-B4-D1 (nach 02.11.) · K-WC-1b (nächste H15-Mail) | offen | `nb_kontrollen.yaml` |
