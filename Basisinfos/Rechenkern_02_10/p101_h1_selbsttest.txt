@@ -1,0 +1,33 @@
+P101 SELBSTTEST H-1 (Fassung 4: Log-Differenz, t-Band ueber Bloecke) · echte Renditen 2025-26, kuenstliche Zustaende · KEIN echtes Ergebnis
+
+========================================================================================================
+bestand
+   H-1b D72   Anteil 25.6 % · S1 Fehlalarm  1.5 % · S2 Ballung  1.0 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:8% 0.50:18% 1.00:88% 2.00:100% -> X = 1.00 Pp  ✔
+   H-1b D120  Anteil 25.6 % · S1 Fehlalarm  1.4 % · S2 Ballung  1.5 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:0% 0.25:6% 0.50:20% 1.00:66% 2.00:100% -> X = 2.00 Pp  ✔
+   H-1b DF    Anteil 25.6 % · S1 Fehlalarm  1.5 % · S2 Ballung  1.3 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:0% 0.25:8% 0.50:28% 1.00:84% 2.00:100% -> X = 1.00 Pp  ✔
+   H-1c D6    Anteil  5.7 % · S1 Fehlalarm  2.8 % · S2 Ballung  2.2 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:8% 0.25:6% 0.50:44% 1.00:92% 2.00:98% -> X = 1.00 Pp  ✔
+   H-1c D72   Anteil  5.7 % · S1 Fehlalarm  2.8 % · S2 Ballung  1.7 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:4% 0.50:12% 1.00:66% 2.00:98% -> X = 2.00 Pp  ✔
+========================================================================================================
+unverzerrt_1
+   H-1b D72   Anteil 24.0 % · S1 Fehlalarm  1.4 % · S2 Ballung  1.0 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:0% 0.25:6% 0.50:24% 1.00:64% 2.00:100% -> X = 2.00 Pp  ✔
+   H-1b D120  Anteil 24.0 % · S1 Fehlalarm  1.2 % · S2 Ballung  1.1 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:6% 0.50:12% 1.00:50% 2.00:96% -> X = 2.00 Pp  ✔
+   H-1b DF    Anteil 24.0 % · S1 Fehlalarm  1.2 % · S2 Ballung  1.3 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:2% 0.50:18% 1.00:82% 2.00:100% -> X = 1.00 Pp  ✔
+   H-1c D6    Anteil  5.2 % · S1 Fehlalarm  2.2 % · S2 Ballung  2.1 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:4% 0.25:10% 0.50:38% 1.00:82% 2.00:96% -> X = 1.00 Pp  ✔
+   H-1c D72   Anteil  5.2 % · S1 Fehlalarm  2.5 % · S2 Ballung  1.5 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:0% 0.50:14% 1.00:60% 2.00:96% -> X = 2.00 Pp  ✔
+========================================================================================================
+unverzerrt_2
+   H-1b D72   Anteil 25.1 % · S1 Fehlalarm  1.8 % · S2 Ballung  1.9 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:0% 0.50:14% 1.00:70% 2.00:98% -> X = 2.00 Pp  ✔
+   H-1b D120  Anteil 25.1 % · S1 Fehlalarm  1.1 % · S2 Ballung  1.1 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:4% 0.25:2% 0.50:8% 1.00:40% 2.00:86% -> X = 2.00 Pp  ✔
+   H-1b DF    Anteil 25.1 % · S1 Fehlalarm  1.2 % · S2 Ballung  1.5 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:6% 0.50:14% 1.00:72% 2.00:100% -> X = 2.00 Pp  ✔
+   H-1c D6    Anteil  5.4 % · S1 Fehlalarm  2.0 % · S2 Ballung  2.8 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:4% 0.25:12% 0.50:30% 1.00:84% 2.00:96% -> X = 1.00 Pp  ✔
+   H-1c D72   Anteil  5.4 % · S1 Fehlalarm  2.3 % · S2 Ballung  1.9 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:0% 0.25:4% 0.50:16% 1.00:38% 2.00:96% -> X = 2.00 Pp  ✔
+========================================================================================================
+unverzerrt_3
+   H-1b D72   Anteil 24.6 % · S1 Fehlalarm  1.1 % · S2 Ballung  1.1 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:4% 0.50:20% 1.00:82% 2.00:100% -> X = 1.00 Pp  ✔
+   H-1b D120  Anteil 24.6 % · S1 Fehlalarm  1.6 % · S2 Ballung  1.4 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:2% 0.25:0% 0.50:14% 1.00:54% 2.00:100% -> X = 2.00 Pp  ✔
+   H-1b DF    Anteil 24.6 % · S1 Fehlalarm  1.9 % · S2 Ballung  1.1 % (Soll <= 5 %; Stufung streng <= 2.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:0% 0.25:6% 0.50:24% 1.00:82% 2.00:100% -> X = 1.00 Pp  ✔
+   H-1c D6    Anteil  5.5 % · S1 Fehlalarm  2.1 % · S2 Ballung  2.3 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:12% 0.25:12% 0.50:52% 1.00:82% 2.00:98% -> X = 1.00 Pp  ✔
+   H-1c D72   Anteil  5.5 % · S1 Fehlalarm  3.2 % · S2 Ballung  2.2 % (Soll <= 5 %; Stufung streng <= 3.5 %: ✔) · D Orakel 100 % · S3 Fundquote 0.10:0% 0.25:4% 0.50:18% 1.00:60% 2.00:96% -> X = 2.00 Pp  ✔
+
+Seiteneffekt Produktionsdatei: ✔ unveraendert
+SELBSTTEST: ✔ BESTANDEN - Messung darf laufen

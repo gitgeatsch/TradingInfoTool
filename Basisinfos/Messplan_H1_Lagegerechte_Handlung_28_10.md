@@ -53,6 +53,8 @@
 > **Gegenprobe ohne Ergebnis** (`p101_h1_gegenprobe.txt`): 1.200 Stichproben aus den Rohdaten gleich (Erträge, Stop, Zustände, Extrem-Merkmale). Beide Vorgriff-Mutationen werden erkannt (a 73, rF 28 Abweichungen). Ein Fehler lag **in der Gegenprobe** selbst: Sie nahm bei einer früher endenden Tagesreihe (AERGO bis 03/2025) einen Monate alten Schluss als „Vortag“. Behoben, jetzt dieselbe Regel wie das Werkzeug: Der Einstiegstag muss in der Reihe stehen. Ohne Zustand a bleiben **1.315 von 43.090** Einstiegen (3 %).
 >
 > **Selbsttest Fassung 4 mit 200/100 Welten** (`p101_h1_selbsttest_fassung4_100welten.txt`): 19 von 20 Zellen bestanden, eine mit S2 6,0 % (6 von 100; Zufallsstreuung bei 100 Welten ≈ ±2 Pp). ⚠ **Eigener Parameterfehler:** §6 setzte 200/100 Ziehungen, der Projektstandard verlangt **mindestens 1.000** (Lehre B4 11.10.). Korrigiert: S1 und S2 mit je 1.000 Welten wiederholt. Soll bleibt das vorab festgelegte ≤ 5 %; die strengere Grenze aus der Stufung (Nennniveau je Hypothese + 2 Standardfehler) wird zusätzlich ausgewiesen.
+>
+> ✔ **Selbsttest Fassung 4 mit 1.000 Welten BESTANDEN** (`p101_h1_selbsttest.txt`), 20 von 20 Zellen, auch nach der strengen Stufungsgrenze (H-1b ≤ 2,5 %, H-1c ≤ 3,5 %): Fehlalarm S1 1,1–3,2 %, Ballung S2 1,0–2,8 %, Orakel 100 %. **Auflösung X** (≥ 80 % gefunden): 1 Pp bei D72/DF/D6 in den meisten Mengen, sonst **2 Pp** (Log-Differenz je Einstieg, Tagesklammer). ⚠ Kleinere Unterschiede zwischen den Zuständen kann diese Messung **nicht** sehen; ein „trägt nicht“ gilt deshalb nur **bis X**.
 
 ---
 
