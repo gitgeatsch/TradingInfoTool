@@ -129,7 +129,7 @@ Daraus folgt der Ansatz dieses Konzepts: **Die Gegebenheiten sollen vor allem da
 **Haltedauer als Achse der Leiter, 0–5 Tage und länger** (Nutzer 27.10.: *„für Hebel ca. 0–5 Tage oder sogar länger vorgesehen“*):
 - **E-6** (27.09.) hat **24 h als Messfenster** gesetzt, weil sich gute und schlechte Einstiege bei 12–24 h am besten trennten (2.642). Ausdrücklich: *„H24 ist das Messfenster, nicht die Haltedauer“*.
 - Zur **Betriebsregel** wurden die 24 h erst durch Schritt7 §23.68 (18.10.): Auf den REGEL0-Einstiegen 2025–26 kostete längeres Halten **netto** −0,32 bis −0,42 % je weiterem Tag. Das war
-  - **netto**, mit 0,18 % je Tag Finanzierung, also Kosten, die nach Regel 2 nachgelagert gehören;
+  - **netto**, mit 0,18 % je Tag Finanzierung, also Kosten, die nach Regel 2 nachgelagert gehören (⚠ **berichtigt in §5.3:** 2025–26 war längeres Halten **auch brutto** schlechter);
   - im Vorab-Urteil je Jahr *nicht unterscheidbar*;
   - **2024 umgekehrt** (H168 brutto +3,4 bis +4,3 % gegen H24 +0,95 bis +1,35 %);
   - gemessen auf Einstiegen, die heute als nicht robust gelten (E-139).
@@ -155,6 +155,43 @@ Daraus folgt der Ansatz dieses Konzepts: **Die Gegebenheiten sollen vor allem da
 - **Nur Long**; Short bleibt wie heute eine nachträgliche Option.
 - **Haltedauer** 24 h bis 5 T, dazu *länger, bis die Führung schließt*, höchstens etwa 14 T.
 - **Leiterzeilen:** Der Nutzer korrigiert diesen Entwurf, danach folgt der Messplan vorab.
+
+### 5.3 Herkunftsprüfung der Leiter und Festlegung 28.10.
+
+**Nutzerfrage 28.10.:** *„woher hast du die Quellen bzw. Recherche?“* Die Leiter beruhte **nicht auf einer Recherche je Zeile**. Sie mischt drei Herkunftsarten: eigene Befunde, Fachliteratur (meist Aktien- und Terminmärkte, nicht Krypto) und **eigene Setzungen** (alle Schwellen wie „oberer Teil des Jahres“, „≈ 14 T“, „mehrere“). Je Zeile nachgeprüft:
+
+| # | Zeile | Herkunft | Einschätzung | Daten NB | **Festlegung 28.10.** |
+|---|---|---|---|---|---|
+| L1 | Schwankung hoch → eine Stufe tiefer | eigener Befund **2.681** (ATR sagt Liquidationsgefahr voraus, 5x vorwärts kalibriert); Moreira/Muir (2017, *J. Finance* 72(4)): Risiko in unruhigen Phasen senken | stärkste Zeile; der Risikovorteil ist fast mechanisch, ein Vorteil **je Risiko** ist auch in der Literatur umstritten (Kritik: außerhalb der Stichprobe schwächer) | ATR ✔; DVOL nur BTC/ETH und in 2.681 **nicht** geprüft | **messen, nur mit ATR** |
+| L2 | Umfeld rot → kleiner | Nutzervorgabe „gewichten“; **kein Beleg**; Liu/Tsyvinski (2021, *RFS* 34(6)): Krypto hängt kaum an Makrofaktoren | schwach; als Richtung nicht entscheidbar (E-133, E-135) | ✔ | **nur Fakt** in der Mail |
+| L3 | Kern → Spot zusätzlich | Projektregel; 2.690: 72 h Spot besser als jeder Hebel | Zulassung, keine Hypothese | ✔ | **Regel** |
+| L4 | unteres B4-Fünftel → kein Spot-Aufbau | eigener Befund (B4 12 M ✔) | stimmig, nur Spot und Monatshorizont | ✔ | **Regel**, Hebel unberührt (Regel 3) |
+| L5 | Extrem → ~~Handlung nach oben~~, kurz halten | 2.648, 2.694 | ⚠️ **Fehler im Entwurf:** 2.648 sagt ein **Ereignis** voraus, ausdrücklich keine Handelsregel; die Umkehr binnen 24 h (2.694) spricht eher **gegen** eine höhere Stufe | ✔ | **„nach oben“ gestrichen**, „kurz halten“ messen |
+| L6 | Rückenwind → länger halten, Führung beendet | Faber (2007, *J. Wealth Mgmt.*): 10-Monats-Schnitt als Trendfilter, über Anlageklassen; Liu/Tsyvinski: Krypto-Bewegungen setzen sich über **Wochen** fort, laut Folgestudie **nur in steigenden Märkten** | ⚠️ **Gegenbefund fehlte im Entwurf: 2.702**: 72 h mit nachgezogenem Stop 1,5 ATR 2025–26 in **0 von 4** Mengen besser (ohne Bedingung Rückenwind; offen, ob Haltedauer oder Stop schuld war). „14 T“ ist eine eigene Setzung | ✔ | **messen**, Haltedauer und Stop **getrennt** |
+| L7 | Gegenwind → 24 h | §23.68 | ohne Bedingung „Gegenwind“ gemessen | ✔ | **messen**, als Gegenstück zu L6 |
+| L8 | Dominanz-Spitze → Alt-Spot 3–9 W | eigener Befund (Spot §32/§33, Lift 1,65) | schwach; Schwelle 8,7 % aus der Rückschau; 16 Signale seit 2023 | ⚠️ **BTCDOM fehlt am NB** (frei nachladbar) | **in den Spot-Strang**, nicht in H-1 |
+| L9 | mehrere Gegenwinde → beobachten | T3; „mehrere“ eigene Setzung | nur so gut wie L6/L7 | ✔ | ergibt sich aus L6/L7 |
+
+**Nutzerantwort 28.10.:** *„streichen von nach oben etc. – unsicher bei allen Punkten“*, also die Festlegungen der letzten Spalte; das Urteil je Zeile **gibt die Messung**.
+
+**Abhängigkeiten zwischen den Zeilen** (fehlten im Entwurf):
+- **Vorrang:** L1 (Risiko) gilt immer. Widersprechen sich Zeilen bei der Haltedauer (z. B. Extrem und Rückenwind), gilt die **kürzere**.
+- **Überschneidung:** Hohe Schwankung und Gegenwind treten oft gemeinsam auf. L1 und L7 werden getrennt ausgewiesen, sonst wird ein Effekt doppelt gezählt.
+- **Gleichzeitige Positionen:** Altcoins hängen stark an BTC; fünf Hebelpositionen bei Rückenwind sind fast **eine** Wette → Grenze je Gruppe (T5).
+- **Geprüft und nicht ergänzt:** Funding, OI und Volumen bringen zur Liquidationsgefahr nichts über die ATR hinaus (2.681); Funding als Richtung an der Nachweisgrenze.
+
+**Berichtigung zu §5.1 (§23.68):** Längeres Halten war 2025–26 **auch brutto** schlechter, nicht nur netto: H24 brutto +0,30…+0,31 %, H168 brutto −0,51…−0,93 % (unverzerrte Mengen, `p62_ausstieg_vorpruefung.txt`). Die Finanzierung allein erklärt den Unterschied also nicht. 2024 war es umgekehrt.
+
+**Vorprüfung 28.10. (Stufe 1, nur Zählung, kein Ergebnis angesehen):** Marktweiter Rückenwind als *BTC über seinem 200-T-Schnitt (Stand Vortag)*, `messdaten.db`:
+
+| | Tage | Rückenwind | Wechsel |
+|---|---|---|---|
+| 2023 (ab 09) | 122 | 62 % | 1 |
+| 2024 | 366 | 80 % | 10 |
+| 2025 | 365 | 73 % | 17 (fast alle im März/Oktober, Flattern um die Linie) |
+| 2026 (bis 08) | 243 | 5 % | 1 |
+
+⇒ 2025–26 besteht im Kern aus **vier Phasen**: Rückenwind bis 09.03.25, Gegenwind bis 22.04.25, Rückenwind bis 03.11.25, Gegenwind bis 19.08.26. Mit Blöcken von max(15 T, 3 × 168 h) = 21 T sind das je Zustand nur **≈ 13–15 Blöcke** (unter 20: **kein Befund**). Über 2023-09 bis 2026-08 wären es ≈ 30 bzw. ≈ 21 Blöcke, aber die **unabhängigen** Fälle sind die **Phasen** (≈ 6–8), nicht die Blöcke. Der Zustand fällt mit der Epoche zusammen: Gemessen würde „2024 und Mitte 2025 gegen Ende 2025 bis 2026“, nicht der Rückenwind. Das ist dieselbe Lage wie bei ETF/DVOL/F&G (zu wenige Wechsel). ⇒ **L6 marktweit ist mit dieser Datenlänge nicht auflösbar.** Auflösbar wäre ein Rückenwind **je Trade** (eigener Trend des Assets), der am selben Tag zwischen Assets wechselt; dann fällt der Markt in der Differenz heraus (§6.1). Siehe §6.5.
 
 ⚠️ **Die Leiter ist eine Liste von Gewichten, keine Kette von Sperren** (Nutzer 28.09.: *„kein künstlicher Blocker“*). Welche Zeilen bleiben und wie stark sie verschieben, **entscheidet die Messung** (§6). Die Zeilen werden **vorab fachlich** festgelegt und nicht aus den Daten gesucht – sonst wäre es wieder Mehrfachtesten (2.645).
 
@@ -207,6 +244,30 @@ Das ist der Unterschied zu allen bisherigen Messungen, die fast alle das *Ob* od
 - **Trägt B gegen C:** Die Leiter ist eine **Bewertung** und darf die Handlung verschieben.
 - **Trägt B nicht:** Die Leiter bleibt als **Fakt-Ordnung** sichtbar (Risikodisziplin), ohne Anspruch auf Vorteil. Auch dann wäre die Mail klarer als heute.
 - Das **Ob** beantwortet auch diese Messung nicht.
+
+### 6.5 Erste Messung H-1 — Umfang (ENTWURF zur Abstimmung, 28.10.)
+
+Drei Fragen, alle **je Trade** veränderlich, damit genug unabhängige Fälle entstehen:
+
+| # | Frage | Gegebenheit je Einstieg (Stand vor dem Einstieg) | verglichen |
+|---|---|---|---|
+| **H-1a** (L1) | Hilft die Stufe nach Schwankung **je Risiko**? | ATR des Assets im rollenden Jahr (Drittel) | 5x / 3x / Spot, Liquidationen am Markpreis |
+| **H-1b** (L6/L7) | Soll die Haltedauer am **Trend dieses Trades** hängen? | **offen, siehe unten** | 24 h / 72 h / 5 T, Stop getrennt (offene Frage aus 2.702) |
+| **H-1c** (L5) | Lohnt bei einem Extrem eine **kurze** Haltedauer? | `momentum_kurz`/`rsi` am Extrem (2.648) | 6 h / 24 h / 72 h |
+
+- **Einstiege:** REGEL0-Referenz, vier Mengen (wie p62, R-R11: H24 brutto muss p62 reproduzieren). Weitere Auslöser (V3) erst in H-2.
+- **Arme** nach §6.2: A fest, B Leiter, C Zufallsleiter je Tagesblock, D Orakel.
+- **Brutto**, Kosten nachgelagert; Zeitraum: Urteil 2025–26, 2024 und 2023-09 ff. als zweite Epoche ausgewiesen.
+- **Marktweiter Rückenwind** (BTC über 200 T) nur als **Auskunft**: zu wenige Wechsel (§5.3).
+
+**Offene Richtungsfrage für H-1b: Was heißt „Rückenwind je Trade“?**
+- **a** eigener Trend des Assets: Kurs über seinem **50-T-Schnitt** (Stand Vortag). Wechselt häufig und zwischen Assets.
+- **b** eigener Trend über den **200-T-Schnitt** (wie Faber, nur je Asset). Langsamer, weniger Wechsel.
+- **c** Stärke gegen BTC über 30 T (relativer Trend).
+
+Empfehlung **a**: Die Literatur findet die Fortsetzung in Krypto über **Wochen** (Liu/Tsyvinski), nicht über Monate; zugleich wechselt der Zustand oft genug für ein Urteil. **b** als zweiter Weg (Prüfbericht E-141). Weil die Zeilen vorab fachlich stehen müssen (2.645), wird **eine** Fassung als Hauptfrage festgelegt, die andere nur als zweiter Weg.
+
+**Vor dem ersten Blick:** Vorprüfung der Fallzahlen je Zustand (Blöcke ≥ 20 je Epoche?), Selbsttest mit Ballung (Fehlalarm, Pflanzung, Positivkontrolle D).
 
 ---
 

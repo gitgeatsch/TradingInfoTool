@@ -2280,3 +2280,10 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
     - V4 Nicht-Handeln (getrennt ausgewiesen).
   - Haltedauer 24 h bis 5 T plus „länger, bis die Führung schließt“, höchstens etwa 14 T. Die 24 h waren nur Messfenster (E-6, 2.642) und wurden über §23.68 netto zur Betriebsregel.
   - Der Leiterentwurf §5.2 ist um Haltedauer- und Spot-Zeilen ergänzt; der Nutzer korrigiert ihn.
+- **Nachtrag 28.10. (Nutzer: „streichen von nach oben etc. – unsicher bei allen Punkten“; vorher: „woher hast du die Quellen bzw. Recherche?“):**
+  - Herkunftsprüfung je Leiterzeile in Konzept §5.3: eigene Befunde, Literatur (Moreira/Muir 2017, Faber 2007, Liu/Tsyvinski 2021, gegengelesen) und eigene Setzungen (alle Schwellen) getrennt ausgewiesen.
+  - Festgelegt: L1, L6/L7 und L5 (ohne „nach oben“) werden **gemessen**; L2 nur **Fakt**; L3/L4 **Regeln**; L8 in den **Spot-Strang**; L9 ergibt sich aus L6/L7. Das Urteil je Zeile gibt die Messung.
+  - **Zwei eigene Fehler im Entwurf:** (1) L5 „nach oben“ ohne Beleg (2.648 ist ein Ereignis, keine Handelsregel; 2.694 spricht dagegen); (2) Gegenbefund **2.702** zu L6 fehlte.
+  - **Berichtigung §23.68:** 2025–26 war längeres Halten **auch brutto** schlechter (H24 +0,30 %, H168 −0,51…−0,93 %), nicht nur netto.
+  - **Vorprüfung (nur Zählung):** BTC über 200-T-Schnitt hat 2025–26 im Kern vier Phasen, je Zustand ≈ 13–15 Blöcke à 21 T ⇒ **marktweiter Rückenwind nicht auflösbar** (wie ETF/DVOL/F&G); nur Auskunft. H-1b misst den Rückenwind **je Trade**.
+  - Neu §6.5 H-1 (Entwurf): H-1a ATR-Stufe, H-1b Haltedauer nach eigenem Trend, H-1c kurz bei Extrem. **Offen:** Fassung „Rückenwind je Trade“ (a 50-T-Schnitt, Empfehlung · b 200-T · c Stärke gegen BTC 30 T).
