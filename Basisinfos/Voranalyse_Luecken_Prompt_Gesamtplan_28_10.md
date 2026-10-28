@@ -73,6 +73,23 @@
 - ⚠️ Asiatische Börsen schließen **vor** Europa und den USA. Ein Rückspiel muss den Tageswert zur **eigenen** Schlusszeit ansetzen, nicht zum UTC-Tagesende (*Tageswert an Stundenanker ist Vorgriff*).
 - ⚠️ yfinance ist inoffiziell. Es läuft im Projekt schon (Rohstoffe, SPY), darf aber nicht die einzige Quelle einer Sicht sein, ohne dass ein Ausfall angezeigt wird.
 
+### A2. Nachweis für die gewählten Sichten S1–S4, S7, S8 — 29.10. (G4, je ein Abruf am Desktop, nichts abgelegt)
+
+Anlass: G2 entschieden (*„G2 und G3 wie empfohlen“*). Geprüft wurde, was in der Übersicht oben nur **[B]** oder **[U]** war.
+
+| Sicht | Quelle | Ergebnis | Befund |
+|---|---|---|---|
+| S1 | **Coinbase-Prämie** (Coinbase BTC-USD gegen Binance BTCUSDT, Tagesschluss) | ✔N | 274 Tage ab 01.01.2023 aus einem Abruf, Median +0,016 %. Je Abruf höchstens 300 Kerzen → rund 5 Abrufe je Jahr |
+| S1 | **Basis Quartalsfutures** (`continuousKlines` CURRENT_QUARTER gegen Perp) | ✔N | BTC und ETH lückenlos ab 01.01.2023 bis heute (500 + 366 + 423 Tage in drei Fenstern), Median +1,00 % absolut |
+| S2 | **ALFRED** (Jahrgänge über unseren FRED-Schlüssel) | ✔N | NFP Dez. 2024: Stand 15.01.2025 **159.536**, heute **158.316** → die Revision ist sichtbar, das Rückspiel kann den **damals bekannten** Wert nehmen. 45 Veröffentlichungstage seit 2023 |
+| S3 | **HY-Aufschlag** `BAMLH0A0HYM2` | ✔N | 793 Werte ab **30.10.2023**. ⚠️ Nur 3 Jahre — reicht aber für **beide** Rückspiel-Zeiträume aus G3 (2025 und Dez. 2025 – Okt. 2026) |
+| S7 | **die 9 Krypto-Feeds live** | ✔N | alle 9 antworten mit HTTP 200, zusammen 193 Meldungen im Abruf. Für den Betrieb fehlt nur der **Job**, keine Quelle. Historie liegt schon in `data/_lc/nachrichten.db` (Wayback) |
+| S7 | **GDELT DOC** Ton-Zeitreihe | ✔N | „bitcoin“ Jan. 2023: 32 Punkte → Historie vorhanden |
+| S7 | GDELT DOC Artikelliste | ✖ | HTTP **429** auch nach 60 s Pause (*„one every 5 seconds“*). Nicht nötig: Artikel kommen aus den Feeds, GDELT nur für den **Ton** |
+| S8 | EZB-Sitzungskalender | ✔ (HTML) | Seite erreichbar, die Termine stehen aber nicht vollständig im HTML (nur 2 Datumsangaben 2026 gefunden) → **Termine von Hand je Jahr** eintragen (8 Sitzungen), wie bisher FOMC |
+
+**Fazit A2:** Für S1–S4, S7 und S8 gibt es **keine offene Quellenlücke mehr**, die den Messplan blockiert. Es bleiben die bekannten Lücken, die **nicht** frei zu haben sind: ETF-Zuflüsse, Token-Freigaben, Hacks. Sie kommen nur über die Ereignisse (A1 liest Binance-Ankündigungen und Nachrichten).
+
 ---
 
 ## B. Reicht der Prompt? — gemessen, nicht geschätzt

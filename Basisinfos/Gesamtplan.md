@@ -77,7 +77,7 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | 3 Gutachten je Sicht | einheitliches Schema: Zustand, Wirkung auf Krypto, Horizont, neu seit, eingepreist, Treiber mit Beleg, kippt wenn, Gegenargument | LLM, **ungeprüft** |
 | 4 Finales LLM je Handlung | Bedenken-Stufe 0/1/2 + zwei Gründe + was umstimmt; dazu A3 Befund-Gedächtnis und A4 Gegenanwalt | LLM, geprüft vom Code; **entscheidet nicht**, Gewicht erst nach Messung |
 
-**Sichten:** S1 Krypto gesamt · S2 Liquidität/Zinsen USA · S3 Risikoappetit · S4 Dollar/Rohstoffe · S5 Asien · S6 Staatsschulden · S7 Ereignisse · S8 Termine. Vorgeschlagen ist, mit S1–S4, S7 und S8 zu beginnen (Nutzer: *„passend“*).
+**Sichten:** S1 Krypto gesamt · S2 Liquidität/Zinsen USA · S3 Risikoappetit · S4 Dollar/Rohstoffe · S5 Asien · S6 Staatsschulden · S7 Ereignisse · S8 Termine. **Entschieden 29.10.: S1–S4, S7 und S8 zuerst** (G2).
 
 ### 4.2 Die Dokumente des Vorhabens
 
@@ -106,9 +106,9 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | # | Punkt | Stand | Wer / Bedingung |
 |---|---|---|---|
 | **G1** | Dieser Plan, Verweise auf allen Ebenen | ✔ 28.10. | – |
-| **G2** | **Sichten-Reihenfolge** festlegen (S1–S4, S7, S8 zuerst) | Vorschlag „passend“ | Abstimmung |
-| **G3** | **Modellwahl für das Rückspiel**: Gemini-Zeitraum ab Dez. 2025 zuerst, Groq 2025 danach als zweiter Zeitraum | Vorschlag | Abstimmung |
-| **G4** | **Lücken schließen** (Nachweis je ein Abruf, dann einbinden): Nachrichten live am NB · KOSPI/Nikkei/DXY/MOVE (✔ nachgewiesen) · Bundesbank 10J (✔) · JGB 10J · Kimchi-Prämie · Coinbase-Prämie · Basis Quartalsfutures · ALFRED | Liste in `Voranalyse_Luecken…` A | nach G2 |
+| **G2** | **Sichten-Reihenfolge** | ✔ **entschieden 29.10.** (Nutzer: *„G2 und G3 wie empfohlen“*): **S1–S4, S7, S8 zuerst**; S5 Asien und S6 Staatsschulden danach | – |
+| **G3** | **Modellwahl für das Rückspiel** | ✔ **entschieden 29.10.**: zuerst **Gemini (Schlüssel 2) Dez. 2025 – Okt. 2026** (~1 Woche), danach **Groq gpt-oss 2025** als zweiter Zeitraum und zweite Modellfamilie (~3–4 Wochen); vorher Wissensstand je Modell prüfen | – |
+| **G4** | **Lücken schließen** (Nachweis je ein Abruf, dann einbinden): Nachrichten live am NB · KOSPI/Nikkei/DXY/MOVE (✔ nachgewiesen) · Bundesbank 10J (✔) · JGB 10J · Kimchi-Prämie · Coinbase-Prämie · Basis Quartalsfutures · ALFRED | **Nachweis für S1–S4, S7, S8 ✔ 29.10.** (`Voranalyse_Luecken…` **A2**): Coinbase-Prämie, Basis Quartal, ALFRED, HY ab 10/2023, 9 Feeds live, GDELT-Ton — keine blockierende Lücke mehr. Offen: **Einbinden** (Abstimmung) · für S5/S6 später: JGB 10J, Kimchi-Prämie, ECOS | Abstimmung Einbinden |
 | **G5** | **ECOS-Schlüssel** (Bank of Korea) — Eintrag in `.env` leer | offen | **Nutzer** registriert, dann Prüfung |
 | **G6** | Frankreich/Italien 10J **täglich** — kein freier Weg gefunden | Suche läuft weiter | – |
 | **G7** | **Messplan** Faktentreue (Selbsttest der Prüfer, 1.000 Fälle) und Wert der Sichten (Rückspiel) | nach G2–G4 | Voranalyse → Abstimmung |
