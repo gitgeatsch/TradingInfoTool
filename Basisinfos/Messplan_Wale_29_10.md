@@ -180,3 +180,58 @@ Ablage nachgesehen). Der 28.10. fehlt bei Futures noch im Archiv (Nachlauf).
 (BTC) — das ist ein **großer** Effekt. Kleinere Vorsprünge sieht diese Messung nicht; ein „trägt nicht“ gilt nur **bis X**.
 ⚠️ S2 liegt über der Stufungsgrenze (bis 4,2 % statt 1,4 %): unter Ballung ist die Messung weniger streng als nominell — die
 Punkte 2–7 (Jahre, q-Leiter, ETH, Schichten, Verzug) sind deshalb Pflicht, nicht Beiwerk.
+
+---
+
+## 10. ERGEBNIS (30.10.2026, `p102_wale_messung.txt`, Gegenprobe `p102_wale_gegenprobe.txt` ✔)
+
+**Geltungsbereich:** BTC (Haupt) und ETH (zweiter Weg), Binance Spot und USDⓈ-M-Futures, Urteil 2025-01-01 bis 2026-09-30
+(638 Tage), q 5 %, Einstieg 00:00 UTC nach dem Signaltag, Log-Ertrag brutto. D = oberstes minus unterstes Fünftel von E, in Pp.
+
+### Spot: trägt NICHT nach der Vorab-Regel — aber durchgehend POSITIV
+
+| | H1 | H3 | H7 |
+|---|---|---|---|
+| **BTC** D [Band] | +0,33 [−0,44 .. +1,10] | +0,71 [−0,52 .. +1,95] | +2,08 [−0,12 .. +4,28] |
+| Stufe | TRÄGT NICHT BIS 2 Pp | TRÄGT NICHT BIS 2 Pp | NICHT TRENNBAR |
+| 2025 / 2026 | +0,43 / +0,21 | +0,77 / +0,64 | +2,04 / +2,10 |
+| q 1 / 5 / 10 / 20 % | alle positiv | alle positiv | alle positiv |
+| Schichten Fall / Mitte / Anstieg | −0,48 / +0,96 / +0,38 | +0,33 / +0,68 / +1,13 | +0,37 / +2,40 / +3,41 |
+| Verzug 06:00 | +0,48 | +0,82 | +2,10 |
+| **ETH** D | +0,61 (NICHT TRENNBAR) | +1,29 (TRÄGT NICHT BIS 4 Pp) | +1,86 (NICHT TRENNBAR) |
+| Epoche 2023-07..2024-12 (BTC) | +1,04 **TRÄGT** | +1,27 | −0,12 |
+| Vergleichsarme BTC: G roh / R roh | +0,06 / +0,15 | +0,50 / −0,27 | +1,48 / −0,11 |
+
+Punkte 1–7 (BTC): ✖ ✔ ✔ ✖ ✔ ✔ ✔ in allen drei Horizonten — es fehlen **das Band** (1) und das **ETH-Band** (4).
+
+### Futures: trägt NICHT
+
+BTC D +0,31 / +0,40 / −0,09 (TRÄGT NICHT BIS 2 / 2 / 4 Pp), 2026 bei H1/H3/H7 negativ; ETH H3/H7 **negativ** (−0,57 / −0,84).
+Das Vorzeichen wechselt zwischen Jahren und Werten — kein Muster.
+
+### Zwischenfazit zum Ziel (ehrlich gewichtet)
+
+| | |
+|---|---|
+| Fakt | Am **Spotmarkt** lag der Kurs nach Tagen mit starkem Netto-Großkauf (nach Abzug von Restfluss und Tagesbewegung) in **jeder** Teilmenge höher als nach Tagen mit Netto-Großverkauf: BTC rund **+0,7 Pp in 3 T** und **+2 Pp in 7 T** |
+| Warum kein Befund | Das Band schließt den Nullpunkt nicht aus. Die Messung sieht sicher erst ab **2 Pp** (Selbsttest) — der gemessene Wert liegt **darunter** bzw. knapp daran |
+| ⚠️ Wie viel die Gleichförmigkeit wert ist | **weniger, als sie aussieht:** die q-Stufen teilen großteils dieselben Tage, BTC und ETH bewegen sich gemeinsam (dieselben Markttage), Verzug 06:00 ist fast derselbe Ertrag. **Unabhängig** sind nur die Jahre 2025/2026 und die frühere Epoche — und die sind alle positiv (außer BTC H7 2023-24) |
+| Futures | zeigt nichts — passt zur Stichprobe (Futures-Große laufen mit dem Rest, §6 Voranalyse) |
+| Herausrechnen | wirkt: E zeigt mehr als der rohe Großfluss (BTC H1 +0,33 gegen +0,06) — die Großen sind am Spot mehr als Begleitung der Bewegung (Lehre 2.665) |
+
+⚠️⚠️ **Nutzervorgabe 29.10.: nicht abhaken, sondern Abstimmung und Lösungssuche.** Ein neuer Weg darf die Richtung nicht auf
+**denselben** Daten nachträglich bestätigen — sonst ist er eine Wahl nach dem Ergebnis.
+
+## 11. Lösungswege (zur Abstimmung)
+
+| | Weg | warum | Daten |
+|---|---|---|---|
+| **a (Empfehlung)** | **Unabhängige Bestätigung**: dieselbe Rechnung, **gerichtet** (aus 2025–26: oberstes Fünftel höher), auf Jahren, die noch **niemand gesehen** hat: Spot BTC und ETH **2019–2022**, dazu **SOL** (dritter Kernwert, 2021–2026) | die einzige Prüfung, die eine Richtung **bestätigen** kann; einseitig ist zulässig, weil die Richtung **vorher** feststeht; ~190 statt 43 Blöcke → Auflösung etwa halb so grob | Spot BTC 29,6 GB + ETH 12,3 GB + SOL 10,3 GB ≈ **52 GB, ~3 Std.** (HEAD gemessen 30.10.) |
+| b | Stufe 2: Großfluss der letzten 24 h **vor REGEL0-Einstiegen** auf dem Kern, Horizont 24 h | näher am Betrieb, viele Fälle; aber **derselbe Zeitraum** → nicht unabhängig von dem, was wir gesehen haben | liegt vor (`stunde`) |
+| c | Vorwärts sammeln (NB-Abrufer) | sauberste Unabhängigkeit | ⛔ Jahre bis zu genug Blöcken (stehende Regel: keine Zwei-Jahres-Lösung) |
+
+⚠️ Zu **a**: 2019–2022 ist eine **andere Marktepoche** (Memory: Krypto hat sich geändert). Trägt es dort nicht, ist das allein kein
+Widerspruch — deshalb je Jahr ausweisen. Binance Spot BTC war bis **22.03.2023** gebührenfrei (Ankündigung im V1-Archiv); der
+**Beginn** (nach meinem Wissen 08.07.2022) liegt vor dem Archiv (ab 01/2023) und wird beim Laden an Dateigröße und
+Geschäftszahl je Tag **nachgewiesen**, nicht angenommen. Die relative Schwelle fängt den aufgeblähten Umsatz auf; getrennt
+ausgewiesen.

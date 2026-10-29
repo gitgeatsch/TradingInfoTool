@@ -1,0 +1,51 @@
+MESSUNG Messplan W (9900K, 2026-10-30T00:44:10) · Nullwelt block (Selbsttest) · Urteil 2025-01-01 bis 2026-09-30 · q 5 % Haupt · Log-Ertrag brutto, Pp
+
+══ BTCUSDT ══
+  spot    H1  D +0.33 [-0.44 .. +1.10] Null -0.02 · TRAEGT NICHT BIS 2.00 Pp · 146/120 Tage oben/unten, 43 Bl., AK -0.002
+            2025 +0.43 · 2026 +0.21 · q 1/5/10/20 +0.18 +0.33 +0.77 +0.47 · Schichten Fall/Mitte/Anstieg -0.48 +0.96 +0.38 · Verzug 06:00 +0.48
+            Epoche 2023-07..2024-12: D +1.04 · TRAEGT (oberstes Fünftel HÖHER) · Vergleichsarme: G roh +0.06, R roh +0.15
+  spot    H3  D +0.71 [-0.52 .. +1.95] Null +0.05 · TRAEGT NICHT BIS 2.00 Pp · 146/120 Tage oben/unten, 43 Bl., AK 0.022
+            2025 +0.77 · 2026 +0.64 · q 1/5/10/20 +0.31 +0.71 +1.23 +0.71 · Schichten Fall/Mitte/Anstieg +0.33 +0.68 +1.13 · Verzug 06:00 +0.82
+            Epoche 2023-07..2024-12: D +1.27 · NICHT TRENNBAR · Vergleichsarme: G roh +0.50, R roh -0.27
+  spot    H7  D +2.08 [-0.12 .. +4.28] Null +0.20 · NICHT TRENNBAR · 146/120 Tage oben/unten, 31 Bl., AK -0.024
+            2025 +2.04 · 2026 +2.10 · q 1/5/10/20 +1.95 +2.08 +1.95 +1.88 · Schichten Fall/Mitte/Anstieg +0.37 +2.40 +3.41 · Verzug 06:00 +2.10
+            Epoche 2023-07..2024-12: D -0.12 · TRAEGT NICHT BIS 4.00 Pp · Vergleichsarme: G roh +1.48, R roh -0.11
+  futures H1  D +0.31 [-0.35 .. +0.97] Null -0.04 · TRAEGT NICHT BIS 2.00 Pp · 143/140 Tage oben/unten, 42 Bl., AK 0.039
+            2025 +0.49 · 2026 -0.01 · q 1/5/10/20 +0.15 +0.31 +0.38 +0.17 · Schichten Fall/Mitte/Anstieg +0.64 +0.09 +0.56 · Verzug 06:00 +0.27
+            Epoche 2023-07..2024-12: D +0.47 · TRAEGT NICHT BIS 2.00 Pp · Vergleichsarme: G roh +0.11, R roh +0.31
+  futures H3  D +0.40 [-0.88 .. +1.68] Null -0.04 · TRAEGT NICHT BIS 2.00 Pp · 143/140 Tage oben/unten, 42 Bl., AK -0.090
+            2025 +0.84 · 2026 -0.46 · q 1/5/10/20 -0.08 +0.40 +0.12 +0.11 · Schichten Fall/Mitte/Anstieg +0.22 +0.11 +1.09 · Verzug 06:00 +0.45
+            Epoche 2023-07..2024-12: D +0.94 · NICHT TRENNBAR · Vergleichsarme: G roh +0.09, R roh +0.49
+  futures H7  D -0.09 [-1.91 .. +1.72] Null -0.09 · TRAEGT NICHT BIS 4.00 Pp · 143/140 Tage oben/unten, 30 Bl., AK -0.063
+            2025 +0.30 · 2026 -0.88 · q 1/5/10/20 -0.17 -0.09 -0.15 -0.36 · Schichten Fall/Mitte/Anstieg -2.37 +0.67 +1.86 · Verzug 06:00 -0.03
+            Epoche 2023-07..2024-12: D -0.65 · TRAEGT NICHT BIS 4.00 Pp · Vergleichsarme: G roh -0.14, R roh +1.30
+
+══ ETHUSDT ══
+  spot    H1  D +0.61 [-0.76 .. +1.97] Null -0.04 · NICHT TRENNBAR · 130/128 Tage oben/unten, 43 Bl., AK 0.001
+            2025 +1.09 · 2026 +0.01 · q 1/5/10/20 +0.32 +0.61 +0.25 +0.25 · Schichten Fall/Mitte/Anstieg +0.36 +0.35 +1.17 · Verzug 06:00 +0.60
+            Epoche 2023-07..2024-12: D +0.48 · TRAEGT NICHT BIS 2.00 Pp · Vergleichsarme: G roh +0.94, R roh -0.01
+  spot    H3  D +1.29 [-1.10 .. +3.68] Null -0.08 · TRAEGT NICHT BIS 4.00 Pp · 130/128 Tage oben/unten, 43 Bl., AK -0.096
+            2025 +1.64 · 2026 +0.85 · q 1/5/10/20 +0.96 +1.29 +1.21 +0.25 · Schichten Fall/Mitte/Anstieg -0.15 +1.08 +3.13 · Verzug 06:00 +1.27
+            Epoche 2023-07..2024-12: D +1.34 · NICHT TRENNBAR · Vergleichsarme: G roh +1.46, R roh -0.42
+  spot    H7  D +1.86 [-2.08 .. +5.81] Null -0.29 · NICHT TRENNBAR · 130/128 Tage oben/unten, 31 Bl., AK -0.003
+            2025 +2.37 · 2026 +1.22 · q 1/5/10/20 +0.90 +1.86 +2.36 +1.34 · Schichten Fall/Mitte/Anstieg -0.41 +2.22 +3.67 · Verzug 06:00 +1.85
+            Epoche 2023-07..2024-12: D +2.58 · NICHT TRENNBAR · Vergleichsarme: G roh +3.14, R roh +0.36
+  futures H1  D +0.30 [-0.84 .. +1.43] Null +0.05 · TRAEGT NICHT BIS 2.00 Pp · 133/141 Tage oben/unten, 43 Bl., AK 0.072
+            2025 +0.89 · 2026 -0.44 · q 1/5/10/20 +0.21 +0.30 +0.18 +0.46 · Schichten Fall/Mitte/Anstieg +0.24 +0.25 +0.56 · Verzug 06:00 +0.17
+            Epoche 2023-07..2024-12: D +0.79 · NICHT TRENNBAR · Vergleichsarme: G roh +0.23, R roh +0.27
+  futures H3  D -0.57 [-2.48 .. +1.34] Null -0.04 · TRAEGT NICHT BIS 4.00 Pp · 133/141 Tage oben/unten, 43 Bl., AK 0.065
+            2025 -0.38 · 2026 -0.81 · q 1/5/10/20 -0.06 -0.57 -0.85 -0.96 · Schichten Fall/Mitte/Anstieg -0.07 -2.07 +0.47 · Verzug 06:00 -0.70
+            Epoche 2023-07..2024-12: D +1.11 · TRAEGT NICHT BIS 4.00 Pp · Vergleichsarme: G roh -1.09, R roh -0.74
+  futures H7  D -0.84 [-3.81 .. +2.14] Null -0.26 · NICHT TRENNBAR · 133/141 Tage oben/unten, 31 Bl., AK 0.027
+            2025 -0.84 · 2026 -0.75 · q 1/5/10/20 +0.60 -0.84 -1.22 -1.45 · Schichten Fall/Mitte/Anstieg -2.25 -1.92 +1.50 · Verzug 06:00 -1.18
+            Epoche 2023-07..2024-12: D +2.87 · NICHT TRENNBAR · Vergleichsarme: G roh -0.69, R roh +0.28
+
+══ URTEIL je Hypothese (BTC Haupt; Messplan §5, alle 7 Punkte) ══
+  spot    H1  Punkte 1-7: ✖ ✔ ✔ ✖ ✔ ✔ ✔  ->  trägt nicht nach Vorab-Regel (Stufe: TRAEGT NICHT BIS 2.00 Pp)
+  spot    H3  Punkte 1-7: ✖ ✔ ✔ ✖ ✔ ✔ ✔  ->  trägt nicht nach Vorab-Regel (Stufe: TRAEGT NICHT BIS 2.00 Pp)
+  spot    H7  Punkte 1-7: ✖ ✔ ✔ ✖ ✔ ✔ ✔  ->  trägt nicht nach Vorab-Regel (Stufe: NICHT TRENNBAR)
+  futures H1  Punkte 1-7: ✖ ✖ ✔ ✖ ✔ ✔ ✔  ->  trägt nicht nach Vorab-Regel (Stufe: TRAEGT NICHT BIS 2.00 Pp)
+  futures H3  Punkte 1-7: ✖ ✖ ✔ ✖ ✔ ✔ ✔  ->  trägt nicht nach Vorab-Regel (Stufe: TRAEGT NICHT BIS 2.00 Pp)
+  futures H7  Punkte 1-7: ✖ ✖ ✔ ✖ ✖ ✔ ✔  ->  trägt nicht nach Vorab-Regel (Stufe: TRAEGT NICHT BIS 4.00 Pp)
+
+Seiteneffekt: geschützte Datei unverändert: True

@@ -11585,6 +11585,20 @@ BEFUNDE = (
                "(~+1 Pp gegen dieselben Tage), je Handel gepoolt aber KEIN Vorteil; 72 h ohne Unterschied", "gilt",
                "Entscheidungen E-165; Messplan_H1_Lagegerechte_Handlung_28_10.md §9; p101_h1_messung, p101_h1_gegenprobe",
                basis="wie E-165-h1b; Nullpunkt nicht nachtraeglich neu gezogen (Vorab-Regel)"),
+    # ---- 30.10.2026: Ergebnis Messplan W (Wal-Fluss, G16), Nutzer *Messung starten - pruefen, gegenpruefen und Doku* ----
+    Befundlage("G16-wale-spot", "Netto-Grossfluss am SPOTMARKT (groesste Sweeps mit >= 5 % des Tagesumsatzes, nach Restfluss und "
+               "Tagesbewegung herausgerechnet) traegt nach der Vorab-Regel NICHT (Band schliesst den Nullpunkt nicht aus, BTC "
+               "TRAEGT NICHT BIS 2 Pp bei H1/H3, NICHT TRENNBAR bei H7); ⚠ aber durchgehend POSITIV: oberstes minus unterstes "
+               "Fuenftel BTC +0,33 / +0,71 / +2,08 Pp (1/3/7 T), ETH +0,61 / +1,29 / +1,86, 2025 und 2026 einzeln, alle vier q, "
+               "Verzug 06:00 - an der Nachweisgrenze, nicht belegt; -> Abstimmung und Loesungssuche (Nutzer 29.10.)", "gilt",
+               "Messplan_Wale_29_10.md §10; p102_wale_messung, p102_wale_gegenprobe",
+               basis="wale_voll.db BTC/ETH Spot 2023-01..2026-10, Urteil 2025-01..2026-09 (638 T, 43/31 Bloecke), Log-Ertrag "
+                     "brutto ab 00:00 t+1, t-Band Bonferroni 6, Nullwelt Blockvertauschung; Selbsttest 1.000 Welten bestanden, "
+                     "Aufloesung BTC D 2 Pp (H1/H3); Gegenprobe exakt"),
+    Befundlage("G16-wale-futures", "Netto-Grossfluss am TERMINMARKT (USDS-M) traegt NICHT: BTC TRAEGT NICHT BIS 2 Pp (H1/H3) bzw. "
+               "4 Pp (H7), Vorzeichen zwischen den Jahren und bei ETH wechselnd (ETH H3/H7 negativ)", "gilt",
+               "Messplan_Wale_29_10.md §10; p102_wale_messung, p102_wale_gegenprobe",
+               basis="wie G16-wale-spot, Futures"),
 )
 
 

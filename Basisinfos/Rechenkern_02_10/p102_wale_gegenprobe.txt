@@ -1,0 +1,32 @@
+GEGENPROBE Messplan W (9900K, 2026-10-30T00:44:30) — zweiter Rechenweg, q 5 %, Urteilsfenster 2025-01-01 bis 2026-09-30
+
+BTCUSDT spot    E: größte Abweichung 5.2e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 6 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 5 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.3314 Pp · Messung +0.3314 Pp ✔ · t-Band Breite 1.543 Pp · Bootstrap 1.489 Pp (Verhältnis 0.97)
+   H3  D Schleife +0.7142 Pp · Messung +0.7142 Pp ✔ · t-Band Breite 2.469 Pp · Bootstrap 2.499 Pp (Verhältnis 1.01)
+   H7  D Schleife +2.0769 Pp · Messung +2.0769 Pp ✔ · t-Band Breite 4.403 Pp · Bootstrap 3.883 Pp (Verhältnis 0.88)
+
+BTCUSDT futures E: größte Abweichung 1.4e-16 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 9 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 7 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.3107 Pp · Messung +0.3107 Pp ✔ · t-Band Breite 1.314 Pp · Bootstrap 1.219 Pp (Verhältnis 0.93)
+   H3  D Schleife +0.3989 Pp · Messung +0.3989 Pp ✔ · t-Band Breite 2.555 Pp · Bootstrap 2.381 Pp (Verhältnis 0.93)
+   H7  D Schleife -0.0948 Pp · Messung -0.0948 Pp ✔ · t-Band Breite 3.633 Pp · Bootstrap 3.348 Pp (Verhältnis 0.92)
+
+ETHUSDT spot    E: größte Abweichung 3.5e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 5 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 4 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.6070 Pp · Messung +0.6070 Pp ✔ · t-Band Breite 2.725 Pp · Bootstrap 2.493 Pp (Verhältnis 0.92)
+   H3  D Schleife +1.2875 Pp · Messung +1.2875 Pp ✔ · t-Band Breite 4.780 Pp · Bootstrap 4.451 Pp (Verhältnis 0.93)
+   H7  D Schleife +1.8641 Pp · Messung +1.8641 Pp ✔ · t-Band Breite 7.886 Pp · Bootstrap 7.098 Pp (Verhältnis 0.90)
+
+ETHUSDT futures E: größte Abweichung 7.3e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 10 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 7 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.2958 Pp · Messung +0.2958 Pp ✔ · t-Band Breite 2.277 Pp · Bootstrap 2.111 Pp (Verhältnis 0.93)
+   H3  D Schleife -0.5687 Pp · Messung -0.5687 Pp ✔ · t-Band Breite 3.814 Pp · Bootstrap 3.424 Pp (Verhältnis 0.90)
+   H7  D Schleife -0.8378 Pp · Messung -0.8378 Pp ✔ · t-Band Breite 5.948 Pp · Bootstrap 5.282 Pp (Verhältnis 0.89)
+
+Seiteneffekt: geschützte Datei unverändert: True
+ERGEBNIS: BESTANDEN

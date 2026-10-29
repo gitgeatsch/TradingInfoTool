@@ -4397,6 +4397,14 @@
 
 - Quelle: Entscheidungen E-165; Messplan_H1_Lagegerechte_Handlung_28_10.md §9; p101_h1_messung, p101_h1_gegenprobe
 
+**G16-wale-spot** — Netto-Grossfluss am SPOTMARKT (groesste Sweeps mit >= 5 % des Tagesumsatzes, nach Restfluss und Tagesbewegung herausgerechnet) traegt nach der Vorab-Regel NICHT (Band schliesst den Nullpunkt nicht aus, BTC TRAEGT NICHT BIS 2 Pp bei H1/H3, NICHT TRENNBAR bei H7); ⚠ aber durchgehend POSITIV: oberstes minus unterstes Fuenftel BTC +0,33 / +0,71 / +2,08 Pp (1/3/7 T), ETH +0,61 / +1,29 / +1,86, 2025 und 2026 einzeln, alle vier q, Verzug 06:00 - an der Nachweisgrenze, nicht belegt; -> Abstimmung und Loesungssuche (Nutzer 29.10.)
+
+- Quelle: Messplan_Wale_29_10.md §10; p102_wale_messung, p102_wale_gegenprobe
+
+**G16-wale-futures** — Netto-Grossfluss am TERMINMARKT (USDS-M) traegt NICHT: BTC TRAEGT NICHT BIS 2 Pp (H1/H3) bzw. 4 Pp (H7), Vorzeichen zwischen den Jahren und bei ETH wechselnd (ETH H3/H7 negativ)
+
+- Quelle: Messplan_Wale_29_10.md §10; p102_wale_messung, p102_wale_gegenprobe
+
 ## ○ WAS OFFEN IST
 
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
