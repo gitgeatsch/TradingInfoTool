@@ -963,7 +963,7 @@ watchlist:
   - symbol: KAITO
     name: KAITO
     rolle: taktisch
-    beobachtungsstatus: beobachtung
+    beobachtungsstatus: ausgemustert
     coingecko_id: kaito
   - symbol: XNO
     name: Nano

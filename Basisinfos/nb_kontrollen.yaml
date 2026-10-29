@@ -13,7 +13,7 @@
 #   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
 #      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
 #   4. eine Quelle: das Memory verweist nur noch hierher.
-stand: "2026-10-27"
+stand: "2026-10-29"
 kontrollen:
   # ---- offen ------------------------------------------------------------------------------------------------------------
   - id: K-ANK-1
@@ -594,6 +594,15 @@ kontrollen:
     commit: ""
     art: ereignis
     nachweis: "naechste H15-Mail (Liquidationsabstand unter Warnschwelle oder neue Meldung): je Position Wochen- und Tageschart; Log 'Hebelfuehrung: ... (Mail zugestellt, Charts n)' mit n = 2 x Positionen; kein 'Hebelfuehrung: Wochen-/Tageschart gescheitert'. Abgespalten aus K-WC-1 (Nutzer 27.10.: 'H15-Teil als eigene Kontrolle offen lassen')"
+    faellig_bis: "2026-12-31"
+    status: offen
+  - id: K-DA-1
+    titel: "Datenausfall-Mail erst nach der Nachpruefung: Pull + Neustart; kein Fehler beim Start, und beim naechsten Totalausfall 'Nachpruefung in 3 Min angesetzt' statt sofortiger Mail"
+    seit: "2026-10-29"
+    paket: Datenausfall
+    commit: ""
+    art: ereignis
+    nachweis: "Export nach Pull + Neustart: keine Tracebacks aus staleness_watchdog. Beim naechsten Netzausfall im Log 'Totalausfall - Nachpruefung in 3 Min angesetzt', danach entweder 'kein Totalausfall mehr, keine Meldung' (kurzer Ausfall, KEINE Mail) oder 'Datenausfall gemeldet ... (auch nach dem Nachhol-Lauf)' (Mail). Anlass: 28.10. 08:48:08 Mail 'alle Kurse veraltet' eine Sekunde NACH dem erfolgreichen Nachhol-Lauf"
     faellig_bis: "2026-12-31"
     status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------

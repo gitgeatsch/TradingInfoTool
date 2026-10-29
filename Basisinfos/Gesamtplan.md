@@ -109,14 +109,14 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | **G2** | **Sichten-Reihenfolge** | ✔ **entschieden 29.10.** (Nutzer: *„G2 und G3 wie empfohlen“*): **S1–S4, S7, S8 zuerst**; S5 Asien und S6 Staatsschulden danach | – |
 | **G3** | **Modellwahl für das Rückspiel** | ✔ **entschieden 29.10.**: zuerst **Gemini (Schlüssel 2) Dez. 2025 – Okt. 2026** (~1 Woche), danach **Groq gpt-oss 2025** als zweiter Zeitraum und zweite Modellfamilie (~3–4 Wochen); vorher Wissensstand je Modell prüfen | – |
 | **G4** | **Lücken schließen** (Nachweis je ein Abruf, dann einbinden): Nachrichten live am NB · KOSPI/Nikkei/DXY/MOVE (✔ nachgewiesen) · Bundesbank 10J (✔) · JGB 10J · Kimchi-Prämie · Coinbase-Prämie · Basis Quartalsfutures · ALFRED | **Nachweis für S1–S4, S7, S8 ✔ 29.10.** (`Voranalyse_Luecken…` **A2**): Coinbase-Prämie, Basis Quartal, ALFRED, HY ab 10/2023, 9 Feeds live, GDELT-Ton — keine blockierende Lücke mehr. Offen: **Einbinden** (Abstimmung) · für S5/S6 später: JGB 10J, Kimchi-Prämie, ECOS | Abstimmung Einbinden |
-| **G5** | **ECOS-Schlüssel** (Bank of Korea) — Eintrag in `.env` leer | offen | **Nutzer** registriert, dann Prüfung |
+| **G5** | **ECOS-Schlüssel** (Bank of Korea) — Eintrag in `.env` leer | **zurückgestellt 29.10.: nur nice to have** — KOSPI/Won kommen über yfinance (✔N), die Kimchi-Prämie aus Upbit + Won; ECOS brächte nur Korea-Staatsanleihe täglich und amtliches M2 (S5, nicht in der ersten Reihe). ⚠️ Anmeldung verlangt laut BoK-Datenschutzblatt Name, Telefon, E-Mail; eine Drittquelle (Anbieter, unbestätigt) nennt **PASS-Prüfung mit koreanischer Handynummer** → für uns vermutlich nicht machbar | erst bei S5 neu bewerten |
 | **G6** | Frankreich/Italien 10J **täglich** — kein freier Weg gefunden | Suche läuft weiter | – |
 | **G7** | **Messplan** Faktentreue (Selbsttest der Prüfer, 1.000 Fälle) und Wert der Sichten (Rückspiel) | nach G2–G4 | Voranalyse → Abstimmung |
 | **G8** | **Bau** B1–B6 + Ebenen 2/3, Mail mit beiden Blöcken | nach G7 | Abstimmung |
 | **G9** | V1 Binance-Ankündigungen 2023–26 laden | ✔ geladen 28.10.: 6.276 Meldungen ab 01/2023, 4.097 mit Text (2 Texte nicht abrufbar), Katalog 93 nur Titel · `data/_a1/binance_ankuendigungen_alle.db` (`Rechenkern_02_10/a1_lade_binance.py`) · nächster Schritt: Voranalyse A1 (Regeln zuerst, LLM für den Rest, Stichprobe ~200) | – |
 | **G10** | `soll_ist.py` (maschinelle Schrittliste, Paket Plan) ist seit 21.09. **nicht fortgeschrieben**: 29 offene Schritte, die meisten der alten Kette | als Historie kennzeichnen oder bereinigen | Rücksprache vor dem Entfernen |
 | **G11** | Verwässerung am NB: 90-T-Vergleich vermutlich ohne Wert bis ~Dez. (Reihe ab ~08.09.) | ungeprüft | nächster NB-Export |
-| **G12** | NB-Kontrollen ausstehend: K-W1-MAIL, K-W2-PUNKT (nächste Mail) · K-SP-3c, K-B4-D1 (nach 02.11.) · K-WC-1b (nächste H15-Mail) | offen | `nb_kontrollen.yaml` |
+| **G12** | NB-Kontrollen ausstehend: K-W1-MAIL, K-W2-PUNKT (nächste Mail) · K-SP-3c, K-B4-D1 (nach 02.11.) · K-WC-1b (nächste H15-Mail) · **K-DA-1** (Datenausfall-Mail erst nach Nachprüfung, 29.10.; nach Pull + Neustart) | offen | `nb_kontrollen.yaml` |
 | **G13** | S-2 Anfang November | nur nach Voranalyse und Ja | – |
 | **G14** | Kern-Regel E-69 (BTC/ETH/SOL immer zugelassen) beschlossen, **nicht gebaut** | offen | Abstimmung |
 | **G15** | Hebel-Phasen | [`Plan_Hebel_fuenf_Phasen_27_09.md`](Plan_Hebel_fuenf_Phasen_27_09.md) (wird maschinell gelesen) | – |
@@ -133,7 +133,8 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | R-R11 | erst reproduzieren, dann widerlegen |
 | Grundgesamtheit | in Betrieb und Messung gleich |
 | NB = Produktion | `data/tradinginfotool.db` am NB nie beschreiben, die Suite läuft nicht am NB, Prüfungen gegen eine Kopie |
-| Labor allein ist FAIL | fertig ist erst, was am NB mit den dortigen Daten läuft |
+| **Desktop zuerst** | eine Änderung geht erst an den NB, wenn ihre **Funktion am Desktop nachgewiesen** ist (Nutzer 09.08.: *„vor der PROD … Prüfung am Desktop“*; nachgetragen 29.10., fehlte in diesem Plan) |
+| Labor allein ist FAIL | fertig ist erst, was am NB mit den dortigen Daten läuft — die **zweite** Hälfte derselben Reihenfolge: Desktop-Nachweis → NB-Betriebsprüfung |
 | kostenfrei | nur freie Quellen und Dienste |
 | Mail | jede Mail eine Handlung; Information nie nur in der GUI |
 | LLM | Prüfung, nicht Entscheider; Fakt / gemessen / ungeprüft gekennzeichnet |

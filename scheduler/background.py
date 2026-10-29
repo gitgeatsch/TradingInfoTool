@@ -5407,6 +5407,27 @@ def _preis_daten_veraltet(conn, watchlist) -> tuple[int, int]:
 # Tagen weggeklickt und ist dann auch still.
 DATENAUSFALL_SPERRE_MINUTEN = 180
 _datenausfall_zuletzt: float | None = None
+# ⚠️ NACHPRUEFUNG VOR DER MAIL (NB-Export 29.10.2026, Nutzer: *"ok A wie empfohlen"*). Am 28.10. fiel das Netz am NB von 08:18 bis
+# 08:36 aus. Der Waechter fand um 08:48:06 alle 62 Preise veraltet, stiess den Nachhol-Lauf an - der war um 08:48:07 erfolgreich
+# (46/62) - und meldete um 08:48:08 trotzdem "alle Kurse veraltet". `modify_job` startet den Lauf in einem anderen Thread; die
+# Mail wartete nicht auf ihn. Jetzt prueft ein einmaliger Job nach dieser Frist NEU, und nur wenn dann noch alles veraltet ist,
+# geht die Mail raus. Ein echter Ausfall wird so hoechstens drei Minuten spaeter gemeldet, ein kurzer gar nicht.
+DATENAUSFALL_NACHPRUEFUNG_MINUTEN = 3
+
+
+def datenausfall_nachpruefung_job(conn_factory, watchlist_provider) -> None:
+    """Einmaliger Job, vom Waechter angesetzt: nach dem Nachhol-Lauf neu pruefen, erst dann melden."""
+    conn = conn_factory()
+    try:
+        veraltet, gesamt = _preis_daten_veraltet(conn, watchlist_provider())
+    finally:
+        conn.close()
+    if veraltet < gesamt or gesamt < 3:
+        logger.info("Datenausfall-Nachpruefung: nach dem Nachhol-Lauf %d von %d Preisen veraltet - kein Totalausfall mehr, "
+                    "keine Meldung", veraltet, gesamt)
+        return
+    if _melde_datenausfall(veraltet, gesamt):
+        logger.warning("Datenausfall gemeldet: %d von %d Preisen veraltet (auch nach dem Nachhol-Lauf)", veraltet, gesamt)
 
 
 def _melde_datenausfall(veraltet: int, gesamt: int) -> bool:
@@ -5669,9 +5690,19 @@ def staleness_watchdog_job(conn_factory, watchlist_provider) -> None:
         except Exception:
             logger.exception("Staleness-Watchdog: Nachhol-Lauf fuer refresh_prices "
                              "konnte nicht ausgeloest werden")
-        if _melde_datenausfall(preise_veraltet, preise_gesamt):
-            logger.warning("Datenausfall gemeldet: %d von %d Preisen veraltet",
-                           preise_veraltet, preise_gesamt)
+        if preise_gesamt >= 3 and preise_veraltet >= preise_gesamt:
+            # ⚠️ NICHT sofort melden: erst den Nachhol-Lauf abwarten (DATENAUSFALL_NACHPRUEFUNG_MINUTEN)
+            try:
+                _scheduler_ref.add_job(
+                    datenausfall_nachpruefung_job, "date",
+                    run_date=datetime.now() + timedelta(minutes=DATENAUSFALL_NACHPRUEFUNG_MINUTEN),
+                    args=[conn_factory, watchlist_provider], id="datenausfall_nachpruefung", replace_existing=True)
+                logger.info("Staleness-Watchdog: Totalausfall - Nachpruefung in %d Min angesetzt, Meldung nur, wenn er bleibt",
+                            DATENAUSFALL_NACHPRUEFUNG_MINUTEN)
+            except Exception:
+                logger.exception("Staleness-Watchdog: Nachpruefung nicht ansetzbar - Meldung sofort, sonst ginge sie verloren")
+                if _melde_datenausfall(preise_veraltet, preise_gesamt):
+                    logger.warning("Datenausfall gemeldet: %d von %d Preisen veraltet", preise_veraltet, preise_gesamt)
     if ohlc_stale:
         logger.info(
             "Staleness-Watchdog: Kraken-OHLC-Historie waehrend laufendem Betrieb veraltet "

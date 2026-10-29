@@ -1709,9 +1709,12 @@ def paket_12() -> None:
 
 
 
-def paket_13() -> None:
-    """Die drei Punkte aus der Datenausfall-Untersuchung (13.08.2026)."""
-    P = "13"
+def paket_13_datenausfall() -> None:
+    """Die drei Punkte aus der Datenausfall-Untersuchung (13.08.2026).
+
+    ⚠️⚠️ BIS 29.10.2026 LIEF DIESES PAKET NIE: es hiess ebenfalls `paket_13`, und die spaetere Definition (Hebel, S6a) ueberdeckte
+    es. Bemerkt beim Einbau der Nachpruefung (NB-Export 29.10.). Jetzt eigener Name und eigener Schluessel `Datenausfall`."""
+    P = "Datenausfall"
     import sqlite3
     import staleness
     import database.db as db
@@ -1765,15 +1768,20 @@ def paket_13() -> None:
     BG._datenausfall_zuletzt = None
     gesendet = []
     import api.email_notify as EN
-    echt_send = EN.send_notification_email
+    import config as _CFG
+    echt_send, echt_cfg = EN.send_notification_email, _CFG.load_config
+    # ⚠️ seit der Reparatur 02.10. geht die Mail ueber `_sende_hinweismail` (Konfiguration + Empfaenger, Schluesselwoerter) -
+    # die alte Attrappe `lambda b, t, e=None` warf dort und liess drei Pruefungen rot werden, sobald das Paket wieder lief
+    _CFG.load_config = lambda *a, **k: {"benachrichtigung": {"email": {"aktiv": True, "empfaenger": "pruefung@example.invalid"}}}
     try:
-        EN.send_notification_email = lambda b, t, e=None: gesendet.append((b, t)) or True
+        EN.send_notification_email = lambda b, t, *a, **k: gesendet.append((b, t)) or True
         teilausfall = BG._melde_datenausfall(2, 3)
         total_1 = BG._melde_datenausfall(3, 3)
         total_2 = BG._melde_datenausfall(3, 3)
         winzig = BG._melde_datenausfall(2, 2)
     finally:
         EN.send_notification_email = echt_send
+        _CFG.load_config = echt_cfg
         BG._datenausfall_zuletzt = None
     pruefe(P, "ein TEILausfall meldet sich nicht", teilausfall is False,
            "eine Nachricht, die bei jedem einzelnen veralteten Asset feuert, "
@@ -1788,8 +1796,65 @@ def paket_13() -> None:
            or gesendet and "Gelegenheiten" in gesendet[0][1],
            gesendet[0][1][:80] if gesendet else "nichts gesendet")
 
+    # PUNKT 2b (NB-Export 29.10.): ERST der Nachhol-Lauf, DANN die Meldung. Am 28.10. ging "alle Kurse veraltet" eine Sekunde
+    # NACH dem erfolgreichen Nachhol-Lauf raus. Geprueft am Ablauf selbst: Waechter mit Totalausfall -> keine Mail, aber ein
+    # einmaliger Job; Nachpruefung mit frischen Preisen -> keine Mail; mit weiter veralteten -> Mail.
+    class _Sched:
+        def __init__(self): self.jobs, self.modify = [], []
+        def add_job(self, fn, trigger, **kw): self.jobs.append((fn, trigger, kw))
+        def modify_job(self, jid, **kw): self.modify.append(jid)
+
+    class _C:
+        def close(self): pass
+
+    _lage = {"preise": (62, 62)}
+    _alt = {n: getattr(BG, n) for n in ("_scheduler_ref", "_laufzeitluecke", "_history_data_is_stale", "_ohlc_data_is_stale",
+                                         "_preis_daten_veraltet")}
+    _alt_lz = BG.db.letzter_joblauf
+    gesendet2 = []
+    try:
+        BG._scheduler_ref = _Sched()
+        BG._laufzeitluecke = lambda conn: None
+        BG._history_data_is_stale = lambda conn, wl: False
+        BG._ohlc_data_is_stale = lambda conn, wl: False
+        BG._preis_daten_veraltet = lambda conn, wl: _lage["preise"]
+        BG.db.letzter_joblauf = lambda conn, job: None
+        BG._datenausfall_zuletzt = None
+        EN.send_notification_email = lambda b, t, *a, **k: gesendet2.append(b) or True
+        _CFG.load_config = lambda *a, **k: {"benachrichtigung": {"email": {"aktiv": True, "empfaenger": "pruefung@example.invalid"}}}
+        BG.staleness_watchdog_job(lambda: _C(), lambda: [])
+        jobs = list(BG._scheduler_ref.jobs)
+        sofort = list(gesendet2)
+        _lage["preise"] = (0, 62)
+        BG.datenausfall_nachpruefung_job(lambda: _C(), lambda: [])
+        nach_erholung = list(gesendet2)
+        _lage["preise"] = (62, 62)
+        BG.datenausfall_nachpruefung_job(lambda: _C(), lambda: [])
+        bleibt = list(gesendet2)
+        BG._datenausfall_zuletzt = None
+        _lage["preise"] = (20, 62)
+        BG._scheduler_ref = _Sched()
+        BG.staleness_watchdog_job(lambda: _C(), lambda: [])
+        teil_jobs = list(BG._scheduler_ref.jobs)
+    finally:
+        for n, v in _alt.items():
+            setattr(BG, n, v)
+        BG.db.letzter_joblauf = _alt_lz
+        EN.send_notification_email = echt_send
+        _CFG.load_config = echt_cfg
+        BG._datenausfall_zuletzt = None
+    pruefe(P, "⚠️⚠️ ein Totalausfall meldet sich NICHT sofort, sondern setzt die Nachpruefung an",
+           not sofort and len(jobs) == 1 and jobs[0][0] is BG.datenausfall_nachpruefung_job and jobs[0][1] == "date"
+           and jobs[0][2].get("id") == "datenausfall_nachpruefung" and jobs[0][2].get("replace_existing") is True,
+           "28.10.: Mail 1 s NACH dem erfolgreichen Nachhol-Lauf · Mails sofort %s · Jobs %s" % (sofort, [j[2].get("id") for j in jobs]))
+    pruefe(P, "die Nachpruefung schweigt, wenn der Nachhol-Lauf die Preise geholt hat", nach_erholung == [],
+           "ein Ausfall von wenigen Minuten ist keine Meldung wert")
+    pruefe(P, "und meldet, wenn der Totalausfall bleibt", len(bleibt) == 1 and "veraltet" in bleibt[0], str(bleibt))
+    pruefe(P, "ein Teilausfall setzt keine Nachpruefung an", teil_jobs == [], str(teil_jobs))
+    pruefe(P, "die Frist ist kurz", 1 <= BG.DATENAUSFALL_NACHPRUEFUNG_MINUTEN <= 5, str(BG.DATENAUSFALL_NACHPRUEFUNG_MINUTEN))
+
     # PUNKT 3: ein benanntes Praedikat statt drei stillschweigender.
-    con = sqlite3.connect("data/tradinginfotool.db"); con.row_factory = sqlite3.Row
+    con = sqlite3.connect("file:data/tradinginfotool.db?mode=ro", uri=True); con.row_factory = sqlite3.Row   # nur lesen
     try:
         z = db.zaehle_signale(con)
         pruefe(P, "Empfehlungen und Abweisungen werden getrennt gezaehlt",
@@ -33498,7 +33563,7 @@ def paket_gesamtplan() -> None:
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "13": paket_13, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": _ohne_statusbuchung(paket_15), "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "Datenausfall": paket_13_datenausfall, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": _ohne_statusbuchung(paket_15), "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
           "Kostenbezug": paket_kostenbezug,
