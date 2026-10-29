@@ -10,6 +10,26 @@ Lösung sein, die einen Vorteil beim Handel darstellt und sich daraus Aktionen a
 Lösungssuche, nicht einfach abhaken“*). Vorab committet, **bevor** ein Werkzeug gebaut oder ein Ergebnis angesehen wird; jede
 spätere Änderung erscheint als **Fassung 2** mit Ursachenbegründung.
 
+> ## ⚠️ FASSUNG 2 (29.10.2026, beim Bau, vor jedem echten Ergebnis)
+>
+> Festlegungen, die Fassung 1 offen ließ. Keine ändert eine Hypothese, eine Schwelle oder ein Kriterium.
+>
+> | | Lücke in Fassung 1 | Festlegung |
+> |---|---|---|
+> | **Rang-Vorlauf** | „gegen die vorangehenden 365 Tage“: E beginnt erst nach 120 Tagen Schätzfenster, der volle 365-T-Rang erst 2024-07 — die zweite Epoche wäre fast leer | bis 365 Werte vorliegen, gilt der **vorhandene** Vorlauf, mindestens 120 Werte (dieselbe Mindestzahl wie das Schätzfenster). Fünftel ab 2023-08-29 |
+> | **Zweiter Weg ETH** „sein Band schließt das Gegenteil aus“ | mehrdeutig | **wörtlich und streng**, wie H-1 Fassung 3: das ETH-Band liegt ganz auf **derselben** Seite des eigenen Nullpunkts wie BTC |
+> | **Kurs zum Zeitpunkt T** | offen | **Eröffnungskurs** der Spot-Stundenkerze, die um T beginnt. Gegenprobe: Eröffnung gegen Schluss der Vorstunde, größte Abweichung 0,08 %. ⚠ Eine Kerze fehlt bei Binance (24.03.2023 13:00 UTC, BTC und ETH gleich); kein Einstiegszeitpunkt |
+> | **Schichten (Punkt 5)** | Grenzen offen | Drittel der Tagesbewegung r_t **im Urteilsfenster** (nur zur Einteilung der Auswertung, kein Signal) |
+> | **Vorzeichen (Punkte 2–6)** | Bezug offen | Vorzeichen von D; die Hauptrichtung ist das Vorzeichen von D − Nullpunkt (Punkt 1) |
+> | **S3 Auflösung** | Welten je k offen | 250 Welten je k; die Pflanzung ±k verschiebt D um **2k** — X wird in k ausgewiesen, die Messung vergleicht das Band mit **2X** |
+> | **D Orakel** | Schwelle offen | 200 Welten, bestanden bei TRÄGT HÖHER in ≥ 95 % je Zelle |
+> | **Freigabe** | offen | die Messung läuft nur, wenn der Selbsttest mit **≥ 1.000** Welten bestanden hat (Datei `p102_wale_selbsttest.json`) |
+>
+> **Werkzeuge:** `p102_wale_basis.py` (EIN Rechenweg für Vorprüfung, Selbsttest und Messung) · `p102_wale_vorpruefung.py` ·
+> `p102_wale_selbsttest.py` · `p102_wale_messung.py` · `p102_wale_gegenprobe.py` (eigener Rechenweg, zwei Vorgriff-Mutationen).
+> **Vorab nachgewiesen** (künstliche Daten): Residuum trennt (ρ zum gepflanzten Eigenen 0,993, zu R und r ≤ 0,014), Fünftel
+> 21/60/20 %, t-Band deckt 95,5 % bei Soll 95 %. Reproduktion der Stichprobe: G und R in allen vier q exakt (≤ 1,4·10⁻¹⁷).
+
 ## 1. Die Frage
 
 > **Zeigt der Netto-Fluss der GROSSEN Aufträge an einem Tag etwas über den Kurs der folgenden Tage — über das hinaus, was der

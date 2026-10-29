@@ -12,6 +12,7 @@ Die Rohdatei wird im Speicher gelesen und nicht gespeichert.
 
     python -X utf8 Basisinfos/Rechenkern_02_10/wale_voll.py --markt spot --symbol BTCUSDT   # ein Lader (setzt fort)
     python -X utf8 Basisinfos/Rechenkern_02_10/wale_voll.py --bericht                       # Vollständigkeit und Abgleich
+    python -X utf8 Basisinfos/Rechenkern_02_10/wale_voll.py --kurse                         # Spot-Stundenkerzen (Messplan W §3)
 """
 import os
 import sqlite3
@@ -119,6 +120,33 @@ def lade(markt: str, symbol: str) -> int:
     return fehlt
 
 
+def kurse() -> None:
+    """Spot-Stundenkerzen BTCUSDT/ETHUSDT per REST in die Tabelle ``kurs`` (Messplan W §3: der Bestand hat BTC-Stundenkurse erst
+    ab 2023-09, 2.668). Der Kurs ZUM Zeitpunkt T ist der ERÖFFNUNGSKURS der Kerze, die um T beginnt. Nur abgeschlossene Kerzen."""
+    c = verbinde()
+    c.execute("CREATE TABLE IF NOT EXISTS kurs (symbol TEXT, ts INTEGER, eroeffnung REAL, schluss REAL, PRIMARY KEY (symbol, ts))")
+    jetzt = int(datetime.now(timezone.utc).timestamp() * 1000)
+    for symbol in SYMBOLE:
+        ab = int(datetime(START.year, START.month, START.day, tzinfo=timezone.utc).timestamp() * 1000)
+        letzt = c.execute("SELECT MAX(ts) FROM kurs WHERE symbol=?", (symbol,)).fetchone()[0]
+        if letzt:
+            ab = letzt + 3600000
+        n = 0
+        while ab < jetzt - 3600000:
+            r = WS._hole(WS.MAERKTE["spot"][1], {"symbol": symbol, "interval": "1h", "startTime": ab, "limit": 1000})
+            if r is None:
+                raise RuntimeError("Stundenkerzen %s nicht abrufbar ab %s" % (symbol, _utc(ab)))
+            k = [x for x in r.json() if x[6] < jetzt]                     # x[6] = Schlusszeit: nur abgeschlossene
+            if not k:
+                break
+            c.executemany("INSERT OR REPLACE INTO kurs VALUES (?,?,?,?)", [(symbol, x[0], float(x[1]), float(x[4])) for x in k])
+            c.commit()
+            n += len(k)
+            ab = k[-1][0] + 3600000
+        print("  ✔ Kurse %s: %d neue Stunden" % (symbol, n), flush=True)
+    c.close()
+
+
 def bericht():
     c = sqlite3.connect("file:%s?mode=ro" % ABLAGE.replace("\\", "/"), uri=True)
     bis = date.today() - timedelta(days=1)
@@ -142,6 +170,8 @@ def bericht():
 if __name__ == "__main__":
     if "--bericht" in sys.argv:
         bericht()
+    elif "--kurse" in sys.argv:
+        kurse()
     else:
         a = sys.argv
         lade(a[a.index("--markt") + 1], a[a.index("--symbol") + 1])
