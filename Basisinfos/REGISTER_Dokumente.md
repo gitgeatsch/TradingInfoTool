@@ -6,7 +6,7 @@
 | Art | Anzahl |
 |---|---|
 | Plan | 21 |
-| Messplan / Vorabfestlegung | 39 |
+| Messplan / Vorabfestlegung | 40 |
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
@@ -15,7 +15,7 @@
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 1 |
-| **gesamt** | **225** |
+| **gesamt** | **226** |
 
 ## Plan
 
@@ -50,6 +50,7 @@
 | [`Messkonzept_LLM_Standard_25_08.md`](Messkonzept_LLM_Standard_25_08.md) | – | vor Messstandard (2026-08-25) |
 | [`Messplan_H1_Lagegerechte_Handlung_28_10.md`](Messplan_H1_Lagegerechte_Handlung_28_10.md) | Messplan H-1 „Lagegerechte Handlung“ — VORAB festgelegt (28.10.2026) | **laufend** |
 | [`Messplan_Indikator_Atlas_23_10.md`](Messplan_Indikator_Atlas_23_10.md) | Messplan Indikator-Atlas (V-1) — Was bewegt den Gesamtmarkt? Fassung 1, VORAB festgelegt (23.10.2026) | **laufend** |
+| [`Messplan_Wale_29_10.md`](Messplan_Wale_29_10.md) | Messplan W „Wal-Fluss“ — VORAB festgelegt (29.10.2026) | **laufend** |
 | [`Pruefliste_Messungen_24_25_09.md`](Pruefliste_Messungen_24_25_09.md) | Prüfliste — alle Messungen vom 24./25.09. gegen den Messstandard | Arbeitsblatt |
 | [`Pruefplan_H_als_Regel_30_08.md`](Pruefplan_H_als_Regel_30_08.md) | – | vor Messstandard (2026-08-30) |
 | [`Vorabfestlegung_15_Reverse_Engineering_25_09.md`](Vorabfestlegung_15_Reverse_Engineering_25_09.md) | Vorabfestlegung 15 — Reverse Engineering der scharfen Anstiege | Arbeitsblatt |

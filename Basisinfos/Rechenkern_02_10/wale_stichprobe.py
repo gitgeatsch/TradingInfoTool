@@ -66,9 +66,9 @@ def _hole(url, params=None, versuche=4):
     return None
 
 
-def lies_tag(markt: str, datum: str) -> pd.DataFrame | None:
+def lies_tag(markt: str, datum: str, symbol: str = "BTCUSDT") -> pd.DataFrame | None:
     pfad = MAERKTE[markt][0]
-    r = _hole("https://data.binance.vision/data/%s/daily/aggTrades/BTCUSDT/BTCUSDT-aggTrades-%s.zip" % (pfad, datum))
+    r = _hole("https://data.binance.vision/data/%s/daily/aggTrades/%s/%s-aggTrades-%s.zip" % (pfad, symbol, symbol, datum))
     if r is None:
         return None
     with zipfile.ZipFile(io.BytesIO(r.content)) as z:
