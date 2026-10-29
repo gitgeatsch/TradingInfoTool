@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 84 |
+| Voranalyse / Recherche | 85 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 1 |
-| **gesamt** | **224** |
+| **gesamt** | **225** |
 
 ## Plan
 
@@ -225,6 +225,7 @@
 | [`Voranalyse_Vorsprungs_Atlas_25_10.md`](Voranalyse_Vorsprungs_Atlas_25_10.md) | Voranalyse Vorsprungs-Atlas (25.10.2026) | Arbeitsblatt |
 | [`Voranalyse_W2_Wetter_Gewicht_29_09.md`](Voranalyse_W2_Wetter_Gewicht_29_09.md) | Voranalyse W2 — ist das Wetter ein Gewicht auf rsi? Der Nachweis ab 2024 (29.09.2026) | Arbeitsblatt |
 | [`Voranalyse_W3_Stilllegung_alte_Kette_27_10.md`](Voranalyse_W3_Stilllegung_alte_Kette_27_10.md) | Voranalyse W-3: Die alte Spot-Kette stilllegen statt nur anhalten (27.10.2026) | Arbeitsblatt |
+| [`Voranalyse_Wale_29_10.md`](Voranalyse_Wale_29_10.md) | Voranalyse Wale — welche Größe zeigt welches Verhalten (29.10.2026) | **laufend** |
 | [`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`](Voranalyse_Weiterentwicklung_Fuehrung_26_10.md) | Voranalyse: Das Fakten- und Führungssystem weiterentwickeln (26.10.2026) | Arbeitsblatt |
 | [`Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md`](Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md) | – | vor Messstandard (2026-08-23) |
 
