@@ -137,3 +137,46 @@ SOL (Kern) braucht einen eigenen Download und folgt nur bei TRÄGT.
 ⚠️ **Ehrliche Erwartung:** Der übrige Fluss trägt im Querschnitt nicht (2.169) und begleitet nur die Bewegung (2.665). Am ehesten
 trägt der **Spot-Großfluss** (er läuft unabhängig vom Rest, Voranalyse §6), am wenigsten der Futures-Großfluss. Zwei Werte und
 rund 640 Urteilstage sind wenig: X wird eher bei 1 Pp und darüber liegen, ein kleinerer Effekt bliebe unsichtbar.
+
+---
+
+## 9. VORPRÜFUNG und SELBSTTEST (29.10.2026 abends, vor jedem echten Ergebnis)
+
+**Voller Download** (`wale_voll.py`, Nutzer *„Ok a, BTC und ETH voll laden“*): 4 × 1.396 Tage (01.01.2023–27.10.2026), 0 Ausfälle,
+Tag und Stunde verdichtet, Rohdaten nicht behalten. Engpass war die Leitung (6,3 MB/s, Prozessor 17 %), nicht der Rechner;
+Spot BTC 2023 (gebührenfrei, ~100 MB je Tag) über Zeitabschnitte auf mehrere Lader verteilt (jeder Tag wird vor dem Laden in der
+Ablage nachgesehen). Der 28.10. fehlt bei Futures noch im Archiv (Nachlauf).
+
+**Vorprüfung** (`p102_wale_vorpruefung.txt`): ✔ **BESTANDEN**
+
+| | |
+|---|---|
+| Vollständigkeit | alle 4 Reihen 1.396/1.396 Tage, Stunden = Tag an jedem Tag |
+| Archiv gegen REST-Kerze | Spot 1,0000–1,0011 · Futures 0,987–1,033, **drei auffällige Tage je Wert**, alle außerhalb des Urteilsfensters (unten) |
+| Reproduktion | G und R auf allen 93 Stichprobentagen je Markt exakt (6,9·10⁻¹⁸) |
+| Kurse | an jedem Einstiegszeitpunkt (00:00, 06:00) vorhanden |
+| Blöcke im Urteilsfenster | H1/H3 43 à 15 T · H7 31 à 21 T (≥ 20 ✔) |
+| Autokorrelation E (lag 1) | +0,06 / −0,04 / −0,07 / +0,02 — E ist fast unabhängig von Tag zu Tag |
+
+**Die drei auffälligen Futures-Tage — Stunde für Stunde gegen die REST-Stundenkerzen geprüft:**
+
+| Tag | Befund | Folge |
+|---|---|---|
+| 16.08.2023 | Archiv = Summe der REST-**Stunden**kerzen (1,0000); nur die REST-**Tages**kerze weicht um 3 % ab | Archiv stimmt |
+| 28.10.2024 | Archiv in den Stunden 19–21 UTC über REST (Stunde 21 ×3,9) | offen, welche Seite fehlt; ein Tag der zweiten Epoche, Fluss als **Anteil** am Umsatz → klein |
+| 27.10.2026 | Archiv in Stunde 00 nur ~50 % von REST | frische Datei — Nachlauf; außerhalb jeder Auswertung |
+
+**Selbsttest** (`p102_wale_selbsttest.txt`, 1.000 Welten): ✔ **BESTANDEN**, Messung freigegeben (`p102_wale_selbsttest.json`)
+
+| | Ergebnis |
+|---|---|
+| S1 Fehlalarm | **0,3–1,4 %** in allen 12 Zellen (Soll ≤ 5 %, Stufungsgrenze 1,4 %) |
+| S2 Ballung | Blockvertauschung **1,4–4,2 %** (Soll ≤ 5 % ✔) · zirkuläre Verschiebung bis 5,4 % ✖ |
+| **Nullwelt** nach Vorab-Regel | **Blockvertauschung** (nur sie hält S1 und S2) |
+| D Orakel | 200 von 200 in allen 6 Zellen |
+| **S3 Auflösung X** (k, D verschiebt um 2k) | BTC H1/H3 **1 Pp**, H7 2 Pp · ETH H1 1 Pp, H3 2 Pp, H7 über 2 Pp |
+
+⚠️ **Was die Auflösung heißt:** Gefunden wird ein Unterschied zwischen oberstem und unterstem Fünftel ab **2 Pp in 1–3 Tagen**
+(BTC) — das ist ein **großer** Effekt. Kleinere Vorsprünge sieht diese Messung nicht; ein „trägt nicht“ gilt nur **bis X**.
+⚠️ S2 liegt über der Stufungsgrenze (bis 4,2 % statt 1,4 %): unter Ballung ist die Messung weniger streng als nominell — die
+Punkte 2–7 (Jahre, q-Leiter, ETH, Schichten, Verzug) sind deshalb Pflicht, nicht Beiwerk.

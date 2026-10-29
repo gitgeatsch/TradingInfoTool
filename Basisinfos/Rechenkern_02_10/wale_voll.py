@@ -88,15 +88,16 @@ def _utc(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, timezone.utc).isoformat(timespec="seconds")
 
 
-def lade(markt: str, symbol: str) -> int:
+def lade(markt: str, symbol: str, ab: date = START, bis: date | None = None) -> int:
+    """Setzt fort. Mehrere Lader je Reihe sind zulässig (Zeitabschnitte ``ab``/``bis``): jeder Tag wird VOR dem Laden in der Ablage
+    nachgesehen, nicht nur beim Start (29.10.: Spot BTC 2023 gebührenfrei ~100 MB je Tag war der Engpass)."""
     c = verbinde()
-    bis = date.today() - timedelta(days=1)
-    fertig = {d for (d,) in c.execute("SELECT datum FROM tag WHERE symbol=? AND markt=?", (symbol, markt))}
+    bis = min(bis or date.today(), date.today() - timedelta(days=1))
     kz = kerzen(markt, symbol, bis)
-    fehlt, d = 0, START
+    fehlt, d = 0, ab
     while d <= bis:
         datum, d = d.isoformat(), d + timedelta(days=1)
-        if datum in fertig:
+        if c.execute("SELECT 1 FROM tag WHERE symbol=? AND markt=? AND datum=?", (symbol, markt, datum)).fetchone():
             continue
         df = WS.lies_tag(markt, datum, symbol)
         if df is None:
@@ -174,4 +175,6 @@ if __name__ == "__main__":
         kurse()
     else:
         a = sys.argv
-        lade(a[a.index("--markt") + 1], a[a.index("--symbol") + 1])
+        lade(a[a.index("--markt") + 1], a[a.index("--symbol") + 1],
+             date.fromisoformat(a[a.index("--ab") + 1]) if "--ab" in a else START,
+             date.fromisoformat(a[a.index("--bis") + 1]) if "--bis" in a else None)

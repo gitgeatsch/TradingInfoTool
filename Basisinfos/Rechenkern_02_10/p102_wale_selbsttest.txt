@@ -1,0 +1,48 @@
+SELBSTTEST Messplan W (9900K, 2026-10-29T23:19:32, 1000 Welten) — echte Erträge, künstliche Signale, KEIN echtes Ergebnis
+Soll S1/S2 <= 5 % je Zelle (vorab) · Stufungsgrenze 1.4 % ausgewiesen · Urteilsfenster 2025-01-01 bis 2026-09-30, 638 Tage
+Autokorrelation (lag 1) der echten E, q 5 %: BTC spot +0.057, BTC futures -0.044, ETH spot -0.069, ETH futures +0.016
+
+FEHLALARM (TRÄGT, Punkt 1) je Zelle — Spalten H 1 / 3 / 7 T
+  block S1 BTCUSDT spot      0.8 %    1.0 %    1.0 % ✔
+  block S1 BTCUSDT futures   0.5 %    1.4 %    1.0 % ✔
+  block S1 ETHUSDT spot      0.6 %    1.0 %    0.8 % ✔
+  block S1 ETHUSDT futures   0.3 %    1.1 %    1.2 % ✔
+  block S2 BTCUSDT spot      2.3 %    2.0 %    3.2 % ✔
+  block S2 BTCUSDT futures   2.4 %    2.5 %    3.0 % ✔
+  block S2 ETHUSDT spot      1.4 %    1.4 %    2.4 % ✔
+  block S2 ETHUSDT futures   1.8 %    2.6 %    4.2 % ✔
+  kreis S1 BTCUSDT spot      1.0 %    1.1 %    1.1 % ✔
+  kreis S1 BTCUSDT futures   0.6 %    1.4 %    1.4 % ✔
+  kreis S1 ETHUSDT spot      0.5 %    0.9 %    0.8 % ✔
+  kreis S1 ETHUSDT futures   0.6 %    1.0 %    0.8 % ✔
+  kreis S2 BTCUSDT spot      2.5 %    2.9 %    4.1 % ✔
+  kreis S2 BTCUSDT futures   3.3 %    3.9 %    4.2 % ✔
+  kreis S2 ETHUSDT spot      2.0 %    3.1 %    3.5 % ✔
+  kreis S2 ETHUSDT futures   2.7 %    4.5 %    5.4 % ✖ über 5 %
+
+NULLWELT nach Vorab-Regel: block (Block hält: True, Kreis hält: False)
+
+S3 AUFLÖSUNG (250 Welten je k, Signal wie S1; Fundquote = TRÄGT HÖHER) — k in Pp, D verschiebt um 2k
+  BTCUSDT spot    H1  0.10:  2%  0.25: 20%  0.50: 75%  1.00:100%  2.00:100%  ->  X = 1.00 Pp (D-Unterschied 2.00 Pp)
+  BTCUSDT spot    H3  0.10:  1%  0.25:  4%  0.50: 26%  1.00: 91%  2.00:100%  ->  X = 1.00 Pp (D-Unterschied 2.00 Pp)
+  BTCUSDT spot    H7  0.10:  2%  0.25:  4%  0.50: 10%  1.00: 48%  2.00: 99%  ->  X = 2.00 Pp (D-Unterschied 4.00 Pp)
+  BTCUSDT futures H1  0.10:  2%  0.25: 20%  0.50: 76%  1.00:100%  2.00:100%  ->  X = 1.00 Pp (D-Unterschied 2.00 Pp)
+  BTCUSDT futures H3  0.10:  3%  0.25:  7%  0.50: 36%  1.00: 92%  2.00:100%  ->  X = 1.00 Pp (D-Unterschied 2.00 Pp)
+  BTCUSDT futures H7  0.10:  1%  0.25:  3%  0.50: 10%  1.00: 56%  2.00: 99%  ->  X = 2.00 Pp (D-Unterschied 4.00 Pp)
+  ETHUSDT spot    H1  0.10:  1%  0.25:  7%  0.50: 31%  1.00: 96%  2.00:100%  ->  X = 1.00 Pp (D-Unterschied 2.00 Pp)
+  ETHUSDT spot    H3  0.10:  1%  0.25:  2%  0.50:  7%  1.00: 47%  2.00: 98%  ->  X = 2.00 Pp (D-Unterschied 4.00 Pp)
+  ETHUSDT spot    H7  0.10:  1%  0.25:  1%  0.50:  2%  1.00: 24%  2.00: 74%  ->  X = über 2 Pp
+  ETHUSDT futures H1  0.10:  1%  0.25:  5%  0.50: 36%  1.00: 90%  2.00:100%  ->  X = 1.00 Pp (D-Unterschied 2.00 Pp)
+  ETHUSDT futures H3  0.10:  0%  0.25:  2%  0.50:  8%  1.00: 44%  2.00: 99%  ->  X = 2.00 Pp (D-Unterschied 4.00 Pp)
+  ETHUSDT futures H7  0.10:  1%  0.25:  2%  0.50:  2%  1.00: 15%  2.00: 74%  ->  X = über 2 Pp
+
+D ORAKEL (200 Welten, E = y + Rauschen gleicher Streuung) — Soll TRÄGT HÖHER in >= 95 %
+  BTCUSDT H1  200 von 200 ✔
+  BTCUSDT H3  200 von 200 ✔
+  BTCUSDT H7  200 von 200 ✔
+  ETHUSDT H1  200 von 200 ✔
+  ETHUSDT H3  200 von 200 ✔
+  ETHUSDT H7  200 von 200 ✔
+
+ERGEBNIS: BESTANDEN · Nullwelt block · X je Zelle siehe S3
+Seiteneffekt: geschützte Datei unverändert: True
