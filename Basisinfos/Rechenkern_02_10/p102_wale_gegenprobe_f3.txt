@@ -1,0 +1,25 @@
+GEGENPROBE Messplan W FASSUNG 3 (9900K, 2026-10-30T07:13:05) — zweiter Rechenweg, q 5 %, Urteilsfenster je Wert
+
+BTCUSDT spot    E: größte Abweichung 1.4e-16 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 17 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 11 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +1.2621 Pp · Messung +1.2621 Pp ✔ · t-Band Breite 2.487 Pp · Bootstrap 2.384 Pp (Verhältnis 0.96)
+   H3  D Schleife +1.3577 Pp · Messung +1.3577 Pp ✔ · t-Band Breite 3.681 Pp · Bootstrap 3.707 Pp (Verhältnis 1.01)
+   H7  D Schleife +0.8828 Pp · Messung +0.8828 Pp ✔ · t-Band Breite 5.901 Pp · Bootstrap 5.629 Pp (Verhältnis 0.95)
+
+ETHUSDT spot    E: größte Abweichung 4.5e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 11 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 10 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.6592 Pp · Messung +0.6592 Pp ✔ · t-Band Breite 2.834 Pp · Bootstrap 2.742 Pp (Verhältnis 0.97)
+   H3  D Schleife +1.9944 Pp · Messung +1.9944 Pp ✔ · t-Band Breite 5.486 Pp · Bootstrap 5.328 Pp (Verhältnis 0.97)
+   H7  D Schleife +2.2593 Pp · Messung +2.2593 Pp ✔ · t-Band Breite 6.974 Pp · Bootstrap 6.501 Pp (Verhältnis 0.93)
+
+SOLUSDT spot    E: größte Abweichung 6.2e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 10 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 7 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.5835 Pp · Messung +0.5835 Pp ✔ · t-Band Breite 2.105 Pp · Bootstrap 2.044 Pp (Verhältnis 0.97)
+   H3  D Schleife +0.7768 Pp · Messung +0.7768 Pp ✔ · t-Band Breite 3.267 Pp · Bootstrap 3.089 Pp (Verhältnis 0.95)
+   H7  D Schleife -0.7500 Pp · Messung -0.7500 Pp ✔ · t-Band Breite 4.803 Pp · Bootstrap 4.809 Pp (Verhältnis 1.00)
+
+Seiteneffekt: geschützte Datei unverändert: True
+ERGEBNIS: BESTANDEN

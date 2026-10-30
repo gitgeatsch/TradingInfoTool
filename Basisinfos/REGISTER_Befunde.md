@@ -4405,6 +4405,10 @@
 
 - Quelle: Messplan_Wale_29_10.md §10; p102_wale_messung, p102_wale_gegenprobe
 
+**G16-wale-spot-f3** — Unabhaengige Bestaetigung (Fassung 3, vorab d5df61fb) auf UNGESEHENEN Jahren 2020-2022: der Spot-Grossfluss TRAEGT bei BTC ueber 1 Tag fuer sich (+1,26 Pp oberstes gegen unterstes Fuenftel, einseitige Untergrenze +0,16 ueber Nullpunkt +0,08, Bonferroni 3; 2020/21/22 einzeln positiv, Verzug 06:00 +0,81) - nach Vorab-Regel NICHT BESTAETIGT, weil nur der strenge zweite Weg fehlt (ETH positiv +0,66/+1,99/+2,26, Band nicht ueber Nullpunkt); H3/H7 nicht trennbar, SOL H7 negativ; BTC H1 ueber alle Jahre positiv, aber kleiner geworden (2020 +1,75 ... 2026 +0,21) -> Abstimmung
+
+- Quelle: Messplan_Wale_29_10.md §13; p102_wale_messung_f3, p102_wale_gegenprobe_f3
+
 ## ○ WAS OFFEN IST
 
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund

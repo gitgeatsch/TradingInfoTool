@@ -290,3 +290,32 @@ deutlich stärker (2021) — beides hebt sich auf. **Was das für die Bestätigu
 Fassung 1 gemessen hat): BTC H3 D +0,71 ≈ k 0,35 → rund **15 %**; BTC H7 D +2,08 ≈ k 1,0 → rund **50 %**. Eine Bestätigung ist also
 nur wahrscheinlich, wenn der Effekt in 2020–22 **größer** war als 2025–26 — ein **Nichtbestätigen** wäre bei dieser Stärke das
 **erwartete** Ergebnis und **kein** Beleg gegen den Effekt.
+
+## 13. ERGEBNIS FASSUNG 3 — unabhängige Bestätigung (30.10.2026, `p102_wale_messung_f3.txt`, Gegenprobe `p102_wale_gegenprobe_f3.txt` ✔)
+
+**Nutzer 30.10. vor der Messung:** *„Messen und Vergleichen ja, aber die Erwartung, dass [Epochen] das gleiche Ergebnis liefern
+sollen, ist nicht realistisch. Das gilt m. E. für alle Messungen.“* — die Epochen-Punkte unten sind in diesem Licht zu lesen.
+
+| BTC Spot, 2020–22 (ungesehen) | H1 | H3 | H7 |
+|---|---|---|---|
+| D [einseitige Untergrenze] · Nullpunkt | **+1,26 [+0,16]** · +0,08 | +1,36 [−0,27] · +0,03 | +0,88 [−1,72] · +0,52 |
+| Stufe | ✔ **TRÄGT (oberstes Fünftel HÖHER)** | NICHT TRENNBAR | TRÄGT NICHT BIS 4 Pp |
+| 2020 / 2021 / 2022 | +1,75 / +1,05 / +0,99 | +0,75 / +1,10 / +2,16 | +0,66 / +0,70 / +0,95 |
+| q 1 / 5 / 10 / 20 % | alle positiv | 3 von 4 | 2 von 4 |
+| Verzug 06:00 | +0,81 | +0,93 | +0,01 |
+| **ETH** 2020–22 | +0,66 (TRÄGT NICHT BIS 2) | +1,99 (NICHT TRENNBAR) | +2,26 (NICHT TRENNBAR) |
+| **SOL** 2021-07–2026-09 | +0,58 | +0,78 | **−0,75** |
+| Punkte 1–8 | ✔ ✔ ✔ **✖** ✔ ✔ ✔ ✔ | ✖ ✔ ✔ ✖ ✔ ✔ ✔ ✔ | ✖ ✔ ✖ ✖ ✔ ✔ ✖ ✔ |
+| **Urteil (Vorab-Regel)** | nicht bestätigt — **nur** Punkt 4 (ETH-Band) fehlt | nicht bestätigt | nicht bestätigt |
+
+### Zwischenfazit zum Ziel
+
+| | |
+|---|---|
+| ✔ **Belegt** | Auf **ungesehenen** Jahren trägt der Spot-Großfluss bei **BTC über 1 Tag** für sich (Band über dem Nullpunkt, Bonferroni 3, einseitig): nach Tagen mit starkem Netto-Großkauf lag BTC am Folgetag **+1,26 Pp** höher als nach Tagen mit Netto-Großverkauf — in jedem Jahr 2020, 2021, 2022 positiv, auch beim Einstieg erst um 06:00 |
+| ⚠️ Warum trotzdem „nicht bestätigt“ | der vorab strenge zweite Weg: ETH ist in allen drei Horizonten **positiv**, sein Band schließt den Nullpunkt aber nicht aus |
+| Bild über alle Daten (Fakt) | BTC H1: 2020 +1,75 · 2021 +1,05 · 2022 +0,99 · 2025 +0,43 · 2026 +0,21 — **immer positiv, aber kleiner geworden** (Epoche, Nutzerhinweis 30.10.) |
+| ⚠️ Gegenrichtung | SOL H7 negativ (−0,75), BTC H7 schwach — über eine Woche zeigt sich **kein** Vorteil; wenn, dann **kurz** (1 Tag) |
+| Herausrechnen | wirkt wieder: E trägt mehr als der rohe Großfluss (BTC H1 +1,26 gegen +0,92) |
+
+**Gegenprobe** ✔: E bis 6·10⁻¹⁷, Fünftel 100 % gleich, D exakt, Bootstrap-Band 0,93–1,01 der t-Breite, alle Vorgriff-Mutationen erkannt.

@@ -1,0 +1,41 @@
+MESSUNG Messplan W FASSUNG 3 (9900K, 2026-10-30T07:12:57) · BESTÄTIGUNG, einseitig (oberstes Fünftel HÖHER) · Nullwelt block · q 5 % · Pp
+
+══ BTCUSDT Spot · Urteil 2020-01-01 bis 2022-12-31 ══
+  H1  D +1.26 [Untergrenze einseitig +0.16] Null +0.08 · TRAEGT (oberstes Fünftel HÖHER) · 173/193 Tage oben/unten, 71 Bl., AK 0.045
+       Jahre 2020 +1.75 2021 +1.05 2022 +0.99 · q 1/5/10/20 +0.27 +1.26 +1.05 +0.48 · Schichten Fall/Mitte/Anstieg +1.31 +2.66 +0.23 · Verzug 06:00 +0.81
+       Auskunft: gepoolt 2020-2026 +0.77 · 2022-07..12 (gebührenfrei) +1.23 · Vergleichsarme G roh +0.92, R roh -0.30
+  H3  D +1.36 [Untergrenze einseitig -0.27] Null +0.03 · NICHT TRENNBAR · 173/193 Tage oben/unten, 71 Bl., AK -0.041
+       Jahre 2020 +0.75 2021 +1.10 2022 +2.16 · q 1/5/10/20 -0.42 +1.36 +1.77 +0.51 · Schichten Fall/Mitte/Anstieg +2.42 +2.70 -0.08 · Verzug 06:00 +0.93
+       Auskunft: gepoolt 2020-2026 +1.00 · 2022-07..12 (gebührenfrei) +2.56 · Vergleichsarme G roh +0.82, R roh +0.60
+  H7  D +0.88 [Untergrenze einseitig -1.72] Null +0.52 · TRAEGT NICHT BIS 4.00 Pp · 173/193 Tage oben/unten, 53 Bl., AK 0.022
+       Jahre 2020 +0.66 2021 +0.70 2022 +0.95 · q 1/5/10/20 -0.28 +0.88 +1.46 -0.47 · Schichten Fall/Mitte/Anstieg +4.29 +3.16 -3.19 · Verzug 06:00 +0.01
+       Auskunft: gepoolt 2020-2026 +0.71 · 2022-07..12 (gebührenfrei) +3.44 · Vergleichsarme G roh +0.76, R roh -0.09
+
+══ ETHUSDT Spot · Urteil 2020-01-01 bis 2022-12-31 ══
+  H1  D +0.66 [Untergrenze einseitig -0.60] Null +0.16 · TRAEGT NICHT BIS 2.00 Pp · 209/202 Tage oben/unten, 73 Bl., AK 0.062
+       Jahre 2020 +0.35 2021 +0.20 2022 +1.10 · q 1/5/10/20 +0.76 +0.66 +0.51 +0.02 · Schichten Fall/Mitte/Anstieg +1.40 -0.08 +1.15 · Verzug 06:00 +0.86
+       Auskunft: gepoolt 2020-2026 +0.49 · 2022-07..12 (gebührenfrei)   –   · Vergleichsarme G roh -0.61, R roh -1.22
+  H3  D +1.99 [Untergrenze einseitig -0.43] Null +0.14 · NICHT TRENNBAR · 209/202 Tage oben/unten, 73 Bl., AK 0.032
+       Jahre 2020 +3.34 2021 +0.51 2022 +1.85 · q 1/5/10/20 +1.62 +1.99 +1.40 +0.74 · Schichten Fall/Mitte/Anstieg +3.31 +1.67 +1.00 · Verzug 06:00 +1.96
+       Auskunft: gepoolt 2020-2026 +1.39 · 2022-07..12 (gebührenfrei)   –   · Vergleichsarme G roh +0.57, R roh -1.12
+  H7  D +2.26 [Untergrenze einseitig -0.82] Null +0.19 · NICHT TRENNBAR · 209/202 Tage oben/unten, 53 Bl., AK 0.075
+       Jahre 2020 +4.73 2021 +1.06 2022 +0.88 · q 1/5/10/20 +1.29 +2.26 +0.65 +0.23 · Schichten Fall/Mitte/Anstieg +3.57 +1.74 +0.82 · Verzug 06:00 +2.34
+       Auskunft: gepoolt 2020-2026 +1.98 · 2022-07..12 (gebührenfrei)   –   · Vergleichsarme G roh +0.61, R roh -0.76
+
+══ SOLUSDT Spot · Urteil 2021-07-01 bis 2026-09-30 ══
+  H1  D +0.58 [Untergrenze einseitig -0.35] Null +0.05 · TRAEGT NICHT BIS 2.00 Pp · 393/380 Tage oben/unten, 128 Bl., AK -0.003
+       Jahre – · q 1/5/10/20 +0.38 +0.58 +0.33 +0.44 · Schichten Fall/Mitte/Anstieg +0.96 +0.98 -0.15 · Verzug 06:00 +0.32
+       Auskunft: gepoolt 2020-2026 +0.75 · 2022-07..12 (gebührenfrei)   –   · Vergleichsarme G roh +0.20, R roh +0.39
+  H3  D +0.78 [Untergrenze einseitig -0.67] Null -0.10 · NICHT TRENNBAR · 393/380 Tage oben/unten, 128 Bl., AK 0.009
+       Jahre – · q 1/5/10/20 +0.79 +0.78 +0.83 +1.06 · Schichten Fall/Mitte/Anstieg +0.20 +1.00 +1.43 · Verzug 06:00 +0.35
+       Auskunft: gepoolt 2020-2026 +1.03 · 2022-07..12 (gebührenfrei)   –   · Vergleichsarme G roh +0.36, R roh +0.91
+  H7  D -0.75 [Untergrenze einseitig -2.88] Null -0.09 · TRAEGT NICHT BIS 4.00 Pp · 393/380 Tage oben/unten, 92 Bl., AK -0.017
+       Jahre – · q 1/5/10/20 -0.50 -0.75 -0.82 -0.66 · Schichten Fall/Mitte/Anstieg -1.84 +0.15 +0.04 · Verzug 06:00 -0.83
+       Auskunft: gepoolt 2020-2026 -0.79 · 2022-07..12 (gebührenfrei)   –   · Vergleichsarme G roh -0.37, R roh +0.37
+
+══ URTEIL je Hypothese (BTC Haupt; Fassung 3, alle 8 Punkte) ══
+  H1  Punkte 1-8: ✔ ✔ ✔ ✖ ✔ ✔ ✔ ✔  ->  nicht bestätigt (Stufe BTC: TRAEGT (oberstes Fünftel HÖHER))
+  H3  Punkte 1-8: ✖ ✔ ✔ ✖ ✔ ✔ ✔ ✔  ->  nicht bestätigt (Stufe BTC: NICHT TRENNBAR)
+  H7  Punkte 1-8: ✖ ✔ ✖ ✖ ✔ ✔ ✖ ✔  ->  nicht bestätigt (Stufe BTC: TRAEGT NICHT BIS 4.00 Pp)
+
+Seiteneffekt: geschützte Datei unverändert: True
