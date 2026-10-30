@@ -413,3 +413,39 @@ Das sind die Ursachenmessung aus §14b mit 200 Vertauschungen und der Lauf 4b mi
 | Lauf | **neu und vollständig**, 1.000 Welten, **neuer Startwert 20261103** |
 | H7 | bei S2 **10,7 %** → das H7-Urteil (Schwelle, p) ist unter gemeinsamer Ballung **nicht verlässlich**. Ausgewiesen wird nur D, ohne TRÄGT-Aussage. H7 war ohnehin keine Hauptfrage |
 | Wirkung aufs Urteil | keine. Die Grenze eicht die **Anlage**; Schwelle und Niveau der Hypothese bleiben gleich |
+
+### 14d. FASSUNG 4d — Nullwelt in 30-T-Blöcken (VORAB: 30.10.2026 abends, vor jedem echten Wert)
+
+**Anlass:** Selbsttest 4c (Startwert 20261103, `p102_wale_selbsttest_f4c_perm.txt`) **✖ NICHT BESTANDEN**:
+
+| H 1 / 3 / 7 | S1 | S2 |
+|---|---|---|
+| Fehlalarm | 5,2 % · 5,0 % · 4,9 % | **6,7 %** · 8,0 % · 11,1 % |
+
+Die Grenze war 6,4 %. Auflösung X H1 = 0,25 Pp, Orakel 200/200. **Nicht gemessen.** Über drei Läufe kommt S2 H1 auf 170/3.000 =
+**5,7 %**. Die Vertauschung in 15-T-Blöcken ist unter gemeinsamer Ballung also leicht zu großzügig, und das ist kein Zufall.
+
+**Ursache gemessen** (1.000 Welten je Art, 200 Vertauschungen, dieselbe Vertauschung für alle sechs, nur künstliche Signale;
+ein erster Lauf mit je Wert eigener Vertauschung war ein Fehler im Prüfskript und ist verworfen):
+
+| Fehlalarm H1 / H3 / H7 | S1 | S2 |
+|---|---|---|
+| Block 15 T | 4,3 / 5,3 / 6,5 % | 5,3 / 7,1 / 10,6 % |
+| **Block 30 T** | 4,4 / 5,4 / 6,0 % | **4,9** / 5,9 / 7,9 % |
+| Block 60 T | 4,4 / 4,7 / 5,6 % | 4,6 / 5,2 / 7,1 % |
+| Kalendermonat | 4,0 / 5,6 / 6,3 % | 4,8 / 5,9 / 6,4 % |
+
+**Was die längeren Blöcke kosten:** Die Auflösung in S1, 250 Welten je Zelle, ist bei allen vier Blocklängen **gleich**. H1 findet
+k 0,25 Pp in 86–88 %, H3 k 0,50 in 93–94 %, H7 k 0,50 in 72–73 %. Ein Fünftel bleibt im echten E im Mittel 1,8 Tage gleich,
+in S2 6,4 Tage; S2 ist damit deutlich härter als die Wirklichkeit.
+
+**Festlegung 4d (alles andere aus §14 bis §14c unverändert):**
+
+| | |
+|---|---|
+| Nullwelt Punkt 1 | Vertauschung in **30-T-Blöcken** (34 Blöcke im Urteilsfenster), für alle sechs dieselbe |
+| Warum nicht 60 T | 17 Blöcke, unter der Mindestzahl 20 des Messregelwerks |
+| Warum nicht Kalendermonat | S2 ist auf Kalendermonaten gebaut; der Monat passte zur Prüfwelt statt zur Frage |
+| Selbsttest | neu und vollständig, 1.000 Welten, **Startwert 20261104**, Grenze wie 4c (S1/S2 H1 ≤ 6,4 %, Orakel ≥ 190/200) |
+| H3 / H7 | H3 nur Auskunft. H7 (S2 7,9 %) bleibt **ohne TRÄGT-Aussage**, nur D |
+| Sperre im Code | `--messung` bricht ab, wenn der Selbsttest für eine andere Blocklänge gilt |

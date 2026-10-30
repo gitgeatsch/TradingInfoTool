@@ -74,8 +74,10 @@ def fassung4():
              "2026": (date(2026, 1, 1), date(2026, 9, 30))}
     HYPOTHESEN = 1
     EINSEITIG = True
-    global PRUEFUNG
+    global PRUEFUNG, NULL_BLOCK
     PRUEFUNG = "perm"                                  # Fassung 4b (30.10., vor jedem echten Wert): siehe PRUEFUNG unten
+    NULL_BLOCK = 30                                    # Fassung 4d (30.10. abends, vor jedem echten Wert): S2 hält mit 15 T
+    #   H1 5,7 % (3 Läufe) nicht sicher, 30 T 4,9 %; Auflösung bei 15/30/60 T gleich (Messplan §14d)
 
 
 def urteil(symbol):
@@ -308,7 +310,7 @@ NULL_PERM = 1000
 
 
 def nullpunkt_gepoolt(labs, ys, rng, n=NULL_N, verteilung=False):
-    """Nullwelt: 15-T-Blockvertauschung, für alle Werte DIESELBE Vertauschung (erhält den Gleichlauf, §14)."""
+    """Nullwelt: Blockvertauschung (NULL_BLOCK Tage, ab Fassung 4d 30), für alle Werte DIESELBE Vertauschung (erhält den Gleichlauf, §14)."""
     lang = len(labs[0])
     bl = [np.arange(i * NULL_BLOCK, min((i + 1) * NULL_BLOCK, lang)) for i in range(-(-lang // NULL_BLOCK))]
     w = []
