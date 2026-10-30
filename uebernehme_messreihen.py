@@ -105,6 +105,11 @@ def main() -> int:
     ap.add_argument("--schreiben", action="store_true",
                     help="ohne dies wird nur geprueft, nichts geschrieben")
     ap.add_argument("--nur", default="", help="Symbole, kommagetrennt")
+    # ⚠️ 30.10.2026 (XDC): die Desktop-Messbasis ist EINGEFROREN (`pruefe_neuaufnahme.EINGEFROREN_BIS`). Eine Reihe, die
+    # weiter reicht, macht den Frischewaechter in `marktrang` blind - er prueft MAX(date) der GANZEN Datei.
+    ap.add_argument("--bis", default="", help="letzter Tag (JJJJ-MM-TT), z. B. der Einfrierstand")
+    ap.add_argument("--quelle", default=QUELLE,
+                    help="Produktionsdatei (nur gelesen) - am Desktop die entpackte juengste NB-Sicherung")
     a = ap.parse_args()
 
     # ⚠️ HARTE SPERRE - dieselbe wie in `lade_messreihen.py`.
@@ -120,7 +125,7 @@ def main() -> int:
                     else "PROBELAUF, es wird nichts geschrieben"))
     print("=" * 96)
 
-    p = sqlite3.connect("file:%s?mode=ro" % QUELLE, uri=True)
+    p = sqlite3.connect("file:%s?mode=ro" % a.quelle.replace("\\", "/"), uri=True)
     z = sqlite3.connect(a.ziel) if a.schreiben else \
         sqlite3.connect("file:%s?mode=ro" % a.ziel, uri=True)
     jetzt = _d.datetime.now(_d.timezone.utc).isoformat()
@@ -146,7 +151,8 @@ def main() -> int:
         rows = p.execute(
             "SELECT date, high, low, close, open, volume, quelle "
             "FROM price_history_ohlc WHERE UPPER(symbol)=? AND currency='USD' "
-            "ORDER BY date", (s,)).fetchall()
+            "AND (? = '' OR substr(date,1,10) <= ?) "
+            "ORDER BY date", (s, a.bis, a.bis)).fetchall()
         if not rows:
             abgelehnt.append((s, "keine USD-Zeile in der Produktion"))
             print("  %-10s %8s   ⚠️ keine USD-Zeile" % (s, "-"))
@@ -180,8 +186,10 @@ def main() -> int:
             # ⚠️ NICHT 'handelnd'. Diese Reihen kann `lade_messreihen` NIE
             # auffrischen - sie sind nicht auf Binance. Ein eigener Status
             # macht sichtbar, dass sie einen anderen Weg brauchen.
+            # ⚠️ Seit 13.09. (Schritt 50 Teil A) mit Assetklasse - die alte
+            # Zweierzeile brach ab (gefunden 30.10. bei der XDC-Voranalyse).
             z.execute("INSERT OR REPLACE INTO messreihen_status "
-                      "VALUES (?, 'uebernommen')", (s,))
+                      "VALUES (?, 'krypto', 'uebernommen')", (s,))
     if a.schreiben:
         z.commit()
     p.close()

@@ -69,6 +69,13 @@ AUSNAHMEN = {
            "Produktion eine Kursreihe; eine Bewertung ist damit "
            "ohnehin nicht moeglich",
 }
+# ⚠️ NUR fuer Fall 4 (Kernposition ohne Beitrag), nicht fuer die Messreihen-Frage. Sie gilt, SOLANGE das Symbol keine
+# Messreihe hat - kommt eine dazu, faellt die Ausnahme weg und die Frage nach dem Beitrag stellt sich neu.
+KERN_AUSNAHMEN = {
+    "CANTON": "Nutzerentscheidung 30.10.2026: 'Canton wird laenger gehalten' - die Kernposition (rolle core) bleibt. "
+              "CANTON ist nicht auf Binance: keine Funding-, OI- oder Umlaufreihe, damit kein Beitrag moeglich; "
+              "die Messreihe fehlt mangels Laenge (109 USD-Tage am 29.10.)",
+}
 # Ab wieviel Tagen gilt eine Assetklasse in der Messbasis als veraltet?
 # ⚠️ Setzung, keine Messung. Krypto handelt durchgehend, ein Rueckstand
 # von mehr als einer Woche ist dort nicht erklaerbar.
@@ -336,6 +343,10 @@ def pruefe(still: bool = False) -> list:
             sag("        Smallcap-Werten ist eine fehlende Bewertung")
             sag("        UNKRITISCH. Kritisch waere sie bei Kernwerten.")
         kern = [s for s in ohne_b if (wl.get(s) or {}).get("rolle") == "core"]
+        frei = [s for s in kern if s in KERN_AUSNAHMEN and s not in mess]
+        for s in frei:
+            sag("     ⚠️ %s ausgenommen mit Grund: %s" % (s, KERN_AUSNAHMEN[s]))
+        kern = [s for s in kern if s not in frei]
         if kern:
             maengel.append("KERNWERTE ohne jeden Beitrag: %s"
                            % ", ".join(kern))
