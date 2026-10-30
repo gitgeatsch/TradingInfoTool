@@ -1,5 +1,7 @@
 # Voranalyse: XDC in die Messbasis (30.10.2026)
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 *Auftrag des Nutzers vom 30.10.: „XDC: Aufnahme in die Messbasis als eigener Schritt mit Voranalyse?“ – „Ja unbedingt“. Alles hier ist nur lesend gelaufen bzw. auf einer Wegwerfkopie. Messbasis und Produktion sind unberührt.*
 
 ## 1. Lage

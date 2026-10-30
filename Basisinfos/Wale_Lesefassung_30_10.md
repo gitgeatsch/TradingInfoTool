@@ -1,5 +1,7 @@
 # Wale (G16) – Ergebnisse zum Lesen und Entscheiden
 
+> 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md) – Ziel, Betrieb, Vorhaben, offene Punkte und Dokumentenlandkarte.
+
 *Stand 30.10.2026 · Volltext: `Messplan_Wale_29_10.md` §10 und §13*
 
 ## Die Frage in einem Satz
@@ -104,3 +106,26 @@ Die Großfluss-Daten liegen nur für BTC/ETH/SOL vor. Die übrigen ~10.000 REGEL
 **Warum a2:** Es ist der einzige Weg, auf dem aus dem Befund noch eine **Handlung** werden kann, also ein Beitrag zur REGEL0. Er ist **gestuft**: zuerst die kleine Prüfung, ob der Effekt außerhalb von BTC überhaupt existiert. ⚠️ Fassung 3 spricht eher dagegen (ETH schwächer, SOL über 7 Tage negativ). Ein „nein“ ist also gut möglich, und dann wäre **c** ehrlich.
 
 **Antwort genügt so:** „Wale a2“ (oder b oder c).
+
+---
+
+## Nachtrag 30.10. abends — Ergebnis Weg a2 (Volltext: Messplan §14–§15)
+
+**Frage:** Gibt es den Wal-Effekt auch außerhalb von BTC? Geprüft auf sechs Altcoins (BNB, ADA, TRX, AVAX, LINK, NEAR), Spot,
+2024-01 bis 2026-09. Die Regel stand vor jedem Wert fest.
+
+**Antwort: Ja, über einen Tag, aber knapp.**
+
+| | |
+|---|---|
+| Tage mit stärkstem Großkauf gegen Tage mit stärkstem Großverkauf | **+0,35 Pp** am Folgetag (brutto, Mittel der sechs) |
+| Zufallsprobe (Permutationstest) | p **0,034**, Schwelle 5 % ✔ |
+| Werte positiv | 5 von 6 (BNB ±0) |
+| Jahre | 2024 +0,10 · 2025 +0,42 · 2026 +0,45 |
+| über 3 / 7 Tage | **kein** Beleg |
+
+⚠️ **Hängt an AVAX:** Ohne AVAX liegt p bei 0,12. Ohne ADA, TRX oder LINK liegt p jeweils bei etwa 0,06.
+
+**Was daraus folgt (deine Vorgabe):** Laut Vorab-Regel ist das jetzt **Stufe 2**, ein eigener Messplan mit der Frage, ob der
+Wal-Fluss **REGEL0 verbessert**, ohne sie irgendwo zu verschlechtern. Er wäre dort ein Gewicht, kein Auslöser. Gelingt das nicht,
+geht er als Befund ins **Dashboard** zur LLM-Bewertung.

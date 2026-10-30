@@ -11608,6 +11608,15 @@ BEFUNDE = (
                "Messplan_Wale_29_10.md §13; p102_wale_messung_f3, p102_wale_gegenprobe_f3",
                basis="wale_voll.db Spot BTC/ETH 2019-2026, SOL ab 2020-08-11; Urteil BTC/ETH 2020-2022, SOL 2021-07..2026-09; "
                      "einseitig, Nullwelt Block; Selbsttest F3 1.000 Welten bestanden; Gegenprobe exakt"),
+    Befundlage("G16-wale-alt-f4", "Weg a2 (Fassung 4d, vorab b71d7fa1): der Spot-Grossfluss TRAEGT auch AUSSERHALB DES KERNS - "
+               "6 Altcoins (BNB ADA TRX AVAX LINK NEAR) gepoolt, H1 oberstes minus unterstes Fuenftel +0,35 Pp brutto, "
+               "Permutationstest p 0,034 (Schwelle +0,33), 5/6 Werte positiv, 2024 +0,10 / 2025 +0,42 / 2026 +0,45, Verzug "
+               "06:00 +0,44 -> alle 5 Punkte, Stufe 2. ⚠ KNAPP: ohne AVAX p 0,12, ohne ADA/TRX/LINK ~0,06; H3 traegt nicht "
+               "(p 0,135), H7 ohne Urteil (Ballung). Zweiter unabhaengiger Befund in dieselbe Richtung wie G16-wale-spot-f3", "gilt",
+               "Messplan_Wale_29_10.md §14-§15; p102_wale_f4 (--messung), p102_wale_gegenprobe --fassung4, p102_wale_f4_auskunft",
+               basis="wale_voll.db Spot BNB/ADA/TRX/AVAX/LINK/NEAR 2023-01..2026-09 (6 x 1.369 T), Urteil 2024-01-01..2026-09-30; "
+                     "einseitig, 1 Hypothese, Permutation 1.000 gemeinsame 30-T-Blockvertauschungen; Selbsttest 4d 1.000 Welten "
+                     "bestanden (S1 4,7 %, S2 6,2 %, Grenze 6,4 %); Gegenprobe exakt"),
 )
 
 

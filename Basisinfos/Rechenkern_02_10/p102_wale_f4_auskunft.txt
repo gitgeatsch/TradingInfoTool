@@ -1,0 +1,10 @@
+Alle sechs · Block 30 T · 10.000 Vertauschungen: D +0.353 · Schwelle +0.334 · p 0.0405
+Alle sechs · Block 15 T · 10.000 Vertauschungen: D +0.353 · Schwelle +0.298 · p 0.0239
+Alle sechs · Block 60 T · 10.000 Vertauschungen: D +0.353 · Schwelle +0.299 · p 0.0257
+ohne BNBUSDT   D +0.426 · Schwelle +0.397 · p 0.0372
+ohne ADAUSDT   D +0.344 · Schwelle +0.373 · p 0.0678
+ohne TRXUSDT   D +0.372 · Schwelle +0.396 · p 0.0626
+ohne AVAXUSDT  D +0.237 · Schwelle +0.330 · p 0.1244
+ohne LINKUSDT  D +0.339 · Schwelle +0.355 · p 0.0576
+ohne NEARUSDT  D +0.403 · Schwelle +0.338 · p 0.0218
+Seiteneffekt: geschützte Datei unverändert: True

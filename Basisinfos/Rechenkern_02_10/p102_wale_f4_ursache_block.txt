@@ -1,0 +1,14 @@
+Mittlere Lauflänge der Fünftel (Tage): echtes E BNB 1.81, ADA 1.90, TRX 2.00, AVAX 1.85, LINK 1.84, NEAR 1.84
+S1 (1000 Welten, 200 Vertauschungen) · Lauflänge Fünftel 1.80 T
+   Block 15      H1  4.3 %  H3  5.3 %  H7  6.5 %  (67 Blöcke)
+   Block 30      H1  4.4 %  H3  5.4 %  H7  6.0 %  (34 Blöcke)
+   Block 60      H1  4.4 %  H3  4.7 %  H7  5.6 %  (17 Blöcke)
+   Block monat   H1  4.0 %  H3  5.6 %  H7  6.3 %  (33 Blöcke)
+S2 (1000 Welten, 200 Vertauschungen) · Lauflänge Fünftel 6.42 T
+   Block 15      H1  5.3 %  H3  7.1 %  H7 10.6 %  (67 Blöcke)
+   Block 30      H1  4.9 %  H3  5.9 %  H7  7.9 %  (34 Blöcke)
+   Block 60      H1  4.6 %  H3  5.2 %  H7  7.1 %  (17 Blöcke)
+   Block monat   H1  4.8 %  H3  5.9 %  H7  6.4 %  (33 Blöcke)
+Standardfehler bei 5 %: 0.69 Pp
+
+[exited with code 0]

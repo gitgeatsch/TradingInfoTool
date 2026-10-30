@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 85 |
+| Voranalyse / Recherche | 86 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
-| Sonstiges | 1 |
-| **gesamt** | **226** |
+| Sonstiges | 2 |
+| **gesamt** | **228** |
 
 ## Plan
 
@@ -228,6 +228,7 @@
 | [`Voranalyse_W3_Stilllegung_alte_Kette_27_10.md`](Voranalyse_W3_Stilllegung_alte_Kette_27_10.md) | Voranalyse W-3: Die alte Spot-Kette stilllegen statt nur anhalten (27.10.2026) | Arbeitsblatt |
 | [`Voranalyse_Wale_29_10.md`](Voranalyse_Wale_29_10.md) | Voranalyse Wale — welche Größe zeigt welches Verhalten (29.10.2026) | **laufend** |
 | [`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`](Voranalyse_Weiterentwicklung_Fuehrung_26_10.md) | Voranalyse: Das Fakten- und Führungssystem weiterentwickeln (26.10.2026) | Arbeitsblatt |
+| [`Voranalyse_XDC_Messbasis_30_10.md`](Voranalyse_XDC_Messbasis_30_10.md) | Voranalyse: XDC in die Messbasis (30.10.2026) | Arbeitsblatt |
 | [`Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md`](Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md) | – | vor Messstandard (2026-08-23) |
 
 ## Lage / Bilanz / Bericht
@@ -292,3 +293,4 @@
 | Dokument | Titel | Einstufung |
 |---|---|---|
 | [`CoinGecko_gegen_Binance_26_09.md`](CoinGecko_gegen_Binance_26_09.md) | CoinGecko gegen Binance — die Quelle trägt, und BTC auch | Arbeitsblatt |
+| [`Wale_Lesefassung_30_10.md`](Wale_Lesefassung_30_10.md) | Wale (G16) – Ergebnisse zum Lesen und Entscheiden | Arbeitsblatt |

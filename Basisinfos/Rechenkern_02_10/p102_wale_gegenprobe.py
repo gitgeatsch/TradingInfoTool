@@ -172,8 +172,7 @@ def main() -> int:
                 z.append("   H%d  D Schleife %+.4f Pp · Messung %+.4f Pp %s · t-Band Breite %.3f Pp · Bootstrap %.3f Pp (Verhältnis %.2f)"
                          % (h, 100 * d, 100 * d_v, "✔" if gut else "✖", 100 * (o_v - u_v), 100 * (bo - bu), (bo - bu) / (o_v - u_v)))
     if len(B.SYMBOLE) > 1 and B.EINSEITIG and B.HYPOTHESEN == 1:   # Fassung 4: GEPOOLT (Mittel der D, gemeinsame Blöcke)
-        z.append("
-GEPOOLT (%d Werte) — D als Mittel der Schleifen-D · Bootstrap über GEMEINSAME Blöcke gegen das t-Band" % len(B.SYMBOLE))
+        z.append("\nGEPOOLT (%d Werte) — D als Mittel der Schleifen-D · Bootstrap über GEMEINSAME Blöcke gegen das t-Band" % len(B.SYMBOLE))
         for h, teile in sorted(pool.items()):
             d = sum(d_schleife(l, y) for l, y in teile) / len(teile)
             w = np.array([B.urteil(B.SYMBOLE[0])[0] <= x <= B.urteil(B.SYMBOLE[0])[1] for x in tg])

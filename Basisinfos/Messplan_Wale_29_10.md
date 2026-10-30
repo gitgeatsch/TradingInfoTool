@@ -449,3 +449,56 @@ in S2 6,4 Tage; S2 ist damit deutlich härter als die Wirklichkeit.
 | Selbsttest | neu und vollständig, 1.000 Welten, **Startwert 20261104**, Grenze wie 4c (S1/S2 H1 ≤ 6,4 %, Orakel ≥ 190/200) |
 | H3 / H7 | H3 nur Auskunft. H7 (S2 7,9 %) bleibt **ohne TRÄGT-Aussage**, nur D |
 | Sperre im Code | `--messung` bricht ab, wenn der Selbsttest für eine andere Blocklänge gilt |
+
+## 15. ERGEBNIS FASSUNG 4d — Altcoins (30.10.2026 abends, `p102_wale_messung_f4.txt`, Gegenprobe `p102_wale_gegenprobe_f4.txt` ✔)
+
+**Selbsttest 4d ✔ BESTANDEN** (`p102_wale_selbsttest_f4.txt`, Startwert 20261104, Nullwelt 30 T):
+- Fehlalarm H1: S1 **4,7 %**, S2 **6,2 %** (Grenze 6,4 %); H3: 5,0 / 6,7 %; H7: 4,5 / 8,5 %.
+- Auflösung X H1 = 0,25 Pp (D 0,50 Pp), Orakel 200/200 in allen Horizonten.
+
+⚠️ **S2 knapp:** Zusammen mit dem Ursachenlauf gibt S2 H1 bei 30 T 111/2.000 = **5,5 %**. S2 ist die härteste Prüfwelt, in der
+ein Fünftel 6,4 statt 1,8 Tage gleich bleibt.
+
+**Gepoolt (Mittel der sechs D), Urteilsfenster 2024-01-01 bis 2026-09-30, oberstes minus unterstes Fünftel von E, Log brutto:**
+
+| | D | Schwelle Permutation 95 % | p | Stufe |
+|---|---|---|---|---|
+| **H1 (Hauptfrage)** | **+0,35 Pp** | +0,33 | **0,034** | **TRÄGT (oberstes Fünftel HÖHER)** |
+| H3 (Auskunft) | +0,39 | +0,53 | 0,135 | trägt nicht bis 1 Pp |
+| H7 (Auskunft, ohne TRÄGT-Aussage §14c/d) | +0,63 | — | — | nur D |
+
+H1 Jahre 2024 **+0,10** · 2025 +0,42 · 2026 +0,45 · Verzug 06:00 +0,44 · q 1/5/10/20 % +0,32 / +0,35 / +0,38 / +0,21 ·
+Vergleichsarme G roh +0,21, R roh +0,02.
+
+**Je Wert (H1, nur Auskunft):** BNB −0,01 · ADA +0,40 · TRX +0,26 · **AVAX +0,94** · LINK +0,43 · NEAR +0,11. Der Verzug ist bei
+allen sechs positiv.
+
+**Urteil nach §14:** 1 Test ✔ · 2 D > 0 bei 5/6 ✔ · 3 Jahre 3/3 ✔ · 4 Verzug ✔ · 5 Selbsttest ✔ →
+**TRÄGT AUSSERHALB DES KERNS → Stufe 2** (eigener Messplan, nur ohne Verschlechterung von REGEL0).
+
+**Gegenprobe ✔:**
+- E je Wert mit eigenem Rechenweg, Abweichung ≤ 2,2·10⁻¹⁶; die Fünftel sind zu 100 % gleich.
+- Beide Vorgriff-Mutationen werden bei allen sechs erkannt.
+- D aus der eigenen Schleife stimmt exakt, je Wert und gepoolt.
+- Ein Block-Bootstrap über gemeinsame Blöcke ergibt 0,95–1,01 der t-Breite.
+
+**Auskunft nach dem Urteil** (`p102_wale_f4_auskunft.txt`, **nicht Teil des Urteils**, nichts wird daraus nachträglich verschoben):
+
+| | p |
+|---|---|
+| 10.000 Vertauschungen, anderer Startwert, Block 30 / 15 / 60 T | 0,041 / 0,024 / 0,026 |
+| ohne BNB · ADA · TRX · **AVAX** · LINK · NEAR | 0,037 · 0,068 · 0,063 · **0,124** · 0,058 · 0,022 |
+
+### Zwischenfazit zum Ziel (ehrlich gewichtet)
+
+- **Formal:** Der Spot-Großfluss trägt jetzt auch **außerhalb des Kerns**. Das sind sechs Altcoins, die vorher keiner angesehen
+  hatte, auf einem ungesehenen Fenster mit vorab festgelegter Regel. Zusammen mit Fassung 3 (BTC 2020–22 trägt) ist das der
+  zweite unabhängige Befund **in dieselbe Richtung**.
+- **Aber knapp:** p 0,034 bei 5 %. Der Befund hängt sichtbar an **AVAX**. Ohne AVAX liegt p bei 0,12, ohne ADA, TRX oder LINK
+  um 0,06. **2024 ist schwach** (+0,10).
+- **Größe:** Das oberste Fünftel liegt am Folgetag rund 0,35 Pp über dem untersten, **brutto**. Das ist eine Ordnungsgröße, kein
+  Ertrag; die Gebühren kommen nachgelagert.
+- **Was es nicht ist:** kein Beleg über 3 oder 7 Tage, kein eigenständiges Handelssignal.
+- **Weiter nach Vorgabe des Nutzers:** **Stufe 2** prüft als eigener Messplan, ob E **REGEL0 nicht verschlechtert**, als Gewicht
+  oder Zusatz und nicht als Auslöser. Fällt das durch, geht E als **Dashboard-Befund** an das LLM (Information mit
+  Bewertungsgrund, kein Auslöser).

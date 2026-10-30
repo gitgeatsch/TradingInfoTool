@@ -1,0 +1,51 @@
+GEGENPROBE Messplan W FASSUNG 3 (9900K, 2026-10-30T21:12:14) — zweiter Rechenweg, q 5 %, Urteilsfenster je Wert
+
+BNBUSDT spot    E: größte Abweichung 1.2e-16 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 9 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 4 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife -0.0104 Pp · Messung -0.0104 Pp ✔ · t-Band Breite 1.070 Pp · Bootstrap 1.087 Pp (Verhältnis 1.02)
+   H3  D Schleife +0.0076 Pp · Messung +0.0076 Pp ✔ · t-Band Breite 2.379 Pp · Bootstrap 2.346 Pp (Verhältnis 0.99)
+   H7  D Schleife +0.1388 Pp · Messung +0.1388 Pp ✔ · t-Band Breite 2.828 Pp · Bootstrap 2.634 Pp (Verhältnis 0.93)
+
+ADAUSDT spot    E: größte Abweichung 9.0e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 6 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 4 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.3988 Pp · Messung +0.3988 Pp ✔ · t-Band Breite 1.724 Pp · Bootstrap 1.742 Pp (Verhältnis 1.01)
+   H3  D Schleife -0.0896 Pp · Messung -0.0896 Pp ✔ · t-Band Breite 2.913 Pp · Bootstrap 2.822 Pp (Verhältnis 0.97)
+   H7  D Schleife -0.9515 Pp · Messung -0.9515 Pp ✔ · t-Band Breite 5.157 Pp · Bootstrap 5.037 Pp (Verhältnis 0.98)
+
+TRXUSDT spot    E: größte Abweichung 2.2e-16 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 12 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 6 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.2622 Pp · Messung +0.2622 Pp ✔ · t-Band Breite 0.813 Pp · Bootstrap 0.822 Pp (Verhältnis 1.01)
+   H3  D Schleife +0.1182 Pp · Messung +0.1182 Pp ✔ · t-Band Breite 1.148 Pp · Bootstrap 1.118 Pp (Verhältnis 0.97)
+   H7  D Schleife -0.3084 Pp · Messung -0.3084 Pp ✔ · t-Band Breite 1.891 Pp · Bootstrap 1.859 Pp (Verhältnis 0.98)
+
+AVAXUSDT spot    E: größte Abweichung 3.8e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 8 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 7 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.9362 Pp · Messung +0.9362 Pp ✔ · t-Band Breite 1.727 Pp · Bootstrap 1.648 Pp (Verhältnis 0.95)
+   H3  D Schleife +1.7451 Pp · Messung +1.7451 Pp ✔ · t-Band Breite 3.014 Pp · Bootstrap 2.907 Pp (Verhältnis 0.96)
+   H7  D Schleife +3.6425 Pp · Messung +3.6425 Pp ✔ · t-Band Breite 4.745 Pp · Bootstrap 4.485 Pp (Verhältnis 0.95)
+
+LINKUSDT spot    E: größte Abweichung 4.2e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 5 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 5 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.4279 Pp · Messung +0.4279 Pp ✔ · t-Band Breite 1.667 Pp · Bootstrap 1.560 Pp (Verhältnis 0.94)
+   H3  D Schleife +0.1520 Pp · Messung +0.1520 Pp ✔ · t-Band Breite 3.327 Pp · Bootstrap 3.202 Pp (Verhältnis 0.96)
+   H7  D Schleife +0.6981 Pp · Messung +0.6981 Pp ✔ · t-Band Breite 4.794 Pp · Bootstrap 4.475 Pp (Verhältnis 0.93)
+
+NEARUSDT spot    E: größte Abweichung 6.9e-17 · Fünftel gleich 1.0000 · ✔
+   Vorgriff-Mutation ols : 14 Tage mit anderem Fünftel ✔ erkannt
+   Vorgriff-Mutation rang: 4 Tage mit anderem Fünftel ✔ erkannt
+   H1  D Schleife +0.1061 Pp · Messung +0.1061 Pp ✔ · t-Band Breite 2.064 Pp · Bootstrap 2.047 Pp (Verhältnis 0.99)
+   H3  D Schleife +0.4123 Pp · Messung +0.4123 Pp ✔ · t-Band Breite 3.349 Pp · Bootstrap 3.294 Pp (Verhältnis 0.98)
+   H7  D Schleife +0.5830 Pp · Messung +0.5830 Pp ✔ · t-Band Breite 5.943 Pp · Bootstrap 5.616 Pp (Verhältnis 0.94)
+
+GEPOOLT (6 Werte) — D als Mittel der Schleifen-D · Bootstrap über GEMEINSAME Blöcke gegen das t-Band
+   H1  D Schleife +0.3535 Pp · Messung +0.3535 Pp ✔ · t-Band (zweiseitig) Breite 0.701 Pp · Bootstrap 0.706 Pp (Verhältnis 1.01)
+   H3  D Schleife +0.3909 Pp · Messung +0.3909 Pp ✔ · t-Band (zweiseitig) Breite 1.350 Pp · Bootstrap 1.277 Pp (Verhältnis 0.95)
+   H7  D Schleife +0.6338 Pp · Messung +0.6338 Pp ✔ · t-Band (zweiseitig) Breite 2.250 Pp · Bootstrap 2.171 Pp (Verhältnis 0.97)
+
+Seiteneffekt: geschützte Datei unverändert: True
+ERGEBNIS: BESTANDEN

@@ -1,0 +1,11 @@
+S3 H1 k 0.10 Pp (250 Welten): Block 15  28 % · Block 30  29 % · Block 60  28 % · Block monat  29 %
+S3 H1 k 0.25 Pp (250 Welten): Block 15  88 % · Block 30  86 % · Block 60  86 % · Block monat  88 %
+S3 H1 k 0.50 Pp (250 Welten): Block 15 100 % · Block 30 100 % · Block 60 100 % · Block monat 100 %
+S3 H3 k 0.10 Pp (250 Welten): Block 15  15 % · Block 30  15 % · Block 60  15 % · Block monat  17 %
+S3 H3 k 0.25 Pp (250 Welten): Block 15  48 % · Block 30  50 % · Block 60  46 % · Block monat  49 %
+S3 H3 k 0.50 Pp (250 Welten): Block 15  94 % · Block 30  94 % · Block 60  93 % · Block monat  94 %
+S3 H7 k 0.10 Pp (250 Welten): Block 15  14 % · Block 30  14 % · Block 60  14 % · Block monat  14 %
+S3 H7 k 0.25 Pp (250 Welten): Block 15  25 % · Block 30  25 % · Block 60  25 % · Block monat  26 %
+S3 H7 k 0.50 Pp (250 Welten): Block 15  72 % · Block 30  72 % · Block 60  72 % · Block monat  73 %
+
+[exited with code 0]

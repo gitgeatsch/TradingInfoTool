@@ -1,0 +1,22 @@
+MESSUNG Messplan W FASSUNG 4 (9900K, 2026-10-30T21:11:27) · BNB ADA TRX AVAX LINK NEAR · Urteil 2024-01-01 bis 2026-09-30 · einseitig (oberstes Fünftel HÖHER) · q 5 % · Log-Ertrag brutto, Pp
+
+══ GEPOOLT (Mittel der sechs D) ══
+  H1  (HAUPTFRAGE)  D +0.35 · Schwelle Permutation 95 % +0.33 (p 0.034) · Null +0.04 · t-Band-Untergrenze +0.06 · TRAEGT (oberstes Fünftel HÖHER) · 1234/1210 Wert-Tage oben/unten, 67 Bl., AK 0.005
+  H3  (Auskunft)    D +0.39 · Schwelle Permutation 95 % +0.53 (p 0.135) · Null +0.05 · t-Band-Untergrenze -0.17 · TRAEGT NICHT BIS 1.00 Pp · 1234/1210 Wert-Tage oben/unten, 67 Bl., AK 0.018
+  H7  (Auskunft)    D +0.63 · Schwelle Permutation 95 % +0.81 (p 0.120) · Null +0.05 · t-Band-Untergrenze -0.30 · TRAEGT NICHT BIS 2.00 Pp · 1234/1210 Wert-Tage oben/unten, 48 Bl., AK 0.021
+  H1 Jahre 2024 +0.10 · 2025 +0.42 · 2026 +0.45 · Verzug 06:00 +0.44
+  Auskunft H1: q 1/5/10/20 +0.32 +0.35 +0.38 +0.21 · Vergleichsarme G roh +0.21, R roh +0.02
+
+══ JE WERT (H1; Untergrenze einseitig zur Auskunft, das Urteil ist gepoolt) ══
+  BNBUSDT   D -0.01 [-0.46] · 2024 +0.56 2025 -0.71 2026 +0.01 · H3 +0.01 H7 +0.14 · Verzug +0.37
+  ADAUSDT   D +0.40 [-0.32] · 2024 -0.12 2025 +1.31 2026 -0.12 · H3 -0.09 H7 -0.95 · Verzug +0.47
+  TRXUSDT   D +0.26 [-0.08] · 2024 +0.73 2025 -0.13 2026 +0.03 · H3 +0.12 H7 -0.31 · Verzug +0.23
+  AVAXUSDT  D +0.94 [+0.21] · 2024 +0.54 2025 +1.61 2026 +0.30 · H3 +1.75 H7 +3.64 · Verzug +1.06
+  LINKUSDT  D +0.43 [-0.27] · 2024 -0.29 2025 +0.66 2026 +1.06 · H3 +0.15 H7 +0.70 · Verzug +0.21
+  NEARUSDT  D +0.11 [-0.76] · 2024 -0.83 2025 -0.23 2026 +1.40 · H3 +0.41 H7 +0.58 · Verzug +0.32
+
+══ URTEIL (§14, alle 5 Punkte) ══
+  1 D über der Permutationsschwelle ✔ · 2 D>0 bei 5/6 ✔ · 3 Jahre positiv 3/3 ✔ · 4 Verzug ✔ · 5 Selbsttest ✔
+  ->  TRÄGT AUSSERHALB DES KERNS -> Stufe 2 (eigener Messplan, keine Verschlechterung)
+
+Seiteneffekt: geschützte Datei unverändert: True
