@@ -28,7 +28,11 @@ import wale_stichprobe as WS  # noqa: E402
 ABLAGE = os.path.join(WS.PROJ, "data", "_wale", "wale_voll.db")
 START = date(2023, 1, 1)
 FRUEH = date(2019, 1, 1)               # Messplan W Fassung 3 (30.10.): unabhängige Bestätigung 2019-2022
-SYMBOLE = ("BTCUSDT", "ETHUSDT", "SOLUSDT")   # SOL seit Fassung 3 (dritter Kernwert, nur Spot)
+KERN = ("BTCUSDT", "ETHUSDT", "SOLUSDT")      # SOL seit Fassung 3 (dritter Kernwert, nur Spot)
+# Fassung 4 (30.10., Nutzer: „A2“, Messplan W §14): die sechs nach Regel - REGEL0-Einstiege, Binance-Spot seit 2023, höchster
+# Spot-Umsatz 2024-26. Nur Spot, 2023-01-01 bis 2026-09-30
+ALT = ("BNBUSDT", "ADAUSDT", "TRXUSDT", "AVAXUSDT", "LINKUSDT", "NEARUSDT")
+SYMBOLE = KERN + ALT
 
 
 def verbinde():

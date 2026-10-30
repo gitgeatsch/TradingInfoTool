@@ -355,3 +355,33 @@ das lohnt nur, wenn der Effekt außerhalb des Kerns **überhaupt** existiert. Di
 | **trägt nicht** | **kein** REGEL0-Weg. Stattdessen **Dashboard-Bewertung** (Bauplan A3): der geltende Befund `G16-wale-spot-f3` (BTC, 1 Tag) als Eintrag der **Befund-Karte** mit `gilt_wenn` BTC, Horizont 1 Tag, Zahl samt Epoche (2020–22 +1,26 Pp, 2025/26 +0,2–0,4 Pp); der Großfluss des Vortags als **Fakt** — erst mit dem Dashboard-Bau, als eigene Abstimmung |
 
 ⚠️ **Betrieb unberührt** in dieser Stufe: nur Desktop, nur Daten unter `data/_wale/`, Produktions-DB nicht geöffnet.
+
+### 14b. FASSUNG 4b — Urteil per Permutationstest (VORAB: 30.10.2026 nachmittags, vor jedem echten Wert)
+
+**Anlass:** Vorprüfung ✔ BESTANDEN (`p102_wale_vorpruefung_f4.txt`: 6 × 1.369 Tage, Archiv = Kerze 1,0000, Rohdatei-Stichprobe
+mit eigenem Rechenweg ≤ 3·10⁻¹⁷, Kurse lückenlos, 67 gemeinsame Blöcke H1, Gleichlauf von E +0,02). Selbsttest 4a mit dem
+t-Band **✖ NICHT BESTANDEN** (`p102_wale_selbsttest_f4a_tband.txt`): Fehlalarm H1 S1 5,6 %, S2 6,2 % (Soll ≤ 5 %); Auflösung
+X = 0,25 Pp (D 0,50 Pp), Orakel 200/200. **Nach Vorab-Regel wurde nicht gemessen.**
+
+**Ursache gemessen** (1.000 Welten je Art, neuer Startwert, nur künstliche Signale, kein echtes Ergebnis):
+
+| Urteil | S1 (AR(1), echter Gleichlauf) | S2 (Monatsregime für alle sechs gleich) |
+|---|---|---|
+| t-Band gegen Nullpunkt (4a) | 4,1 % | **6,5 %** |
+| t-Band, 30-T-Block | 4,2 % | 6,1 % |
+| Block-Bootstrap | 4,5 % | 6,9 % |
+| **Permutationstest** (dieselbe 15-T-Vertauschung für alle, 95. Perzentil) | **4,0 %** | **5,0 %** |
+
+→ S1-Überschuss war **Zufall** (Standardfehler 0,7 Pp). S2 ist **echt**: Laufen alle sechs im selben Regime, wird das t-Band zu eng;
+längerer Block und Bootstrap helfen nicht, die Vertauschung hält.
+
+**Festlegung 4b (alles andere aus §14 unverändert):**
+
+| | |
+|---|---|
+| Urteil Punkt 1 | gepooltes D (H1) **über dem 95. Perzentil** von 1.000 gemeinsamen 15-T-Blockvertauschungen (einseitig, p-Wert ausgewiesen) |
+| t-Band | nur noch **Anzeige** |
+| Selbsttest | **neu und vollständig**, 1.000 Welten, **neuer Startwert**, dieselben Sollwerte (S1/S2 H1 ≤ 5 %, Orakel ≥ 190/200) |
+| Codeprobe | vor dem Download einmal auf 2023-09 bis 11 gelaufen (nur 5 Werte, 6 Blöcke, KEIN BEFUND). Das liegt **außerhalb** des Urteilsfensters, das Urteilsfenster 2024-01 bis 2026-09 ist **ungesehen** |
+
+⚠️ Bei einem Wert ist der gepoolte Weg mit t-Band bitgleich mit Fassung 3 (BTC H1/H3/H7, nach dem Umbau erneut geprüft).

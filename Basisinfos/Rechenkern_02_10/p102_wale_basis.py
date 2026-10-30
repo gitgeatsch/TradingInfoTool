@@ -60,6 +60,24 @@ def fassung3():
     EINSEITIG = True
 
 
+def fassung4():
+    """Messplan W FASSUNG 4 (vorab 1924c5b4, §14): Vorprüfung auf sechs Altcoins nach Regel, nur Spot, nur H1 als Hauptfrage,
+    einseitig, gepoolt (Mittel der sechs D) 2024-01-01 bis 2026-09-30. H3/H7 nur Auskunft."""
+    global START, SYMBOLE, MAERKTE, URTEIL, EPOCHE2, JAHRE, HYPOTHESEN, EINSEITIG, URTEIL_JE
+    START = date(2023, 1, 1)
+    SYMBOLE = ("BNBUSDT", "ADAUSDT", "TRXUSDT", "AVAXUSDT", "LINKUSDT", "NEARUSDT")
+    MAERKTE = ("spot",)
+    URTEIL = (date(2024, 1, 1), date(2026, 9, 30))
+    URTEIL_JE = {}
+    EPOCHE2 = URTEIL
+    JAHRE = {"2024": (date(2024, 1, 1), date(2024, 12, 31)), "2025": (date(2025, 1, 1), date(2025, 12, 31)),
+             "2026": (date(2026, 1, 1), date(2026, 9, 30))}
+    HYPOTHESEN = 1
+    EINSEITIG = True
+    global PRUEFUNG
+    PRUEFUNG = "perm"                                  # Fassung 4b (30.10., vor jedem echten Wert): siehe PRUEFUNG unten
+
+
 def urteil(symbol):
     return URTEIL_JE.get(symbol, URTEIL)
 
@@ -243,6 +261,107 @@ def bewerte(lab, y, h, rng, aufloesung=None, art=None, mit_block=True):
         st = "NICHT TRENNBAR"
     return {"D": d, "unten": u, "oben": o, "nullpunkt": npkt, "null90": n90, "null10": n10, "n_bloecke": nb, "block": blk,
             "ak": ak, "n_oben": int((lab == 1).sum()), "n_unten": int((lab == -1).sum()), "stufe": st}
+
+
+# ── Gepoolt über mehrere Werte (Fassung 4) ───────────────────────────────────────────────────────────────────────────────
+def _einfluss(lab, y, block):
+    """-> (D, Einfluss je Kalenderblock über ALLE Blöcke des Fensters, Blöcke mit Beobachtung). Mit einem Wert = ``band``."""
+    o, u = (lab == 1) & np.isfinite(y), (lab == -1) & np.isfinite(y)
+    b = np.arange(len(y)) // block
+    nb = int(b.max()) + 1
+    if o.sum() == 0 or u.sum() == 0:
+        return float("nan"), np.zeros(nb), np.zeros(nb, bool)
+    so = np.bincount(b, weights=np.where(o, y, 0), minlength=nb)
+    ko = np.bincount(b, weights=o.astype(float), minlength=nb)
+    su = np.bincount(b, weights=np.where(u, y, 0), minlength=nb)
+    ku = np.bincount(b, weights=u.astype(float), minlength=nb)
+    mo, mu = so.sum() / ko.sum(), su.sum() / ku.sum()
+    return float(mo - mu), (so - mo * ko) / ko.sum() - (su - mu * ku) / ku.sum(), (ko + ku) > 0
+
+
+def differenz_gepoolt(labs, ys):
+    """D = Mittel der D je Wert (gleich gewichtet, Messplan §14)."""
+    return float(np.mean([differenz(l, y) for l, y in zip(labs, ys)]))
+
+
+def band_gepoolt(labs, ys, block, alpha, einseitig=False):
+    """Cluster-robustes t-Band über GEMEINSAME Kalenderblöcke: derselbe Markttag liegt für alle Werte im selben Block, der Einfluss
+    eines Blocks ist das Mittel der Einflüsse je Wert — damit geht der Gleichlauf der Werte ins Band ein (§14)."""
+    from scipy.stats import t as _t
+    teile = [_einfluss(l, y, block) for l, y in zip(labs, ys)]
+    if any(not np.isfinite(d) for d, _, _ in teile):
+        return float("nan"), float("nan"), 0
+    d = float(np.mean([x[0] for x in teile]))
+    einfluss = np.mean([x[1] for x in teile], axis=0)
+    nb = int(np.any([x[2] for x in teile], axis=0).sum())
+    if nb < 2:
+        return float("nan"), float("nan"), nb
+    halb = _t.ppf(1 - (alpha if einseitig else alpha / 2), nb - 1) * np.sqrt(nb / (nb - 1)) * np.sqrt((einfluss ** 2).sum())
+    return d - halb, d + halb, nb
+
+
+# Fassung 4b (30.10., VOR jedem echten Wert): Urteil per PERMUTATIONSTEST statt t-Band. Gemessen auf 1.000 Welten je Art
+# (scratchpad f4_ursache): S2 (Monatsregime gemeinsam) t-Band 6,5 %, 30-T-Block 6,1 %, Bootstrap 6,9 %, Permutation 5,0 %;
+# S1 t-Band 4,1 %, Permutation 4,0 %. Das t-Band ist bei gemeinsamer Ballung zu eng, die Vertauschung hält.
+PRUEFUNG = "tband"                                    # "perm": TRÄGT, wenn D > (1 - ALPHA/HYPOTHESEN)-Quantil der Vertauschungen
+NULL_PERM = 1000
+
+
+def nullpunkt_gepoolt(labs, ys, rng, n=NULL_N, verteilung=False):
+    """Nullwelt: 15-T-Blockvertauschung, für alle Werte DIESELBE Vertauschung (erhält den Gleichlauf, §14)."""
+    lang = len(labs[0])
+    bl = [np.arange(i * NULL_BLOCK, min((i + 1) * NULL_BLOCK, lang)) for i in range(-(-lang // NULL_BLOCK))]
+    w = []
+    for _ in range(n):
+        idx = np.concatenate([bl[i] for i in rng.permutation(len(bl))])
+        w.append(differenz_gepoolt([l[idx] for l in labs], ys))
+    w = np.array(w)
+    w = w[np.isfinite(w)]
+    if not len(w):
+        return (float("nan"),) * 3 + ((w,) if verteilung else ())
+    aus = (float(w.mean()), float(np.quantile(w, 0.9)), float(np.quantile(w, 0.1)))
+    return aus + (w,) if verteilung else aus
+
+
+def bewerte_gepoolt(labs, ys, h, rng, aufloesung=None, mit_block=True):
+    """Wie ``bewerte``, über mehrere Werte gepoolt. Einseitig nach ``EINSEITIG``, Nennniveau ALPHA / HYPOTHESEN."""
+    labs = [np.where(np.isfinite(l) & np.isfinite(y), l, np.nan) for l, y in zip(labs, ys)]
+    ys = [np.where(np.isfinite(l), y, np.nan) for l, y in zip(labs, ys)]
+    blk = N._block(h)
+    d = differenz_gepoolt(labs, ys)
+    u, o, nb = band_gepoolt(labs, ys, blk, ALPHA / HYPOTHESEN, EINSEITIG)
+    schwelle = p_wert = float("nan")
+    if PRUEFUNG == "perm":
+        npkt, n90, n10, null = nullpunkt_gepoolt(labs, ys, rng, n=NULL_PERM, verteilung=True)
+        if len(null):
+            schwelle = float(np.quantile(null, 1 - ALPHA / HYPOTHESEN))
+            p_wert = float((1 + (null >= d).sum()) / (1 + len(null)))
+    else:
+        npkt, n90, n10 = nullpunkt_gepoolt(labs, ys, rng)
+    ak, block_ok = float("nan"), True
+    if mit_block:
+        je_tag = {}
+        for i in range(len(ys[0])):
+            v = [l[i] * y[i] for l, y in zip(labs, ys) if np.isfinite(l[i]) and l[i] != 0]
+            if v:
+                je_tag[i] = float(np.mean(v))
+        pb = N.pruefe_block(je_tag, blk)
+        ak, block_ok = pb["ak"], pb["ok"] or not np.isfinite(pb["ak"])
+    if not np.isfinite(d):
+        st = "KEIN BEFUND - keine Fünftel"
+    elif nb < 20:
+        st = "KEIN BEFUND - nur %d Blöcke" % nb
+    elif not block_ok:
+        st = "KEIN BEFUND - Block %d zu kurz (AK %.3f)" % (blk, ak)
+    elif (PRUEFUNG == "perm" and EINSEITIG and d > schwelle) or (PRUEFUNG != "perm" and (u > npkt or (o < npkt and not EINSEITIG))):
+        st = "TRAEGT (%s)" % ("oberstes Fünftel HÖHER" if d > npkt else "oberstes Fünftel NIEDRIGER")
+    elif aufloesung is not None and (o - npkt) < aufloesung and (EINSEITIG or (npkt - u) < aufloesung):
+        st = "TRAEGT NICHT BIS %.2f Pp" % (100 * aufloesung)
+    else:
+        st = "NICHT TRENNBAR"
+    return {"D": d, "unten": u, "oben": o, "nullpunkt": npkt, "null90": n90, "null10": n10, "n_bloecke": nb, "block": blk,
+            "ak": ak, "n_oben": int(sum((l == 1).sum() for l in labs)), "n_unten": int(sum((l == -1).sum() for l in labs)), "stufe": st,
+            "schwelle": schwelle, "p": p_wert}
 
 
 # ── Laden ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────

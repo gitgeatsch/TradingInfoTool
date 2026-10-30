@@ -128,6 +128,10 @@ def main() -> int:
     if "--fassung3" in sys.argv:                                  # Messplan W Fassung 3 (vorab d5df61fb)
         B.fassung3()
         AUSGABE = AUSGABE.replace(".txt", "_f3.txt")
+    elif "--fassung4" in sys.argv:                                # Fassung 4 (vorab 1924c5b4): sechs Altcoins, gepoolt
+        B.fassung4()
+        AUSGABE = AUSGABE.replace(".txt", "_f4.txt")
+    pool = {}                                                     # h -> [(lab im Fenster, y im Fenster)] je Wert, zweiter Weg
     vorher = B.fingerabdruck()
     rng = np.random.default_rng(7)
     tg, aus = B.lade()
@@ -164,8 +168,36 @@ def main() -> int:
                 bu, bo = bootstrap(lw, yw, B.N._block(h), B.ALPHA / B.HYPOTHESEN, rng)
                 gut = abs(d - d_v) < 1e-12
                 ok &= gut
+                pool.setdefault(h, []).append((lw, yw))
                 z.append("   H%d  D Schleife %+.4f Pp · Messung %+.4f Pp %s · t-Band Breite %.3f Pp · Bootstrap %.3f Pp (Verhältnis %.2f)"
                          % (h, 100 * d, 100 * d_v, "✔" if gut else "✖", 100 * (o_v - u_v), 100 * (bo - bu), (bo - bu) / (o_v - u_v)))
+    if len(B.SYMBOLE) > 1 and B.EINSEITIG and B.HYPOTHESEN == 1:   # Fassung 4: GEPOOLT (Mittel der D, gemeinsame Blöcke)
+        z.append("
+GEPOOLT (%d Werte) — D als Mittel der Schleifen-D · Bootstrap über GEMEINSAME Blöcke gegen das t-Band" % len(B.SYMBOLE))
+        for h, teile in sorted(pool.items()):
+            d = sum(d_schleife(l, y) for l, y in teile) / len(teile)
+            w = np.array([B.urteil(B.SYMBOLE[0])[0] <= x <= B.urteil(B.SYMBOLE[0])[1] for x in tg])
+            labs_v = [aus[s]["markt"]["spot"][B.Q_HAUPT][3][w] for s in B.SYMBOLE]
+            ys_v = [aus[s]["y"][(h, 0)][w] for s in B.SYMBOLE]
+            d_v = B.differenz_gepoolt(labs_v, ys_v)
+            u_v, o_v, _ = B.band_gepoolt(labs_v, ys_v, B.N._block(h), B.ALPHA)
+            blk = B.N._block(h)
+            nbl = -(-len(teile[0][0]) // blk)
+            ws = []
+            for _ in range(2000):
+                zieh = rng.choice(nbl, nbl)
+                je = []
+                for l, y in teile:
+                    lz = [l[i] for k in zieh for i in range(k * blk, min((k + 1) * blk, len(l)))]
+                    yz = [y[i] for k in zieh for i in range(k * blk, min((k + 1) * blk, len(y)))]
+                    je.append(d_schleife(lz, yz))
+                if all(math.isfinite(x) for x in je):
+                    ws.append(sum(je) / len(je))
+            bu, bo = float(np.quantile(ws, B.ALPHA / 2)), float(np.quantile(ws, 1 - B.ALPHA / 2))
+            gut = abs(d - d_v) < 1e-12
+            ok &= gut
+            z.append("   H%d  D Schleife %+.4f Pp · Messung %+.4f Pp %s · t-Band (zweiseitig) Breite %.3f Pp · Bootstrap %.3f Pp (Verhältnis %.2f)"
+                     % (h, 100 * d, 100 * d_v, "✔" if gut else "✖", 100 * (o_v - u_v), 100 * (bo - bu), (bo - bu) / (o_v - u_v)))
     con.close()
     nachher = B.fingerabdruck()
     ok &= vorher == nachher
