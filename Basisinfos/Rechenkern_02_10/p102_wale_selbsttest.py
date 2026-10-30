@@ -48,16 +48,24 @@ def traegt(r):
 
 
 def main() -> int:
+    global AUSGABE
     welten = int(sys.argv[sys.argv.index("--welten") + 1]) if "--welten" in sys.argv else 1000
+    arten = ("block", "kreis")
+    if "--fassung3" in sys.argv:                                  # Messplan W Fassung 3 (vorab d5df61fb): einseitig, Nullwelt Block
+        B.fassung3()
+        AUSGABE = AUSGABE.replace(".txt", "_f3.txt")
+        arten = ("block",)
     vorher = B.fingerabdruck()
     rng = np.random.default_rng(20261029)
     tg, aus = B.lade()
-    w = B.maske(tg, B.URTEIL)
-    zeilen = ["SELBSTTEST Messplan W (%s, %s, %d Welten) — echte Erträge, künstliche Signale, KEIN echtes Ergebnis"
-              % (socket.gethostname(), datetime.now().isoformat(timespec="seconds"), welten)]
+    ws = {s: B.maske(tg, B.urteil(s)) for s in B.SYMBOLE}
+    w = ws[B.SYMBOLE[0]]
+    zeilen = ["SELBSTTEST Messplan W%s (%s, %s, %d Welten) — echte Erträge, künstliche Signale, KEIN echtes Ergebnis%s"
+              % (" FASSUNG 3" if B.EINSEITIG else "", socket.gethostname(), datetime.now().isoformat(timespec="seconds"), welten,
+                 " · EINSEITIG (nur HÖHER zählt)" if B.EINSEITIG else "")]
     stufung = B.ALPHA / B.HYPOTHESEN + 2 * np.sqrt((B.ALPHA / B.HYPOTHESEN) * (1 - B.ALPHA / B.HYPOTHESEN) / welten)
-    zeilen.append("Soll S1/S2 <= 5 %% je Zelle (vorab) · Stufungsgrenze %.1f %% ausgewiesen · Urteilsfenster %s bis %s, %d Tage"
-                  % (100 * stufung, B.URTEIL[0], B.URTEIL[1], int(w.sum())))
+    zeilen.append("Soll S1/S2 <= 5 %% je Zelle (vorab) · Stufungsgrenze %.1f %% ausgewiesen · Urteilsfenster %s"
+                  % (100 * stufung, " · ".join("%s %s bis %s (%d T)" % (s[:3], *B.urteil(s), int(ws[s].sum())) for s in B.SYMBOLE)))
     fehl = {}                                                     # (art, welt, s, m, h) -> Quote
     phis = {}
     for s in B.SYMBOLE:
@@ -69,29 +77,30 @@ def main() -> int:
     for welt in ("S1", "S2"):
         for s in B.SYMBOLE:
             for m in B.MAERKTE:
-                treffer = {(a, h): 0 for a in ("block", "kreis") for h in B.HORIZONTE}
+                w = ws[s]
+                treffer = {(a, h): 0 for a in arten for h in B.HORIZONTE}
                 for _ in range(welten):
                     e = ar1(rng, len(tg), phis[(s, m)]) if welt == "S1" else monatlich(rng, tg)
                     lab = B.fuenftel(e)[w]
                     for h in B.HORIZONTE:
                         y = aus[s]["y"][(h, 0)][w]
-                        for a in ("block", "kreis"):
+                        for a in arten:
                             treffer[(a, h)] += traegt(B.bewerte(lab, y, h, rng, art=a, mit_block=False))
                 for (a, h), n in treffer.items():
                     fehl[(a, welt, s, m, h)] = n / welten
         print("  %s fertig" % welt, flush=True)
     zeilen.append("\nFEHLALARM (TRÄGT, Punkt 1) je Zelle — Spalten H 1 / 3 / 7 T")
-    for a in ("block", "kreis"):
+    for a in arten:
         for welt in ("S1", "S2"):
             for s in B.SYMBOLE:
                 for m in B.MAERKTE:
                     q = [fehl[(a, welt, s, m, h)] for h in B.HORIZONTE]
                     zeilen.append("  %-5s %s %s %-7s %s %s" % (a, welt, s, m, "  ".join("%5.1f %%" % (100 * x) for x in q),
                                                              "✔" if max(q) <= 0.05 else "✖ über 5 %"))
-    halt = {a: all(v <= 0.05 for (aa, *_), v in fehl.items() if aa == a) for a in ("block", "kreis")}
-    art = "block" if halt["block"] else ("kreis" if halt["kreis"] else None)
-    zeilen.append("\nNULLWELT nach Vorab-Regel: %s (Block hält: %s, Kreis hält: %s)" % (art or "KEINE hält - NICHT MESSEN, Fassung 2",
-                                                                                       halt["block"], halt["kreis"]))
+    halt = {a: all(v <= 0.05 for (aa, *_), v in fehl.items() if aa == a) for a in arten}
+    art = "block" if halt["block"] else ("kreis" if halt.get("kreis") else None)     # Fassung 3: nur Block zulässig
+    zeilen.append("\nNULLWELT nach Vorab-Regel: %s (%s)" % (art or "KEINE hält - NICHT MESSEN",
+                                                         ", ".join("%s hält: %s" % (a, v) for a, v in halt.items())))
     if art is None:
         _schreibe(zeilen, vorher)
         return 1
@@ -101,6 +110,7 @@ def main() -> int:
     xs = {}
     for s in B.SYMBOLE:
         for m in B.MAERKTE:
+            w = ws[s]
             for h in B.HORIZONTE:
                 y0 = aus[s]["y"][(h, 0)][w]
                 quote = []
@@ -119,6 +129,7 @@ def main() -> int:
     zeilen.append("\nD ORAKEL (200 Welten, E = y + Rauschen gleicher Streuung) — Soll TRÄGT HÖHER in >= 95 %")
     orakel_ok = True
     for s in B.SYMBOLE:
+        w = ws[s]
         for h in B.HORIZONTE:
             yv = aus[s]["y"][(h, 0)]
             sd = np.nanstd(yv)

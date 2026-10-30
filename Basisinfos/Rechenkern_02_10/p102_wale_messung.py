@@ -10,7 +10,7 @@ import json
 import os
 import socket
 import sys
-from datetime import datetime
+from datetime import date, datetime
 
 import numpy as np
 
@@ -98,5 +98,70 @@ def main() -> int:
     return 0
 
 
+def main_f3() -> int:
+    """FASSUNG 3 (vorab d5df61fb): unabhängige Bestätigung, gerichtet, BTC 2020-22 Haupt, ETH 2020-22, SOL 2021-07..2026-09."""
+    B.fassung3()
+    st_pfad = SELBSTTEST.replace(".json", "_f3.json")
+    if not os.path.exists(st_pfad) or not json.load(open(st_pfad, encoding="utf-8")).get("bestanden"):
+        print("✖ kein bestandener Selbsttest Fassung 3 (%s) - nicht messen" % st_pfad)
+        return 1
+    st = json.load(open(st_pfad, encoding="utf-8"))
+    B.NULLWELT = st["nullwelt"]
+    vorher = B.fingerabdruck()
+    rng = np.random.default_rng(20261031)
+    tg, aus = B.lade()
+    m = "spot"
+    z = ["MESSUNG Messplan W FASSUNG 3 (%s, %s) · BESTÄTIGUNG, einseitig (oberstes Fünftel HÖHER) · Nullwelt %s · q 5 %% · Pp"
+         % (socket.gethostname(), datetime.now().isoformat(timespec="seconds"), B.NULLWELT)]
+    erg = {}
+    for s in B.SYMBOLE:
+        w = B.maske(tg, B.urteil(s))
+        g, r, e, lab = aus[s]["markt"][m][B.Q_HAUPT]
+        z.append("\n══ %s Spot · Urteil %s bis %s ══" % (s, *B.urteil(s)))
+        for h in B.HORIZONTE:
+            x = st["X"].get("%s|%s|%d" % (s, m, h))
+            y = aus[s]["y"][(h, 0)]
+            haupt = B.bewerte(lab[w], y[w], h, rng, aufloesung=2 * x if x else None)
+            jahre = {j: B.differenz(lab[B.maske(tg, zr)], y[B.maske(tg, zr)]) for j, zr in B.JAHRE.items()} if s != "SOLUSDT" else {}
+            leiter = {q: B.differenz(aus[s]["markt"][m][q][3][w], y[w]) for q in B.STUFEN}
+            bew = aus[s]["r"][w]
+            schicht = np.digitize(bew, np.nanquantile(bew, (1 / 3, 2 / 3)))
+            schichten = [B.differenz(np.where(schicht == i, lab[w], np.nan), y[w]) for i in range(3)]
+            verzug = B.differenz(lab[w], aus[s]["y"][(h, 6)][w])
+            gepoolt = B.differenz(lab[B.maske(tg, B.EPOCHE2)], y[B.maske(tg, B.EPOCHE2)])
+            frei = B.maske(tg, (date(2022, 7, 1), date(2022, 12, 31)))
+            h2_22 = B.differenz(lab[frei], y[frei]) if s == "BTCUSDT" else float("nan")
+            arm_g, arm_r = B.differenz(B.fuenftel(g)[w], y[w]), B.differenz(B.fuenftel(r)[w], y[w])
+            erg[(s, h)] = dict(haupt=haupt, jahre=jahre, leiter=leiter, schichten=schichten, verzug=verzug)
+            z.append("  H%d  D %s [Untergrenze einseitig %s] Null %s · %s · %d/%d Tage oben/unten, %d Bl., AK %.3f"
+                     % (h, pp(haupt["D"]), pp(haupt["unten"]), pp(haupt["nullpunkt"]), haupt["stufe"], haupt["n_oben"],
+                        haupt["n_unten"], haupt["n_bloecke"], haupt["ak"]))
+            z.append("       Jahre %s · q 1/5/10/20 %s · Schichten Fall/Mitte/Anstieg %s · Verzug 06:00 %s"
+                     % (" ".join("%s %s" % (j, pp(v)) for j, v in jahre.items()) or "–", " ".join(pp(leiter[q]) for q in B.STUFEN),
+                        " ".join(pp(v) for v in schichten), pp(verzug)))
+            z.append("       Auskunft: gepoolt 2020-2026 %s · 2022-07..12 (gebührenfrei) %s · Vergleichsarme G roh %s, R roh %s"
+                     % (pp(gepoolt), pp(h2_22), pp(arm_g), pp(arm_r)))
+    z.append("\n══ URTEIL je Hypothese (BTC Haupt; Fassung 3, alle 8 Punkte) ══")
+    for h in B.HORIZONTE:
+        a, b, c = erg[("BTCUSDT", h)], erg[("ETHUSDT", h)], erg[("SOLUSDT", h)]
+        p = [a["haupt"]["stufe"].startswith("TRAEGT (oberstes Fünftel HÖHER"),
+             sum(v > 0 for v in a["jahre"].values()) >= 2,
+             sum(v > 0 for v in a["leiter"].values()) >= 3,
+             b["haupt"]["D"] > 0 and b["haupt"]["unten"] > b["haupt"]["nullpunkt"],
+             sum(v > 0 for v in a["schichten"]) >= 2,
+             a["verzug"] > 0,
+             c["haupt"]["D"] > 0,
+             bool(st["bestanden"])]
+        z.append("  H%d  Punkte 1-8: %s  ->  %s" % (h, " ".join("✔" if x else "✖" for x in p),
+                                                  "BESTÄTIGT" if all(p) else "nicht bestätigt (Stufe BTC: %s)" % a["haupt"]["stufe"]))
+    nachher = B.fingerabdruck()
+    z.append("\nSeiteneffekt: geschützte Datei unverändert: %s" % (vorher == nachher))
+    text = "\n".join(z)
+    print(text)
+    with open(AUSGABE.replace(".txt", "_f3.txt"), "w", encoding="utf-8") as f:
+        f.write(text + "\n")
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main_f3() if "--fassung3" in sys.argv else main())

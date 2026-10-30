@@ -1,0 +1,31 @@
+VORPRÜFUNG Messplan W (9900K, 2026-10-30T03:57:57) · Tage 2019-01-01 bis 2026-10-28
+
+1 VOLLSTÄNDIGKEIT (Soll 2858 Tage je Reihe)
+  BTCUSDT spot    2858 Tage · Archiv/Kerze 1.0000..1.0011 · auffällig 0 · Stunden≠Tag 0 · ✔
+  ETHUSDT spot    2858 Tage · Archiv/Kerze 1.0000..1.0000 · auffällig 0 · Stunden≠Tag 0 · ✔
+  SOLUSDT spot    2270 Tage · Archiv/Kerze 1.0000..1.0000 · auffällig 2 · Stunden≠Tag 0 · ✔
+
+2 REPRODUKTION Stichprobe (BTCUSDT, G und R bei q 5 %, eigener Rechenweg in wale_stichprobe.schwelle)
+  spot    93 Tage · größte Abweichung G 6.94e-18 · ✔
+
+3 KURSE an den Einstiegszeitpunkten (00:00 Pflicht; 06:00 = Verzugsprobe)
+  BTCUSDT fehlend 00:00 0  · 06:00 5 (davon Börsenausfall bei allen Werten 5: 2019-03-12, 2019-05-15, 2019-08-15, 2020-11-30, 2021-04-25) · ✔
+  ETHUSDT fehlend 00:00 0  · 06:00 5 (davon Börsenausfall bei allen Werten 5: 2019-03-12, 2019-05-15, 2019-08-15, 2020-11-30, 2021-04-25) · ✔
+  SOLUSDT fehlend 00:00 0  · 06:00 2 (davon Börsenausfall bei allen Werten 2: 2020-11-30, 2021-04-25) · ✔
+
+4 FALLZAHLEN (q 5 %)
+  BTCUSDT Urteil 2020-01-01 bis 2022-12-31 · H1: Block 15 T -> 74 Blöcke ✔
+  BTCUSDT Urteil 2020-01-01 bis 2022-12-31 · H3: Block 15 T -> 74 Blöcke ✔
+  BTCUSDT Urteil 2020-01-01 bis 2022-12-31 · H7: Block 21 T -> 53 Blöcke ✔
+  ETHUSDT Urteil 2020-01-01 bis 2022-12-31 · H1: Block 15 T -> 74 Blöcke ✔
+  ETHUSDT Urteil 2020-01-01 bis 2022-12-31 · H3: Block 15 T -> 74 Blöcke ✔
+  ETHUSDT Urteil 2020-01-01 bis 2022-12-31 · H7: Block 21 T -> 53 Blöcke ✔
+  SOLUSDT Urteil 2021-07-01 bis 2026-09-30 · H1: Block 15 T -> 128 Blöcke ✔
+  SOLUSDT Urteil 2021-07-01 bis 2026-09-30 · H3: Block 15 T -> 128 Blöcke ✔
+  SOLUSDT Urteil 2021-07-01 bis 2026-09-30 · H7: Block 21 T -> 92 Blöcke ✔
+  BTCUSDT spot    E ab 2019-05-01, Fünftel ab 2019-08-29, AK(1) +0.044 · oben/mitte/unten 2019: 31/71/23 · 2020: 57/250/59 · 2021: 63/231/71 · 2022: 53/249/63 · 2023: 101/161/103 · 2024: 74/196/96 · 2025: 81/219/65 · 2026: 70/170/61
+  ETHUSDT spot    E ab 2019-05-01, Fünftel ab 2019-08-29, AK(1) -0.034 · oben/mitte/unten 2019: 32/56/37 · 2020: 53/258/55 · 2021: 71/240/54 · 2022: 85/187/93 · 2023: 72/206/87 · 2024: 79/223/64 · 2025: 73/222/70 · 2026: 67/168/66
+  SOLUSDT spot    E ab 2020-12-10, Fünftel ab 2021-04-09, AK(1) -0.013 · oben/mitte/unten 2019: 0/0/0 · 2020: 0/0/0 · 2021: 44/190/33 · 2022: 75/209/81 · 2023: 69/219/77 · 2024: 69/229/68 · 2025: 82/207/76 · 2026: 71/164/66
+
+Seiteneffekt: geschützte Datei unverändert: True
+ERGEBNIS: BESTANDEN

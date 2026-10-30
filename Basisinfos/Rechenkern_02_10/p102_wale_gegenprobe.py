@@ -124,15 +124,19 @@ def bootstrap(lab, y, block, alpha, rng, n=2000):
 
 
 def main() -> int:
+    global AUSGABE
+    if "--fassung3" in sys.argv:                                  # Messplan W Fassung 3 (vorab d5df61fb)
+        B.fassung3()
+        AUSGABE = AUSGABE.replace(".txt", "_f3.txt")
     vorher = B.fingerabdruck()
     rng = np.random.default_rng(7)
     tg, aus = B.lade()
     con = B.ro()
-    w = [B.URTEIL[0] <= d <= B.URTEIL[1] for d in tg]
-    z = ["GEGENPROBE Messplan W (%s, %s) — zweiter Rechenweg, q 5 %%, Urteilsfenster %s bis %s"
-         % (socket.gethostname(), datetime.now().isoformat(timespec="seconds"), *B.URTEIL)]
+    z = ["GEGENPROBE Messplan W%s (%s, %s) — zweiter Rechenweg, q 5 %%, Urteilsfenster je Wert"
+         % (" FASSUNG 3" if B.EINSEITIG else "", socket.gethostname(), datetime.now().isoformat(timespec="seconds"))]
     ok = True
     for s in B.SYMBOLE:
+        w = [B.urteil(s)[0] <= d <= B.urteil(s)[1] for d in tg]
         px0 = [kurs(con, s, d, 0) for d in tg + [tg[-1] + timedelta(days=i) for i in range(1, 10)]]
         bew = [math.log(px0[i + 1] / px0[i]) if px0[i] and px0[i + 1] else float("nan") for i in range(len(tg))]
         for m in B.MAERKTE:

@@ -11,7 +11,7 @@
 import os
 import socket
 import sys
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import numpy as np
 
@@ -23,7 +23,14 @@ import messnorm as N  # noqa: E402
 AUSGABE = os.path.join(B.HIER, "p102_wale_vorpruefung.txt")
 
 
+ERSTER_TAG = {"SOLUSDT": date(2020, 8, 11)}             # Handelsbeginn SOLUSDT bei Binance (davor gibt es keine Datei)
+
+
 def main() -> int:
+    global AUSGABE
+    if "--fassung3" in sys.argv:                                  # Messplan W Fassung 3 (vorab d5df61fb)
+        B.fassung3()
+        AUSGABE = AUSGABE.replace(".txt", "_f3.txt")
     vorher = B.fingerabdruck()
     con = B.ro()
     tg, aus = B.lade()
@@ -35,13 +42,14 @@ def main() -> int:
     for s in B.SYMBOLE:
         for m in B.MAERKTE:
             n, lo, hi, ohne = con.execute("""SELECT COUNT(*), MIN(umsatz_usd/kerze_usd), MAX(umsatz_usd/kerze_usd), SUM(kerze_usd IS NULL)
-                                             FROM tag WHERE symbol=? AND markt=? AND datum<=?""", (s, m, bis.isoformat())).fetchone()
-            ab = con.execute("""SELECT COUNT(*) FROM tag WHERE symbol=? AND markt=? AND datum<=? AND (ABS(umsatz_usd/kerze_usd-1) > 0.005
-                                OR substr(erste_utc,12,5) > '00:05' OR substr(letzte_utc,12,5) < '23:55')""", (s, m, bis.isoformat())).fetchone()[0]
+                                             FROM tag WHERE symbol=? AND markt=? AND datum BETWEEN ? AND ?""", (s, m, tg[0].isoformat(), bis.isoformat())).fetchone()
+            ab = con.execute("""SELECT COUNT(*) FROM tag WHERE symbol=? AND markt=? AND datum BETWEEN ? AND ? AND (ABS(umsatz_usd/kerze_usd-1) > 0.005
+                                OR substr(erste_utc,12,5) > '00:05' OR substr(letzte_utc,12,5) < '23:55')""", (s, m, tg[0].isoformat(), bis.isoformat())).fetchone()[0]
             sw = con.execute("""SELECT COUNT(*) FROM (SELECT t.datum, ABS(SUM(st.usd)/t.umsatz_usd-1) a FROM tag t JOIN stunde st
-                                USING (symbol, markt, datum) WHERE t.symbol=? AND t.markt=? AND t.datum<=? GROUP BY t.datum HAVING a > 1e-6)""",
-                             (s, m, bis.isoformat())).fetchone()[0]
-            gut = n == len(tg) and not ohne and not sw
+                                USING (symbol, markt, datum) WHERE t.symbol=? AND t.markt=? AND t.datum BETWEEN ? AND ? GROUP BY t.datum HAVING a > 1e-6)""",
+                             (s, m, tg[0].isoformat(), bis.isoformat())).fetchone()[0]
+            soll = len([d for d in tg if d >= ERSTER_TAG.get(s, tg[0])])
+            gut = n == soll and not ohne and not sw
             ok &= gut
             z.append("  %s %-7s %4d Tage · Archiv/Kerze %.4f..%.4f · auffällig %d · Stunden≠Tag %d · %s"
                      % (s, m, n, lo, hi, ab, sw, "✔" if gut else "✖"))
@@ -71,20 +79,33 @@ def main() -> int:
         z.append("  %-7s %d Tage · größte Abweichung G %.2e · %s" % (m, n, abw, "✔" if gut else "✖"))
     sp.close()
     # 3 Kurse an den Einstiegszeitpunkten
-    z.append("\n3 KURSE an den Einstiegszeitpunkten")
+    z.append("\n3 KURSE an den Einstiegszeitpunkten (00:00 Pflicht; 06:00 = Verzugsprobe)")
+    # ⚠️ 30.10.: Binance hatte Ausfälle (u. a. 15.05.2019 nach dem Hack) - dieselbe Stunde fehlt dann bei ALLEN Werten. Um 06:00 ist
+    # das ein ausgewiesener BÖRSENAUSFALL (nur die Verzugsprobe verliert den Tag), um 00:00 ein Fehler. Der erste Handelstag eines
+    # Werts zählt nicht (SOLUSDT handelte am 11.08.2020 erst ab 06:00).
+    jetzt = int(datetime.now().timestamp() * 1000) - 3600000
+    pxs = {s: B.kurse(con, s) for s in B.SYMBOLE}                  # einmal je Wert laden (nicht je Tag)
+    fehlt = {s: {(d, st) for d in tg + [bis + timedelta(days=i) for i in range(1, 9)] for st in (0, 6)
+                 if d > ERSTER_TAG.get(s, tg[0] - timedelta(days=1)) and B._ms(d, st) not in pxs[s] and B._ms(d, st) < jetzt}
+             for s in B.SYMBOLE}
     for s in B.SYMBOLE:
-        px = B.kurse(con, s)
-        fehlt = [(d, st) for d in tg + [bis + timedelta(days=i) for i in range(1, 9)] for st in (0, 6)
-                 if B._ms(d, st) not in px and B._ms(d, st) < int(datetime.now().timestamp() * 1000) - 3600000]
-        ok &= not fehlt
-        z.append("  %s fehlend %d %s" % (s, len(fehlt), fehlt[:3] if fehlt else "✔"))
+        null = sorted(x for x in fehlt[s] if x[1] == 0)
+        sechs = sorted(x for x in fehlt[s] if x[1] == 6)
+        boerse = [x for x in sechs if all(x in fehlt[t] for t in B.SYMBOLE if x[0] > ERSTER_TAG.get(t, tg[0] - timedelta(days=1)))]
+        gut = not null and len(boerse) == len(sechs)
+        ok &= gut
+        z.append("  %s fehlend 00:00 %d %s · 06:00 %d (davon Börsenausfall bei allen Werten %d: %s) · %s"
+                 % (s, len(null), null[:3] if null else "", len(sechs), len(boerse), ", ".join(d.isoformat() for d, _ in boerse),
+                    "✔" if gut else "✖"))
     # 4 Fallzahlen
-    z.append("\n4 FALLZAHLEN (q 5 %%) · Urteil %s bis %s" % B.URTEIL)
-    w = B.maske(tg, B.URTEIL)
-    for h in B.HORIZONTE:
-        blk = N._block(h)
-        z.append("  H%d: Block %d T -> %d Blöcke im Urteilsfenster %s" % (h, blk, -(-int(w.sum()) // blk), "✔" if w.sum() / blk >= 20 else "✖ < 20"))
-        ok &= w.sum() / blk >= 20
+    z.append("\n4 FALLZAHLEN (q 5 %)")
+    for s in B.SYMBOLE:
+        w = B.maske(tg, B.urteil(s))
+        for h in B.HORIZONTE:
+            blk = N._block(h)
+            z.append("  %s Urteil %s bis %s · H%d: Block %d T -> %d Blöcke %s" % (s, *B.urteil(s), h, blk, -(-int(w.sum()) // blk),
+                                                                              "✔" if w.sum() / blk >= 20 else "✖ < 20"))
+            ok &= w.sum() / blk >= 20
     for s in B.SYMBOLE:
         for m in B.MAERKTE:
             g, r, e, lab = aus[s]["markt"][m][B.Q_HAUPT]
@@ -92,7 +113,7 @@ def main() -> int:
             ak = np.corrcoef(e[:-1][fin], e[1:][fin])[0, 1]
             erst = next((tg[i] for i in range(len(tg)) if np.isfinite(lab[i])), None)
             je = []
-            for j in (2023, 2024, 2025, 2026):
+            for j in range(B.START.year, 2027):
                 mj = np.array([d.year == j for d in tg])
                 je.append("%d: %d/%d/%d" % (j, (lab[mj] == 1).sum(), (lab[mj] == 0).sum(), (lab[mj] == -1).sum()))
             z.append("  %s %-7s E ab %s, Fünftel ab %s, AK(1) %+.3f · oben/mitte/unten %s"

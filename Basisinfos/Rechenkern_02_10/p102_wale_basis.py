@@ -42,6 +42,26 @@ URTEIL = (date(2025, 1, 1), date(2026, 9, 30))
 EPOCHE2 = (date(2023, 7, 1), date(2024, 12, 31))
 JAHRE = {"2025": (date(2025, 1, 1), date(2025, 12, 31)), "2026": (date(2026, 1, 1), date(2026, 9, 30))}
 NULLWELT = "block"                                   # vom Selbsttest nach Vorab-Regel bestätigt oder ersetzt (§5)
+EINSEITIG = False                                    # Fassung 3: gerichtete Bestätigung (oberstes Fünftel HÖHER)
+URTEIL_JE = {}                                       # Fassung 3: eigenes Urteilsfenster je Wert (SOL)
+
+
+def fassung3():
+    """Messplan W FASSUNG 3 (vorab d5df61fb): unabhängige Bestätigung auf 2019-2022 (BTC, ETH) und SOL, nur Spot, einseitig."""
+    global START, SYMBOLE, MAERKTE, URTEIL, EPOCHE2, JAHRE, HYPOTHESEN, EINSEITIG, URTEIL_JE
+    START = date(2019, 1, 1)
+    SYMBOLE = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
+    MAERKTE = ("spot",)
+    URTEIL = (date(2020, 1, 1), date(2022, 12, 31))
+    URTEIL_JE = {"SOLUSDT": (date(2021, 7, 1), date(2026, 9, 30))}
+    EPOCHE2 = (date(2020, 1, 1), date(2026, 9, 30))                    # Auskunft: gepoolt 2020-2026 (enthält Gesehenes)
+    JAHRE = {str(j): (date(j, 1, 1), date(j, 12, 31)) for j in (2020, 2021, 2022)}
+    HYPOTHESEN = 3
+    EINSEITIG = True
+
+
+def urteil(symbol):
+    return URTEIL_JE.get(symbol, URTEIL)
 
 
 def ro(pfad=ABLAGE):
@@ -156,8 +176,9 @@ def differenz(lab, y):
     return float(y[o].mean() - y[u].mean())
 
 
-def band(lab, y, block, alpha):
-    """Cluster-robustes t-Band über Kalenderblöcke (wie H-1 Fassung 4: t-Quantil nb-1, Faktor sqrt(nb/(nb-1)))."""
+def band(lab, y, block, alpha, einseitig=False):
+    """Cluster-robustes t-Band über Kalenderblöcke (wie H-1 Fassung 4: t-Quantil nb-1, Faktor sqrt(nb/(nb-1))).
+    ``einseitig``: die Untergrenze ist die einseitige (1 - alpha)-Grenze; die Obergrenze steht symmetrisch nur zur Anzeige."""
     from scipy.stats import t as _t
     o, u = (lab == 1) & np.isfinite(y), (lab == -1) & np.isfinite(y)
     b = np.arange(len(y)) // block
@@ -172,7 +193,7 @@ def band(lab, y, block, alpha):
     ku = np.bincount(inv, weights=u[nimm].astype(float), minlength=nb)
     mo, mu = so.sum() / ko.sum(), su.sum() / ku.sum()
     einfluss = (so - mo * ko) / ko.sum() - (su - mu * ku) / ku.sum()
-    halb = _t.ppf(1 - alpha / 2, nb - 1) * np.sqrt(nb / (nb - 1)) * np.sqrt((einfluss ** 2).sum())
+    halb = _t.ppf(1 - (alpha if einseitig else alpha / 2), nb - 1) * np.sqrt(nb / (nb - 1)) * np.sqrt((einfluss ** 2).sum())
     d = mo - mu
     return float(d - halb), float(d + halb), nb
 
@@ -199,7 +220,7 @@ def bewerte(lab, y, h, rng, aufloesung=None, art=None, mit_block=True):
     lab, y = np.where(ok, lab, np.nan), np.where(ok, y, np.nan)
     blk = N._block(h)
     d = differenz(lab, y)
-    u, o, nb = band(lab, y, blk, ALPHA / HYPOTHESEN)
+    u, o, nb = band(lab, y, blk, ALPHA / HYPOTHESEN, EINSEITIG)
     npkt, n90, n10 = nullpunkt(lab, y, rng, art=art)
     ak = float("nan")
     if mit_block:
@@ -214,9 +235,9 @@ def bewerte(lab, y, h, rng, aufloesung=None, art=None, mit_block=True):
         st = "KEIN BEFUND - nur %d Blöcke" % nb
     elif not block_ok:
         st = "KEIN BEFUND - Block %d zu kurz (AK %.3f)" % (blk, ak)
-    elif u > npkt or o < npkt:
+    elif u > npkt or (o < npkt and not EINSEITIG):                      # einseitig zählt nur HÖHER (Fassung 3)
         st = "TRAEGT (%s)" % ("oberstes Fünftel HÖHER" if d > npkt else "oberstes Fünftel NIEDRIGER")
-    elif aufloesung is not None and (o - npkt) < aufloesung and (npkt - u) < aufloesung:
+    elif aufloesung is not None and (o - npkt) < aufloesung and (EINSEITIG or (npkt - u) < aufloesung):
         st = "TRAEGT NICHT BIS %.2f Pp" % (100 * aufloesung)
     else:
         st = "NICHT TRENNBAR"
@@ -228,7 +249,10 @@ def bewerte(lab, y, h, rng, aufloesung=None, art=None, mit_block=True):
 def lade(bis: date | None = None):
     """-> (tg, {symbol: {"r": r_t, "y": {(h, verzug): y}, "markt": {markt: {q: (G, R, E, L)}}}})."""
     con = ro()
-    bis = bis or date.fromisoformat(con.execute("SELECT MIN(m) FROM (SELECT MAX(datum) m FROM tag GROUP BY symbol, markt)").fetchone()[0])
+    if bis is None:
+        sym, mkt = ",".join("'%s'" % x for x in SYMBOLE), ",".join("'%s'" % x for x in MAERKTE)
+        bis = date.fromisoformat(con.execute("SELECT MIN(m) FROM (SELECT MAX(datum) m FROM tag WHERE symbol IN (%s) AND markt IN (%s) "
+                                             "GROUP BY symbol, markt)" % (sym, mkt)).fetchone()[0])
     tg = tage(bis)
     aus = {}
     for s in SYMBOLE:
