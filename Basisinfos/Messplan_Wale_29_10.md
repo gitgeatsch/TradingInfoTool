@@ -235,3 +235,40 @@ Widerspruch — deshalb je Jahr ausweisen. Binance Spot BTC war bis **22.03.2023
 **Beginn** (nach meinem Wissen 08.07.2022) liegt vor dem Archiv (ab 01/2023) und wird beim Laden an Dateigröße und
 Geschäftszahl je Tag **nachgewiesen**, nicht angenommen. Die relative Schwelle fängt den aufgeblähten Umsatz auf; getrennt
 ausgewiesen.
+
+---
+
+> ## ⚠️ FASSUNG 3 — UNABHÄNGIGE BESTÄTIGUNG (30.10.2026, VORAB: vor jedem Wert auf 2019–2022 und auf SOL)
+>
+> **Nutzer 30.10.:** *„Ok a, laden und wie immer prüfen, gegenprüfen, Doku“* (§11 Weg a). **Anlass:** Fassung 1/2 trug nach der
+> Vorab-Regel nicht, war aber am Spot in jeder Teilmenge positiv (§10). Eine Richtung darf nur auf **ungesehenen** Daten bestätigt
+> werden. Stand beim Festlegen: Spot BTC/ETH 2019–2022 und SOL werden **geladen**, kein Wert ist gerechnet.
+>
+> | | Festlegung |
+> |---|---|
+> | **Hypothese** | **gerichtet** (aus 2025–26): am **Spot** liegt der Ertrag nach Tagen im **obersten** Fünftel von E **höher** als nach Tagen im untersten. E, q 5 %, Fünftel, Einstieg 00:00 UTC t+1, Log-Ertrag brutto — **unverändert** aus Fassung 1/2 |
+> | **Hauptwert** | **BTC**, Urteil **2020-01-01 bis 2022-12-31**; 2019 ist Vorlauf für Schätzfenster (180 T) und Rang (Fünftel ab 2019-08-29) |
+> | Horizonte | 1 / 3 / 7 T → **3 Hypothesen**, **einseitig**, Bonferroni: Untergrenze des einseitigen Bandes bei 5 %/3 |
+> | Blöcke | wie Fassung 1 (`messnorm._block`), erwartet 2020–22 ≈ 73 à 15 T bzw. 52 à 21 T |
+> | Nullwelt | Blockvertauschung 15 T (Selbsttest 29.10.) — der Selbsttest läuft **neu** auf den Erträgen 2020–22, **einseitig**, 1.000 Welten, sonst keine Messung |
+>
+> **BESTÄTIGT** verlangt **alle** Punkte (BTC 2020–22, q 5 %):
+>
+> | # | Punkt |
+> |---|---|
+> | 1 | Untergrenze des einseitigen Bandes **über** dem Nullpunkt |
+> | 2 | Jahre 2020, 2021, 2022 einzeln: D > 0 in ≥ 2 von 3 |
+> | 3 | q-Leiter 1 / 5 / 10 / 20 %: D > 0 in ≥ 3 von 4 |
+> | 4 | **ETH** 2020–22: D > 0 **und** einseitige Untergrenze über dem eigenen Nullpunkt (streng, wie Fassung 2) |
+> | 5 | Schichten nach Tagesbewegung: D > 0 in ≥ 2 von 3 |
+> | 6 | Verzug 06:00: D > 0 |
+> | 7 | **SOL** (Urteil 2021-07-01 bis 2026-09-30, ungesehener Wert): D > 0 |
+> | 8 | Selbsttest bestanden |
+>
+> **Auskunft ohne Urteil:** BTC 2022-07 bis 2022-12 getrennt (Binance BTC gebührenfrei — der Beginn wird an Umsatz und
+> Geschäftszahl je Tag **nachgewiesen**); BTC gepoolt 2020–2026 (enthält die gesehenen Jahre, deshalb kein Urteil); SOL mit Band.
+>
+> | Ergebnis | Folge |
+> |---|---|
+> | **BESTÄTIGT** | Spot-Großfluss wird **Bewertungszeile für den Kern** (§8): Spot-Einstieg auslösen/zurückhalten, Hebel-Wahrscheinlichkeit, Begründung in der Mail — danach Kostenprüfung, Bauentscheid, NB-Abrufer |
+> | **nicht bestätigt** | Abstimmung und Lösungssuche (Nutzer 29.10.); ⚠ 2019–22 ist eine **andere Epoche** — ein Nichtbestätigen dort widerlegt 2025–26 nicht allein; die Jahre einzeln ausweisen |

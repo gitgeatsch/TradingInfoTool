@@ -27,7 +27,8 @@ import wale_stichprobe as WS  # noqa: E402
 
 ABLAGE = os.path.join(WS.PROJ, "data", "_wale", "wale_voll.db")
 START = date(2023, 1, 1)
-SYMBOLE = ("BTCUSDT", "ETHUSDT")
+FRUEH = date(2019, 1, 1)               # Messplan W Fassung 3 (30.10.): unabhängige Bestätigung 2019-2022
+SYMBOLE = ("BTCUSDT", "ETHUSDT", "SOLUSDT")   # SOL seit Fassung 3 (dritter Kernwert, nur Spot)
 
 
 def verbinde():
@@ -48,9 +49,9 @@ def verbinde():
     return c
 
 
-def kerzen(markt: str, symbol: str, bis: date) -> dict:
-    """Alle REST-Tageskerzen ab START in wenigen Abrufen: datum -> (Quote-Umsatz, Taker-Kauf-Quote-Umsatz)."""
-    aus, ab = {}, int(datetime(START.year, START.month, START.day, tzinfo=timezone.utc).timestamp() * 1000)
+def kerzen(markt: str, symbol: str, bis: date, von: date = START) -> dict:
+    """Alle REST-Tageskerzen ab ``von`` in wenigen Abrufen: datum -> (Quote-Umsatz, Taker-Kauf-Quote-Umsatz)."""
+    aus, ab = {}, int(datetime(von.year, von.month, von.day, tzinfo=timezone.utc).timestamp() * 1000)
     grenze = 1000 if markt == "spot" else 500
     while True:
         r = WS._hole(WS.MAERKTE[markt][1], {"symbol": symbol, "interval": "1d", "startTime": ab, "limit": grenze})
@@ -93,7 +94,7 @@ def lade(markt: str, symbol: str, ab: date = START, bis: date | None = None) -> 
     nachgesehen, nicht nur beim Start (29.10.: Spot BTC 2023 gebührenfrei ~100 MB je Tag war der Engpass)."""
     c = verbinde()
     bis = min(bis or date.today(), date.today() - timedelta(days=1))
-    kz = kerzen(markt, symbol, bis)
+    kz = kerzen(markt, symbol, bis, min(ab, START))
     fehlt, d = 0, ab
     while d <= bis:
         datum, d = d.isoformat(), d + timedelta(days=1)
@@ -128,9 +129,9 @@ def kurse() -> None:
     c.execute("CREATE TABLE IF NOT EXISTS kurs (symbol TEXT, ts INTEGER, eroeffnung REAL, schluss REAL, PRIMARY KEY (symbol, ts))")
     jetzt = int(datetime.now(timezone.utc).timestamp() * 1000)
     for symbol in SYMBOLE:
-        ab = int(datetime(START.year, START.month, START.day, tzinfo=timezone.utc).timestamp() * 1000)
-        letzt = c.execute("SELECT MAX(ts) FROM kurs WHERE symbol=?", (symbol,)).fetchone()[0]
-        if letzt:
+        ab = int(datetime(FRUEH.year, FRUEH.month, FRUEH.day, tzinfo=timezone.utc).timestamp() * 1000)
+        erst, letzt = c.execute("SELECT MIN(ts), MAX(ts) FROM kurs WHERE symbol=?", (symbol,)).fetchone()
+        if letzt and erst <= ab:                                           # vorne vollständig -> nur fortsetzen
             ab = letzt + 3600000
         n = 0
         while ab < jetzt - 3600000:
