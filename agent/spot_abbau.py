@@ -619,7 +619,8 @@ def _de(s: str) -> str:
 
 
 # ══ Lesen fuer Statusseite, Teilexport, Bestand-Tab ═══════════════════════════════════════════════════════════════════════════
-def stand(ordner: str) -> dict:
+def stand(ordner: str, heute=None) -> dict:
+    """``heute`` (30.10.2026): Vorgabe der echte Tag; der Pruefstand P22c setzt seinen festen Stichtag (er war seit 25.10. rot)."""
     p = os.path.join(ordner, ABLAGE)
     if not os.path.exists(p):
         return {"ablage": False}
@@ -642,7 +643,7 @@ def stand(ordner: str) -> dict:
             try:                                                 # P22c: naechste Freigaben (Rhythmus der Vergangenheit) im Bestand
                 from agent import verwaesserung as VW
                 reihen_b = {r[0]: r[1] for r in c.execute("SELECT symbol, reihe FROM abbau_fuenftel WHERE stichtag=? AND reihe IS NOT NULL", (l[0],))}
-                rhy = VW.rhythmus_bestand(ordner, reihen_b)
+                rhy = VW.rhythmus_bestand(ordner, reihen_b, heute=heute)
             except Exception:                                    # noqa: BLE001
                 rhy = []
         return {"ablage": True, "laeufe": n, "letzter": tuple(l) if l else None, "stamm": st[0] or 0, "stamm_binance": st[1] or 0, "letzte": letzte,
@@ -651,8 +652,9 @@ def stand(ordner: str) -> dict:
         c.close()
 
 
-def verw_am_stichtag(ordner: str, t: str, liste: list) -> dict:
-    """P22: {Bestandsymbol: (log-Wachstum 90 T, Fuenftel)} fuer die Zeilen ``liste`` (abbau_fuenftel: symbol, reihe, ...) am Stichtag."""
+def verw_am_stichtag(ordner: str, t: str, liste: list, heute=None) -> dict:
+    """P22: {Bestandsymbol: (log-Wachstum 90 T, Fuenftel)} fuer die Zeilen ``liste`` (abbau_fuenftel: symbol, reihe, ...) am Stichtag.
+    ``heute`` (30.10.2026): Vorgabe der echte Tag (Rhythmus-Text in der Mail); der Pruefstand P22c setzt seinen festen Stichtag."""
     p = os.path.join(ordner, ABLAGE)
     if not os.path.exists(p):
         return {}
@@ -667,7 +669,7 @@ def verw_am_stichtag(ordner: str, t: str, liste: list) -> dict:
     try:                                                     # P22c: Freigabe-Rhythmus (Vergangenheit) je Coin dazu
         from agent import verwaesserung as VW
         reihen = VW.alle_reihen(ordner)[0]                   # P22b: mit Zusatz-Coins
-        heute = datetime.now(timezone.utc).date()
+        heute = heute or datetime.now(timezone.utc).date()
         aus = {r[0]: tuple(aus[r[0]]) + (VW.rhythmus_text(VW.rhythmus(reihen.get(r[1] or r[0]), heute)),) for r in liste}
     except Exception:                                        # noqa: BLE001
         pass

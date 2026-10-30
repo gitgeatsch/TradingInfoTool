@@ -147,7 +147,7 @@ c.execute("INSERT INTO abbau_fuenftel VALUES ('2026-09-01','BTC','BTC','H',-0.2,
 c.commit()
 c.close()
 liste = [("APT", "APT", "H", -0.9, 600, 1000, 0.05, 1, None, 10), ("BTC", "BTC", "H", -0.2, 30, 3000, 0.5, 3, None, 1)]
-verw = SA.verw_am_stichtag(O, "2026-09-01", liste)
+verw = SA.verw_am_stichtag(O, "2026-09-01", liste, heute=HEUTE.date())   # 30.10.: fester Stichtag statt Uhr
 b4 = SA.mail({"stichtag": "2026-09-01", "art": "erstliste", "liste": liste}, {"APT": 100.0, "BTC": 100.0}, set(), verw)[1]
 z_apt = next((z for z in b4.splitlines() if z.strip().startswith("Verwässerung") and "Freigaben zuletzt" in z), None)
 # KORREKTUR 15.10. (erster Lauf C4 rot - Fehler im PRUEFSTAND): der Messlage-Satz beginnt auch mit "Verwässerung" - nur Coin-Zeilen zaehlen
@@ -158,7 +158,7 @@ pruefe("C4", "Freigaben zuletzt monatlich" in f_apt["text"] and "Freigaben" not 
                                                              sum("Freigaben" in z for z in z_btc) == 1))
 
 # ══ C5 Statusseite ═══════════════════════════════════════════════════════════════════════════════════════════════════════════
-st = SA.stand(O)
+st = SA.stand(O, heute=HEUTE.date())
 rh_st = st.get("verw_rhythmus") or []
 pruefe("C5", [r[0] for r in rh_st] == ["APT"] and rh_st[0][1] == "monatlich",
        "stand()['verw_rhythmus'] = %s (Stand: heute, nicht der 22.09.)" % rh_st)

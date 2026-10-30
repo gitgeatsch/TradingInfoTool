@@ -45,11 +45,16 @@ from __future__ import annotations
 import sqlite3
 import sys
 
+import wegwerf  # noqa: E402,F401  Wegwerf-Ordner auf D: und Aufraeumen ohne stilles Scheitern (Hausregel)
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 MESS = "data/messdaten.db"
 PROD = "data/tradinginfotool.db"
+PROD_QUELLE = PROD            # wird von _lies gesetzt: welche Produktion tatsaechlich gelesen wurde
+PROD_USD: dict = {}           # USD-Tage je Symbol aus DERSELBEN gelesenen Produktion (30.10.: vorher zweimal die alte Kopie)
+PROD_STAND = ""               # juengster OHLC-Tag dieser Produktion
 
 # ⚠️⚠️ DIE AUSNAHMEN STEHEN HIER MIT GRUND - nicht im Code versteckt.
 # Eine Ausnahme ohne Begruendung ist eine stille Luecke; genau die soll
@@ -83,6 +88,14 @@ FRISCHE_GRENZE_TAGE = 7
 # sind Kalender- und Handelstage dasselbe, dort aendert sich nichts.
 HANDELSTAGE_KLASSEN = ("aktien", "rohstoffe", "themen_etf")
 
+# ⚠️⚠️ DIE DESKTOP-MESSBASIS IST BEWUSST EINGEFROREN (Nutzer 30.10.2026, Entscheidung A zu den roten Suite-Pruefungen).
+# `data/messdaten.db` am Desktop wird nur von Hand nachgeladen (`lade_messreihen.py`), zuletzt am 20.09.2026 - jede Messung seither
+# steht auf genau diesem Stand, und ein Nachladen aendert die Basis (R-R11, Grundgesamtheit). Die Frischeregel unten gilt deshalb
+# NICHT fuer diesen erklaerten Stand: solange der juengste Tag der Datei EINGEFROREN_BIS ist, wird der Stand ausgewiesen, nicht
+# bemaengelt. Wer nachlaedt, muss diese Zeile mitziehen - sonst greift die Frischeregel wieder (gewollt: dann ist es kein
+# erklaerter Stand mehr). Am Notebook (Betriebskopie, Marke `_nur_betrieb`) gilt die Frischeregel immer.
+EINGEFROREN_BIS = "2026-09-20"
+
 
 def _alter_tage(von: str, bis, klasse: str) -> int:
     """Alter in Tagen - fuer schliessende Maerkte in HANDELStagen."""
@@ -107,12 +120,34 @@ def _lies():
             wl[s] = {"klasse": str(getattr(a, "assetklasse", "") or "").lower(),
                      "rolle": str(getattr(a, "rolle", "") or ""),
                      "cash": bool(getattr(a, "ist_cash_aequivalent", False))}
-    c = sqlite3.connect("file:%s?mode=ro" % PROD, uri=True)
-    best = {r[0].upper() for r in
-            c.execute("SELECT symbol FROM holdings WHERE quantity > 0")}
-    prod = {r[0].upper(): r[1] for r in c.execute(
-        "SELECT symbol, COUNT(*) FROM price_history_ohlc GROUP BY symbol")}
-    c.close()
+    # ⚠️⚠️ 30.10.2026: die JUENGSTE Produktion lesen. Am Desktop ist `data/tradinginfotool.db` eine alte Kopie (OHLC-Stand 19.08.,
+    # 28 Bestaende) - die Pruefung meldete falsche Tageszahlen und uebersah XDC. Liegt im Austauschordner eine NEUERE NB-Sicherung,
+    # wird sie in eine Wegwerfdatei entpackt und nur gelesen (`mode=ro`); sonst wie bisher PROD.
+    global PROD_QUELLE, PROD_USD, PROD_STAND
+    import glob as _gl, gzip as _gz, os as _os, shutil as _sh, tempfile as _tf
+    _sich = sorted(_gl.glob("K:/My Drive/Claude_Austauschordner/DB_Backups/tradinginfotool_*.db.gz"))
+    _pfad, _weg = PROD, None
+    if _sich and (not _os.path.exists(PROD) or _os.path.getmtime(_sich[-1]) > _os.path.getmtime(PROD)):
+        _weg = _tf.mkdtemp(prefix="neuauf_")
+        _pfad = _os.path.join(_weg, "prod.db")
+        with _gz.open(_sich[-1]) as _f, open(_pfad, "wb") as _g:
+            _sh.copyfileobj(_f, _g)
+        PROD_QUELLE = "NB-Sicherung %s" % _os.path.basename(_sich[-1])
+    else:
+        PROD_QUELLE = PROD
+    try:
+        c = sqlite3.connect("file:%s?mode=ro" % _pfad.replace("\\", "/"), uri=True)
+        best = {r[0].upper() for r in
+                c.execute("SELECT symbol FROM holdings WHERE quantity > 0")}
+        prod = {r[0].upper(): r[1] for r in c.execute(
+            "SELECT symbol, COUNT(*) FROM price_history_ohlc GROUP BY symbol")}
+        PROD_USD = {r[0].upper(): r[1] for r in c.execute(
+            "SELECT UPPER(symbol), COUNT(DISTINCT date) FROM price_history_ohlc WHERE currency='USD' GROUP BY UPPER(symbol)")}
+        PROD_STAND = (c.execute("SELECT MAX(date) FROM price_history_ohlc").fetchone()[0] or "")[:10]
+        c.close()
+    finally:
+        if _weg:
+            wegwerf.aufraeumen(_weg)
     m = sqlite3.connect("file:%s?mode=ro" % MESS, uri=True)
     # ⚠️ `symbol -> MENGE` seit dem 13.09. (Schritt 50 Teil A): ein
     # Ticker kann als Aktie UND als Kryptowaehrung gefuehrt sein.
@@ -131,8 +166,9 @@ def _lies():
             "SELECT symbol, assetklasse, MAX(date) FROM price_history_ohlc "
             "GROUP BY symbol, assetklasse"):
         letzte[(sym.upper(), kl)] = tag
+    betriebskopie = bool(m.execute("SELECT 1 FROM sqlite_master WHERE name='_nur_betrieb'").fetchone())
     m.close()
-    return wl, best, prod, mess, letzte, status
+    return wl, best, prod, mess, letzte, status, betriebskopie
 
 
 def pruefe(still: bool = False) -> list:
@@ -141,7 +177,8 @@ def pruefe(still: bool = False) -> list:
         if not still:
             print(*a)
 
-    wl, best, prod, mess, letzte, status = _lies()
+    wl, best, prod, mess, letzte, status, betriebskopie = _lies()
+    sag("  Produktion gelesen aus: %s" % PROD_QUELLE)
     maengel = []
 
     sag("=" * 96)
@@ -178,16 +215,7 @@ def pruefe(still: bool = False) -> list:
             # ASTER und MON weiter "die Daten sind da, nur nicht
             # uebernommen" - dabei sind sie ZU KURZ. Die Zeilenzahl in
             # USD entscheidet, nicht die Gesamtzahl (EUR zaehlt mit).
-            _usd = 0
-            try:
-                _c = sqlite3.connect("file:%s?mode=ro" % PROD, uri=True)
-                _usd = _c.execute(
-                    "SELECT COUNT(DISTINCT date) FROM price_history_ohlc "
-                    "WHERE UPPER(symbol)=? AND currency='USD'", (s,)
-                ).fetchone()[0]
-                _c.close()
-            except Exception:                                # noqa: BLE001
-                pass
+            _usd = PROD_USD.get(s, 0)                       # 30.10.: aus derselben (juengsten) Produktion wie oben
             # ⚠️⚠️ NICHT "die Produktion" SAGEN (13.09.2026, Schritt 51).
             #
             # Gelesen wird `data/tradinginfotool.db` - am DESKTOP ist das
@@ -197,17 +225,9 @@ def pruefe(still: bool = False) -> list:
             # "CANTON hat auch in der PRODUKTION keine Kursreihe" - und
             # das war schlicht falsch. Ein Befund, der eine veraltete
             # Kopie als Produktion ausgibt, ist schlimmer als keiner.
-            _stand = ""
-            try:
-                _c2 = sqlite3.connect("file:%s?mode=ro" % PROD, uri=True)
-                _stand = (_c2.execute(
-                    "SELECT MAX(date) FROM price_history_ohlc").fetchone()
-                    [0] or "")[:10]
-                _c2.close()
-            except Exception:                                # noqa: BLE001
-                pass
-            _woher = ("lokalen DB (OHLC-Stand %s)" % _stand) if _stand \
-                else "lokalen DB"
+            _stand = PROD_STAND                             # 30.10.: derselbe Stand wie oben gelesen
+            _woher = ("%s (OHLC-Stand %s)" % (PROD_QUELLE, _stand)) if _stand \
+                else PROD_QUELLE
             if _usd == 0:
                 grund = ("in der %s KEINE Kursreihe - \u26a0\ufe0f gegen die "
                          "Produktionssicherung gegenpruefen, bevor daraus "
@@ -255,6 +275,12 @@ def pruefe(still: bool = False) -> list:
     sag("     %-12s %8s %12s %10s %13s %11s"
         % ("Klasse", "handelnd", "Median-Tag", "Alter Med.", "veraltet",
            "eingestellt"))
+    _juengster = max(letzte.values()) if letzte else ""
+    eingefroren = _juengster == EINGEFROREN_BIS and not betriebskopie
+    if eingefroren:
+        sag("     ⚠️ EINGEFROREN: die Messbasis steht bewusst auf %s (Nachladen nur von Hand,"
+            % EINGEFROREN_BIS)
+        sag("        aendert die Basis) - das Alter wird ausgewiesen, nicht bemaengelt.")
     for kl in sorted(je_klasse):
         tage = sorted(je_klasse[kl])
         med = tage[len(tage) // 2]
@@ -273,8 +299,8 @@ def pruefe(still: bool = False) -> list:
         sag("     %-12s %8d %12s %8d T %6d (%3.0f %%) %11d%s"
             % (kl, len(tage), med, alter, veraltet, anteil,
                eingestellt_je.get(kl, 0),
-               "  ⚠️ VERALTET" if alter > FRISCHE_GRENZE_TAGE else ""))
-        if alter > FRISCHE_GRENZE_TAGE:
+               ("  (eingefroren)" if eingefroren else "  ⚠️ VERALTET") if alter > FRISCHE_GRENZE_TAGE else ""))
+        if alter > FRISCHE_GRENZE_TAGE and not eingefroren:
             maengel.append(
                 "Messbasis `%s`: die MEDIAN-Reihe ist %d %s alt (%s), "
                 "%d von %d Reihen (%.0f %%) sind aelter als %d %s"

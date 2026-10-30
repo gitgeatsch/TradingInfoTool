@@ -102,11 +102,23 @@ st = pd.DatetimeIndex(B["stich"])
 ab = idx[0] + pd.Timedelta(days=2 * ML.FENSTER + 800)          # beide 5-J-Fenster voll (Kanal und Gesamt)
 sel = (st >= ab) & (st <= idx[-1])
 m2 = []
+# ⚠️ 30.10.2026 (Nutzer: Weg a): FRED revidiert manche Reihen rueckwirkend (ALFRED-Nachweis G4/N4 vom 29.10.: NFCI 459, WTREGEN 410,
+# M2SL 104, DTWEXBGS 2.011 Beobachtungen mit mehreren Jahrgaengen). Eine Abweichung im vollen Fenster ist nur ZULAESSIG, wenn an
+# diesem Stichtag AUSSCHLIESSLICH Kanaele aus revidierten Reihen abweichen - dann ist sie eine Revision, kein Rechenfehler. Weicht ein
+# Kanal aus nicht revidierten Marktreihen ab, ist es ein FEHLER (vorher: exakte Gleichheit, rot seit dem NFCI-Nachtrag zum 01.08.).
+REVIDIERT = ("K1 ", "K2 ", "K7 ", "K8 ")          # M2SL · WALCL/WTREGEN/RRPONTSYD · NFCI · DTWEXBGS
+kanaele = [n for n in B["namen"] if n.startswith("K")]
+revision, fehler2 = [], []
 for name in ("Gesamt lang", "Gesamt kurz"):
     e = B["echt"][B["namen"].index(name)][sel]
     m = S_mod[name].reindex(st[sel]).values
     ok = np.isfinite(e) & np.isfinite(m)
     m2.append("%s %d von %d gleich" % (name, int((e[ok] == m[ok]).sum()), int(ok.sum())))
+    for i in np.where(ok & (e != m))[0]:
+        t = st[sel][i]
+        anders = [k for k in kanaele if np.isfinite(B["echt"][B["namen"].index(k)][sel][i]) and k in S_mod
+                  and B["echt"][B["namen"].index(k)][sel][i] != S_mod[k].reindex([t]).values[0]]
+        (revision if anders and all(k.startswith(REVIDIERT) for k in anders) else fehler2).append("%s %s: %s" % (name, t.date(), anders))
 # dazu die GANZE Historie: Rohreihen ab 2003 ueber denselben Abruf, Scores mit dem Modul, gegen alle Stichtage der Messung ab 2011-04
 roh03 = {sid: ML.hole_reihe(sid, KEY, "2003-01-01") for sid in ML.REIHEN}
 idx03 = pd.date_range("2003-01-01", pd.Timestamp(HEUTE), freq="D")
@@ -119,9 +131,9 @@ for name in ("Gesamt lang", "Gesamt kurz"):
     ok = np.isfinite(e) & np.isfinite(m)
     quote.append((name, int((e[ok] == m[ok]).sum()), int(ok.sum())))
 m2.append("ganze Historie ab 2011-04: " + " · ".join("%s %d von %d" % q for q in quote))
-pruefe("M2", all(g >= 0.95 * n for _, g, n in quote) and all(x.split()[-4] == x.split()[-2] for x in m2[:2]),             # "Gesamt lang 10 von 10 gleich"
-       "FRED-API gegen fredgraph.csv vom 14.10. (Unterschied nur durch Datenrevisionen erwartet; Soll >= 95 %%) - ab %s: %s" % (
-           ab.date(), " · ".join(m2)))
+pruefe("M2", all(g >= 0.95 * n for _, g, n in quote) and not fehler2,
+       "FRED-API gegen fredgraph.csv vom 14.10. (Unterschied nur durch Datenrevisionen erwartet; Soll >= 95 %%) - ab %s: %s · "
+       "Abweichungen im vollen Fenster: Revision %s · NICHT erklaert %s" % (ab.date(), " · ".join(m2), revision or "keine", fehler2 or "keine"))
 
 # ══ M3 lage_aus ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════
 d = ML.lage_aus(roh, HEUTE)

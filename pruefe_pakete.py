@@ -3584,7 +3584,8 @@ def gesamtpruefung() -> None:
     for _f in pathlib.Path(".").glob("**/*.py"):
         _t = str(_f).replace(chr(92), "/")
         if ("/agent/hebel_analyst.py" in "/" + _t or _t.startswith("bestand")
-                or _t.startswith("pruefe_") or "/.git/" in "/" + _t):
+                or _t.startswith("pruefe_") or "/.git/" in "/" + _t
+                or _t.startswith(".claude/")):             # 30.10.: Git-Worktrees anderer Sitzungen sind KEINE Aufrufer
             continue
         _q = _f.read_text(encoding="utf-8", errors="replace")
         for _zeile in _q.split(chr(10)):
@@ -22307,11 +22308,18 @@ def paket_guikette() -> None:
         # P19 (17.10.2026): Reiter Markt (Krypto) und Spot
         ("Markt Ampel", __import__("ui.markt_tab", fromlist=["x"]).AMPEL_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).AMPEL_TIPP),
         ("Markt Makro", __import__("ui.markt_tab", fromlist=["x"]).MAKRO_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).MAKRO_TIPP),
-        ("Spot Kandidaten", __import__("ui.markt_tab", fromlist=["x"]).KAND_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).KAND_TIPP))}
+        ("Spot Kandidaten", __import__("ui.markt_tab", fromlist=["x"]).KAND_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).KAND_TIPP),
+        # E-137 (24.10.2026): Lagebild Gesamtmarkt - fehlte hier, die Pruefung zaehlte 3 Tabellen fest (30.10. nachgezogen)
+        ("Markt Gesamtmarkt", __import__("ui.markt_tab", fromlist=["x"]).GESAMT_SPALTEN, __import__("ui.markt_tab", fromlist=["x"]).GESAMT_TIPP))}
+    # ⚠️ 30.10.2026: nicht mehr ZAEHLEN (fest == 3, seit E-137 sind es 4), sondern ABLEITEN - jede Treeview im Markt-Tab ruft
+    # add_heading_tooltips (Hausregel 4: was aufgezaehlt wird, veraltet)
+    _mt15 = _nur_code("ui/markt_tab.py")
+    _baeume15 = re.findall(r"self\s*\.\s*(\w+)\s*=\s*ttk\s*\.\s*Treeview\s*\(", _mt15)     # _nur_code trennt Tokens mit Leerzeichen
+    _ohne_tt15 = [b_ for b_ in _baeume15 if not re.search(r"add_heading_tooltips\s*\(\s*self\s*\.\s*%s\s*," % b_, _mt15)]
     pruefe(P, "⚠️ P15b: JEDE Spalte in Bestand-, Hebel-, Markt- und Spot-Tab hat eine Erklaerung im Mouseover - und jede Tabelle ruft add_heading_tooltips",
            not any(_ohne15b.values()) and _bt15.count("add_heading_tooltips(") >= 3 and _ht12.count("add_heading_tooltips(") >= 3
-           and _quelltext("ui/markt_tab.py").count("add_heading_tooltips(self.") == 3,
-           "%s" % {k_: v_ for k_, v_ in _ohne15b.items() if v_})
+           and len(_baeume15) >= 4 and not _ohne_tt15,
+           "%s · Markt-Tab Tabellen %s, ohne Mouseover %s" % ({k_: v_ for k_, v_ in _ohne15b.items() if v_}, _baeume15, _ohne_tt15))
     import ui.heading_tooltip as _TT15
     pruefe(P, "⚠️ P15c: Mouseover nie ausserhalb des Bildschirms - am rechten Rand links vom Zeiger (Spaltenkopf und Zeile)",
            _TT15.lage(1900, 500, 300, 80, 2000, 1100) == (1588, 518) and _TT15.lage(10, 10, 300, 80, 2000, 1100) == (22, 28)
@@ -22382,7 +22390,9 @@ def paket_spot_mitnahme() -> None:
 
 def _vor_umstellung(sicherungen: list) -> list:
     """P11b/P11c spielen die UMSTELLUNG auf das Buch nach (alte Importer-Zeilen, ETH noch gespeichert offen). Die gibt es nur in
-    Sicherungen VOR dem 16.10.2026 16:26 UTC (K-HB-1) - die Namen tragen UTC. Seit dem 17.10. nahm die Suite die juengste, schon
+    Sicherungen VOR dem 16.10.2026 16:26 UTC (K-HB-1) - die Namen tragen UTC. Seit 30.10.2026 liegt dafuer eine DAUERHAFTE Grundlage in
+    `Claude_Austauschordner/Pruefgrundlagen` (aus den 191 Originalzeilen wiederhergestellt, siehe LIESMICH dort) - die Rotation in
+    DB_Backups (7 behalten) hatte die echte Sicherung am 18.10. entfernt. Seit dem 17.10. nahm die Suite die juengste, schon
     umgestellte Sicherung, und beide Pruefstaende fielen am Zustand statt am Code (18.10.2026, gegen 16.10. 05:43 gegengeprueft:
     8/8 und 9/9). Liegt keine solche Sicherung mehr da, faellt die Pruefung ehrlich mit 'keine Sicherung gefunden'."""
     import os as _os
@@ -22407,7 +22417,8 @@ def paket_hebelbuch() -> None:
            _qb.index("INSERT INTO %s SELECT * FROM hebel_positions") < _qb.index("DELETE FROM hebel_positions")
            and "Sicherung unvollstaendig" in _qb and 'typ == "margin_trading_liquidation_long"' in _qb)
     _js = sorted(_gl.glob("K:/My Drive/Claude_Austauschordner/Notebook_Analysedaten/nb_bitpanda_buchungen_voll_*.json"))
-    _gz = _vor_umstellung(sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz"))))
+    _gz = _vor_umstellung(sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz"))
+                                       + _gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/Pruefgrundlagen", "tradinginfotool_*.db.gz"))))
     if not _js or not _gz:
         pruefe(P, "Pruefstand p11b (braucht Buchungen voll + Prod-Sicherung im Austauschordner)", False, "fehlt: %s" % ("JSON" if not _js else "Sicherung"))
         return
@@ -22438,7 +22449,8 @@ def paket_wallet_fuehrung() -> None:
            and "hebel_position_last_synced_unix" in _q)
     pruefe(P, "LAUT BITPANDA GESCHLOSSEN loest keine Mail aus (nicht in MELDEN)",
            __import__("agent.hebelfuehrung", fromlist=["x"]).LAUT_BITPANDA_GESCHLOSSEN not in __import__("agent.hebelfuehrung", fromlist=["x"]).MELDEN)
-    _sich = _vor_umstellung(sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz"))))
+    _sich = _vor_umstellung(sorted(_gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/DB_Backups", "tradinginfotool_*.db.gz"))
+                                       + _gl.glob(_os.path.join("K:/My Drive/Claude_Austauschordner/Pruefgrundlagen", "tradinginfotool_*.db.gz"))))
     if not _sich:
         pruefe(P, "Pruefstand p11c (braucht eine Prod-Sicherung im Austauschordner)", False, "keine Sicherung gefunden")
         return
@@ -26098,11 +26110,29 @@ def paket_verfuegbarkeit():
                "sonst waere die Verwechslung wieder still moeglich")
 
     _soll = _MR.turnover_verfuegbar()
+    # ⚠️ 30.10.2026: GERAETEUNABHAENGIG. Die Mengendatei wird am Desktop nicht fortgeschrieben (Stand 22.09., Frische 5 T) - die
+    # Pruefung war seit Ende September rot, ohne dass der Helfer etwas falsch machte. Gefragt ist, ob er bei FRISCHEN Daten Symbole
+    # liefert: Wegwerfkopie der Datei, der juengste Tag auf heute gelegt (Hausregel 3: Wegwerfpfad, nie die Vorgabe).
+    import datetime as _dtv
+    import shutil as _shv
+    import sqlite3 as _sqv
+    import tempfile as _tfv
+    _ov = _tfv.mkdtemp(prefix="verf_")
+    try:
+        _fv = _os.path.join(_ov, "umlaufmenge_cg.db")
+        _shv.copy(_MR.FREEFLOAT_DATEI, _fv)
+        _cv = _sqv.connect(_fv)
+        _cv.execute("INSERT OR REPLACE INTO umlaufmenge SELECT symbol, ?, wert FROM umlaufmenge WHERE datum = (SELECT MAX(datum) FROM umlaufmenge)",
+                    (_dtv.date.today().isoformat(),))
+        _cv.commit(); _cv.close()
+        _frisch = _MR.turnover_verfuegbar(frei_datei=_fv)
+    finally:
+        wegwerf.aufraeumen(_ov)                              # Hausregel: nie still loeschen
     pruefe(P, "⚠ der Helfer liefert ueberhaupt Symbole",
-           len(_soll) > 0,
+           len(_frisch) > 0,
            "leer hiesse, turnover faellt fuer ALLE Werte aus - dann "
-           "waere die Frage nach der Luecke gegenstandslos. Anzahl: "
-           "%d" % len(_soll))
+           "waere die Frage nach der Luecke gegenstandslos. Bei frischen Daten (Wegwerfkopie): %d · mit dem Geraetestand: %d"
+           % (len(_frisch), len(_soll)))
 
     for _name in ("phase4_c_turnover_luecke", "phase4_c_betrag_bei_luecke"):
         try:
@@ -26173,24 +26203,34 @@ def paket_nennersperre() -> None:
            "Grund im Code ist es eine Setzung. Ohne Grund: %s" % _leer)
 
     # ---- ⚠⚠ DER SEITENEFFEKT, nicht der Quelltext --------------
-    _datei = "data/onchain_historie.db"
-    _kein_betrieb = "data/_gibt_es_nicht_.db"
+    # ⚠️ 30.10.2026: GERAETEUNABHAENGIG. Bis hier las der Nachweis `data/onchain_historie.db` - am Desktop Stand 12.09., Frische
+    # 21 T: ab Anfang Oktober waren auch die gesperrten Symbole zu alt, und der Test pruefte nichts (rot, ohne Fehler im Code).
+    # Jetzt eine WEGWERF-Messdatei mit derselben Tabelle `splycur`, heutiges Datum (wie der Betriebsweg unten).
+    import datetime as _dtn
     import os as _os
-    if not _os.path.exists(_datei):
-        pruefe(P, "⚠ Messdatei fuer den Seiteneffekt vorhanden",
-               False, "ohne %s ist der Nachweis nicht zu fuehren - am "
-                      "Notebook liegt dort nur die Symbolliste" % _datei)
-        return
+    import sqlite3 as _sqn
+    import tempfile as _tfn
+    _kein_betrieb = "data/_gibt_es_nicht_.db"
     _vorher = _MR.NENNER_WIDERLEGT
     # ⚠️ SEIT 22.09. ZWEISTUFIG. Dieser Nachweis gilt der Groesse, die
     # der Betrieb heute benutzt - `umlaufmengen` liest `splycur`.
     _gesperrt = _vorher.get("umschlag_gesamt", {})
+    _on = _tfn.mkdtemp(prefix="nenner_")
+    _datei = _os.path.join(_on, "onchain_historie.db")
     try:
-        _mit = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
-        _MR.NENNER_WIDERLEGT = {"umschlag_gesamt": {}}
-        _ohne = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
+        _cn = _sqn.connect(_datei)
+        _cn.execute("CREATE TABLE splycur (symbol TEXT NOT NULL, datum TEXT NOT NULL, wert REAL NOT NULL, PRIMARY KEY (symbol, datum))")
+        for _s, _w in [(_s, 1.0e9) for _s in _gesperrt] + [("BTC", 2.0e7)]:
+            _cn.execute("INSERT INTO splycur VALUES (?,?,?)", (_s, _dtn.date.today().isoformat(), _w))
+        _cn.commit(); _cn.close()
+        try:
+            _mit = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
+            _MR.NENNER_WIDERLEGT = {"umschlag_gesamt": {}}
+            _ohne = _MR.umlaufmengen(db_pfad=_kein_betrieb, datei=_datei)
+        finally:
+            _MR.NENNER_WIDERLEGT = _vorher
     finally:
-        _MR.NENNER_WIDERLEGT = _vorher
+        wegwerf.aufraeumen(_on)                              # Hausregel: nie still loeschen
 
     _war_da = sorted(s for s in _gesperrt if s in _ohne)
     pruefe(P, "⚠ die gesperrten Symbole waren OHNE Sperre ueberhaupt da",

@@ -208,8 +208,11 @@ for name, f in (("Statusseite", lambda: BL.hebel_fuehrung_jetzt(c)), ("Positione
     except Exception as exc:                                     # noqa: BLE001
         fehl8.append("%s: %s: %s" % (name, type(exc).__name__, exc))
 sb = BL.hebel_fuehrung_jetzt(c)
-pruefe("B8", not fehl8 and lq and abs(lq - t3a[0]["liquidation_eur"]) / lq < 0.01 and [p["symbol"] for p in sb] == ["BTC"],
-       "Liquidationspreis des Jobs %.2f (Fuehrung %.2f) · Statusseite %s · Fehler %s" % (lq or 0, t3a[0]["liquidation_eur"],
+# ⚠️ 30.10.2026: der Job rechnet mit der ECHTEN Uhr (Finanzierung bis heute) - verglichen wird deshalb mit der Fuehrung ZUR SELBEN
+# Zeit, nicht mit JETZT (16.10.). Vorher wurde B8 rot, sobald die Finanzierung die Liquidation um mehr als 1 % verschoben hatte.
+t8 = HF.lade(c, nahe_grenze=0.15, wallet=False)
+pruefe("B8", not fehl8 and lq and abs(lq - t8[0]["liquidation_eur"]) / lq < 0.01 and [p["symbol"] for p in sb] == ["BTC"],
+       "Liquidationspreis des Jobs %.2f (Fuehrung zur selben Zeit %.2f) · Statusseite %s · Fehler %s" % (lq or 0, t8[0]["liquidation_eur"],
                                                                                        [p["symbol"] + " " + str(p["empfehlung"]) for p in sb], fehl8 or "keine"))
 c.close()
 

@@ -51,6 +51,7 @@ MAKRO_TIPP = {
 GESAMT_SPALTEN = ("nr", "stichwort", "wert", "gemessen")
 GESAMT_KOPF = {"nr": "", "stichwort": "Lagebild", "wert": "heute", "gemessen": "gemessen"}
 GESAMT_TIPP = {
+    "nr": "Kennung der Lagebild-Zeile (L1 bis L7).",
     "stichwort": "Lagebild Gesamtmarkt L1-L7 (L-A, E-137; L7 DVOL E-161): Fakt, kein Signal - keine Makrogröße läuft den BTC-Wenden voraus (Atlas E-135).",
     "wert": "Stand heute (FRED, alternative.me). Einzige Farbe: Rezessionsampel ROT, wenn Zinskurve UND Sahm-Regel anschlagen.",
     "gemessen": "Was die Messung dazu sagt (Indikator-Atlas E-135).",

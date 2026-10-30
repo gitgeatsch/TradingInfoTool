@@ -32,6 +32,12 @@ import scheduler.background as BG         # noqa: E402
 
 STANDARD = os.path.join(WURZEL, "data", "tradinginfotool.db")
 ok = n = 0
+# ⚠️ 30.10.2026: alle Zeiten RELATIV zur Uhr. Der Lauf `_hebelfuehrung_lauf` rechnet mit der ECHTEN Uhr (Finanzierung bis heute); mit
+# der festen Eroeffnung 09.10. wanderte die Liquidation jeden Tag ~145 EUR naeher, und ab 22.10. fielen P2/P4-P7 in andere Stufen.
+# Die Lage vom 10.10. (Eroeffnung 27 h 21 min vor dem Lauf) bleibt so an jedem Tag dieselbe.
+from datetime import datetime as _DT, timedelta as _TD, timezone as _TZ  # noqa: E402
+JETZT = _DT.now(_TZ.utc).replace(microsecond=0)
+EROEFFNET = JETZT - _TD(hours=27, minutes=21, seconds=7)
 
 
 def pruefe(name, gut, info=""):
@@ -48,7 +54,7 @@ def main():
     c.row_factory = sqlite3.Row                     # wie im Betrieb (database.db.get_connection)
     DB.init_db(c)
     spalten = [r[1] for r in c.execute("PRAGMA table_info(hebel_positions)")]
-    werte = {"symbol": "BTC", "richtung": "LONG", "status": "offen", "eroeffnet_am": "2026-10-09T04:38:53+00:00", "hebel_effektiv": 3.0,
+    werte = {"symbol": "BTC", "richtung": "LONG", "status": "offen", "eroeffnet_am": EROEFFNET.isoformat(), "hebel_effektiv": 3.0,
              "positionswert_eur": 1500.0, "kreditbetrag_eur": 1000.0, "eigenkapital_eur": 500.0, "positionsmenge": 0.02038541}
     werte = {k: v for k, v in werte.items() if k in spalten}
     for cid, name, typ, notnull, vorgabe, pk in c.execute("PRAGMA table_info(hebel_positions)").fetchall():
@@ -69,7 +75,7 @@ def main():
         zaehler[0] += 1
         x = sqlite3.connect(pfad)
         x.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, price_eur, fetched_at) VALUES ('BTC','bitcoin',?,?,?)",
-                  (k * 1.1, k, "2026-10-09T08:%02d:00+00:00" % zaehler[0]))
+                  (k * 1.1, k, (JETZT - _TD(minutes=60 - zaehler[0])).isoformat()))
         x.commit()
         x.close()
 
@@ -98,11 +104,11 @@ def main():
     kurs(53000); r = BG._hebelfuehrung_lauf(fabrik, versand=versand_ok)
     pruefe("P6", r.get("mail") and "LIQUIDATION ERREICHT" in r["mail"][0], r["mail"][0] if r.get("mail") else "-")
     x = fabrik()
-    t13 = HF.lade(x, nahe_grenze=0.15, jetzt="2026-10-10T08:00:00+00:00")
+    t13 = HF.lade(x, nahe_grenze=0.15, jetzt=JETZT.isoformat())      # jetzt als TEXT: prueft die Umwandlung in haltedauer_text mit
     x.execute("DELETE FROM price_cache"); x.commit()
-    x.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, price_eur, fetched_at) VALUES ('BTC','bitcoin',1,62000,'2026-10-10T08:00:00+00:00')")
+    x.execute("INSERT INTO price_cache (symbol, coingecko_id, price_usd, price_eur, fetched_at) VALUES ('BTC','bitcoin',1,62000,?)", (JETZT.isoformat(),))
     x.commit()
-    t13 = HF.lade(x, nahe_grenze=0.15, jetzt="2026-10-10T08:00:00+00:00")
+    t13 = HF.lade(x, nahe_grenze=0.15, jetzt=JETZT.isoformat())
     # P7 leitet heute/morgen vom ECHTEN UTC-Tag ab - so vermerkt der Lauf oben (`_hebelfuehrung_lauf` ohne `tag`). Bis 10.10. stand
     # hier fest "2026-10-09"/"2026-10-10"; am Folgetag wurde die Pruefung rot (Suite 10.10., zweite Zeitabhaengigkeit nach P10).
     from datetime import datetime as _dt, timedelta as _td, timezone as _tz

@@ -317,6 +317,10 @@ def haltedauer_text(ordner: str, symbol: str, eroeffnet, jetzt: datetime | None 
     """E3: 'seit 198 h offen (Regel 24 h) · REGEL0-Signal 10.10. 05:00' oder '... · eigene Entscheidung (kein REGEL0-Signal davor)'."""
     if eroeffnet is None:
         return None
+    if isinstance(jetzt, str):                       # 30.10.2026: hebelfuehrung.lade nimmt `jetzt` auch als ISO-Text an (TypeError im Log)
+        jetzt = datetime.fromisoformat(jetzt.strip().replace("Z", "+00:00"))
+    if jetzt is not None and jetzt.tzinfo:
+        jetzt = jetzt.astimezone(timezone.utc)
     jetzt = (jetzt or datetime.now(timezone.utc)).replace(tzinfo=None)
     auf = datetime.fromisoformat(str(eroeffnet).replace("Z", "")[:19]).replace(tzinfo=None) if not isinstance(eroeffnet, datetime) \
         else eroeffnet.astimezone(timezone.utc).replace(tzinfo=None) if eroeffnet.tzinfo else eroeffnet
