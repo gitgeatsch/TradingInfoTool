@@ -319,3 +319,39 @@ sollen, ist nicht realistisch. Das gilt m. E. für alle Messungen.“* — die E
 | Herausrechnen | wirkt wieder: E trägt mehr als der rohe Großfluss (BTC H1 +1,26 gegen +0,92) |
 
 **Gegenprobe** ✔: E bis 6·10⁻¹⁷, Fünftel 100 % gleich, D exakt, Bootstrap-Band 0,93–1,01 der t-Breite, alle Vorgriff-Mutationen erkannt.
+
+---
+
+## 14. FASSUNG 4 — Vorprüfung auf Altcoins (Weg a2, VORAB: 30.10.2026, vor jedem Download und jedem Wert)
+
+**Nutzer 30.10.:** *„A2, wichtig es soll keine Verschlechterung erfolgen, wenn nicht für Regel0 geeignet dann uU für die Dashboard LLM bewertung.“*
+**Anlass:** Weg a (Großfluss vor REGEL0-Einstiegen auf dem Kern) ist **nicht messbar**: 276 Einstiege BTC/ETH/SOL 2024–26, Auflösung
+≈ 1,6 Pp gegen erwartete 0,2–0,4 Pp (Lesefassung §5). Ein REGEL0-Beitrag braucht die ~10.000 Einstiege **aller** REGEL0-Assets — und
+das lohnt nur, wenn der Effekt außerhalb des Kerns **überhaupt** existiert. Diese Stufe prüft genau das, nichts weiter.
+
+| | Festlegung |
+|---|---|
+| **Werte (Regel, keine Auswahl)** | REGEL0-Einstiege der Menge `bestand`, ohne Kern, Binance-Spot-Reihe seit spätestens 01.01.2023, Status `handelnd` → die **6 mit dem höchsten Spot-Umsatz 2024–26**: **BNB, ADA, TRX, AVAX, LINK, NEAR** (59 Kandidaten, gerechnet 30.10.) |
+| Daten | Binance-Archiv aggTrades Spot je Tag, 01.01.2023 bis 30.09.2026; HEAD gemessen **14,9 GB** zip (BNB 6,0 · ADA 2,3 · TRX 1,7 · AVAX 1,5 · LINK 1,7 · NEAR 1,7), 0 fehlende Monate |
+| Rechnung | **unverändert** aus Fassung 3 (E, q 5 %, Fünftel, Einstieg 00:00 UTC t+1, Log brutto, Verzug 06:00) |
+| **Hypothese** | **gerichtet**, einseitig (aus Fassung 3): oberstes Fünftel **höher** als unterstes |
+| **Hauptfrage** | **nur H1** (der einzige Horizont, der in Fassung 3 trug) → **eine** Hypothese, kein Bonferroni; H3/H7 nur Auskunft |
+| Urteil | **2024-01-01 bis 2026-09-30**; D = **Mittel der sechs D** (gleich gewichtet), Band cluster-robust über **gemeinsame** 15-Tage-Blöcke (dieselben Markttage liegen im selben Block, weil die Werte gemeinsam laufen) |
+| Nullwelt / Selbsttest | Blockvertauschung 15 T je Wert, **dieselbe** Vertauschung für alle sechs (erhält den Gleichlauf); Selbsttest **vor** dem ersten Wert, 1.000 Welten, einseitig, S1/S2/S3/Orakel wie Fassung 3; Vorprüfung (Archiv = Kerze, Stichprobe, Vollständigkeit) vorher |
+
+**TRÄGT AUSSERHALB DES KERNS** verlangt **alle** Punkte:
+
+| # | Punkt |
+|---|---|
+| 1 | einseitige Untergrenze des gepoolten D (H1) **über** dem Nullpunkt |
+| 2 | D (H1) > 0 bei **≥ 4 von 6** Werten |
+| 3 | Jahre 2024, 2025, 2026 einzeln (gepoolt): D > 0 in **≥ 2 von 3** — ⚠️ Epochen dürfen verschieden ausfallen (Nutzer 30.10.), deshalb nicht 3 von 3 |
+| 4 | Verzug 06:00: D > 0 |
+| 5 | Selbsttest bestanden |
+
+| Ergebnis | Folge |
+|---|---|
+| **trägt** | Stufe 2 als eigener Messplan: Wal-Daten für **alle** REGEL0-Assets (Download vorher messen und vorlegen), dann Großfluss als **Beitrag zur REGEL0**. ⚠️⚠️ **Keine Verschlechterung (Nutzer):** eingebaut wird nur, wenn REGEL0 **mit** dem Beitrag auf denselben Einstiegen nachweislich **besser** ist als ohne (Auswahlanteil angeglichen, Signalbilanz je Asset, Nullwelt) — sonst bleibt REGEL0 unverändert |
+| **trägt nicht** | **kein** REGEL0-Weg. Stattdessen **Dashboard-Bewertung** (Bauplan A3): der geltende Befund `G16-wale-spot-f3` (BTC, 1 Tag) als Eintrag der **Befund-Karte** mit `gilt_wenn` BTC, Horizont 1 Tag, Zahl samt Epoche (2020–22 +1,26 Pp, 2025/26 +0,2–0,4 Pp); der Großfluss des Vortags als **Fakt** — erst mit dem Dashboard-Bau, als eigene Abstimmung |
+
+⚠️ **Betrieb unberührt** in dieser Stufe: nur Desktop, nur Daten unter `data/_wale/`, Produktions-DB nicht geöffnet.
