@@ -1,0 +1,16 @@
+{
+ "bestanden": true,
+ "nullwelt": "block",
+ "welten": 1000,
+ "X": {
+  "BTCUSDT|spot|1": 0.01,
+  "BTCUSDT|spot|3": 0.01,
+  "BTCUSDT|spot|7": 0.02,
+  "ETHUSDT|spot|1": 0.01,
+  "ETHUSDT|spot|3": 0.02,
+  "ETHUSDT|spot|7": 0.02,
+  "SOLUSDT|spot|1": 0.01,
+  "SOLUSDT|spot|3": 0.01,
+  "SOLUSDT|spot|7": 0.02
+ }
+}

@@ -272,3 +272,21 @@ ausgewiesen.
 > |---|---|
 > | **BESTÄTIGT** | Spot-Großfluss wird **Bewertungszeile für den Kern** (§8): Spot-Einstieg auslösen/zurückhalten, Hebel-Wahrscheinlichkeit, Begründung in der Mail — danach Kostenprüfung, Bauentscheid, NB-Abrufer |
 > | **nicht bestätigt** | Abstimmung und Lösungssuche (Nutzer 29.10.); ⚠ 2019–22 ist eine **andere Epoche** — ein Nichtbestätigen dort widerlegt 2025–26 nicht allein; die Jahre einzeln ausweisen |
+
+### Fassung 3 — Download, Vorprüfung, Selbsttest (30.10.2026 nachts, vor jedem echten Ergebnis)
+
+| | |
+|---|---|
+| **Download** | Spot BTC/ETH 2019-01-01 bis heute je **2.858 Tage**, SOL **2.270 Tage** ab Handelsbeginn 11.08.2020 (davor gibt es keine Datei), 0 Ausfälle |
+| **Gebührenfreiheit nachgewiesen** | Spot BTC ab **08.07.2022**: Geschäfte je Tag 0,89 → 3,99 Mio. (×4,5), Umsatz ×2,8; ab 22.03.2023 zurück (11,9 → 2,3 Mrd $/Tag) |
+| **Vorprüfung** (`p102_wale_vorpruefung_f3.txt`) | ✔ BESTANDEN — Archiv = Kerze (Spot 1,0000–1,0011), Stichprobe exakt, Stunden = Tag, Blöcke BTC/ETH 74 (H7 53), SOL 128 (H7 92) |
+| Kurslücken | **nur 06:00** und bei **allen** Werten gleich (Binance-Ausfälle 12.03., 15.05., 15.08.2019, 30.11.2020, 25.04.2021) → Börsenausfall, nur die Verzugsprobe verliert diese Tage. SOL 29.11.2020 endet 23:48 (derselbe Ausfall) |
+| ⚠️ **Eigene Fehler, von der Gegenprüfung gefunden** | (1) die Vollständigkeitsabfrage hatte kein Anfangsdatum (zählte 2019–22 in Fassung 1 mit), (2) Kurse je Tag neu geladen (Laufzeit). Beide behoben; Fassung 1 Messung/Gegenprobe/Vorprüfung danach **bitgleich** |
+| **Selbsttest** (`p102_wale_selbsttest_f3.txt`, 1.000 Welten, einseitig) | ✔ BESTANDEN — S1 Fehlalarm **1,0–1,7 %**, S2 Ballung **2,1–3,7 %** (Soll ≤ 5 %, Stufungsgrenze 2,5 %), Orakel 200/200 in allen 9 Zellen, Nullwelt Block |
+| **Auflösung X** (D-Unterschied 2X) | BTC H1/H3 **1 Pp** (D 2 Pp), H7 2 Pp · ETH H1 1, H3/H7 2 · SOL H1/H3 1, H7 2 |
+
+⚠️⚠️ **Die Auflösung ist NICHT feiner geworden** (erwartet: etwa halb so grob). Mehr Blöcke, aber 2020–22 schwankte der Kurs
+deutlich stärker (2021) — beides hebt sich auf. **Was das für die Bestätigung heißt** (Fundquote aus S3 bei der Größe, die
+Fassung 1 gemessen hat): BTC H3 D +0,71 ≈ k 0,35 → rund **15 %**; BTC H7 D +2,08 ≈ k 1,0 → rund **50 %**. Eine Bestätigung ist also
+nur wahrscheinlich, wenn der Effekt in 2020–22 **größer** war als 2025–26 — ein **Nichtbestätigen** wäre bei dieser Stärke das
+**erwartete** Ergebnis und **kein** Beleg gegen den Effekt.
