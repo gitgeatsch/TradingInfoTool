@@ -385,3 +385,31 @@ längerer Block und Bootstrap helfen nicht, die Vertauschung hält.
 | Codeprobe | vor dem Download einmal auf 2023-09 bis 11 gelaufen (nur 5 Werte, 6 Blöcke, KEIN BEFUND). Das liegt **außerhalb** des Urteilsfensters, das Urteilsfenster 2024-01 bis 2026-09 ist **ungesehen** |
 
 ⚠️ Bei einem Wert ist der gepoolte Weg mit t-Band bitgleich mit Fassung 3 (BTC H1/H3/H7, nach dem Umbau erneut geprüft).
+
+### 14c. FASSUNG 4c — Sollgrenze des Selbsttests nach der Stufung (VORAB: 30.10.2026 abends, vor jedem echten Wert)
+
+**Anlass:** Selbsttest 4b (Permutationstest, Startwert 20261102) **✖ NICHT BESTANDEN** (`p102_wale_selbsttest_f4b_perm.txt`):
+
+| H 1 / 3 / 7 | S1 | S2 |
+|---|---|---|
+| Fehlalarm | **5,8 %** · 5,2 % · 5,6 % | **5,0 %** · 6,0 % · 10,7 % |
+
+Auflösung X H1 = 0,25 Pp (D 0,50 Pp), Orakel 200/200 in allen drei Horizonten. **Nicht gemessen.**
+
+**Ursache: meine Sollwert-Festlegung, nicht die Anlage.** Der Permutationstest hält das Nennniveau 5 % **genau**. Ein Test,
+der genau 5 % hält, liegt bei 1.000 Welten in etwa der Hälfte der Läufe über „≤ 5 %“. Der Standardfehler beträgt 0,69 Pp.
+Die stehende Regel vom 11.10. (Spot §43.5) verlangt deshalb die Grenze **Nennniveau + 2 Standardfehler**; §6 dieses Plans
+nennt sie als „Stufungsgrenze“. In 4b hatte ich „≤ 5 %“ ohne Toleranz übernommen, die Grenze stammte aus Fassung 3 mit dem
+konservativen t-Band (Raten 1–4 %).
+
+Beleg: Beide unabhängigen Läufe desselben Tests zusammen ergeben S1 **98/2.000 = 4,9 %** und S2 **100/2.000 = 5,0 %**.
+Das sind die Ursachenmessung aus §14b mit 200 Vertauschungen und der Lauf 4b mit 1.000.
+
+**Festlegung 4c (alles andere aus §14/§14b unverändert, das Urteil Punkt 1 bleibt der Permutationstest zu 5 %):**
+
+| | |
+|---|---|
+| Sollgrenze Selbsttest | S1/S2 H1 ≤ **5 % + 2 SE = 6,4 %** bei 1.000 Welten; Orakel H1 ≥ 190/200 |
+| Lauf | **neu und vollständig**, 1.000 Welten, **neuer Startwert 20261103** |
+| H7 | bei S2 **10,7 %** → das H7-Urteil (Schwelle, p) ist unter gemeinsamer Ballung **nicht verlässlich**. Ausgewiesen wird nur D, ohne TRÄGT-Aussage. H7 war ohnehin keine Hauptfrage |
+| Wirkung aufs Urteil | keine. Die Grenze eicht die **Anlage**; Schwelle und Niveau der Hypothese bleiben gleich |

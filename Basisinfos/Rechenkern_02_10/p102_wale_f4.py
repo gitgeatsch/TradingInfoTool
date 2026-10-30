@@ -162,7 +162,9 @@ def traegt(r):
 def selbsttest() -> int:
     welten = int(sys.argv[sys.argv.index("--welten") + 1]) if "--welten" in sys.argv else 1000
     vorher = B.fingerabdruck()
-    rng = np.random.default_rng(20261102 if B.PRUEFUNG == "perm" else 20261031)    # 4b: neuer Startwert, nicht der vom 4a-Lauf
+    rng = np.random.default_rng(20261103 if B.PRUEFUNG == "perm" else 20261031)    # 4c: neuer Startwert (4a 20261031, 4b 20261102)
+    # 4c (§14c): ein Test zum Nennniveau 5 % trifft "<= 5 %" nur in der Hälfte der Läufe - Grenze Nennniveau + 2 SE (Regel 11.10.)
+    grenze = 0.05 + (2 * np.sqrt(0.05 * 0.95 / welten) if B.PRUEFUNG == "perm" else 0.0)
     tg, aus = B.lade()
     w = B.maske(tg, B.URTEIL)
     n = len(tg)
@@ -178,8 +180,8 @@ def selbsttest() -> int:
     ys = {h: [aus[s]["y"][(h, 0)][w] for s in S] for h in B.HORIZONTE}
     monat = np.unique(np.array([d.year * 12 + d.month for d in tg]), return_inverse=True)[1]
     z = [kopf("SELBSTTEST", " · %d Welten · echte Erträge, künstliche Signale, KEIN echtes Ergebnis · EINSEITIG" % welten)]
-    z.append("Soll: S1/S2 TRÄGT in <= 5 %% bei H1 (Hauptfrage; H3/H7 Auskunft) · Orakel H1 >= 190/200 · Nullwelt Block 15 T, gemeinsam · "
-             "Urteil %s" % ("PERMUTATIONSTEST (Fassung 4b), %d Vertauschungen" % B.NULL_PERM if B.PRUEFUNG == "perm" else "t-Band"))
+    z.append("Soll: S1/S2 TRÄGT in <= %.1f %% bei H1 (Nennniveau 5 %% + 2 SE bei %d Welten; H3/H7 Auskunft) · Orakel H1 >= 190/200 · Nullwelt Block 15 T, gemeinsam · "
+             "Urteil %s" % (100 * grenze, welten, "PERMUTATIONSTEST (Fassung 4b/4c), %d Vertauschungen" % B.NULL_PERM if B.PRUEFUNG == "perm" else "t-Band"))
     z.append("Autokorrelation E: %s · Gleichlauf rho %.3f (Mittel der 15 Paare)" % (", ".join("%s %+.3f" % (s[:-4], p) for s, p in phis.items()), rho))
 
     def s1():
@@ -202,8 +204,8 @@ def selbsttest() -> int:
     z.append("\nFEHLALARM (TRÄGT HÖHER) — H 1 / 3 / 7")
     for name in ("S1", "S2"):
         q = [fehl[name][h] for h in B.HORIZONTE]
-        z.append("  %s  %s   H1 %s" % (name, "  ".join("%5.1f %%" % (100 * x) for x in q), "✔" if q[0] <= 0.05 else "✖ über 5 %"))
-    halt = fehl["S1"][1] <= 0.05 and fehl["S2"][1] <= 0.05
+        z.append("  %s  %s   H1 %s" % (name, "  ".join("%5.1f %%" % (100 * x) for x in q), "✔" if q[0] <= grenze else "✖ über %.1f %%" % (100 * grenze)))
+    halt = fehl["S1"][1] <= grenze and fehl["S2"][1] <= grenze
     n3 = max(200, welten // 4)
     z.append("\nS3 AUFLÖSUNG (%d Welten je k, Signal wie S1) — k in Pp, D verschiebt um 2k" % n3)
     xs = {}
@@ -238,7 +240,7 @@ def selbsttest() -> int:
     schreibe("selbsttest", z, vorher)
     if welten >= 1000:
         with open(SELBSTTEST, "w", encoding="utf-8") as f:
-            json.dump({"bestanden": bestanden, "nullwelt": "block", "welten": welten, "rho": rho, "fehl": fehl,
+            json.dump({"bestanden": bestanden, "nullwelt": "block", "welten": welten, "grenze": grenze, "rho": rho, "fehl": fehl,
                        "X": {str(h): v for h, v in xs.items()}, "orakel": orakel}, f, indent=1)
     return 0 if bestanden else 1
 
