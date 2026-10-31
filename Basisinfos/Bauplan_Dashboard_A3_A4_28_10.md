@@ -128,3 +128,11 @@ Bestände ohne Handlung bekommen **keine Mail**, nur die Karte (*jede Mail eine 
 Beides kommt **vor** B1.
 
 ⚠️ **Korrektur zu §4:** Der Desktop hat ein **eigenes** Gemini-Kontingent, den zweiten Schlüssel `GEMINI_API_KEY_2` mit eigenem Projekt (seit 05.10., N4 mit Deckel 480/Tag). Tests und Messungen am Desktop zehren also **nicht** am NB-Kontingent, solange sie Schlüssel 2 nehmen. Die Aussage in Voranalyse §1.5a („Desktop-Läufe zehren am NB-Topf“) gilt nur für Schlüssel 1.
+
+⚠️ **Nachtrag 31.10. — Wal-Verhalten (G16) eingereiht** (Nutzer: *„a“*, Einzelheiten `Datenbasis_Schichten_Sichten_28_10.md` §8):
+- **B1:** Befund-Karte bekommt **einen** G16-Eintrag (Kennungen `G16-wale-spot-f3`, `-alt-f4`, `-s2`, `-ursache`), mit `nicht_wenn`
+  „REGEL0-Einstieg“ und „Altcoins: nicht trennbar“.
+- **B2:** der Fakt-Sammler liest den Wal-Zustand (Fünftel des Spot-Großflusses gestern) — **nur** oberstes/unterstes Fünftel.
+- **B4/B6:** Tagesabruf `aggTrades` am NB (gemessen 32 MB/Tag für 127 Altcoins, BTC/ETH/SOL offen) und die 365-T-Historie gehen
+  ins **selbe** NB-Bündel; vorher ein Nachweislauf.
+- **Messplan nach dem Bau:** im Rückspiel 2025–26 die Bedenken-Stufe **mit und ohne** Wal-Zustand (Ü6).

@@ -69,6 +69,7 @@
 | Spot B1 Mitnahme, B3 Upbit, B4 Abbau-Ränge | `spot_*`, täglich bzw. stündlich | Kurse, Bestand | Mails, Statusseite | nein |
 | Hebel H15 (Abstand, Warnstufe) | `hebelfuehrung`, 15 min | Kurs, Position | Statusseite, H15-Mail | nein |
 | REGEL0-Messstand | `regel0_messstand`, 06:50 | Ablage | Statusseite, Mail | nein |
+| **Spot-Großfluss je Asset** (G16, Nachtrag 31.10.) | **fehlt** — Rechnung `p102_wale_basis` (E nach Rest und Tagesbewegung, Fünftel 365 T), täglich ab 03:00 UTC | Binance-Spot `aggTrades` Tagesdatei des Vortags | **noch nirgends** → Asset-Karte (§8) | **ja**: als Fakt **und** mit Befund-Karten-Eintrag (A3) |
 
 **Was heute an ein LLM geht:**
 - Im Betrieb **nur** der REGEL0-Prüfblock. Der **Trader** bekommt Kerzen, Prämie und Terminmarkt; die Rolle **Markt** bekommt Liquidität, Zinskurve, F&G, S&P-Trend und CPI.
@@ -181,6 +182,7 @@ Ergebnis: eine **Bedenken-Stufe** (0 / 1 / 2) mit Gründen.
 | **Frankreich–Deutschland 10J** | FRED-Langfristzinsen je Land, **nur monatlich** **[U]**; täglich frei nicht bekannt | prüfen |
 | **DXY** | yfinance `DX-Y.NYB` (nur in der stillgelegten alten Kette) | vorhanden, nicht angebunden |
 | **Basis Quartalsfutures** | Binance-Lieferkontrakte über die öffentliche Schnittstelle **[U]** | prüfen |
+| **Spot-Großfluss live am NB** (§8) | Binance-Spot `aggTrades` Tagesdateien (data.binance.vision), wie `wale_s2_laden.py`. **Gemessen** (Monatsdateien 06–08/2026, zip): 127 Altcoins zusammen **32 MB/Tag**, die 40 größten 24 MB, Median 0,12 MB; BTC/ETH/SOL nicht gezählt **[U]** | Job fehlt; Historie 365 T per USB |
 | **Historie von K1–K9 / L1–L7** | die Tageswerte wären aus FRED nachrechenbar, aber revidiert; Lösung über die FRED-Jahrgänge **[U]**. Ab jetzt **protokollieren** (V6) | Protokoll fehlt |
 
 **[U]** heißt ungeprüft. Jeder dieser Wege wird vor dem Bau mit **einem** Abruf nachgewiesen (Datenquellen-Inventar + Abdeckung, am NB).
@@ -223,3 +225,22 @@ Ergebnis: eine **Bedenken-Stufe** (0 / 1 / 2) mit Gründen.
 | **A** | **S1, S2, S3, S4, S7, S8 sofort**: alle aus vorhandenen Daten, dazu nur der kleine Nachrichten-Job am NB. **S5 und S6 folgen**, sobald KOSPI/Nikkei und der Frankreich-Abstand nachgewiesen sind | sechs Sichten in der ersten Stufe | **Empfehlung**: nichts wartet auf Unsicheres; die neuen Quellen kommen nach ihrem Nachweis |
 | B | Erst alle Lücken schließen, dann alle acht Sichten | vollständig, aber später | hält das Vorhandene auf |
 | C | Nur S1 Krypto und S7 Ereignisse | klein und schnell | lässt genau das weg, was du dir wünschst (Weltmärkte, Asien, Staatsschulden) |
+
+---
+
+## 8. Nachtrag 31.10.2026 — Wal-Verhalten (G16) eingereiht
+
+**Nutzer 31.10.:** *„a“* — auf die Frage, wie G16 nach dem Ergebnis *„nicht für REGEL0“* weitergeht: **in Weg a einreihen**,
+kein Sonderbau. Grundlage: Register `G16-wale-spot-f3`, `-alt-f4`, `-s2`, `-ursache` (Messplan Wale §13–§19).
+
+| Teil | Form | Regel dahinter |
+|---|---|---|
+| **Zustand** (Ebene 1, Fakt) | ein Satz je Asset: *„Spot-Großfluss gestern: oberstes Fünftel der eigenen 365 Tage (Netto-Kauf)“* — mit Stand und Alter | Ü1 Zustand mit Einordnung · **F2: nur oberstes oder unterstes Fünftel** erscheinen, sonst nichts |
+| **Asset-Karte** | Fakten-Schicht, nur für Bestände und REGEL0-Signale des Tages | Teil der Signalmail, **nie eigener Mail-Anlass** (ein Fakt ist kein Signal; jede Mail eine Handlung) |
+| **Befund-Karte** (A3, Bau B1) | ein Eintrag: *BTC Folgetag positiv, kleiner geworden (2020–22 +1,26 Pp, 2026 +0,21) · Altcoins nicht trennbar (+0,16, Obergrenze +0,30 Pp) · am REGEL0-Einstieg ohne Wirkung* | bremst die LLM-Erzählung *„Wale kaufen → steigt“*: das LLM darf den Fluss nur mit diesen Grenzen nennen |
+| **finales LLM** (Ebene 4) | bekommt Zustand + Eintrag; darf ihn als Bestätigung oder Gegengrund nennen, gekennzeichnet | Ü9: keine Entscheidung |
+| **Wertmessung** | Rückspiel 2025–26 (gpt-oss-120b): Bedenken-Stufe **mit und ohne** Wal-Zustand (Ü6) | einer der wenigen Eingänge mit **sauberem Zeitpunkt** (Tagesdatei ab 03:00 UTC) und **voller Historie** (`wale_s2.db`, `wale_voll.db`) → sofort rückspielbar |
+
+**Vor dem Bau nachzuweisen** (§4): Abruf am NB mit **einem** Lauf (Volumen 32 MB/Tag für 127 Altcoins gemessen; BTC/ETH/SOL offen),
+Übertragung der 365-T-Historie für die Einordnung. **Nicht** Teil davon: das dünne Drittel und die eingestellten Paare aus §19 des
+Messplans — sie wären eine **neue Hypothese** mit eigenem Vorab-Plan.
