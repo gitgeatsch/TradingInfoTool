@@ -4413,6 +4413,10 @@
 
 - Quelle: Messplan_Wale_29_10.md §14-§15; p102_wale_f4 (--messung), p102_wale_gegenprobe --fassung4, p102_wale_f4_auskunft
 
+**G16-wale-s2** — Stufe 2 (Messplan Wale §16, vorab f69d1822): der Spot-Grossfluss E TRAEGT NICHT als GEWICHT in der REGEL0. Auf den REGEL0-Einstiegen der ungesehenen Symbole (111-127 Symbole, 8.352-9.169 Einstiege je Menge, 2024-01..2026-08), L des letzten bekannten Tages (ab 03:00 UTC Vortag), 24 h Log brutto, tagesbereinigt: D bestand -0,08 / unverzerrt +0,15 / +0,09 / -0,01 Pp, p 0,70 / 0,13 / 0,32 / 0,50 -> 0 von 4 Mengen (Soll >= 3). Einseitige Obergrenze 0,14-0,35 Pp: die aus Fassung 4 erwartete Groesse am Einstieg (~0,30 Pp) ist in 2 Mengen ausgeschlossen. Keine Ordnung: das MITTLERE Fuenftel liegt in allen Mengen am hoechsten. Gegenrechnung Lauf A -0,05 (p 0,73), Zuordnung Vorvortag ebenfalls ohne Wirkung. Folge nach §16.6: REGEL0 unveraendert, G16 als Dashboard-Befund. ⚠ Loest G16-wale-alt-f4 NICHT ab (andere Frage: Tageseinstieg 00:00 aller Tage auf 6 liquiden Altcoins)
+
+- Quelle: Messplan_Wale_29_10.md §16-§17; p104_wale_s2 (--vorpruefung/--selbsttest/--messung), p104b_wale_s2_gegenprobe
+
 ## ○ WAS OFFEN IST
 
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund

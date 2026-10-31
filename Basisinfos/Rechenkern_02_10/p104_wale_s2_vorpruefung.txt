@@ -1,0 +1,22 @@
+VORPRÜFUNG G16 STUFE 2 (Messplan §16, 9900K, 2026-10-31T13:04:16) · OHNE Erträge (keine y, kein D)
+
+1 VOLLSTÄNDIGKEIT: Monatsdateien 5643 von 5643 geladen · fehlend 0 · Tage mit REST-Umsatz, die im Archiv fehlen: 0 ✔
+    Auskunft: Monate (nicht erster/letzter) mit weniger Tagen als der Kalender: 3 [('BNXUSDT', '2023-02'), ('KEYUSDT', '2023-03'), ('KEYUSDT', '2023-02')] — bei REST gleich kurz (Handelspause)
+
+2 ARCHIV = KERZE (Tagesumsatz Archiv / REST, ±0,5 %): 170167 Tage · auffällig 2 (0.00 %) · Symbole mit > 1 %: 0 · größter Anteil 0.1 % (C98USDT) ✔
+    Verhältnis Archiv/Kerze: Median 1.00000 · 1.–99. Perzentil 1.0000 .. 1.0000 · auffällige Tage gelten als FEHLEND (G und R NaN)
+    Tagesabdeckung: erster Handel nach 01:00 oder letzter vor 23:00 an 0.08 % der Tage (dünne Werte, Auskunft)
+
+3 ZUORDNUNG Symbol (REGEL0, reihe) <-> Spotpaar (Archiv): Tagesrendite-Korrelation >= 0,9 und Preisverhältnis stabil (Streuung < 2 %)
+    geprüft 168 Symbole · auffällig 0
+    ⚠️ auffällige Zuordnungen bleiben OHNE E (keine Brücke ohne Nachweis); keine
+
+4 E: 177 Symbole mit E · AK(1) Mittel +0.001 (Spanne -0.130 .. +0.227) · Gleichlauf rho +0.010 (Mittel aller Paare, >= 200 gemeinsame Tage)
+  bestand       Urteilsmenge  8352 Einstiege, 111 Symbole · oben/mitte/unten 2024: 337/1064/314 · 2025: 723/2050/677 · 2026: 781/1642/764 · Zuordnungstage 2024-01-04..2026-08-30 -> 33 Blöcke ✔ · mit L gesamt 9201
+  unverzerrt_1  Urteilsmenge  9169 Einstiege, 127 Symbole · oben/mitte/unten 2024: 295/1044/289 · 2025: 881/2478/832 · 2026: 836/1731/783 · Zuordnungstage 2024-01-01..2026-08-30 -> 33 Blöcke ✔ · mit L gesamt 9737
+  unverzerrt_2  Urteilsmenge  8416 Einstiege, 126 Symbole · oben/mitte/unten 2024: 286/911/264 · 2025: 865/2367/792 · 2026: 710/1512/709 · Zuordnungstage 2024-01-01..2026-08-30 -> 33 Blöcke ✔ · mit L gesamt 8966
+  unverzerrt_3  Urteilsmenge  8720 Einstiege, 124 Symbole · oben/mitte/unten 2024: 279/899/280 · 2025: 842/2269/799 · 2026: 815/1753/784 · Zuordnungstage 2024-01-01..2026-08-30 -> 33 Blöcke ✔ · mit L gesamt 9284
+
+ERGEBNIS: BESTANDEN
+
+Seiteneffekt: geschützte Datei unverändert: True

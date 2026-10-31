@@ -583,3 +583,56 @@ Lauf A (`data/_hist/einstiege_A.csv`, REGEL0 mit Historie ab 2019, stehende Rege
 
 **Werkzeuge:** `wale_s2_laden.py` (Download) · `p104_wale_s2.py --vorpruefung | --selbsttest | --messung` (ein Rechenweg) ·
 `p104b_wale_s2_gegenprobe.py` (eigener Rechenweg). ⚠️ Betrieb unberührt: nur Desktop, nur `data/_wale/`, Produktions-DB nicht geöffnet.
+
+## 17. ERGEBNIS STUFE 2 (31.10.2026, `p104_wale_s2_messung.txt`, Gegenprobe `p104b_wale_s2_gegenprobe.txt` ✔) — TRÄGT NICHT
+
+**Daten:** 87,5 GB, 5.643 Monatsdateien, 0 Ausfälle (`wale_s2_laden.py`, 08:50–13:00). **Vorprüfung ✔** (`p104_wale_s2_vorpruefung.txt`):
+- Kein Tag mit REST-Umsatz fehlt im Archiv. Archiv = Kerze an 170.165 von 170.167 Tagen.
+- Zuordnung Symbol ↔ Spotpaar bei allen 168 Symbolen sauber (Korrelation ≥ 0,9, Preisverhältnis stabil).
+- E auf 177 Symbolen: AK(1) +0,001, Gleichlauf ρ +0,010. Je Urteilsmenge 8.352–9.169 Einstiege auf 111–127 Symbolen, 33 Blöcke.
+- ⚠️ **Prüfmaßstab nach dem ersten Lauf korrigiert** (vor jedem Ertrag): „Monat hat weniger Tage als der Kalender“ schlug bei
+  BNX 2023-02 und KEY 2023-02/03 an. REST hat dort genau dieselben Tage (Handelspause). Richtig ist „Tag mit REST-Umsatz fehlt
+  im Archiv“ — 0.
+
+**Selbsttest ✔** (`p104_wale_s2_selbsttest.txt`, Startwert 20261105): Fehlalarm der Regel S1 **2,0 %**, S2 **0,3 %** (Grenze 6,4 %;
+je Menge 0,6–5,2 %), Orakel **200/200**. Auflösung der Regel: k 0,15 Pp → 50 %, 0,20 → 77 %, **0,25 → 96 %** (D-Unterschied
+≈ 0,40–0,50 Pp). ⚠️ Das ist **schlechter** als die Voranalyse (0,31–0,34 Pp je Menge): Die Regel „3 von 4 Mengen“ und die
+Tagesbereinigung einer echten Pflanzung kosten Trennschärfe. Bei erwarteten 0,30 Pp lag die Fundquote damit bei ≈ 50 %, nicht 75 %.
+
+**Urteil je Menge** (Urteilsmenge ungesehen, tagesbereinigt, Log brutto, Pp):
+
+| Menge | D | Schwelle 95 % | p | Obergrenze einseitig | 2 Summe roh | 3 Jahre 24 / 25 / 26 | 4 Assets mit Minus (Null-95. P.) | Stufe |
+|---|---|---|---|---|---|---|---|---|
+| bestand | **−0,08** | +0,20 | 0,70 | 0,14 | ✔ | +0,14 / −0,19 / −0,07 ✖ | 51 % (59 %) ✔ | trägt nicht |
+| unverzerrt 1 | **+0,15** | +0,21 | 0,13 | 0,35 | ✔ | +0,76 / +0,20 / −0,13 ✔ | 41 % (57 %) ✔ | trägt nicht |
+| unverzerrt 2 | **+0,09** | +0,24 | 0,32 | 0,31 | ✔ | +0,45 / +0,04 / +0,01 ✔ | 45 % (57 %) ✔ | trägt nicht |
+| unverzerrt 3 | **−0,01** | +0,24 | 0,50 | 0,25 | ✔ | +0,33 / +0,10 / −0,25 ✔ | 49 % (58 %) ✔ | trägt nicht |
+
+→ **0 von 4 Mengen** bestehen Punkt 1 → **TRÄGT NICHT** (§16.3). Nach der Stufenregel „trägt nicht bis 0,50 Pp“ (Auflösung aus
+S3); die einseitigen Obergrenzen liegen tiefer, bei **0,14–0,35 Pp**.
+
+**Auskunft** (nach dem Urteil, nicht Teil davon):
+- y je Fünftel oben / Mitte / unten: in **allen** Mengen ist das **mittlere** Fünftel am höchsten (bestand +0,31 / +0,54 / +0,38 Pp,
+  unverzerrt +0,21..+0,26 / +0,33..+0,35 / +0,04..+0,17) — **keine Ordnung**, auch nicht teilweise.
+- D roh −0,07 / +0,22 / +0,15 / +0,04. Kern tagesbereinigt +0,08..+0,17 (n 179–276), Fassung-4-Werte −0,31..+0,15, eingestellte
+  Paare +0,68 / −0,63 / +0,19 — alles Rauschen dieser Größe.
+- Zuordnung strenger (alle Einstiege L des Vorvortags): −0,02 / +0,07 / −0,04 / +0,13, p 0,24–0,68.
+- Gegenrechnung Lauf A (REGEL0 mit Historie ab 2019, ungesehen, n 9.027): D **−0,05** (p 0,73), roh +0,06.
+
+**Gegenprobe ✔ 7/7** (eigene Wege): E auf 14 Symbolen ≤ 3,3·10⁻¹⁶, Fünftel 100 % gleich · vektorisierte Fünftel des Selbsttests
+= Rang der Messung · Zuordnungstag 43.183 Einstiege, 0 Abweichungen · y aus der Stundenkurs-Ablage exakt · D, Summe, Jahre,
+Signalbilanz exakt · Vorgriff: Daten nur bis 15.06.2025 → E und L bis dahin gleich, Zuordnungstag immer vor dem Einstieg ·
+eigener Permutationstest p 0,148 (Messung 0,133).
+
+### Zwischenfazit zum Ziel (ehrlich gewichtet)
+
+- **Für die REGEL0 ist E kein Beitrag.** Auf ~9.000 Einstiegen in ~120 ungesehenen Werten ordnet der Großfluss des Vortags den
+  Folgetag nicht — das mittlere Fünftel liegt sogar vorn. Die Nutzervorgabe „keine Verschlechterung“ wird damit nicht berührt:
+  **REGEL0 bleibt unverändert.**
+- **Was es nicht heißt:** `G16-wale-alt-f4` ist **nicht** widerlegt (R-R11). Das war eine andere Frage: Einstieg an **jedem** Tag
+  um 00:00 auf den **sechs liquidesten** Altcoins. Stufe 2 fragt nach REGEL0-Einstiegen (nach rsi-Ereignissen, zu jeder Stunde) auf
+  meist kleinen Werten. Offen ist, **woran** es liegt — an den Werten (klein statt liquid), an den Einstiegen (REGEL0-Lage statt
+  jeder Tag) oder daran, dass Fassung 4 knapp war (p 0,034, hing an AVAX). Das ist **messbar** — mit den jetzt geladenen Daten:
+  Fassung 4 unverändert auf den 168 neuen Werten.
+- **Weiter nach §16.6:** G16 als **Dashboard-Befund** (Befund-Karte, Bauplan A3), E des Vortags als **Fakt**. Wie stark der
+  Bewertungsgrund für Altcoins ist, hängt an der offenen Ursachenfrage.

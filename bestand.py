@@ -11617,6 +11617,18 @@ BEFUNDE = (
                basis="wale_voll.db Spot BNB/ADA/TRX/AVAX/LINK/NEAR 2023-01..2026-09 (6 x 1.369 T), Urteil 2024-01-01..2026-09-30; "
                      "einseitig, 1 Hypothese, Permutation 1.000 gemeinsame 30-T-Blockvertauschungen; Selbsttest 4d 1.000 Welten "
                      "bestanden (S1 4,7 %, S2 6,2 %, Grenze 6,4 %); Gegenprobe exakt"),
+    Befundlage("G16-wale-s2", "Stufe 2 (Messplan Wale §16, vorab f69d1822): der Spot-Grossfluss E TRAEGT NICHT als GEWICHT in der "
+               "REGEL0. Auf den REGEL0-Einstiegen der ungesehenen Symbole (111-127 Symbole, 8.352-9.169 Einstiege je Menge, "
+               "2024-01..2026-08), L des letzten bekannten Tages (ab 03:00 UTC Vortag), 24 h Log brutto, tagesbereinigt: D bestand "
+               "-0,08 / unverzerrt +0,15 / +0,09 / -0,01 Pp, p 0,70 / 0,13 / 0,32 / 0,50 -> 0 von 4 Mengen (Soll >= 3). Einseitige "
+               "Obergrenze 0,14-0,35 Pp: die aus Fassung 4 erwartete Groesse am Einstieg (~0,30 Pp) ist in 2 Mengen ausgeschlossen. "
+               "Keine Ordnung: das MITTLERE Fuenftel liegt in allen Mengen am hoechsten. Gegenrechnung Lauf A -0,05 (p 0,73), "
+               "Zuordnung Vorvortag ebenfalls ohne Wirkung. Folge nach §16.6: REGEL0 unveraendert, G16 als Dashboard-Befund. "
+               "⚠ Loest G16-wale-alt-f4 NICHT ab (andere Frage: Tageseinstieg 00:00 aller Tage auf 6 liquiden Altcoins)", "gilt",
+               "Messplan_Wale_29_10.md §16-§17; p104_wale_s2 (--vorpruefung/--selbsttest/--messung), p104b_wale_s2_gegenprobe",
+               basis="wale_s2.db (168 Symbole, 5.643 Monatsdateien Spot 2023-01..2026-08, Archiv = REST) + wale_voll.db; "
+                     "kern48jbz_einstiege 4 Mengen; Permutation 1.000 gemeinsame 30-T-Blockvertauschungen; Selbsttest 1.000 Welten "
+                     "bestanden (Regel S1 2,0 %, S2 0,3 %, Orakel 200/200, Aufloesung D ~0,45 Pp); Gegenprobe 7/7 exakt"),
 )
 
 

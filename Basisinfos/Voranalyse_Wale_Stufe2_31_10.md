@@ -201,3 +201,5 @@ Gegenprobe → Doku → Abstimmung.
 - **Risiko:** Ein „nicht entscheidbar“ ist realistisch. Dann geht es nach deiner Vorgabe weiter mit b.
 
 **Antwort genügt so:** „Stufe 2 a“ (oder b oder c).
+
+**Ergebnis (31.10.):** Weg a gewählt, gemessen → **trägt nicht** (Messplan [§17](Messplan_Wale_29_10.md), Register `G16-wale-s2`). Die Auflösung der Urteilsregel lag mit D ≈ 0,40–0,50 Pp schlechter als hier geschätzt (0,31–0,34 Pp je Menge).

@@ -1,0 +1,17 @@
+SELBSTTEST G16 STUFE 2 (Messplan §16, 9900K, 2026-10-31T13:05:19) · 1000 Welten · echte Einstiege und y, künstliche L · EINSEITIG · Startwert 20261105
+Soll: Fehlalarm der REGEL (Punkt 1 in >= 3 von 4 Mengen) S1/S2 <= 6.4 % · Orakel >= 190/200 · Nullwelt 30 T gemeinsam, 1000 Vertauschungen
+phi 0.001 · rho 0.010 (aus der Vorprüfung) · Urteilsmengen bestand 8352 · unverzerrt_1 9169 · unverzerrt_2 8416 · unverzerrt_3 8720
+
+FEHLALARM (TRÄGT HÖHER, Punkt 1)
+  S1  Regel   2.0 % ✔ · je Menge bestand 3.7 % · unverzerrt_1 4.1 % · unverzerrt_2 5.2 % · unverzerrt_3 4.6 %
+  S2  Regel   0.3 % ✔ · je Menge bestand 1.6 % · unverzerrt_1 0.6 % · unverzerrt_2 0.9 % · unverzerrt_3 0.9 %
+
+S3 AUFLÖSUNG (250 Welten je k, Signal wie S1, Pflanzung y + k·L vor der Tagesbereinigung) — k in Pp
+  0.05: 11%  0.10: 26%  0.15: 50%  0.20: 77%  0.25: 96%  ->  X = 0.25 Pp (D-Unterschied ~0.50 Pp)
+
+ORAKEL (200 Welten, E = y des Einstiegs am Zuordnungstag + Rauschen gleicher Streuung)
+  200 von 200 ✔
+
+ERGEBNIS: BESTANDEN · X 0.25 Pp
+
+Seiteneffekt: geschützte Datei unverändert: True

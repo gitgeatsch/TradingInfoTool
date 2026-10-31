@@ -1,0 +1,29 @@
+GEGENPROBE G16 STUFE 2 (9900K, 2026-10-31T13:52:52) — eigene Rechenwege
+  1 FIO      E größte Abweichung 3.3e-16 · NaN-Muster und Fünftel gleich True
+  1 NOT      E größte Abweichung 3.5e-17 · NaN-Muster und Fünftel gleich True
+  1 FIDA     E größte Abweichung 9.7e-17 · NaN-Muster und Fünftel gleich True
+  1 W        E größte Abweichung 4.9e-17 · NaN-Muster und Fünftel gleich True
+  1 FLOKI    E größte Abweichung 4.9e-17 · NaN-Muster und Fünftel gleich True
+  1 SXT      E größte Abweichung 3.2e-16 · NaN-Muster und Fünftel gleich True
+  1 NTRN     E größte Abweichung 5.6e-17 · NaN-Muster und Fünftel gleich True
+  1 GMX      E größte Abweichung 5.6e-17 · NaN-Muster und Fünftel gleich True
+  1 C98      E größte Abweichung 5.6e-17 · NaN-Muster und Fünftel gleich True
+  1 ZK       E größte Abweichung 4.5e-17 · NaN-Muster und Fünftel gleich True
+  1 KAIA     E größte Abweichung 6.9e-17 · NaN-Muster und Fünftel gleich True
+  1 ASR      E größte Abweichung 1.0e-16 · NaN-Muster und Fünftel gleich True
+  1 AVAX     E größte Abweichung 3.5e-17 · NaN-Muster und Fünftel gleich True
+  1 BTC      E größte Abweichung 4.2e-17 · NaN-Muster und Fünftel gleich True
+1 E und L (14 Symbole, eigener Weg): ✔
+2 Fünftel des Selbsttests gegen den Rang der Messung: NaN-Muster gleich True · Labels gleich 1.00000 ✔
+3 Zuordnungstag: 43183 Einstiege, abweichend 0 ✔
+4 y aus der Stundenkurs-Ablage (300 Einstiege unverzerrt_1): größte Abweichung 0.0e+00 ✔
+  5 bestand       D -0.077210 Pp (Messung -0.077210) · Summe +0.1641 (+0.1641) · Assets mit Minus 0.5135 (0.5135) · Jahre gleich · ✔
+  5 unverzerrt_1  D +0.146742 Pp (Messung +0.146742) · Summe +4.7937 (+4.7937) · Assets mit Minus 0.4127 (0.4127) · Jahre gleich · ✔
+  5 unverzerrt_2  D +0.086781 Pp (Messung +0.086781) · Summe +3.4412 (+3.4412) · Assets mit Minus 0.4524 (0.4524) · Jahre gleich · ✔
+  5 unverzerrt_3  D -0.011892 Pp (Messung -0.011892) · Summe +1.2279 (+1.2279) · Assets mit Minus 0.4919 (0.4919) · Jahre gleich · ✔
+5 D, Summe, Jahre, Signalbilanz mit eigener Schleife: ✔
+6 VORGRIFF: FIO mit Daten nur bis 2025-06-15 -> E und L bis dahin gleich ✔ · Zuordnungstag immer VOR dem Einstiegstag ✔
+7 Permutation unverzerrt_1, eigene Schleife, 2.000 Vertauschungen: p 0.148 (Messung 0.133) · Schwelle +0.234 Pp (Messung +0.214) — Auskunft
+
+ERGEBNIS GEGENPROBE: BESTANDEN
+Seiteneffekt: geschützte Datei unverändert: True
