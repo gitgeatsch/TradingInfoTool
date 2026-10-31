@@ -504,3 +504,82 @@ allen sechs positiv.
   Bewertungsgrund, kein Auslöser).
 - **Voranalyse Stufe 2 (31.10.):** [`Voranalyse_Wale_Stufe2_31_10.md`](Voranalyse_Wale_Stufe2_31_10.md) — Abdeckung, Download,
   Betriebsregel, Tagesprofil und Auflösung auf den REGEL0-Einstiegen, ohne E auf einem Einstieg anzusehen.
+
+---
+
+## 16. STUFE 2 — der Wal-Fluss als GEWICHT in der REGEL0 (VORAB: 31.10.2026, vor jedem E auf einem REGEL0-Einstieg)
+
+**Nutzer 31.10.:** *„Stufe 2 a, prüfen, gegenprüfen, Doku“*. **Vorgabe 30.10.:** *„A2, wichtig es soll keine Verschlechterung
+erfolgen, wenn nicht für Regel0 geeignet dann uU für die Dashboard LLM bewertung.“* **Grundlage:** Voranalyse
+[`Voranalyse_Wale_Stufe2_31_10.md`](Voranalyse_Wale_Stufe2_31_10.md) §7. Register `G16-wale-alt-f4` (trägt außerhalb des Kerns, knapp).
+
+⚠️ **Zeitpunkt:** Festgelegt, bevor ein E für eines der 168 neuen Symbole berechnet ist. Der Download lief bereits (Binance-Archiv,
+nur Umsätze, keine Erträge, kein E). Der Lader `wale_s2_laden.py` ist vorher geprüft: bitgleich zum Tagesweg von Fassung 4
+(5 Tage, beide Zeitstempel-Formate, Stückgrenzen).
+
+### 16.1 Die Frage
+
+> **Liegt auf den REGEL0-Einstiegen der 24-h-Ertrag höher, wenn E am letzten bekannten Tag im obersten Fünftel lag, als wenn es
+> im untersten lag — so, dass ein Gewicht aus E die REGEL0 nirgends verschlechtert?**
+
+Bewertung, nicht Fakt (Zukunftsaussage aus `G16-wale-alt-f4`). Gemessen wird eine **Ordnung innerhalb** der REGEL0-Einstiege,
+nicht der Vorsprung der REGEL0 selbst (der ist nicht robust, E-136/E-139).
+
+### 16.2 Festlegungen
+
+| | Festlegung |
+|---|---|
+| **Daten** | `data/_wale/wale_s2.db` (168 Symbole, Monatsdateien 2023-01 bis 2026-08, nur lesend) + `wale_voll.db` (Kern, Fassung 4). Tagesbewegung r_t aus REST-Tageskerzen (Eröffnung 00:00 bis 00:00, gleich der Stundenkerze 00:00 aus Fassung 4) |
+| **Größe E** | **unverändert** aus Fassung 3/4 über `p102_wale_basis` (`fluss` q 5 %, `residuum` b auf 180 T, `fuenftel` gegen die vorangehenden 365 T, mindestens 120) |
+| **Einstiege** | `data/_vergleich/kern48jbz_einstiege_<Menge>.csv`, vier Mengen. Einstieg = **Schluss** der Einstiegsstunde (`stunde` + 1 h) |
+| **Zuordnung** (Betriebsregel, gemessen) | Einstieg ab **03:00 UTC** → L des **Vortags**, 00:00–02:59 → L des **Vorvortags** |
+| **Zielgröße** | y = ln(C[j+24] / C[j]) über `p64_lc_voranalyse.reihe`, **brutto** (wie die REGEL0-Referenz F-1). Kosten nachgelagert (Regel 2) |
+| **Urteilsmenge** | Einstiege mit L und y auf den **ungesehenen** Symbolen (ohne BTC ETH SOL und BNB ADA TRX AVAX LINK NEAR) |
+| **Statistik** | **tagesbereinigt:** y minus Mittel der Einstiege derselben Urteilsmenge am selben Einstiegstag (UTC) mit L. D = Mittel(oben) − Mittel(unten), gepoolt über die Einstiege |
+| **Test** | **einseitig** (Richtung seit Fassung 3 fest). Nullwelt: die Tage der L-Reihen in **gemeinsamen 30-T-Blöcken** vertauscht (dieselbe Vertauschung für alle Symbole, Raster ab dem ersten Tag mit L der Menge); Einstiege und y bleiben fest, ihre Ballung bleibt erhalten. 1.000 Vertauschungen, Schwelle = 95. Perzentil, p-Wert ausgewiesen. Mindestens 20 Blöcke, sonst KEIN BEFUND |
+
+### 16.3 Urteil — je Menge alle Punkte, dann **mindestens 3 von 4 Mengen**
+
+| # | Punkt | Bedeutung |
+|---|---|---|
+| 1 | D (tagesbereinigt) **über der Permutationsschwelle** | E ordnet die Einstiege |
+| 2 | **Summe nicht verschlechtert:** Σ y(oben) − Σ y(unten) **roh > 0** auf **allen** Einstiegen mit L (auch Kern und Fassung 4) | ein Gewicht 1 ± a hebt die REGEL0-Summe brutto, statt sie zu senken |
+| 3 | Jahre 2024 / 2025 / 2026 einzeln (Urteilsmenge, tagesbereinigt): D > 0 in **≥ 2 von 3** | Epochen dürfen verschieden ausfallen |
+| 4 | **Signalbilanz je Asset:** Anteil der Assets mit Σ y(oben) − Σ y(unten) < 0 (roh, je eigenes Asset) **nicht über dem 95. Perzentil** derselben Zahl in den 1.000 Vertauschungen | nicht wenige Gewinner auf Kosten vieler Verlierer |
+| 5 | Selbsttest (16.4) bestanden | |
+
+**TRÄGT (Stufe 2)**, wenn mindestens 3 der 4 Mengen alle fünf Punkte erfüllen. Sonst: **trägt nicht bis X**, wenn die einseitige
+Obergrenze von D (D + Abstand 95. Perzentil − Mittel der Nullwelt) unter der Auflösung aus S3 bleibt; sonst **nicht trennbar**.
+
+### 16.4 Selbsttest — vor dem ersten Blick, auf den echten Einstiegen und echten y
+
+| | |
+|---|---|
+| Welten | 1.000, Startwert **20261105**, alle vier Mengen in jeder Welt (dieselben künstlichen L-Reihen) |
+| Künstliche L | latente Reihe je Symbol mit dem **NaN-Muster des echten E**, daraus die Fünftel mit **demselben Rollfenster** (365 T, mindestens 120; vektorisiert, in der Gegenprobe gegen `fuenftel` geprüft) |
+| S1 | AR(1) je Symbol, φ und Gleichlauf ρ **aus dem echten E** (Vorprüfung, ohne Erträge) |
+| S2 | Monatsregime **gemeinsam** für alle Symbole + 0,2 Rauschen (schärfste Ballung) |
+| S3 Auflösung | Signal wie S1, Pflanzung y + k·L **vor** der Tagesbereinigung, k 0,05 bis 0,25 Pp, 250 Welten je k |
+| Orakel | E = y des Einstiegs (Symbol, Zuordnungstag) + Rauschen gleicher Streuung, 200 Welten |
+| **Soll** | Fehlalarm der **Regel** (Punkt 1 in ≥ 3 von 4 Mengen) S1 und S2 je ≤ **6,4 %** (5 % + 2 SE, Regel 11.10.); Orakel ≥ 190/200. Je Menge nur Auskunft |
+
+**Vorprüfung** (vor dem Selbsttest, **ohne Erträge**): Vollständigkeit je Monatsdatei, Archiv = REST-Kerze (Tagesumsatz ±0,5 %),
+Tagesabdeckung (erste/letzte Zeit), **Zuordnung Symbol ↔ Spotpaar** (Tagesrendite des Spotpaars gegen `reihe` des Symbols,
+Korrelation ≥ 0,9 und Preisverhältnis stabil — vier Symbolwelten, keine Brücke ohne Nachweis), Fallzahlen je Fünftel und Menge,
+Autokorrelation und Gleichlauf von E.
+
+### 16.5 Auskunft — nach dem Urteil, nicht Teil davon
+
+D roh · Kern und Fassung-4-Werte getrennt · eingestellte Paare getrennt · Zuordnung strenger (alle Einstiege L des Vorvortags) ·
+Mittel von y je Fünftel (oben / Mitte / unten, Grundlage einer späteren Gewichtshöhe) · Gegenrechnung auf den Einstiegen von
+Lauf A (`data/_hist/einstiege_A.csv`, REGEL0 mit Historie ab 2019, stehende Regel 24.10.).
+
+### 16.6 Folgen
+
+| Ergebnis | Folge |
+|---|---|
+| **trägt** | Bauentscheid zur Abstimmung: NB-Abrufer der Tagesdateien (≈ 45 MB/Tag), Gewicht auf den **Einsatz** in `regel0_groesse` (nie Sperre, Kern immer zugelassen, keine Änderung der Signale, Hebelstufe bleibt beim ATR-Modell), Begründungszeile in der Mail. Die **Höhe** a wird eigens gemessen, nicht gewählt |
+| **trägt nicht / nicht trennbar** | REGEL0 bleibt unverändert. G16 geht als **Dashboard-Befund** in die Befund-Karte (Bauplan A3, G8), E des Vortags als **Fakt**, mit Bewertungsgrund |
+
+**Werkzeuge:** `wale_s2_laden.py` (Download) · `p104_wale_s2.py --vorpruefung | --selbsttest | --messung` (ein Rechenweg) ·
+`p104b_wale_s2_gegenprobe.py` (eigener Rechenweg). ⚠️ Betrieb unberührt: nur Desktop, nur `data/_wale/`, Produktions-DB nicht geöffnet.
