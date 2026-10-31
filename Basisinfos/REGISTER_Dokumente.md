@@ -14,8 +14,8 @@
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
-| Sonstiges | 2 |
-| **gesamt** | **229** |
+| Sonstiges | 3 |
+| **gesamt** | **230** |
 
 ## Plan
 
@@ -294,4 +294,5 @@
 | Dokument | Titel | Einstufung |
 |---|---|---|
 | [`CoinGecko_gegen_Binance_26_09.md`](CoinGecko_gegen_Binance_26_09.md) | CoinGecko gegen Binance — die Quelle trägt, und BTC auch | Arbeitsblatt |
+| [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) | Fütterung Weg a — die Satzform der Zustände und was jede Stufe bekommt (31.10.2026 abends) | **laufend** |
 | [`Wale_Lesefassung_30_10.md`](Wale_Lesefassung_30_10.md) | Wale (G16) – Ergebnisse zum Lesen und Entscheiden | Arbeitsblatt |

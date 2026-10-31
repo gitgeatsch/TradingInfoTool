@@ -208,7 +208,7 @@ Ergebnis: eine **Bedenken-Stufe** (0 / 1 / 2) mit Gründen.
 ## 6. Reihenfolge danach
 
 1. Dieses Blatt abstimmen: Sichten und Reihenfolge (§7).
-2. Lücken nachweisen (je ein Abruf) und Satzform der Zustände festlegen (Ü1).
+2. Lücken nachweisen (je ein Abruf) und Satzform der Zustände festlegen (Ü1). → **Satzform: [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) (31.10.)**
 3. **Messplan:**
    - Faktentreue: die Prüfer bekommen einen Selbsttest mit 1.000 Fällen.
    - Wert der Sichten-Gutachten: Rückspiel 2025–26 mit gpt-oss-120b am Desktop, nur PIT-Eingänge.
