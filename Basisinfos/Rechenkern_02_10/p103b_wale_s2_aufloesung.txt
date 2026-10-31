@@ -1,0 +1,61 @@
+VORANALYSE G16 STUFE 2 — F AUFLÖSUNG (Gerät 9900K, 2026-10-31T02:21:43) · künstliche Fünftel AR(1) phi 0.037, Gleichlauf rho 0.021 (Fünftelkorrelation 0.0185) · 2000 Welten · echte 24-h-Erträge (Log, brutto)
+
+══ bestand · 8948 Einstiege mit E und Kurs · 120 Symbole · Streuung 24 h 5.25 % · tagesbereinigt 3.71 % ══
+  Einstiegsstunde UTC: 00-02 10.0 % · 03-11 44.3 % · 12-17 26.1 % · 18-23 19.7 %  ->  Überlappung mit dem Folgetag 0.442 (Annahme 'gleichmäßig' — ÜBERHOLT durch Teil G: gemessen 0.86)
+  roh             2024-01..2026-08           n  8948 · Null-SD 0.192 Pp · X (D am Einstieg, 80 %) 0.48 Pp [2. Weg 0.49] · Tageseffekt nötig 0.55 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  13 % · 0.15 Pp  19 % · 0.20 Pp  27 % · 0.25 Pp  37 % · 0.30 Pp  46 % · 0.35 Pp  56 %
+  roh             2024                       n  1866 · Null-SD 0.428 Pp · X (D am Einstieg, 80 %) 1.06 Pp [2. Weg 1.06] · Tageseffekt nötig 1.24 Pp
+  roh             2025                       n  3693 · Null-SD 0.323 Pp · X (D am Einstieg, 80 %) 0.80 Pp [2. Weg 0.82] · Tageseffekt nötig 0.93 Pp
+  roh             2026                       n  3389 · Null-SD 0.289 Pp · X (D am Einstieg, 80 %) 0.73 Pp [2. Weg 0.71] · Tageseffekt nötig 0.85 Pp
+  roh             ungesehen (ohne Kern/F4)   n  8099 · Null-SD 0.205 Pp · X (D am Einstieg, 80 %) 0.51 Pp [2. Weg 0.52] · Tageseffekt nötig 0.59 Pp
+  tagesbereinigt  2024-01..2026-08           n  8948 · Null-SD 0.127 Pp · X (D am Einstieg, 80 %) 0.31 Pp [2. Weg 0.31] · Tageseffekt nötig 0.36 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  20 % · 0.15 Pp  33 % · 0.20 Pp  48 % · 0.25 Pp  63 % · 0.30 Pp  78 % · 0.35 Pp  87 %
+  tagesbereinigt  2024                       n  1866 · Null-SD 0.287 Pp · X (D am Einstieg, 80 %) 0.73 Pp [2. Weg 0.71] · Tageseffekt nötig 0.85 Pp
+  tagesbereinigt  2025                       n  3693 · Null-SD 0.181 Pp · X (D am Einstieg, 80 %) 0.47 Pp [2. Weg 0.44] · Tageseffekt nötig 0.54 Pp
+  tagesbereinigt  2026                       n  3389 · Null-SD 0.215 Pp · X (D am Einstieg, 80 %) 0.53 Pp [2. Weg 0.52] · Tageseffekt nötig 0.62 Pp
+  tagesbereinigt  ungesehen (ohne Kern/F4)   n  8099 · Null-SD 0.136 Pp · X (D am Einstieg, 80 %) 0.33 Pp [2. Weg 0.33] · Tageseffekt nötig 0.39 Pp
+
+══ unverzerrt_1 · 9498 Einstiege mit E und Kurs · 133 Symbole · Streuung 24 h 5.74 % · tagesbereinigt 4.10 % ══
+  Einstiegsstunde UTC: 00-02 11.5 % · 03-11 43.4 % · 12-17 24.9 % · 18-23 20.3 %  ->  Überlappung mit dem Folgetag 0.430 (Annahme 'gleichmäßig' — ÜBERHOLT durch Teil G: gemessen 0.86)
+  roh             2024-01..2026-08           n  9498 · Null-SD 0.199 Pp · X (D am Einstieg, 80 %) 0.50 Pp [2. Weg 0.52] · Tageseffekt nötig 0.58 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  14 % · 0.15 Pp  19 % · 0.20 Pp  26 % · 0.25 Pp  35 % · 0.30 Pp  44 % · 0.35 Pp  53 %
+  roh             2024                       n  1671 · Null-SD 0.459 Pp · X (D am Einstieg, 80 %) 1.13 Pp [2. Weg 1.18] · Tageseffekt nötig 1.31 Pp
+  roh             2025                       n  4334 · Null-SD 0.343 Pp · X (D am Einstieg, 80 %) 0.87 Pp [2. Weg 0.88] · Tageseffekt nötig 1.01 Pp
+  roh             2026                       n  3493 · Null-SD 0.268 Pp · X (D am Einstieg, 80 %) 0.68 Pp [2. Weg 0.70] · Tageseffekt nötig 0.79 Pp
+  roh             ungesehen (ohne Kern/F4)   n  8930 · Null-SD 0.206 Pp · X (D am Einstieg, 80 %) 0.52 Pp [2. Weg 0.54] · Tageseffekt nötig 0.61 Pp
+  tagesbereinigt  2024-01..2026-08           n  9498 · Null-SD 0.130 Pp · X (D am Einstieg, 80 %) 0.33 Pp [2. Weg 0.33] · Tageseffekt nötig 0.38 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  17 % · 0.15 Pp  30 % · 0.20 Pp  44 % · 0.25 Pp  59 % · 0.30 Pp  74 % · 0.35 Pp  84 %
+  tagesbereinigt  2024                       n  1671 · Null-SD 0.329 Pp · X (D am Einstieg, 80 %) 0.80 Pp [2. Weg 0.82] · Tageseffekt nötig 0.93 Pp
+  tagesbereinigt  2025                       n  4334 · Null-SD 0.188 Pp · X (D am Einstieg, 80 %) 0.47 Pp [2. Weg 0.47] · Tageseffekt nötig 0.55 Pp
+  tagesbereinigt  2026                       n  3493 · Null-SD 0.213 Pp · X (D am Einstieg, 80 %) 0.53 Pp [2. Weg 0.55] · Tageseffekt nötig 0.62 Pp
+  tagesbereinigt  ungesehen (ohne Kern/F4)   n  8930 · Null-SD 0.136 Pp · X (D am Einstieg, 80 %) 0.34 Pp [2. Weg 0.34] · Tageseffekt nötig 0.40 Pp
+
+══ unverzerrt_2 · 8743 Einstiege mit E und Kurs · 132 Symbole · Streuung 24 h 5.72 % · tagesbereinigt 4.09 % ══
+  Einstiegsstunde UTC: 00-02 11.1 % · 03-11 42.5 % · 12-17 26.0 % · 18-23 20.4 %  ->  Überlappung mit dem Folgetag 0.428 (Annahme 'gleichmäßig' — ÜBERHOLT durch Teil G: gemessen 0.86)
+  roh             2024-01..2026-08           n  8743 · Null-SD 0.212 Pp · X (D am Einstieg, 80 %) 0.52 Pp [2. Weg 0.54] · Tageseffekt nötig 0.60 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  13 % · 0.15 Pp  19 % · 0.20 Pp  26 % · 0.25 Pp  35 % · 0.30 Pp  44 % · 0.35 Pp  52 %
+  roh             2024                       n  1516 · Null-SD 0.459 Pp · X (D am Einstieg, 80 %) 1.16 Pp [2. Weg 1.16] · Tageseffekt nötig 1.35 Pp
+  roh             2025                       n  4156 · Null-SD 0.356 Pp · X (D am Einstieg, 80 %) 0.89 Pp [2. Weg 0.89] · Tageseffekt nötig 1.03 Pp
+  roh             2026                       n  3071 · Null-SD 0.289 Pp · X (D am Einstieg, 80 %) 0.71 Pp [2. Weg 0.73] · Tageseffekt nötig 0.82 Pp
+  roh             ungesehen (ohne Kern/F4)   n  8193 · Null-SD 0.222 Pp · X (D am Einstieg, 80 %) 0.55 Pp [2. Weg 0.56] · Tageseffekt nötig 0.64 Pp
+  tagesbereinigt  2024-01..2026-08           n  8743 · Null-SD 0.138 Pp · X (D am Einstieg, 80 %) 0.34 Pp [2. Weg 0.34] · Tageseffekt nötig 0.39 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  18 % · 0.15 Pp  30 % · 0.20 Pp  44 % · 0.25 Pp  58 % · 0.30 Pp  71 % · 0.35 Pp  82 %
+  tagesbereinigt  2024                       n  1516 · Null-SD 0.326 Pp · X (D am Einstieg, 80 %) 0.80 Pp [2. Weg 0.80] · Tageseffekt nötig 0.93 Pp
+  tagesbereinigt  2025                       n  4156 · Null-SD 0.213 Pp · X (D am Einstieg, 80 %) 0.53 Pp [2. Weg 0.52] · Tageseffekt nötig 0.62 Pp
+  tagesbereinigt  2026                       n  3071 · Null-SD 0.212 Pp · X (D am Einstieg, 80 %) 0.52 Pp [2. Weg 0.54] · Tageseffekt nötig 0.61 Pp
+  tagesbereinigt  ungesehen (ohne Kern/F4)   n  8193 · Null-SD 0.144 Pp · X (D am Einstieg, 80 %) 0.36 Pp [2. Weg 0.36] · Tageseffekt nötig 0.41 Pp
+
+══ unverzerrt_3 · 9052 Einstiege mit E und Kurs · 130 Symbole · Streuung 24 h 5.69 % · tagesbereinigt 4.21 % ══
+  Einstiegsstunde UTC: 00-02 10.7 % · 03-11 42.9 % · 12-17 25.8 % · 18-23 20.7 %  ->  Überlappung mit dem Folgetag 0.431 (Annahme 'gleichmäßig' — ÜBERHOLT durch Teil G: gemessen 0.86)
+  roh             2024-01..2026-08           n  9052 · Null-SD 0.203 Pp · X (D am Einstieg, 80 %) 0.51 Pp [2. Weg 0.52] · Tageseffekt nötig 0.59 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  13 % · 0.15 Pp  18 % · 0.20 Pp  25 % · 0.25 Pp  33 % · 0.30 Pp  42 % · 0.35 Pp  53 %
+  roh             2024                       n  1511 · Null-SD 0.484 Pp · X (D am Einstieg, 80 %) 1.18 Pp [2. Weg 1.19] · Tageseffekt nötig 1.37 Pp
+  roh             2025                       n  4043 · Null-SD 0.333 Pp · X (D am Einstieg, 80 %) 0.82 Pp [2. Weg 0.86] · Tageseffekt nötig 0.95 Pp
+  roh             2026                       n  3498 · Null-SD 0.295 Pp · X (D am Einstieg, 80 %) 0.75 Pp [2. Weg 0.74] · Tageseffekt nötig 0.87 Pp
+  roh             ungesehen (ohne Kern/F4)   n  8488 · Null-SD 0.211 Pp · X (D am Einstieg, 80 %) 0.52 Pp [2. Weg 0.54] · Tageseffekt nötig 0.61 Pp
+  tagesbereinigt  2024-01..2026-08           n  9052 · Null-SD 0.138 Pp · X (D am Einstieg, 80 %) 0.33 Pp [2. Weg 0.34] · Tageseffekt nötig 0.39 Pp
+        Fundquote nach D am Einstieg: 0.10 Pp  20 % · 0.15 Pp  32 % · 0.20 Pp  46 % · 0.25 Pp  60 % · 0.30 Pp  73 % · 0.35 Pp  84 %
+  tagesbereinigt  2024                       n  1511 · Null-SD 0.340 Pp · X (D am Einstieg, 80 %) 0.83 Pp [2. Weg 0.84] · Tageseffekt nötig 0.96 Pp
+  tagesbereinigt  2025                       n  4043 · Null-SD 0.190 Pp · X (D am Einstieg, 80 %) 0.46 Pp [2. Weg 0.49] · Tageseffekt nötig 0.54 Pp
+  tagesbereinigt  2026                       n  3498 · Null-SD 0.238 Pp · X (D am Einstieg, 80 %) 0.57 Pp [2. Weg 0.59] · Tageseffekt nötig 0.66 Pp
+  tagesbereinigt  ungesehen (ohne Kern/F4)   n  8488 · Null-SD 0.145 Pp · X (D am Einstieg, 80 %) 0.35 Pp [2. Weg 0.36] · Tageseffekt nötig 0.41 Pp

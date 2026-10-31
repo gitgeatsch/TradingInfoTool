@@ -1,0 +1,11 @@
+GEGENPROBE VORANALYSE G16 STUFE 2 (Gerät 9900K, 2026-10-31T02:19:38)
+
+1 S3-Verzeichnis: 186 Paare · Abweichungen zu HEAD (Existenz oder Größe) 0 von 8184 Zeilen · mit Spotmarkt 177 (Voranalyse 177) · Download 87.5 GB
+2 Abdeckung bestand       eigene Schleife  8948 · Voranalyse  8948 · ✔
+2 Abdeckung unverzerrt_1  eigene Schleife  9499 · Voranalyse  9499 · ✔
+2 Abdeckung unverzerrt_2  eigene Schleife  8744 · Voranalyse  8744 · ✔
+2 Abdeckung unverzerrt_3  eigene Schleife  9054 · Voranalyse  9054 · ✔
+3 Ertragsweg: unverzerrt 1, 2025-26, 9124 von 9126 Handel mit Kurs · netto -0.184 % je Handel (Referenz F-1 -0,184 %) ✔
+4 Tagesprofil: D(0..24) B.ertrag 0.003535 · eigenes Fenster 0.003535 · D(6..30) 0.004428 / 0.004428 · ✔
+
+GEGENPROBE BESTANDEN

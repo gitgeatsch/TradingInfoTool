@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 86 |
+| Voranalyse / Recherche | 87 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 2 |
-| **gesamt** | **228** |
+| **gesamt** | **229** |
 
 ## Plan
 
@@ -227,6 +227,7 @@
 | [`Voranalyse_W2_Wetter_Gewicht_29_09.md`](Voranalyse_W2_Wetter_Gewicht_29_09.md) | Voranalyse W2 — ist das Wetter ein Gewicht auf rsi? Der Nachweis ab 2024 (29.09.2026) | Arbeitsblatt |
 | [`Voranalyse_W3_Stilllegung_alte_Kette_27_10.md`](Voranalyse_W3_Stilllegung_alte_Kette_27_10.md) | Voranalyse W-3: Die alte Spot-Kette stilllegen statt nur anhalten (27.10.2026) | Arbeitsblatt |
 | [`Voranalyse_Wale_29_10.md`](Voranalyse_Wale_29_10.md) | Voranalyse Wale — welche Größe zeigt welches Verhalten (29.10.2026) | **laufend** |
+| [`Voranalyse_Wale_Stufe2_31_10.md`](Voranalyse_Wale_Stufe2_31_10.md) | Voranalyse G16 Stufe 2 — der Wal-Fluss als Gewicht in der REGEL0 (31.10.2026) | **laufend** |
 | [`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`](Voranalyse_Weiterentwicklung_Fuehrung_26_10.md) | Voranalyse: Das Fakten- und Führungssystem weiterentwickeln (26.10.2026) | Arbeitsblatt |
 | [`Voranalyse_XDC_Messbasis_30_10.md`](Voranalyse_XDC_Messbasis_30_10.md) | Voranalyse: XDC in die Messbasis (30.10.2026) | Arbeitsblatt |
 | [`Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md`](Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md) | – | vor Messstandard (2026-08-23) |

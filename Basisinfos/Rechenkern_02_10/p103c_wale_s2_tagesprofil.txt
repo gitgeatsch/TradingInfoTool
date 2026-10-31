@@ -1,0 +1,13 @@
+VORANALYSE G16 STUFE 2 — G TAGESPROFIL (Gerät 9900K, 2026-10-31T02:19:37) · Fassung 4: BNB ADA TRX AVAX LINK NEAR · 2024-01-01 .. 2026-09-30 · gepoolt, Pp, Log brutto · NUR AUSKUNFT
+  Kontrolle: D(0..24) 0.353 (Fassung 4 H1 +0,35) · D(6..30) 0.443 (Verzug +0,44)
+
+  6-h-Stücke nach Tagesende: 00-06 h +0.005 · 06-12 h +0.130 · 12-18 h +0.108 · 18-24 h +0.111 · 24-30 h +0.094 · 30-36 h +0.017 · 36-42 h +0.012 · 42-48 h -0.034
+
+  24-h-Fenster ab Stunde v nach Tagesende (Einstieg v Uhr am Folgetag, v >= 24: 00-02 Uhr mit E des Vorvortags):
+  0 +0.35 · 1 +0.30 · 2 +0.42 · 3 +0.44 · 4 +0.44 · 5 +0.48 · 6 +0.44 · 7 +0.43 · 8 +0.38 · 9 +0.27 · 10 +0.36 · 11 +0.36 · 12 +0.33 · 13 +0.35 · 14 +0.35 · 15 +0.25 · 16 +0.27 · 17 +0.27 · 18 +0.23 · 19 +0.19 · 20 +0.23 · 21 +0.35 · 22 +0.30 · 23 +0.16 · 24 +0.09 · 25 +0.08 · 26 -0.01
+  bestand       erwartetes D am Einstieg (Profil gewichtet mit der Einstiegsstunde) +0.306 Pp = 0.87 × H1
+  unverzerrt_1  erwartetes D am Einstieg (Profil gewichtet mit der Einstiegsstunde) +0.301 Pp = 0.85 × H1
+  unverzerrt_2  erwartetes D am Einstieg (Profil gewichtet mit der Einstiegsstunde) +0.301 Pp = 0.85 × H1
+  unverzerrt_3  erwartetes D am Einstieg (Profil gewichtet mit der Einstiegsstunde) +0.302 Pp = 0.86 × H1
+
+Seiteneffekt: geschützte Datei unverändert: True

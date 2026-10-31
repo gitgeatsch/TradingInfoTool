@@ -1,0 +1,63 @@
+VORANALYSE G16 STUFE 2 (Gerät 9900K, 2026-10-31T02:18:50) · Einstiege kern48jbz_<Menge> · Spot-Archiv data.binance.vision
+
+══ A  EINSTIEGE ══
+  bestand        10732 Einstiege · 127 Symbole · 2024 2324 2025 4715 2026 3693 · 2024-01-02 .. 2026-08-31
+                davon Kern 276 (2.6 %) · Fassung-4-Werte 573 (5.3 %) · übrige 9883
+  unverzerrt_1   11177 Einstiege · 140 Symbole · 2024 2051 2025 5326 2026 3800 · 2024-01-02 .. 2026-08-31
+                davon Kern 182 (1.6 %) · Fassung-4-Werte 386 (3.5 %) · übrige 10609
+  unverzerrt_2   10481 Einstiege · 139 Symbole · 2024 1896 2025 5222 2026 3363 · 2024-01-02 .. 2026-08-31
+                davon Kern 180 (1.7 %) · Fassung-4-Werte 370 (3.5 %) · übrige 9931
+  unverzerrt_3   10793 Einstiege · 137 Symbole · 2024 1873 2025 5088 2026 3832 · 2024-01-02 .. 2026-08-31
+                davon Kern 179 (1.7 %) · Fassung-4-Werte 385 (3.6 %) · übrige 10229
+  Vereinigung der vier Mengen: 184 Symbole
+  bestand       Einstiegstage 671 · je Tag Median 8, 90. Perzentil 45, Höchstwert 111
+  unverzerrt_1  Einstiegstage 673 · je Tag Median 8, 90. Perzentil 45, Höchstwert 111
+  unverzerrt_2  Einstiegstage 671 · je Tag Median 7, 90. Perzentil 44, Höchstwert 102
+  unverzerrt_3  Einstiegstage 664 · je Tag Median 8, 90. Perzentil 44, Höchstwert 107
+
+══ B  BINANCE-SPOTMARKT JE SYMBOL (Monatsdateien 2023-01-01 .. 2026-08-31, HEAD) ══
+  mit Spotmarkt: 177 von 184 Symbolen · ohne: 7
+  ohne Spotmarkt (nur Terminmarkt oder anderer Name): AKT BRETT CC GRIFFAIN HYPE KAS MON
+  davon eingestellt vor 2026-08 (Archiv endet früher; gehören zur Grundgesamtheit): 45 · AERGO ALPACA AMB ANT ATA BAKE BNX BSW CHESS COMBO COS D DEGO FIO FIS FLM FXS HOOK KEY LEVER LINA LOOM LRC MBOX NKN NTRN NULS OMG OMNI OXT PERP PHB REN SNT STMX SXP SYS TON TROY TRU UNFI VIDT VOXEL WAVES XEM
+    bestand       Einstiege mit E auf eingestellten Paaren: 0
+    unverzerrt_1  Einstiege mit E auf eingestellten Paaren: 1051
+    unverzerrt_2  Einstiege mit E auf eingestellten Paaren: 1021
+    unverzerrt_3  Einstiege mit E auf eingestellten Paaren: 852
+
+══ C  ABDECKUNG: welcher Einstieg bekäme ein E (Daten ab 2023-01-01 bzw. ab Spotbeginn, Vorlauf 300 T, E des Vortags) ══
+  bestand         8948 von  10732 Einstiegen mit E (83.4 %) · ohne Spotmarkt 436 · zu jung/zu früh 1348
+                2024:  1866 von  2324 (80.3 %)
+                2025:  3693 von  4715 (78.3 %)
+                2026:  3389 von  3693 (91.8 %)
+                davon UNGESEHEN (ohne Kern und Fassung-4-Werte): 8099 Einstiege, 111 Symbole
+  unverzerrt_1    9499 von  11177 Einstiegen mit E (85.0 %) · ohne Spotmarkt 442 · zu jung/zu früh 1236
+                2024:  1671 von  2051 (81.5 %)
+                2025:  4334 von  5326 (81.4 %)
+                2026:  3494 von  3800 (91.9 %)
+                davon UNGESEHEN (ohne Kern und Fassung-4-Werte): 8931 Einstiege, 127 Symbole
+  unverzerrt_2    8744 von  10481 Einstiegen mit E (83.4 %) · ohne Spotmarkt 433 · zu jung/zu früh 1304
+                2024:  1516 von  1896 (80.0 %)
+                2025:  4157 von  5222 (79.6 %)
+                2026:  3071 von  3363 (91.3 %)
+                davon UNGESEHEN (ohne Kern und Fassung-4-Werte): 8194 Einstiege, 126 Symbole
+  unverzerrt_3    9054 von  10793 Einstiegen mit E (83.9 %) · ohne Spotmarkt 440 · zu jung/zu früh 1299
+                2024:  1511 von  1873 (80.7 %)
+                2025:  4043 von  5088 (79.5 %)
+                2026:  3500 von  3832 (91.3 %)
+                davon UNGESEHEN (ohne Kern und Fassung-4-Werte): 8490 Einstiege, 124 Symbole
+
+══ D  DOWNLOAD-UMFANG (zip, 2023-01-01 .. 2026-08-31; Kern und Fassung-4-Werte liegen schon vor) ══
+  168 Symbole · 87.5 GB zip · 5643 Monatsdateien
+  größte: SUI 4.1 · FLOKI 3.4 · WIF 2.0 · PENGU 2.0 · HBAR 1.9 · ORDI 1.6 · APT 1.5 · TIA 1.4 · ICP 1.3 · SEI 1.2 · CRV 1.1 · TAO 1.1
+  kleinste: VELODROME 0.11 · XEM 0.10 · OMG 0.10 · BIGTIME 0.09 · AERGO 0.09 · ANT 0.06
+  Verteilung je Symbol (GB): Median 0.36 · 90. Perzentil 1.01 · Summe der 10 größten 20.5 (23 %)
+  davon Symbole, die Einstiege mit E liefern: 168 · 87.5 GB
+
+══ E  BETRIEB: Erscheinungszeit der Tagesdatei (Last-Modified, letzte 10 Tage) ══
+  45 Dateien · Stunden nach Tagesende (00:00 UTC): Median 2.0 · Höchstwert 2.7 · Mindestwert 1.7
+    AVAXUSDT  2.0 2.4 2.0 2.6 2.0 1.8 2.5 2.0 2.7
+    BTCUSDT   1.9 2.3 1.9 2.5 1.9 1.7 2.4 1.9 2.6
+    ETHUSDT   1.9 2.3 1.9 2.5 1.9 1.7 2.4 1.9 2.7
+    LINKUSDT  1.9 2.3 1.9 2.5 1.9 1.7 2.4 1.9 2.7
+    SOLUSDT   2.0 2.4 2.0 2.6 2.0 1.8 2.5 2.0 2.7
+  Größe je Tag (MB, zip): AVAXUSDT 0.9 · BTCUSDT 12.2 · ETHUSDT 8.5 · LINKUSDT 1.2 · SOLUSDT 2.6

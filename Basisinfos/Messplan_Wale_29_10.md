@@ -502,3 +502,5 @@ allen sechs positiv.
 - **Weiter nach Vorgabe des Nutzers:** **Stufe 2** prüft als eigener Messplan, ob E **REGEL0 nicht verschlechtert**, als Gewicht
   oder Zusatz und nicht als Auslöser. Fällt das durch, geht E als **Dashboard-Befund** an das LLM (Information mit
   Bewertungsgrund, kein Auslöser).
+- **Voranalyse Stufe 2 (31.10.):** [`Voranalyse_Wale_Stufe2_31_10.md`](Voranalyse_Wale_Stufe2_31_10.md) — Abdeckung, Download,
+  Betriebsregel, Tagesprofil und Auflösung auf den REGEL0-Einstiegen, ohne E auf einem Einstieg anzusehen.
