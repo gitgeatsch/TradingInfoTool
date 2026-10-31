@@ -636,3 +636,72 @@ eigener Permutationstest p 0,148 (Messung 0,133).
   Fassung 4 unverändert auf den 168 neuen Werten.
 - **Weiter nach §16.6:** G16 als **Dashboard-Befund** (Befund-Karte, Bauplan A3), E des Vortags als **Fakt**. Wie stark der
   Bewertungsgrund für Altcoins ist, hängt an der offenen Ursachenfrage.
+
+---
+
+## 18. URSACHENMESSUNG — Fassung 4 UNVERÄNDERT auf den neuen Werten (VORAB: 31.10.2026 abends, vor jedem Ertrag dieser Frage)
+
+**Nutzer 31.10.:** *„Ok a“* (auf die Vorlage: Ursache messen, Fassung 4 unverändert auf den 168 neu geladenen Werten).
+**Anlass:** §17 — Stufe 2 trägt nicht, `G16-wale-alt-f4` bleibt bestehen. Offen ist, **woran** das liegt: an den **Werten**
+(klein statt liquid), an den **Einstiegen** (REGEL0-Lage zu jeder Stunde statt Einstieg an jedem Tag um 00:00) oder an
+Fassung 4 selbst (knapp, p 0,034, hing an AVAX). Diese Messung trennt das: **dieselbe Frage wie Fassung 4, andere Werte.**
+
+| Ausgang | heißt |
+|---|---|
+| trägt | der Effekt gibt es auch auf den neuen Werten → Stufe 2 scheiterte an den **Einstiegen** (REGEL0-Lage, Stunde), nicht an E |
+| trägt nicht, liquides Drittel trägt (Auskunft) | der Effekt hängt an der **Liquidität** → Dashboard-Bewertungsgrund nur für liquide Altcoins |
+| trägt nicht, auch nicht im liquiden Drittel | Fassung 4 war vermutlich **Glück** (knapp, AVAX) → Dashboard-Befund nur mit dieser Einschränkung |
+
+⚠️ **Zeitpunkt und was schon gesehen ist:** E und L der 168 Werte liegen seit Stufe 2 vor (`data/_wale/s2_e.npz`) — ohne Erträge an
+Tagesgrenzen. Gesehen sind nur die 24-h-Erträge **nach REGEL0-Einstiegen** (≈ 9.000 Einstiege zu beliebiger Stunde); die
+Tageserträge 00:00 → 00:00 dieser Frage (≈ 140 Werte × ≈ 975 Tage) sind **nicht** angesehen. Gezählt wurden vorab nur Tage mit L.
+
+### 18.1 Festlegungen — alles aus §14 bis §14d unverändert, außer den Zeilen „neu“
+
+| | Festlegung |
+|---|---|
+| **Werte (Regel, neu)** | alle Symbole in `s2_e.npz` **ohne** Kern (BTC ETH SOL) und ohne die sechs aus Fassung 4, mit **≥ 365 Tagen** L und y (H1) im Urteilsfenster; eingestellte Paare **gehören dazu** (Grundgesamtheit, Kapitel 120.3). Gezählt vorab: 147 von 177 mit ≥ 365 Tagen L, davon ≈ 140 neu |
+| E, L | unverändert: `p102_wale_basis` (q 5 %, Residuum 180 T, Fünftel 365 T / mindestens 120), Tage mit Archiv ≠ Kerze (> 0,5 %) ohne G/R (wie §16) |
+| y | **unverändert**: ln(P(t+1+h, 00:00) / P(t+1, 00:00)) aus der Tabelle `kurs` (REST-Tageskerze, Eröffnung 00:00 UTC) — `B.ertrag` |
+| Verzug 06:00 (neu, nur Datenquelle) | die Ablage hat keine Stundenkurse → P(06:00) aus `p64_lc_voranalyse.reihe` (Schluss der Stunde 05:00–06:00); Zuordnung Symbol ↔ Paar in §17 geprüft (≥ 0,9, Verhältnis stabil) |
+| **Urteilsfenster** | **2024-01-01 bis 2026-08-31** (die Monatsdateien reichen bis 08/2026; Fassung 4: bis 09-30) |
+| Hauptfrage | **nur H1**, einseitig (oberstes Fünftel HÖHER); H3/H7 nur D |
+| Statistik | D = **Mittel der D je Wert** (gleich gewichtet), D je Wert = Mittel(y \| L=+1) − Mittel(y \| L=−1), **roh** (wie Fassung 4, keine Tagesbereinigung) |
+| Test | Permutation, **gemeinsame 30-T-Blöcke** über das Urteilsfenster, dieselbe Vertauschung für alle Werte, 1.000, Schwelle 95. Perzentil, p ausgewiesen — `B.bewerte_gepoolt` (derselbe Code wie Fassung 4d) |
+
+**TRÄGT AUF DEN NEUEN WERTEN** verlangt **alle** Punkte (§14, unverändert gelesen):
+
+| # | Punkt |
+|---|---|
+| 1 | gepooltes D (H1) **über** der Permutationsschwelle |
+| 2 | D (H1) > 0 bei **mehr als der Hälfte** der Werte — Fassung 4 „4 von 6“ ist genau die kleinste echte Mehrheit von 6 |
+| 3 | Jahre 2024 / 2025 / 2026 (bis 08-31), gepoolt: D > 0 in **≥ 2 von 3** |
+| 4 | Verzug 06:00: D > 0 |
+| 5 | Selbsttest bestanden |
+
+### 18.2 Selbsttest — vor dem ersten Ertrag, auf den echten y dieser Werte
+
+Wie §14/§14d: 1.000 Welten, **Startwert 20261107**, S1 (AR(1), φ und ρ aus der Vorprüfung §17: φ 0,001, ρ 0,010), S2 (Monatsregime
+**gemeinsam** für alle Werte + 0,2 Rauschen), S3 Auflösung (Pflanzung y + k·L, k 0,05 / 0,10 / 0,15 / 0,25 / 0,50 Pp, 250 Welten je k),
+Orakel (E = y + Rauschen gleicher Streuung, 200 Welten). Künstliche L mit dem NaN-Muster des echten E und dem Rollfenster von
+`fuenftel` (vektorisiert wie §16.4). **Soll:** Fehlalarm H1 S1 und S2 ≤ **6,4 %**, Orakel ≥ 190/200. Der Selbsttest rechnet die
+Vertauschung vektorisiert; **vor dem Lauf** wird an Probewelten gezeigt, dass D, Schwelle und p **bitgleich** zu `B.bewerte_gepoolt`
+sind (derselbe Zufallsstrom).
+
+### 18.3 Auskunft — nach dem Urteil, nicht Teil davon (vorab festgelegt)
+
+| | |
+|---|---|
+| **Liquidität** | Werte nach Spot-Umsatz 2024-01 bis 2026-08 in **Drittel**; je Drittel gepooltes D, Permutation (Startwert der Messung), p — das beantwortet „klein statt liquid“ |
+| **Fassung-4-Regel auf den neuen Werten** | die **6 mit dem höchsten Spot-Umsatz** 2024–26 unter den neuen Werten, Status handelnd: D, p |
+| sonst | H3/H7 · D je Jahr · eingestellte Paare getrennt · Anteil Werte mit D > 0 gegen die Nullwelt |
+
+### 18.4 Folgen
+
+| Ergebnis | Folge |
+|---|---|
+| trägt | `G16` gilt für Altcoins **breit** (Einstieg 00:00, Folgetag). Für REGEL0 bleibt §17 (trägt nicht als Gewicht). Dashboard-Befund mit Geltung „Altcoins, Folgetag ab 00:00“. Ob eine **Tagesbewertung** (statt REGEL0-Gewicht) einen eigenen Weg verdient, wird abgestimmt — kein Bau ohne eigenen Plan |
+| trägt nicht | Dashboard-Befund mit der Einschränkung aus der Liquiditätsauskunft (nur liquide / unsicher). Keine weitere Wal-Messung ohne neue Begründung |
+
+**Werkzeuge:** `p105_wale_f4_breit.py --selbsttest | --messung` · Gegenprobe `p105b_wale_f4_breit_gegenprobe.py` (eigener Rechenweg:
+y aus `kerze`, D je Wert per Schleife, Permutation neu). ⚠️ Betrieb unberührt: nur Desktop, nur `data/_wale/`, Produktions-DB nicht geöffnet.
