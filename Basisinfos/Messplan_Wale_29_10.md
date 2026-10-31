@@ -705,3 +705,59 @@ sind (derselbe Zufallsstrom).
 
 **Werkzeuge:** `p105_wale_f4_breit.py --selbsttest | --messung` · Gegenprobe `p105b_wale_f4_breit_gegenprobe.py` (eigener Rechenweg:
 y aus `kerze`, D je Wert per Schleife, Permutation neu). ⚠️ Betrieb unberührt: nur Desktop, nur `data/_wale/`, Produktions-DB nicht geöffnet.
+
+## 19. ERGEBNIS URSACHENMESSUNG (31.10.2026 abends) — NICHT TRENNBAR, Fassung 4 vermutlich Glück
+
+Alles nach §18, in dieser Reihenfolge: Abgleich → Selbsttest → Messung → Gegenprobe. Register `G16-wale-ursache`.
+
+**Abgleich (vor dem Selbsttest):** die vektorisierte Rechnung in `p105_wale_f4_breit.py` ist auf den Fassung-4-Daten **bitgleich**
+zu `B.bewerte_gepoolt` (H1/H3, Startwerte 1–3, D-Abweichung ≤ 2,6e-18, p identisch) — `p105_wale_f4_breit_abgleich.txt`.
+⚠️ **Eine Abweichung von §18.1, die hier nachgetragen wird:** bei 138 Werten fehlt in einer Vertauschung manchem Wert oben oder
+unten. Dann zählt der **nanmean über die übrigen Werte**; `B.bewerte_gepoolt` hätte die Vertauschung verworfen. Auf den F4-Daten
+tritt der Fall nicht auf (daher bitgleich), im Selbsttest wurde **höchstens 0** Vertauschungen je Welt verworfen — die Regel ist
+ausgewiesen, wirkt aber nicht.
+
+**Selbsttest** (1.000 Welten, Startwert 20261107, 138 Werte): S1 **2,0 %**, S2 **3,6 %** (Grenze 6,4 %) ✔ · Orakel **200/200** ✔ ·
+Auflösung S3 0,05: 24 % · 0,10: 77 % · **0,15: 99 %** → X **0,15 Pp** (D-Unterschied 0,30 Pp). Die Anlage ist auf 138 Werten
+**gut doppelt so fein** wie auf den 6 aus Fassung 4 — die dort gefundene Größe (+0,35 Pp) wäre klar sichtbar.
+
+**Messung H1** (Startwert 20261108):
+
+| # | Punkt | Wert | |
+|---|---|---|---|
+| 1 | D über Permutationsschwelle | **D +0,16 Pp**, Schwelle +0,18, **p 0,086**, Null +0,03, einseitige Obergrenze +0,30; 65 Blöcke (15 T), AK −0,04 | ✖ |
+| 2 | D > 0 bei mehr als der Hälfte | 80 von 138 | ✔ |
+| 3 | Jahre ≥ 2 von 3 | 2024 +0,26 · 2025 +0,34 · 2026 −0,03 | ✔ |
+| 4 | Verzug 06:00 | +0,16 | ✔ |
+| 5 | Selbsttest | bestanden | ✔ |
+
+→ **NICHT TRENNBAR** (Punkt 1 verfehlt). Die Richtung ist positiv, aber die **Größe aus Fassung 4 (+0,35) liegt über der
+Obergrenze +0,30** — sie ist auf den neuen Werten an der Grenze ausgeschlossen.
+
+**Auskunft (§18.3, nach dem Urteil, nicht Teil davon):**
+
+| | D (Pp) | p | D > 0 |
+|---|---|---|---|
+| H3 / H7 (nur D) | +0,26 / +0,21 | — | — |
+| Liquidität Drittel 1 (6,7–129 Mrd. USD) | +0,08 | 0,398 | 25/46 |
+| Drittel 2 (3,0–6,6 Mrd.) | +0,06 | 0,306 | 24/46 |
+| Drittel 3 (0,9–2,9 Mrd., dünn) | +0,33 | 0,047 | 31/46 |
+| Fassung-4-Regel: Top 6 Umsatz (SUI WIF FLOKI HBAR RUNE TAO) | +0,04 | 0,495 | je Wert +1,02 −0,17 −0,12 −0,04 ±0,00 −0,46 |
+| eingestellte Paare (35) / übrige | +0,44 / +0,06 | — | — |
+
+⚠️ Das dünne Drittel mit p 0,047 ist **eines von drei** Teilergebnissen nach dem Urteil — kein Befund. Dass ausgerechnet das
+**dünnste** Drittel und die **eingestellten** Paare vorne liegen, ist das Gegenteil der Vorab-Erwartung „liquid trägt“.
+
+**Gegenprobe** (`p105b_wale_f4_breit_gegenprobe.txt`, eigene Wege) **7/7 ✔**: Auswahl 138 gleich · y aus `kerze` gegen `kurs`
+Abweichung 0 · D je Wert per Schleife ≤ 7,8e-18, gepoolt +0,1553 gleich, Jahre gleich · Verzug per SQL (199 Zeitpunkte) 0 ·
+Vorgriff: Rang nur aus t−365..t−1, 0 Abweichungen · eigene Permutation (2.000, Startwert 20261110) **p 0,093**, Schwelle +0,19 ·
+Liquidität aus `kerze.quote_usd` gleiche Top 6. Geschützte Datei unverändert.
+
+### 19.1 Folge nach §18.4 — Zeile „trägt nicht, auch nicht im liquiden Drittel“
+
+| | |
+|---|---|
+| **Fassung 4** | vermutlich **Glück** (knapp, p 0,034, hing an AVAX); `G16-wale-alt-f4` bleibt nach R-R11 eingetragen — andere Werte widerlegen ihn nicht —, gilt aber **nicht breit** |
+| **REGEL0** | unverändert (§17) |
+| **Dashboard** | der Spot-Großfluss nur als **Hinweis** mit Einschränkung: Richtung auf Altcoins positiv, aber **nicht trennbar**; kein Bewertungsgrund mit Gewicht |
+| **weitere Wal-Messung** | keine ohne **neue Begründung**. Die Auffälligkeit dünnes Drittel / eingestellte Paare ist nachträglich gesehen — sie wäre nur als **neue Hypothese** mit eigenem Vorab-Plan zu prüfen, auf Daten, die sie nicht hervorgebracht haben |

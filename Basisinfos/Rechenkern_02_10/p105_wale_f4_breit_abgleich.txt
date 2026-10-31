@@ -1,0 +1,11 @@
+ABGLEICH G16 URSACHE — Fassung 4 auf den neuen Werten (Messplan §18, 9900K, 2026-10-31T15:39:55) · eigene Vertauschung gegen B.bewerte_gepoolt auf Fassung 4 (sechs Werte, gesehen, KEIN neuer Ertrag)
+  H1 Startwert 1: D +0.35 / +0.35 · Schwelle +0.33 / +0.33 · p 0.032 / 0.032 · Abweichung D 8.7e-19, Schwelle 0.0e+00 ✔
+  H1 Startwert 2: D +0.35 / +0.35 · Schwelle +0.31 / +0.31 · p 0.025 / 0.025 · Abweichung D 8.7e-19, Schwelle 8.7e-19 ✔
+  H1 Startwert 3: D +0.35 / +0.35 · Schwelle +0.35 / +0.35 · p 0.049 / 0.049 · Abweichung D 8.7e-19, Schwelle 0.0e+00 ✔
+  H3 Startwert 1: D +0.39 / +0.39 · Schwelle +0.54 / +0.54 · p 0.119 / 0.119 · Abweichung D 0.0e+00, Schwelle 2.6e-18 ✔
+  H3 Startwert 2: D +0.39 / +0.39 · Schwelle +0.50 / +0.50 · p 0.114 / 0.114 · Abweichung D 0.0e+00, Schwelle 8.7e-19 ✔
+  H3 Startwert 3: D +0.39 / +0.39 · Schwelle +0.58 / +0.58 · p 0.120 / 0.120 · Abweichung D 0.0e+00, Schwelle 1.7e-18 ✔
+
+ERGEBNIS: BITGLEICH (bis 1e-15, p identisch)
+
+Seiteneffekt: geschützte Datei unverändert: True

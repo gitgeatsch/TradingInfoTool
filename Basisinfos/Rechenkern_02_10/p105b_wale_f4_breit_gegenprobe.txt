@@ -1,0 +1,12 @@
+GEGENPROBE G16 URSACHE (Messplan §18, 9900K, 2026-10-31T17:09:06) · eigene Wege
+
+1 AUSWAHL (y aus kerze, eigene Zählung): 138 Werte · gleich der Messung: True ✔
+2 y kerze gegen kurs: größte Abweichung 0.0e+00 ✔
+3 D je Wert (eigene Schleife): größte Abweichung 7.8e-18 · gepoolt +0.1553 Pp / Messung +0.1553 · Jahre 4.3e-19 · D>0 80/138 (Messung 80/138) ✔
+4 VERZUG 06:00 direkt per SQL gegen reihe: 199 Zeitpunkte, größte Abweichung 0.0e+00 ✔
+5 VORGRIFF: Rang nur aus t-365..t-1 (eigene Schleife, 5 Werte, 4357 Tage): 0 Abweichungen · y_t = ln(Eröffnung t+2 / Eröffnung t+1) per Datum (Punkt 2) ✔
+6 PERMUTATION eigen (2.000, Startwert 20261110): p 0.093 (Messung 0.086) · Schwelle +0.19 Pp (Messung +0.18) ✔
+7 LIQUIDITÄT aus kerze.quote_usd: Top 6 SUI WIF FLOKI HBAR RUNE TAO (Messung SUI WIF FLOKI HBAR RUNE TAO) ✔ gleich
+  Drittelgrößen [46, 46, 46]
+
+ERGEBNIS: BESTANDEN · geschützte Datei unverändert: True

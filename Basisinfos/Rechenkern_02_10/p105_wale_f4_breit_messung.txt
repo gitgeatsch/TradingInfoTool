@@ -1,0 +1,17 @@
+MESSUNG G16 URSACHE — Fassung 4 auf den neuen Werten (Messplan §18, 9900K, 2026-10-31T17:08:57) · einseitig (oberstes Fünftel HÖHER) · q 5 % · Einstieg 00:00 UTC t+1 · Log brutto, roh, Pp
+Selbsttest ✔ (S1 2.0 %, S2 3.6 %, Orakel 200/200, X 0.15 Pp) · Werte 138 von 168 neuen (>= 365 Tage) · Urteil 2024-01-01 bis 2026-08-31
+
+══ URTEIL H1 (§18.1, alle 5 Punkte) ══
+  D +0.16 Pp · Schwelle Permutation 95 % +0.18 (p 0.086) · Null +0.03 · einseitige Obergrenze +0.30 · Blöcke (15 T) 65 · AK -0.037
+  1 Test ✖ · 2 D>0 bei 80/138 ✔ · 3 Jahre 2024 +0.26 2025 +0.34 2026 -0.03 ✔ · 4 Verzug 06:00 +0.16 ✔ · 5 Selbsttest ✔
+  ->  NICHT TRENNBAR
+
+══ AUSKUNFT (§18.3) — nach dem Urteil, NICHT Teil davon ══
+  H3 +0.26 · H7 +0.21 · Verzug H3 +0.07
+  Liquidität Drittel 1 (46 Werte, Spot-Umsatz 6.69..129.44 Mrd. USD): D +0.08 · Schwelle +0.27 · p 0.398 · D>0 bei 25/46
+  Liquidität Drittel 2 (46 Werte, Spot-Umsatz 2.96..6.56 Mrd. USD): D +0.06 · Schwelle +0.24 · p 0.306 · D>0 bei 24/46
+  Liquidität Drittel 3 (46 Werte, Spot-Umsatz 0.86..2.91 Mrd. USD): D +0.33 · Schwelle +0.31 · p 0.047 · D>0 bei 31/46
+  Fassung-4-Regel auf den neuen Werten (Top 6 Umsatz, handelnd: SUI WIF FLOKI HBAR RUNE TAO): D +0.04 · Schwelle +0.50 · p 0.495 · je Wert +1.02 -0.17 -0.12 -0.04 +0.00 -0.46
+  eingestellte Paare (35): D +0.44 · übrige: +0.06
+
+Seiteneffekt: geschützte Datei unverändert: True

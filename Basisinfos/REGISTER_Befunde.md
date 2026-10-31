@@ -4417,6 +4417,10 @@
 
 - Quelle: Messplan_Wale_29_10.md §16-§17; p104_wale_s2 (--vorpruefung/--selbsttest/--messung), p104b_wale_s2_gegenprobe
 
+**G16-wale-ursache** — Ursachenmessung (Messplan Wale §18, vorab 4b3c4643): Fassung 4 UNVERAENDERT (Einstieg 00:00, H1, roh, gleich gewichtet) auf 138 NEUEN Altcoins ist NICHT TRENNBAR - D +0,16 Pp, Permutationsschwelle +0,18, p 0,086, einseitige Obergrenze +0,30; 80/138 Werte positiv, 2024 +0,26 / 2025 +0,34 / 2026 -0,03, Verzug +0,16 -> Punkt 1 verfehlt. Aufloesung X 0,15 Pp (D 0,30): die Groesse aus Fassung 4 (+0,35) waere sichtbar gewesen und ist an der Grenze ausgeschlossen. Auskunft (nicht Urteil): liquides Drittel +0,08 (p 0,40), mittleres +0,06 (p 0,31), DUENNES +0,33 (p 0,047, eines von drei); Fassung-4-Regel (Top 6 Umsatz) +0,04 (p 0,50); eingestellte Paare +0,44. Folge §18.4 Zeile 3: kein Liquiditaetseffekt -> Fassung 4 vermutlich GLUECK (knapp, AVAX); G16 nur als Dashboard-Hinweis mit dieser Einschraenkung, keine weitere Wal-Messung ohne neue Begruendung. ⚠ G16-wale-alt-f4 bleibt (R-R11: andere Werte widerlegen nicht), gilt aber NICHT breit
+
+- Quelle: Messplan_Wale_29_10.md §18-§19; p105_wale_f4_breit (--abgleich/--selbsttest/--messung), p105b_wale_f4_breit_gegenprobe
+
 ## ○ WAS OFFEN IST
 
 **2.145-zeit** — ⚠️ ABER `schnitt` haelt ueber die ZEIT nicht durch: erste Haelfte +0,3483 (nur 17 Bloecke), zweite +0,0375 (Trennschaerfe 0,10 - untermaechtig, nicht widerlegt). KANDIDAT, kein registrierungsreifer Befund
