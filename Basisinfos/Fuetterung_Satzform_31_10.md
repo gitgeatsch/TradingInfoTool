@@ -36,7 +36,7 @@ Reihenfolge §6 Schritt 2) · [`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashb
 | # | Regel | Warum (aus der Probe) |
 |---|---|---|
 | **SF1** | Je Zustand **eine Zeile**: Sicht · Name · Wert · Maß · **Rang P** im Fenster · **Klasse** · **Lesart** · vor 4 Wochen · **Stand** · Kennzeichen | Ü1, Ü3: alles, was das LLM zur Einordnung braucht, steht in der Zeile, nicht im Prompt |
-| **SF2** | **Maß je Art:** Zinsen, Aufschläge, Schwankung, Prämien, Ton als **Niveau** · Preise als **Abstand zum 200-T-Schnitt** · Mengen (M2, Netto-Liquidität) als **Veränderung gegen Vorjahr** | ein Niveau-Rang von Preisen steht in steigenden Märkten fast immer oben und sagt nichts |
+| **SF2** | **Maß je Art:** Zinsen, Aufschläge, Schwankung, Prämien, Ton, Funding, Breite als **Niveau** · Preise als **Abstand zum 200-T-Schnitt** · Mengen (M2, Netto-Liquidität) als **Veränderung gegen Vorjahr** · **Krypto-Mengen (Stablecoins, OI in Coins) als Veränderung über 30 Tage** (Nutzer 01.11.: „1a“) · **Kategorien (Season-Stufe) ohne Rang**, mit „seit“ | ein Niveau-Rang von Preisen steht in steigenden Märkten fast immer oben und sagt nichts. Krypto-Mengen: die Frage an S1 ist Abfluss/Hebel in 1–7 Tagen, ein Jahresvergleich zeigt das kaum ([`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md)) |
 | **SF3** | **Klasse aus dem Rang**, fest: ≤ P5 sehr tief · ≤ P20 tief · normal · ≥ P80 hoch · ≥ P95 sehr hoch | ein Wort über die Lage ist ein **Fakt** (Gegenwart), keine Bewertung (Ü2) |
 | **SF4** | **Lesart je Zustand fest im Code** — was HÖHER heißt, beschreibend | ohne sie ist „hoch“ mehrdeutig: beim **Nachrichtenton** heißt hoch *freundlicher*, beim **VIX** *mehr Angst*. Die Lesart sagt nie „gut/schlecht für Krypto“ — das ist die Frage an die Sicht |
 | **SF5** | **Stand je Zeile** (Datum der Beobachtung) | M2 stand am 29.10. beim **01.09.** — zwei Monate alt; ohne Stand liest das LLM ihn als heutig |
@@ -100,7 +100,7 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 | # | Schritt | Gerät | Betrieb? |
 |---|---|---|---|
 | 1 | **Historie ab 2020-01** in `sichten.db` (P1) — derselbe Abrufer, nur früherer Start | Desktop | nein |
-| 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) | Desktop | nein |
+| 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) — **✔ 01.11. geladen und gegengeprüft**, [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) §5; offen: Breite Desktop ↔ NB (V2) | Desktop | nein |
 | 3 | **Ebene-1-Modul** `agent/zustaende.py`: die Satzform aus §1 als **ein** Rechenweg (SF8), Probe → Modul, mit Prüfpaket (Fenster, Vorgriff, Lesart je Zustand vorhanden) | Desktop | nein |
 | 4 | **Voranalyse A1** (G9) — Regeln zuerst, LLM für den Rest | Desktop | nein |
 | 5 | **G7 Messplan**: Faktentreue der Prüfer + Wert der Sichten im Rückspiel | Desktop | nein |

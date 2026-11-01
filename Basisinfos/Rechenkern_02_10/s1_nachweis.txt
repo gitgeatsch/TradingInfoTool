@@ -1,0 +1,38 @@
+====================================================================================================
+S1-ERGÄNZUNG — NACHWEIS (2026-11-01 13:17 UTC)
+====================================================================================================
+  OK    G1 kurs BTC lückenlos                        2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 kurs BTC ohne Vorgriff                    bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 kurs ETH lückenlos                        2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 kurs ETH ohne Vorgriff                    bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 dvol BTC lückenlos                        2048 Tage, 2021-03-24 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 dvol BTC ohne Vorgriff                    bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 dvol ETH lückenlos                        2048 Tage, 2021-03-24 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 dvol ETH ohne Vorgriff                    bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 funding BTC lückenlos                     2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 funding BTC ohne Vorgriff                 bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 funding ETH lückenlos                     2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 funding ETH ohne Vorgriff                 bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 oi BTC lückenlos                          1797 Tage, 2021-11-30 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 oi BTC ohne Vorgriff                      bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 oi ETH lückenlos                          1797 Tage, 2021-11-30 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 oi ETH ohne Vorgriff                      bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 stablecoins USD lückenlos                 2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
+  OK    G2 stablecoins USD ohne Vorgriff             bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
+  OK    G1 breite TOP50 lückenlos                    2455 Tage, 2020-01-01 bis 2026-09-20, größter Abstand 1 T
+  OK    G2 breite TOP50 ohne Vorgriff                bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-09-20 (< 2026-11-01)
+  OK    G1 season STUFE lückenlos                    2455 Tage, 2020-01-01 bis 2026-09-20, größter Abstand 1 T
+  OK    G2 season STUFE ohne Vorgriff                bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-09-20 (< 2026-11-01)
+  OK    G3 Kurs BTC = Messbasis                      2454 gemeinsame Tage, größte Abweichung 0.00e+00 · letzter Messbasis-Tag 2026-09-20 (offene Kerze) -0.82 %
+  OK    G3 Kurs ETH = Messbasis                      2454 gemeinsame Tage, größte Abweichung 0.00e+00 · letzter Messbasis-Tag 2026-09-20 (offene Kerze) -2.51 %
+  OK    G4 Funding BTC ×3 = funding_historie         2435 gemeinsame Tage, Verhältnis 3 an 100.0 % (Rest: Tage mit anderer Zahl an Zahlungen)
+  OK    G4 Funding ETH ×3 = funding_historie         2435 gemeinsame Tage, Verhältnis 3 an 100.0 % (Rest: Tage mit anderer Zahl an Zahlungen)
+  OK    G5 OI BTC Datei ≈ API (≤ 0,5 %)              30 gemeinsame Tage (davon 1 aus der API selbst), Datei gg. API größte Abweichung 0.363 %, Median 0.039 %
+  OK    G5 OI ETH Datei ≈ API (≤ 0,5 %)              30 gemeinsame Tage (davon 1 aus der API selbst), Datei gg. API größte Abweichung 0.261 %, Median 0.025 %
+  FEHL  G6a Breite Desktop = NB                      368 gemeinsame Tage · gleich an 45 · größte Abweichung 0.088 (4.4 Coins von 50) · Mittel 0.0222
+       größte Abweichungen: 2025-10-03 0.745/0.812, 2025-10-06 0.745/0.812, 2025-10-11 0.333/0.406, 2025-10-29 0.271/0.188, 2025-10-02 0.787/0.875
+       Wirkung: Klasse im 5-J-Rang anders an 23 von 368 Tagen (6.2 %)
+  OK    G6b Season-Stufe Desktop = NB                368 gemeinsame Tage, gleich an 368
+  OK    G7 Stablecoins B3 = NB-Ampel                 409 gemeinsame Tage, größte Abweichung 0.00e+00 (Revisionen DefiLlama zwischen den Abrufen)
+====================================================================================================
+31 Prüfungen, 1 FEHLGESCHLAGEN: G6a Breite Desktop = NB

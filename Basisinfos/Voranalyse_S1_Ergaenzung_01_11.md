@@ -5,7 +5,7 @@
 **Auftrag (Nutzer 01.11.):** *„ja, starte mit den nächsten Schritten, wir müssen wieder vorankommen, z. B. der Voranalyse S1“*.
 **Gehört zu:** [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §6 Schritt 2 (Befund **P2**) ·
 [`Datenbasis_Schichten_Sichten_28_10.md`](Datenbasis_Schichten_Sichten_28_10.md) §3 (S1 Krypto gesamt) und §3a (Frage an S1).
-**Stand:** Vorlage zur Abstimmung. **Nichts am Betrieb geändert, nichts geladen.** Gemessen nur lesend (Desktop-Dateien, öffentliche
+**Stand:** ✔ entschieden und **ausgeführt 01.11.2026** (§5). **Betrieb unberührt** — geladen nur am Desktop in `data/_sichten/sichten.db`. Gemessen nur lesend (Desktop-Dateien, öffentliche
 Schnittstellen mit kleinen Abfragen).
 
 ---
@@ -85,3 +85,44 @@ Netto-Liquidität, die sich in Monaten bewegen.
 
 **Frage 3 — Gegenprobe Breite (V2):** beim nächsten Gang zum NB `data\spot_betrieb.db` in den Austauschordner kopieren (nur
 kopieren, nichts ändern). Ohne sie bleibt der Abstand von einem Coin unerklärt — **Ja/Nein**.
+
+✔ **Entschieden 01.11.2026 (Nutzer: *„1a, 2a, 3 ja – prüfen gegenprüfen und doku“*):** Krypto-Mengen über **30 Tage**,
+OI-Historie **laden**, Gegenprobe Breite gegen die NB-Kopie **ja** (`spot_betrieb.db` liegt seit 01.11. im Austauschordner).
+
+---
+
+## 5. Ausführung und Nachweis (01.11.2026)
+
+**Gebaut** — nur Desktop, Betrieb unberührt:
+
+| Teil | was |
+|---|---|
+| `api/sichten_quellen.py` | sieben neue Abrufer in **derselben** Auftragsliste (Ü8): `kurs_spot`, `dvol`, `funding`, `oi` (+ `_oi_datei`), `stablecoins` (Funktion der Ampel), `breite` und `season_stufe` (Ampel-Code `season_ampel.rechne`). OI setzt ab dem letzten Tag fort. **Nebenbei behoben:** „heute“ war Ortszeit statt UTC (`_heute`) — zwischen 00:00 und 01:00 MEZ rutschte die offene UTC-Kerze in Kurs, Basis, Prämie und GDELT |
+| `Rechenkern_02_10/fuetterung_satzform_probe.py` | die elf S1-Zeilen; Maß `tage30` (30 **Kalender**tage) und `stufe` (ohne Rang); „vor 4 Wochen“ mit drei gültigen Stellen (vorher Funding „+0.01“); leere Reihe → eigene Zeile, nie still |
+| `pruefe_pakete.py` Paket **SichtenQuellen** | ohne Netz, 9 Prüfungen: UTC-Tag, Stufen-Codes **abgeleitet** aus `season_ampel.NAME`, elf Reihen in der einen Auftragsliste, offene Kerze nicht dabei, Funding-Tagesmittel, OI aus der Zeile 00:00 der Folgetagsdatei (nicht der ersten), API als Rückfall, > 3 fehlende Tage = Fehler, nie Produktions-DB |
+| `Rechenkern_02_10/s1_nachweis.py` → `s1_nachweis.txt` | die Gegenproben gegen echte Daten (unten) |
+
+**Geladen** in `data/_sichten/sichten.db` (Sicherung `sichten_vor_s1_01_11.db`):
+
+| Reihe | Tage | Zeitraum |
+|---|---|---|
+| Kurs BTC, ETH · Funding BTC, ETH · Stablecoins | je 2.496 | 2020-01-01 – 2026-10-31, lückenlos |
+| DVOL BTC, ETH | je 2.048 | 2021-03-24 – 2026-10-31, lückenlos |
+| OI BTC, ETH | 1.797 | 2021-11-30 – 2026-10-31, lückenlos (BTC 2021-12-13 nach Verbindungsfehler nachgeholt → Abrufer wiederholt jetzt dreimal) |
+| Breite, Season-Stufe | je 2.455 | 2020-01-01 – **2026-09-20** (Desktop-Messbasis eingefroren; am NB laufend) |
+
+**Gegenproben** (`s1_nachweis.txt`, 31 Prüfungen, **30 grün**):
+
+| # | Ergebnis |
+|---|---|
+| G1/G2 | alle elf Reihen lückenlos, `bekannt_ab` überall = Folgetag 00:00 UTC, kein Tag ≥ heute |
+| G3 | Kurs = Desktop-Messbasis an 2.454 Tagen **bitgleich**. Ausnahme ausgewiesen: der **letzte** Messbasis-Tag 20.09.2026 wurde mit **offener Kerze** geladen (BTC −0,82 %, ETH −2,51 %) — ein Befund über die Messbasis, nicht über die neue Reihe |
+| G4 | Funding × 3 = `funding_historie.db` (dort Tagessumme) an 2.435 Tagen, 100 % |
+| G5 | OI Datei gegen `openInterestHist` an 30 Tagen: größte Abweichung **0,36 %** (BTC) / 0,26 % (ETH), Median 0,04 % / 0,03 %. Grenze **0,5 %**, begründet: die 30-T-Veränderung liegt im Median bei **7,2 % / 9,6 %**, im 10. Perzentil bei 1,3 % / 1,7 %; aus der API kommt nur der jeweils **letzte** Tag |
+| G6b | **Season-Stufe Desktop = NB an allen 368 gemeinsamen Tagen** |
+| G7 | Stablecoins B3 (91 T) aus unserer Reihe = NB-Ampel an 409 Tagen, Abweichung 0 — dieselbe Funktion, dieselbe Datierung |
+| ⚠ **G6a offen** | **Breite Desktop ≠ NB**: gleich an 45 von 368 Tagen, im Mittel 0,022 (≈ 1 Coin von 50), höchstens 0,088 (4,4 Coins); **Klasse im 5-J-Rang anders an 23 von 368 Tagen (6,2 %)**. Ausgeschlossen: Stablecoin-Ausnahme (beide Seiten dieselben 11). Die eingestellten Werte erklären nur einen Teil (ohne sie gleich an 80 statt 45 Tagen). **Vermutung:** die Kurs- und Umsatzreihen der Betriebskopie (NB) und der Messbasis (Desktop) unterscheiden sich. **Nächster Schritt:** NB-Betriebskopie `data\messdaten.db` in den Austauschordner, Breite darauf nachrechnen, Ursache je Coin |
+
+**Probe** (beide Stichtage, 35 Zustände, ≈ 1.750 Token): am **01.12.2025** fällt S1 mit **OI hoch** (BTC P87, ETH P85, +15–20 % in 30 T) und **BTC tief** (P17, −17,6 % zum Schnitt) auf; am **29.10.2026** mit DVOL tief, Stablecoin-Abfluss (P16), Coinbase-Prämie tief, Krypto-Ton sehr tief. **Fenster:** OI am Rückspielbeginn **3,9 J** (nicht 4,0 — die 30-T-Veränderung braucht den ersten Monat), DVOL 4,7 J, Basis 4,8 J — alle mit ⚠.
+
+⚠ **Grundgesamtheit (G6a):** bis die Ursache gefunden ist, geht die Breite im Rückspiel mit dem Kennzeichen *„Desktop ≠ NB, 6,2 % Klasse anders“* in die Befund-Karte — nicht still.

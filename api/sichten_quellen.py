@@ -18,8 +18,13 @@ beide Wege auf den gemeinsamen Tagen.
     yfinance       Tagesschluss der Börse, vorsichtig 22:00 UTC am Beobachtungstag (US-Schluss inkl. Winterzeit)
     FRED/ALFRED    Folgetag 00:00 UTC nach dem Veröffentlichungstag ``realtime_start`` — revidierte Werte bekommen eine EIGENE
                    Zeile (``bis`` = Ende ihrer Gültigkeit), das Rückspiel nimmt den damals bekannten Wert
-    Krypto-Tage    Kerzen in UTC: 00:00 UTC des Folgetags
+    Krypto-Tage    Kerzen in UTC: 00:00 UTC des Folgetags (Kurs, Basis, Prämie, DVOL, Funding = Tagesmittel, OI = Stand 24:00)
+    Stablecoins    DefiLlama, 00:00 UTC des Folgetags — OHNE Jahrgänge (DefiLlama revidiert; Größe wie in der Season-Ampel klein)
+    Breite, Season Ableitung mit DEMSELBEN Code wie die Season-Ampel (``agent/season_ampel``), Folgetag; M2 darin mit 35 T Verzug
     GDELT-Ton      00:00 UTC des Folgetags
+
+S1-Ergänzung (Nutzer 01.11.2026: *„1a, 2a, 3 ja“*, Voranalyse_S1_Ergaenzung_01_11.md): Kurs, DVOL, Funding, OI je BTC/ETH,
+Stablecoins, Breite und Season-Stufe. OI-Historie aus den Binance-Metrikdateien (``openInterestHist`` reicht nur 30 Tage).
 
 ⚠️ Ablage ``data/_sichten/sichten.db`` (nicht versioniert). NIE ``data/tradinginfotool.db``. Jeder Abruf steht in ``lauf`` —
 ein Fehlschlag ist nie still (Lehre E-1: eine gescheiterte Abfrage ist keine leere Reihe).
@@ -54,6 +59,11 @@ YFINANCE = {"^GSPC": "S3", "^NDX": "S3", "SOXX": "S3", "^VIX": "S3", "^MOVE": "S
 FRED = {"M2SL": "S2", "WALCL": "S2", "WTREGEN": "S2", "RRPONTSYD": "S2", "DFII10": "S2", "DGS2": "S2", "DGS10": "S2",
         "T10Y2Y": "S2", "BAA10Y": "S3", "BAMLH0A0HYM2": "S3", "NFCI": "S3", "DTWEXBGS": "S4", "VIXCLS": "S3"}
 KRYPTO = ("BTC", "ETH")
+DVOL_URL = "https://www.deribit.com/api/v2/public/get_volatility_index_data"
+OI_DATEIEN = "https://data.binance.vision/data/futures/um/daily/metrics"
+OI_API_TAGE = 29                # openInterestHist liefert 30 Tagespunkte; aelter kommt aus den Metrikdateien
+# Season-Stufe als Zahl (``reihe.wert`` ist REAL) - die Namen wie agent/season_ampel.NAME
+SEASON_CODE = {"kalt": 0, "ungewohnt": 1, "Vorlauf": 2, "Season-Klima": 3, "Ueberhitzung": 4, "Ende": 5}
 GDELT = {"krypto": "(bitcoin OR cryptocurrency) sourcelang:english", "fed": '"federal reserve" sourcelang:english',
          "aktien": '"stock market" sourcelang:english', "konflikt": "(war OR sanctions OR tariffs) sourcelang:english"}
 FEEDS = {"cointelegraph": "cointelegraph.com/rss", "coindesk": "coindesk.com/arc/outboundfeeds/rss/", "decrypt": "decrypt.co/feed",
@@ -63,6 +73,12 @@ FEEDS = {"cointelegraph": "cointelegraph.com/rss", "coindesk": "coindesk.com/arc
 
 def _jetzt() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _heute() -> date:
+    """Der laufende Tag in UTC. 01.11.: vorher ``date.today()`` (Ortszeit) - zwischen 00:00 und 01:00 MEZ rutschte so die noch
+    offene UTC-Tageskerze in die Reihe."""
+    return datetime.now(timezone.utc).date()
 
 
 def _folgetag(d: str) -> str:
@@ -168,8 +184,8 @@ def coinbase_praemie(basis: str, start: str) -> list:
     """Tagesschluss Coinbase {basis}-USD / Binance {basis}USDT − 1 (Nachfrage US gegen Welt)."""
     bn = _binance_tage("https://api.binance.com/api/v3/klines", {"symbol": basis + "USDT", "interval": "1d"}, start)
     cb, ab = {}, date.fromisoformat(start)
-    while ab < date.today():
-        bis = min(ab + timedelta(days=299), date.today())
+    while ab < _heute():
+        bis = min(ab + timedelta(days=299), _heute())
         r = _hole("https://api.exchange.coinbase.com/products/%s-USD/candles" % basis,
                   {"granularity": 86400, "start": ab.isoformat() + "T00:00:00Z", "end": bis.isoformat() + "T00:00:00Z"})
         if r is None:
@@ -178,7 +194,7 @@ def coinbase_praemie(basis: str, start: str) -> list:
             cb[_tag(x[0] * 1000)] = float(x[4])
         ab = bis + timedelta(days=1)
         time.sleep(0.4)
-    heute = date.today().isoformat()
+    heute = _heute().isoformat()
     return [(d, cb[d] / bn[d] - 1, _folgetag(d), None) for d in sorted(cb) if d in bn and d < heute]   # nur abgeschlossene Tage
 
 
@@ -187,8 +203,151 @@ def basis_quartal(basis: str, start: str) -> list:
     q = _binance_tage("https://fapi.binance.com/fapi/v1/continuousKlines",
                       {"pair": basis + "USDT", "contractType": "CURRENT_QUARTER", "interval": "1d"}, start)
     p = _binance_tage("https://fapi.binance.com/fapi/v1/klines", {"symbol": basis + "USDT", "interval": "1d"}, start)
-    heute = date.today().isoformat()
+    heute = _heute().isoformat()
     return [(d, q[d] / p[d] - 1, _folgetag(d), None) for d in sorted(q) if d in p and d < heute]
+
+
+# ── S1-Ergänzung (01.11.2026) ─────────────────────────────────────────────────────────────────────────────────────────────────
+def kurs_spot(basis: str, start: str) -> list:
+    """Binance-Spot-Tagesschluss {basis}USDT. Das Maß (Abstand zum 200-T-Schnitt, SF2) rechnet Ebene 1, nicht der Abrufer."""
+    k = _binance_tage("https://api.binance.com/api/v3/klines", {"symbol": basis + "USDT", "interval": "1d"}, start)
+    heute = _heute().isoformat()
+    return [(d, k[d], _folgetag(d), None) for d in sorted(k) if d < heute]
+
+
+def dvol(basis: str, start: str) -> list:
+    """Deribit-Volatilitätsindex, Tagesschluss. Den Index gibt es erst seit 24.03.2021 (Voranalyse S1, V6)."""
+    aus, ab, heute = {}, date.fromisoformat(start), _heute()
+    while ab < heute:
+        bis = min(ab + timedelta(days=365), heute)
+        r = _hole(DVOL_URL, {"currency": basis, "resolution": "1D", "start_timestamp": _ms(ab.isoformat()),
+                             "end_timestamp": _ms(bis.isoformat())})
+        if r is None:
+            raise RuntimeError("Deribit DVOL %s nicht abrufbar ab %s" % (basis, ab))
+        for x in r.json().get("result", {}).get("data", []):
+            aus[_tag(x[0])] = float(x[4])
+        ab = bis
+        time.sleep(0.5)
+    return [(d, aus[d], _folgetag(d), None) for d in sorted(aus) if start <= d < heute.isoformat()]
+
+
+def funding(basis: str, start: str) -> list:
+    """Binance-Funding {basis}USDT, Tagesmittel der Zahlungen eines UTC-Tags (Niveau, SF2 „Prämie“)."""
+    je_tag, ab = {}, _ms(start)
+    while True:
+        r = _hole("https://fapi.binance.com/fapi/v1/fundingRate", {"symbol": basis + "USDT", "startTime": ab, "limit": 1000})
+        if r is None:
+            raise RuntimeError("Binance Funding %s nicht abrufbar ab %s" % (basis, _tag(ab)))
+        k = r.json()
+        for x in k:
+            je_tag.setdefault(_tag(x["fundingTime"]), []).append(float(x["fundingRate"]))
+        if len(k) < 1000:
+            break
+        ab = k[-1]["fundingTime"] + 1
+        time.sleep(0.3)
+    heute = _heute().isoformat()
+    return [(d, sum(v) / len(v), _folgetag(d), None) for d, v in sorted(je_tag.items()) if d < heute]
+
+
+def _oi_datei(basis: str, d: str) -> float | None:
+    """Stand 24:00 UTC von ``d`` = Zeile '<d+1> 00:00:00' in der Metrikdatei des Folgetags. None, wenn Datei oder Zeile fehlt."""
+    import csv
+    import io
+    import zipfile
+    f = (date.fromisoformat(d) + timedelta(days=1)).isoformat()
+    r = None
+    for v in range(3):                       # 01.11.: ein einziger Verbindungsfehler liess BTC 2021-12-13 fehlen - die Datei war da
+        try:
+            r = requests.get("%s/%sUSDT/%sUSDT-metrics-%s.zip" % (OI_DATEIEN, basis, basis, f), headers=H, timeout=60)
+            if r.status_code == 200 or r.status_code == 404:   # 404 = noch nicht erschienen: kein Wiederholen
+                break
+        except requests.RequestException:
+            r = None
+        time.sleep(2 * (v + 1))
+    if r is None or r.status_code != 200:
+        return None
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    for zeile in csv.reader(io.TextIOWrapper(z.open(z.namelist()[0]), encoding="utf-8")):
+        if zeile and zeile[0] == f + " 00:00:00":
+            return float(zeile[2])
+    return None
+
+
+def oi(basis: str, start: str) -> list:
+    """Offene Positionen {basis}USDT in COINS (Kurs heraus), Stand 24:00 UTC je Tag.
+
+    Quelle je Tag: die Metrikdatei (data.binance.vision, ab 12/2021); fehlt sie noch (die des Folgetags erscheint erst am Tag
+    danach), der Tageswert von ``openInterestHist`` (nur 30 Tage). Gegenprobe 01.11.: beide weichen um 0,004–0,05 % ab."""
+    heute = _heute()
+    r = _hole("https://fapi.binance.com/futures/data/openInterestHist", {"symbol": basis + "USDT", "period": "1d", "limit": 30})
+    api = {(date.fromisoformat(_tag(x["timestamp"])) - timedelta(days=1)).isoformat(): float(x["sumOpenInterest"])
+           for x in (r.json() if r is not None else [])}
+    aus, d, fehlt = [], max(date.fromisoformat(start), date(2021, 11, 30)), 0
+    while d < heute:
+        t = d.isoformat()
+        w = _oi_datei(basis, t)
+        if w is None:
+            w = api.get(t)
+        if w is None:
+            fehlt += 1
+        else:
+            aus.append((t, w, _folgetag(t), None))
+        d += timedelta(days=1)
+        time.sleep(0.05)
+    if fehlt > 3:                                             # einzelne fehlende Tage sind Luecken, keine Ausnahme; viele sind ein Fehler
+        raise Teilergebnis("OI %s: %d Tage ohne Wert" % (basis, fehlt), aus)
+    return aus
+
+
+def stablecoins(start: str) -> list:
+    """Stablecoin-Angebot in USD (DefiLlama ``peggedUSD``) - mit DERSELBEN Funktion wie die Season-Ampel (B3, Voranalyse V4).
+    Die Ampel datiert auf den Tag der Verfügbarkeit (+1 T); hier steht der Beobachtungstag, ``bekannt_ab`` = Folgetag."""
+    from agent import season_ampel as SA
+    s = SA.stablecoins(requests)
+    heute = _heute().isoformat()
+    aus = []
+    for verf, w in s.items():
+        d = (verf - timedelta(days=1)).date().isoformat()
+        if start <= d < heute:
+            aus.append((d, float(w), _folgetag(d), None))
+    return aus
+
+
+_SEASON: dict = {}
+
+
+def _season_tabelle(ordner: str) -> "object":
+    """Die Tagestabelle der Season-Ampel (Breite, Stufe) mit ihrem EIGENEN Code (``season_ampel.rechne``), einmal je Lauf.
+    Desktop: Messbasis ``data/messdaten.db``; NB: die Betriebskopie unter demselben Pfad. FRED wie in der Ampel ueber
+    ``makro_lage.hole_reihe`` (35 T Verzug), hier mit Beobachtungen ab 2017 fuer die Historie."""
+    if ordner not in _SEASON:
+        import pandas as pd
+        from dotenv import load_dotenv
+        from agent import makro_lage as ML
+        from agent import season_ampel as SA
+        load_dotenv(os.path.join(PROJ, ".env"))
+        key = os.environ.get("FRED_API_KEY") or ""
+        if not key:
+            raise RuntimeError("kein FRED_API_KEY (Season-Ampel braucht M2 und Netto-Liquiditaet)")
+        bis = _heute() - timedelta(days=1)
+        fred = {sid: ML.hole_reihe(sid, key, "2017-01-01", None) for sid in SA.FRED}
+        K, U = SA.kopie(ordner, bis)
+        _SEASON[ordner] = SA.rechne(K, U, SA.stabile(ordner, K), fred, SA.stablecoins(requests), pd.Series(dtype=float), bis)
+    return _SEASON[ordner]
+
+
+def breite(start: str, ordner: str = os.path.join(PROJ, "data")) -> list:
+    """Anteil der Top 50 nach Umsatz mit 90-T-Ertrag ueber BTC (``season_ampel.breite``), Niveau."""
+    T = _season_tabelle(ordner)
+    return [(t.date().isoformat(), float(v), _folgetag(t.date().isoformat()), None) for t, v in T.Breite.items()
+            if v == v and t.date().isoformat() >= start]
+
+
+def season_stufe(start: str, ordner: str = os.path.join(PROJ, "data")) -> list:
+    """Die GELTENDE Stufe der Season-Ampel (mit Haltezeit, wie im Betrieb) als Zahl ``SEASON_CODE``."""
+    T = _season_tabelle(ordner)
+    return [(t.date().isoformat(), float(SEASON_CODE[s]), _folgetag(t.date().isoformat()), None) for t, s in T.stufe.items()
+            if t.date().isoformat() >= start]
 
 
 def _gdelt_fenster(abfrage: str, ab: date, bis: date) -> list:
@@ -215,7 +374,7 @@ def gdelt_ton(abfrage: str, start: str, ende: str | None = None) -> list:
     nach 20 s und 60 s). Deshalb JAHRESFENSTER (4 Anfragen fuer 2023-26 statt 46). Liefert ein Fenster keine Tagesaufloesung
     (Punkte < 80 % der Tage), wird es monatsweise geholt - nie still eine groebere Reihe.
     ``ende`` (ausschliesslich) nur fuer die Luecke VOR dem Bestand (31.10.: Historie von 2023 auf 2020 vorverlegt)."""
-    aus, heute = {}, min(date.today(), date.fromisoformat(ende)) if ende else date.today()
+    aus, heute = {}, min(_heute(), date.fromisoformat(ende)) if ende else _heute()
     ab = date.fromisoformat(start)
     while ab < heute:
         bis = min(date((ab + timedelta(days=1)).year + 1, 1, 1), heute)   # Randtag 31.12. nicht als eigenes 1-Tages-Fenster
@@ -293,6 +452,12 @@ def auftraege(fred_key: str) -> list:
         a += [("fred", sid, lambda s, sid=sid: fred_jahrgaenge(sid, s, fred_key)) for sid in FRED]
     a += [("coinbase_praemie", b, lambda s, b=b: coinbase_praemie(b, s)) for b in KRYPTO]
     a += [("basis_quartal", b, lambda s, b=b: basis_quartal(b, s)) for b in KRYPTO]
+    # S1-Ergaenzung (01.11.2026)
+    a += [("kurs", b, lambda s, b=b: kurs_spot(b, s)) for b in KRYPTO]
+    a += [("dvol", b, lambda s, b=b: dvol(b, s)) for b in KRYPTO]
+    a += [("funding", b, lambda s, b=b: funding(b, s)) for b in KRYPTO]
+    a += [("oi", b, lambda s, b=b: oi(b, s)) for b in KRYPTO]
+    a += [("stablecoins", "USD", stablecoins), ("breite", "TOP50", breite), ("season", "STUFE", season_stufe)]
     a += [("gdelt_ton", k, lambda s, e=None, q=q: gdelt_ton(q, s, e)) for k, q in GDELT.items()]
     return a
 
@@ -331,6 +496,11 @@ def lade(start: str, pfad: str = ABLAGE, nur: str | None = None, mit_feeds: bool
                 letzte_gdelt = time.monotonic()
             if quelle == "fred":
                 ab = START
+            elif quelle == "oi":                               # je Tag eine Datei: ab dem letzten vorhandenen Tag fortsetzen
+                letzt = c.execute("SELECT MAX(datum) FROM reihe WHERE quelle=? AND symbol=? AND datum >= ?",
+                                  (quelle, symbol, start)).fetchone()[0]
+                if letzt:
+                    ab = max(start, letzt)
             elif quelle == "gdelt_ton":                        # FORTSETZEN: GDELT sperrt lange, Geholtes nicht neu holen
                 tage = [r[0] for r in c.execute("SELECT DISTINCT datum FROM reihe WHERE quelle=? AND symbol=? AND datum >= ? "
                                                 "ORDER BY datum", (quelle, symbol, start))]
@@ -377,7 +547,7 @@ def main() -> int:
         stand(pfad)
         return 0
     if "--laufend" in a:
-        e = lade((date.today() - timedelta(days=LAUFEND_TAGE)).isoformat(), pfad, nur, mit_feeds=True)
+        e = lade((_heute() - timedelta(days=LAUFEND_TAGE)).isoformat(), pfad, nur, mit_feeds=True)
     elif "--historie" in a:
         e = lade(START, pfad, nur)
     else:

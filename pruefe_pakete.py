@@ -33539,6 +33539,84 @@ def paket_alarmmail(B=None) -> None:
         c.close()
 
 
+def paket_sichten_quellen() -> None:
+    """Der Abrufer der Sichten ``api/sichten_quellen.py`` - S1-Ergaenzung (01.11.2026, Nutzer: *"1a, 2a, 3 ja – pruefen gegenpruefen
+    und doku"*). OHNE Netz: die Abrufe werden mit Attrappen bedient. Die Gegenproben gegen echte Daten stehen in
+    ``Basisinfos/Rechenkern_02_10/s1_nachweis.py`` (Netz, Desktop-Messbasen, NB-Kopie)."""
+    P = "SichtenQuellen"
+    import io as _io
+    import zipfile as _zf
+    from datetime import date as _d, datetime as _dt, timedelta as _td, timezone as _tz
+
+    from agent import season_ampel as _SA
+    from api import sichten_quellen as _SQ
+
+    heute = _dt.now(_tz.utc).date()
+    pruefe(P, "der laufende Tag ist UTC, nicht Ortszeit (01.11.: zwischen 00:00 und 01:00 MEZ kam sonst die offene Kerze mit)",
+           _SQ._heute() == heute and not __import__("re").search(r"(?<!`)date\.today\(\)", open(_SQ.__file__, encoding="utf-8").read()))
+    pruefe(P, "jede Stufe der Season-Ampel hat einen Code - abgeleitet aus season_ampel.NAME, nicht aufgezaehlt",
+           set(_SQ.SEASON_CODE) == set(_SA.NAME) and len(set(_SQ.SEASON_CODE.values())) == len(_SQ.SEASON_CODE),
+           "fehlt: %s" % sorted(set(_SA.NAME) - set(_SQ.SEASON_CODE)))
+    q = {(a, s) for a, s, _ in _SQ.auftraege("")}
+    soll = {("kurs", "BTC"), ("kurs", "ETH"), ("dvol", "BTC"), ("dvol", "ETH"), ("funding", "BTC"), ("funding", "ETH"),
+            ("oi", "BTC"), ("oi", "ETH"), ("stablecoins", "USD"), ("breite", "TOP50"), ("season", "STUFE")}
+    pruefe(P, "die elf S1-Reihen stehen in DER EINEN Auftragsliste (Historie = laufend, Ue8)", soll <= q, "fehlt: %s" % sorted(soll - q))
+
+    # Attrappen fuer requests.get / _hole
+    class _R:
+        def __init__(self, status=200, json_=None, content=b""):
+            self.status_code, self._j, self.content = status, json_, content
+
+        def json(self):
+            return self._j
+    echt_hole, echt_get, echt_bt = _SQ._hole, _SQ.requests.get, _SQ._binance_tage
+    try:
+        gestern, vorgestern = (heute - _td(days=1)).isoformat(), (heute - _td(days=2)).isoformat()
+        _SQ._binance_tage = lambda url, params, start: {vorgestern: 1.0, gestern: 2.0, heute.isoformat(): 3.0}
+        z = _SQ.kurs_spot("BTC", vorgestern)
+        pruefe(P, "Kurs: die offene Tageskerze (heute UTC) kommt NICHT mit; bekannt_ab = Folgetag 00:00 UTC",
+               [x[0] for x in z] == [vorgestern, gestern] and z[-1][2] == heute.isoformat() + "T00:00:00+00:00", str(z))
+        ms = lambda d, h: int(_dt.fromisoformat(d).replace(tzinfo=_tz.utc).timestamp() * 1000) + h * 3600000   # noqa: E731
+        _SQ._hole = lambda url, params=None, **k: _R(json_=[{"fundingTime": ms(gestern, 0), "fundingRate": "0.0003"},
+                                                              {"fundingTime": ms(gestern, 8), "fundingRate": "0.0001"},
+                                                              {"fundingTime": ms(heute.isoformat(), 0), "fundingRate": "0.9"}])
+        f = _SQ.funding("BTC", gestern)
+        pruefe(P, "Funding: Tagesmittel der Zahlungen eines UTC-Tags, der laufende Tag nicht",
+               len(f) == 1 and f[0][0] == gestern and abs(f[0][1] - 0.0002) < 1e-12, str(f))
+        # OI: Metrikdatei des Folgetags, Zeile '<d+1> 00:00:00'; ohne Datei die API (Stand 00:00 = Ende des Vortags)
+        def _zip(tag):
+            b = _io.BytesIO()
+            with _zf.ZipFile(b, "w") as zz:
+                zz.writestr("x.csv", "create_time,symbol,sum_open_interest,sum_open_interest_value\n"
+                                     "%s 01:15:00,BTCUSDT,999,1\n%s 00:00:00,BTCUSDT,123.5,1\n" % (tag, tag))
+            return b.getvalue()
+        _SQ.requests.get = lambda url, **k: (_R(content=_zip(url[-14:-4])) if url.endswith("%s.zip" % gestern) else _R(status=404))
+        _SQ._hole = lambda url, params=None, **k: _R(json_=[{"timestamp": ms(heute.isoformat(), 0), "sumOpenInterest": "77.0"}])
+        o = _SQ.oi("BTC", vorgestern)
+        pruefe(P, "OI: Stand 24:00 aus der Datei des Folgetags (Zeile 00:00, nicht die erste); fehlt sie, die API (Vortag)",
+               o == [(vorgestern, 123.5, gestern + "T00:00:00+00:00", None), (gestern, 77.0, heute.isoformat() + "T00:00:00+00:00", None)],
+               str(o))
+        _SQ.requests.get = lambda url, **k: _R(status=404)
+        _SQ._hole = lambda url, params=None, **k: _R(json_=[])
+        try:
+            _SQ.oi("BTC", (heute - _td(days=10)).isoformat())
+            viele = False
+        except _SQ.Teilergebnis:
+            viele = True
+        pruefe(P, "OI: fehlen mehr als drei Tage, ist das ein Fehler mit Teilergebnis - nie still eine kurze Reihe", viele)
+    finally:
+        _SQ._hole, _SQ.requests.get, _SQ._binance_tage = echt_hole, echt_get, echt_bt
+    pruefe(P, "der Abrufer schreibt nie in die Produktions-DB", _verweigert(lambda: _SQ.verbinde("x/tradinginfotool.db")))
+
+
+def _verweigert(f) -> bool:
+    try:
+        f()
+    except SystemExit:
+        return True
+    return False
+
+
 def paket_gesamtplan() -> None:
     """Der LAUFENDE PLAN Basisinfos/Gesamtplan.md (28.10.2026, Nutzer: *"ja 1, neuer Gesamtplan - bau auf allen Ebenen einen Link-Verweis
     ein, damit wir die Plaene und Informationen immer finden und beruecksichtigen koennen"*).
@@ -33646,6 +33724,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "GuiKette": paket_guikette,
           "Kontrollen": paket_kontrollen,
           "Gesamtplan": paket_gesamtplan,
+          "SichtenQuellen": paket_sichten_quellen,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
