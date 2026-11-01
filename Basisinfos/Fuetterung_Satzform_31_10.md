@@ -100,7 +100,7 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 | # | Schritt | Gerät | Betrieb? |
 |---|---|---|---|
 | 1 | **Historie ab 2020-01** in `sichten.db` (P1) — derselbe Abrufer, nur früherer Start | Desktop | nein |
-| 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) — **✔ 01.11. geladen und gegengeprüft**, [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) §5; offen: Breite Desktop ↔ NB (V2) | Desktop | nein |
+| 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) — **✔ 01.11. geladen und gegengeprüft**, [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) §5; Breite Desktop ↔ NB (V2/G6a) ✔ gelöst 01.11. abends (§6 dort: Grundgesamtheit des Betriebs zum Zeitpunkt) | Desktop | nein |
 | 3 | **Ebene-1-Modul** `agent/zustaende.py`: die Satzform aus §1 als **ein** Rechenweg (SF8), Probe → Modul, mit Prüfpaket (Fenster, Vorgriff, Lesart je Zustand vorhanden) | Desktop | nein |
 | 4 | **Voranalyse A1** (G9) — Regeln zuerst, LLM für den Rest | Desktop | nein |
 | 5 | **G7 Messplan**: Faktentreue der Prüfer + Wert der Sichten im Rückspiel | Desktop | nein |
@@ -170,6 +170,7 @@ Datenabruf ist eine massive Hürde“):**
 | | |
 |---|---|
 | Geholt bis 01.11. 11:30 UTC | fed, aktien, krypto **2020–2021**; konflikt **2020–2026**; alle ab 2023 (Lauf 29.10.) |
-| Wird noch geholt | **nur 2022** für fed, aktien, krypto — drei Anfragen, je Reihe genau eine, danach Ende. Das ist, was das 5-J-Fenster am Rückspielbeginn (01.12.2025 → ab 12/2020) braucht |
+| ~~Wird noch geholt~~ ✔ **geholt 01.11.** | **2022** für fed, aktien, krypto — je Reihe eine Anfrage (krypto 12:25, fed 13:25, aktien nach einer 429-Sperre 16:34 UTC), danach Ende. **GDELT ist damit abgeschlossen:** alle vier Reihen 2.453 Tage, 2020-01-01 bis 2026-10-27 |
+| Verbleibende Lücken (alle vier Reihen gleich) | **2025-06-14 bis 07-01** (18 T, dokumentiert, Probe weist sie aus) · Einzeltage 2020-10-20, 2023-03-23 · 2026: 07-01–07-04, 09-14–09-19, 09-26, 10-03–10-05, 10-07, 10-09, 10-11–10-14. ⚠ Die 2026er Lücken weist die Probe nicht einzeln aus (sie nennt die größte) — **nicht nachgeholt**, jede weitere Anfrage riskiert die Sperre; für die Messung (G7) als bekannte Lücken führen |
 | Wird **nicht** mehr geholt | die **18-Tage-Lücke 14.06.–01.07.2025** in allen vier Reihen: 18 von ~2.100 Tagen, keine Fensterfrage. **Dokumentierte Lücke** — die Tage fehlen (kein Auffüllen, keine Interpolation); die Probe meldet sie mit „⚠ Lücke“, das ist erklärt |
 | Was **nicht** mehr wartet | Probe, S1-Ergänzung, Ebene-1-Modul und Voranalyse A1 laufen weiter, ohne auf GDELT zu warten. Fehlt 2022 bei Beginn von A1, geht der Ton dort mit **kurzem Fenster** gekennzeichnet ein (SF7), nicht gar nicht |

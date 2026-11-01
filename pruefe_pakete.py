@@ -33608,6 +33608,41 @@ def paket_sichten_quellen() -> None:
         _SQ._hole, _SQ.requests.get, _SQ._binance_tage = echt_hole, echt_get, echt_bt
     pruefe(P, "der Abrufer schreibt nie in die Produktions-DB", _verweigert(lambda: _SQ.verbinde("x/tradinginfotool.db")))
 
+    # ⚠️⚠️ G6a (01.11.): Breite und Stufe in der Grundgesamtheit des BETRIEBS zum Zeitpunkt - Kunstdaten, Grenzen aus dem Job
+    import numpy as _np
+    import pandas as _pd
+    from scheduler.background import BETRIEBSREIHEN_MINDEST as _MI, BETRIEBSREIHEN_TAGE as _TA
+    i = _pd.date_range("2020-01-01", periods=_TA + 200, freq="D")
+    K = _pd.DataFrame({"BTC": 1.0, "ALT": 1.0, "JUNG": _np.nan, "FREMD": 1.0}, index=i)
+    K.loc[i[_TA + 200 - (_MI + 9)]:, "JUNG"] = 1.0                    # erreicht die Mindestlaenge am 10.-letzten Tag
+    mit, ab = _SQ.betriebsmenge(K, {"BTC": {"binance_mess"}, "ALT": {"binance_mess"}, "JUNG": {"binance_mess"},
+                                    "FREMD": {"uebernommen_bybit"}})
+    pruefe(P, "Betriebsmenge: Grenzen aus scheduler.background (TAGE %d, MINDEST %d), Quelle nur %s" % (_TA, _MI, _SQ.BETRIEBSQUELLE),
+           mit["JUNG"].sum() == 10 and bool(mit.loc[i[-10], "JUNG"]) and not mit.loc[i[-11], "JUNG"] and not mit["FREMD"].any(),
+           "JUNG Mitglied an %d Tagen, FREMD an %d" % (mit["JUNG"].sum(), mit["FREMD"].sum()))
+    pruefe(P, "Betriebsmenge: gueltig erst, wenn die BTC-Reihe das ganze Fenster deckt (NB-Kopie: nur Fortschreiben)",
+           ab == i[0] + _pd.Timedelta(days=_TA - 1), str(ab))
+    # breite_zum_zeitpunkt: Mitgliedschaft 'alle' = season_ampel.breite (Regression); ein Nicht-Mitglied faellt aus den Top 50,
+    # sein KURS VOR 90 T aber bleibt (01.11.: erste Fassung blendete den Kurs aus - falsch, der Job laedt die ganze Reihe)
+    rng = _np.random.default_rng(7)
+    syms = ["BTC"] + ["A%02d" % k for k in range(30)]
+    i2 = _pd.date_range("2024-01-01", periods=260, freq="D")
+    K2 = _pd.DataFrame(_np.exp(rng.normal(0, 0.03, (260, 31)).cumsum(0)), index=i2, columns=syms)
+    U2 = _pd.DataFrame(rng.uniform(1, 2, (260, 31)), index=i2, columns=syms)
+    tg = list(i2[150:])
+    alts = syms[1:]
+    alle = _pd.DataFrame(True, index=i2, columns=syms)
+    v0 = _SA.breite(K2, U2, alts, K2["BTC"], tg)
+    r = _SQ.breite_zum_zeitpunkt(K2, U2, alts, alle, tg)
+    pruefe(P, "breite_zum_zeitpunkt mit Mitgliedschaft 'alle' = season_ampel.breite (dieselbe Funktion wie die Ampel)",
+           bool(((r - v0).abs() < 1e-12).all()))
+    teil = alle.copy()
+    teil.loc[: i2[200], "A00"] = False                               # A00 erst ab Tag 201 Mitglied
+    r2 = _SQ.breite_zum_zeitpunkt(K2, U2, alts, teil, tg)
+    pruefe(P, "breite_zum_zeitpunkt: vor der Aufnahme zaehlt der Coin nicht, danach mit seiner ganzen Reihe",
+           bool(((r2[i2[201]:] - v0[i2[201]:]).abs() < 1e-12).all()) and len(alts) - 1 >= 20
+           and bool((r2[:i2[200]] - _SA.breite(K2, U2, alts[1:], K2["BTC"], tg)[:i2[200]]).abs().max() < 1e-12))
+
 
 def _verweigert(f) -> bool:
     try:

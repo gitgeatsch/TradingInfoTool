@@ -1,5 +1,5 @@
 ====================================================================================================
-S1-ERGÄNZUNG — NACHWEIS (2026-11-01 13:17 UTC)
+S1-ERGÄNZUNG — NACHWEIS (2026-11-01 16:29 UTC)
 ====================================================================================================
   OK    G1 kurs BTC lückenlos                        2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
   OK    G2 kurs BTC ohne Vorgriff                    bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
@@ -19,7 +19,7 @@ S1-ERGÄNZUNG — NACHWEIS (2026-11-01 13:17 UTC)
   OK    G2 oi ETH ohne Vorgriff                      bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
   OK    G1 stablecoins USD lückenlos                 2496 Tage, 2020-01-01 bis 2026-10-31, größter Abstand 1 T
   OK    G2 stablecoins USD ohne Vorgriff             bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-10-31 (< 2026-11-01)
-  OK    G1 breite TOP50 lückenlos                    2455 Tage, 2020-01-01 bis 2026-09-20, größter Abstand 1 T
+  OK    G1 breite TOP50 lückenlos                    2375 Tage, 2020-03-21 bis 2026-09-20, größter Abstand 1 T
   OK    G2 breite TOP50 ohne Vorgriff                bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-09-20 (< 2026-11-01)
   OK    G1 season STUFE lückenlos                    2455 Tage, 2020-01-01 bis 2026-09-20, größter Abstand 1 T
   OK    G2 season STUFE ohne Vorgriff                bekannt_ab ≠ Folgetag: 0 · letzter Tag 2026-09-20 (< 2026-11-01)
@@ -29,10 +29,16 @@ S1-ERGÄNZUNG — NACHWEIS (2026-11-01 13:17 UTC)
   OK    G4 Funding ETH ×3 = funding_historie         2435 gemeinsame Tage, Verhältnis 3 an 100.0 % (Rest: Tage mit anderer Zahl an Zahlungen)
   OK    G5 OI BTC Datei ≈ API (≤ 0,5 %)              30 gemeinsame Tage (davon 1 aus der API selbst), Datei gg. API größte Abweichung 0.363 %, Median 0.039 %
   OK    G5 OI ETH Datei ≈ API (≤ 0,5 %)              30 gemeinsame Tage (davon 1 aus der API selbst), Datei gg. API größte Abweichung 0.261 %, Median 0.025 %
-  FEHL  G6a Breite Desktop = NB                      368 gemeinsame Tage · gleich an 45 · größte Abweichung 0.088 (4.4 Coins von 50) · Mittel 0.0222
-       größte Abweichungen: 2025-10-03 0.745/0.812, 2025-10-06 0.745/0.812, 2025-10-11 0.333/0.406, 2025-10-29 0.271/0.188, 2025-10-02 0.787/0.875
-       Wirkung: Klasse im 5-J-Rang anders an 23 von 368 Tagen (6.2 %)
+  OK    G6a-1 Regression: alle Mitglieder = Ampel    breite_zum_zeitpunkt mit Mitgliedschaft 'alle' = season_ampel.breite an 2455 von 2455 Tagen
+  OK    G6a-2 sichten.db = Betriebsmenge (Desktop)   2375 Zeilen, alle aus der Betriebsmenge, größte Abweichung 0.0e+00 · rechenbar ab 2020-03-21
+  OK    G6a-3 Desktop = NB-Kopie (beide Betriebsmenge) 59 gemeinsame Tage (2026-07-23 bis 2026-09-19), gleich an 59, größte Abweichung 0.000
+  OK    G6a-4 NB letzter Tag: Abrufer = Ampel        2026-10-31 Breite 0.540 / 0.540, Stufe ungewohnt / ungewohnt · geschrieben würde am NB ab 2026-10-31
+  OK    G6a-5 NB davor: einzige Ursache = Mitgliedschaft 101 Tage, Abrufer anders an 86 · mit Mitgliedschaft 'alle' = Ampel an 101 von 101 (die Ampel rechnet rückwirkend)
+       2026-10-21 Abrufer 0.680 / Ampel 0.660 · am Tag noch nicht Mitglied: 0G, BARD, HEMI, MIRA, XPL
+       2026-10-23 Abrufer 0.620 / Ampel 0.600 · am Tag noch nicht Mitglied: 0G, HEMI, MIRA, XPL
+       2026-10-28 Abrufer 0.660 / Ampel 0.640 · am Tag noch nicht Mitglied: MIRA, XPL
+       Wirkung: Klasse im 5-J-Rang Betriebsmenge gg. Messbasis-Menge anders an 324 von 2375 Tagen (13.6 %)
   OK    G6b Season-Stufe Desktop = NB                368 gemeinsame Tage, gleich an 368
   OK    G7 Stablecoins B3 = NB-Ampel                 409 gemeinsame Tage, größte Abweichung 0.00e+00 (Revisionen DefiLlama zwischen den Abrufen)
 ====================================================================================================
-31 Prüfungen, 1 FEHLGESCHLAGEN: G6a Breite Desktop = NB
+35 Prüfungen, ALLE BESTANDEN

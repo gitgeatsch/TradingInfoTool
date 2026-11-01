@@ -5,7 +5,7 @@
 **Auftrag (Nutzer 01.11.):** *„ja, starte mit den nächsten Schritten, wir müssen wieder vorankommen, z. B. der Voranalyse S1“*.
 **Gehört zu:** [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §6 Schritt 2 (Befund **P2**) ·
 [`Datenbasis_Schichten_Sichten_28_10.md`](Datenbasis_Schichten_Sichten_28_10.md) §3 (S1 Krypto gesamt) und §3a (Frage an S1).
-**Stand:** ✔ entschieden und **ausgeführt 01.11.2026** (§5). **Betrieb unberührt** — geladen nur am Desktop in `data/_sichten/sichten.db`. Gemessen nur lesend (Desktop-Dateien, öffentliche
+**Stand:** ✔ entschieden und **ausgeführt 01.11.2026** (§5) · ✔ **G6a gelöst 01.11. abends** (§6: Breite in der Grundgesamtheit des Betriebs, 35 von 35 Gegenproben grün). **Betrieb unberührt** — geladen nur am Desktop in `data/_sichten/sichten.db`. Gemessen nur lesend (Desktop-Dateien, öffentliche
 Schnittstellen mit kleinen Abfragen).
 
 ---
@@ -109,9 +109,10 @@ OI-Historie **laden**, Gegenprobe Breite gegen die NB-Kopie **ja** (`spot_betrie
 | Kurs BTC, ETH · Funding BTC, ETH · Stablecoins | je 2.496 | 2020-01-01 – 2026-10-31, lückenlos |
 | DVOL BTC, ETH | je 2.048 | 2021-03-24 – 2026-10-31, lückenlos |
 | OI BTC, ETH | 1.797 | 2021-11-30 – 2026-10-31, lückenlos (BTC 2021-12-13 nach Verbindungsfehler nachgeholt → Abrufer wiederholt jetzt dreimal) |
-| Breite, Season-Stufe | je 2.455 | 2020-01-01 – **2026-09-20** (Desktop-Messbasis eingefroren; am NB laufend) |
+| Breite | 2.375 | **2020-03-21** – **2026-09-20** in der **Betriebsmenge** (§6; vorher rechnen weniger als 20 der Top 50) |
+| Season-Stufe | 2.455 | 2020-01-01 – **2026-09-20** (Desktop-Messbasis eingefroren; am NB laufend) |
 
-**Gegenproben** (`s1_nachweis.txt`, 31 Prüfungen, **30 grün**):
+**Gegenproben** (`s1_nachweis.txt`): am 01.11. mittags 31 Prüfungen, 30 grün — **nach §6: 35 von 35 grün**.
 
 | # | Ergebnis |
 |---|---|
@@ -121,8 +122,65 @@ OI-Historie **laden**, Gegenprobe Breite gegen die NB-Kopie **ja** (`spot_betrie
 | G5 | OI Datei gegen `openInterestHist` an 30 Tagen: größte Abweichung **0,36 %** (BTC) / 0,26 % (ETH), Median 0,04 % / 0,03 %. Grenze **0,5 %**, begründet: die 30-T-Veränderung liegt im Median bei **7,2 % / 9,6 %**, im 10. Perzentil bei 1,3 % / 1,7 %; aus der API kommt nur der jeweils **letzte** Tag |
 | G6b | **Season-Stufe Desktop = NB an allen 368 gemeinsamen Tagen** |
 | G7 | Stablecoins B3 (91 T) aus unserer Reihe = NB-Ampel an 409 Tagen, Abweichung 0 — dieselbe Funktion, dieselbe Datierung |
-| ⚠ **G6a offen** | **Breite Desktop ≠ NB**: gleich an 45 von 368 Tagen, im Mittel 0,022 (≈ 1 Coin von 50), höchstens 0,088 (4,4 Coins); **Klasse im 5-J-Rang anders an 23 von 368 Tagen (6,2 %)**. Ausgeschlossen: Stablecoin-Ausnahme (beide Seiten dieselben 11). Die eingestellten Werte erklären nur einen Teil (ohne sie gleich an 80 statt 45 Tagen). **Vermutung:** die Kurs- und Umsatzreihen der Betriebskopie (NB) und der Messbasis (Desktop) unterscheiden sich. **Nächster Schritt:** NB-Betriebskopie `data\messdaten.db` in den Austauschordner, Breite darauf nachrechnen, Ursache je Coin |
+| ~~G6a offen~~ ✔ **gelöst, §6** | *(Stand mittags)* **Breite Desktop ≠ NB**: gleich an 45 von 368 Tagen, im Mittel 0,022 (≈ 1 Coin von 50), höchstens 0,088 (4,4 Coins); **Klasse im 5-J-Rang anders an 23 von 368 Tagen (6,2 %)**. Ausgeschlossen: Stablecoin-Ausnahme (beide Seiten dieselben 11). Die eingestellten Werte erklären nur einen Teil (ohne sie gleich an 80 statt 45 Tagen). **Vermutung:** die Kurs- und Umsatzreihen der Betriebskopie (NB) und der Messbasis (Desktop) unterscheiden sich. **Nächster Schritt:** NB-Betriebskopie `data\messdaten.db` in den Austauschordner, Breite darauf nachrechnen, Ursache je Coin |
 
 **Probe** (beide Stichtage, 35 Zustände, ≈ 1.750 Token): am **01.12.2025** fällt S1 mit **OI hoch** (BTC P87, ETH P85, +15–20 % in 30 T) und **BTC tief** (P17, −17,6 % zum Schnitt) auf; am **29.10.2026** mit DVOL tief, Stablecoin-Abfluss (P16), Coinbase-Prämie tief, Krypto-Ton sehr tief. **Fenster:** OI am Rückspielbeginn **3,9 J** (nicht 4,0 — die 30-T-Veränderung braucht den ersten Monat), DVOL 4,7 J, Basis 4,8 J — alle mit ⚠.
 
-⚠ **Grundgesamtheit (G6a):** bis die Ursache gefunden ist, geht die Breite im Rückspiel mit dem Kennzeichen *„Desktop ≠ NB, 6,2 % Klasse anders“* in die Befund-Karte — nicht still.
+~~⚠ **Grundgesamtheit (G6a):** bis die Ursache gefunden ist, geht die Breite im Rückspiel mit dem Kennzeichen *„Desktop ≠ NB, 6,2 % Klasse anders“* in die Befund-Karte.~~ → **gelöst, §6** — das Kennzeichen entfällt.
+
+## 6. G6a gelöst — die Breite in der Grundgesamtheit des Betriebs (01.11.2026 abends)
+
+Nutzer 01.11.: *„ja weiter prüfen gegenprüfen und doku – die messdaten liegen im Ordner“* (NB-Betriebskopie `messdaten.db`,
+11:35, nur gelesen).
+
+**Ursache — kein Datenfehler, eine andere Grundgesamtheit.** Die Kurse der gemeinsamen Coins sind bitgleich. Zerlegt, Schritt
+für Schritt gegen die NB-Ampel (368 Tage):
+
+| Desktop-Menge | gleich | Klasse anders |
+|---|---|---|
+| Messbasis, alle Quellen (so geladen) | 45 | 23 (6,2 %) |
+| nur `binance_mess` — ohne die **übernommenen Fremdreihen** (Bybit/gemessen: HYPE, KAS, AIOZ, SUPRA, XDC …) | 85 | 15 (4,1 %) |
+| + die **17 Neulistungen**, die der eingefrorenen Messbasis fehlen (WLFI, XPL, PUMP, BARD …) | 297 | 3 (0,8 %) |
+| + **PLUME** von Binance statt der übernommenen Reihe | **367** | **0** — Rest = 20.09., die offene Kerze (G3) |
+
+**Aber dahinter liegt die eigentliche Frage:** *welche* Menge ist die richtige? Der NB-Job `betriebsreihen` behält 500 Tage
+und **löscht jedes Symbol mit weniger als 400 Kerzen** (`lade_messreihen`, nach dem Zuschnitt). Am Tag t rechnet die Ampel
+also **ohne junge Coins** — und nimmt einen Coin, sobald er die 400 erreicht, mit seiner ganzen Reihe auf. Die Messbasis
+zählt junge Coins dagegen **rückwirkend ab dem ersten Tag**, und die NB-Tabelle `ampel_tag` tut **dasselbe**: sie wird
+täglich ganz neu gerechnet, mit der heutigen Menge. Beide Historien zeigen also nicht, was am Tag t lief.
+
+**Für die Sicht gilt Ü8 und `bekannt_ab`:** was am Tag t gerechnet wurde. Das ist eine Fachfrage, keine Wahl — umgesetzt:
+
+| Teil | was |
+|---|---|
+| `sichten_quellen.betriebsmenge` | Mitgliedschaft je Tag und Symbol: ≥ `BETRIEBSREIHEN_MINDEST` Kerzen in (t − `BETRIEBSREIHEN_TAGE`, t], nur Quelle `binance_mess` — **Grenzen aus `scheduler.background` importiert**, nicht abgeschrieben (die Marke `_nur_betrieb` der NB-Kopie sagt dasselbe: 500/400). Gültig erst, wenn die **BTC**-Reihe das Fenster deckt (Desktop ab 2018-12-29; NB-Kopie nur die letzten Tage → dort nur Fortschreiben) |
+| `sichten_quellen.breite_zum_zeitpunkt` | gruppiert die Tage nach ihrer Menge und schickt jede Gruppe durch **dieselbe** `season_ampel.breite` (V4: keine zweite Wahrheit) |
+| `_season_tabelle` | Breite der Betriebsmenge ersetzt die der Messbasis, die Stufe danach mit `stufen`/`geltend` der Ampel |
+| ⚠ eigener Fehler, vor dem Laden gefunden | die erste Fassung blendete bei jungen Coins auch den **Kurs vor 90 T** aus. Falsch — der Job lädt die ganze Reihe; entscheidend ist nur, **ob** der Coin am Tag t dabei ist. Die erste Wirkungsmessung (14 % / 53 Tage) stammte aus dieser Fassung und ist verworfen |
+
+**Geladen** (Sicherung `sichten_vor_g6a_01_11.db`): Breite 2.375 Tage ab **2020-03-21** — davor haben weniger als 20 der
+Top 50 einen Kurs in der Betriebsmenge (2020-06: 42 Mitglieder, 2023-01: 283, 2026-09: 367). Die 80 alten Zeilen
+2020-01-01 bis 2020-03-20 (Messbasis-Menge) sind **entfernt**, im `lauf` vermerkt. Season-Stufe 2.455 Tage, neu geschrieben.
+
+**Gegenproben** (`s1_nachweis.txt`, **35 von 35 grün**):
+
+| # | Ergebnis |
+|---|---|
+| G6a-1 | Regression: Mitgliedschaft „alle“ = `season_ampel.breite` an **2.455 von 2.455** Tagen |
+| G6a-2 | `sichten.db` = Betriebsmenge, alle 2.375 Zeilen, Abweichung 0 |
+| G6a-3 | **Desktop-Messbasis = NB-Kopie**, beide in der Betriebsmenge: **59 von 59** gemeinsamen Tagen bitgleich (23.07.–19.09.2026) — zwei verschiedene Datenbestände, dasselbe Ergebnis |
+| G6a-4 | Abrufer auf der NB-Kopie = **NB-Ampel am letzten Tag** (31.10.: Breite 0,540, Stufe ungewohnt) |
+| G6a-5 | davor anders an 86 von 101 Tagen — **einzige Ursache die Mitgliedschaft**: mit „alle“ = Ampel an 101 von 101. Beispiel 28.10.: 0,66 gegen 0,64, XPL und MIRA hatten die 400 noch nicht. ⚠ Ein erster Maßstab („Menge des letzten Tages“) war falsch — ihm fehlen die inzwischen **eingestellten** Coins, die damals mitliefen (61 von 101) |
+| G6b | Season-Stufe weiter = NB an 368 von 368 |
+
+**Wirkung** (Auskunft): Klasse der Breite im 5-J-Rang, Betriebsmenge gegen Messbasis-Menge, anders an **324 von 2.375 Tagen
+(13,6 %)**, über alle Jahre (2020: 112 … 2026: 13). **Season-Stufe** anders an **34 Tagen, alle 2020/21** — seit 2022 an
+keinem. Probe 01.12.2025: Breite jetzt **P13 tief** (●), 8 statt 7 auffällige Zustände.
+
+**Was das für den Betrieb heißt — nichts zu ändern, zwei Dinge zu wissen:**
+
+| | |
+|---|---|
+| Mail / Season-Stufe | **unberührt** — die Ampel rechnet am Tag t live genau die Betriebsmenge; die Stufe weicht seit 2022 nicht ab |
+| `ampel_tag` (NB) | ⚠ ist **keine Zeitreihe dessen, was lief** — sie wird täglich rückwirkend neu gerechnet. Wer die NB-Historie auswertet, muss das wissen; die Sicht nimmt deshalb die eigene Reihe |
+| Messung der Ampel-Schwellen (`BREITE_HEISS` 0,6) | stand auf der Messbasis-Menge. Die Stufe hält trotzdem seit 2022 — **kein Handlungsbedarf, aber ein Grundgesamtheits-Unterschied** (CLAUDE.md), hier vermerkt |

@@ -314,12 +314,61 @@ def stablecoins(start: str) -> list:
 
 
 _SEASON: dict = {}
+BETRIEBSQUELLE = "binance_mess"          # die einzige Quelle, die der NB-Job schreibt (lade_messreihen, Spalte quelle)
+
+
+def betriebsmenge(K, quelle_je_symbol: dict):
+    """⚠️⚠️ Die Grundgesamtheit, die der BETRIEB am Tag t hat (G6a, 01.11.2026) - nicht die der Messbasis.
+
+    Der NB-Job ``betriebsreihen`` behaelt ``BETRIEBSREIHEN_TAGE`` Tage und loescht danach jedes Symbol mit weniger als
+    ``BETRIEBSREIHEN_MINDEST`` Kerzen (``lade_messreihen``: DELETE ... HAVING COUNT(*) < mindest nach dem Zuschnitt). Am Tag t
+    rechnet die Ampel also nur mit Symbolen, die in (t-TAGE, t] mindestens MINDEST Kerzen haben, und nur mit Binance -
+    dann aber mit deren GANZER Reihe (auch dem Kurs vor 90 T). Die Messbasis zaehlt junge Coins dagegen rueckwirkend ab dem
+    ersten Tag (sie haben die 400 SPAETER erreicht) und traegt uebernommene Fremdreihen (Bybit, gemessen: HYPE, KAS ...).
+
+    Gibt (Mitglied, gueltig_ab) zurueck: ``Mitglied`` = bool je Tag und Symbol. Vor ``gueltig_ab`` deckt die Datei das
+    Fenster nicht ab - dort wird nichts geschrieben. ⚠️ Gemessen am Beginn der BTC-Reihe, nicht am aeltesten Tag der Datei:
+    die NB-Kopie bewahrt EINGESTELLTE Werte je Symbol auf (ab 2019), die handelnden aber nur 500 Tage - am NB bleibt so nur
+    das Fortschreiben der letzten Tage, am Desktop gilt ab 2018-12-29."""
+    import pandas as pd
+    from scheduler.background import BETRIEBSREIHEN_MINDEST, BETRIEBSREIHEN_TAGE
+    spalten = [s for s in K.columns if quelle_je_symbol.get(s) == {BETRIEBSQUELLE}]
+    n = K[spalten].notna().astype(int).rolling(BETRIEBSREIHEN_TAGE, min_periods=1).sum()
+    return (n >= BETRIEBSREIHEN_MINDEST).reindex(columns=K.columns, fill_value=False), \
+        K["BTC"].first_valid_index() + pd.Timedelta(days=BETRIEBSREIHEN_TAGE - 1)
+
+
+def breite_zum_zeitpunkt(K, U, alts, mitglied, tage) -> "object":
+    """``season_ampel.breite`` mit der Mitgliedschaft je Tag: die Tage werden nach ihrer Menge gruppiert, und jede Gruppe
+    laeuft durch DIESELBE Funktion wie die Ampel (Top 50 je Monat innerhalb der Menge, 90-T-Ertrag aus der ganzen Reihe)."""
+    import pandas as pd
+    from agent import season_ampel as SA
+    Kd = K.reindex(pd.date_range(K.index[0], max(tage), freq="D"))
+    Ud = U.reindex(Kd.index)
+    M = mitglied.reindex(Kd.index).fillna(False).astype(bool)
+    gruppen: dict = {}
+    for t in tage:
+        gruppen.setdefault(frozenset(M.columns[M.loc[t].values]), []).append(t)
+    teile = [SA.breite(Kd, Ud, [a for a in alts if a in menge], Kd["BTC"], ts) for menge, ts in gruppen.items()]
+    return pd.concat(teile).sort_index() if teile else pd.Series(dtype=float)
+
+
+def _quellen(ordner: str) -> dict:
+    c = sqlite3.connect("file:%s?mode=ro" % os.path.join(ordner, "messdaten.db").replace("\\", "/"), uri=True)
+    try:
+        q = {}
+        for s, x in c.execute("SELECT DISTINCT symbol, quelle FROM price_history_ohlc WHERE assetklasse='krypto' AND currency='USD'"):
+            q.setdefault(s, set()).add(x)
+        return q
+    finally:
+        c.close()
 
 
 def _season_tabelle(ordner: str) -> "object":
     """Die Tagestabelle der Season-Ampel (Breite, Stufe) mit ihrem EIGENEN Code (``season_ampel.rechne``), einmal je Lauf.
     Desktop: Messbasis ``data/messdaten.db``; NB: die Betriebskopie unter demselben Pfad. FRED wie in der Ampel ueber
-    ``makro_lage.hole_reihe`` (35 T Verzug), hier mit Beobachtungen ab 2017 fuer die Historie."""
+    ``makro_lage.hole_reihe`` (35 T Verzug), hier mit Beobachtungen ab 2017 fuer die Historie.
+    ⚠️ Auf der Grundgesamtheit des Betriebs ZUM ZEITPUNKT (``betriebsmenge``, Ue8) - Stablecoins wie in der Ampel aus allen Reihen."""
     if ordner not in _SEASON:
         import pandas as pd
         from dotenv import load_dotenv
@@ -332,7 +381,15 @@ def _season_tabelle(ordner: str) -> "object":
         bis = _heute() - timedelta(days=1)
         fred = {sid: ML.hole_reihe(sid, key, "2017-01-01", None) for sid in SA.FRED}
         K, U = SA.kopie(ordner, bis)
-        _SEASON[ordner] = SA.rechne(K, U, SA.stabile(ordner, K), fred, SA.stablecoins(requests), pd.Series(dtype=float), bis)
+        stabil = SA.stabile(ordner, K)
+        T = SA.rechne(K, U, stabil, fred, SA.stablecoins(requests), pd.Series(dtype=float), bis)
+        mitglied, ab = betriebsmenge(K, _quellen(ordner))
+        alts = [s for s in K.columns if s not in stabil and s != "BTC"]
+        # die Breite der Betriebsmenge ersetzt die der Messbasis; Stufe danach wie in ``rechne`` (dieselben drei Funktionen)
+        T["Breite"] = breite_zum_zeitpunkt(K, U, alts, mitglied, list(T.index)).reindex(T.index)
+        T["stufe_roh"] = SA.stufen(T)
+        T["stufe"] = SA.geltend(T.stufe_roh)
+        _SEASON[ordner] = T[T.index >= ab]
     return _SEASON[ordner]
 
 
