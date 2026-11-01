@@ -136,7 +136,7 @@ Die Punkte SF1–SF8, §4 und §5 sind **fachlich begründet** und hier nicht zu
 | Coinbase-Prämie BTC/ETH | ✔ ab 2020-01-01 |
 | Basis Quartal BTC/ETH | ✔ ab **2021-02-03** — früher führt Binance keine USDT-Quartalskontrakte. Im Rückspiel ab 01.12.2025 = 4,8 J, innerhalb der Toleranz |
 | **BAMLH0A0HYM2** Hochzins-Aufschlag | ✖ FRED führt ihn (ICE-Lizenz) nur ab **10/2023** → im Rückspiel 2,1 J und ein wachsendes Fenster (verletzt SF7). **Ersetzt durch `BAA10Y`** (Baa − 10 J, Jahrgänge ab 2018), dieselbe Art Aufschlag. Die Reihe bleibt in `sichten.db`, geht aber nicht in die Fütterung |
-| GDELT-Ton (4) | ◐ **läuft** — siehe P6 |
+| GDELT-Ton (4) | ◐ bis auf **2022** (fed, aktien, krypto) geladen; Juni-2025-Lücke dokumentiert — siehe P6 und unten |
 
 **Zwei Fehler im Abrufer, behoben:**
 1. Ein vorverlegter Start wurde bei GDELT **nicht nachgeholt** (die Fortsetzung begann am letzten Tag). Jetzt: erst die **erste Lücke über 7 Tage** (`_erste_luecke`), dann die Fortsetzung. Dabei gefunden: **alle vier GDELT-Reihen haben eine 18-Tage-Lücke ab 14.06.2025** aus dem Lauf vom 29.10. — bisher von keiner Prüfung bemerkt.
@@ -163,3 +163,13 @@ Daten auf das NB bringen bzw. zuverlässige Abrufe für die Produktion generiere
 **Zuerst** in A1/G7 messen, ob der Ton etwas beiträgt. **Nur wenn ja:** NB-Weg und zuverlässiger Produktionsabruf (Kandidaten: 4
 kleine Anfragen je Tag mit Nachholen und gemessener Ausfallquote; BigQuery-Tabelle, kostenfreies Kontingent). Bis dahin **kein**
 GDELT-Abruf am NB, nichts im NB-Bündel.
+
+**GDELT vom kritischen Pfad genommen (Nutzer 01.11. mittags: „sorge dafür, dass die GDELT Sache endlich erledigt ist, dieser
+Datenabruf ist eine massive Hürde“):**
+
+| | |
+|---|---|
+| Geholt bis 01.11. 11:30 UTC | fed, aktien, krypto **2020–2021**; konflikt **2020–2026**; alle ab 2023 (Lauf 29.10.) |
+| Wird noch geholt | **nur 2022** für fed, aktien, krypto — drei Anfragen, je Reihe genau eine, danach Ende. Das ist, was das 5-J-Fenster am Rückspielbeginn (01.12.2025 → ab 12/2020) braucht |
+| Wird **nicht** mehr geholt | die **18-Tage-Lücke 14.06.–01.07.2025** in allen vier Reihen: 18 von ~2.100 Tagen, keine Fensterfrage. **Dokumentierte Lücke** — die Tage fehlen (kein Auffüllen, keine Interpolation); die Probe meldet sie mit „⚠ Lücke“, das ist erklärt |
+| Was **nicht** mehr wartet | Probe, S1-Ergänzung, Ebene-1-Modul und Voranalyse A1 laufen weiter, ohne auf GDELT zu warten. Fehlt 2022 bei Beginn von A1, geht der Ton dort mit **kurzem Fenster** gekennzeichnet ein (SF7), nicht gar nicht |
