@@ -119,3 +119,32 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 | c | nichts laden, Fenster „seit 2023“ | sofort | **verletzt SF7/Ü8**: das Fenster wächst im Rückspiel von 2,9 auf 3,8 J — die Ränge sind über die Zeit nicht vergleichbar |
 
 Die Punkte SF1–SF8, §4 und §5 sind **fachlich begründet** und hier nicht zur Wahl gestellt — Einwände natürlich willkommen.
+
+✔ **Entschieden 31.10.2026 (Nutzer: *„a, Historie ab 2020 laden“*)** — Ausführung in §8.
+
+---
+
+## 8. Ausführung — Historie ab 2020 (31.10./01.11.2026)
+
+**Abrufer** `api/sichten_quellen.py`: `START` 2023-01-01 → **2020-01-01**, sonst derselbe Weg (Ü8). Sicherung des alten Stands:
+`data/_sichten/sichten_vor_2020_31_10.db`.
+
+| Quelle | Ergebnis |
+|---|---|
+| yfinance (9) | ✔ ab 2020-01-02 |
+| FRED (13) | ✔ **neu geladen statt ergänzt**: der alte Lauf hatte 10.831 Zeilen mit `bekannt_ab` auf 02.01.2023 **gekappt** (ALFRED setzt ältere Gültigkeitsbeginne auf `realtime_start`). Ergänzen hätte sie doppelt stehen lassen. Jetzt Jahrgänge ab 2020, Beobachtungen ab 2018 wie bisher |
+| Coinbase-Prämie BTC/ETH | ✔ ab 2020-01-01 |
+| Basis Quartal BTC/ETH | ✔ ab **2021-02-03** — früher führt Binance keine USDT-Quartalskontrakte. Im Rückspiel ab 01.12.2025 = 4,8 J, innerhalb der Toleranz |
+| **BAMLH0A0HYM2** Hochzins-Aufschlag | ✖ FRED führt ihn (ICE-Lizenz) nur ab **10/2023** → im Rückspiel 2,1 J und ein wachsendes Fenster (verletzt SF7). **Ersetzt durch `BAA10Y`** (Baa − 10 J, Jahrgänge ab 2018), dieselbe Art Aufschlag. Die Reihe bleibt in `sichten.db`, geht aber nicht in die Fütterung |
+| GDELT-Ton (4) | ◐ **läuft** — siehe P6 |
+
+**Zwei Fehler im Abrufer, behoben:**
+1. Ein vorverlegter Start wurde bei GDELT **nicht nachgeholt** (die Fortsetzung begann am letzten Tag). Jetzt: erst die **erste Lücke über 7 Tage** (`_erste_luecke`), dann die Fortsetzung. Dabei gefunden: **alle vier GDELT-Reihen haben eine 18-Tage-Lücke ab 14.06.2025** aus dem Lauf vom 29.10. — bisher von keiner Prüfung bemerkt.
+2. Zwischen zwei Jahresfenstern lagen **6 s** → das zweite Fenster immer 429. Jetzt der volle GDELT-Abstand. Außerdem wurde ein Randtag 31.12. als eigenes 1-Tages-Fenster geholt — eine verschenkte Anfrage.
+
+**Probe ergänzt:** Lückenprüfung im Fenster (Lücke > max(10 T, 5 × üblicher Abstand) zählt wie ein kurzes Fenster). Ohne sie
+meldete die Probe für GDELT Krypto ein volles 5-J-Fenster, obwohl 2021–22 fehlten.
+
+| # | Befund | Folge |
+|---|---|---|
+| P6 | **GDELT liefert nicht verlässlich.** Je Lauf kam meist nur die **erste** Anfrage durch; danach 429 über **Stunden**, auch nach 10, 20 und 40 Min. Abstand (01.11. 01:23–03:15 UTC drei Sperren in Folge). Am 29.10. scheiterten auch einzelne kurze Abrufe wie im laufenden Takt | **Für den Betrieb (G8):** täglicher GDELT-Abruf am NB ist **nicht gesichert** — vor dem Bau klären: Abstand von Stunden, oder die GDELT-Tagesdateien (GKG) statt der DOC-Schnittstelle. Die Karte zeigt den Stand je Zeile (SF5), ein alter Ton ist sichtbar alt. Datenbasis §4 |

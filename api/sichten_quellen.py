@@ -39,8 +39,8 @@ import requests
 
 PROJ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ABLAGE = os.path.join(PROJ, "data", "_sichten", "sichten.db")
-START = "2023-01-01"            # Messfokus ab 2023 (2022 nur Auskunft)
-FRED_BEOBACHTUNG_AB = "2018-01-01"   # Einordnung im 5-J-Fenster braucht Vorlauf vor 2023
+START = "2020-01-01"            # Nutzer 31.10. (Fuetterung §7 a): 5-J-Fenster fuer alle Zustaende ab dem Rueckspiel 2025, wie K1–K9
+FRED_BEOBACHTUNG_AB = "2018-01-01"   # Vorlauf fuer die Veraenderung gegen Vorjahr
 LAUFEND_TAGE = 14
 # GDELT (Nutzer 30.10.: a): zwischen zwei GDELT-Abfragen 10 Minuten; bei einer Sperre EIN zweiter Versuch, dann gilt der Tag als
 # Quellausfall und der naechste Lauf setzt fort. Am 29.10. haben 5 Wiederholungen je Fenster die Sperre ueber Stunden verlaengert.
@@ -210,14 +210,15 @@ class Teilergebnis(RuntimeError):
         self.zeilen = zeilen
 
 
-def gdelt_ton(abfrage: str, start: str) -> list:
+def gdelt_ton(abfrage: str, start: str, ende: str | None = None) -> list:
     """Tageston aus GDELT DOC. ⚠️ Hoechstens eine Anfrage je 5 s, und nach vielen Anfragen sperrt GDELT LAENGER (29.10.: 429 auch
     nach 20 s und 60 s). Deshalb JAHRESFENSTER (4 Anfragen fuer 2023-26 statt 46). Liefert ein Fenster keine Tagesaufloesung
-    (Punkte < 80 % der Tage), wird es monatsweise geholt - nie still eine groebere Reihe."""
-    aus, heute = {}, date.today()
+    (Punkte < 80 % der Tage), wird es monatsweise geholt - nie still eine groebere Reihe.
+    ``ende`` (ausschliesslich) nur fuer die Luecke VOR dem Bestand (31.10.: Historie von 2023 auf 2020 vorverlegt)."""
+    aus, heute = {}, min(date.today(), date.fromisoformat(ende)) if ende else date.today()
     ab = date.fromisoformat(start)
     while ab < heute:
-        bis = min(date(ab.year + 1, 1, 1), heute)
+        bis = min(date((ab + timedelta(days=1)).year + 1, 1, 1), heute)   # Randtag 31.12. nicht als eigenes 1-Tages-Fenster
         try:
             teil = _gdelt_fenster(abfrage, ab, bis)
             tage = {d for d, _ in teil}
@@ -234,7 +235,8 @@ def gdelt_ton(abfrage: str, start: str) -> list:
             if start <= d < min(bis, heute).isoformat():
                 aus[d] = w
         ab = bis
-        time.sleep(6)
+        if ab < heute:                                        # 01.11.: 6 s zwischen Jahresfenstern -> 429 schon beim zweiten Fenster
+            time.sleep(GDELT_ABSTAND_S)
     return [(d, w, _folgetag(d), None) for d, w in sorted(aus.items())]
 
 
@@ -291,8 +293,20 @@ def auftraege(fred_key: str) -> list:
         a += [("fred", sid, lambda s, sid=sid: fred_jahrgaenge(sid, s, fred_key)) for sid in FRED]
     a += [("coinbase_praemie", b, lambda s, b=b: coinbase_praemie(b, s)) for b in KRYPTO]
     a += [("basis_quartal", b, lambda s, b=b: basis_quartal(b, s)) for b in KRYPTO]
-    a += [("gdelt_ton", k, lambda s, q=q: gdelt_ton(q, s)) for k, q in GDELT.items()]
+    a += [("gdelt_ton", k, lambda s, e=None, q=q: gdelt_ton(q, s, e)) for k, q in GDELT.items()]
     return a
+
+
+def _erste_luecke(start: str, tage: list, mehr_als: int = 7) -> tuple | None:
+    """(ab, ende) der ersten Luecke ueber ``mehr_als`` Tage ab ``start`` - ``ab`` ist der letzte vorhandene Tag davor (Randtag,
+    wird neu geholt), ``ende`` der erste danach (ausschliesslich). Ohne Bestand: keine Luecke, der normale Lauf holt alles."""
+    if not tage:
+        return None
+    vorher = (date.fromisoformat(start) - timedelta(days=1)).isoformat()
+    for a, b in zip([vorher] + tage, tage):
+        if (date.fromisoformat(b) - date.fromisoformat(a)).days > mehr_als:
+            return (start if a == vorher else a), b
+    return None
 
 
 def lade(start: str, pfad: str = ABLAGE, nur: str | None = None, mit_feeds: bool = False) -> dict:
@@ -310,7 +324,7 @@ def lade(start: str, pfad: str = ABLAGE, nur: str | None = None, mit_feeds: bool
         try:
             # FRED immer mit allen Jahrgaengen ab START: ALFRED kappt aeltere Gueltigkeitsbeginne auf realtime_start - ein
             # spaeterer Start legte fuer jede alte Beobachtung eine zweite Zeile an. Wenige Abrufe je Reihe, und genau gleich.
-            ab = start
+            ab, ende = start, None
             if quelle == "gdelt_ton":
                 if letzte_gdelt is not None:
                     time.sleep(max(0.0, GDELT_ABSTAND_S - (time.monotonic() - letzte_gdelt)))
@@ -318,10 +332,14 @@ def lade(start: str, pfad: str = ABLAGE, nur: str | None = None, mit_feeds: bool
             if quelle == "fred":
                 ab = START
             elif quelle == "gdelt_ton":                        # FORTSETZEN: GDELT sperrt lange, Geholtes nicht neu holen
-                letzt = c.execute("SELECT MAX(datum) FROM reihe WHERE quelle=? AND symbol=?", (quelle, symbol)).fetchone()[0]
-                if letzt and letzt >= start:                   # ab dem LETZTEN Tag: er wird neu geholt (er kann ein Randtag sein)
-                    ab = letzt
-            n = _schreibe(c, quelle, symbol, abruf(ab))
+                tage = [r[0] for r in c.execute("SELECT DISTINCT datum FROM reihe WHERE quelle=? AND symbol=? AND datum >= ? "
+                                                "ORDER BY datum", (quelle, symbol, start))]
+                luecke = _erste_luecke(start, tage)
+                if luecke:                                     # Luecke im Bestand zuerst (Start vorverlegt), Rest im naechsten Lauf
+                    ab, ende = luecke
+                elif tage:                                     # ab dem LETZTEN Tag: er wird neu geholt (er kann ein Randtag sein)
+                    ab = tage[-1]
+            n = _schreibe(c, quelle, symbol, abruf(ab, ende) if ende else abruf(ab))
             ergebnis[(quelle, symbol)] = n
             print("  ✔ %-17s %-13s %6d Zeilen" % (quelle, symbol, n), flush=True)
         except Teilergebnis as e:

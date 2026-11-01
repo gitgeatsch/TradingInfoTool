@@ -45,7 +45,9 @@ ZUSTAENDE = [
     ("S3", "yfinance", "SOXX", "Halbleiter (SOXX)", "abstand200", "", "höher = weiter über dem eigenen Schnitt"),
     ("S3", "yfinance", "^VIX", "VIX", "niveau", "", "höher = Aktienmarkt erwartet größere Schwankung"),
     ("S3", "yfinance", "^MOVE", "MOVE (Anleihe-Schwankung)", "niveau", "", "höher = Anleihemarkt erwartet größere Schwankung"),
-    ("S3", "fred", "BAMLH0A0HYM2", "Hochzins-Aufschlag", "niveau", "Pp", "höher = Kreditgeber verlangen mehr für Risiko"),
+    # 01.11.: BAA10Y statt Hochzins-Aufschlag BAMLH0A0HYM2 - den führt FRED (ICE-Lizenz) nur ab 10/2023, im Rückspiel ab Dez. 2025
+    # wären das 2,1 J und ein wachsendes Fenster (SF7). BAA10Y liegt mit Jahrgängen ab 2018 vor und misst dieselbe Art Aufschlag.
+    ("S3", "fred", "BAA10Y", "Kreditaufschlag Baa − 10 J", "niveau", "Pp", "höher = Kreditgeber verlangen mehr für Risiko"),
     ("S3", "fred", "NFCI", "Finanzlage NFCI", "niveau", "", "höher = straffere Finanzierungsbedingungen"),
     ("S3", "gdelt_ton", "aktien", "Nachrichtenton Aktienmarkt (GDELT)", "niveau", "", "höher = freundlicherer Ton"),
     ("S4", "yfinance", "DX-Y.NYB", "Dollar-Index DXY", "abstand200", "", "höher = Dollar stärker als im eigenen Schnitt"),
@@ -96,9 +98,12 @@ def satz(sicht, name, mass, einheit, lesart, s: pd.Series, T: str, jahre: int) -
     else:
         wert = ("%s %.3g %s" % (name, jetzt, "%" if einheit == "anteil" else einheit)).rstrip()
     knapp = " ⚠ Fenster nur %.1f J" % j if j < jahre - 0.2 else ""
+    abst = fenster.index.to_series().diff().dt.days.dropna()
+    if len(abst) and abst.max() > max(10, 5 * abst.median()):   # 01.11.: ein Loch im Fenster ist so schlimm wie ein kurzes Fenster
+        knapp += " ⚠ Lücke %d T ab %s" % (abst.max(), (abst.idxmax() - pd.Timedelta(days=int(abst.max()))).strftime("%Y-%m-%d"))
     zeile = "[%s] %s · Rang P%.0f der letzten %.1f J (ab %s) = %s (%s)%s · Stand %s%s · Fakt" % (
         sicht, wert, p, j, ab.strftime("%Y-%m"), klasse(p), lesart, rich, datum, knapp)
-    return zeile, klasse(p) != "normal", j
+    return zeile, klasse(p) != "normal", (0.0 if "Lücke" in knapp else j)   # ein Loch zählt wie ein kurzes Fenster
 
 
 def main() -> int:

@@ -1,34 +1,34 @@
 FÜTTERUNG — PROBE DER SATZFORM (Ü1) · Stichtag 2026-10-29T00:00:00+00:00 · Einordnung 5 J · nur lesend D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_sichten\sichten.db
 
 ── S1 ──
-    [S1] Basis Quartalsfuture BTC 0.922 % · Rang P56 der letzten 3.8 J (ab 2023-01) = normal (höher = Terminkäufer zahlen mehr Aufschlag) · vor 4 Wochen +1.24 · Stand 2026-10-28 ⚠ Fenster nur 3.8 J · Fakt
-    [S1] Basis Quartalsfuture ETH 0.705 % · Rang P52 der letzten 3.8 J (ab 2023-01) = normal (höher = Terminkäufer zahlen mehr Aufschlag) · vor 4 Wochen +0.97 · Stand 2026-10-28 ⚠ Fenster nur 3.8 J · Fakt
-  ● [S1] Coinbase-Prämie BTC -0.116 % · Rang P6 der letzten 3.8 J (ab 2023-01) = tief (höher = US-Käufer zahlen mehr als der Rest der Welt) · vor 4 Wochen -0.08 · Stand 2026-10-28 ⚠ Fenster nur 3.8 J · Fakt
-  ● [S1] Coinbase-Prämie ETH -0.118 % · Rang P6 der letzten 3.8 J (ab 2023-01) = tief (höher = US-Käufer zahlen mehr als der Rest der Welt) · vor 4 Wochen -0.08 · Stand 2026-10-28 ⚠ Fenster nur 3.8 J · Fakt
-  ● [S1] Nachrichtenton Krypto (GDELT) -2.29 · Rang P3 der letzten 3.8 J (ab 2023-01) = sehr tief (höher = freundlicherer Ton) · vor 4 Wochen -3.05 · Stand 2026-10-27 ⚠ Fenster nur 3.8 J · Fakt
+    [S1] Basis Quartalsfuture BTC 0.922 % · Rang P63 der letzten 5.0 J (ab 2021-10) = normal (höher = Terminkäufer zahlen mehr Aufschlag) · vor 4 Wochen +1.24 · Stand 2026-10-28 · Fakt
+    [S1] Basis Quartalsfuture ETH 0.705 % · Rang P59 der letzten 5.0 J (ab 2021-10) = normal (höher = Terminkäufer zahlen mehr Aufschlag) · vor 4 Wochen +0.97 · Stand 2026-10-28 · Fakt
+  ● [S1] Coinbase-Prämie BTC -0.116 % · Rang P6 der letzten 5.0 J (ab 2021-10) = tief (höher = US-Käufer zahlen mehr als der Rest der Welt) · vor 4 Wochen -0.08 · Stand 2026-10-28 · Fakt
+  ● [S1] Coinbase-Prämie ETH -0.118 % · Rang P7 der letzten 5.0 J (ab 2021-10) = tief (höher = US-Käufer zahlen mehr als der Rest der Welt) · vor 4 Wochen -0.08 · Stand 2026-10-28 · Fakt
+  ● [S1] Nachrichtenton Krypto (GDELT) -2.29 · Rang P3 der letzten 5.0 J (ab 2021-10) = sehr tief (höher = freundlicherer Ton) · vor 4 Wochen -3.05 · Stand 2026-10-27 ⚠ Lücke 366 T ab 2021-12-31 · Fakt
 ── S2 ──
     [S2] Netto-Liquidität Fed (Bilanz − TGA − RRP) 5801 Mrd. USD, +0.3 % gegen Vorjahr · Rang P71 der letzten 5.0 J (ab 2021-11) = normal (höher = mehr Zentralbankgeld im Umlauf als vor einem Jahr) · vor 4 Wochen -1.17 · Stand 2026-10-21 · Fakt
   ● [S2] Geldmenge M2 23414 Mrd. USD, +5.7 % gegen Vorjahr · Rang P87 der letzten 5.0 J (ab 2021-11) = hoch (höher = Geldmenge wächst schneller) · vor 4 Wochen +5.60 · Stand 2026-09-01 · Fakt
   ● [S2] Realzins 10 J 2.64 % · Rang P98 der letzten 5.0 J (ab 2021-10) = sehr hoch (höher = teureres Geld nach Inflation) · vor 4 Wochen +2.91 · Stand 2026-10-27 · Fakt
   ● [S2] Rendite 2 J 4.7 % · Rang P83 der letzten 5.0 J (ab 2021-10) = hoch (höher = Markt erwartet höhere Leitzinsen) · vor 4 Wochen +4.89 · Stand 2026-10-27 · Fakt
     [S2] Zinskurve 10 J − 2 J 0.38 Pp · Rang P65 der letzten 5.0 J (ab 2021-10) = normal (höher = steilere Kurve) · vor 4 Wochen +0.41 · Stand 2026-10-28 · Fakt
-    [S2] Nachrichtenton Fed (GDELT) -1.33 · Rang P44 der letzten 3.8 J (ab 2023-01) = normal (höher = freundlicherer Ton) · vor 4 Wochen -1.29 · Stand 2026-10-27 ⚠ Fenster nur 3.8 J · Fakt
+    [S2] Nachrichtenton Fed (GDELT) -1.33 · Rang P44 der letzten 3.8 J (ab 2023-01) = normal (höher = freundlicherer Ton) · vor 4 Wochen -1.29 · Stand 2026-10-27 ⚠ Fenster nur 3.8 J ⚠ Lücke 18 T ab 2025-06-14 · Fakt
 ── S3 ──
-    [S3] S&P 500 7743.98, +6.0 % zum 200-T-Schnitt · Rang P27 der letzten 3.2 J (ab 2023-08) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +6.02 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
-    [S3] Nasdaq 100 29813.16, +6.9 % zum 200-T-Schnitt · Rang P23 der letzten 3.2 J (ab 2023-08) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +10.89 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
-    [S3] Halbleiter (SOXX) 521.94, +9.9 % zum 200-T-Schnitt · Rang P36 der letzten 3.2 J (ab 2023-08) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +25.72 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
-    [S3] VIX 16.9 · Rang P54 der letzten 3.8 J (ab 2023-01) = normal (höher = Aktienmarkt erwartet größere Schwankung) · vor 4 Wochen +16.34 · Stand 2026-10-28 ⚠ Fenster nur 3.8 J · Fakt
-    [S3] MOVE (Anleihe-Schwankung) 94.6 · Rang P42 der letzten 3.8 J (ab 2023-01) = normal (höher = Anleihemarkt erwartet größere Schwankung) · vor 4 Wochen +110.45 · Stand 2026-10-28 ⚠ Fenster nur 3.8 J · Fakt
-    [S3] Hochzins-Aufschlag 3.18 Pp · Rang P68 der letzten 3.0 J (ab 2023-10) = normal (höher = Kreditgeber verlangen mehr für Risiko) · vor 4 Wochen +3.08 · Stand 2026-10-27 ⚠ Fenster nur 3.0 J · Fakt
+    [S3] S&P 500 7743.98, +6.0 % zum 200-T-Schnitt · Rang P45 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +6.02 · Stand 2026-10-28 · Fakt
+    [S3] Nasdaq 100 29813.16, +6.9 % zum 200-T-Schnitt · Rang P39 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +10.89 · Stand 2026-10-28 · Fakt
+    [S3] Halbleiter (SOXX) 521.94, +9.9 % zum 200-T-Schnitt · Rang P46 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +25.72 · Stand 2026-10-28 · Fakt
+    [S3] VIX 16.9 · Rang P42 der letzten 5.0 J (ab 2021-10) = normal (höher = Aktienmarkt erwartet größere Schwankung) · vor 4 Wochen +16.34 · Stand 2026-10-28 · Fakt
+    [S3] MOVE (Anleihe-Schwankung) 94.6 · Rang P39 der letzten 5.0 J (ab 2021-10) = normal (höher = Anleihemarkt erwartet größere Schwankung) · vor 4 Wochen +110.45 · Stand 2026-10-28 · Fakt
+  ● [S3] Kreditaufschlag Baa − 10 J 1.45 Pp · Rang P6 der letzten 5.0 J (ab 2021-10) = tief (höher = Kreditgeber verlangen mehr für Risiko) · vor 4 Wochen +1.46 · Stand 2026-10-26 · Fakt
     [S3] Finanzlage NFCI -0.487 · Rang P34 der letzten 5.0 J (ab 2021-10) = normal (höher = straffere Finanzierungsbedingungen) · vor 4 Wochen -0.52 · Stand 2026-10-23 · Fakt
-    [S3] Nachrichtenton Aktienmarkt (GDELT) -0.532 · Rang P23 der letzten 3.8 J (ab 2023-01) = normal (höher = freundlicherer Ton) · vor 4 Wochen -0.41 · Stand 2026-10-27 ⚠ Fenster nur 3.8 J · Fakt
+    [S3] Nachrichtenton Aktienmarkt (GDELT) -0.532 · Rang P23 der letzten 3.8 J (ab 2023-01) = normal (höher = freundlicherer Ton) · vor 4 Wochen -0.41 · Stand 2026-10-27 ⚠ Fenster nur 3.8 J ⚠ Lücke 18 T ab 2025-06-14 · Fakt
 ── S4 ──
-  ● [S4] Dollar-Index DXY 102.19, +2.6 % zum 200-T-Schnitt · Rang P89 der letzten 3.2 J (ab 2023-08) = hoch (höher = Dollar stärker als im eigenen Schnitt) · vor 4 Wochen +2.23 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
-  ● [S4] Gold 4051.60 USD, -10.5 % zum 200-T-Schnitt · Rang P1 der letzten 3.2 J (ab 2023-08) = sehr tief (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen -8.08 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
-  ● [S4] Öl Brent 115.32 USD, +25.4 % zum 200-T-Schnitt · Rang P92 der letzten 3.2 J (ab 2023-08) = hoch (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +18.56 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
-    [S4] Kupfer 6.64 USD, +7.1 % zum 200-T-Schnitt · Rang P55 der letzten 3.2 J (ab 2023-08) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +7.43 · Stand 2026-10-28 ⚠ Fenster nur 3.2 J · Fakt
+    [S4] Dollar-Index DXY 102.19, +2.6 % zum 200-T-Schnitt · Rang P74 der letzten 5.0 J (ab 2021-10) = normal (höher = Dollar stärker als im eigenen Schnitt) · vor 4 Wochen +2.23 · Stand 2026-10-28 · Fakt
+  ● [S4] Gold 4051.60 USD, -10.5 % zum 200-T-Schnitt · Rang P1 der letzten 5.0 J (ab 2021-10) = sehr tief (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen -8.08 · Stand 2026-10-28 · Fakt
+  ● [S4] Öl Brent 115.32 USD, +25.4 % zum 200-T-Schnitt · Rang P90 der letzten 5.0 J (ab 2021-10) = hoch (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +18.56 · Stand 2026-10-28 · Fakt
+    [S4] Kupfer 6.64 USD, +7.1 % zum 200-T-Schnitt · Rang P66 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +7.43 · Stand 2026-10-28 · Fakt
 ── S7 ──
-  ● [S7] Nachrichtenton Krieg/Sanktionen/Zölle (GDELT) -1.82 · Rang P89 der letzten 3.8 J (ab 2023-01) = hoch (höher = freundlicherer Ton) · vor 4 Wochen -2.22 · Stand 2026-10-27 ⚠ Fenster nur 3.8 J · Fakt
+  ● [S7] Nachrichtenton Krieg/Sanktionen/Zölle (GDELT) -1.82 · Rang P91 der letzten 5.0 J (ab 2021-10) = hoch (höher = freundlicherer Ton) · vor 4 Wochen -2.22 · Stand 2026-10-27 ⚠ Lücke 18 T ab 2025-06-14 · Fakt
 
-● = auffällig (Rang ≤ P20 oder ≥ P80) · 10 von 24 Zuständen auffällig · 18 mit kürzerem Fenster als 5 J
-Zeichen gesamt: 4712 (≈ 1256 Token bei 3,5–4 Zeichen je Token)
+● = auffällig (Rang ≤ P20 oder ≥ P80) · 10 von 24 Zuständen auffällig · 4 mit kürzerem Fenster als 5 J
+Zeichen gesamt: 4508 (≈ 1202 Token bei 3,5–4 Zeichen je Token)
