@@ -148,3 +148,18 @@ meldete die Probe für GDELT Krypto ein volles 5-J-Fenster, obwohl 2021–22 feh
 | # | Befund | Folge |
 |---|---|---|
 | P6 | **GDELT liefert nicht verlässlich.** Je Lauf kam meist nur die **erste** Anfrage durch; danach 429 über **Stunden**, auch nach 10, 20 und 40 Min. Abstand (01.11. 01:23–03:15 UTC drei Sperren in Folge). Am 29.10. scheiterten auch einzelne kurze Abrufe wie im laufenden Takt | **Für den Betrieb (G8):** täglicher GDELT-Abruf am NB ist **nicht gesichert** — vor dem Bau klären: Abstand von Stunden, oder die GDELT-Tagesdateien (GKG) statt der DOC-Schnittstelle. Die Karte zeigt den Stand je Zeile (SF5), ein alter Ton ist sichtbar alt. Datenbasis §4 |
+
+**P6 — Ursache recherchiert, Weg entschieden (01.11.2026)**
+
+| | |
+|---|---|
+| **Belegt** | GDELTs Grenze ist strenger als die dokumentierten 5 s: ein anderes Projekt maß im **September 2026** 3 von 3 Abweisungen bei **30 s** Abstand nach der Antwort, auch bei der leichtesten Abfrage (`artlist`, 1 Artikel), **ohne** `Retry-After`; eine ausgelöste Sperre „klebt“, auch über Sitzungen (github.com/cyanheads/gdelt-mcp-server, Issues #44, #16, #26). Unsere Logs: 46 Abweisungen, auch bei 40–60 Min. Abstand |
+| **Selbst verursacht (behoben)** | 29./30.10. fünf Wiederholungen je Fenster, 6 s zwischen Jahresfenstern, Randtag 31.12. — haben die Sperre verlängert, erklären sie aber nicht |
+| **Nicht belegt** | ob unsere schweren Jahresfenster mehr zählen; Vermutung: GDELT drosselt nach Gesamtlast. Von außen nicht messbar |
+| Gemessen: Rohdateien | GKG je 15 Min. 1,9–6,5 MB → 200–600 MB/Tag, Historie ab 2020 ≈ 0,5–1 TB — andere Größe (Themen statt Suchbegriff), Ü8 verlangte dann auch die Historie daraus |
+
+**Entscheidung (Nutzer 01.11.: „Weg 1 – vorher klären, ob Daten und Messung etwas bringen, wenn bestätigt überlegen, wie wir die
+Daten auf das NB bringen bzw. zuverlässige Abrufe für die Produktion generieren“):** DOC-Schnittstelle wie bisher, Historie fertig laden.
+**Zuerst** in A1/G7 messen, ob der Ton etwas beiträgt. **Nur wenn ja:** NB-Weg und zuverlässiger Produktionsabruf (Kandidaten: 4
+kleine Anfragen je Tag mit Nachholen und gemessener Ausfallquote; BigQuery-Tabelle, kostenfreies Kontingent). Bis dahin **kein**
+GDELT-Abruf am NB, nichts im NB-Bündel.
