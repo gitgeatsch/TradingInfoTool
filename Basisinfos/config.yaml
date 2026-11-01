@@ -794,7 +794,7 @@ watchlist:
     coingecko_id: monad
   - symbol: CANTON
     name: Canton Network
-    rolle: core
+    rolle: taktisch                # Nutzer 01.11.2026: nicht versorgbar (nicht auf Binance) -> aus der Kernposition
     beobachtungsstatus: beobachtung
     coingecko_id: canton-network
   - symbol: XLM

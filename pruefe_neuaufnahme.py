@@ -68,13 +68,24 @@ AUSNAHMEN = {
            "relevant'. Es hat weder in der Messbasis noch in der "
            "Produktion eine Kursreihe; eine Bewertung ist damit "
            "ohnehin nicht moeglich",
+    "CANTON": "Nutzerentscheidung 01.11.2026: 'wenn wir canton nicht versorgen koennen nimm diesen aus der "
+              "Kernposition' - CANTON ist nicht auf Binance, damit gibt es weder eine Messreihe (Messbasis und "
+              "Betriebsreihen sind Binance) noch Funding, OI oder Umlauf. rolle core -> taktisch; Kurs und Bestand "
+              "laufen weiter ueber CoinGecko/Kraken",
 }
 # ⚠️ NUR fuer Fall 4 (Kernposition ohne Beitrag), nicht fuer die Messreihen-Frage. Sie gilt, SOLANGE das Symbol keine
 # Messreihe hat - kommt eine dazu, faellt die Ausnahme weg und die Frage nach dem Beitrag stellt sich neu.
-KERN_AUSNAHMEN = {
-    "CANTON": "Nutzerentscheidung 30.10.2026: 'Canton wird laenger gehalten' - die Kernposition (rolle core) bleibt. "
-              "CANTON ist nicht auf Binance: keine Funding-, OI- oder Umlaufreihe, damit kein Beitrag moeglich; "
-              "die Messreihe fehlt mangels Laenge (109 USD-Tage am 29.10.)",
+# 01.11.2026: leer - CANTON (30.10. hier) ist keine Kernposition mehr und steht oben unter AUSNAHMEN.
+KERN_AUSNAHMEN: dict = {}
+# ⚠️ AUFGENOMMEN, ABER NOCH ZU KURZ (Nutzer 01.11.2026: "Aster und Mon nehmen wir nun dazu"). Die 400 Kerzen sind die
+# MESSgrenze und damit die Grundgesamtheit (CLAUDE.md) - sie wird fuer zwei Werte nicht gesenkt. Am NB nimmt der Job
+# `betriebsreihen` (BETRIEBSREIHEN_MINDEST 400) sie von selbst auf, sobald die Reihe lang genug ist. Bis dahin kein
+# Mangel; ab 400 USD-Tagen ohne Messreihe meldet Fall 1 wieder - so faellt ein Nachzuegler nicht still durch.
+IN_AUFNAHME = {
+    "ASTER": "Nutzerentscheidung 01.11.2026: aufgenommen (388 Tage laut NB-Sicherung 30.10.) - kommt mit 400 Tagen "
+             "von selbst in die Betriebsreihen am NB",
+    "MON": "Nutzerentscheidung 01.11.2026: aufgenommen (339 Tage laut NB-Sicherung 30.10.) - kommt mit 400 Tagen "
+           "von selbst in die Betriebsreihen am NB",
 }
 # Ab wieviel Tagen gilt eine Assetklasse in der Messbasis als veraltet?
 # ⚠️ Setzung, keine Messung. Krypto handelt durchgehend, ein Rueckstand
@@ -239,6 +250,13 @@ def pruefe(still: bool = False) -> list:
                 grund = ("in der %s KEINE Kursreihe - \u26a0\ufe0f gegen die "
                          "Produktionssicherung gegenpruefen, bevor daraus "
                          "ein Befund wird" % _woher)
+            elif _usd < 400 and s in IN_AUFNAHME:
+                from datetime import date, timedelta
+                _ab = ((date.fromisoformat(_stand) + timedelta(days=400 - _usd)).isoformat()
+                       if _stand else "?")
+                sag("     ✔ %s in Aufnahme: %d USD-Tage in %s, 400 erreicht um %s - %s"
+                    % (s, _usd, _woher, _ab, IN_AUFNAHME[s]))
+                continue
             elif _usd < 400:
                 grund = ("nur %d USD-Tage (%s) - unter der 400er-Grenze. "
                          "Das ist eine DATENLAGE-Grenze, keine "

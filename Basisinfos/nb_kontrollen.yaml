@@ -13,7 +13,7 @@
 #   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
 #      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
 #   4. eine Quelle: das Memory verweist nur noch hierher.
-stand: "2026-10-29"
+stand: "2026-11-01"
 kontrollen:
   # ---- offen ------------------------------------------------------------------------------------------------------------
   - id: K-ANK-1
@@ -604,6 +604,15 @@ kontrollen:
     art: ereignis
     nachweis: "Export nach Pull + Neustart: keine Tracebacks aus staleness_watchdog. Beim naechsten Netzausfall im Log 'Totalausfall - Nachpruefung in 3 Min angesetzt', danach entweder 'kein Totalausfall mehr, keine Meldung' (kurzer Ausfall, KEINE Mail) oder 'Datenausfall gemeldet ... (auch nach dem Nachhol-Lauf)' (Mail). Anlass: 28.10. 08:48:08 Mail 'alle Kurse veraltet' eine Sekunde NACH dem erfolgreichen Nachhol-Lauf"
     faellig_bis: "2026-12-31"
+    status: offen
+  - id: K-WL-3
+    titel: "CANTON aus der Kernposition (Nutzer 01.11.: nicht versorgbar, nicht auf Binance): nach dem Pull steht CANTON mit rolle taktisch; ASTER und MON kommen mit 400 Tagen von selbst in die Betriebsreihen"
+    seit: "2026-11-01"
+    paket: Neuaufnahme
+    commit: ""
+    art: manuell
+    nachweis: "Vor dem Pull am NB 'git diff Basisinfos/config.yaml' leer (sonst stash, nicht verwerfen). Danach Diagnose watchlist_stammdaten: CANTON rolle taktisch, keine Zeile fuer CANTON in watchlist_ergaenzung mit rolle core. Spaeter: ASTER (um den 11.11.) und MON (um den 30.12.) in messdaten.db (Betriebskopie) mit >= 400 Tagen"
+    faellig_bis: "2027-01-15"
     status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}

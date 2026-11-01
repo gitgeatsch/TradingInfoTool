@@ -27774,6 +27774,10 @@ def paket_neuaufnahme() -> None:
            "eine Ausnahme ohne Begruendung ist eine stille Luecke - genau "
            "die soll diese Pruefung ja finden. Ausgenommen: %s"
            % ", ".join(_NA.AUSNAHMEN))
+    pruefe(P, "auch die Werte IN AUFNAHME tragen einen Grund (Nutzer 01.11.: ASTER, MON)",
+           all(len(v) > 40 for v in _NA.IN_AUFNAHME.values()),
+           "sie sind bis 400 Tage kein Mangel - ohne Grund waere das dieselbe stille Luecke. In Aufnahme: %s"
+           % ", ".join(_NA.IN_AUFNAHME))
     # ---- DIE F-198-KOLLISIONEN SIND NUR HALB BEREINIGT (08.09.2026) ----
     #
     # ⚠️⚠️ `messreihen` hat `symbol TEXT PRIMARY KEY` - ein Symbol kann
