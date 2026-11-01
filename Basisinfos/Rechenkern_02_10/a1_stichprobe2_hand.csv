@@ -1,0 +1,61 @@
+nr;typ;assets;bereich;notiz
+301;regulierung_klage;WLFI;asset;Untersuchung des Repraesentantenhauses
+302;regulierung_klage;AAVE;asset;SEC beendet Ermittlung
+303;netz_upgrade;SOL;asset;Testnetz
+304;unternehmen;OM;asset;Umstrukturierung
+305;regulierung_klage;;krypto_gesamt;
+306;hack_exploit;;krypto_gesamt;Datenleck
+307;produkt;;krypto_gesamt;
+308;sonstiges;;sonstiges;
+309;regulierung_klage;;krypto_gesamt;
+310;verschoben;;krypto_gesamt;zweifelhaft: Gesetzesarbeit verzoegert
+311;unternehmen;;krypto_gesamt;
+312;marktbericht_meinung;;krypto_gesamt;erwaegt
+313;marktbericht_meinung;BTC;asset;
+314;marktbericht_meinung;;krypto_gesamt;Gespraeche
+315;regulierung_klage;;krypto_gesamt;Vergleich
+316;regulierung_klage;;krypto_gesamt;zweifelhaft: Schriftsatz, keine Entscheidung
+317;hack_exploit;;krypto_gesamt;
+318;hack_exploit;ATH;asset;
+319;regulierung_klage;;krypto_gesamt;Gesetz kommt voran
+320;unternehmen;;krypto_gesamt;
+321;sonstiges;;sonstiges;
+322;regulierung_klage;;krypto_gesamt;Beschlagnahme
+323;marktbericht_meinung;;krypto_gesamt;Forderung
+324;hack_exploit;RUNE;asset;
+325;regulierung_klage;;krypto_gesamt;
+326;marktbericht_meinung;XRP;asset;
+327;hack_exploit;TAIKO;asset;
+328;netz_upgrade;SOL APT;asset;
+329;marktbericht_meinung;;aktien_kredit;
+330;marktbericht_meinung;;krypto_gesamt;Studie
+331;marktbericht_meinung;BTC;asset;
+332;marktbericht_meinung;BTC;asset;
+333;marktbericht_meinung;XMR;asset;
+334;marktbericht_meinung;BTC;asset;
+335;marktbericht_meinung;BTC;asset;
+336;regulierung_klage;;krypto_gesamt;Lizenz
+337;produkt;;krypto_gesamt;
+338;marktbericht_meinung;BTC;asset;
+339;marktbericht_meinung;BTC;asset;
+340;marktbericht_meinung;;aktien_kredit;
+341;marktbericht_meinung;;krypto_gesamt;
+342;produkt;;sonstiges;
+343;marktbericht_meinung;;krypto_gesamt;
+344;produkt;XRP;asset;
+345;marktbericht_meinung;AAVE;asset;
+346;marktbericht_meinung;XRP;asset;
+347;makro_zentralbank;;makro_usa;zweifelhaft: Daten zu Zwangsversteigerungen
+348;marktbericht_meinung;ADA;asset;
+349;marktbericht_meinung;HYPE;asset;
+350;marktbericht_meinung;;krypto_gesamt;
+351;marktbericht_meinung;ETH;asset;
+352;makro_zentralbank;;makro_usa;CPI
+353;marktbericht_meinung;XRP;asset;
+354;sonstiges;;krypto_gesamt;zweifelhaft
+355;marktbericht_meinung;FEG;asset;
+356;marktbericht_meinung;;krypto_gesamt;
+357;marktbericht_meinung;BTC;asset;
+358;marktbericht_meinung;;aktien_kredit;Frist durch Senatoren, keine Entscheidung
+359;marktbericht_meinung;ETH;asset;
+360;produkt;BNB;krypto_gesamt;

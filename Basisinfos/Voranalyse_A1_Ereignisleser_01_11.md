@@ -7,7 +7,7 @@
 Nachricht … zu welchem Asset, welcher Typ, welche Schwere?“*, Prüfung gegen ~200 handgeprüfte Meldungen, V4) ·
 [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §3 (Ereignisse kommen **nur** über A1, Zeilenform) ·
 [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md) (Ebene 1, S8 im Takt offen).
-**Stand:** Vorlage zur Abstimmung. **Nichts gebaut, nichts geladen, Betrieb unberührt.** Gemessen nur lesend auf den drei Archiven;
+**Stand:** ✔ **Gebaut 01.11. (§7), Frage §8 offen.** Betrieb unberührt. (Die Voranalyse darunter: unverändert.) Gemessen nur lesend auf den drei Archiven;
 dazu **ein Probelauf** gpt-oss-120b (Groq) auf 2 × 2 × 25 öffentlichen Nachrichtentiteln. Skripte und Ausgaben: `Rechenkern_02_10/a1_voranalyse_regeln.py` → `.txt`, `a1_voranalyse_llm_probe.py` → `…_standard.csv`, `…_low.csv` (Variante mit `reasoning_effort: low`).
 
 ---
@@ -99,3 +99,63 @@ geklärt: ein Termin wird zum Ereignis, wenn er **stattfindet**.
 
 **Empfehlung a** — mit der Regel, dass die Messung (nicht eine Wahl) über den Wechsel auf b entscheidet. A1-1 bis A1-10, der
 Typkatalog, die Zeilenform und P1–P6 sind fachlich begründet und hier nicht zur Wahl gestellt — Einwände willkommen.
+
+---
+
+## 7. Ausführung (01.11.2026) — gebaut, geprüft, gegengeprüft
+
+**Auftrag (Nutzer 01.11.):** *„a, bauen – prüfen, gegenprüfen und doku“*. **Nur Desktop, Betrieb unberührt** (`binance_ankuendigungen.art`
+unverändert, kein NB, keine Mail). Ablage `data/_sichten/sichten.db` (Sicherung `sichten_vor_a1_01_11.db`), Tabellen `ereignis` und
+`llm_antwort`.
+
+### 7.1 Gebaut
+
+| Teil | was |
+|---|---|
+| `agent/ereignisse.py` | Typkatalog (24 Typen mit Definition, dazu 6 Bereiche mit Definition) · Regeln Binance (17) und Upbit (7), Vorrang nach Reihenfolge, die fünf Mail-tragenden **unverändert** aus der Voranalyse · Assets: Mail-Typen über `binance_ankuendigungen.kuerzel` (E-1-gleich), sonst Klammer/Kontrakt/Großwort; Upbit ohne Marktnamen; LLM-Kürzel gegen Universum (783) und **Alias-Tabelle** (mehrdeutige Kürzel wie S, CAT nur mit Namen) · **Schwere nur aus dem Register** (E-1, C2-a/-b/-c), sonst *ungemessen* · `bekannt_ab` Börse +1 h, Nachricht min(Aufnahme, +1 h) · LLM gpt-oss-120b, Stapel 25, Temperatur 0, `reasoning_effort low`, jede Antwort mit Prompt-Prüfsumme in `llm_antwort`, wiederaufnehmbar, wartet auf das Kontingent · `am(T)` (nur `bekannt_ab ≤ T`, ≤ 7 T, nur echte Ereignisse; **Börsen-Ereignis fremder Werte entfällt**, Nachricht zu fremdem Asset → S1) · `zeilen()` in der Form von Fütterung §3 |
+| `agent/zustaende.py` | `text()` hängt je Sicht die Ereignisse an (Vorgabe: Watchlist von heute — ⚠ im Rückspiel nicht die damalige, offen) |
+| geladen | **6.701 Börsen-Ereignisse nach Regeln** (Binance 94,6 %, Upbit 84,2 % der Meldungen; Rest 360 fürs LLM) |
+| Prüfpaket `Ereignisse` | 12 Prüfungen ohne Netz (+ Standard-DB); **6 von 6 Mutationen rot** (Vorgriff +2 h, max statt min bei `bekannt_ab`, Alias aus, Aktion als Ereignis, alter Paar-Titel, unbekannter Typ still akzeptiert) |
+| Nachweis | `Rechenkern_02_10/a1_nachweis.py` → `a1_nachweis.txt` (Prompt 2) und `a1_nachweis_prompt1.txt`; Stichproben `a1_stichprobe.py/.csv`, `a1_stichprobe2.py/.csv`, Hand `a1_stichprobe_hand.csv` (git `e798513c`) und `a1_stichprobe2_hand.csv` (git `05caccb8`) — **beide vor jedem Blick auf die Ausgabe festgeschrieben** |
+
+### 7.2 Gegenprüfung — Ergebnisse
+
+| # | Prüfung | Ergebnis |
+|---|---|---|
+| P3 | Gleichheit mit dem Betrieb, **alle** 6.276 Binance-Meldungen | Token-Delisting 32/32 (+2 echte, s. A1-2), Futures-Delisting **59/59**, Monitoring **19/19** — Betrieb ⊆ A1 ✔ |
+| P1/P2 | Börsen gegen die Hand | Upbit-Regel Typ **93 %** [79–98], Ereignis 100 %, Asset 100 % · Binance-Regel Typ **84 %** [71–92], Ereignis 88 %, Asset 71 % (BSC-Upgrade ohne „BNB“ im Titel, MANTRA/OM) · Binance-Rest per LLM Typ 70 % |
+| — | **Vorfilter (Bedingung von Weg a), Kriterium vorab** | relevante Risiko-Ereignisse: Treffer 15/45, ohne Treffer 2/45 → hochgerechnet **erfasst 55 %** [grob 19–86]; Kriterium ≥ 90 % **NICHT erfüllt → Weg b** (deine Regel). Zweiter Blick auf Stichprobe 2: 14/30 gegen 1/30 — gleiche Richtung. Verloren gehen v. a. Firmenmeldungen (Strategy kauft BTC, World verkauft WLD, IPOs), dazu je ein Hack und ein Fed-Schritt zum GENIUS Act |
+| — | ⚠ **Prompt 1 hatte einen Fehler:** die Bereiche waren nur genannt, nicht definiert | 39 von 90 Nachrichten unter *sonstiges*, darunter Krypto-Hacks und -Klagen → **an keine Sicht** (15 relevante verloren). **Prompt 2** definiert die Bereiche, trennt Entscheidung von Forderung/Meinung, nennt Käufe großer Halter. Auf Stichprobe 1 (geschönt, dort gefunden): verloren 2 statt 15 |
+| P2 | **Prompt 2, gültige Zahl auf Stichprobe 2** (60 Nachrichten, alle per LLM) | Typ **70 %** [57–80] · Ereignis ja/nein **77 %** [65–86] · Asset 77 % [58–89] · gleiche Sicht-Relevanz 77 % · Hand relevant/LLM nicht **4** · LLM relevant/Hand nicht **10** |
+| P4 | derselbe Stapel zweimal | gleicher Typ **88 %** [81–93], gleiche Assets 93 % |
+| P5 | kein Vorgriff | `bekannt_ab ≥ zeit` überall; 333 Stichtage: 0 Zeilen mit `bekannt_ab > T`; Stapelkontext (Hauptlauf gegen gemischten Stapel) 4/5 — noch zu wenig, wird mit dem Volllauf belastbar |
+
+**Was der Rest-Fehler ist (Stichprobe 2):** das LLM nimmt **„sonstiges“ als Sammelbecken** für Kursberichte und Meinungen (6 der 10
+Fehlalarme: *„Oil price collapse signals …“*, *„HSBC risk-on order …“*, *„BlackRock remains risk-on …“*) — und *sonstiges* zählt als
+Ereignis. Dazu Forderungen/Erwägungen als *regulierung_klage* (3). Beides ist eine Frage der Definition, nicht des Modells.
+
+⚠ **Meine Handeinordnung ist selbst unsicher** — 14 Fälle tragen *zweifelhaft* in der Notiz. Deine stichprobenartige Gegenprüfung (V4)
+steht aus; die beiden Hand-Dateien sind dafür gedacht.
+
+### 7.3 Stand und was offen ist
+
+| | |
+|---|---|
+| Börsen | ✔ fertig in `sichten.db` (Regeln); Börsen-Rest (360) per LLM offen |
+| Nachrichten | **Weg b** (Messung, nicht Wahl). Der Volllauf (25.203 Nachrichten + 360 Börsen-Rest, ≈ 2,8 Mio. Token ≈ **14 Tage** Groq-Kontingent für gpt-oss-120b; der Betrieb nutzt ein anderes Modell mit eigenem Kontingent) ist **gebaut, aber nicht gestartet**: ein weiterer Prompt-Schritt würde ihn entwerten. 98 Antworten mit Prompt 1 liegen unter dessen Prüfsumme und werden nicht verwendet |
+| Frage | siehe §8 |
+| offen | Watchlist **zum Zeitpunkt** für S7 im Rückspiel · Binance-Asset für Netz-Meldungen ohne Kürzel („BNB Smart Chain“) · Live-Abruf am NB (G8) |
+
+---
+
+## 8. Zur Abstimmung — eine Frage (01.11.2026)
+
+**Wann startet der 14-Tage-Lauf über alle Nachrichten?**
+
+| | Weg | Folge |
+|---|---|---|
+| **a** | **Erst Prompt 3** — *sonstiges* nur für echtes Geschehen, Kursbericht/Meinung ausdrücklich ausgeschlossen, Forderung/Erwägung ausdrücklich *marktbericht_meinung* —, **gemessen an einer DRITTEN frischen Stichprobe** (60, Hand vorher festgeschrieben), dann Volllauf | ~1 h + ~10.000 Token; der lange Lauf geht mit dem besseren Prompt |
+| b | **Jetzt starten mit Prompt 2** (Ereignis ja/nein 77 %) | 14 Tage früher fertig; die Fehlalarme (~1 von 6 Meldungen) gehen als Rauschen in die Sichten, G7 misst dann auf dieser Qualität |
+
+**Empfehlung a:** der Fehler ist systematisch und benannt, der Lauf dauert ohnehin zwei Wochen — eine Stunde davor kostet nichts. Dazu
+deine Stichproben-Gegenprüfung meiner Handeinordnung (V4), damit die Zahlen auf festem Grund stehen.

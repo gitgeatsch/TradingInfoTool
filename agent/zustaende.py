@@ -293,18 +293,34 @@ def zeilen(liste: list[Zustand], sicht: str) -> list[str]:
     return [("● " if z.auffaellig else "  ") + z.satz for z in liste if z.sicht == sicht]
 
 
-def text(T, ablage: Ablage | None = None, jahre: int = JAHRE, pfad: str = ABLAGE) -> str:
-    """Alle Sichten als Block - Form der Probe (Kopf, je Sicht, Zusammenfassung)."""
+def _watchlist_krypto() -> list[str]:
+    try:
+        import config as C
+        return [w.symbol.upper() for w in C.get_watchlist() if w.assetklasse == "krypto"]
+    except Exception:                                          # noqa: BLE001
+        return []
+
+
+def text(T, ablage: Ablage | None = None, jahre: int = JAHRE, pfad: str = ABLAGE, ereignisse: pd.DataFrame | None = None,
+         assets: list | None = None) -> str:
+    """Alle Sichten als Block - Form der Probe (Kopf, je Sicht, Zusammenfassung). Je Sicht nach den Zuständen die EREIGNISSE aus A1
+    (``agent.ereignisse``, Fütterung §3), am Stichtag bekannt und höchstens 7 T alt. ``assets`` = wessen Asset-Ereignisse an S7 gehen
+    (Vorgabe: die Watchlist von HEUTE - ⚠ im Rückspiel nicht die damalige, offener Punkt in der Doku)."""
+    from agent import ereignisse as EV
     T = _T(T)
     liste = zustaende(T, ablage, jahre)
     rang = [z for z in liste if z.sicht != "S8"]
+    E = EV.lade(pfad) if ereignisse is None else ereignisse
+    ev = EV.am(E, T, assets=_watchlist_krypto() if assets is None else assets)
     aus = ["FÜTTERUNG — PROBE DER SATZFORM (Ü1) · Stichtag %s · Einordnung %d J · nur lesend %s" % (T, jahre, pfad), ""]
     for sicht in SICHTEN:
         aus.append("── %s ──" % sicht)
         aus += ["  " + z for z in zeilen(liste, sicht)]
+        aus += ["  " + z for z in EV.zeilen(ev, sicht, T)]
     n = sum(len(z.satz) for z in rang)
     aus += ["", "● = auffällig (Rang ≤ P20 oder ≥ P80) · %d von %d Zuständen auffällig · %d mit kürzerem Fenster als %d J" % (
         sum(z.auffaellig for z in rang), len(rang), sum(z.fenster_j < jahre - 0.2 for z in rang), jahre),
         "Zeichen gesamt: %d (≈ %d Token bei 3,5–4 Zeichen je Token)" % (n, n / 3.75),
-        "S8 Termine: %d Zeilen, %d Zeichen" % (sum(z.sicht == "S8" for z in liste), sum(len(z.satz) for z in liste if z.sicht == "S8"))]
+        "S8 Termine: %d Zeilen, %d Zeichen" % (sum(z.sicht == "S8" for z in liste), sum(len(z.satz) for z in liste if z.sicht == "S8")),
+        "Ereignisse (A1, %d T): %d Meldungen in %d Zeilen" % (EV.FENSTER_T, len(ev), sum(len(EV.zeilen(ev, s, T)) for s in SICHTEN))]
     return "\n".join(aus)

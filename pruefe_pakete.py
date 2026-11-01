@@ -33759,6 +33759,118 @@ def _verweigert(f) -> bool:
     return False
 
 
+def paket_ereignisse() -> None:
+    """A1 Ereignis-Leser ``agent/ereignisse.py`` (G9, Voranalyse_A1 §5 P6, Nutzer 01.11.2026: *"a, bauen – pruefen, gegenpruefen und
+    doku"*). OHNE Netz, an Mustertiteln und einer Kunstablage. Die Gegenproben gegen echte Daten und die Handeinordnung (P1-P5) stehen in
+    ``Basisinfos/Rechenkern_02_10/a1_nachweis.py``."""
+    P = "Ereignisse"
+    import hashlib as _hl
+    import json as _json
+
+    import pandas as _pd
+
+    from agent import binance_ankuendigungen as _BA
+    from agent import ereignisse as _E
+
+    # 1 Regeln je Typ an Mustertiteln - Binance (Vorrang!) und Upbit
+    muster_b = {
+        "Binance Will Remove the Monitoring Tag on FOO on 2026-01-01": "monitoring_ende",
+        "Binance Will Extend the Monitoring Tag to Include FOO, BAR on 2026-01-01": "monitoring",
+        "Binance Futures Will Delist USDⓈ-Margined FOOUSDT Perpetual Contract": "delisting_futures",
+        "Binance Margin Will Delist FOO/USDT Isolated Margin Pair": "delisting_margin",
+        "Notice of Removal of Isolated Margin Trading Pairs - 2023-10-12": "delisting_margin",
+        "Binance Will Delist FOO, BAR on 2026-01-01": "delisting_token",
+        "Notice of Removal of Spot Trading Pairs - 2026-01-01": "paar_entfernt",
+        "Notice of Removal of Trading Pairs - 2023-03-01": "paar_entfernt",          # A1-3: alter Titel ohne „Spot“
+        "Binance Futures Will Launch USDⓈ-Margined FOOUSDT Perpetual Contract": "listing_futures",
+        "Binance Will List Foo (FOO) with Seed Tag Applied": "listing_spot",
+        "Binance Will Postpone the Listing of FOO": "verschoben",
+        "Binance Will Support the Foo (FOO) Network Upgrade & Hard Fork": "netz_upgrade",
+        "Join the Foo Trading Competition to Share 1,000 USDT in Rewards!": "aktion",
+        "Binance Futures Updates Taker Program (2026-01-01)": "produkt",
+    }
+    falsch = {t: _E.regel(t, _E.B_REGELN) for t, s in muster_b.items() if _E.regel(t, _E.B_REGELN) != s}
+    pruefe(P, "Binance-Regeln: %d Mustertitel je Typ, Vorrang (Monitoring-Ende vor Monitoring, Margin vor Paar, Delisting vor Listing)"
+           % len(muster_b), not falsch, str(falsch)[:200])
+    muster_u = {"블라스트(BLAST) 거래 유의 종목 지정 안내": "monitoring", "디지털 자산 유의 종목 지정 해제 안내 (FOO)": "monitoring_ende",
+                "이머코인(EMC) BTC 마켓 거래 지원 종료 안내": "paar_entfernt", "스톰엑스(STMX) 거래지원 종료 안내 (7/3 15:00)": "delisting_token",
+                "뉴메레르(NMR) KRW, USDT 마켓 디지털 자산 추가": "listing_spot", "BTC 마켓 코인 추가 (MEDX, SPC)": "listing_spot"}
+    falsch = {t: _E.regel(t, _E.U_REGELN) for t, s in muster_u.items() if _E.regel(t, _E.U_REGELN) != s}
+    pruefe(P, "Upbit-Regeln: %d Mustertitel (Paar-Ende vor Token-Ende, Kennzeichen-Ende vor Kennzeichen)" % len(muster_u), not falsch,
+           str(falsch)[:200])
+    # 2 Gleichheit mit dem Betrieb (A1-2): wo die Regel einen Mail-Typ gibt, sagt art() dasselbe - und dieselben Kuerzel
+    W = {"FOO", "BAR", "EMC", "NMR", "SOL", "S", "CAT", "BTC", "ETH"}
+    ungleich = [t for t, s in muster_b.items() if s in _E.BETRIEB_ART and _BA.art(t, 161) != _E.BETRIEB_ART[s]]
+    txt = "FOOUSDT and BARUSDT will be delisted"
+    gleich_k = _E.binance_assets("delisting_futures", "Binance Futures Will Delist X", txt, W) == \
+        sorted(_BA.kuerzel("futures_delist", "Binance Futures Will Delist X", txt, W))
+    pruefe(P, "Mail-Typen: art() des Betriebs = Regel hier, Kuerzel = binance_ankuendigungen.kuerzel (E-1-Gleichheit, P3)",
+           not ungleich and gleich_k and set(_E.BETRIEB_ART.values()) == set(_BA.ARTEN_MAIL), str(ungleich))
+    # 3 Assets: Alias, mehrdeutige Kuerzel, Universum, Marktnamen bei Upbit
+    A = {"solana": "SOL", "sonic": "S", "simons cat": "CAT"}
+    fall = [_E.assets_pruefen(["S"], "S price jumps", W, A), _E.assets_pruefen(["S"], "Sonic (S) upgrade goes live", W, A),
+            _E.assets_pruefen(["CAT", "XYZ"], "CAT token news", W, A), _E.assets_pruefen([], "Solana network halts", W, A),
+            _E.upbit_assets("이머코인(EMC) BTC 마켓 거래 지원 종료 안내", W), _E.upbit_assets("뉴메레르(NMR) KRW, USDT 마켓 디지털 자산 추가", W)]
+    pruefe(P, "Assets: mehrdeutiges Kuerzel nur mit Namen, nur im Universum, Name allein genuegt, Marktname (BTC/KRW) ist kein Asset",
+           fall == [[], ["S"], [], ["SOL"], ["EMC"], ["NMR"]], str(fall))
+    # 4 Schwere NUR aus dem Register
+    ref = all(("E-1" in v or "C2-" in v) for v in _E.SCHWERE.values())
+    pruefe(P, "Schwere nur aus dem Register: jeder Wert mit Befund (E-1/C2), Nachrichten ungemessen, Upbit ohne KRW ungemessen",
+           ref and _E.schwere("nachricht", "hack_exploit") == _E.UNGEMESSEN and _E.schwere("upbit", "listing_spot") == _E.UNGEMESSEN
+           and "C2-b" in _E.schwere("upbit", "listing_spot", "KRW") and "E-1" in _E.schwere("binance", "monitoring"))
+    # 5 Vorfilter
+    treffer = ["Hacker drains $5M from DeFi bridge", "SEC sues exchange", "USDe depegs", "Binance to delist FOO", "Token unlock next week"]
+    kein = ["Bitcoin price analysis: why 60K matters", "Second quarter earnings beat", "ETF inflows hit record"]
+    pruefe(P, "Vorfilter: Risiko-Stichwoerter treffen, Kursberichte nicht; 'SEC' nur gross (nicht in 'Second')",
+           all(map(_E.vorfilter, treffer)) and not any(map(_E.vorfilter, kein)))
+    # 6 bekannt_ab (A1-5) und 7 Lesen am Stichtag (P5)
+    pub = _pd.Timestamp("2026-01-01 10:00", tz="UTC")
+    pruefe(P, "bekannt_ab: Boerse +1 h; Nachricht min(Aufnahme, +1 h) - nie vor der Veroeffentlichung",
+           _E.bekannt_boerse(pub) == "2026-01-01T11:00:00+00:00"
+           and _E.bekannt_nachricht(pub, _pd.Timestamp("2026-01-01 18:00", tz="UTC")) == "2026-01-01T11:00:00+00:00"
+           and _E.bekannt_nachricht(pub, _pd.Timestamp("2026-01-01 10:20", tz="UTC")) == "2026-01-01T10:20:00+00:00"
+           and _E.bekannt_nachricht(pub, _pd.NaT) == "2026-01-01T11:00:00+00:00")
+
+    def ev(m, bek, typ, assets, bereich, quelle="binance"):
+        return {"quelle": quelle, "meldung": m, "zeit": bek, "bekannt_ab": bek, "typ": typ, "ereignis": int(typ not in _E.KEIN_EREIGNIS),
+                "assets": _json.dumps(assets), "bereich": bereich, "sicht": _E.sicht(assets, bereich), "schwere": "ungemessen",
+                "beleg": "x", "titel": m, "methode": "regel", "modell": ""}
+    Ek = _pd.DataFrame([ev("alt", "2025-12-20T00:00:00+00:00", "delisting_token", ["FOO"], "asset"),
+                        ev("a", "2025-12-30T00:00:00+00:00", "delisting_token", ["FOO"], "asset"),
+                        ev("b", "2025-12-31T00:00:00+00:00", "delisting_token", ["FOO"], "asset"),
+                        ev("c", "2025-12-31T05:00:00+00:00", "hack_exploit", ["BAR"], "asset", "nachricht"),
+                        ev("e", "2025-12-31T07:00:00+00:00", "delisting_token", ["BAR"], "asset"),
+                        ev("d", "2025-12-31T06:00:00+00:00", "aktion", ["FOO"], "asset"),
+                        ev("spaet", "2026-01-01T00:00:01+00:00", "hack_exploit", ["FOO"], "asset")])
+    x = _E.am(Ek, "2026-01-01")
+    xw = _E.am(Ek, "2026-01-01", assets=["FOO"])
+    z = _E.zeilen(xw, "S7", "2026-01-01")
+    pruefe(P, "am Stichtag: nur bekannt_ab <= T (P5), hoechstens 7 T alt, keine Aktion; fremdes Asset: Nachricht -> S1, Boerse entfaellt; "
+           "gleiche Zeile einmal mit Zahl",
+           sorted(x.meldung) == ["a", "b", "c", "e"] and dict(zip(xw.meldung, xw.sicht)) == {"a": "S7", "b": "S7", "c": "S1"}
+           and len(z) == 1 and "(2 Meldungen)" in z[0] and "neu seit" in z[0] and z[0].endswith("Ereignis"), " | ".join(z)[:160])
+    # 8 LLM-Antwort: Form wird geprueft, nicht geraten
+    gut = '[{"nr":1,"typ":"hack_exploit","assets":["FOO"],"bereich":"asset"},{"nr":2,"typ":"aktion","assets":[],"bereich":"was"}]'
+    ok = _E.lies_antwort("Antwort: " + gut, 2) == [("hack_exploit", ["FOO"], "asset"), ("aktion", [], "sonstiges")]
+    fehl = 0
+    for roh, n in (('[{"nr":1,"typ":"erfunden","assets":[]}]', 1), ('[{"nr":1,"typ":"aktion"}]', 2), ("kein json", 1)):
+        try:
+            _E.lies_antwort(roh, n)
+        except Exception:                                  # noqa: BLE001
+            fehl += 1
+    pruefe(P, "LLM-Antwort: unbekannter Typ, fehlende Nummer, kein JSON -> Fehler (kein stilles Raten); unbekannter Bereich -> sonstiges",
+           ok and fehl == 3)
+    pruefe(P, "Prompt nennt JEDEN Typ mit Definition; Pruefsumme passt; Temperatur 0",
+           all("- %s: " % k in _E.prompt() for k in _E.TYPEN)
+           and _E.PROMPT_SHA == _hl.sha256(_E.prompt().encode("utf-8")).hexdigest()[:12]
+           and '"temperature": 0' in open(_E.__file__, encoding="utf-8").read())
+    pruefe(P, "kein Ereignis = Aktion, Produkt, Marktbericht/Meinung (abgelegt, nicht an die Sichten)",
+           set(_E.KEIN_EREIGNIS) == {"aktion", "produkt", "marktbericht_meinung"} and set(_E.KEIN_EREIGNIS) <= set(_E.TYPEN))
+    # 9 nie die Produktion
+    pruefe(P, "nie die Produktions-DB (schreiben und lesen)",
+           _verweigert(lambda: _E.verbinde("x/tradinginfotool.db")) and _verweigert(lambda: _E.lade("x/tradinginfotool.db")))
+
+
 def paket_gesamtplan() -> None:
     """Der LAUFENDE PLAN Basisinfos/Gesamtplan.md (28.10.2026, Nutzer: *"ja 1, neuer Gesamtplan - bau auf allen Ebenen einen Link-Verweis
     ein, damit wir die Plaene und Informationen immer finden und beruecksichtigen koennen"*).
@@ -33868,6 +33980,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Gesamtplan": paket_gesamtplan,
           "SichtenQuellen": paket_sichten_quellen,
           "Zustaende": paket_zustaende,
+          "Ereignisse": paket_ereignisse,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,

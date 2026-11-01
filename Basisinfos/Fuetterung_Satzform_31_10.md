@@ -66,7 +66,7 @@ Reihenfolge §6 Schritt 2) · [`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashb
 | **Form** | je Ereignis eine Zeile: Zeit (UTC) · Asset oder Bereich · Typ (Delisting, Hack, Freigabe, Listing, Klage, Regulierung, Makro …) · Schwere · **neu seit** · Beleg (Quelle, Link) · Kennzeichen *Ereignis* |
 | **Regel** | Sichten bekommen **nie Rohmeldungen** (gemessen: 11.500 statt 1.100–2.000 Token, Voranalyse_Luecken T1) |
 | **GDELT-Ton** | ist **Stimmung**, kein Ereignis — er steht als Zustand in S1/S2/S3/S7 |
-| **Stand** | A1 ist **nicht entworfen** (G9: 6.276 Binance-Meldungen geladen, Voranalyse A1 offen). Bis dahin bekommt S7 nur Binance/Upbit-Ankündigungen in derselben Zeilenform, **regelbasiert** (Delisting, Monitoring, Listing) |
+| **Stand** | ✔ **A1 gebaut 01.11.** (`agent/ereignisse.py`, [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) §7): Börsen regelbasiert in `sichten.db` (6.701 Ereignisse), Nachrichten per LLM nach **Weg b** (Vorfilter verlor zu viel) — der Lauf über alle Nachrichten braucht ~14 Tage Groq-Kontingent. `zustaende.text` hängt die Ereignisse je Sicht an (Fenster 7 T, nur am Stichtag bekannte) |
 
 ---
 
@@ -103,7 +103,7 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 | 1 | **Historie ab 2020-01** in `sichten.db` (P1) — derselbe Abrufer, nur früherer Start | Desktop | nein |
 | 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) — **✔ 01.11. geladen und gegengeprüft**, [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) §5; Breite Desktop ↔ NB (V2/G6a) ✔ gelöst 01.11. abends (§6 dort: Grundgesamtheit des Betriebs zum Zeitpunkt) | Desktop | nein |
 | 3 | **Ebene-1-Modul** `agent/zustaende.py`: die Satzform aus §1 als **ein** Rechenweg (SF8), Probe → Modul, mit Prüfpaket (Fenster, Vorgriff, Lesart je Zustand vorhanden) — **✔ 01.11. gebaut** (Weg a, mit S8 Termine; §7 der Voranalyse) · **Voranalyse 01.11.** [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md): die Probe hat ein **Jahrgangsloch** (Z1) und stürzt bei leerer Reihe ab (Z2) | Desktop | nein |
-| 4 | **Voranalyse A1** (G9) — Regeln zuerst, LLM für den Rest — **01.11. zur Abstimmung** [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) | Desktop | nein |
+| 4 | **A1** (G9) — Regeln zuerst, LLM für den Rest — **✔ 01.11. gebaut (a → nach Messung b)**, LLM-Lauf Nachrichten offen (~14 T) [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) §7 | Desktop | nein |
 | 5 | **G7 Messplan**: Faktentreue der Prüfer + Wert der Sichten im Rückspiel | Desktop | nein |
 | 6 | **G8 Bau** B1–B6 + Ebenen 2/3, Abgleich Mail ↔ Ebene 1 am NB (P3) | beide | ja, ein Bündel |
 

@@ -1,0 +1,207 @@
+A1 NACHWEIS · Prompt 05e921720b82 · Modell openai/gpt-oss-120b · Stichprobe 200 · Universum 783
+
+P1/P2 — gegen die Hand, Wilson 95 % (Weg a, wie das Modul liefert)
+Schicht              Methode  Typ richtig                  Ereignis ja/nein richtig     Asset richtig (Hand-Ereignis)
+binance_regel        regel    42/50 = 84 % [71–92]         44/50 = 88 % [76–94]         10/14 = 71 % [45–88]        
+binance_rest         llm      21/30 = 70 % [52–83]         23/30 = 77 % [59–88]         9/11 = 82 % [52–95]         
+upbit                regel    28/30 = 93 % [79–98]         30/30 = 100 % [89–100]       30/30 = 100 % [89–100]      
+nachricht_treffer    llm      24/45 = 53 % [39–67]         38/45 = 84 % [71–92]         25/32 = 78 % [61–89]        
+nachricht_kein       vorfilter 0/45 = 0 % [0–8]             35/45 = 78 % [64–87]         7/10 = 70 % [40–89]         
+nachricht (alle 90)  llm=b    59/90 = 66 % [55–75]         74/90 = 82 % [73–89]         33/42 = 79 % [64–88]        
+
+Abweichungen Typ (Hand -> Modul):
+    9 binance_regel     margin_neu           -> produkt              Binance Will Add Nillion (NIL) on Earn, Buy Crypto, Convert, Margin & Futures
+   22 binance_regel     produkt              -> aktion               Binance Margin & Binance Earn System Upgrade Notice (2023-06-13)
+   23 binance_regel     produkt              -> listing_alpha        DYOR Just Got Upgraded: Track New On-Chain Metrics for Binance Alpha Tokens
+   26 binance_regel     listing_spot         -> produkt              Notice on New Trading Pairs & Trading Bots Services on Binance Spot - 2026-03-03
+   33 binance_regel     listing_spot         -> produkt              Notice on New Trading Pairs & Trading Bots Services on Binance Spot - 2024-09-04
+   39 binance_regel     produkt              -> listing_futures      Binance Futures Will End Last Price Protected Period on USDⓈ-Margined ONEUSDT Pe
+   47 binance_regel     produkt              -> aktion               Binance Futures Updates Trading Fee Discount for TradFi Perps (2026-03-31)
+   50 binance_regel     produkt              -> verschoben           Binance Futures Will Postpone the Minimum Trade Amount Adjustment of USDⓈ-M SOLU
+   55 binance_rest      produkt              -> paar_entfernt        Notice Regarding the Removal of BTC & ETH From Binance DeFi Staking (2023-12-05)
+   57 binance_rest      netz_upgrade         -> produkt              Binance Will Support ETH 2.0 Staking Withdrawals
+   60 binance_rest      netz_upgrade         -> sonstiges            The 22nd Quarterly BNB Burn Completed via BNB Auto-Burn
+   61 binance_rest      marktbericht_meinung -> sonstiges            Community Reminder on Projects and Tokens with Similar Names
+   62 binance_rest      sonstiges            -> marktbericht_meinung Price Volatility of MANTRA (OM)
+   69 binance_rest      produkt              -> paar_entfernt        Notice Regarding the Removal of Selected Liquidity Pools on Binance Liquid Swap 
+   70 binance_rest      aktion               -> sonstiges            Binance Blockchain Week Dubai 2024 Ticket Prices Are Now 150 USD (Excluding VAT)
+   73 binance_rest      produkt              -> listing_spot         Binance Will Open Spot Grid Trading for ARKM/USDT, PEPE/USDT, USTC/USDT & WLD/US
+   74 binance_rest      netz_upgrade         -> sonstiges            The 25th Quarterly BNB Burn Completed via BNB Auto-Burn
+   98 upbit             verschoben           -> listing_spot         아이리스(IRYS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)
+  103 upbit             verschoben           -> listing_spot         오리진트레일(TRAC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)
+  112 nachricht_treffer regulierung_klage    -> sonstiges            FTC Is Sending $23,800,000 to 640,000 Consumers Over Grubhub Settlement
+  114 nachricht_treffer regulierung_klage    -> sonstiges            Wells Fargo To Hand Out $1,300,000 Over Lawsuit Alleging Bank Sent Improper Lett
+  115 nachricht_treffer regulierung_klage    -> sonstiges            Billion-Dollar Bank Handing $2,400,000 To Customers and Attorneys In Settlement 
+  116 nachricht_treffer sonstiges            -> hack_exploit         Solana Foundation to Help Secure DeFi Protocols Following $285 Million Drift Hac
+  118 nachricht_treffer hack_exploit         -> sonstiges            New Jersey Woman Allegedly Drains $86,840 From Bank Accounts in Debit Card Fraud
+  119 nachricht_treffer marktbericht_meinung -> hack_exploit         Hacked crypto tokens drop 61% on average and rarely recover, Immunefi report say
+  120 nachricht_treffer regulierung_klage    -> sonstiges            Australia asks OpenAI, Anthropic chiefs to Senate inquiry on rogue hack: Report
+  122 nachricht_treffer sonstiges            -> regulierung_klage    ZachXBT Names Axiom Exchange in Alleged Employee Crypto Insider Trading Investig
+  125 nachricht_treffer regulierung_klage    -> hack_exploit         Maryland Man Accused of Stealing $53,300,000 From Decentralized Crypto Exchange,
+  127 nachricht_treffer hack_exploit         -> sonstiges            Update Your Browser: Google Patches Chrome Flaw Hackers Were Already Using
+  128 nachricht_treffer marktbericht_meinung -> regulierung_klage    UK committee chairs push for crypto political donations ban, adding pressure to 
+  130 nachricht_treffer marktbericht_meinung -> sonstiges            SpaceX IPO betting on Hyperliquid values Elon Musk’s company above $2 trillion e
+  136 nachricht_treffer marktbericht_meinung -> sonstiges            People Are Turning to AI for Mental Health, California Wants It Banned
+  138 nachricht_treffer marktbericht_meinung -> hack_exploit         The Daily: ZachXBT alleges $40M government crypto theft tied to custody contract
+  140 nachricht_treffer regulierung_klage    -> hack_exploit         Crypto Burglar ‘GothFerrari’ Sentenced After $250M Theft Ring Targeted US Victim
+  142 nachricht_treffer hack_exploit         -> sonstiges            Texas Firm Suffers Cybersecurity Breach As Names, Social Security Details, Phone
+  144 nachricht_treffer regulierung_klage    -> sonstiges            Ireland Data Regulator Fines Google $463,000,000 Over Location Tracking
+  145 nachricht_treffer marktbericht_meinung -> regulierung_klage    Trump to Meet Ripple, Coinbase, SEC, and CFTC Leaders as CLARITY Act Hangs in Ba
+  149 nachricht_treffer marktbericht_meinung -> sonstiges            Trump Says AI Could Be 'Bigger Than the Internet' as He Pushes Light-Touch Regul
+  151 nachricht_treffer regulierung_klage    -> sonstiges            FlightAware drops Kalshi lawsuit over a market niche that data shows it never to
+  155 nachricht_treffer regulierung_klage    -> sonstiges            71-Year-Old Man Steals $1,130,000 From US Government, Helps Accomplices Launder 
+  156 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin Price Analysis: Why the $60K-$62K Zone Is Make or Break
+  157 nachricht_kein    listing_spot         -> nicht_gelesen        Binance lists som-pegged stablecoin as Kyrgyzstan deepens crypto push
+  158 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin outperforms gold and stocks in global turmoil as ETFs and Strategy accum
+  159 nachricht_kein    regulierung_klage    -> nicht_gelesen        U.S. Federal Reserve moves on proposals to implement GENIUS Act for stablecoins
+  160 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Gold vs. Bitcoin: Can Gold Outperform BTC Amid US–Iran Conflict?
+  161 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Market Expert Updates XRP Roadmap To $300 With New Data
+  162 nachricht_kein    marktbericht_meinung -> nicht_gelesen        More people are using Ethereum for the first time, data shows
+  163 nachricht_kein    marktbericht_meinung -> nicht_gelesen        $2T Morgan Stanley Predicts Tokenized Asset Market to Hit $10T by 2030
+  164 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Ripple’s XRP Turned the Tide in April After Record Losing Streak Ends
+  165 nachricht_kein    marktbericht_meinung -> nicht_gelesen        The CLARITY Act Could Kill Stablecoin Yield – Here Is Where the Money Goes Inste
+  166 nachricht_kein    marktbericht_meinung -> nicht_gelesen        U.S. midterms pack major digital assets punch as Stand With Crypto preps strateg
+  167 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Ripple’s XRP Plunged to 14-Month Low: What’s Good, What’s Bad, and What’s Next
+  168 nachricht_kein    marktbericht_meinung -> nicht_gelesen        XRP holders hit a record 7.7M: Will price break through $1.60 next?
+  169 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bearish Signal? Bitcoin Breaks $84K with $76K in the Crosshairs
+  170 nachricht_kein    hack_exploit         -> nicht_gelesen        The End of Step Finance: How a Wallet Compromise Killed the Solana DeFi Aggregat
+  171 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Institutions Watched Bitcoin Fall 50%: Yet None of 15 Bitwise Surveyed Investors
+  172 nachricht_kein    marktbericht_meinung -> nicht_gelesen        RWA perps will outpace tokenization
+  173 nachricht_kein    marktbericht_meinung -> nicht_gelesen        XRP bounces, but $2 remains the hurdle as exchange supply hits 8-year low
+  174 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Five years after the GameStop saga, Robinhood CEO wants tokenized stocks to trad
+  175 nachricht_kein    sonstiges            -> nicht_gelesen        Mayo Clinic Says AI Can Detect Pancreatic Cancer Years Before Human Doctors
+  176 nachricht_kein    marktbericht_meinung -> nicht_gelesen        The privacy paradox of protecting kids online
+  177 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin slips as record $28B Boxing Day options expiry becomes key volatility dr
+  178 nachricht_kein    marktbericht_meinung -> nicht_gelesen        UBS considers crypto trading offering for some private clients: Bloomberg
+  179 nachricht_kein    sonstiges            -> nicht_gelesen        Aave governance rift deepens as major governance group exits $26 billion DeFi pr
+  180 nachricht_kein    marktbericht_meinung -> nicht_gelesen        CLARITY Act: Key Democrat Says Banks May Have to Compromise as Senate Eyes Crypt
+  181 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Will XRP Price Recover to $1.50 Soon as XRP ETFs Alone See Net Inflows?
+  182 nachricht_kein    produkt              -> nicht_gelesen        Visa backs Open USD with new stablecoin platform as Circle faces fresh competiti
+  183 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin just flashed a rare capitulation signal that historically triggers a vio
+  184 nachricht_kein    marktbericht_meinung -> nicht_gelesen        $209B exited altcoins over the last 13 months: Did traders rotate into Bitcoin?
+  185 nachricht_kein    produkt              -> nicht_gelesen        Sui’s native stablecoin goes live with promise of Treasury yield going back to t
+  186 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin floats near $70,000 as dollar strength and oil volatility pressure risk 
+  187 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Deutsche Bank says bitcoin’s selloff signals a loss of conviction, not a broken 
+  188 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin approaches ‘late bear market territory’ as regime signals echo 2022 bott
+  189 nachricht_kein    unternehmen          -> nicht_gelesen        Sam Altman’s World Foundation sells $65M in WLD as token hits new lows
+  190 nachricht_kein    marktbericht_meinung -> nicht_gelesen        What Ripple’s CEO Appearance At The Banking Committee Means For XRP
+  191 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Trump changes tune on prediction markets days after saying he disliked them
+  192 nachricht_kein    marktbericht_meinung -> nicht_gelesen        The Quantum Threat to Bitcoin Dividing Crypto
+  193 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Aave slides as community debates over who controls the brand
+  194 nachricht_kein    unternehmen          -> nicht_gelesen        CZ’s YZi Labs Joins BitGo IPO as Strategic Investor After Strong NYSE Debut
+  195 nachricht_kein    marktbericht_meinung -> nicht_gelesen        XRP leads broad altcoin rally as bitcoin’s biggest weekly gain in two years lift
+  196 nachricht_kein    sonstiges            -> nicht_gelesen        $15,800 Per Person in No-Strings-Attached Cash To Be Dished Out As Major US City
+  197 nachricht_kein    unternehmen          -> nicht_gelesen        Michael Saylor’s Strategy Acquires $1,280,000,000 in Bitcoin, Tom Lee’s Bitmine 
+  198 nachricht_kein    marktbericht_meinung -> nicht_gelesen        Bitcoin ETFs see new money again, but inflows remain ‘peanuts’ relative to the r
+  199 nachricht_kein    unternehmen          -> nicht_gelesen        Figure is debuting its tokenized stock along with upsized $150 million offering
+  200 nachricht_kein    marktbericht_meinung -> nicht_gelesen        3 countries control 66% of Bitcoin mining, but 1 rival is gaining
+
+Abweichungen Asset auf Hand-Ereignissen (Hand ∩ Universum -> Modul):
+   13 binance_regel     ["BNB"]                  -> []                       Binance Will Support the BNB Smart Chain (BEP20) Network Upgrade & Har
+   19 binance_regel     ["OM"]                   -> ["MANTRA", "OM"]         Binance Will Cease Support for Deposits and Withdrawals of MANTRA (OM)
+   21 binance_regel     ["BNB"]                  -> []                       Wallet Maintenance Extension for BNB Smart Chain (BEP20) - 2023-03-30
+   37 binance_regel     ["BNB"]                  -> []                       Binance Will Support the BNB Smart Chain (BEP20) Network Upgrade & Har
+   62 binance_rest      ["OM"]                   -> ["MANTRA"]               Price Volatility of MANTRA (OM)
+   71 binance_rest      ["BTC", "ETH"]           -> []                       Binance Futures Will List USDⓈ-M & COIN-M Quarterly 1227 Delivery Cont
+  124 nachricht_treffer []                       -> ["BTC"]                  Swan Bitcoin Hit With Nearly $1 Billion Lawsuit Over Prime Trust Colla
+  129 nachricht_treffer ["DRIFT"]                -> ["DRIFT", "SOL"]         Drift Protocol's $285 Million Exploit on Solana Raises Questions Over 
+  132 nachricht_treffer []                       -> ["ETH"]                  $1.6 billion Ether Machine SPAC deal collapses over unfavorable market
+  135 nachricht_treffer ["WLFI"]                 -> ["BTC", "WBTC"]          Is President Trump selling Bitcoin? WLFI pays off Aave debt with WBTC 
+  143 nachricht_treffer []                       -> ["BTC"]                  Bitcoin Depot ATM Operator Says $3.6 Million in BTC Stolen in Corporat
+  153 nachricht_treffer []                       -> ["BTC"]                  A hacker turned 25 cents of bitcoin into 46 billion fake BTC tokens on
+  154 nachricht_treffer []                       -> ["LUNA"]                 Terraform Labs Lawsuit: Jump Trading Faces $4B Case over Market Manipu
+
+AUSKUNFT (nachträglich, kein Kriterium) — Nachrichten, alle 90 per LLM (Weg b): kommt die Meldung bei derselben Sicht an?
+  relevant ja/nein gleich 76/90 = 84 % [76–91] · beide relevant: gleiche Sicht 19/26 = 73 % [54–86] · Hand relevant, LLM nicht 2 · LLM relevant, Hand nicht 12
+    119 Hand nan   LLM S1    Hacked crypto tokens drop 61% on average and rarely recover, Immunefi report say
+    124 Hand S1    LLM S7    Swan Bitcoin Hit With Nearly $1 Billion Lawsuit Over Prime Trust Collapse
+    128 Hand nan   LLM S1    UK committee chairs push for crypto political donations ban, adding pressure to 
+    130 Hand nan   LLM S7    SpaceX IPO betting on Hyperliquid values Elon Musk’s company above $2 trillion e
+    131 Hand nan   LLM S1    South Koreans Paid in Crypto for 'Revenge' Attacks Involving Human Waste, Say Po
+    132 Hand S1    LLM S7    $1.6 billion Ether Machine SPAC deal collapses over unfavorable market
+    137 Hand nan   LLM S1    Scammers Drain $56,000 From Massachusetts Woman After Masquerading as Bank Emplo
+    138 Hand nan   LLM S1    The Daily: ZachXBT alleges $40M government crypto theft tied to custody contract
+    143 Hand S1    LLM S7    Bitcoin Depot ATM Operator Says $3.6 Million in BTC Stolen in Corporate Hack
+    145 Hand nan   LLM S7    Trump to Meet Ripple, Coinbase, SEC, and CFTC Leaders as CLARITY Act Hangs in Ba
+    153 Hand S1    LLM S7    A hacker turned 25 cents of bitcoin into 46 billion fake BTC tokens on a DeFi br
+    154 Hand S1    LLM S7    Terraform Labs Lawsuit: Jump Trading Faces $4B Case over Market Manipulation
+    159 Hand S1    LLM S2    U.S. Federal Reserve moves on proposals to implement GENIUS Act for stablecoins
+    165 Hand nan   LLM S2    The CLARITY Act Could Kill Stablecoin Yield – Here Is Where the Money Goes Inste
+    166 Hand nan   LLM S2    U.S. midterms pack major digital assets punch as Stand With Crypto preps strateg
+    179 Hand S7    LLM nan   Aave governance rift deepens as major governance group exits $26 billion DeFi pr
+    180 Hand nan   LLM S2    CLARITY Act: Key Democrat Says Banks May Have to Compromise as Senate Eyes Crypt
+    190 Hand nan   LLM S7    What Ripple’s CEO Appearance At The Banking Committee Means For XRP
+    192 Hand nan   LLM S7    The Quantum Threat to Bitcoin Dividing Crypto
+    194 Hand S1    LLM S3    CZ’s YZi Labs Joins BitGo IPO as Strategic Investor After Strong NYSE Debut
+    199 Hand S3    LLM nan   Figure is debuting its tokenized stock along with upsized $150 million offering
+
+VORFILTER-VOLLSTÄNDIGKEIT (Bedingung aus Weg a, Kriterium vorab im Kopf)
+  relevante Ereignisse         Treffer 20/45 = 44 % [31–59] · ohne Treffer 8/45 = 18 % [9–31] · hochgerechnet 1570 gegen 3851 · erfasst 29 % [grob 14–51]
+  relevante RISIKO-Ereignisse  Treffer 15/45 = 33 % [21–48] · ohne Treffer 2/45 = 4 % [1–15] · hochgerechnet 1178 gegen 963 · erfasst 55 % [grob 19–86]
+  KRITERIUM (vorab): erfasst >= 90 % und obere Grenze ohne Treffer <= 5 % -> NICHT ERFÜLLT - Weg b
+  verlorene relevante Ereignisse in der Stichprobe:
+    157 listing_spot       Binance lists som-pegged stablecoin as Kyrgyzstan deepens crypto push
+    159 regulierung_klage  U.S. Federal Reserve moves on proposals to implement GENIUS Act for stablecoins
+    170 hack_exploit       The End of Step Finance: How a Wallet Compromise Killed the Solana DeFi Aggregator
+    179 sonstiges          Aave governance rift deepens as major governance group exits $26 billion DeFi protocol
+    189 unternehmen        Sam Altman’s World Foundation sells $65M in WLD as token hits new lows
+    194 unternehmen        CZ’s YZi Labs Joins BitGo IPO as Strategic Investor After Strong NYSE Debut
+    197 unternehmen        Michael Saylor’s Strategy Acquires $1,280,000,000 in Bitcoin, Tom Lee’s Bitmine Buys $122,
+    199 unternehmen        Figure is debuting its tokenized stock along with upsized $150 million offering
+
+P4 — derselbe Stapel zweimal (Lauf 11 gegen 12, Temperatur 0)
+  gleicher Typ 106/120 = 88 % [81–93] · gleiche Assets 112/120 = 93 % [87–97]
+     135 sonstiges            / unternehmen          Is President Trump selling Bitcoin? WLFI pays off Aave debt with WBTC 
+     147 produkt              / sonstiges            Nasdaq seeks SEC approval for prediction-style binary options tied to 
+     150 regulierung_klage    / monitoring           Tether Freezes $344 Million in USDT Stablecoins Flagged for Illicit Ac
+     185 produkt              / listing_spot         Sui’s native stablecoin goes live with promise of Treasury yield going
+     190 regulierung_klage    / marktbericht_meinung What Ripple’s CEO Appearance At The Banking Committee Means For XRP
+     192 sonstiges            / marktbericht_meinung The Quantum Threat to Bitcoin Dividing Crypto
+     199 produkt              / sonstiges            Figure is debuting its tokenized stock along with upsized $150 million
+      52 aktion               / produkt              Boost Capital Efficiency with 5% Extra APR on BFUSD in Binance Futures
+      53 netz_upgrade         / produkt              Binance Has Completed the Sei (SEI) EVM Integration
+      58 netz_upgrade         / produkt              Binance Completes Xai (XAI) Mainnet Integration, Opens Deposits
+      60 sonstiges            / netz_upgrade         The 22nd Quarterly BNB Burn Completed via BNB Auto-Burn
+      61 sonstiges            / monitoring           Community Reminder on Projects and Tokens with Similar Names
+      63 aktion               / produkt              Extended 5% APR Boost on BFUSD in Binance Futures and Portfolio Margin
+      74 sonstiges            / netz_upgrade         The 25th Quarterly BNB Burn Completed via BNB Auto-Burn
+
+P3 — Gleichheit mit dem Betrieb auf ALLEN Binance-Meldungen (Mail-Arten, A1-2)
+  delisting_token    Betrieb  32 · A1  34 · gemeinsam  32 · nur Betrieb 0 · nur A1 2 ['Binance Will Delist Non-MiCA Compliant Stablecoin Trading Pa', 'Binance Will Delist UTK and Support Rebranding and Airdrop P']
+    -> ✔ Betrieb ⊆ A1
+  delisting_futures  Betrieb  59 · A1  59 · gemeinsam  59 · nur Betrieb 0 · nur A1 0 []
+    -> ✔ Betrieb ⊆ A1
+  monitoring         Betrieb  19 · A1  19 · gemeinsam  19 · nur Betrieb 0 · nur A1 0 []
+    -> ✔ Betrieb ⊆ A1
+
+P5 — kein Vorgriff, auf der Ablage D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_sichten\sichten.db
+  Ereignisse in der Ablage: 6701 ({'regel': 6701})
+  bekannt_ab >= zeit bei allen: True
+  333 Stichtage: Zeilen mit bekannt_ab > T 0 · volle Ablage = auf bekannt_ab <= T gekürzte Ablage: 0 Abweichungen
+  Stapelkontext (Auskunft): gleicher Typ Hauptlauf gegen gemischten Stapel noch keine Stichproben-Meldung im Hauptlauf - zum Vergleich P4 (Wiederholung) oben
+
+VALIDIERUNG PROMPT 2 — zweite Stichprobe, 60 Nachrichten, alle per LLM (Weg b), Hand vorher festgeschrieben (05caccb8)
+  Typ richtig 42/60 = 70 % [57–80] · Ereignis ja/nein 46/60 = 77 % [65–86] · Asset (Hand-Ereignis) 20/26 = 77 % [58–89]
+  Sicht: relevant ja/nein gleich 46/60 = 77 % [65–86] · beide relevant, gleiche Sicht 15/20 = 75 % [53–89] · Hand relevant, LLM nicht 4 · LLM relevant, Hand nicht 10
+    301 regulierung_klage    -> sonstiges            Sicht S7    -> nan   Trump’s World Liberty Faces House Probe Amid Claims of Major UAE Inves
+    310 verschoben           -> regulierung_klage    Sicht S1    -> S2    Work delayed on US market structure bill, crypto regulation amid winte
+    311 unternehmen          -> unternehmen          Sicht S1    -> S3    Robinhood is investing in crypto trading platform Talos at $1.5 billio
+    312 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    UK gambling regulator weighs allowing crypto payments for online betti
+    313 marktbericht_meinung -> sonstiges            Sicht nan   -> S7    Oil price collapse signals a dangerous liquidity trap and Bitcoin isn’
+    314 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Polymarket pushes for broader US relaunch with CFTC talks: Report
+    315 regulierung_klage    -> sonstiges            Sicht S1    -> nan   Bored Ape Yacht Club maker Yuga Labs settles with ‘expressive appropri
+    320 unternehmen          -> unternehmen          Sicht S1    -> S3    Animoca Brands suspends merger deal that would have taken it public
+    323 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Calls Mount for UK to Ban Political Donations Made in Crypto
+    328 netz_upgrade         -> produkt              Sicht S7    -> nan   Solana, Aptos Move to Harden Blockchains Against Future Quantum Attack
+    329 marktbericht_meinung -> sonstiges            Sicht nan   -> S3    Billionaire Investing Legend Buys $4,200,000,000 of Assets in Massive 
+    335 marktbericht_meinung -> sonstiges            Sicht nan   -> S7    Urgent HSBC risk-on order issued as dollar hits 2021 lows which could 
+    336 regulierung_klage    -> regulierung_klage    Sicht S1    -> S7    Ripple Gets Green Light From FCA to Scale Crypto Payments in the UK
+    340 marktbericht_meinung -> sonstiges            Sicht nan   -> S3    Coinbase, Robinhood and Figure Stocks Are 60% Off Their Peaks—Bernstei
+    342 produkt              -> sonstiges            Sicht nan   -> nan   This Open-Source Phone AI Agent Sees, Hears and Acts—All Without Touch
+    343 marktbericht_meinung -> sonstiges            Sicht nan   -> S2    BlackRock Remains Risk-on as ‘Mega Forces’ Like AI, Stablecoins Transf
+    347 makro_zentralbank    -> sonstiges            Sicht S2    -> S3    Banks and Other Lenders Seize 42% More US Homes Than a Year Ago As Tex
+    352 makro_zentralbank    -> marktbericht_meinung Sicht S2    -> nan   Bitcoin was waiting for cuts. Hot CPI inflation data just put hikes ba
+    355 marktbericht_meinung -> sonstiges            Sicht nan   -> S7    Feed Every Gorilla (FEG) Marks Five Years of Decentralized Finance Inf
+    356 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Why April 13 Will Decide the CLARITY Act’s Fate
+    358 marktbericht_meinung -> sonstiges            Sicht nan   -> nan   US Senators Give Apple Aug 21 Deadline to Dump Blacklisted Chinese Chi
+  Vorfilter, zweiter Blick: relevante Risiko-Ereignisse unter Treffern 14/30 = 47 % [30–64], ohne Treffer 1/30 = 3 % [1–17]

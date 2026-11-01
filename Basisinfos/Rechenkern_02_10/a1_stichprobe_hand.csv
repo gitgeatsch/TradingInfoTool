@@ -1,0 +1,201 @@
+nr;typ;assets;bereich;notiz
+1;listing_futures;DATAIP;asset;
+2;aktion;SOMI;asset;
+3;produkt;;krypto_gesamt;
+4;aktion;;krypto_gesamt;
+5;aktion;;krypto_gesamt;
+6;produkt;;krypto_gesamt;
+7;delisting_margin;?;asset;Paare nur im Text
+8;aktion;;krypto_gesamt;
+9;margin_neu;NIL;asset;zweifelhaft: Aufnahme in mehrere Produkte inkl. Margin/Futures
+10;aktion;;krypto_gesamt;
+11;paar_entfernt;?;asset;Paare nur im Text
+12;produkt;;krypto_gesamt;
+13;netz_upgrade;BNB;asset;
+14;aktion;BABY;asset;
+15;aktion;;krypto_gesamt;
+16;aktion;;krypto_gesamt;
+17;listing_spot;BERA;asset;HODLer-Airdrop-Meldung kuendigt das Spot-Listing an
+18;listing_futures;KDA;asset;
+19;netz_upgrade;OM;asset;Netze abgeschaltet, nicht ausgesetzt
+20;aktion;;krypto_gesamt;
+21;netz_upgrade;BNB;asset;zweifelhaft: Wartung/Aussetzung
+22;produkt;;krypto_gesamt;
+23;produkt;;krypto_gesamt;
+24;aktion;;krypto_gesamt;
+25;aktion;;krypto_gesamt;
+26;listing_spot;?;asset;zweifelhaft: neue Paare bestehender Token
+27;listing_futures;ARC AVAAI;asset;
+28;listing_futures;;aktien_kredit;Aktien-Perpetual, kein Krypto-Asset
+29;listing_futures;TON;asset;
+30;produkt;;krypto_gesamt;
+31;delisting_margin;?;asset;Paare nur im Text
+32;aktion;;krypto_gesamt;
+33;listing_spot;?;asset;zweifelhaft: neue Paare bestehender Token
+34;delisting_margin;ATA FORTH JST QTUM SUN ZEN ZRX;asset;
+35;aktion;FOGO;asset;
+36;aktion;;krypto_gesamt;
+37;netz_upgrade;BNB;asset;
+38;paar_entfernt;?;asset;Paare nur im Text
+39;produkt;ONE;asset;
+40;aktion;;krypto_gesamt;
+41;aktion;;krypto_gesamt;
+42;listing_futures;AGLD;asset;
+43;aktion;;krypto_gesamt;
+44;listing_futures;AZTEC;asset;Vorboersen-Handel
+45;aktion;;krypto_gesamt;
+46;aktion;;krypto_gesamt;
+47;produkt;;krypto_gesamt;
+48;aktion;BABY;asset;
+49;aktion;;krypto_gesamt;
+50;produkt;SOL;asset;verschoben ist eine Parameter-Aenderung, kein Listing/Delisting/Upgrade
+51;produkt;;krypto_gesamt;
+52;aktion;;krypto_gesamt;
+53;netz_upgrade;SEI;asset;
+54;listing_spot;SUI;asset;
+55;produkt;;krypto_gesamt;
+56;produkt;;krypto_gesamt;
+57;netz_upgrade;ETH;asset;
+58;netz_upgrade;XAI;asset;
+59;regulierung_klage;?;krypto_gesamt;MiCA-Stablecoin-Regeln
+60;netz_upgrade;BNB;asset;Burn
+61;marktbericht_meinung;;krypto_gesamt;Hinweis ohne Geschehen
+62;sonstiges;OM;asset;Kurssturz OM, Stellungnahme der Boerse
+63;aktion;;krypto_gesamt;
+64;produkt;;krypto_gesamt;
+65;produkt;;aktien_kredit;
+66;produkt;;aktien_kredit;
+67;aktion;BTR;asset;
+68;netz_upgrade;RONIN;asset;
+69;produkt;;krypto_gesamt;
+70;aktion;;krypto_gesamt;
+71;listing_futures;BTC ETH;asset;
+72;produkt;;krypto_gesamt;
+73;produkt;;krypto_gesamt;
+74;netz_upgrade;BNB;asset;Burn
+75;produkt;;krypto_gesamt;
+76;aktion;;krypto_gesamt;
+77;produkt;;krypto_gesamt;
+78;listing_spot;SKHYB;aktien_kredit;tokenisierte Aktie
+79;produkt;;krypto_gesamt;
+80;listing_spot;MAV;asset;
+81;delisting_token;NOM;asset;
+82;delisting_token;STMX;asset;
+83;listing_spot;IP;asset;KRW
+84;delisting_token;STRIKE;asset;
+85;listing_spot;BLUR;asset;KRW
+86;monitoring;DAWN RFR MARO;asset;
+87;listing_spot;XCN;asset;KRW
+88;monitoring;DOT;asset;
+89;listing_spot;AXL;asset;KRW
+90;delisting_token;UXLINK;asset;
+91;delisting_token;BONK;asset;
+92;listing_spot;MASK ACS;asset;KRW
+93;listing_spot;MMT;asset;KRW
+94;monitoring;AERGO AQT;asset;Aufruf zur Vorsicht
+95;delisting_token;BTG;asset;
+96;listing_spot;DRV;asset;KRW
+97;monitoring;DAI MKR;asset;Aufruf zur Vorsicht
+98;verschoben;IRYS;asset;Listing, Beginn geaendert
+99;monitoring;ZIL;asset;
+100;monitoring;FOR;asset;
+101;delisting_token;QTCON;asset;
+102;listing_spot;DOOD;asset;KRW
+103;verschoben;TRAC;asset;Listing, Beginn geaendert
+104;monitoring;DAD;asset;Verlaengerung
+105;listing_spot;BERA;asset;KRW, Hinweis zu Beginn und Mindestpreis
+106;listing_spot;BFC;asset;KRW
+107;listing_spot;TRUMP;asset;KRW
+108;listing_spot;OM;asset;KRW
+109;monitoring;RVN;asset;
+110;delisting_token;RLY;asset;
+111;hack_exploit;;krypto_gesamt;
+112;regulierung_klage;;sonstiges;
+113;marktbericht_meinung;;krypto_gesamt;
+114;regulierung_klage;;sonstiges;
+115;regulierung_klage;;sonstiges;
+116;sonstiges;SOL;krypto_gesamt;Initiative nach dem Drift-Hack
+117;marktbericht_meinung;;krypto_gesamt;
+118;hack_exploit;;sonstiges;zweifelhaft: auch Anklage
+119;marktbericht_meinung;;krypto_gesamt;
+120;regulierung_klage;;sonstiges;
+121;regulierung_klage;;krypto_gesamt;
+122;sonstiges;;krypto_gesamt;Vorwurf eines Ermittlers, keine Behoerde
+123;hack_exploit;;krypto_gesamt;Folgemeldung
+124;regulierung_klage;;krypto_gesamt;
+125;regulierung_klage;;krypto_gesamt;zweifelhaft: auch hack_exploit
+126;marktbericht_meinung;;krypto_gesamt;
+127;hack_exploit;;sonstiges;
+128;marktbericht_meinung;;krypto_gesamt;Forderung, keine Entscheidung
+129;hack_exploit;DRIFT;asset;zweifelhaft: auch Kommentar
+130;marktbericht_meinung;;krypto_gesamt;
+131;sonstiges;;sonstiges;
+132;unternehmen;;krypto_gesamt;
+133;hack_exploit;ZETA;asset;Folgemeldung
+134;regulierung_klage;;krypto_gesamt;
+135;sonstiges;WLFI;asset;zweifelhaft
+136;marktbericht_meinung;;sonstiges;
+137;hack_exploit;;sonstiges;
+138;marktbericht_meinung;;krypto_gesamt;Sammelmeldung
+139;etf_fonds;SOL;asset;
+140;regulierung_klage;;krypto_gesamt;
+141;marktbericht_meinung;;krypto_gesamt;
+142;hack_exploit;;sonstiges;
+143;hack_exploit;;krypto_gesamt;
+144;regulierung_klage;;sonstiges;
+145;marktbericht_meinung;;krypto_gesamt;Treffen angekuendigt, keine Entscheidung
+146;hack_exploit;;krypto_gesamt;
+147;produkt;;aktien_kredit;zweifelhaft: Antrag bei der SEC
+148;regulierung_klage;USDT;krypto_gesamt;
+149;marktbericht_meinung;;sonstiges;
+150;regulierung_klage;USDT;asset;zweifelhaft: Einfrieren durch Tether
+151;regulierung_klage;;sonstiges;
+152;marktbericht_meinung;;krypto_gesamt;
+153;hack_exploit;;krypto_gesamt;
+154;regulierung_klage;;krypto_gesamt;
+155;regulierung_klage;;sonstiges;
+156;marktbericht_meinung;BTC;asset;
+157;listing_spot;;krypto_gesamt;Stablecoin in Som, Kuerzel unbekannt
+158;marktbericht_meinung;;krypto_gesamt;
+159;regulierung_klage;;krypto_gesamt;
+160;marktbericht_meinung;;krypto_gesamt;
+161;marktbericht_meinung;XRP;asset;
+162;marktbericht_meinung;ETH;asset;
+163;marktbericht_meinung;;krypto_gesamt;
+164;marktbericht_meinung;XRP;asset;
+165;marktbericht_meinung;;krypto_gesamt;
+166;marktbericht_meinung;;krypto_gesamt;
+167;marktbericht_meinung;XRP;asset;
+168;marktbericht_meinung;XRP;asset;
+169;marktbericht_meinung;BTC;asset;
+170;hack_exploit;STEP;asset;rueckblickend
+171;marktbericht_meinung;BTC;asset;
+172;marktbericht_meinung;;krypto_gesamt;
+173;marktbericht_meinung;XRP;asset;
+174;marktbericht_meinung;;aktien_kredit;
+175;sonstiges;;sonstiges;
+176;marktbericht_meinung;;sonstiges;
+177;marktbericht_meinung;BTC;asset;
+178;marktbericht_meinung;;krypto_gesamt;Plaene laut Bericht
+179;sonstiges;AAVE;asset;
+180;marktbericht_meinung;;krypto_gesamt;
+181;marktbericht_meinung;XRP;asset;
+182;produkt;;krypto_gesamt;
+183;marktbericht_meinung;BTC;asset;
+184;marktbericht_meinung;;krypto_gesamt;
+185;produkt;SUI;asset;
+186;marktbericht_meinung;BTC;asset;
+187;marktbericht_meinung;BTC;asset;
+188;marktbericht_meinung;BTC;asset;
+189;unternehmen;WLD;asset;
+190;marktbericht_meinung;XRP;asset;
+191;marktbericht_meinung;;sonstiges;
+192;marktbericht_meinung;BTC;asset;
+193;marktbericht_meinung;AAVE;asset;
+194;unternehmen;;krypto_gesamt;
+195;marktbericht_meinung;;krypto_gesamt;
+196;sonstiges;;sonstiges;
+197;unternehmen;BTC ETH;asset;
+198;marktbericht_meinung;BTC;asset;
+199;unternehmen;;aktien_kredit;
+200;marktbericht_meinung;BTC;asset;
