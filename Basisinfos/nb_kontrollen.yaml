@@ -609,8 +609,9 @@ kontrollen:
     titel: "CANTON aus der Kernposition (Nutzer 01.11.: nicht versorgbar, nicht auf Binance): nach dem Pull steht CANTON mit rolle taktisch; ASTER und MON kommen mit 400 Tagen von selbst in die Betriebsreihen"
     seit: "2026-11-01"
     paket: Neuaufnahme
-    commit: ""
+    commit: c179ed99
     art: manuell
+    beleg: "Teil 1 erfuellt 01.11.: Nutzer 'diff war leer canton ist taktisch'; Export 01.11. 10:22: git_stand c179ed99 ohne Aenderungen/Stash, watchlist_stammdaten CANTON taktisch (Grundliste), watchlist_ergaenzung nur KAITO, Neustart 09:52 ohne Traceback. Offen: Teil 2 ASTER/MON"
     nachweis: "Vor dem Pull am NB 'git diff Basisinfos/config.yaml' leer (sonst stash, nicht verwerfen). Danach Diagnose watchlist_stammdaten: CANTON rolle taktisch, keine Zeile fuer CANTON in watchlist_ergaenzung mit rolle core. Spaeter: ASTER (um den 11.11.) und MON (um den 30.12.) in messdaten.db (Betriebskopie) mit >= 400 Tagen"
     faellig_bis: "2027-01-15"
     status: offen
