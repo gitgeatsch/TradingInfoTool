@@ -501,7 +501,6 @@ def feeds_laufend(c) -> int:
     return n
 
 
-# ══ Ablauf ════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══ S8 Termine (01.11.2026, Voranalyse_Zustaende_Modul a) ═══════════════════════════════════════════════════════════════
 # ``wert`` = Zeitpunkt des Termins in Unix-Sekunden (UTC), ``datum`` = Tag in New York. ``bekannt_ab`` = TERMIN_VORLAUF_T Tage
 # davor: FOMC und BLS veroeffentlichen ihren Kalender ein Jahr im Voraus; 90 T decken die laengste Luecke zwischen zwei
@@ -538,6 +537,7 @@ def termine_fomc(start: str) -> list:
     return [_termin_zeile(d, "fomc") for d in tage if d.isoformat() >= start]
 
 
+# ══ Ablauf ════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 def auftraege(fred_key: str) -> list:
     """(quelle, symbol, abruf(start)) — EINE Liste für Historie und laufend."""
     a = [("yfinance", t, lambda s, t=t: yfinance_reihe(t, s)) for t in YFINANCE]

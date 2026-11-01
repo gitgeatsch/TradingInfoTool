@@ -103,7 +103,7 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 | 1 | **Historie ab 2020-01** in `sichten.db` (P1) — derselbe Abrufer, nur früherer Start | Desktop | nein |
 | 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) — **✔ 01.11. geladen und gegengeprüft**, [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) §5; Breite Desktop ↔ NB (V2/G6a) ✔ gelöst 01.11. abends (§6 dort: Grundgesamtheit des Betriebs zum Zeitpunkt) | Desktop | nein |
 | 3 | **Ebene-1-Modul** `agent/zustaende.py`: die Satzform aus §1 als **ein** Rechenweg (SF8), Probe → Modul, mit Prüfpaket (Fenster, Vorgriff, Lesart je Zustand vorhanden) — **✔ 01.11. gebaut** (Weg a, mit S8 Termine; §7 der Voranalyse) · **Voranalyse 01.11.** [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md): die Probe hat ein **Jahrgangsloch** (Z1) und stürzt bei leerer Reihe ab (Z2) | Desktop | nein |
-| 4 | **Voranalyse A1** (G9) — Regeln zuerst, LLM für den Rest | Desktop | nein |
+| 4 | **Voranalyse A1** (G9) — Regeln zuerst, LLM für den Rest — **01.11. zur Abstimmung** [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) | Desktop | nein |
 | 5 | **G7 Messplan**: Faktentreue der Prüfer + Wert der Sichten im Rückspiel | Desktop | nein |
 | 6 | **G8 Bau** B1–B6 + Ebenen 2/3, Abgleich Mail ↔ Ebene 1 am NB (P3) | beide | ja, ein Bündel |
 

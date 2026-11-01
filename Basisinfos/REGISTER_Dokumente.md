@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 89 |
+| Voranalyse / Recherche | 90 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **232** |
+| **gesamt** | **233** |
 
 ## Plan
 
@@ -166,6 +166,7 @@
 | [`Recherche_Grid_Trading_21_10.md`](Recherche_Grid_Trading_21_10.md) | Recherche Grid-Trading (Stand 21.10.2026) | Arbeitsblatt |
 | [`Recherche_Neue_Ansaetze_22_10.md`](Recherche_Neue_Ansaetze_22_10.md) | Recherche neue Ansätze — Krypto und Multi-Asset (R-A), Plan und Ergebnis (ab 22.10.2026) | Arbeitsblatt |
 | [`Voranalyse_1b_Bewertungsebene_27_09.md`](Voranalyse_1b_Bewertungsebene_27_09.md) | Voranalyse 1b — die Bewertungsebene neu aufsetzen | Arbeitsblatt |
+| [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) | Voranalyse A1 — der Ereignis-Leser (G9, Fütterung §3 und §6 Schritt 4, 01.11.2026) | **laufend** |
 | [`Voranalyse_A_Positionsfuehrung_01_10.md`](Voranalyse_A_Positionsfuehrung_01_10.md) | Voranalyse A — Positionsführung als erste Optimierung der REGEL0 (ENTWURF 01.10.2026, zur Abstimmung) | Arbeitsblatt |
 | [`Voranalyse_B_Kern_stabilisieren_01_10.md`](Voranalyse_B_Kern_stabilisieren_01_10.md) | Voranalyse B — den Kern stabilisieren (M1-3), mit der Ursache der Verluste als Auskunft (ENTWURF 01.10.2026, z | Arbeitsblatt |
 | [`Voranalyse_Beitrag_Kontext_Gewicht_29_09.md`](Voranalyse_Beitrag_Kontext_Gewicht_29_09.md) | Voranalyse — Beitrag, Kontext, Gewicht: die Begriffe und das Messprogramm W1–W5 (29.09.2026) | Arbeitsblatt |

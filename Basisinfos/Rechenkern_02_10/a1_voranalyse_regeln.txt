@@ -1,0 +1,31 @@
+BINANCE 6276 Meldungen - Typ je Katalog:
+katalog              48    49    93  128  157  161   All
+typ                                                     
+airdrop               1    24    38   13    1    0    77
+aktion                2   369  1736    1    0    0  2108
+alpha_entfernt        0     0     0    0    0   10    10
+delisting_futures     0     0     0    0    0   59    59
+delisting_margin      0     0     0    0    0   24    24
+delisting_token       0     1     0    0    0   33    34
+depeg_warnung         0     2     0    0    0    1     3
+listing_alpha         1    16    72    0    1    0    90
+listing_futures     409   253     7    0    0    0   669
+listing_spot        318     7     0    1    0    0   326
+margin_neu           36     0     0    0    0    0    36
+monitoring            0    18     0    0    0    1    19
+monitoring_ende       0     9     0    0    0    0     9
+netz_upgrade          0    50     0    0  416    0   466
+paar_entfernt         1     0     0    0    0  165   166
+produkt             330   555   129    0    2   14  1030
+rest                119   622   195    0   97   75  1108
+verschoben            5    35     0    0    0    2    42
+All                1222  1961  2177   15  517  384  6276
+Rest-Beispiele: ['Binance Introduces Spot Altcoin LiquidityBoost Program', 'Complete Entity Verification to Get a VIP+1 Upgrade for One Month!', 'Updates on International Virtual Asset Transfer Procedures in Brazil', 'Participate in the Exclusive Astra Nova (RVV) Booster Program and Pre-Token Generation Eve', 'Introducing BLIK One-Click Buy Crypto on Binance!', 'The 24th Quarterly BNB Burn Completed via BNB Auto-Burn', 'Notice of Removal of Margin Trading Pairs - 2026-09-25', 'Binance Completes Integration of USDC (USDC) on Sei Network, Opens Deposits and Withdrawal', 'Binance Pool: Enjoy 50% Off Cloud Mining Management Fees!', 'Binance System Upgrade Notice (2026-09-22)']
+
+UPBIT 785 Meldungen: {'listing_spot': 429, 'monitoring': 142, 'rest': 136, 'delisting_token': 62, 'monitoring_ende': 13, 'netz_upgrade': 2, 'airdrop': 1}
+Rest-Beispiele: ['원화 마켓 신규 상장 (아이오에스티 IOST)', '일부 암호화폐의 거래 지원 마켓 변경', 'TT, LSK 유의 종목 해제 안내 (전체 유의 종목 해제)', '리피오크레딧네트워크(RCN) 상장', '원화 마켓 신규 상장 : 코스모스(ATOM)', '디지털 자산 거래 지원 종료 안내 (8종) - 8/7 11시', '원화 마켓 신규 상장 : (가스 GAS, 온톨로지가스 ONG)', '에이다, 코모도 원화 마켓 상장 안내']
+
+NACHRICHTEN Rueckspielfenster 01.12.2025-16.10.2026: 25193 Meldungen, 67 je Tag (Median), Zeichen je Meldung Median 226, P90 386
+gleicher Titelanfang (8 Woerter) in mehreren Feeds: 204 Dubletten
+LLM alles einzeln: ~4.8 Mio Token = 24 Tage bei 200.000 Token/Tag (Groq)
+Typ-Regeln auf Nachrichtentitel (Binance-Muster, nur zur Groesse): {'rest': 21475, 'produkt': 2665, 'aktion': 765, 'verschoben': 124, 'depeg_warnung': 74, 'netz_upgrade': 46, 'airdrop': 41, 'listing_futures': 2}
