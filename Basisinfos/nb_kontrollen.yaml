@@ -615,6 +615,15 @@ kontrollen:
     nachweis: "Vor dem Pull am NB 'git diff Basisinfos/config.yaml' leer (sonst stash, nicht verwerfen). Danach Diagnose watchlist_stammdaten: CANTON rolle taktisch, keine Zeile fuer CANTON in watchlist_ergaenzung mit rolle core. Spaeter: ASTER (um den 11.11.) und MON (um den 30.12.) in messdaten.db (Betriebskopie) mit >= 400 Tagen"
     faellig_bis: "2027-01-15"
     status: offen
+  - id: K-WL-4
+    titel: "GOOGL (Alphabet) in der Watchlist (Nutzer 01.11.: echter Kauf, Bitpanda seit 30.10.): Bestand zugeordnet, Kurs ueber yfinance, Warnung 'Position ohne Watchlist-Eintrag' verschwindet"
+    seit: "2026-11-01"
+    paket: Watchlist
+    commit: ""
+    art: manuell
+    nachweis: "Vor dem Pull 'git diff Basisinfos/config.yaml' leer (sonst stash). Nach Pull + Neustart im Export: watchlist_stammdaten GOOGL aktien taktisch; im Log keine Zeile 'Position ohne Watchlist-Eintrag - Alphabet Inc (GOOGL)' mehr; Kurs fuer GOOGL in refresh_securities_prices ohne Fehler"
+    faellig_bis: "2026-11-15"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

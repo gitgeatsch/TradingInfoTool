@@ -955,6 +955,14 @@ watchlist:
     yfinance_symbol: ROL
     hauptgruppe: aktien_sektoren
     unterkategorie: industrie
+  - symbol: GOOGL                  # Nutzer 01.11.2026: echter Kauf (Bitpanda seit 30.10., 0,598 St.) -> aufnehmen
+    name: Alphabet Inc
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    assetklasse: aktien
+    yfinance_symbol: GOOGL
+    hauptgruppe: aktien_sektoren
+    unterkategorie: kommunikation    # wie agent/kategorie_thesen.py ("aktien_sektoren:kommunikation": GOOGL, META)
   - symbol: VSN
     name: Vision
     rolle: taktisch
