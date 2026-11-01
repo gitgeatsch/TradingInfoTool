@@ -3,6 +3,8 @@ Moduls, git hash-object e798513c).
 
 ABLAUF: Prompt 1 (35eb32461b60) -> a1_nachweis_prompt1.txt; die Bereiche fehlten im Prompt -> Prompt 2. Auf Stichprobe 1 ist Prompt 2
 GESCHOENT (dort wurde der Fehler gefunden); die GUELTIGE Zahl kommt aus Stichprobe 2 (a1_stichprobe2.py, Hand 05caccb8).
+SEIT PROMPT 3 (7b94d07d7d1d, a1_validierung3.py): dieses Skript liest die Antworten zum AKTUELLEN Prompt - die Ausgabe in
+a1_nachweis.txt gilt fuer Prompt 2 (05e921720b82) und ist nur mit dem Modul aus Commit 06a6bf83 reproduzierbar.
 
 VORAB FESTGELEGT (01.11.2026, vor der Auswertung):
   * Bewertet wird, was das Modul im Weg a liefert: Börse mit Regel -> Regel; Börse ohne Regel -> LLM; Nachricht mit Vorfilter-Treffer -> LLM;

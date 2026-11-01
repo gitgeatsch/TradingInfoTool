@@ -1,0 +1,68 @@
+A1 VALIDIERUNG 3 · Modell openai/gpt-oss-120b · Prompt 3 7b94d07d7d1d gegen Prompt 2 05e921720b82 · 60 Nachrichten (30 Treffer, 30 ohne) · Hand vorher festgeschrieben
+  Hand: 20 Ereignisse, davon 16 an eine Sicht
+
+PROMPT 2 (05e921720b82) — zweite gültige Messung
+  Typ richtig 28/60 = 47 % [35–59] · Ereignis ja/nein 38/60 = 63 % [51–74] · Asset (Hand-Ereignis) 15/18 = 83 % [61–94]
+  Sicht relevant ja/nein gleich 40/60 = 67 % [54–77] · beide relevant, gleiche Sicht 8/11 = 73 % [43–90] · FEHLALARM 15 · VERLUST 5
+  hochgerechnet auf alle Nachrichten: Fehlalarm 19 % · Verlust 7 % · Sicht relevant gleich 74 %
+    403 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Stablecoin yield rewards (likely won't be) banned under OCC proposal: 
+    404 sonstiges            -> sonstiges            Sicht S1    -> nan   Iran Accepting Crypto Payments for Weapons—But This May Not Help It Ev
+    406 unternehmen          -> marktbericht_meinung Sicht S7    -> nan   MARA Holdings Dumps 996 BTC During $1 Billion in Crypto Market Liquida
+    407 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Operation Choke Point: House Republicans Spotlight Biden Administratio
+    408 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S7    South Korean Lawmakers Slam Regulators Over Bithumb's $43 Billion Bitc
+    409 regulierung_klage    -> hack_exploit         Sicht S1    -> S1    Three Indicted Over ‘Brazen’ Crypto Wrench Attack Spree in California
+    410 marktbericht_meinung -> produkt              Sicht nan   -> nan   CFTC's AI will review U.S. crypto registration applications, chairman 
+    411 marktbericht_meinung -> sonstiges            Sicht nan   -> nan   ‘Cupid doesn’t ask for crypto’: DOJ warns of romance scams as Valentin
+    413 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Wall Street giants push back on exemptions for tokenized securities in
+    414 marktbericht_meinung -> sonstiges            Sicht nan   -> S7    Bitcoin Could Avoid a Full Quantum Freeze Under New ‘Canary’ Proposal
+    416 regulierung_klage    -> depeg_aussetzung     Sicht S7    -> S7    $182,000,000 In USDT Stablecoins Frozen By Tether on Tron Blockchain A
+    417 marktbericht_meinung -> sonstiges            Sicht nan   -> nan   Former SEC counsel explains what it takes to make RWAs compliant
+    418 regulierung_klage    -> sonstiges            Sicht nan   -> nan   ‘Insatiably Greedy’ Shoe Seller Masterminds $80,000,000 Fraud, Uses Cu
+    419 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S7    China Bitcoin legalization is priced at 5% but Beijing’s February 2026
+    421 regulierung_klage    -> sonstiges            Sicht nan   -> nan   Up to $5,000 per Person To Be Handed Out Over Massive Data Breach That
+    422 hack_exploit         -> sonstiges            Sicht nan   -> nan   Banks Reject Reimbursement After Scammer Drains $75,000 From Woman’s B
+    423 hack_exploit         -> sonstiges            Sicht nan   -> nan   Bank Teller Steals Nearly $16,000 From Her Drawer, Falsifies Records T
+    424 regulierung_klage    -> sonstiges            Sicht S3    -> nan   Major Bank Handing $155,800,000 To Customers In Long-Awaited Overdraft
+    427 marktbericht_meinung -> netz_upgrade         Sicht nan   -> S7    Former Mt. Gox CEO proposes hard fork to recover $5.2 billion in bitco
+    428 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    U.S. SEC’s Crypto Task Force Sets Dec. 15 for Privacy Roundtable After
+    429 marktbericht_meinung -> hack_exploit         Sicht nan   -> S1    Crypto hacks average $25 million as largest exploits skew industry los
+    430 marktbericht_meinung -> sonstiges            Sicht nan   -> S3    MSTR Stock Options Flashes “Extreme Bearish” Signals Amid MSCI Delisti
+    436 marktbericht_meinung -> sonstiges            Sicht nan   -> nan   Google Employees Demand CEO Block Military AI Contracts in Open Letter
+    440 unternehmen          -> unternehmen          Sicht S1    -> S7    Bitcoin miner Core Scientific shifts to AI with 1.5GW data center push
+    443 sonstiges            -> unternehmen          Sicht S1    -> S7    Trump Brothers' American Bitcoin Mining Firm Reports $59 Million Q4 Lo
+    446 unternehmen          -> marktbericht_meinung Sicht S7    -> nan   BREAKING: Strategy Buys $1.57 Billion Worth of Bitcoin (BTC)
+    447 etf_fonds            -> produkt              Sicht S1    -> nan   Morgan Stanley launches stablecoin reserves fund aligned with GENIUS A
+    448 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Tim Scott: Warren’s Team Wants to ‘Run Crypto Out of the Country’ as C
+    450 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    Prediction markets inch closer to the Supreme Court: State of Crypto
+    451 marktbericht_meinung -> sonstiges            Sicht nan   -> S1    Trump-Linked Panel Examines Stablecoin Proposal For Postwar Gaza
+    454 produkt              -> sonstiges            Sicht nan   -> nan   StepFun's Voice AI Topped Every Benchmark. It Also Hears Your Sighs
+    455 marktbericht_meinung -> sonstiges            Sicht nan   -> S1    Pi Network (PI) News Today: March 10th
+    457 produkt              -> listing_spot         Sicht nan   -> S1    Bybit Returns To UK’s Crypto Scene Following 2023 Exit — Details
+    460 unternehmen          -> sonstiges            Sicht S1    -> S3    Strategy to equitize convertible debt over 3-6 years: Saylor
+
+PROMPT 3 (7b94d07d7d1d)
+  Typ richtig 46/60 = 77 % [65–86] · Ereignis ja/nein 55/60 = 92 % [82–96] · Asset (Hand-Ereignis) 15/18 = 83 % [61–94]
+  Sicht relevant ja/nein gleich 54/60 = 90 % [80–95] · beide relevant, gleiche Sicht 10/12 = 83 % [55–95] · FEHLALARM 2 · VERLUST 4
+  hochgerechnet auf alle Nachrichten: Fehlalarm 3 % · Verlust 7 % · Sicht relevant gleich 90 %
+    406 unternehmen          -> marktbericht_meinung Sicht S7    -> nan   MARA Holdings Dumps 996 BTC During $1 Billion in Crypto Market Liquida
+    410 marktbericht_meinung -> regulierung_klage    Sicht nan   -> S1    CFTC's AI will review U.S. crypto registration applications, chairman 
+    416 regulierung_klage    -> sonstiges            Sicht S7    -> S7    $182,000,000 In USDT Stablecoins Frozen By Tether on Tron Blockchain A
+    418 regulierung_klage    -> sonstiges            Sicht nan   -> nan   ‘Insatiably Greedy’ Shoe Seller Masterminds $80,000,000 Fraud, Uses Cu
+    421 regulierung_klage    -> sonstiges            Sicht nan   -> nan   Up to $5,000 per Person To Be Handed Out Over Massive Data Breach That
+    422 hack_exploit         -> sonstiges            Sicht nan   -> nan   Banks Reject Reimbursement After Scammer Drains $75,000 From Woman’s B
+    423 hack_exploit         -> sonstiges            Sicht nan   -> nan   Bank Teller Steals Nearly $16,000 From Her Drawer, Falsifies Records T
+    424 regulierung_klage    -> sonstiges            Sicht S3    -> nan   Major Bank Handing $155,800,000 To Customers In Long-Awaited Overdraft
+    440 unternehmen          -> unternehmen          Sicht S1    -> S7    Bitcoin miner Core Scientific shifts to AI with 1.5GW data center push
+    443 sonstiges            -> unternehmen          Sicht S1    -> S7    Trump Brothers' American Bitcoin Mining Firm Reports $59 Million Q4 Lo
+    446 unternehmen          -> sonstiges            Sicht S7    -> S7    BREAKING: Strategy Buys $1.57 Billion Worth of Bitcoin (BTC)
+    447 etf_fonds            -> produkt              Sicht S1    -> nan   Morgan Stanley launches stablecoin reserves fund aligned with GENIUS A
+    452 produkt              -> marktbericht_meinung Sicht nan   -> nan   Dogecoin Gold? A DOGE-Themed Company Is Joining the Tokenized Gold Rus
+    457 produkt              -> sonstiges            Sicht nan   -> S1    Bybit Returns To UK’s Crypto Scene Following 2023 Exit — Details
+    460 unternehmen          -> marktbericht_meinung Sicht S1    -> nan   Strategy to equitize convertible debt over 3-6 years: Saylor
+
+P4 Prompt 3, derselbe Stapel zweimal: gleicher Typ 60/60 = 100 % [94–100]
+Gepaart (Auskunft): Sicht relevant ja/nein — nur Prompt 3 richtig 16, nur Prompt 2 richtig 2 · Vorzeichentest p = 0.0013
+Gegenprobe ohne die 15 zweifelhaften Handfälle, Prompt 2: Sicht relevant gleich 32/45 = 71 % [57–82] · Fehlalarm 10 · Verlust 3
+Gegenprobe ohne die 15 zweifelhaften Handfälle, Prompt 3: Sicht relevant gleich 43/45 = 96 % [85–99] · Fehlalarm 0 · Verlust 2
+
+ENTSCHEIDUNG (vorab): Fehlalarm 15 -> 2 (weniger), Verlust 5 -> 4 (höchstens +1) => PROMPT 3 ERSETZT PROMPT 2

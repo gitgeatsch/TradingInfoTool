@@ -7,7 +7,7 @@
 Nachricht … zu welchem Asset, welcher Typ, welche Schwere?“*, Prüfung gegen ~200 handgeprüfte Meldungen, V4) ·
 [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §3 (Ereignisse kommen **nur** über A1, Zeilenform) ·
 [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md) (Ebene 1, S8 im Takt offen).
-**Stand:** ✔ **Gebaut 01.11. (§7), Frage §8 offen.** Betrieb unberührt. (Die Voranalyse darunter: unverändert.) Gemessen nur lesend auf den drei Archiven;
+**Stand:** ✔ **Gebaut 01.11. (§7); §8 entschieden (a) → Prompt 3 gemessen und übernommen (§9), Volllauf gestartet.** Betrieb unberührt. (Die Voranalyse darunter: unverändert.) Gemessen nur lesend auf den drei Archiven;
 dazu **ein Probelauf** gpt-oss-120b (Groq) auf 2 × 2 × 25 öffentlichen Nachrichtentiteln. Skripte und Ausgaben: `Rechenkern_02_10/a1_voranalyse_regeln.py` → `.txt`, `a1_voranalyse_llm_probe.py` → `…_standard.csv`, `…_low.csv` (Variante mit `reasoning_effort: low`).
 
 ---
@@ -142,7 +142,7 @@ steht aus; die beiden Hand-Dateien sind dafür gedacht.
 | | |
 |---|---|
 | Börsen | ✔ fertig in `sichten.db` (Regeln); Börsen-Rest (360) per LLM offen |
-| Nachrichten | **Weg b** (Messung, nicht Wahl). Der Volllauf (25.203 Nachrichten + 360 Börsen-Rest, ≈ 2,8 Mio. Token ≈ **14 Tage** Groq-Kontingent für gpt-oss-120b; der Betrieb nutzt ein anderes Modell mit eigenem Kontingent) ist **gebaut, aber nicht gestartet**: ein weiterer Prompt-Schritt würde ihn entwerten. 98 Antworten mit Prompt 1 liegen unter dessen Prüfsumme und werden nicht verwendet |
+| Nachrichten | ⇒ **Nachtrag: mit Prompt 3 gestartet, §9.** **Weg b** (Messung, nicht Wahl). Der Volllauf (25.203 Nachrichten + 360 Börsen-Rest, ≈ 2,8 Mio. Token ≈ **14 Tage** Groq-Kontingent für gpt-oss-120b; der Betrieb nutzt ein anderes Modell mit eigenem Kontingent) ist **gebaut, aber nicht gestartet**: ein weiterer Prompt-Schritt würde ihn entwerten. 98 Antworten mit Prompt 1 liegen unter dessen Prüfsumme und werden nicht verwendet |
 | Frage | siehe §8 |
 | offen | Watchlist **zum Zeitpunkt** für S7 im Rückspiel · Binance-Asset für Netz-Meldungen ohne Kürzel („BNB Smart Chain“) · Live-Abruf am NB (G8) |
 
@@ -159,3 +159,48 @@ steht aus; die beiden Hand-Dateien sind dafür gedacht.
 
 **Empfehlung a:** der Fehler ist systematisch und benannt, der Lauf dauert ohnehin zwei Wochen — eine Stunde davor kostet nichts. Dazu
 deine Stichproben-Gegenprüfung meiner Handeinordnung (V4), damit die Zahlen auf festem Grund stehen.
+
+✔ **Entschieden (Nutzer 01.11.): „a, Prompt 3 – prüfen, gegenprüfen und doku“** → §9.
+
+---
+
+## 9. Prompt 3 — gemessen auf der dritten Stichprobe (01.11.2026)
+
+**Reihenfolge, nachweisbar über Commit `ade5a067`:** Prompt 3 geschrieben **nur** aus den Fehlern der Stichprobe 2 → Stichprobe 3
+gezogen (60 Nachrichten, 30 Vorfilter-Treffer / 30 ohne, Saat 20261103, ohne die 260 der Stichproben 1 und 2) → Handeinordnung
+festgeschrieben (`hash-object f9b10d8f`, 15 × *zweifelhaft*) → **erst dann** das LLM. Prompt 2 lief aus Commit `06a6bf83` auf denselben
+60 Titeln — so ist der Vergleich gepaart. Skript `Rechenkern_02_10/a1_validierung3.py` → `a1_validierung3.txt`.
+
+**Was Prompt 3 (`7b94d07d7d1d`) ändert:** Leitfrage vorweg *„meldet sie etwas, das TATSÄCHLICH PASSIERT ist?“* — wenn nein,
+*marktbericht_meinung* · *sonstiges* nur für eingetretenes Geschehen · Forderung, Aufruf, Erwägung, Gespräche, Vorschau, Bank-/
+Analystenempfehlung, Rückblick, Jubiläum, Projekt-Selbstdarstellung → *marktbericht_meinung* · Ermittlung auch durch ein Parlament ·
+neu veröffentlichte Makrodaten bleiben *makro_zentralbank*, auch mit Krypto-Bezug · börsennotierte Krypto-Firmen → *krypto_gesamt*.
+
+**Entscheidungsregel vorab:** Prompt 3 ersetzt Prompt 2 nur mit **weniger Fehlalarmen** und **höchstens einem Verlust mehr**.
+
+| | Prompt 2 | **Prompt 3** |
+|---|---|---|
+| Typ richtig | 47 % [35–59] | **77 %** [65–86] |
+| Ereignis ja/nein | 63 % [51–74] | **92 %** [82–96] |
+| Asset (Hand-Ereignis) | 83 % [61–94] | 83 % [61–94] |
+| Sicht relevant ja/nein gleich | 67 % [54–77] | **90 %** [80–95] |
+| **Fehlalarm** (LLM an eine Sicht, Hand nicht) | **15** | **2** |
+| **Verlust** (Hand an eine Sicht, LLM nicht) | 5 | 4 |
+| hochgerechnet auf alle Nachrichten: Fehlalarm · Verlust | 19 % · 7 % | **3 %** · 7 % |
+| gepaart: nur dieser Prompt richtig | 2 | **16** (Vorzeichentest p = 0,0013) |
+| **Gegenprobe ohne die 15 zweifelhaften Handfälle** | 71 % · Fehlalarm 10 · Verlust 3 | **96 %** · Fehlalarm **0** · Verlust 2 |
+| P4 derselbe Stapel zweimal | — | gleicher Typ 60/60 |
+
+→ **Prompt 3 ersetzt Prompt 2** (Regel erfüllt: 15 → 2, 5 → 4).
+
+⚠ **Prompt 2 war schlechter, als Stichprobe 2 zeigte** (Sicht-Relevanz 67 % statt 77 %). Zwei Stichproben zu 60 streuen so weit — die
+Bänder überlappen. Deshalb gilt für Prompt 3 dasselbe: 90 % ist **eine** Messung, keine Garantie.
+
+**Was bleibt (die 4 Verluste):** MARA verkauft 996 BTC → *marktbericht_meinung* (der Titel nennt die Liquidationen) · Vergleich
+einer Großbank (S3) → *sonstiges* · Morgan Stanley startet einen Stablecoin-Reservefonds und Strategy kündigt die Umwandlung von
+Wandelanleihen an — beide in meiner Hand *zweifelhaft*. **Käufe/Verkäufe großer Halter** sind damit die einzige wiederkehrende
+Lücke (auch beim Vorfilter, §7.2). Nicht nachgeschärft: ein Prompt 4 bräuchte eine vierte Stichprobe, und 1 Fall ist kein Muster.
+
+**Damit startet der Volllauf mit Prompt 3** (Weg a der Frage §8: *„dann Volllauf“*): `python -m agent.ereignisse --llm`, wiederaufnehmbar,
+Protokoll `data/_a1/a1_volllauf_p3.txt`. Nur Desktop; er läuft, solange der Rechner läuft, und setzt nach einem Neustart dort fort,
+wo er stand. Danach `--schreibe` → `sichten.db`.

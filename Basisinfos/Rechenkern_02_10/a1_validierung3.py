@@ -173,7 +173,12 @@ def main():
     L12 = antworten(c, 12, E.PROMPT_SHA)
     p("\nP4 Prompt 3, derselbe Stapel zweimal: gleicher Typ %s" % fmt(sum(R3.typ[i] == L12.loc[str(n)].typ for i, n in zip(S.index, S.nr)), 60))
     k, n, pw = vorzeichen(R3.ok, R2.ok)
-    p("Gepaart (Auskunft): Sicht relevant ja/nein — nur Prompt 3 richtig %d, nur Prompt 2 richtig %d · Vorzeichentest p = %.2f" % (k, n - k, pw))
+    p("Gepaart (Auskunft): Sicht relevant ja/nein — nur Prompt 3 richtig %d, nur Prompt 2 richtig %d · Vorzeichentest p = %.4f" % (k, n - k, pw))
+    z = ~S.notiz.str.startswith("zweifelhaft")
+    for nm, R in (("Prompt 2", R2), ("Prompt 3", R3)):
+        p("Gegenprobe ohne die %d zweifelhaften Handfälle, %s: Sicht relevant gleich %s · Fehlalarm %d · Verlust %d" % (
+            int((~z).sum()), nm, fmt(int(R.ok[z].sum()), int(z.sum())), int((S.h_sicht.isna() & R.sicht.notna())[z].sum()),
+            int((S.h_sicht.notna() & R.sicht.isna())[z].sum())))
     ja = fa3 < fa2 and ve3 <= ve2 + 1
     p("\nENTSCHEIDUNG (vorab): Fehlalarm %d -> %d (%s), Verlust %d -> %d (%s) => %s" % (
         fa2, fa3, "weniger" if fa3 < fa2 else "NICHT weniger", ve2, ve3, "höchstens +1" if ve3 <= ve2 + 1 else "MEHR als +1",
