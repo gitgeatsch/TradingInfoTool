@@ -49,6 +49,14 @@ FOMC_MEETING_DATES_2027: list[tuple[date, date]] = [
     (date(2027, 12, 7), date(2027, 12, 8)),
 ]
 
+# VERGANGENE Erklaerungstage 2023-2025 (01.11.2026, Voranalyse_Zustaende Z7) - aus p59_termin_vorpruefung.FOMC uebernommen, dort
+# gemessen (127 Termine). Nur fuer das Rueckspiel der Sicht S8 (`api.sichten_quellen.termine_fomc`). ⚠️ Bewusst NICHT in
+# FOMC_MEETING_DATES: der Betrieb fragt nur kommende Sitzungen, und die Liste bleibt fuer ihn unveraendert.
+FOMC_ERKLAERUNG_2023_2025: list[date] = [date.fromisoformat(d) for d in (
+    "2023-02-01", "2023-03-22", "2023-05-03", "2023-06-14", "2023-07-26", "2023-09-20", "2023-11-01", "2023-12-13",
+    "2024-01-31", "2024-03-20", "2024-05-01", "2024-06-12", "2024-07-31", "2024-09-18", "2024-11-07", "2024-12-18",
+    "2025-01-29", "2025-03-19", "2025-05-07", "2025-06-18", "2025-07-30", "2025-09-17", "2025-10-29", "2025-12-10")]
+
 # ⚠️ ALLE bekannten Sitzungen. Hinter dem letzten Eintrag liefert jede Abfrage nichts - und das sieht aus wie "keine Sitzung".
 # Deshalb `fomc_liste_reicht_bis()`: wer Termine zeigt, zeigt auch, wie weit die Liste reicht.
 FOMC_MEETING_DATES: list[tuple[date, date]] = FOMC_MEETING_DATES_2026 + FOMC_MEETING_DATES_2027

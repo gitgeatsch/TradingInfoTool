@@ -502,6 +502,42 @@ def feeds_laufend(c) -> int:
 
 
 # ══ Ablauf ════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══ S8 Termine (01.11.2026, Voranalyse_Zustaende_Modul a) ═══════════════════════════════════════════════════════════════
+# ``wert`` = Zeitpunkt des Termins in Unix-Sekunden (UTC), ``datum`` = Tag in New York. ``bekannt_ab`` = TERMIN_VORLAUF_T Tage
+# davor: FOMC und BLS veroeffentlichen ihren Kalender ein Jahr im Voraus; 90 T decken die laengste Luecke zwischen zwei
+# Terminen einer Art (FOMC ~7 Wochen) sicher ab. ⚠️ [U] Verschiebungen (Shutdown 2025) kennt FRED nur als Ergebnis - siehe
+# ``agent.zustaende.SHUTDOWN_2025``.
+TERMIN_VORLAUF_T = 90
+
+
+def _termin_zeile(tag: date, art: str) -> tuple:
+    from agent import termin_fakt as TF
+    t = TF._zeitpunkt(tag, art)
+    ab = (t - timedelta(days=TERMIN_VORLAUF_T)).date().isoformat() + "T00:00:00+00:00"
+    return (tag.isoformat(), float(int(t.timestamp())), ab, None)
+
+
+def termine_fred(art: str, start: str, key: str) -> list:
+    """CPI (release 10) und Arbeitsmarkt (50) aus FRED ``release/dates`` - vergangene UND angekuendigte Termine."""
+    from agent import termin_fakt as TF
+    r = _hole("https://api.stlouisfed.org/fred/release/dates",
+              {"release_id": TF.FRED[art], "api_key": key, "file_type": "json", "realtime_start": "2020-01-01",
+               "realtime_end": "9999-12-31", "include_release_dates_with_no_data": "true", "limit": 10000})
+    if r is None:
+        raise RuntimeError("FRED release/dates %s nicht abrufbar" % art)
+    tage = sorted({x["date"] for x in r.json().get("release_dates", [])})
+    if not tage:
+        raise RuntimeError("FRED release/dates %s: keine Termine" % art)
+    return [_termin_zeile(date.fromisoformat(d), art) for d in tage if d >= start]
+
+
+def termine_fomc(start: str) -> list:
+    """FOMC-Erklaerungstage: vergangene (``cycles.FOMC_ERKLAERUNG_2023_2025``) und angekuendigte (``FOMC_MEETING_DATES``)."""
+    from agent import cycles as CY
+    tage = sorted(set(CY.FOMC_ERKLAERUNG_2023_2025) | {ende for _a, ende in CY.FOMC_MEETING_DATES})
+    return [_termin_zeile(d, "fomc") for d in tage if d.isoformat() >= start]
+
+
 def auftraege(fred_key: str) -> list:
     """(quelle, symbol, abruf(start)) — EINE Liste für Historie und laufend."""
     a = [("yfinance", t, lambda s, t=t: yfinance_reihe(t, s)) for t in YFINANCE]
@@ -516,6 +552,10 @@ def auftraege(fred_key: str) -> list:
     a += [("oi", b, lambda s, b=b: oi(b, s)) for b in KRYPTO]
     a += [("stablecoins", "USD", stablecoins), ("breite", "TOP50", breite), ("season", "STUFE", season_stufe)]
     a += [("gdelt_ton", k, lambda s, e=None, q=q: gdelt_ton(q, s, e)) for k, q in GDELT.items()]
+    # S8 Termine (01.11.2026)
+    if fred_key:
+        a += [("termin", art, lambda s, art=art: termine_fred(art, s, fred_key)) for art in ("cpi", "nfp")]
+    a += [("termin", "fomc", termine_fomc)]
     return a
 
 

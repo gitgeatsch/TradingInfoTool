@@ -33561,6 +33561,13 @@ def paket_sichten_quellen() -> None:
     soll = {("kurs", "BTC"), ("kurs", "ETH"), ("dvol", "BTC"), ("dvol", "ETH"), ("funding", "BTC"), ("funding", "ETH"),
             ("oi", "BTC"), ("oi", "ETH"), ("stablecoins", "USD"), ("breite", "TOP50"), ("season", "STUFE")}
     pruefe(P, "die elf S1-Reihen stehen in DER EINEN Auftragsliste (Historie = laufend, Ue8)", soll <= q, "fehlt: %s" % sorted(soll - q))
+    # S8 Termine (01.11.2026): FOMC immer, CPI/NFP nur mit FRED-Schluessel; wert = Unix-Sekunden UTC, bekannt_ab = TERMIN_VORLAUF_T davor
+    q_ohne = {(x, s) for x, s, _ in _SQ.auftraege("") if x == "termin"}
+    q_mit = {(x, s) for x, s, _ in _SQ.auftraege("k") if x == "termin"}
+    zt = _SQ._termin_zeile(_d(2025, 12, 10), "fomc")
+    pruefe(P, "S8 Termine in derselben Auftragsliste; Zeile = (Tag NY, UTC-Sekunden, Termin - %d T, offen)" % _SQ.TERMIN_VORLAUF_T,
+           q_ohne == {("termin", "fomc")} and q_mit == {("termin", "fomc"), ("termin", "cpi"), ("termin", "nfp")}
+           and zt == ("2025-12-10", float(_dt(2025, 12, 10, 19, 0, tzinfo=_tz.utc).timestamp()), "2025-09-11T00:00:00+00:00", None), str(zt))
 
     # Attrappen fuer requests.get / _hole
     class _R:
@@ -33642,6 +33649,106 @@ def paket_sichten_quellen() -> None:
     pruefe(P, "breite_zum_zeitpunkt: vor der Aufnahme zaehlt der Coin nicht, danach mit seiner ganzen Reihe",
            bool(((r2[i2[201]:] - v0[i2[201]:]).abs() < 1e-12).all()) and len(alts) - 1 >= 20
            and bool((r2[:i2[200]] - _SA.breite(K2, U2, alts[1:], K2["BTC"], tg)[:i2[200]]).abs().max() < 1e-12))
+
+
+def paket_zustaende() -> None:
+    """Ebene 1 ``agent/zustaende.py`` (Fuetterung §6 Schritt 3, Nutzer 01.11.2026: *"a, bauen – pruefen, gegenpruefen und doku"*).
+    OHNE Netz, auf einer Kunstablage. Die Gegenproben gegen echte Daten (N1-N5) stehen in
+    ``Basisinfos/Rechenkern_02_10/zustaende_nachweis.py``."""
+    P = "Zustaende"
+    import importlib.util as _ilu
+    import os as _os
+
+    import numpy as _np
+    import pandas as _pd
+    from scipy.stats import percentileofscore as _pos
+
+    from agent import cycles as _CY
+    from agent import termin_fakt as _TF
+    from agent import zustaende as _Z
+    from api.sichten_quellen import SEASON_CODE as _SC
+
+    def zeilen(q, sym, werte, ab="2019-01-01"):
+        d = _pd.date_range(ab, periods=len(werte), freq="D")
+        return _pd.DataFrame({"quelle": q, "symbol": sym, "datum": d.strftime("%Y-%m-%d"), "wert": werte,
+                              "bekannt_ab": (d + _pd.Timedelta(days=1)).strftime("%Y-%m-%dT00:00:00+00:00"), "bis": None})
+    rng = _np.random.default_rng(3)
+    basis = zeilen("dvol", "BTC", 50 + rng.normal(0, 5, 2500))
+    T = "2025-06-01"
+    d_dvol = next(d for d in _Z.DEFINITIONEN if d[1:3] == ("dvol", "BTC"))
+    z0 = _Z.zustand(d_dvol, _Z.Ablage(df=basis), T)
+    # 1 kein Vorgriff: eine spaeter bekannte Zeile und eine Beobachtung AM Stichtag aendern nichts
+    vorgriff = _pd.concat([basis, _pd.DataFrame([
+        {"quelle": "dvol", "symbol": "BTC", "datum": "2025-05-30", "wert": 999.0, "bekannt_ab": "2025-06-01T00:00:01+00:00", "bis": None},
+        {"quelle": "dvol", "symbol": "BTC", "datum": "2025-06-01", "wert": 999.0, "bekannt_ab": "2025-06-01T00:00:00+00:00", "bis": None}])])
+    pruefe(P, "kein Vorgriff: eine Zeile mit bekannt_ab > T und eine Beobachtung am Stichtag aendern nichts",
+           _Z.zustand(d_dvol, _Z.Ablage(df=vorgriff), T).satz == z0.satz, z0.satz[:90])
+    # 2 Jahrgangswechsel ohne Loch (Z1): alter Jahrgang gilt bis bis+1, der neue ab bis+2 00:00
+    jg = _pd.DataFrame([
+        {"quelle": "fred", "symbol": "DGS2", "datum": "2024-01-01", "wert": 1.0, "bekannt_ab": "2024-01-03T00:00:00+00:00", "bis": "2024-03-05"},
+        {"quelle": "fred", "symbol": "DGS2", "datum": "2024-01-01", "wert": 2.0, "bekannt_ab": "2024-03-07T00:00:00+00:00", "bis": None}])
+    a = _Z.Ablage(df=jg)
+    w = [a.stand_am("fred", "DGS2", t).tolist() for t in ("2024-03-05T00:00:00+00:00", "2024-03-06T00:00:00+00:00",
+                                                           "2024-03-07T00:00:00+00:00")]
+    pruefe(P, "Jahrgangswechsel ohne Loch (Z1): am Tag bis+1 der alte, ab bis+2 00:00 der neue, nie beide", w == [[1.0], [1.0], [2.0]], str(w))
+    # 3 leere Reihe in JEDEM Mass -> Zeile 'KEINE Werte', kein Absturz (Z2)
+    leer = _Z.Ablage(df=basis.iloc[:0])
+    kaputt = []
+    for d in _Z.DEFINITIONEN:
+        try:
+            z = _Z.zustand(d, leer, T)
+            if "KEINE Werte" not in z.satz or z.auffaellig:
+                kaputt.append(d[2])
+        except Exception as e:                       # noqa: BLE001
+            kaputt.append("%s %s" % (d[2], type(e).__name__))
+    pruefe(P, "leere Reihe in jedem Mass (%s) -> 'KEINE Werte', kein Absturz (Z2)" % ", ".join(sorted({d[4] for d in _Z.DEFINITIONEN})),
+           not kaputt, ", ".join(kaputt))
+    # 4 Fenster, Luecke, veraltet
+    kurz = _Z.zustand(d_dvol, _Z.Ablage(df=basis[basis.datum >= "2023-01-01"]), T)
+    loch = _Z.zustand(d_dvol, _Z.Ablage(df=basis[(basis.datum < "2024-01-01") | (basis.datum > "2024-02-15")]), T)
+    alt = _Z.zustand(d_dvol, _Z.Ablage(df=basis[basis.datum <= "2025-05-01"]), T)
+    pruefe(P, "Kennzeichen: Fenster kuerzer als 5 J, Luecke > 10 T, veraltet ueber dem eigenen P99 (SF9) - und sonst keines",
+           "Fenster nur" in kurz.satz and "Lücke" in loch.satz and "Stand 31 T alt" in alt.satz and "⚠" not in z0.satz,
+           " | ".join(x.kennzeichen for x in (kurz, loch, alt)))
+    # 5 Lesart, Stufe ohne Rang
+    ohne = [d[3] for d in _Z.DEFINITIONEN if d[4] != "stufe" and not d[6].startswith("höher = ")]
+    pruefe(P, "jede Definition mit Rang hat eine Lesart 'höher = ...' (SF4)", not ohne, ", ".join(ohne))
+    st = zeilen("season", "STUFE", [float(_SC["kalt"])] * 2000 + [float(_SC["Vorlauf"])] * 10)
+    d_st = next(d for d in _Z.DEFINITIONEN if d[4] == "stufe")
+    zs = _Z.zustand(d_st, _Z.Ablage(df=st), "2024-07-10")
+    z1 = _Z.zustand(d_st, _Z.Ablage(df=st), "2024-06-01")
+    from agent.season_ampel import NAME as _N
+    pruefe(P, "Stufe: Name aus season_ampel, 'seit' (Wechsel bzw. Reihenbeginn), kein Rang, kein ●, Klasse = Stufe (Takt §5)",
+           "kein Rang" in zs.satz and "Rang P" not in zs.satz and not zs.auffaellig and zs.rang is None and "seit 2024-06-23" in zs.satz
+           and zs.klasse == _N["Vorlauf"] and "seit 2019-01-01" in z1.satz, zs.satz + " | " + z1.satz)
+    # 6 Rang und Klasse
+    x = _pd.Series(basis.wert.values, index=_pd.to_datetime(basis.datum))
+    f = x[(x.index >= _pd.Timestamp(T) - _pd.DateOffset(years=5)) & (x.index < _pd.Timestamp(T))]
+    pruefe(P, "Rang = scipy percentileofscore(kind='mean') im 5-J-Fenster", abs(z0.rang - _pos(f.values, f.iloc[-1], kind="mean")) < 1e-9,
+           "%.4f / %.4f" % (z0.rang, _pos(f.values, f.iloc[-1], kind="mean")))
+    pruefe(P, "Klassen SF3: P5 sehr tief, P20 tief, P79,9 normal, P80 hoch, P95 sehr hoch",
+           [_Z.klasse(p) for p in (5, 20, 79.9, 80, 95)] == ["sehr tief", "tief", "normal", "hoch", "sehr hoch"])
+    # 7 S8 Termine
+    u = int(_pd.Timestamp("2025-06-10 18:00", tz="UTC").timestamp())
+    tm = _pd.DataFrame([
+        {"quelle": "termin", "symbol": "fomc", "datum": "2025-06-10", "wert": float(u), "bekannt_ab": "2025-03-12T00:00:00+00:00", "bis": None},
+        {"quelle": "termin", "symbol": "cpi", "datum": "2025-11-13", "wert": float(u + 86400 * 156), "bekannt_ab": "2025-08-15T00:00:00+00:00", "bis": None}])
+    tz = {z.symbol: z for z in _Z.termine(_Z.Ablage(df=tm), "2025-06-01")}
+    tz2 = {z.symbol: z for z in _Z.termine(_Z.Ablage(df=tm), "2025-09-01")}
+    pruefe(P, "S8: naechster bekannter Termin mit Faktor aus termin_fakt; noch nicht bekannt / kein Termin = eigene Zeile mit ⚠",
+           "in 9.8 T" in tz["fomc"].satz and _TF._komma(_TF.FAKTOR_2H["fomc"]) + "×" in tz["fomc"].satz
+           and "kein Termin bekannt ⚠" in tz["cpi"].satz and "kein Termin bekannt ⚠" in tz["nfp"].satz
+           and "Shutdown" in tz2["cpi"].satz and "kein Termin bekannt" in tz2["fomc"].satz, tz["fomc"].satz[:80])
+    pruefe(P, "Shutdown-⚠ nur fuer die BLS-Termine (CPI, Arbeitsmarkt), nicht fuer FOMC", _Z.SHUTDOWN_ARTEN == ("cpi", "nfp"))
+    pruefe(P, "die FOMC-Historie 2023-2025 steht NICHT in FOMC_MEETING_DATES (Betrieb unveraendert)",
+           min(e for _a, e in _CY.FOMC_MEETING_DATES).year >= 2026 and max(_CY.FOMC_ERKLAERUNG_2023_2025).year == 2025)
+    # 8 ein Rechenweg, nie Produktions-DB
+    spec = _ilu.spec_from_file_location("_probe", _os.path.join("Basisinfos", "Rechenkern_02_10", "fuetterung_satzform_probe.py"))
+    pr = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(pr)
+    pruefe(P, "die Probe ist nur eine Huelle - kein zweiter Rechenweg (SF8)",
+           not any(hasattr(pr, n) for n in ("stand_am", "satz", "ZUSTAENDE", "klasse")))
+    pruefe(P, "nie die Produktions-DB", _verweigert(lambda: _Z.Ablage("x/tradinginfotool.db")))
 
 
 def _verweigert(f) -> bool:
@@ -33760,6 +33867,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Kontrollen": paket_kontrollen,
           "Gesamtplan": paket_gesamtplan,
           "SichtenQuellen": paket_sichten_quellen,
+          "Zustaende": paket_zustaende,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,

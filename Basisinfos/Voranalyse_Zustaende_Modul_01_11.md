@@ -6,7 +6,7 @@
 **Gehört zu:** [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) (SF1–SF8, §4 Blöcke, §5 Takt, §6 Schritt 3) ·
 [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) (die elf S1-Reihen, §6 Grundgesamtheit) ·
 [`Datenbasis_Schichten_Sichten_28_10.md`](Datenbasis_Schichten_Sichten_28_10.md) (Sichten S1–S8, Entscheidung A).
-**Stand:** Vorlage zur Abstimmung. **Nichts gebaut, nichts geladen, Betrieb unberührt.** Geprüft nur lesend auf
+**Stand:** ✔ **entschieden a und gebaut 01.11.2026** (§7) — Nachweis 10 von 10, Prüfpaket 14 von 14. **Betrieb unberührt.** *(Vorlage-Stand:)* Geprüft nur lesend auf
 `data/_sichten/sichten.db`, dazu zwei FRED-Abfragen (Veröffentlichungstermine).
 
 ---
@@ -117,3 +117,49 @@ Betrieb, NB, Mail, Season-Ampel, `makro_lage`. `sichten.db` liegt nur am Desktop
 | b | ohne S8, Termine erst mit A1 | weniger zu laden — aber S2 fragt nach dem Termin, und Entscheidung A sah S8 **sofort** vor |
 
 **Empfehlung a.** Z1–Z9 und SF9 sind fachlich begründet und hier nicht zur Wahl gestellt — Einwände willkommen.
+
+✔ **Entschieden 01.11.2026 (Nutzer: *„a, bauen – prüfen, gegenprüfen und doku“*)** — Ausführung in §7.
+
+---
+
+## 7. Ausführung und Nachweis (01.11.2026)
+
+**Gebaut** — nur Desktop, Betrieb unberührt:
+
+| Teil | was |
+|---|---|
+| `agent/zustaende.py` | `DEFINITIONEN` (die 35, aus der Probe verschoben), `Ablage` (einmal laden, `mode=ro`, Produktions-DB verweigert), `stand_am` mit der Jahrgangsregel **Z1**, `zustand` (Rechnung der Probe + **Z2** vor jedem Maß + **SF9**), `termine` (S8), `zustaende`, `zeilen`, `text`. Rückgabe **strukturiert** (`Zustand`: Satz, Klasse, Rang, Stand, Alter, Kennzeichen) |
+| `Rechenkern_02_10/fuetterung_satzform_probe.py` | nur noch Hülle um das Modul — **ein** Rechenweg (SF8) |
+| `api/sichten_quellen.py` | `termine_fred` (CPI 10, Arbeitsmarkt 50 aus FRED `release/dates`), `termine_fomc`, in **derselben** Auftragsliste. Zeile: Tag (New York), UTC-Sekunden, `bekannt_ab` = Termin − `TERMIN_VORLAUF_T` (90 T) |
+| `agent/cycles.py` | `FOMC_ERKLAERUNG_2023_2025` (aus `p59`, dort gemessen) — **nicht** in `FOMC_MEETING_DATES`, der Betrieb liest die Liste unverändert |
+| `pruefe_pakete.py` | Paket **Zustaende** (14, ohne Netz) · SichtenQuellen +1 (Termine, 14) |
+| `Rechenkern_02_10/zustaende_nachweis.py` → `.txt` | N1–N5 gegen echte Daten |
+
+**Geladen** (Sicherung `sichten_vor_zustaende_01_11.db`): Termine CPI 88 (2020-01-14 – 2026-12-10), Arbeitsmarkt 86
+(2020-01-10 – 2026-12-04), FOMC 40 (2023-02-01 – 2027-12-08).
+
+**Abweichung vom Plan §3:** FOMC 2020–2022 **nicht** nachgetragen. Ein Termin hat keinen Rang und kein Fenster — das Rückspiel ab
+12/2025 braucht nur die kommenden Termine. Vor 2023 meldet S8 *„kein Termin bekannt ⚠“*, nie still.
+
+**Unterwegs gefunden und behoben:**
+
+| | |
+|---|---|
+| Shutdown-⚠ zuerst auch beim FOMC | falsch — verschoben wurden nur die **BLS**-Termine (CPI, Arbeitsmarkt); `SHUTDOWN_ARTEN` |
+| **Z10** (Prüfpaket): hat die Stufe **nie** gewechselt, nannte die Probe als „seit“ den **letzten** Tag | jetzt der erste. In den echten Daten trat es nicht auf (die Stufe wechselt ab 2020 mehrfach) |
+
+**Nachweis** (`zustaende_nachweis.txt`, **10 von 10 grün**):
+
+| # | Ergebnis |
+|---|---|
+| N1 | Modul = alte Probe (aus Git, `ceb7df73`) an **01.12.2025 und 29.10.2026: je 35 von 35 Zeilen** gleich — einziger Zusatz SF9 an 2 Zeilen (Breite, Season-Stufe am 29.10.: *„⚠ Stand 39 T alt (üblich ≤ 20 T)“*, die eingefrorene Desktop-Messbasis) |
+| N2 | 333 Rückspiel-Stichtage (01.12.2025 – 29.10.2026): **0** leere FRED-Zeilen (alte Regel: 59 Lochtage), **kein** Stand läuft rückwärts |
+| N3 | ⚠⚠ **Vorgriff am Ergebnis: 0 von 333** Stichtagen verschieden zwischen voller Ablage und einer Ablage, die nur das am Stichtag Bekannte enthält (`bis` nur, wenn der Nachfolger schon bekannt war) |
+| N4 | 0 Fehler; 1.532 s für 333 Stichtage × 2 ≈ **2,3 s je Rechnung** |
+| N5 | FOMC in der Ablage = `agent.cycles` (40); CPI = FRED (88 = 88); Arbeitsmarkt = FRED (86 = 86); nächster FOMC je Stichtag unabhängig nachgerechnet: **0 von 333** falsch |
+
+**Probe 29.10.2026** (neu geschrieben): 35 Zustände, 13 auffällig, ≈ 1.760 Token; dazu S8 drei Zeilen (≈ 235 Token) — Arbeitsmarkt
+in 8,6 T, CPI in 12,6 T, FOMC in 41,8 T.
+
+**Was offen bleibt:** S8 hat keine Klasse — wann ein Termin ein neues Gutachten auslöst (Takt §5), regelt der Ereignis-Leser A1
+(G9). Das Modul läuft am NB erst mit **G8** (dort liegt `sichten.db` noch nicht).

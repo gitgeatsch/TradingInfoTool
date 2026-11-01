@@ -3,8 +3,8 @@ FÜTTERUNG — PROBE DER SATZFORM (Ü1) · Stichtag 2026-10-29T00:00:00+00:00 ·
 ── S1 ──
     [S1] BTC 81343.50 USD, +11.3 % zum 200-T-Schnitt · Rang P60 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +17.3 · Stand 2026-10-28 · Fakt
     [S1] ETH 2359.68 USD, +9.2 % zum 200-T-Schnitt · Rang P61 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +27.3 · Stand 2026-10-28 · Fakt
-    [S1] Breite (Anteil der Top 50, die über 90 T besser liefen als BTC) 53.1 % · Rang P74 der letzten 5.0 J (ab 2021-10) = normal (höher = mehr Altcoins laufen besser als BTC) · vor 4 Wochen +41.7 · Stand 2026-09-20 · Fakt
-    [S1] Season-Ampel: ungewohnt seit 2026-09-08 (Stufe, kein Rang) · Stand 2026-09-20 · Fakt
+    [S1] Breite (Anteil der Top 50, die über 90 T besser liefen als BTC) 53.1 % · Rang P74 der letzten 5.0 J (ab 2021-10) = normal (höher = mehr Altcoins laufen besser als BTC) · vor 4 Wochen +41.7 · Stand 2026-09-20 ⚠ Stand 39 T alt (üblich ≤ 20 T) · Fakt
+    [S1] Season-Ampel: ungewohnt seit 2026-09-08 (Stufe, kein Rang) · Stand 2026-09-20 ⚠ Stand 39 T alt (üblich ≤ 20 T) · Fakt
   ● [S1] DVOL BTC (Optionsmarkt) 37.3 · Rang P8 der letzten 5.0 J (ab 2021-10) = tief (höher = Optionsmarkt erwartet größere Schwankung) · vor 4 Wochen +35.2 · Stand 2026-10-28 · Fakt
   ● [S1] DVOL ETH (Optionsmarkt) 52.5 · Rang P16 der letzten 5.0 J (ab 2021-10) = tief (höher = Optionsmarkt erwartet größere Schwankung) · vor 4 Wochen +49.4 · Stand 2026-10-28 · Fakt
   ● [S1] Stablecoin-Angebot 302 Mrd. USD, -1.6 % gegen vor 30 Tagen · Rang P16 der letzten 5.0 J (ab 2021-10) = tief (höher = mehr Stablecoins als vor 30 Tagen) · vor 4 Wochen +1.38 · Stand 2026-10-28 · Fakt
@@ -40,6 +40,11 @@ FÜTTERUNG — PROBE DER SATZFORM (Ü1) · Stichtag 2026-10-29T00:00:00+00:00 ·
     [S4] Kupfer 6.64 USD, +7.1 % zum 200-T-Schnitt · Rang P66 der letzten 5.0 J (ab 2021-10) = normal (höher = weiter über dem eigenen Schnitt) · vor 4 Wochen +7.43 · Stand 2026-10-28 · Fakt
 ── S7 ──
   ● [S7] Nachrichtenton Krieg/Sanktionen/Zölle (GDELT) -1.82 · Rang P91 der letzten 5.0 J (ab 2021-10) = hoch (höher = freundlicherer Ton) · vor 4 Wochen -2.22 · Stand 2026-10-27 ⚠ Lücke 18 T ab 2025-06-14 · Fakt
+── S8 ──
+    [S8] US-Zinsentscheid (FOMC) 2026-12-09 19:00 UTC, in 41.8 T · BTC bewegt sich in den 2 h ab dem Termin im Mittel 2,3× so stark wie sonst zur selben Uhrzeit (über 24 h 1,1×; gemessen 2023-2026 an 127 Terminen (Schritt7 §23.53); für REGEL0-Trades mit Termin im Fenster kein Unterschied belegt) · Fakt
+    [S8] US-Inflation (CPI) 2026-11-10 13:30 UTC, in 12.6 T · BTC bewegt sich in den 2 h ab dem Termin im Mittel 1,8× so stark wie sonst zur selben Uhrzeit (über 24 h 1,1×; gemessen 2023-2026 an 127 Terminen (Schritt7 §23.53); für REGEL0-Trades mit Termin im Fenster kein Unterschied belegt) · Fakt
+    [S8] US-Arbeitsmarkt 2026-11-06 13:30 UTC, in 8.6 T · BTC bewegt sich in den 2 h ab dem Termin im Mittel 1,5× so stark wie sonst zur selben Uhrzeit (über 24 h 1,1×; gemessen 2023-2026 an 127 Terminen (Schritt7 §23.53); für REGEL0-Trades mit Termin im Fenster kein Unterschied belegt) · Fakt
 
 ● = auffällig (Rang ≤ P20 oder ≥ P80) · 13 von 35 Zuständen auffällig · 4 mit kürzerem Fenster als 5 J
-Zeichen gesamt: 6534 (≈ 1742 Token bei 3,5–4 Zeichen je Token)
+Zeichen gesamt: 6600 (≈ 1760 Token bei 3,5–4 Zeichen je Token)
+S8 Termine: 3 Zeilen, 883 Zeichen

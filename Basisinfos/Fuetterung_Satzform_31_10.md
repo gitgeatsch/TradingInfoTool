@@ -42,7 +42,8 @@ Reihenfolge §6 Schritt 2) · [`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashb
 | **SF5** | **Stand je Zeile** (Datum der Beobachtung) | M2 stand am 29.10. beim **01.09.** — zwei Monate alt; ohne Stand liest das LLM ihn als heutig |
 | **SF6** | **Alle** Zustände einer Sicht gehen hinein, auffällige mit **●** markiert | 24 Zustände = **4.712 Zeichen ≈ 1.260 Token** — kein Grund zu kürzen. Ob *nichts Besonderes* ist, entscheidet die Sicht (F2), nicht ein Vorfilter |
 | **SF7** | **Ein Fenster für alle: 5 Jahre** — wie der Rang von K1–K9 in `makro_lage` | ein Rang ist ein Perzentil; **wer das Fenster ändert, ändert jeden Wert** (Grundgesamtheit). Kürzere Fenster werden mit ⚠ ausgewiesen, nie still |
-| **SF8** | **Ein Rechenweg** für live und Rückspiel: die Zeilen entstehen aus `sichten.db` am Stichtag mit dem **damals gültigen Jahrgang** (`bekannt_ab ≤ T`, `bis ≥ T`) | Ü8; ohne Jahrgänge wäre jeder revidierte FRED-Wert ein Vorgriff |
+| **SF8** | **Ein Rechenweg** für live und Rückspiel: die Zeilen entstehen aus `sichten.db` am Stichtag mit dem **damals gültigen Jahrgang** (`bekannt_ab ≤ T`, ~~`bis ≥ T`~~ **`bis` + 1 T ≥ T** — korrigiert 01.11., Z1: der Nachfolger ist erst am Tag `bis` + 2 bekannt) | Ü8; ohne Jahrgänge wäre jeder revidierte FRED-Wert ein Vorgriff. Gebaut in `agent/zustaende.py` |
+| **SF9** | ⚠ **veraltet**, wenn das Alter des Stands über dem 99. Perzentil der **eigenen** Alter im Fenster liegt (*„⚠ Stand 39 T alt (üblich ≤ 20 T)“*) — neu 01.11. | das Alter ist je Zustand sehr verschieden (Krypto 1 T, M2 im Median 70 T); SF5 zeigt das Datum, aber nicht, dass es **ungewöhnlich** alt ist ([`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md) Z4) |
 
 ---
 
@@ -101,7 +102,7 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 |---|---|---|---|
 | 1 | **Historie ab 2020-01** in `sichten.db` (P1) — derselbe Abrufer, nur früherer Start | Desktop | nein |
 | 2 | **S1 ergänzen** um Trend, Breite, DVOL, Stablecoins, Funding/OI als Reihen mit `bekannt_ab` (P2) — **✔ 01.11. geladen und gegengeprüft**, [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) §5; Breite Desktop ↔ NB (V2/G6a) ✔ gelöst 01.11. abends (§6 dort: Grundgesamtheit des Betriebs zum Zeitpunkt) | Desktop | nein |
-| 3 | **Ebene-1-Modul** `agent/zustaende.py`: die Satzform aus §1 als **ein** Rechenweg (SF8), Probe → Modul, mit Prüfpaket (Fenster, Vorgriff, Lesart je Zustand vorhanden) — **Voranalyse 01.11.** [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md): die Probe hat ein **Jahrgangsloch** (Z1) und stürzt bei leerer Reihe ab (Z2) | Desktop | nein |
+| 3 | **Ebene-1-Modul** `agent/zustaende.py`: die Satzform aus §1 als **ein** Rechenweg (SF8), Probe → Modul, mit Prüfpaket (Fenster, Vorgriff, Lesart je Zustand vorhanden) — **✔ 01.11. gebaut** (Weg a, mit S8 Termine; §7 der Voranalyse) · **Voranalyse 01.11.** [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md): die Probe hat ein **Jahrgangsloch** (Z1) und stürzt bei leerer Reihe ab (Z2) | Desktop | nein |
 | 4 | **Voranalyse A1** (G9) — Regeln zuerst, LLM für den Rest | Desktop | nein |
 | 5 | **G7 Messplan**: Faktentreue der Prüfer + Wert der Sichten im Rückspiel | Desktop | nein |
 | 6 | **G8 Bau** B1–B6 + Ebenen 2/3, Abgleich Mail ↔ Ebene 1 am NB (P3) | beide | ja, ein Bündel |

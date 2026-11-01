@@ -1,0 +1,15 @@
+==============================================================================================================
+ZUSTÄNDE — NACHWEIS (2026-11-01 17:22 UTC)
+==============================================================================================================
+  OK    N1 Modul = alte Probe 2025-12-01                     35 von 35 Zeilen gleich (ohne SF9-Zusatz; SF9 an 0 Zeilen)
+  OK    N1 Modul = alte Probe 2026-10-29                     35 von 35 Zeilen gleich (ohne SF9-Zusatz; SF9 an 2 Zeilen)
+  OK    N2 keine FRED-Zeile leer                             333 Stichtage, leere FRED-Zeilen: 0 (alte Regel: 59 Lochtage)
+  OK    N2 kein Stand läuft rückwärts                        0 Fälle 
+  OK    N3 Vorgriff: volle = gekürzte Ablage                 an 0 von 333 Stichtagen verschieden []
+  OK    N4 alle Stichtage ohne Fehler                        0 Fehler · 1532 s für 333 Stichtage (je zweimal gerechnet)
+  OK    N5 FOMC in der Ablage = agent.cycles                 40 Termine
+  OK    N5 CPI in der Ablage = FRED release/dates            88 Termine (FRED 88)
+  OK    N5 NFP in der Ablage = FRED release/dates            86 Termine (FRED 86)
+  OK    N5 nächster FOMC je Stichtag unabhängig nachgerechnet 333 Stichtage, falsch 0
+==============================================================================================================
+10 Prüfungen, ALLE BESTANDEN
