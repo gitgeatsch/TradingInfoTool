@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 87 |
+| Voranalyse / Recherche | 88 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **230** |
+| **gesamt** | **231** |
 
 ## Plan
 
@@ -216,6 +216,7 @@
 | [`Voranalyse_REGEL0_Reife_Vola_26_10.md`](Voranalyse_REGEL0_Reife_Vola_26_10.md) | Voranalyse: REGEL0 robust machen (Ansatz 1) und Größe nach Schwankung (Ansatz 2) — 26.10.2026 | Arbeitsblatt |
 | [`Voranalyse_REGEL0_Robustheit_24_10.md`](Voranalyse_REGEL0_Robustheit_24_10.md) | Voranalyse Robustheit der REGEL0 (24.10.2026) | Arbeitsblatt |
 | [`Voranalyse_Richtung_Kern_30_09.md`](Voranalyse_Richtung_Kern_30_09.md) | Voranalyse RICHTUNG — Rolle A auf dem Kern ausreizen (30.09.2026) | Arbeitsblatt |
+| [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) | Voranalyse S1 — die fehlenden Krypto-Zustände als Reihen mit `bekannt_ab` (01.11.2026) | **laufend** |
 | [`Voranalyse_Schritt1_Beitrag_verdrahten_26_09.md`](Voranalyse_Schritt1_Beitrag_verdrahten_26_09.md) | Voranalyse Schritt 1 — den Hebel-Beitrag verdrahten | Arbeitsblatt |
 | [`Voranalyse_Schritt7_Betrieb_02_10.md`](Voranalyse_Schritt7_Betrieb_02_10.md) | Voranalyse Schritt 7 — die REGEL0 in den Betrieb am Notebook (ENTWURF 02.10.2026, zur Abstimmung) | **laufend** |
 | [`Voranalyse_Spot_Neubau_04_10.md`](Voranalyse_Spot_Neubau_04_10.md) | Voranalyse Spot-Neubau — die Grundlage aus fachlicher und technischer Sicht | **laufend** |
