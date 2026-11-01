@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 88 |
+| Voranalyse / Recherche | 89 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **231** |
+| **gesamt** | **232** |
 
 ## Plan
 
@@ -231,6 +231,7 @@
 | [`Voranalyse_Wale_Stufe2_31_10.md`](Voranalyse_Wale_Stufe2_31_10.md) | Voranalyse G16 Stufe 2 — der Wal-Fluss als Gewicht in der REGEL0 (31.10.2026) | **laufend** |
 | [`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`](Voranalyse_Weiterentwicklung_Fuehrung_26_10.md) | Voranalyse: Das Fakten- und Führungssystem weiterentwickeln (26.10.2026) | Arbeitsblatt |
 | [`Voranalyse_XDC_Messbasis_30_10.md`](Voranalyse_XDC_Messbasis_30_10.md) | Voranalyse: XDC in die Messbasis (30.10.2026) | Arbeitsblatt |
+| [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md) | Voranalyse — Ebene-1-Modul `agent/zustaende.py` (Fütterung §6 Schritt 3, 01.11.2026) | **laufend** |
 | [`Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md`](Vorschlag_Rechnung_Hebel_Vorfilter_23_08.md) | – | vor Messstandard (2026-08-23) |
 
 ## Lage / Bilanz / Bericht
