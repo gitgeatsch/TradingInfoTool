@@ -67,11 +67,12 @@ TYPEN = {
     "verschoben": "ein angekündigter Termin (Listing, Delisting, Upgrade) wird verschoben oder vorgezogen",
     "depeg_aussetzung": "ein Stablecoin verliert seine Bindung, oder Einzahlung/Auszahlung/Handel/ein Netz wird ausgesetzt oder fällt aus",
     "hack_exploit": "Diebstahl, Hack, Exploit, Rug Pull, abgezogene Mittel",
-    "regulierung_klage": "Gesetz oder Gesetzesschritt (Abstimmung, Beschluss), Behördenentscheid, Ermittlung, Klage, Anklage, Urteil, "
-                         "Vergleich, Verbot, Lizenz, Sanktion, Beschlagnahme. NICHT: Forderung, Kritik, Treffen, Erwägung, Meinung "
-                         "(das ist marktbericht_meinung)",
+    "regulierung_klage": "Gesetz oder Gesetzesschritt (Abstimmung, Beschluss), Behördenentscheid, Ermittlung oder Untersuchung (auch durch "
+                         "ein Parlament), Klage, Anklage, Urteil, Vergleich, Verbot, Lizenz, Sanktion, Beschlagnahme. NICHT: Forderung, "
+                         "Aufruf, Kritik, Treffen, Gespräche, Erwägung, Vorschau auf eine Entscheidung, Meinung (das ist marktbericht_meinung)",
     "etf_fonds": "Antrag, Zulassung, Start, Ablehnung eines ETF oder Fonds (tägliche Zu-/Abflüsse sind marktbericht_meinung)",
-    "makro_zentralbank": "Zinsentscheid, Zentralbank, Inflation, Arbeitsmarkt, Zölle, Staatshaushalt, Konjunkturdaten",
+    "makro_zentralbank": "Zinsentscheid, Zentralbank, Inflation, Arbeitsmarkt, Zölle, Staatshaushalt, Konjunkturdaten - auch wenn die "
+                         "Meldung neu veröffentlichte Daten mit ihrer Wirkung auf Krypto verbindet",
     "unternehmen": "Firmenkauf, Fusion, Umstrukturierung, Insolvenz, Finanzierungsrunde, Börsengang; eine Firma, Stiftung oder ein "
                    "Staat kauft oder verkauft Krypto in großem Umfang (gemeldeter Kauf/Verkauf, keine Prognose)",
     "netz_upgrade": "Netz-Upgrade, Hard Fork, Token-Migration oder -Tausch, Umbenennung, Änderung der Tokenomics, Burn",
@@ -79,16 +80,23 @@ TYPEN = {
     "airdrop": "Airdrop, Gratis-Verteilung von Token",
     "aktion": "Werbung, Wettbewerb, Rabatt, Belohnung, Veranstaltung",
     "produkt": "neues Produkt, Funktion, Gebühr, Wartung, Programm einer Firma oder Börse (ohne Handelsbeginn/-ende eines Tokens)",
-    "marktbericht_meinung": "Kursbericht, Zu-/Abflüsse, Analyse, Prognose, Meinung, Interview, Erklärstück — kein neues Geschehen",
-    "sonstiges": "neues Geschehen, das in keinen anderen Typ passt",
+    "marktbericht_meinung": "Kursbericht, Zu-/Abflüsse, Analyse, Prognose, Meinung, Kommentar, Empfehlung einer Bank oder eines "
+                            "Analysten, Interview, Erklärstück, Rückblick, Jubiläum, Selbstdarstellung eines Projekts; Forderung, Aufruf, "
+                            "Erwägung, Gespräche, Vorschau auf eine Entscheidung — kein neues Geschehen",
+    "sonstiges": "NUR ein tatsächlich eingetretenes neues Geschehen, das in keinen anderen Typ passt. Nie für Bericht, Meinung, "
+                 "Kommentar, Rückblick oder Ratschlag (das ist marktbericht_meinung)",
 }
+# Prompt 2 (05e921720b82, a1_nachweis.txt) legte Kommentare, Bankempfehlungen und Projekt-Werbung unter "sonstiges" und Forderungen/Erwägungen
+# unter "regulierung_klage" - 10 von 60 Nachrichten der zweiten Stichprobe gingen so fälschlich an eine Sicht. Prompt 3 schärft das und
+# stellt die Leitfrage voran (TATSÄCHLICH PASSIERT?). Gültig gemessen auf der DRITTEN Stichprobe (a1_validierung3.py).
 KEIN_EREIGNIS = ("aktion", "produkt", "marktbericht_meinung")   # abgelegt, aber nicht an die Sichten (Voranalyse §3)
 # Prompt 1 (35eb32461b60) nannte die Bereiche nur - das LLM legte 39 von 90 Nachrichten unter "sonstiges", darunter Krypto-Hacks und
 # Krypto-Klagen, die so an KEINE Sicht gingen (a1_nachweis.txt). Prompt 2 definiert sie.
 BEREICHE = {
     "asset": "die Meldung betrifft ein oder mehrere bestimmte Krypto-Assets (dann stehen sie in assets)",
-    "krypto_gesamt": "Krypto allgemein ohne ein bestimmtes Asset: Börsen, DeFi, Wallets, Stablecoins, Krypto-Firmen, Krypto-Kriminalität, "
-                     "Krypto-Gesetze und -Regulierung (in jedem Land)",
+    "krypto_gesamt": "Krypto allgemein ohne ein bestimmtes Asset: Börsen, DeFi, Wallets, Stablecoins, Krypto-Firmen (auch börsennotierte "
+                     "Firmen mit Krypto-Geschäft wie Coinbase, Robinhood, Miner), Krypto-Kriminalität, Krypto-Gesetze und -Regulierung "
+                     "(in jedem Land)",
     "makro_usa": "US-Wirtschaft und Fed: Zinsen, Inflation, Arbeitsmarkt, Konjunktur, Zölle, Staatshaushalt (nicht: Krypto-Gesetze)",
     "aktien_kredit": "Aktien, Anleihen, Banken, Kredit - ohne Krypto-Bezug",
     "asien": "Wirtschaft und Märkte Asiens - ohne Krypto-Bezug",
@@ -312,6 +320,8 @@ def prompt() -> str:
     defs = "\n".join("- %s: %s" % (k, v) for k, v in TYPEN.items())
     bdefs = "\n".join("- %s: %s" % (k, v) for k, v in BEREICHE.items())
     return ("Du ordnest Krypto- und Wirtschaftsmeldungen ein. Jede nummerierte Meldung FÜR SICH - die anderen Meldungen nicht heranziehen. "
+            "Frage zuerst: meldet sie etwas, das TATSÄCHLICH PASSIERT ist (beschlossen, eingetreten, veröffentlicht)? Wenn nein, ist "
+            "der Typ marktbericht_meinung. "
             "Typen (genau einer):\n%s\n"
             "Für JEDE Meldung ein JSON-Objekt {\"nr\": n, \"typ\": \"...\", \"assets\": [Ticker], \"bereich\": \"...\"}. "
             "assets: nur Krypto-Ticker, die die Meldung BETRIFFT (nicht bloß erwähnt; Bitcoin als Beute oder Zahlungsmittel "

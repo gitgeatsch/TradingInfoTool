@@ -1,0 +1,61 @@
+nr;typ;assets;bereich;notiz
+401;regulierung_klage;;krypto_gesamt;SEC/CFTC-Regelschritte
+402;hack_exploit;;krypto_gesamt;zweifelhaft: TWT als Asset
+403;marktbericht_meinung;;krypto_gesamt;zweifelhaft: Kolumne ueber einen OCC-Vorschlag
+404;sonstiges;;krypto_gesamt;zweifelhaft: Staat nimmt Krypto als Zahlung
+405;hack_exploit;?;krypto_gesamt;Erklaerstueck, aber Hack vom Vortag
+406;unternehmen;BTC;asset;Firma verkauft BTC
+407;marktbericht_meinung;;krypto_gesamt;Kritik
+408;marktbericht_meinung;;krypto_gesamt;Kritik
+409;regulierung_klage;;krypto_gesamt;Anklage
+410;marktbericht_meinung;;krypto_gesamt;zweifelhaft: Ankuendigung im Interview
+411;marktbericht_meinung;;krypto_gesamt;Warnung
+412;etf_fonds;?;krypto_gesamt;Antrag
+413;marktbericht_meinung;;krypto_gesamt;Forderung im Treffen
+414;marktbericht_meinung;BTC;asset;zweifelhaft: Vorschlag, kein Upgrade
+415;marktbericht_meinung;;krypto_gesamt;
+416;regulierung_klage;USDT;asset;zweifelhaft: Einfrieren durch Tether (wie 150)
+417;marktbericht_meinung;;krypto_gesamt;
+418;regulierung_klage;;sonstiges;Betrug ohne Krypto
+419;marktbericht_meinung;BTC;asset;
+420;regulierung_klage;;krypto_gesamt;Klage
+421;regulierung_klage;;sonstiges;Vergleich, Datenleck
+422;hack_exploit;;sonstiges;zweifelhaft: Einzelbetrug
+423;hack_exploit;;sonstiges;Einzeldiebstahl
+424;regulierung_klage;;aktien_kredit;Vergleich einer Bank
+425;marktbericht_meinung;BTC;asset;
+426;regulierung_klage;;krypto_gesamt;Beschlagnahme
+427;marktbericht_meinung;BTC;asset;Vorschlag
+428;marktbericht_meinung;;krypto_gesamt;zweifelhaft: Termin eines Treffens
+429;marktbericht_meinung;;krypto_gesamt;Statistik
+430;marktbericht_meinung;;krypto_gesamt;zweifelhaft: MSCI-Entscheid im Hintergrund
+431;marktbericht_meinung;BTC;asset;
+432;marktbericht_meinung;BTC;asset;
+433;marktbericht_meinung;BTC;asset;
+434;marktbericht_meinung;BTC;asset;
+435;produkt;;krypto_gesamt;
+436;marktbericht_meinung;;aktien_kredit;Forderung
+437;marktbericht_meinung;BTC;asset;
+438;marktbericht_meinung;BTC;asset;
+439;marktbericht_meinung;ETH;asset;
+440;unternehmen;;krypto_gesamt;zweifelhaft: Umstrukturierung oder produkt
+441;marktbericht_meinung;BTC;asset;zweifelhaft: Zoelle im Hintergrund
+442;marktbericht_meinung;UNI;asset;
+443;sonstiges;;krypto_gesamt;zweifelhaft: Quartalszahlen haben keinen Typ
+444;marktbericht_meinung;BTC;asset;
+445;marktbericht_meinung;BTC;asset;
+446;unternehmen;BTC;asset;Firma kauft BTC (wie 197)
+447;etf_fonds;;krypto_gesamt;zweifelhaft: Fondsstart oder produkt
+448;marktbericht_meinung;;krypto_gesamt;
+449;marktbericht_meinung;DOGE ADA BTC;asset;
+450;marktbericht_meinung;;krypto_gesamt;
+451;marktbericht_meinung;;krypto_gesamt;Erwaegung
+452;produkt;;krypto_gesamt;
+453;marktbericht_meinung;BTC;asset;
+454;produkt;;sonstiges;
+455;marktbericht_meinung;PI;asset;
+456;marktbericht_meinung;BTC;asset;
+457;produkt;;krypto_gesamt;zweifelhaft: Wiedereintritt einer Boerse
+458;marktbericht_meinung;BTC;asset;
+459;marktbericht_meinung;;krypto_gesamt;
+460;unternehmen;;krypto_gesamt;zweifelhaft: Plan angekuendigt
