@@ -1,0 +1,5 @@
+
+4  AUFLÖSUNG JE MENGE (§10.4) — Pflanzung wie 3, 200 Ziehungen je Stärke; Null 300 Ziehungen (G-Tag Lauf 1 T / G-Handel 30 %)
+   a gemailt                         903 Einst.  204 Tage  25 Assets · Null 3.3/1.0 % · Fund G-Handel/G-Tag: 0.05σ (≈0.21 %):   4/ 10 · 0.10σ (≈0.42 %):  12/ 18 · 0.20σ (≈0.84 %):  48/ 42 · 0.30σ (≈1.27 %):  91/ 72 · 8 s
+   b gemailt + 5/Tag Stichprobe     2379 Einst.  321 Tage 526 Assets · Null 4.3/4.0 % · Fund G-Handel/G-Tag: 0.05σ (≈0.23 %):  19/ 14 · 0.10σ (≈0.47 %):  60/ 34 · 0.20σ (≈0.94 %):  98/ 79 · 0.30σ (≈1.40 %): 100/ 98 · 26 s
+   c alle                          19453 Einst.  321 Tage 615 Assets · Null 3.3/0.0 % · Fund G-Handel/G-Tag: 0.05σ (≈0.24 %):  38/ 18 · 0.10σ (≈0.47 %):  98/ 27 · 0.20σ (≈0.94 %): 100/ 78 · 0.30σ (≈1.41 %): 100/ 98 · 122 s

@@ -8,7 +8,7 @@ messbar ist“) und §6 Schritt 3 · [`Bauplan_Dashboard_A3_A4_28_10.md`](Baupla
 Prüfer ≥ 1.000 je Art) · [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §4 (Blöcke des finalen LLM), §5 (Takt), §6 Schritt 5 ·
 [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) T4–T7 (Budget, Modelle) ·
 [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) (Ereignisse) · Gesamtplan G3 (Modelle, Reihenfolge) · G7.
-**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9); Kurse eingelesen (§9.5); Voranalyse REGEL0-Einstiege aus der Betriebsrechnung (§10) — FRAGE §10.4 offen.** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
+**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9); Kurse eingelesen (§9.5); Voranalyse REGEL0-Einstiege aus der Betriebsrechnung (§10), §10.4 → a; Stufe-3-Anlage gebaut, Selbsttest bestanden (§11) — FRAGE §11.4 offen (a oder b nach gemessener Auflösung).** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
 mit `Rechenkern_02_10/g7_voranalyse.py` → `g7_voranalyse.txt`.
 
 ---
@@ -479,7 +479,7 @@ Kontrolltag (4 %): das Groq-Kontingent ist vom A1-Volllauf belegt. **Beide sind 
 | | |
 |---|---|
 | NB-Auszug Kurse | ✔ **eingelesen 02.11.** (§9.5) |
-| danach | REGEL0-Einstiege aus der Betriebsrechnung ✔ gerechnet (§10) — **Frage §10.4** (Menge für Stufe 3) · Stufe 1, sobald die A1-Nachrichten fertig sind |
+| danach | REGEL0-Einstiege aus der Betriebsrechnung ✔ (§10) · §10.4 → a · Stufe-3-Anlage ✔ (§11) — **Frage §11.4** · Stufe 1, sobald die A1-Nachrichten fertig sind |
 | G8-Bündel | Z-1-Zahlenerkennung (§6.2) · GDELT-Abruf mit zwei Wochen Nachweis (9.2) · S7 live mit Beständen (9.1) |
 
 ### 9.5 Kurse Sep./Okt. eingelesen (02.11.2026)
@@ -564,3 +564,73 @@ vor T (der Betrieb zählt die Messbasis über die ganze Datei; `ereignisse.asset
 **Empfehlung a**, mit dem Selbsttest der Stufe-3-Anlage **auf genau diesen 903** vor dem ersten LLM-Aufruf (Nullwelt Tagesblock, geballte
 Einstiege, Pflanzung als Auflösungskurve — Memory *Selbsttest vor dem ersten Blick*). Zeigt er, dass 903 zu grob auflösen, wird **b** neu
 vorgelegt — mit der gemessenen Auflösung, nicht vorab.
+
+---
+
+## 11. Stufe 3: Messanlage und Selbsttest auf der Menge a (02.11.2026) — vor jedem LLM-Urteil
+
+**Auftrag (Nutzer 02.11.):** *„Ok start mit a, aber vorsicht beim Ergebnis denke ich, regel0 hat im Wesentlichen heute keine
+Abhängigkeit nur Info der alten bzw bestehenden LLM Rollen“*. Gerechnet mit `Rechenkern_02_10/g7_stufe3_anlage.py` →
+`g7_stufe3_anlage.txt`, `g7_stufe3_anlage_mengen.txt`. Kein LLM-Aufruf; die Sicht-Gutachten (Stufe 1) warten auf den A1-Lauf.
+
+### 11.1 Lesart — vorab festgehalten (die Vorsicht des Nutzers)
+
+| | |
+|---|---|
+| **Der Betrieb hängt nicht am LLM** | Die REGEL0 entscheidet allein (Einstieg, Stufe, Mail). Der LLM-Block der Mail ist **Auskunft** (`regel0_llm`, Schatten/Mail-Block). Die gemailte Menge wählt der **Hebel-Schalter**, nicht das LLM — sie ist damit **unverzerrt** gegenüber jedem LLM-Urteil, ein sauberer Prüfstand |
+| **Die alten Rollen trennten nicht** | N4 und N5 (Memory *N5 — LLM trennt nicht*): wo die Trader-Rolle „dagegen“ sagte, lief es **besser** (2025 −2,60 Pp, 2026 −3,95 Pp). Ursachen: Trendlogik statt Wette, Pessimismus 43–52 %, Eingänge ohne Gehalt, Rauschen, Messmenge ≠ Betrieb. Das finale LLM von G7 ist ein **anderes** Urteil (Sichten, Ereignisse, Betriebsmenge = W2/W4) — sein Ergebnis gilt nicht rückwirkend für die alten Rollen und umgekehrt |
+| **Ergebnis in beiden Richtungen ausweisen** | Entschieden wird einseitig „unten“ (Bedenken → schlechter, fachliche Richtung). Das obere Ende wird **mit ausgewiesen**: eine Umkehr wie bei N5 heißt „das Urteil zeigt verkehrt“, ist **kein** verwertbares Signal |
+| **Ein „trägt“ ändert den Betrieb nicht** | Es wäre zuerst eine **Information** für die Mail (Regel 4: kein Fakt als Auslöser; Regel *Betriebsumstellung erst nach ganzer Kette*). Gewicht oder Gate nur nach eigener Abstimmung, mit zweitem Weg (Stufe 5) |
+| **Ein „trägt nicht“ heißt nicht „wertlos“** | sondern: kein Unterschied **oberhalb der Auflösung** (11.3) |
+
+**Vorab festgelegt** (im Kopf von `g7_stufe3_anlage.py`): Menge a (903, Dez. 2025 – Okt. 2026) · Urteil JA = Bedenken ≥ 1 ·
+Zielgröße `ertrag_s` = 24-h-Log-Ertrag ab Schluss der Einstiegsstunde / σ des Assets (60 Tage vor dem Einstiegstag) · Auskunft roh,
+A24/B24 · Arm HANDEL entscheidet, Arm TAG ist Auskunft.
+
+### 11.2 Selbsttest — ein Fehler der ersten Anlage gefunden und behoben
+
+Die erste Nullwelt verschob die Urteile um **Einstiege** (wie `g7_messanlage`). Bei Urteilen, die **je Tag** gleich ausfallen — und das
+finale LLM sieht für alle Einstiege eines Tages dieselben Sichten —, zerreißt das die Tage: **7,1 % bzw. 8,6 % Fehlalarm** (Soll ≤ 5 %).
+**Behoben:** Verschiebung um **ganze Tage** (der Einstieg an Position j des Tages d bekommt das Urteil von Tag d+k, Position j mod n;
+volle Bahn, 203 Verschiebungen). Gegenprobe gegen eine naive Schleife: Abweichung 2·10⁻¹⁶.
+
+| Null-Generator (1.000 Ziehungen, einseitig) | Tage-Verschiebung (**gilt**) | Einstiegs-Verschiebung (erster Bau) |
+|---|---|---|
+| Tagesstimmung, Lauf 1 / 3 / 10 T | 3,9 / 3,1 / 2,5 % | **8,6** / 5,7 / 4,5 % |
+| je Einstieg unabhängig, 20 / 40 % | 1,3 / 0,5 % | 4,6 / 5,5 % |
+| Asset-Vorurteil, 20 / 40 % der Assets | 0,3 / 1,1 % | 2,9 / 4,6 % |
+
+→ **Messanlage bestanden**, eher vorsichtig. ⚠ Ein Fehler im Zwischenspeicher der Tagesbahn (Schlüssel `id()`, wird neu vergeben) trat
+erst beim Mengenwechsel auf; behoben, der Hauptselbsttest gibt danach **dieselben** Zahlen.
+
+### 11.3 Auflösung — gemessen für a, b, c
+
+Fundquote (%) bei gepflanztem Unterschied: Ja-Einstiege um s σ schlechter (σ des Tages im Median ≈ 4,2 %). G-Handel = Urteil je
+Einstieg verschieden; G-Tag = Urteil folgt einer Tagesstimmung (was bei gemeinsamen Sichten zu erwarten ist).
+
+| Menge | Einstiege | Tage | 0,1 σ (≈ 0,45 %) | 0,2 σ (≈ 0,9 %) | 0,3 σ (≈ 1,3 %) | Gemini-Tage |
+|---|---|---|---|---|---|---|
+| **a gemailt** | 903 | 204 | 12 / 18 | 48 / 42 | **91 / 72** | 1,8 |
+| b a + 5/Tag Stichprobe | 2.379 | 321 | 60 / 34 | **98 / 79** | 100 / 98 | ≈ 5 |
+| c alle | 19.453 | 321 | **98** / 27 | 100 / 78 | 100 / 98 | ≈ 40 |
+
+(je Zelle G-Handel / G-Tag; Null je Menge 0–4,3 %.) Zum Vergleich: der Vorteil der REGEL0 je Handel liegt bei +0,65 % (24 h, Menge a),
+die Kosten bei 0,48 %. Ein **wirtschaftlich** nützlicher Unterschied liegt also eher bei 0,25–0,9 %.
+
+**Was die Zahlen sagen:**
+1. **a findet nur große Unterschiede** — sicher erst ab ≈ 1,3 % je Handel. Kleinere, aber schon nützliche bleiben unentschieden.
+2. **b verdoppelt die Auflösung** (sicher ab ≈ 0,9 %) — für 2,7-fache Kosten.
+3. **c hilft nur, wenn das Urteil je Einstieg verschieden ist.** Folgt es einer Tagesstimmung, ist c **nicht besser als b**: der Engpass
+   sind die **Tage** (321), nicht die Einstiege.
+
+### 11.4 Zur Abstimmung — wie in §10.4 vereinbart, mit der gemessenen Auflösung
+
+| | Menge | Folge |
+|---|---|---|
+| a | **gemailt, 903** (wie entschieden) | genau der Betrieb; findet nur Unterschiede ≥ ≈ 1,3 % je Handel; 1,8 Gemini-Tage |
+| **b** | **a + 5 Einstiege je Tag aus den übrigen (2.379)** | Auflösung ≈ 0,9 %; das Ergebnis wird **zweimal** ausgewiesen: auf a allein (gilt für den Betrieb) und auf b (kann das Urteil überhaupt trennen); ≈ 5 Gemini-Tage. Die Stichprobe ist eine andere Grundgesamtheit — sie zählt nur als Auskunft über die Trennfähigkeit |
+| c | alle 19.453 | ≈ 40 Gemini-Tage; besser als b nur bei Urteilen je Einstieg |
+
+**Empfehlung b** — a bleibt darin vollständig enthalten und wird für sich ausgewiesen; b kostet drei Gemini-Tage mehr und entscheidet
+Unterschiede halber Größe. c lohnt nicht, solange das Urteil von gemeinsamen Sichten lebt. Entscheidung **vor** Stufe 3, Stufe 3 läuft ohnehin
+erst nach Stufe 1/2.

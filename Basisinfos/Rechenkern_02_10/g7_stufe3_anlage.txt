@@ -1,0 +1,23 @@
+G7 STUFE 3 — Messanlage und Selbsttest auf den gemailten REGEL0-Einstiegen · 2026-11-02 10:43
+   Gegenprobe FFT-Bahn gegen naive Schleife: größte Abweichung 4.4e-16
+   Gegenprobe Tagesbahn: größte Abweichung 2.4e-16 über 203 Verschiebungen
+
+1  EINSTIEGE: 903 gemailt · mit Zielgröße 903 (ohne: 0) · Tage 204 · Assets 25 · Blöcke (15 T, mit Einstieg) 23
+   ertrag_s Mittel +0.147, Std 1.127 · 24-h-Ertrag Mittel +0.65 % · σ (Tag) Median 4.22 % · A24 23.3 % · B24 13.7 %
+   je Tag Einstiege: Median 3, max 24 · größter Anteil eines Assets 4.5 % (LINK)
+
+2  SELBSTTEST NULL (kein Bezug zur Zukunft; einseitig 'unten'; Soll ≤ 5 %, Toleranz 6,5 %; 1000 Ziehungen)
+   Generator                           HANDEL (Tage) HANDEL (Einstiege) TAG (Auskunft)
+   G-Tag Lauf 1 T                              3.9 %              8.6 %          3.3 %
+   G-Tag Lauf 3 T                              3.1 %              5.7 %          3.0 %
+   G-Tag Lauf 10 T                             2.5 %              4.5 %          3.1 %
+   G-Handel Rate 20 %                          1.3 %              4.6 %          2.1 %
+   G-Handel Rate 40 %                          0.5 %              5.5 %          4.9 %
+   G-Asset 20 % der Assets                     0.3 %              2.9 %          1.7 %
+   G-Asset 40 % der Assets                     1.1 %              4.6 %          4.7 %
+
+3  AUFLÖSUNG (Pflanzung: Ja-Einstiege um s σ schlechter; 500 Ziehungen je Stärke; Fundquote HANDEL (Tage) / TAG)
+   G-Handel Rate 30 %   0.05σ (≈0.2 %):   4 /   6 · 0.10σ (≈0.4 %):  14 /   9 · 0.20σ (≈0.8 %):  55 /  22 · 0.30σ (≈1.3 %):  89 /  40 · 0.50σ (≈2.1 %): 100 /  76
+   G-Tag Lauf 3 T       0.05σ (≈0.2 %):   9 /   8 · 0.10σ (≈0.4 %):  17 /  11 · 0.20σ (≈0.8 %):  48 /  28 · 0.30σ (≈1.3 %):  72 /  55 · 0.50σ (≈2.1 %):  97 /  93
+
+   => MESSANLAGE BESTANDEN (Null HANDEL ≤ 6,5 % bei G-Tag und G-Handel) (42 s)
