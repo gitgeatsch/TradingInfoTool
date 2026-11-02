@@ -12,7 +12,8 @@
 |               | Rückspiel = derselbe Weg wie die Historie (``sichten_quellen.gdelt_ton``), NACH dem Probeende geholt         |
 | K3 Form       | jeder erfolgreiche Abruf hat Tagesauflösung (ein Punkt je Tag)                                               |
 
-Hält sie nicht, wird **c** (Ton auch aus dem Rückspiel nehmen, Ü8) neu vorgelegt — so in G7 §9.2. Nur Auskunft: Verzug bis zum
+Hält sie nicht, wird **c** (Ton auch aus dem Rückspiel nehmen, Ü8) neu vorgelegt — so in G7 §9.2. Nur Auskunft: je Lücke die URSACHE (gesperrt · Quelle fehlt
+· kein Abruf — K1 zählt alle gleich, für den Betrieb ist ein fehlender Wert ein fehlender Wert), Verzug bis zum
 ersten Wert, Revision (erster gegen letzten Wert desselben Tages), die Fensterprobe (14-T-Fenster gegen die Jahresfenster der
 Historie auf den gemeinsamen Tagen) und die Gleichheit der Probe mit dem Quelltext von ``api/sichten_quellen``.
 
@@ -117,7 +118,24 @@ def live_tage(st: dict, bis: datetime) -> list:
         d += timedelta(days=1)
 
 
-def verfuegbarkeit(A: pd.DataFrame, tage: list, toene) -> pd.DataFrame:
+def versuche(z: list) -> pd.DataFrame:
+    """Jeder Abrufversuch (ts, ton, erfolg) - auch die ohne Punkte, sonst ist eine Lücke nicht zuzuordnen."""
+    v = [(pd.Timestamp(x["ts"]), x["ton"], x.get("punkte") is not None) for x in z if x.get("art") == "abruf"]
+    return pd.DataFrame(v, columns=["ts", "ton", "erfolg"])
+
+
+def ursache(Vs: pd.DataFrame, ton: str, ab: pd.Timestamp, bis: pd.Timestamp) -> str:
+    """Warum fehlt ein Tag in der Frist [ab, bis)? (Nutzer 02.11.: Trennung gesperrt / Quelle fehlt)
+    quelle_fehlt = mindestens ein Abruf ERFOLGREICH, der Tag war nicht darin (GDELT hat ihn nicht) ·
+    gesperrt     = Abrufe versucht, keiner erfolgreich (429, Netzfehler, Unsinn) · kein_abruf = gar kein Versuch (Rechner aus)."""
+    x = Vs[(Vs.ton == ton) & (Vs.ts >= ab) & (Vs.ts < bis)]
+    return "kein_abruf" if x.empty else "quelle_fehlt" if x.erfolg.any() else "gesperrt"
+
+
+URSACHEN = ("gesperrt", "quelle_fehlt", "kein_abruf")
+
+
+def verfuegbarkeit(A: pd.DataFrame, tage: list, toene, Vs: pd.DataFrame | None = None) -> pd.DataFrame:
     zeilen = []
     for ton in toene:
         a = A[A.ton == ton]
@@ -125,9 +143,12 @@ def verfuegbarkeit(A: pd.DataFrame, tage: list, toene) -> pd.DataFrame:
             ende_d = pd.Timestamp(d, tz="UTC") + pd.Timedelta(days=1)
             x = a[(a.tag == d) & (a.ts >= ende_d)].sort_values("ts")
             erst = x.iloc[0] if len(x) else None
-            zeilen.append((ton, d, None if erst is None else (erst.ts - ende_d).total_seconds() / 3600,
-                           None if erst is None else erst.wert, None if x.empty else x.iloc[-1].wert, len(x)))
-    return pd.DataFrame(zeilen, columns=["ton", "tag", "verzug_h", "erstwert", "letztwert", "abrufe"])
+            verzug = None if erst is None else (erst.ts - ende_d).total_seconds() / 3600
+            grund = None
+            if (verzug is None or verzug > 24) and Vs is not None:
+                grund = ursache(Vs, ton, ende_d, ende_d + pd.Timedelta(days=1))
+            zeilen.append((ton, d, verzug, None if erst is None else erst.wert, None if x.empty else x.iloc[-1].wert, len(x), grund))
+    return pd.DataFrame(zeilen, columns=["ton", "tag", "verzug_h", "erstwert", "letztwert", "abrufe", "ursache"])
 
 
 def stand_live(A: pd.DataFrame, ton: str, zeitpunkt: pd.Timestamp) -> dict:
@@ -201,7 +222,7 @@ def auswerten(st: dict, z: list, H: pd.DataFrame, R: dict | None, bis: datetime 
     e = min(datetime.fromisoformat(st["ende"]), bis)
     soll = {P.iso(s) for s in P.slots_zwischen(a, e)} | {"start"}
     tage = live_tage(st, bis)
-    V = verfuegbarkeit(A, tage, list(P.GDELT))
+    V = verfuegbarkeit(A, tage, list(P.GDELT), versuche(z))
     r = {"st": st, "abrufe": len(ab), "mit_werten": sum(1 for x in ab if x.get("punkte") is not None),
          "http": pd.Series([str(x.get("http")) for x in ab]).value_counts().to_dict() if ab else {},
          "runden_soll": len(soll), "runden_ist": len(runden_ist & soll), "runden_fehlen": sorted(soll - runden_ist),
@@ -213,6 +234,7 @@ def auswerten(st: dict, z: list, H: pd.DataFrame, R: dict | None, bis: datetime 
         luecke = g.verzug_h.isna() | (g.verzug_h > 24)
         k1[ton] = (int(luecke.sum()), len(g), float(luecke.mean()) if len(g) else float("nan"))
     r["k1"] = k1
+    r["k1_ursache"] = {ton: {u: int((g.ursache == u).sum()) for u in URSACHEN} for ton, g in V.groupby("ton")}
     r["k1_ok"] = bool(tage) and all(q <= K1_LUECKE_MAX for _, _, q in k1.values())
     # K3
     r["k3_abrufe_nicht_taeglich"] = int((~A.groupby("ts").tagesaufloesung.all()).sum()) if len(A) else 0
@@ -252,6 +274,11 @@ def bericht(r: dict, gl: list) -> str:
         v = r["V"][r["V"].ton == ton].verzug_h.dropna()
         o.append("  %-8s Lücken %d von %d (%.0f %%) · Verzug bis zum ersten Wert: Median %.1f h, max %.1f h" % (
             ton, n, m, q * 100 if m else float("nan"), v.median() if len(v) else float("nan"), v.max() if len(v) else float("nan")))
+        if n:
+            u = r["k1_ursache"][ton]
+            o.append("           davon gesperrt %d · Quelle fehlt %d · kein Abruf %d   (Tage: %s)" % (
+                u["gesperrt"], u["quelle_fehlt"], u["kein_abruf"],
+                ", ".join("%s %s" % (t[5:], g) for t, g in r["V"][(r["V"].ton == ton) & r["V"].ursache.notna()][["tag", "ursache"]].values)))
     o.append("  → %s" % ("erfüllt" if r["k1_ok"] else "NICHT erfüllt" if r["tage"] else "noch keine Live-Tage"))
     o += ["", "K3 Form: Abrufe ohne Tagesauflösung %d → %s" % (
         r["k3_abrufe_nicht_taeglich"], "noch kein Abruf mit Werten" if not len(r["A"]) else "erfüllt" if r["k3_ok"] else "NICHT erfüllt"), ""]

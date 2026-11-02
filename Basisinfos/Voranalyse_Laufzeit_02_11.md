@@ -212,3 +212,18 @@ GKG-Rohdateien, G4). Die Sperrmeldung nennt selbst einen Ansprechpartner bei GDE
 für kurze Fenster vermutlich **Viertelstunden- statt Tageswerte**; `_gdelt_fenster` nähme dann je Tag den **letzten** Viertelstundenwert
 (Wörterbuch überschreibt). **Ungeprüft** (heute gesperrt) — die Probe fragt bewusst das 14-T-Fenster, das Tageswerte liefert. Vor dem
 Bau G8 mit einem Abruf klären; bis dahin ist es eine Vermutung.
+
+### 7.5 Probe am NB gestartet (02.11. 18:07 UTC) — erste Runde, und die Trennung der Lückenursache
+
+**Nutzer:** *„Ok, Probe am NB ist gestartet“* · *„Ok, bau die Trennung gesperrt/Quelle fehlt ein“*.
+
+| | |
+|---|---|
+| NB kommt durch | Rechner T440, Python 3.13.14, Prüfsumme `75caf5849b327086` (= geprüfte Fassung). Erster Versuch je Ton oft 429, der **zweite nach 120 s erfolgreich** — anders als der Desktop (8/8 gesperrt) |
+| Erfolgsweg belegt | echte Antwort, Tagesauflösung (K3), **Fensterprobe 18 von 18 Werten bitgleich** mit der Historie (14-T-Fenster = Jahresfenster) |
+| ⚠ **Quelle endet am 27.10.** | das Fenster reicht bis 01.11., GDELT liefert nur bis **27.10.** — wie schon beim Historienladen am 01.11. Vermutlich ein **Ausfall bei GDELT** seit dem 28.10., nicht belegt. Hält er an, wird K1 rot — zu Recht: im Betrieb fehlt der Wert so oder so |
+
+**Gebaut (Auswertung, nur Auskunft — K1 zählt alle Lücken gleich):** je Lücke die Ursache aus den Versuchen in der 24-h-Frist —
+**gesperrt** (versucht, keiner erfolgreich: 429, Netzfehler, Unsinn) · **Quelle fehlt** (mindestens ein Abruf erfolgreich, der Tag war nicht
+darin) · **kein Abruf** (gar kein Versuch, Rechner aus). Prüfung **44/44** (neu: Sperre → 2 × gesperrt; GDELT ohne 3 Tage → 3 × Quelle fehlt,
+andere Töne frei; Rechner 36 h aus → 1 × kein Abruf bei allen Tönen; saubere Welt ohne Ursache).

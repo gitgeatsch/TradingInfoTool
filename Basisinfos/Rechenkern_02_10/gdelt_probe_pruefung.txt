@@ -1,4 +1,4 @@
-GDELT-PROBE — Prüfung 2026-11-02T17:44+00:00: 40 von 40 grün
+GDELT-PROBE — Prüfung 2026-11-02T18:35+00:00: 44 von 44 grün
   ✔ P1 nur Standardbibliothek — Importe __future__, datetime, hashlib, json, os, socket, sys, time, urllib
   ✔ P1 verweigert x/tradinginfotool.db
   ✔ P1 verweigert x/tradinginfotool.jsonl
@@ -34,6 +34,10 @@ GDELT-PROBE — Prüfung 2026-11-02T17:44+00:00: 40 von 40 grün
   ✔ P7 saubere Welt: 13 Live-Tage, Verzug ≤ 1 h — 13 / 1.00 h
   ✔ P7 Sperre 30 h bei aktien: genau 1 Lücke, K1 noch grün (1/13) — aktien (1, 13, 0.07692307692307693)
   ✔ P7 Sperre 60 h: genau 2 Lücken, K1 rot — aktien (2, 13, 0.15384615384615385)
+  ✔ P7 Ursache: die 2 Lücken der Sperre heißen 'gesperrt' — {'gesperrt': 2, 'quelle_fehlt': 0, 'kein_abruf': 0}
+  ✔ P7 Ursache: GDELT ohne 3 Tage -> 3 Lücken 'Quelle fehlt', andere Töne frei — {'gesperrt': 0, 'quelle_fehlt': 3, 'kein_abruf': 0}
+  ✔ P7 Ursache: Rechner 36 h aus -> 'kein Abruf' (08.11.), bei allen Tönen gleich — {'aktien': {'gesperrt': 0, 'quelle_fehlt': 0, 'kein_abruf': 1}, 'fed': {'gesperrt': 0, 'quelle_fehlt': 0, 'kein_abruf': 1}, 'konflikt': {'gesperrt': 0, 'quelle_fehlt': 0, 'kein_abruf': 1}, 'krypto': {'gesperrt': 0, 'quelle_fehlt': 0, 'kein_abruf': 1}}
+  ✔ P7 Ursache: saubere Welt ohne jede Ursache
   ✔ P7 Revision: genau ein Ton-Tag geändert, Größe 3,0 — (52, 3.0, 1)
   ✔ P7 Rückspiel weicht ab (fed +4): K2 rot — {'mittel7': (40, 52), 'niveau': (40, 52)}
   ✔ P7 Stundenauflösung in einem Abruf: K3 rot — 1

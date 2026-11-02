@@ -214,9 +214,10 @@ def p5_p6():
 
 
 # ── P7 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-def welt(H, luecke=None, revision=None, doppelt=None, seed=7):
+def welt(H, luecke=None, revision=None, doppelt=None, seed=7, fehlt=None, aus=None):
     """Synthetische Probe 14 Tage ab 2026-11-03 13:50 mit bekannter Wahrheit. luecke=(ton, ab, bis): alle Abrufe des Tons in
-    [ab, bis) gesperrt · revision=(ton, tag, delta): ab dem 2. Abruf, der den Tag enthält, gilt wahr+delta · doppelt=(ton, tag)."""
+    [ab, bis) gesperrt · revision=(ton, tag, delta): ab dem 2. Abruf, der den Tag enthält, gilt wahr+delta · doppelt=(ton, tag) ·
+    fehlt=(ton, {tage}): GDELT hat diese Tage nicht (Abruf erfolgreich, Tag fehlt) · aus=(ab, bis): Rechner aus, kein Versuch."""
     P = neu()
     rnd = random.Random(seed)
     start = t("2026-11-03T13:50:00")
@@ -234,6 +235,8 @@ def welt(H, luecke=None, revision=None, doppelt=None, seed=7):
     gesehen = {}
     for k in ["start"] + [P.iso(s) for s in P.slots_zwischen(start, ende)]:
         ts0 = start if k == "start" else datetime.fromisoformat(k)
+        if aus and aus[0] <= ts0 < aus[1]:
+            continue
         for i, ton in enumerate(P.GDELT):
             ts = ts0 + timedelta(minutes=10 * i)
             ab, bis = P.fenster(ts)
@@ -248,6 +251,8 @@ def welt(H, luecke=None, revision=None, doppelt=None, seed=7):
                     w[revision[1]] += revision[2]
             dp = doppelt[1] if doppelt and doppelt[0] == ton and k == "start" else None
             pkt = json.loads(gdelt_json(ab, bis, w, dp))["timeline"][0]["data"]
+            if fehlt and ton == fehlt[0]:
+                pkt = [x for x in pkt if AW._tag(x["date"]) not in fehlt[1]]
             z.append({"art": "abruf", "runde": k, "ts": P.iso(ts), "ton": ton, "versuch": 1, "http": 200, "fehler": None,
                       "punkte": [[x["date"], x["value"]] for x in pkt]})
         z.append({"art": "runde_ende", "runde": k, "ts": P.iso(ts0), "toene_ok": 4})
@@ -276,6 +281,23 @@ def p7():
     r = AW.auswerten(st, z, H, R, bis=bis)
     pruefe("P7 Sperre 60 h: genau 2 Lücken, K1 rot", r["k1"]["aktien"][0] == 2 and not r["k1_ok"] and r["haelt"] is False,
            "aktien %s" % (r["k1"]["aktien"],))
+    # Ursache der Lücke (Nutzer 02.11.: gesperrt / Quelle fehlt)
+    u = r["k1_ursache"]["aktien"]
+    pruefe("P7 Ursache: die 2 Lücken der Sperre heißen 'gesperrt'", u == {"gesperrt": 2, "quelle_fehlt": 0, "kein_abruf": 0}, str(u))
+    st, z, R = welt(H, fehlt=("fed", {"2026-11-05", "2026-11-06", "2026-11-07"}))
+    r = AW.auswerten(st, z, H, R, bis=bis)
+    u = r["k1_ursache"]["fed"]
+    pruefe("P7 Ursache: GDELT ohne 3 Tage -> 3 Lücken 'Quelle fehlt', andere Töne frei",
+           u == {"gesperrt": 0, "quelle_fehlt": 3, "kein_abruf": 0} and r["k1"]["krypto"][0] == 0 and not r["k1_ok"], str(u))
+    st, z, R = welt(H, aus=(t("2026-11-09T00:00:00"), t("2026-11-10T12:00:00")))
+    r = AW.auswerten(st, z, H, R, bis=bis)
+    u = r["k1_ursache"]["krypto"]
+    pruefe("P7 Ursache: Rechner 36 h aus -> 'kein Abruf' (08.11.), bei allen Tönen gleich",
+           u == {"gesperrt": 0, "quelle_fehlt": 0, "kein_abruf": 1} and len({str(v) for v in r["k1_ursache"].values()}) == 1,
+           str(r["k1_ursache"]))
+    st, z, R = welt(H)
+    r = AW.auswerten(st, z, H, R, bis=bis)
+    pruefe("P7 Ursache: saubere Welt ohne jede Ursache", r["V"].ursache.isna().all())
     # Revision
     st, z, R = welt(H, revision=("fed", "2026-11-08", 3.0))
     r = AW.auswerten(st, z, H, R, bis=bis)
