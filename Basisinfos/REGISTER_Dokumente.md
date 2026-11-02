@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 91 |
+| Voranalyse / Recherche | 92 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **234** |
+| **gesamt** | **235** |
 
 ## Plan
 
@@ -203,6 +203,7 @@
 | [`Voranalyse_L4_Summe_30_09.md`](Voranalyse_L4_Summe_30_09.md) | Voranalyse L4 — die Summe auf dem Kern (30.09.2026) | Arbeitsblatt |
 | [`Voranalyse_L_Liquiditaet_01_10.md`](Voranalyse_L_Liquiditaet_01_10.md) | Voranalyse L — Liquidität zum Zeitpunkt (ENTWURF 01.10.2026, zur Abstimmung) | Arbeitsblatt |
 | [`Voranalyse_Lagebild_Gesamtmarkt_23_10.md`](Voranalyse_Lagebild_Gesamtmarkt_23_10.md) | Voranalyse Lagebild Gesamtmarkt (L-A Teil 1) — Bauvorschlag zur Abstimmung (23.10.2026) | Arbeitsblatt |
+| [`Voranalyse_Laufzeit_02_11.md`](Voranalyse_Laufzeit_02_11.md) | Voranalyse Laufzeit — die Wochen auf dem kritischen Weg sauber verkürzen (02.11.2026) | **laufend** |
 | [`Voranalyse_Losfahren_aus_dem_Stand_29_09.md`](Voranalyse_Losfahren_aus_dem_Stand_29_09.md) | Voranalyse — Losfahren aus dem Stand: die Anfahr-Kurve und die Lage auf stehenden Ankern (29.09.2026) | Arbeitsblatt |
 | [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) | Vor dem Bau: Lücken und Quellen, Prompt-Umfang, Gesamtplan (28.10.2026 spät) | **laufend** |
 | [`Voranalyse_M1_2_Informationsgewinn_Kontext_30_09.md`](Voranalyse_M1_2_Informationsgewinn_Kontext_30_09.md) | Voranalyse M1-2 — der INFORMATIONSGEWINN des rsi-Modells als Regime-Kontext (30.09.2026) | Arbeitsblatt |
