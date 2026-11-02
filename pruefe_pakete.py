@@ -33749,6 +33749,14 @@ def paket_zustaende() -> None:
     pruefe(P, "die Probe ist nur eine Huelle - kein zweiter Rechenweg (SF8)",
            not any(hasattr(pr, n) for n in ("stand_am", "satz", "ZUSTAENDE", "klasse")))
     pruefe(P, "nie die Produktions-DB", _verweigert(lambda: _Z.Ablage("x/tradinginfotool.db")))
+    # 9 GDELT-Ton als 7-T-Mittel (02.11.2026, G7 §8.2 a): liest DIESELBE Reihe, Wert = Mittel der letzten 7 Beobachtungen VOR dem Stichtag
+    ton = zeilen("gdelt_ton", "aktien", rng.normal(0, 1, 2500))
+    d7 = next(d for d in _Z.DEFINITIONEN if d[2] == "aktien~7T")
+    z7 = _Z.zustand(d7, _Z.Ablage(df=ton), T)
+    vor = ton[ton.datum < T].wert.iloc[-7:].mean()
+    pruefe(P, "7-T-Mittel des GDELT-Tons: dieselbe Reihe (Symbol ohne ~7T), Wert = Mittel der 7 Beobachtungen vor T, eigener Name und "
+           "eigener Schluessel je Ton (4)", abs(z7.mass_wert - vor) < 1e-9 and z7.symbol == "aktien~7T" and "7-T-Mittel" in z7.satz
+           and sum(d[4] == "mittel7" for d in _Z.DEFINITIONEN) == 4, "%s / %s" % (z7.mass_wert, vor))
 
 
 def _verweigert(f) -> bool:
@@ -33869,6 +33877,33 @@ def paket_ereignisse() -> None:
     # 9 nie die Produktion
     pruefe(P, "nie die Produktions-DB (schreiben und lesen)",
            _verweigert(lambda: _E.verbinde("x/tradinginfotool.db")) and _verweigert(lambda: _E.lade("x/tradinginfotool.db")))
+    # 11 S7-ASSETS am Stichtag (02.11.2026, G7 §8.1 a): was die REGEL0 dann bewertet (Messbasis > 2.000 h, Zusatz >= 500 h, ohne
+    # gesperrte, nur Stunden VOR T) + Kern + Bestand - nicht die Watchlist von heute
+    import sqlite3 as _sq
+    import tempfile as _tf2
+
+    import wegwerf as _ww2
+    T2 = _tf2.mkdtemp(prefix="a1_assets_")
+    try:
+        def kurse(datei, je):
+            c = _sq.connect(__import__("os").path.join(T2, datei))
+            c.execute("CREATE TABLE stundenkurse (symbol TEXT, stunde TEXT, open REAL, high REAL, low REAL, close REAL, volumen REAL)")
+            for sym, n in je.items():
+                st = _pd.date_range("2026-01-01", periods=n, freq="h")
+                c.executemany("INSERT INTO stundenkurse VALUES (?,?,1,1,1,1,1)", [(sym, x.strftime("%Y-%m-%d %H:%M")) for x in st])
+            c.commit()
+            c.close()
+        kurse("stundenkurse.db", {"AAA": 2001, "BBB": 2000})                      # AAA erreicht 2.001 h am 2026-03-25
+        kurse("stundenkurse_alle.db", {"CCC": 500, "DDD": 499, "LIT": 600})      # LIT ist gesperrt
+        _E._STUNDEN.pop(T2, None)
+        vorher = _E.assets_am("2026-03-20", T2)
+        nachher = _E.assets_am("2026-06-01", T2, bestand=["eurcv"])
+    finally:
+        _E._STUNDEN.pop(T2, None)
+        _ww2.aufraeumen(T2)
+    pruefe(P, "S7-Assets am Stichtag: Schwellen wie die REGEL0 (2.001 / 500 h), nur Stunden VOR T, gesperrte nie, Kern immer, Bestand dazu",
+           vorher == {"CCC", "BTC", "ETH", "SOL"} and nachher == {"AAA", "CCC", "BTC", "ETH", "SOL", "EURCV"} and "LIT" in _E.gesperrt(),
+           "%s | %s" % (sorted(vorher), sorted(nachher)))
     # 10 NACHFASSEN (02.11.): ein unlesbarer Stapel wird kleiner neu gefragt, mit DEMSELBEN Prompt; was einzeln nicht lesbar ist, bleibt.
     # Kunst-LLM: ein Stapel mit "GIFT" ist ab 2 Titeln unlesbar (Bereich im Typ-Feld, wie am 01.11.), "TOT" ist es immer
     import tempfile as _tf

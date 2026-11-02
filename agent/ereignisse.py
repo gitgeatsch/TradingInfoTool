@@ -104,6 +104,55 @@ BEREICHE = {
     "sonstiges": "NUR wenn die Meldung weder Krypto noch Wirtschaft oder Finanzmärkte betrifft",
 }
 SICHT_JE_BEREICH = {"asset": "S7", "krypto_gesamt": "S1", "makro_usa": "S2", "aktien_kredit": "S3", "asien": "S5"}
+
+# ══ Wessen Asset-Ereignisse gehen an S7 (G7 §8.1 a, Nutzer 02.11.2026; Voranalyse_G7_Messplan_02_11.md §9) ══════════════════════════
+# NICHT die Watchlist von heute: sie hat eine Historie erst ab 30.06.2026 und wäre im Rückspiel ein Vorgriff (gewählt, als 2025/26 bekannt
+# war). Stattdessen die Werte, die die REGEL0 zum Zeitpunkt BEWERTET - dieselbe Regel wie ``regel0_rechnung.lade_reihen_iter`` und
+# ``betriebs_zusatz`` (Messbasis > 2.000 Stunden, Zusatz >= 500 Stunden, ohne die gesperrten aus symbol_zuordnung.csv), gezählt nur
+# Stunden VOR dem Stichtag. Dazu der Kern (immer zugelassen, E-69) und live die Bestände (Spot-Handlungen; im Rückspiel gibt es keine).
+# Gemessen Dez. 2025 - Sep. 2026: S7-Börsenereignisse Watchlist heute 45 · Referenz 127 + Kern 131 · DIESE Menge 236 (487-621 Werte).
+KERN = ("BTC", "ETH", "SOL")
+MIN_STUNDEN = {"stundenkurse.db": 2001, "stundenkurse_alle.db": 500}
+_STUNDEN: dict = {}
+
+
+def _stunden_je_tag(ordner: str) -> dict:
+    """Je Kursdatei: kumulierte Stundenzahl je Symbol und Tag (einmal je Prozess gelesen, ``mode=ro``)."""
+    if ordner not in _STUNDEN:
+        aus = {}
+        for f in MIN_STUNDEN:
+            pf = os.path.join(ordner, f)
+            if not os.path.exists(pf):
+                continue
+            c = _ro(pf)
+            try:
+                x = pd.read_sql("SELECT symbol, substr(stunde,1,10) tag, COUNT(*) n FROM stundenkurse GROUP BY symbol, tag", c)
+            finally:
+                c.close()
+            x["kum"] = x.groupby("symbol").n.cumsum()
+            aus[f] = x
+        _STUNDEN[ordner] = aus
+    return _STUNDEN[ordner]
+
+
+def gesperrt() -> set:
+    import csv
+    pz = os.path.join(PROJ, "Basisinfos", "symbol_zuordnung.csv")
+    if not os.path.exists(pz):
+        return set()
+    with open(pz, encoding="utf-8") as f:
+        return {x for r in csv.DictReader(f, delimiter=";") if r.get("markt") == "gesperrt" for x in (r.get("bitpanda", ""), r.get("binance", ""))
+                if x}
+
+
+def assets_am(T, ordner: str = DATEN, bestand=None) -> set:
+    """Die S7-Assets am Stichtag T: was die REGEL0 dann bewertet + Kern + (live) ``bestand``."""
+    t = _iso(pd.Timestamp(T).tz_localize("UTC") if pd.Timestamp(T).tzinfo is None else pd.Timestamp(T))[:10]
+    m = set()
+    for f, x in _stunden_je_tag(ordner).items():
+        y = x[x.tag < t].groupby("symbol").kum.last()
+        m |= set(y[y >= MIN_STUNDEN[f]].index)
+    return (m - gesperrt()) | set(KERN) | {str(b).upper() for b in (bestand or [])}
 # Gleichheit mit dem Betrieb (A1-2, P3): Typ hier -> ``binance_ankuendigungen.art``
 BETRIEB_ART = {"delisting_token": "token_delist", "delisting_futures": "futures_delist", "monitoring": "monitoring"}
 

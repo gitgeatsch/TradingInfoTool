@@ -57,12 +57,14 @@ DEFINITIONEN = [
     ("S1", "coinbase_praemie", "BTC", "Coinbase-Prämie BTC", "niveau", "anteil", "höher = US-Käufer zahlen mehr als der Rest der Welt"),
     ("S1", "coinbase_praemie", "ETH", "Coinbase-Prämie ETH", "niveau", "anteil", "höher = US-Käufer zahlen mehr als der Rest der Welt"),
     ("S1", "gdelt_ton", "krypto", "Nachrichtenton Krypto (GDELT)", "niveau", "", "höher = freundlicherer Ton"),
+    ("S1", "gdelt_ton", "krypto~7T", "Nachrichtenton Krypto (GDELT), 7-T-Mittel", "mittel7", "", "höher = freundlicherer Ton"),
     ("S2", "fred", "NETTO", "Netto-Liquidität Fed (Bilanz − TGA − RRP)", "jahr", "Mrd. USD", "höher = mehr Zentralbankgeld im Umlauf als vor einem Jahr"),
     ("S2", "fred", "M2SL", "Geldmenge M2", "jahr", "Mrd. USD", "höher = Geldmenge wächst schneller"),
     ("S2", "fred", "DFII10", "Realzins 10 J", "niveau", "%", "höher = teureres Geld nach Inflation"),
     ("S2", "fred", "DGS2", "Rendite 2 J", "niveau", "%", "höher = Markt erwartet höhere Leitzinsen"),
     ("S2", "fred", "T10Y2Y", "Zinskurve 10 J − 2 J", "niveau", "Pp", "höher = steilere Kurve"),
     ("S2", "gdelt_ton", "fed", "Nachrichtenton Fed (GDELT)", "niveau", "", "höher = freundlicherer Ton"),
+    ("S2", "gdelt_ton", "fed~7T", "Nachrichtenton Fed (GDELT), 7-T-Mittel", "mittel7", "", "höher = freundlicherer Ton"),
     ("S3", "yfinance", "^GSPC", "S&P 500", "abstand200", "", "höher = weiter über dem eigenen Schnitt"),
     ("S3", "yfinance", "^NDX", "Nasdaq 100", "abstand200", "", "höher = weiter über dem eigenen Schnitt"),
     ("S3", "yfinance", "SOXX", "Halbleiter (SOXX)", "abstand200", "", "höher = weiter über dem eigenen Schnitt"),
@@ -72,11 +74,16 @@ DEFINITIONEN = [
     ("S3", "fred", "BAA10Y", "Kreditaufschlag Baa − 10 J", "niveau", "Pp", "höher = Kreditgeber verlangen mehr für Risiko"),
     ("S3", "fred", "NFCI", "Finanzlage NFCI", "niveau", "", "höher = straffere Finanzierungsbedingungen"),
     ("S3", "gdelt_ton", "aktien", "Nachrichtenton Aktienmarkt (GDELT)", "niveau", "", "höher = freundlicherer Ton"),
+    ("S3", "gdelt_ton", "aktien~7T", "Nachrichtenton Aktienmarkt (GDELT), 7-T-Mittel", "mittel7", "", "höher = freundlicherer Ton"),
     ("S4", "yfinance", "DX-Y.NYB", "Dollar-Index DXY", "abstand200", "", "höher = Dollar stärker als im eigenen Schnitt"),
     ("S4", "yfinance", "GC=F", "Gold", "abstand200", "USD", "höher = weiter über dem eigenen Schnitt"),
     ("S4", "yfinance", "BZ=F", "Öl Brent", "abstand200", "USD", "höher = weiter über dem eigenen Schnitt"),
     ("S4", "yfinance", "HG=F", "Kupfer", "abstand200", "USD", "höher = weiter über dem eigenen Schnitt"),
     ("S7", "gdelt_ton", "konflikt", "Nachrichtenton Krieg/Sanktionen/Zölle (GDELT)", "niveau", "", "höher = freundlicherer Ton"),
+    ("S7", "gdelt_ton", "konflikt~7T", "Nachrichtenton Krieg/Sanktionen/Zölle (GDELT), 7-T-Mittel", "mittel7", "", "höher = freundlicherer Ton"),
+    # 02.11.2026 (G7 §8.2 a, Voranalyse_G7_Messplan_02_11.md §7.3/§9): der TAGESwert des Tons springt fast jeden zweiten Tag über eine
+    # Klassengrenze und zurück (G7-3); das 7-T-Mittel flackert nicht und trug im Vergleichsarm mindestens so gut. Symbol "<x>~7T" =
+    # dieselbe Reihe <x>, Maß "mittel7" (7 Beobachtungen, mindestens 5) - eigener Schlüssel für den Prüfer v2 (S3.gdelt_ton.aktien~7T)
 ]
 NETTO_TEILE = ("WALCL", "WTREGEN", "RRPONTSYD")   # WALCL und WTREGEN in Mio. USD, RRPONTSYD in Mrd. USD
 
@@ -205,7 +212,7 @@ def zustand(d, ablage: Ablage, T, jahre: int = JAHRE) -> Zustand:
     """Ein Zustand am Stichtag - die Rechnung der Probe, dazu Z2 (leere Reihe in JEDEM Maß) und SF9."""
     T = _T(T)
     sicht, q, sym, name, mass, einheit, lesart = d
-    s = ablage.reihe(q, sym, T).copy()
+    s = ablage.reihe(q, sym.split("~")[0], T).copy()
     if mass == "stufe":
         return _stufe(d, s, T, ablage, jahre)
     leer = Zustand(sicht, q, sym, name, mass, "[%s] %s: KEINE Werte vor dem Stichtag ⚠ · Fakt" % (sicht, name), False)
@@ -219,6 +226,8 @@ def zustand(d, ablage: Ablage, T, jahre: int = JAHRE) -> Zustand:
     elif mass == "abstand200":
         m = s.rolling(200, min_periods=150).mean()
         x = (s / m - 1) * 100
+    elif mass == "mittel7":
+        x = s.rolling(7, min_periods=5).mean()
     elif mass == "jahr":
         v = s.reindex(pd.date_range(s.index.min(), s.index.max())).ffill()
         x = (v / v.shift(365) - 1) * 100
@@ -247,7 +256,7 @@ def zustand(d, ablage: Ablage, T, jahre: int = JAHRE) -> Zustand:
     abst = fenster.index.to_series().diff().dt.days.dropna()
     if len(abst) and abst.max() > max(10, 5 * abst.median()):   # ein Loch im Fenster ist so schlimm wie ein kurzes Fenster
         knapp += " ⚠ Lücke %d T ab %s" % (abst.max(), (abst.idxmax() - pd.Timedelta(days=int(abst.max()))).strftime("%Y-%m-%d"))
-    alter, alt = _veraltet(ablage, q, sym, s.index[-1], t, jahre)
+    alter, alt = _veraltet(ablage, q, sym.split("~")[0], s.index[-1], t, jahre)
     kl = klasse(p)
     satz = "[%s] %s · Rang P%.0f der letzten %.1f J (ab %s) = %s (%s)%s · Stand %s%s%s · Fakt" % (
         sicht, wert, p, j, ab.strftime("%Y-%m"), kl, lesart, rich, datum, knapp, alt)
@@ -305,13 +314,14 @@ def text(T, ablage: Ablage | None = None, jahre: int = JAHRE, pfad: str = ABLAGE
          assets: list | None = None) -> str:
     """Alle Sichten als Block - Form der Probe (Kopf, je Sicht, Zusammenfassung). Je Sicht nach den Zuständen die EREIGNISSE aus A1
     (``agent.ereignisse``, Fütterung §3), am Stichtag bekannt und höchstens 7 T alt. ``assets`` = wessen Asset-Ereignisse an S7 gehen
-    (Vorgabe: die Watchlist von HEUTE - ⚠ im Rückspiel nicht die damalige, offener Punkt in der Doku)."""
+    (Vorgabe seit 02.11.2026, G7 §8.1 a: ``ereignisse.assets_am(T)`` = was die REGEL0 zum Zeitpunkt bewertet + Kern; live kommen die
+    Bestände dazu. Vorher die Watchlist von heute - im Rückspiel ein Vorgriff)."""
     from agent import ereignisse as EV
     T = _T(T)
     liste = zustaende(T, ablage, jahre)
     rang = [z for z in liste if z.sicht != "S8"]
     E = EV.lade(pfad) if ereignisse is None else ereignisse
-    ev = EV.am(E, T, assets=_watchlist_krypto() if assets is None else assets)
+    ev = EV.am(E, T, assets=EV.assets_am(T) if assets is None else assets)
     aus = ["FÜTTERUNG — PROBE DER SATZFORM (Ü1) · Stichtag %s · Einordnung %d J · nur lesend %s" % (T, jahre, pfad), ""]
     for sicht in SICHTEN:
         aus.append("── %s ──" % sicht)

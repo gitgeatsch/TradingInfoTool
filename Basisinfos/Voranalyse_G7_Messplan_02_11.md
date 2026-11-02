@@ -8,7 +8,7 @@ messbar ist“) und §6 Schritt 3 · [`Bauplan_Dashboard_A3_A4_28_10.md`](Baupla
 Prüfer ≥ 1.000 je Art) · [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §4 (Blöcke des finalen LLM), §5 (Takt), §6 Schritt 5 ·
 [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) T4–T7 (Budget, Modelle) ·
 [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) (Ereignisse) · Gesamtplan G3 (Modelle, Reihenfolge) · G7.
-**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); Fragen §8 offen.** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
+**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9).** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
 mit `Rechenkern_02_10/g7_voranalyse.py` → `g7_voranalyse.txt`.
 
 ---
@@ -382,7 +382,7 @@ Erzwungene Schätzung des BTC-Schlusskurses, Fehler zum echten Kurs (die Kontrol
 | gemini-3.5-flash-lite | 0 · 3 · 4 % | **7** · **2** · **10** % | 44 · 45 · 47 · 96 % | bis Okt. 2025 → sauber |
 | gemini-3.6-flash | 0 · 0 · 1 % | 33 · 15 · **2** % | 33 · 56 · 130 · 123 % | bis Okt. 2025 → sauber |
 | gemini-3.7-flash | — | — | — | **keine Antwort** an Schlüssel 2 (Kontingent/Freigabe) — nicht verwendbar, solange das so bleibt |
-| gemini-3.8-flash · gpt-oss-120b | NACHTRAG | | | |
+| gemini-3.8-flash · gpt-oss-120b | — | — | — | nicht geprüft (kaum Antworten, Groq vom Volllauf belegt) — §9.3 |
 
 → **Kein erreichbares Gemini-Modell kennt den Kurs ab Nov. 2025** (Fehler ≥ 33 %, bei einer üblichen Monatsschwankung von 10–20 %). Der
 Gemini-Zeitraum ab **Dez. 2025** ist damit für alle vier geprüften Modelle sauber; für **2025** sind sie es **nicht** (Aug./Okt. 2025 auf
@@ -422,3 +422,62 @@ S7 — deshalb gemessen (45 → 131) und hier vorgelegt, nicht beiläufig gesetz
 
 **Danach:** NB-Auszug → Kurse einlesen → REGEL0-Einstiege Sep./Okt. nachrechnen → Stufe 1 (Sicht-Gutachten im Rückspiel auf Gemini),
 sobald der A1-Volllauf die Nachrichten-Ereignisse fertig hat.
+
+---
+
+## 9. Fachliche Prüfung zu §8 und Ausführung (02.11.2026)
+
+**Auftrag (Nutzer 02.11.):** *„mach eine fachliche prüfung für 8.1 und 8.2 wenn diese passt zur Entscheidung A dann so vorgehen“*.
+
+### 9.1 S7-Assets — Prüfung bestätigt a, mit einer Korrektur der Menge
+
+| Prüffrage | Ergebnis |
+|---|---|
+| Welche Werte bewertet die REGEL0 **im Betrieb**? | **Nicht** die 127 der Referenz: `regel0_rechnung.lade_reihen_iter` + `betriebs_zusatz` nehmen die Messbasis (> 2.000 Stunden) **und alle** Werte aus `stundenkurse_alle.db` mit ≥ 500 Stunden, ohne die 5 gesperrten (LIT, NEIRO, ONE, QUICK, ZK). Zum Zeitpunkt gezählt: **487** (Dez. 2025) · **530** (Apr. 2026) · **621** (Sep. 2026) Werte |
+| Ist a dann noch „Betrieb = Messung“? | Nur mit **dieser** Menge. Mit den 127 der Referenz hätte S7 im Rückspiel weniger Werte als live — genau der Fehler aus 2.487 (*Grundgesamtheit ist keine Stellschraube*) |
+| Wirkung, gemessen Dez. 2025 – Sep. 2026 (S7-Börsenereignisse, neu je Tag) | Watchlist heute **45** · Referenz 127 + Kern **131** · **Betriebsmenge zum Zeitpunkt 236** |
+| Fehlt etwas? | **Live die Spot-Bestände**: Handlungen sind auch „Bestand Y“ (Fütterung §4); 7 der 46 Watchlist-Werte stehen in **keiner** REGEL0-Datei (u. a. Werte außerhalb Binance). Im Rückspiel misst G7 nur REGEL0-Einstiege, dort gibt es keine Bestände |
+| Regel 3 (kein Asset-Vorurteil) | erfüllt — die Menge folgt der Datenlage, nicht einer Auswahl |
+
+→ **a gilt**, genau gefasst: **S7-Assets am Stichtag = was die REGEL0 dann bewertet (gleiche Schwellen, nur Stunden vor T, ohne gesperrte) +
+Kern BTC/ETH/SOL + live die Bestände.** Das ist das Prinzip von a; die Zahl ist größer als in §8.1 vorgelegt (dort waren es die 127 der
+Referenz). ⚠ **Folge für Stufe 3:** auch die REGEL0-Einstiege des Rückspiels sollten aus der **Betriebsrechnung** über diese Menge kommen,
+nicht aus der 127er-Referenz — sonst misst Stufe 3 eine andere Grundgesamtheit als die, die live läuft. Vor Stufe 3 zu messen (Zahl der
+Einstiege, Budget).
+
+**Gebaut:** `agent/ereignisse.assets_am(T, ordner, bestand)` (Stundenzahl je Symbol und Tag einmal je Prozess gelesen, `mode=ro`, 9 s);
+`zustaende.text` nimmt sie als Vorgabe statt der Watchlist von heute. Prüfpaket `Ereignisse` Nr. 15 (Kunstdateien: Schwellen 2.001/500,
+nur vor T, gesperrt, Kern, Bestand) **15/15**; drei Mutationen (alle Stunden statt nur vor T · gesperrte nicht entfernt · Schwelle 2.000)
+**alle rot**.
+
+### 9.2 GDELT-Ton am NB — Prüfung bestätigt a, mit zwei Bedingungen
+
+| Prüffrage | Ergebnis |
+|---|---|
+| Trägt der Ton (Entscheidung 01.11.)? | **Aktienmarkt ja** (Befunde), **Fed** nur Hinweise (2025-26, gleiches Vorzeichen), Krypto/Konflikt nein. Alle Befunde und Hinweise gegenläufig (freundlicher Ton → danach schwächer) |
+| Wie stark ist das einzeln? | **Schwach.** Aus einer Suche mit im Mittel 2 Zufallsbefunden (c2) sind 2–3 Befunde einer Reihe kein Nachweis. Der Ton ist ein **Zustand in der Sicht**, kein gewichtetes Signal — das bleibt so |
+| Warum dann live? | **Ü8:** die Sichten bekommen den Ton im Rückspiel; fehlt er live, gilt der gemessene Wert eines Gutachtens nicht für das, was läuft. Die Alternative wäre c (Ton auch aus dem Rückspiel nehmen) — dann bliebe der Befund ungenutzt |
+| Welche Form? | **Nachgemessen (c3, `g7_stufe0_c3.txt`)** — gebaut ist der Rang des **7-T-Mittels der Tonwerte**, gemessen hatte c das 7-T-Mittel der **Ränge**. Ergebnis: Aktienmarkt Tageswert 1 Befund (reproduziert c: −0,103/−0,101), **7-T-Mittel 2 Befunde** (Breite ertrag H=1: −0,086/−0,098; H=3: −0,183/−0,185) + 10 Hinweise; Fed 0/12 bzw. 0/4; Konflikt 0/2; Krypto 0/0 |
+| Ist der Abruf am NB machbar? | **Ungeprüft.** 29.10.–01.11. am Desktop oft stundenlang 429. Vier Abrufe am Tag, über den Tag verteilt, mit Nachholen, sind etwas anderes als der Historien-Abruf — aber das ist eine Vermutung |
+
+→ **a gilt**, mit zwei Bedingungen für G8:
+1. **NB-Nachweis vor dem Betrieb** (Memory *Datenquellen-Inventar + Abdeckung am NB*): zwei Wochen Probeabruf, je Tag vier Töne, Lücken
+   gezählt. Hält er nicht, wird **c** neu vorgelegt (Ton auch im Rückspiel weg — Ü8).
+2. Der Ton bleibt **Zustand**, nie Auslöser oder Gewicht ohne eigene Vorab-Messung.
+
+**Gebaut:** vier Zustände **„Nachrichtenton …, 7-T-Mittel“** (`zustaende.DEFINITIONEN`, Maß `mittel7`, Symbol `<x>~7T` = dieselbe Reihe,
+eigener Schlüssel für den Prüfer v2) — jetzt **42** Zustände. Prüfpaket `Zustaende` Nr. 15 **15/15**.
+
+### 9.3 Positivkontrolle — Nachtrag
+
+gemini-3.8-flash antwortete nur an 2 von 10 Tagen (Nov./Dez. 2025: 64 % / 45 % daneben — kein Wissen), gpt-oss-120b nur an einem
+Kontrolltag (4 %): das Groq-Kontingent ist vom A1-Volllauf belegt. **Beide sind damit nicht geprüft** → vor einem Einsatz nachholen
+(gpt-oss nach dem Volllauf).
+
+### 9.4 Stand
+
+| | |
+|---|---|
+| NB-Auszug Kurse | **wartet auf den Nutzer** (Anleitung: im NB-Projektordner `python "G:\Meine Ablage\Claude_Austauschordner\G7_Kurse\nb_auszug_kurse.py"`) |
+| danach | `g7_kurse_einlesen.py` → REGEL0-Einstiege Sep./Okt. **aus der Betriebsrechnung** (9.1) → Stufe 1, sobald die A1-Nachrichten fertig sind |
+| G8-Bündel | Z-1-Zahlenerkennung (§6.2) · GDELT-Abruf mit zwei Wochen Nachweis (9.2) · S7 live mit Beständen (9.1) |

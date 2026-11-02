@@ -1,0 +1,10 @@
+d  POSITIVKONTROLLE WISSENSSTAND — erzwungene Schätzung des BTC-Schlusskurses (wie p66_gegenprobe G1)
+   Gemini-Modelle am Schlüssel 2 (flash, 3.x, Text): gemini-3.1-flash-lite, gemini-3.5-flash, gemini-3.5-flash-lite, gemini-3.6-flash, gemini-3.7-flash, gemini-3.8-flash
+   gemini-3.1-flash-lite              23-06 2% · 24-03 0% · 24-11 7% · 25-04 50% · 25-08 2% · 25-10 2% · 25-11 67% · 25-12 68% · 26-02 130% · 26-06 127%
+   gemini-3.5-flash                   23-06 0% · 24-03 0% · 24-11 0% · 25-04 24% · 25-08 7% · 25-10 29% · 25-11 56% · 25-12 68% · 26-02 88% · 26-06 127%
+   gemini-3.5-flash-lite              23-06 0% · 24-03 3% · 24-11 4% · 25-04 7% · 25-08 2% · 25-10 10% · 25-11 44% · 25-12 45% · 26-02 47% · 26-06 96%
+   gemini-3.6-flash                   23-06 0% · 24-03 0% · 24-11 1% · 25-04 33% · 25-08 15% · 25-10 2% · 25-11 33% · 25-12 56% · 26-02 130% · 26-06 123%
+   gemini-3.7-flash                   23-06 – · 24-03 – · 24-11 – · 25-04 – · 25-08 – · 25-10 – · 25-11 – · 25-12 – · 26-02 – · 26-06 –
+   gemini-3.8-flash                   23-06 – · 24-03 – · 24-11 – · 25-04 – · 25-08 – · 25-10 – · 25-11 64% · 25-12 45% · 26-02 – · 26-06 –
+   openai/gpt-oss-120b                23-06 4% · 24-03 – · 24-11 – · 25-04 – · 25-08 – · 25-10 – · 25-11 – · 25-12 – · 26-02 – · 26-06 –
+   Lesart: Kontrolltage müssen klein sein (sonst taugt die Probe nicht). Ein Testtag mit kleinem Fehler (< 10 %) heißt: das Modell KENNT diesen Kurs — für ein Rückspiel ab dort ungeeignet. Massstab: BTC schwankte im Monat typisch 10–20 %

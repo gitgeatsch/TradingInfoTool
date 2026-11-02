@@ -1,0 +1,12 @@
+c3 NACHMESSUNG: GDELT-Ton als Rang des 7-T-Mittels (gebaute Form) neben dem Tageswert — Vorab-Regel wie in c
+   aktien       Befunde 1 · Hinweise 5
+      BEFUND  BTC ertrag H=3 2023-24 -0.103 2025-26 -0.101
+   aktien~7T    Befunde 2 · Hinweise 10
+      BEFUND  Breite ertrag H=1 2021-22 -0.086 2025-26 -0.098
+      BEFUND  Breite ertrag H=3 2021-22 -0.183 2025-26 -0.185
+   fed          Befunde 0 · Hinweise 12
+   fed~7T       Befunde 0 · Hinweise 4
+   konflikt     Befunde 0 · Hinweise 2
+   konflikt~7T  Befunde 0 · Hinweise 2
+   krypto       Befunde 0 · Hinweise 0
+   krypto~7T    Befunde 0 · Hinweise 0

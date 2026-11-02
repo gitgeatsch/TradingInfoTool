@@ -423,6 +423,39 @@ def teil_c2():
         a0, 100 * (aus_null >= a0).mean(), b0, 100 * (bef_null >= b0).mean()))
 
 
+def teil_c3():
+    """NACHMESSUNG der GEBAUTEN Form (02.11., §9): in c lief das 7-T-Mittel der täglichen RÄNGE, gebaut ist der Rang des 7-T-Mittels der
+    TONWERTE (zustaende.py, Maß mittel7). Dieselbe Vorab-Regel, dieselben Zielgrößen und Epochen."""
+    p("c3 NACHMESSUNG: GDELT-Ton als Rang des 7-T-Mittels (gebaute Form) neben dem Tageswert — Vorab-Regel wie in c")
+    A = Z.Ablage()
+    defs = [d for d in Z.DEFINITIONEN if d[1] == "gdelt_ton"]
+    zeilen = []
+    for T in pd.date_range("2021-03-01", "2026-10-31", freq="D"):
+        Ts = T.strftime("%Y-%m-%d")
+        for d in defs:
+            z = Z.zustand(d, A, Ts)
+            if z.rang is not None:
+                zeilen.append((T, d[2], z.rang))
+    R = pd.DataFrame(zeilen, columns=["tag", "sym", "rang"]).pivot_table(index="tag", columns="sym", values="rang")
+    btc, br = kurs_btc(), breite_reihe()
+    for sym in R.columns:
+        bef, hin = [], []
+        for zn, kurs in (("BTC", btc), ("Breite", br)):
+            for art in ("ertrag", "tief"):
+                for H in (1, 3, 7):
+                    z = M.zielgroesse(kurs, H, art)
+                    je = {ep: M.messe(R[sym].loc[a:b], z.loc[a:b], H, richtung="beide") for ep, (a, b) in EPOCHEN.items()}
+                    aus = {ep: np.sign(r["abstand"]) for ep, r in je.items() if r["urteil"] == "TRÄGT"}
+                    t = "%s %s H=%d %s" % (zn, art, H, " ".join("%s %+.3f" % (ep, je[ep]["stat"]) for ep in aus))
+                    if aus and max(sum(v > 0 for v in aus.values()), sum(v < 0 for v in aus.values())) >= 2:
+                        bef.append(t)
+                    elif aus:
+                        hin.append(t)
+        p("   %-12s Befunde %d · Hinweise %d" % (sym, len(bef), len(hin)))
+        for t in bef:
+            p("      BEFUND  %s" % t)
+
+
 # ══ d ═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 def teil_d():
     import requests
@@ -479,7 +512,7 @@ def main():
     except Exception:  # noqa: BLE001
         pass
     t = sys.argv[1]
-    {"a": teil_a, "b": teil_b, "c": teil_c, "c2": teil_c2, "d": teil_d}[t]()
+    {"a": teil_a, "b": teil_b, "c": teil_c, "c2": teil_c2, "c3": teil_c3, "d": teil_d}[t]()
     open(os.path.join(HIER, "g7_stufe0_%s.txt" % t), "w", encoding="utf-8").write("\n".join(AUS) + "\n")
 
 

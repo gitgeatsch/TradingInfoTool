@@ -66,7 +66,7 @@ Reihenfolge §6 Schritt 2) · [`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashb
 | **Form** | je Ereignis eine Zeile: Zeit (UTC) · Asset oder Bereich · Typ (Delisting, Hack, Freigabe, Listing, Klage, Regulierung, Makro …) · Schwere · **neu seit** · Beleg (Quelle, Link) · Kennzeichen *Ereignis* |
 | **Regel** | Sichten bekommen **nie Rohmeldungen** (gemessen: 11.500 statt 1.100–2.000 Token, Voranalyse_Luecken T1) |
 | **GDELT-Ton** | ist **Stimmung**, kein Ereignis — er steht als Zustand in S1/S2/S3/S7 |
-| **Stand** | ✔ **A1 gebaut 01.11.** (`agent/ereignisse.py`, [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) §7): Börsen regelbasiert in `sichten.db` (6.701 Ereignisse), Nachrichten per LLM nach **Weg b** (Vorfilter verlor zu viel) — mit **Prompt 3** (§9: Sicht-Relevanz 90 %), der Lauf über alle Nachrichten (~14 Tage Groq-Kontingent) ist **seit 01.11. gestartet**. `zustaende.text` hängt die Ereignisse je Sicht an (Fenster 7 T, nur am Stichtag bekannte) |
+| **Stand** | ✔ **A1 gebaut 01.11.** (`agent/ereignisse.py`, [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) §7): Börsen regelbasiert in `sichten.db` (6.701 Ereignisse), Nachrichten per LLM nach **Weg b** (Vorfilter verlor zu viel) — mit **Prompt 3** (§9: Sicht-Relevanz 90 %), der Lauf über alle Nachrichten (~14 Tage Groq-Kontingent) ist **seit 01.11. gestartet**. `zustaende.text` hängt die Ereignisse je Sicht an (Fenster 7 T, nur am Stichtag bekannte) · **S7-Assets seit 02.11.:** was die REGEL0 zum Zeitpunkt bewertet + Kern (+ live Bestände), nicht die Watchlist von heute ([`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) §9.1) |
 
 ---
 
