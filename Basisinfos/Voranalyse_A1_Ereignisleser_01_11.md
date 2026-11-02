@@ -204,3 +204,34 @@ Lücke (auch beim Vorfilter, §7.2). Nicht nachgeschärft: ein Prompt 4 bräucht
 **Damit startet der Volllauf mit Prompt 3** (Weg a der Frage §8: *„dann Volllauf“*): `python -m agent.ereignisse --llm`, wiederaufnehmbar,
 Protokoll `data/_a1/a1_volllauf_p3.txt`. Nur Desktop; er läuft, solange der Rechner läuft, und setzt nach einem Neustart dort fort,
 wo er stand. Danach `--schreibe` → `sichten.db`.
+
+---
+
+## 10. Nachfassen unlesbarer Stapel (02.11.2026)
+
+**Auftrag (Nutzer 02.11.):** *„ja, Ergänzung jetzt bauen – prüfen, gegenprüfen und doku“*.
+
+**Anlass:** Im Volllauf blieb ein 25er-Stapel Nachrichten **unlesbar** — das LLM schrieb dreimal hintereinander einen **Bereich**
+(`krypto_gesamt`) ins Typ-Feld, nach drei Versuchen legte das Modul den ganzen Stapel als `unlesbar` ab (1 von 46 Stapeln; hochgerechnet
+~500 Meldungen ≈ 2 %).
+
+**Gebaut** (`agent/ereignisse.py`):
+- `nachfassen()`: die als `unlesbar` abgelegten Meldungen noch einmal — **derselbe Prompt, dasselbe Modell**, nur kleinere Stapel
+  (erst zu 5, dann einzeln, `NACHFASSEN = (5, 1)`). Gelesenes ersetzt die Zeile; was auch einzeln nicht lesbar ist, bleibt `unlesbar`.
+  Ein Fehler wird **nicht** geraten (z. B. Felder tauschen), er wird neu gefragt.
+- `--llm` fasst am Ende **selbst** nach; `--nachfassen` allein ist möglich. Der **laufende** Volllauf hat den alten Code geladen — nach
+  seinem Ende einmal `python -m agent.ereignisse --nachfassen`.
+- `unlesbar` wird **kein Ereignis** mehr (`llm_ereignisse` überspringt es; Altzeilen in `ereignis` werden vor dem Schreiben entfernt).
+- Gemeinsamer Kern `_stapel()` für Hauptlauf und Nachfassen (eine Stelle für Versuche, Ablage, Prüfsumme).
+
+**Prüfen** — Prüfpaket `Ereignisse` Nr. 14 (ohne Netz, Kunst-LLM: ein Stapel mit „GIFT“ ist ab 2 Titeln kaputt, „TOT“ immer): 40 unlesbar →
+zu 5: 12 Fragen, 6 Stapel gelesen → einzeln: 12 Fragen → **nur die eine dauerhaft kaputte bleibt**; derselbe Prompt; `unlesbar` ist kein
+Ereignis; ein zweiter Aufruf fragt nur noch die eine. **14/14 grün.**
+
+**Gegenprüfen:**
+- **Drei Mutationen, alle rot:** ohne Einzelstufe · `unlesbar` als Ereignis · Nachfassen fragt alles neu.
+- **Echt gegen Groq**, in einer **Wegwerf-Ablage** (nicht `sichten.db`): die 25 tatsächlich unlesbaren Meldungen → zu 5 in 5 Stapeln
+  **alle gelesen, 0 Formfehler**, 8.823 Token. Die Einordnung ist plausibel (u. a. *Do Kwon zu 15 Jahren verurteilt* → `regulierung_klage`,
+  *Aptos fällt nach Token-Freigabe* → `token_freigabe`/APT, *Kommentare über Debanking* → `marktbericht_meinung`).
+- Eine kleine Schwäche der Antworten bleibt sichtbar: *„Do Kwon sentenced …“* einmal mit LUNA, einmal ohne Asset — das ist die Asset-Frage
+  aus §7.2 (77–83 %), keine Frage des Nachfassens.

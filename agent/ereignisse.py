@@ -19,6 +19,7 @@ EIN Rechenweg live und Rückspiel (Ü8):
 
     python -m agent.ereignisse --regeln            # Börsen-Ereignisse nach Regeln (ohne Netz)
     python -m agent.ereignisse --llm               # Rest + Vorfilter-Treffer per LLM (wiederaufnehmbar, wartet auf das Kontingent)
+    python -m agent.ereignisse --nachfassen        # nur unlesbare Stapel noch einmal, zu 5, dann einzeln (macht --llm am Ende selbst)
     python -m agent.ereignisse --stand
 """
 from __future__ import annotations
@@ -439,6 +440,31 @@ def llm_offen(W: set | None = None, alle: bool = False, ab: str = NACHRICHT_AB) 
     return pd.concat(teile, ignore_index=True)
 
 
+def _stapel(c: sqlite3.Connection, T: pd.DataFrame, key: str, lauf: int, protokoll, unlesbar_ablegen: bool = True) -> tuple[int, int, bool]:
+    """Ein Stapel, bis zu drei Versuche -> (Token, Formfehler, gelesen). Gelesenes wird abgelegt; ein unlesbarer Stapel nur mit
+    ``unlesbar_ablegen`` (im Hauptlauf, damit er weiterkommt - ``nachfassen`` holt ihn später in kleineren Stapeln)."""
+    sid = hashlib.sha256(_eingabe(list(T.titel)).encode("utf-8")).hexdigest()[:12]
+    tok = fehl = 0
+    for versuch in range(3):
+        roh, t = frage(key, list(T.titel))
+        tok += t
+        try:
+            aus = lies_antwort(roh, len(T))
+            break
+        except Exception as e:                                 # noqa: BLE001
+            fehl += 1
+            protokoll("  Form ungültig (%s), Versuch %d" % (str(e)[:80], versuch + 1))
+    else:
+        if not unlesbar_ablegen:
+            return tok, fehl, False
+        aus = [("unlesbar", [], "sonstiges")] * len(T)
+    c.executemany("INSERT OR REPLACE INTO llm_antwort VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                  [(m.quelle, m.meldung, lauf, MODELL, PROMPT_SHA, sid, k + 1, a[0], json.dumps(a[1]), a[2], t, roh, _jetzt())
+                   for k, (m, a) in enumerate(zip(T.itertuples(index=False), aus))])
+    c.commit()
+    return tok, fehl, aus[0][0] != "unlesbar"
+
+
 def llm_lauf(c: sqlite3.Connection, M: pd.DataFrame, key: str, lauf: int = 1, stapel: int = STAPEL, protokoll=print) -> dict:
     """Je Quelle zeitlich geordnet in Stapeln; bereits beantwortete (gleicher Lauf, Modell, Prompt) werden übersprungen."""
     da = {(q, m) for q, m in c.execute("SELECT quelle, meldung FROM llm_antwort WHERE lauf=? AND modell=? AND prompt_sha=?",
@@ -447,25 +473,35 @@ def llm_lauf(c: sqlite3.Connection, M: pd.DataFrame, key: str, lauf: int = 1, st
     tok = fehl = 0
     for q, G in offen.groupby("quelle", sort=False):
         for i in range(0, len(G), stapel):
-            T = G.iloc[i:i + stapel]
-            sid = hashlib.sha256(_eingabe(list(T.titel)).encode("utf-8")).hexdigest()[:12]
-            for versuch in range(3):
-                roh, t = frage(key, list(T.titel))
-                tok += t
-                try:
-                    aus = lies_antwort(roh, len(T))
-                    break
-                except Exception as e:                         # noqa: BLE001
-                    fehl += 1
-                    protokoll("  Form ungültig (%s), Versuch %d" % (str(e)[:80], versuch + 1))
-            else:
-                aus = [("unlesbar", [], "sonstiges")] * len(T)
-            c.executemany("INSERT OR REPLACE INTO llm_antwort VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                          [(m.quelle, m.meldung, lauf, MODELL, PROMPT_SHA, sid, k + 1, a[0], json.dumps(a[1]), a[2], t, roh, _jetzt())
-                           for k, (m, a) in enumerate(zip(T.itertuples(index=False), aus))])
-            c.commit()
+            t, f, _ = _stapel(c, G.iloc[i:i + stapel], key, lauf, protokoll)
+            tok, fehl = tok + t, fehl + f
             protokoll("%s %s Stapel %d/%d · %d Token" % (_jetzt()[:19], q, i // stapel + 1, (len(G) + stapel - 1) // stapel, t))
     return {"gefragt": len(offen), "token": tok, "formfehler": fehl}
+
+
+NACHFASSEN = (5, 1)    # 01.11.: ein 25er-Stapel blieb unlesbar (das LLM schrieb dreimal einen Bereich ins Typ-Feld) - kleiner neu fragen
+
+
+def nachfassen(c: sqlite3.Connection, M: pd.DataFrame, key: str, lauf: int = 1, stufen=NACHFASSEN, protokoll=print) -> dict:
+    """Die als ``unlesbar`` abgelegten Meldungen aus ``M`` noch einmal - DERSELBE Prompt, dasselbe Modell, nur kleinere Stapel (erst 5,
+    dann einzeln). Was gelesen wird, ersetzt die Zeile ``unlesbar``; was auch einzeln nicht lesbar ist, bleibt ``unlesbar`` stehen."""
+    un = {(q, m) for q, m in c.execute("SELECT quelle, meldung FROM llm_antwort WHERE lauf=? AND modell=? AND prompt_sha=? AND typ='unlesbar'",
+                                        (lauf, MODELL, PROMPT_SHA))}
+    offen = M[[(q, m) in un for q, m in zip(M.quelle, M.meldung)]]
+    vorher, tok, fehl = len(offen), 0, 0
+    for n in stufen:
+        rest = []
+        for q, G in offen.groupby("quelle", sort=False):
+            for i in range(0, len(G), n):
+                T = G.iloc[i:i + n]
+                t, f, ok = _stapel(c, T, key, lauf, protokoll, unlesbar_ablegen=False)
+                tok, fehl = tok + t, fehl + f
+                if not ok:
+                    rest.append(T)
+                protokoll("%s nachfassen %s zu %d · %d/%d %s" % (_jetzt()[:19], q, n, i // n + 1, (len(G) + n - 1) // n,
+                                                                  "gelesen" if ok else "unlesbar"))
+        offen = pd.concat(rest) if rest else offen.iloc[:0]
+    return {"unlesbar_vorher": vorher, "unlesbar_nachher": len(offen), "token": tok, "formfehler": fehl}
 
 
 def llm_ereignisse(c: sqlite3.Connection, M: pd.DataFrame, W: set | None = None, lauf: int = 1) -> list:
@@ -479,6 +515,8 @@ def llm_ereignisse(c: sqlite3.Connection, M: pd.DataFrame, W: set | None = None,
         if (m.quelle, m.meldung) not in L.index:
             continue
         r = L.loc[(m.quelle, m.meldung)]
+        if r.typ == "unlesbar":                                # keine Aussage - kein Ereignis (auch nicht "kein Ereignis")
+            continue
         a = assets_pruefen(json.loads(r.assets), m.titel, W, A)
         b = r.bereich if not (a and r.bereich == "sonstiges") else "asset"
         zeilen.append(_zeile(m, r.typ, a, b, upbit_markt(m.titel) if m.quelle == "upbit" else "", "llm", MODELL))
@@ -539,6 +577,7 @@ def main() -> int:
     p.add_argument("--regeln", action="store_true")
     p.add_argument("--llm", action="store_true")
     p.add_argument("--schreibe", action="store_true", help="nur die vorhandenen LLM-Antworten als Ereignisse schreiben (ohne Netz)")
+    p.add_argument("--nachfassen", action="store_true", help="nur die unlesbaren Stapel noch einmal, kleiner (läuft nach --llm ohnehin)")
     p.add_argument("--stand", action="store_true")
     p.add_argument("--pfad", default=ABLAGE)
     o = p.parse_args()
@@ -547,16 +586,19 @@ def main() -> int:
     if o.regeln:
         z, rest = regel_ereignisse(W)
         print("Regeln: %d Ereignisse geschrieben, Rest für das LLM %d" % (schreibe(c, z), len(rest)))
-    if o.llm or o.schreibe:
+    if o.llm or o.schreibe or o.nachfassen:
         M = llm_offen(W, alle=(WEG == "b"))
         print("LLM: %d Meldungen (Börsen-Rest, Vorfilter-Treffer%s), Prompt %s" % (len(M), ", übrige Nachrichten" * (WEG == "b"),
                                                                                  PROMPT_SHA))
-        if o.llm:
+        if o.llm or o.nachfassen:
             from dotenv import dotenv_values
             key = dotenv_values(os.path.join(PROJ, ".env")).get("GROQ_API_KEY")
-            print(llm_lauf(c, M, key, protokoll=lambda s: print(s, flush=True)))
+            if o.llm:
+                print(llm_lauf(c, M, key, protokoll=lambda s: print(s, flush=True)))
+            print(nachfassen(c, M, key, protokoll=lambda s: print(s, flush=True)))
+        c.execute("DELETE FROM ereignis WHERE typ='unlesbar'")    # Altbestand vor 02.11. (damals noch als Zeile geschrieben)
         print("LLM: %d Ereignisse geschrieben" % schreibe(c, llm_ereignisse(c, M, W)))
-    if o.stand or not (o.regeln or o.llm or o.schreibe):
+    if o.stand or not (o.regeln or o.llm or o.schreibe or o.nachfassen):
         print(pd.read_sql("SELECT quelle, methode, typ, COUNT(*) n FROM ereignis GROUP BY 1,2,3 ORDER BY 1,2,4 DESC", c).to_string())
     c.close()
     return 0

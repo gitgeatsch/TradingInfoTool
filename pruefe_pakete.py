@@ -33869,6 +33869,46 @@ def paket_ereignisse() -> None:
     # 9 nie die Produktion
     pruefe(P, "nie die Produktions-DB (schreiben und lesen)",
            _verweigert(lambda: _E.verbinde("x/tradinginfotool.db")) and _verweigert(lambda: _E.lade("x/tradinginfotool.db")))
+    # 10 NACHFASSEN (02.11.): ein unlesbarer Stapel wird kleiner neu gefragt, mit DEMSELBEN Prompt; was einzeln nicht lesbar ist, bleibt.
+    # Kunst-LLM: ein Stapel mit "GIFT" ist ab 2 Titeln unlesbar (Bereich im Typ-Feld, wie am 01.11.), "TOT" ist es immer
+    import tempfile as _tf
+
+    import wegwerf as _ww
+
+    fragen = []
+
+    def kunst(key, titel, http=None):
+        fragen.append(len(titel))
+        kaputt = any("TOT" in t for t in titel) or (len(titel) > 1 and any("GIFT" in t for t in titel))
+        return _json.dumps([{"nr": i + 1, "typ": "krypto_gesamt" if kaputt else "hack_exploit", "assets": [], "bereich": "krypto_gesamt"}
+                            for i in range(len(titel))]), 100
+    T = _tf.mkdtemp(prefix="a1_nachfassen_")
+    echt = _E.frage
+    try:
+        _E.frage = kunst
+        c = _E.verbinde(__import__("os").path.join(T, "s.db"))
+        titel = ["Meldung %d%s" % (i, " GIFT" if i == 7 else " TOT" if i == 31 else "") for i in range(40)]
+        M = _pd.DataFrame({"quelle": "nachricht", "meldung": [str(i) for i in range(40)], "titel": titel,
+                           "zeit": _pd.Timestamp("2026-01-01", tz="UTC"), "aufnahme": _pd.NaT, "beleg": "x"})
+        _E.llm_lauf(c, M, "k", protokoll=lambda s: None)                 # Stapel 0-24 (GIFT) und 25-39 (TOT) unlesbar
+        n_un = c.execute("SELECT COUNT(*) FROM llm_antwort WHERE typ='unlesbar'").fetchone()[0]
+        ohne = len(_E.llm_ereignisse(c, M, {"FOO"}))
+        fragen.clear()
+        r = _E.nachfassen(c, M, "k", protokoll=lambda s: None)
+        rest = [m for (m,) in c.execute("SELECT meldung FROM llm_antwort WHERE typ='unlesbar'")]
+        sha = {s for (s,) in c.execute("SELECT DISTINCT prompt_sha FROM llm_antwort")}
+        zweit = _E.nachfassen(c, M, "k", protokoll=lambda s: None)
+        c.close()
+    finally:
+        _E.frage = echt
+        _ww.aufraeumen(T)
+    # erwartet: 40 unlesbar -> zu 5: 6 Stapel gelesen, 2 nicht (GIFT 5-9, TOT 30-34) je 3 Versuche = 12 Fragen zu 5 -> einzeln:
+    # 9 gelesen + "31" dreimal = 12 Fragen zu 1 -> nur "31" bleibt; der zweite Aufruf: 3 + 3 Fragen zu 1
+    pruefe(P, "nachfassen: 40 unlesbar -> zu 5, dann einzeln -> nur die eine dauerhaft kaputte bleibt; derselbe Prompt; unlesbar ist "
+           "kein Ereignis; ein zweiter Aufruf fragt nur noch die eine",
+           n_un == 40 and ohne == 0 and r == {"unlesbar_vorher": 40, "unlesbar_nachher": 1, "token": 2400, "formfehler": 9}
+           and rest == ["31"] and sha == {_E.PROMPT_SHA} and fragen == [5] * 12 + [1] * 12 + [1] * 6
+           and zweit["unlesbar_vorher"] == 1 and zweit["unlesbar_nachher"] == 1, "%s rest=%s fragen=%s" % (r, rest, fragen))
 
 
 def paket_gesamtplan() -> None:
