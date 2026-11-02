@@ -478,6 +478,25 @@ Kontrolltag (4 %): das Groq-Kontingent ist vom A1-Volllauf belegt. **Beide sind 
 
 | | |
 |---|---|
-| NB-Auszug Kurse | **wartet auf den Nutzer** (Anleitung: im NB-Projektordner `python "G:\Meine Ablage\Claude_Austauschordner\G7_Kurse\nb_auszug_kurse.py"`) |
-| danach | `g7_kurse_einlesen.py` → REGEL0-Einstiege Sep./Okt. **aus der Betriebsrechnung** (9.1) → Stufe 1, sobald die A1-Nachrichten fertig sind |
+| NB-Auszug Kurse | ✔ **eingelesen 02.11.** (§9.5) |
+| danach | REGEL0-Einstiege Sep./Okt. **aus der Betriebsrechnung** (9.1) → Stufe 1, sobald die A1-Nachrichten fertig sind |
 | G8-Bündel | Z-1-Zahlenerkennung (§6.2) · GDELT-Abruf mit zwei Wochen Nachweis (9.2) · S7 live mit Beständen (9.1) |
+
+### 9.5 Kurse Sep./Okt. eingelesen (02.11.2026)
+
+Auszug vom NB (T440, geholt 07:21 UTC, 107 MB) über den Austauschordner, eingelesen mit `g7_kurse_einlesen.py`:
+
+| | `stundenkurse.db` (Messbasis) | `stundenkurse_alle.db` (Bewertung) |
+|---|---|---|
+| Überlappung ab 01.08. | 132.618 Stunden, **0 abweichend** | 766.100 Stunden, **451 abweichend** |
+| davon letzte Desktop-Stunde je Symbol | — | **alle 451** (01.10. 16/17 Uhr) |
+| sonst abweichend · nur am Desktop | 0 · 0 | 0 · 0 |
+| angehängt | 127.106 Stunden, 116 Symbole | 410.742 Stunden (inkl. 451 ersetzt), 556 Symbole (19 nur am NB = neu gelistet) |
+| bis | 02.11. 06:00 | 02.11. 06:00 (549 von 556; 7 enden früher) |
+
+**Ursache der 451:** die Desktop-Datei wurde am 01.10. mitten in der Stunde kopiert (USB-Übertragung O11) — die **letzte Kerze war
+offen**. Das NB hat sie danach fertig geschrieben; dort gilt die NB-Kerze. Das Skript lässt Abweichungen **nur** auf der letzten
+Desktop-Stunde je Symbol zu und ersetzt sie (`INSERT OR REPLACE`); jede andere Abweichung bleibt rot.
+
+**Gegenprobe:** jede NB-Stunde steht in der Arbeitskopie, Schlusskurse gleich (0 ungleich), **keine Lücke > 1 h** ab 01.09. bei
+keinem Symbol, Marke `_g7_rueckspiel` gesetzt. Messbasis-Dateien unberührt (Dateidatum 25.09. / 01.10.).

@@ -3,7 +3,8 @@ einlesen. Die Messbasis-Dateien am Desktop bleiben UNBERÜHRT (``data/stundenkur
 
   1  GEGENPROBE auf der Überlappung (ab 2026-08-01 bis zum Desktop-Ende): je Symbol und Stunde dieselben Kurse? Abweichungen werden
      gezählt und gezeigt — Betrieb (NB) und Messbasis (Desktop) müssen dieselbe Reihe sein, sonst ist das Anhängen falsch
-     (CLAUDE.md: Betrieb und Messung brauchen dieselbe Grundgesamtheit)
+     (CLAUDE.md: Betrieb und Messung brauchen dieselbe Grundgesamtheit). AUSNAHME: die LETZTE Desktop-Stunde je Symbol — die Kerze
+     war beim Kopieren noch offen (02.11.: alle 451 Abweichungen genau dort, 01.10. 16/17 Uhr); dort gilt die NB-Kerze (ersetzt)
   2  ARBEITSKOPIE ``data/_g7/kurse/`` = Desktop-Datei + NB-Zeilen NACH dem jeweiligen Desktop-Ende je Symbol; Marke ``_g7_rueckspiel``.
      Nur wenn 1 sauber ist (oder mit ``--trotzdem``)
 
@@ -55,11 +56,14 @@ def main():
         sym_nb, sym_d = set(N.symbol), set(D.symbol)
         print("%-22s Überlappung %d Stunden · abweichend %d · nur am Desktop %d · Symbole NB %d / Desktop %d (nur NB %d, nur Desktop %d)" % (
             f, len(m), len(abw), nur_d, len(sym_nb), len(sym_d), len(sym_nb - sym_d), len(sym_d - sym_nb)))
+        offen = abw[abw.stunde.values == ende.reindex(abw.symbol).values]
+        abw = abw.drop(offen.index)
+        print("   davon letzte Desktop-Stunde (Kerze offen, NB ersetzt): %d · sonst abweichend: %d" % (len(offen), len(abw)))
         if len(abw):
             print(abw.groupby("symbol").size().sort_values(ascending=False).head(10).to_string())
             sauber = False
         x = N.merge(ende.rename("bis").reset_index(), on="symbol", how="left")
-        neu[f] = x[x.bis.isna() | (x.stunde > x.bis)]
+        neu[f] = pd.concat([x[x.bis.isna() | (x.stunde > x.bis)], x.merge(offen[["symbol", "stunde"]], on=["symbol", "stunde"])])
         print("   anzuhängen: %d Stunden, %d Symbole, bis %s" % (len(neu[f]), neu[f].symbol.nunique(), neu[f].stunde.max()))
     if "--nur-pruefen" in sys.argv:
         return
@@ -74,7 +78,7 @@ def main():
         tab = "kurse_" + f.replace(".db", "")
         X = pd.read_sql("SELECT %s FROM %s" % (",".join(spalten), tab), a)
         X = X.merge(neu[f][["symbol", "stunde"]], on=["symbol", "stunde"])
-        c.executemany("INSERT OR IGNORE INTO stundenkurse (%s) VALUES (%s)" % (",".join(spalten), ",".join("?" * len(spalten))),
+        c.executemany("INSERT OR REPLACE INTO stundenkurse (%s) VALUES (%s)" % (",".join(spalten), ",".join("?" * len(spalten))),
                       X.itertuples(index=False, name=None))
         c.execute("CREATE TABLE IF NOT EXISTS _g7_rueckspiel (hinweis TEXT)")
         c.execute("INSERT INTO _g7_rueckspiel VALUES (?)", ("Arbeitskopie G7: Desktop-Messbasis + NB-Auszug %s (%s) - NICHT die Messbasis"
