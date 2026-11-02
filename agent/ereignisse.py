@@ -10,7 +10,8 @@ EIN Rechenweg live und Rückspiel (Ü8):
     ``binance_ankuendigungen.art`` (A1-2, Prüfpaket) und dieselben Kürzel (``binance_ankuendigungen.kuerzel``)
   * Nachrichten: VORFILTER auf Risiko-Stichwörter (Nutzer 01.11. „a“), nur die Treffer liest das LLM. Ob der Filter echte Ereignisse
     verliert, misst die Stichprobe (P1/P2) — ist es mehr als vernachlässigbar, geht es auf b (alle Nachrichten)
-  * der REST der Börsen und die Vorfilter-Treffer: gpt-oss-120b (Groq), Stapel zu 25, Temperatur 0, Typ-Definitionen im Prompt (A1-6).
+  * der REST der Börsen und die Vorfilter-Treffer: gemini-3.5-flash (seit 02.11., vorher gpt-oss-120b auf Groq — s. ``MODELL``),
+    Stapel zu 25, Temperatur 0, Typ-Definitionen im Prompt (A1-6).
     Jede Antwort steht in ``llm_antwort`` (Eingabe-Prüfsumme, Rohtext, Token) — ein zweiter Lauf liest sie, statt neu zu fragen
   * SCHWERE nur aus dem Register (A1-8): die gemessene Wirkung mit Befund, sonst „ungemessen“
   * ``bekannt_ab`` (A1-5): Börsen Veröffentlichung + 1 h (stündlicher Abruf); Nachrichten min(Archivaufnahme, Veröffentlichung + 1 h)
@@ -42,8 +43,14 @@ ABLAGE = os.path.join(DATEN, "_sichten", "sichten.db")
 QUELLEN = {"binance": os.path.join(DATEN, "_a1", "binance_ankuendigungen_alle.db"),
            "upbit": os.path.join(DATEN, "_c2", "ankuendigungen.db"),
            "nachricht": os.path.join(DATEN, "_lc", "nachrichten.db")}
-MODELL = "openai/gpt-oss-120b"
-URL = "https://api.groq.com/openai/v1/chat/completions"
+# 02.11.2026 (Voranalyse_Laufzeit_02_11.md §4.1, Nutzer: „Ok A1“): gemini-3.5-flash statt gpt-oss-120b (Groq, ≈ 10 T Restlaufzeit).
+# Die Groq-Regel galt für Rückspiele VOR dem Wissenshorizont; A1 liest ab Dez. 2025 (gemessen sauber, G7 §7). Auf Stichprobe 3 liest
+# 3.5-flash mindestens so gut (Fehlalarm/Verlust 3/3 gg. 2/4, Typ richtig 85 gg. 77 %). gemini-2.5 ist für beide Schlüssel gesperrt (404).
+# Schlüssel 2 = eigener Desktop-Topf (500 Aufrufe/Tag je Modell), nie der NB-Schlüssel. Die gpt-oss-Antworten bleiben unter ihrem
+# Modellnamen in der Ablage (zweiter Weg).
+MODELL = "gemini-3.5-flash"
+URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+SCHLUESSEL = "GEMINI_API_KEY_2"
 STAPEL = 25
 LESEVERZUG_H = 1                        # A1-5: live würde stündlich gelesen
 FENSTER_T = 7                           # Takt §5: ein Gutachten gilt höchstens 7 Tage - so weit zurück reicht „neu seit“
@@ -405,7 +412,8 @@ def lies_antwort(roh: str, n: int) -> list:
 
 
 def frage(key: str, titel: list, http=None) -> tuple[str, int]:
-    """Ein Stapel an Groq; wartet geduldig auf Minuten- und Tageskontingent (wie p67)."""
+    """Ein Stapel an das LLM (``URL``/``MODELL``); wartet geduldig auf Minuten- und Tageskontingent (wie p67). Gemini: ein leerer
+    TAGES-Topf (``PerDay`` im Fehlerkörper) wartet je 15 min bis zum Rücksetzen um Mitternacht Pazifik, sonst gilt ``retryDelay``."""
     import requests
     http = http or requests
     body = {"model": MODELL, "temperature": 0, "reasoning_effort": "low",
@@ -418,8 +426,10 @@ def frage(key: str, titel: list, http=None) -> tuple[str, int]:
             continue
         if r.status_code == 429 or r.status_code >= 500:
             m = re.search(r"try again in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s", r.text)
-            warte = (int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + float(m.group(3))) if m else \
-                float(r.headers.get("retry-after") or 30)
+            g = re.search(r'"retryDelay"\s*:\s*"([\d.]+)s"', r.text)
+            warte = 900.0 if "PerDay" in r.text else \
+                (int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + float(m.group(3))) if m else \
+                float(g.group(1)) if g else float(r.headers.get("retry-after") or 30)
             time.sleep(min(max(warte + 2, 5), 900))
             continue
         r.raise_for_status()
@@ -427,7 +437,7 @@ def frage(key: str, titel: list, http=None) -> tuple[str, int]:
         if int(r.headers.get("x-ratelimit-remaining-tokens") or 8000) < 3500:
             time.sleep(20)
         return j["choices"][0]["message"].get("content") or "", int((j.get("usage") or {}).get("total_tokens") or 0)
-    raise RuntimeError("Groq: keine Antwort")
+    raise RuntimeError("LLM %s: keine Antwort" % MODELL)
 
 
 # ══ Ablage ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -641,7 +651,7 @@ def main() -> int:
                                                                                  PROMPT_SHA))
         if o.llm or o.nachfassen:
             from dotenv import dotenv_values
-            key = dotenv_values(os.path.join(PROJ, ".env")).get("GROQ_API_KEY")
+            key = dotenv_values(os.path.join(PROJ, ".env")).get(SCHLUESSEL)
             if o.llm:
                 print(llm_lauf(c, M, key, protokoll=lambda s: print(s, flush=True)))
             print(nachfassen(c, M, key, protokoll=lambda s: print(s, flush=True)))

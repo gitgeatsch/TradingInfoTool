@@ -102,3 +102,17 @@ haben (Schlüssel 1; 3.5-flash-lite ist dort der Prüfblock).
   gpt-oss wäre **Cloudflare Workers AI** (10.000 Neurons/Tag [R]); dafür bräuchte es ein Konto, das nur du anlegen kannst — erst prüfen,
   wenn Stufe 5 ansteht.
 - **gemini-2.5** fällt weg (L-2); das ist ein Fakt und kein Hebel mehr.
+
+---
+
+## 5. Entschieden (02.11.2026)
+
+**Nutzer:** *„Ok A1 prüfe aber vorher ob einer unserer keys also der ältere gemini 2.5 aufrufen kann, bei 2. der bündelung bin ich
+unsicher, entscheide du wenn kein negativer Impakt dann ja bei 3. Bitte um info wie der nb abruf ohne code funktioniert.“*
+
+| | Ergebnis |
+|---|---|
+| **Vorprüfung gemini-2.5** | **beide** Schlüssel (`GEMINI_API_KEY` = NB-Projekt, `GEMINI_API_KEY_2` = Desktop) bekommen für 2.5-flash, 2.5-flash-lite und 2.5-pro **404 „no longer available to new users“** — über den OpenAI-kompatiblen **und** den nativen Zugang. Kein Weg |
+| **§4.1 → a, umgesetzt** | `agent/ereignisse.py`: `MODELL = gemini-3.5-flash`, `SCHLUESSEL = GEMINI_API_KEY_2`; leerer Tagestopf (`PerDay`) wartet je 15 min, sonst `retryDelay`. Groq-Lauf **angehalten** bei Stapel 67/1.009; seine **2.133 Antworten** (25 unlesbar) bleiben unter `openai/gpt-oss-120b` in der Ablage — **zweiter Weg** (Übereinstimmung beider Modelle auf denselben Titeln). Neuer Lauf gestartet 02.11. 11:24 (`data/_a1/a1_volllauf_gemini.txt`), ≈ 1.023 Stapel bei 500/Tag → **≈ 2–2,5 Tage**, danach `--nachfassen` ist im Lauf enthalten. Prüfpakete Ereignisse 15/15, Zustaende 15/15 |
+| **§4.2 → a, durch die Probe entschieden** | vom Nutzer an mich übertragen: *„wenn kein negativer Impakt dann ja“*. „Kein negativer Impakt“ ist die **vorab festgelegte Gleichheitsprobe**: Bündel nur, wenn Bündel ↔ einzeln höchstens 5 Pp seltener gleich ist als einzeln ↔ einzeln. Fällt sie durch, läuft Stufe 3 **einzeln** — ohne neue Rückfrage |
+| **§4.3** | Erklärung an den Nutzer, Entscheidung offen (s. Gesprächsverlauf 02.11.) |
