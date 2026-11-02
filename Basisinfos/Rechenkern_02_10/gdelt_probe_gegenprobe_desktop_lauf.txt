@@ -1,0 +1,12 @@
+GDELT-Probe 1 (02.11.2026) · Rechner 9900K · Datei D:/CLAUDE_Temp/TradingInfoTool/gdelt_echt_0211/probe_echt.jsonl
+  läuft bis 2026-11-16 17:02 UTC — Fenster offen lassen, Ctrl+C beendet (Neustart setzt fort)
+Runde start
+  17:02:55  krypto   Versuch 1: HTTP 429
+  17:05:12  krypto   Versuch 2: HTTP 429
+  17:15:12  fed      Versuch 1: HTTP 429
+  17:17:25  fed      Versuch 2: HTTP 429
+  17:27:25  aktien   Versuch 1: HTTP 429
+  17:29:34  aktien   Versuch 2: HTTP 429
+  17:39:34  konflikt Versuch 1: HTTP 429
+  17:41:44  konflikt Versuch 2: HTTP 429
+rc=0

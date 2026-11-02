@@ -1,0 +1,40 @@
+GDELT-PROBE AM NOTEBOOK — Anleitung (Stand 02.11.2026)
+=====================================================
+
+WOZU
+  Zwei Wochen lang prüfen, ob der Nachrichtenton von GDELT am NB zuverlässig abrufbar ist und
+  live dieselben Werte liefert wie das Rückspiel am Desktop (G7 §9.2, Bedingung 1).
+  Erst wenn das hält, wird der Abruf in G8 in den Betrieb eingebaut.
+
+WAS ES BERÜHRT
+  NICHTS am Betrieb. Kein git pull, kein Projektcode, nicht tradinginfotool.db, nicht der Scheduler.
+  Das Skript braucht nur Python (Standardbibliothek) und Internet.
+  Es schreibt nur eine Datei hier daneben: gdelt_probe_<Rechnername>.jsonl
+
+STARTEN (einmal)
+  1. Am NB eine Eingabeaufforderung (cmd) oder PowerShell öffnen.
+  2. Eingeben:
+       C:\Python313\python.exe "G:\Meine Ablage\Claude_Austauschordner\GDELT_Probe\gdelt_probe.py"
+  3. Das Fenster offen lassen. Es läuft 14 Tage und beendet sich dann selbst ("Fertig: 14 Tage vorbei").
+
+  Es holt sofort eine erste Runde (dauert ca. 35 Minuten: vier Abfragen mit je 10 Minuten Abstand),
+  danach je Tag um 01:30, 07:30, 13:30, 19:30 Uhr (MEZ).
+
+WENN ...
+  ... das Fenster zu ist oder der NB neu gestartet hat:
+      denselben Befehl noch einmal starten. Es setzt fort; die Ausfallzeit wird gezählt.
+  ... "HTTP 429" erscheint: das ist eine Sperre von GDELT. Nichts tun — genau das soll die Probe zählen.
+  ... Google Drive eine "Konfliktkopie" der .jsonl anlegt: kurz Bescheid geben.
+
+STAND ANSEHEN (beliebig, auch während es läuft, in einem ZWEITEN Fenster)
+       C:\Python313\python.exe "G:\Meine Ablage\Claude_Austauschordner\GDELT_Probe\gdelt_probe.py" --stand
+
+BEENDEN VOR DER ZEIT
+  Fenster schließen oder Strg+C.
+
+WÄHRENDDESSEN
+  Der Desktop fragt GDELT nicht ab (womöglich dieselbe Internet-Adresse — eine Sperre am Desktop wäre sonst eine Lücke am NB).
+
+DANACH (Desktop, Claude)
+  Auswertung mit gdelt_probe_auswertung.py: Lücken, Verzug, und ob die Klasse des Tons live = Rückspiel ist.
+  Die Kriterien stehen vorab fest (K1-K3). Hält es nicht, wird Weg c neu vorgelegt.

@@ -13,7 +13,7 @@
 #   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
 #      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
 #   4. eine Quelle: das Memory verweist nur noch hierher.
-stand: "2026-11-01"
+stand: "2026-11-02"
 kontrollen:
   # ---- offen ------------------------------------------------------------------------------------------------------------
   - id: K-ANK-1
@@ -626,6 +626,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-11-01"
     beleg: "Export 01.11. 11:36: git_stand fe1bf509 sauber; GOOGL aktien taktisch (Grundliste); seit Neustart 11:30 keine GOOGL-Warnung (davor 83), Bestand 'Aenderung GOOGL: frei 0 -> 0,59839357'; refresh_securities_prices erfolgreich; 143 Logzeilen ohne WARNING/ERROR/Traceback"
+  - id: K-GD-1
+    titel: "GDELT-Probe am NB (G7 §9.2 Bedingung 1): eigenstaendiges Skript im Austauschordner, 14 Tage, vier Toene viermal am Tag - KEIN Pull, kein Betriebscode"
+    seit: "2026-11-02"
+    paket: GDELT-Probe
+    commit: ""
+    art: manuell
+    nachweis: "Am NB in eigener Konsole: C:\\Python313\\python.exe \"G:\\Meine Ablage\\Claude_Austauschordner\\GDELT_Probe\\gdelt_probe.py\" (Anleitung LIESMICH.txt daneben). Datei gdelt_probe_<Rechnername>.jsonl waechst; nach 14 Tagen Zeile 'fertig'. Danach Desktop: gdelt_probe_auswertung.py --rueckspiel -> Urteil K1-K3 (vorab festgelegt). Waehrend der Probe fragt der Desktop GDELT NICHT ab"
+    faellig_bis: "2026-11-20"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

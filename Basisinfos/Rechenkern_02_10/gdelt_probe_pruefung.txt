@@ -1,0 +1,41 @@
+GDELT-PROBE — Prüfung 2026-11-02T17:44+00:00: 40 von 40 grün
+  ✔ P1 nur Standardbibliothek — Importe __future__, datetime, hashlib, json, os, socket, sys, time, urllib
+  ✔ P1 verweigert x/tradinginfotool.db
+  ✔ P1 verweigert x/tradinginfotool.jsonl
+  ✔ P1 verweigert x/probe.db
+  ✔ P1 Vorgabe = eigene Datei neben dem Skript
+  ✔ P2 gleich dem Quelltext (9 Merkmale)
+  ✔ P2 Mutation Abstand wird rot — ['Abstand zwischen Abfragen (s)']
+  ✔ P2 Mutation Abfragen wird rot — ['Abfragen (4 Töne)']
+  ✔ P2 Mutation Pause wird rot — ['Pause vor dem 2. Versuch (s)']
+  ✔ P2 Mutation Fenster wird rot — ['Fenster --laufend (Tage)']
+  ✔ P3 zuerst die Startrunde
+  ✔ P3 nach dem Start bis 18:30 nichts
+  ✔ P3 18:30 fällig
+  ✔ P3 erledigte Runde nicht doppelt
+  ✔ P3 verschlafen bis 06:45: nur 06:30 nachgeholt
+  ✔ P3 nächste Rundenzeit nach 13:50 = 18:30
+  ✔ P3 nächste Rundenzeit nach 23:59 = 00:30 Folgetag
+  ✔ P3 Fenster 14 Tage bis heute 00:00 UTC
+  ✔ P3 56 feste Runden in 14 Tagen
+  ✔ P4 zwei von vier Tönen mit Werten — toene_ok=2
+  ✔ P4 sieben Versuche, jeder protokolliert — [('krypto', 1, 200), ('fed', 1, 429), ('fed', 2, 200), ('aktien', 1, 429), ('aktien', 2, 429), ('konflikt', 1, None), ('konflikt', 2, 200)]
+  ✔ P4 200 ohne JSON gilt als Fehler, nicht als leere Reihe
+  ✔ P4 14 Tagespunkte bei Erfolg (Fenster ohne heute) — 14
+  ✔ P4 Wartezeiten: 600 zwischen Tönen, 120 vor dem 2. Versuch — [600, 120, 600, 120, 600, 120]
+  ✔ P4 Abstand gilt auch über Runden (500 s Rest, dann 600) — [500, 600, 600, 600]
+  ✔ P5 läuft 14 Tage und endet von selbst
+  ✔ P5 ein Start, ein Neustart, Startzeit bleibt
+  ✔ P5 keine Runde doppelt — 56 Runden
+  ✔ P5 genau die verschlafene Runde fehlt (06.11. 06:30) — ['2026-11-06T06:30:00+00:00']
+  ✔ P5 Auswertung zählt die fehlende Runde — ['2026-11-06T06:30:00+00:00']
+  ✔ P6 einzige neue Datei ist die eigene .jsonl — {'gdelt_probe_TEST.jsonl'}
+  ✔ P7 saubere Welt: K1, K2, K3 erfüllt, HÄLT — Live-Tage 13, K2 {'mittel7': (52, 52), 'niveau': (52, 52)}, Revision (52, 0.0, 0)
+  ✔ P7 saubere Welt: 13 Live-Tage, Verzug ≤ 1 h — 13 / 1.00 h
+  ✔ P7 Sperre 30 h bei aktien: genau 1 Lücke, K1 noch grün (1/13) — aktien (1, 13, 0.07692307692307693)
+  ✔ P7 Sperre 60 h: genau 2 Lücken, K1 rot — aktien (2, 13, 0.15384615384615385)
+  ✔ P7 Revision: genau ein Ton-Tag geändert, Größe 3,0 — (52, 3.0, 1)
+  ✔ P7 Rückspiel weicht ab (fed +4): K2 rot — {'mittel7': (40, 52), 'niveau': (40, 52)}
+  ✔ P7 Stundenauflösung in einem Abruf: K3 rot — 1
+  ✔ P7 ohne Rückspiel: Urteil offen, nicht grün
+  ✔ P7 Fensterprobe sieht Abweichungen gegen die Historie — (512, 3.9385, 512)

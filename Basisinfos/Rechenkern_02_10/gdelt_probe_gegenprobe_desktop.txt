@@ -1,0 +1,27 @@
+GDELT-PROBE AM NB — Auswertung 2026-11-02T17:42+00:00
+Probe: Rechner 9900K · Python 3.13.14 · Fassung 1 (02.11.2026) · Prüfsumme 75caf5849b327086 · Start 2026-11-02T17:02:55+00:00 · Ende 2026-11-16T17:02:55+00:00
+
+Gleichheit mit dem Quelltext von api/sichten_quellen (Ü8):
+  ✔ Abfragen (4 Töne)                
+  ✔ Abstand zwischen Abfragen (s)    
+  ✔ Fenster --laufend (Tage)         
+  ✔ Kopfzeile                        
+  ✔ Adresse                          
+  ✔ Versuche je Abfrage              
+  ✔ Pause vor dem 2. Versuch (s)     
+  ✔ mode                             
+  ✔ format                           
+
+Runden: 1 von 1 (fehlen: keine) · Abrufe 8, davon mit Werten 0 · HTTP {'429': 8} · Neustarts 0 · kaputte Zeilen 0
+
+K1 Abdeckung (Wert spätestens 24 h nach Tagesende; Soll Lücken ≤ 10 %) — 0 Live-Tage
+  → noch keine Live-Tage
+
+K3 Form: Abrufe ohne Tagesauflösung 0 → noch kein Abruf mit Werten
+
+K2 Gleichheit: offen — Rückspiel erst nach dem Probeende holen (--rueckspiel)
+
+Auskunft — Fensterprobe (14-T-Fenster der Probe gegen die Jahresfenster der Historie): 0 gemeinsame Werte, abweichend 0, größte Abweichung –
+Auskunft — Revision (erster gegen letzten Wert desselben Tages in der Probe): 0 Ton-Tage, geändert 0, größte Änderung –
+
+URTEIL: offen (K2 fehlt)

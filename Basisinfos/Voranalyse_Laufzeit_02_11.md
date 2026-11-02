@@ -115,7 +115,7 @@ unsicher, entscheide du wenn kein negativer Impakt dann ja bei 3. Bitte um info 
 | **Vorprüfung gemini-2.5** | **beide** Schlüssel (`GEMINI_API_KEY` = NB-Projekt, `GEMINI_API_KEY_2` = Desktop) bekommen für 2.5-flash, 2.5-flash-lite und 2.5-pro **404 „no longer available to new users“** — über den OpenAI-kompatiblen **und** den nativen Zugang. Kein Weg |
 | **§4.1 → a, umgesetzt** | `agent/ereignisse.py`: `MODELL = gemini-3.5-flash`, `SCHLUESSEL = GEMINI_API_KEY_2`; leerer Tagestopf (`PerDay`) wartet je 15 min, sonst `retryDelay`. Groq-Lauf **angehalten** bei Stapel 67/1.009; seine **2.133 Antworten** (25 unlesbar) bleiben unter `openai/gpt-oss-120b` in der Ablage — **zweiter Weg** (Übereinstimmung beider Modelle auf denselben Titeln). Neuer Lauf gestartet 02.11. 11:24 (`data/_a1/a1_volllauf_gemini.txt`), ≈ 1.023 Stapel bei 500/Tag → **≈ 2–2,5 Tage**, danach `--nachfassen` ist im Lauf enthalten. Prüfpakete Ereignisse 15/15, Zustaende 15/15 |
 | **§4.2 → a, durch die Probe entschieden** | vom Nutzer an mich übertragen: *„wenn kein negativer Impakt dann ja“*. „Kein negativer Impakt“ ist die **vorab festgelegte Gleichheitsprobe**: Bündel nur, wenn Bündel ↔ einzeln höchstens 5 Pp seltener gleich ist als einzeln ↔ einzeln. Fällt sie durch, läuft Stufe 3 **einzeln** — ohne neue Rückfrage |
-| **§4.3** | Erklärung an den Nutzer, Entscheidung offen (s. Gesprächsverlauf 02.11.) |
+| **§4.3 → a** | Nutzer 02.11. abends: *„ja, Skript bauen – prüfen, gegenprüfen und doku“* → gebaut, §7 |
 
 ---
 
@@ -158,3 +158,57 @@ Die ersten 610 Antworten auf flash-lite hatten **73 unlesbar (12 %)** — alle i
 
 → Das häufigere „relevant“ von Gemini auf dem Binance-Rest sind eher **Verluste von gpt-oss** als Fehlalarme von Gemini. Skript:
 `zeit_voranalyse.py b` / `rb` → `zeit_voranalyse_rb.txt`.
+
+---
+
+## 7. §4.3 umgesetzt — GDELT-Probe am NB gebaut, geprüft, gegengeprüft (02.11.2026 abends)
+
+**Nutzer 02.11.:** *„ja, Skript bauen – prüfen, gegenprüfen und doku“*. Der Betrieb ist unberührt: kein Pull, kein Betriebscode.
+
+### 7.1 Was gebaut ist
+
+| Datei | Zweck |
+|---|---|
+| `Rechenkern_02_10/gdelt_probe_nb.py` → Austauschordner `GDELT_Probe/gdelt_probe.py` | **die Probe**: nur Standardbibliothek, kein Import aus dem Projekt; schreibt **nur** `gdelt_probe_<Rechner>.jsonl` daneben (je Abfrage eine Zeile, sofort auf der Platte, Rohpunkte mit Uhrzeit). Runden: beim Start, dann 00:30/06:30/12:30/18:30 UTC; Abfragen, 600 s Abstand (jetzt auch **über** Runden), zweiter Versuch nach 120 s, Fenster 14 T bis heute 00:00 UTC — wie `sichten_quellen --laufend`. Neustart setzt fort, Ende nach 14 Tagen von selbst |
+| `gdelt_probe_LIESMICH.txt` → `GDELT_Probe/LIESMICH.txt` | Anleitung für den Start am NB (`C:\Python313\python.exe "G:\Meine Ablage\Claude_Austauschordner\GDELT_Probe\gdelt_probe.py"`) |
+| `gdelt_probe_auswertung.py` | Desktop, liest nur. **Vorab festgelegt** (im Kopf, vor jedem Probewert): **K1** je Ton fehlt der Tageswert 24 h nach Tagesende an ≤ 10 % der Tage · **K2** Klasse des Zustands (Tageswert und 7-T-Mittel, `zustaende.klasse`) live = Rückspiel an ≥ 90 % der Ton-Tage je Maß; live = Stand 07:00 UTC des Folgetags, wie `INSERT OR REPLACE` ihn hätte · **K3** Tagesauflösung in jedem Abruf. Hält es nicht → **c** neu vorlegen (G7 §9.2). Auskunft: Verzug, **Revision** (GDELT ändert Tageswerte nachträglich? — das Rückspiel nimmt den späten Wert mit `bekannt_ab` = Folgetag; wäre das ein Vorgriff, zeigt es sich hier), Fensterprobe 14-T- gegen Jahresfenster. `--rueckspiel` holt nach dem Probeende über `sichten_quellen.gdelt_ton` (derselbe Weg wie die Historie) und **verweigert sich vorher** |
+| `gdelt_probe_pruefung.py` → `gdelt_probe_pruefung.txt` | **40/40 grün**, ohne Netz |
+| NB-Kontrolle **K-GD-1** | `nb_kontrollen.yaml`, fällig 20.11. |
+
+### 7.2 Prüfung (40/40)
+
+| | |
+|---|---|
+| P1 eigenständig | nur Standardbibliothek (AST); verweigert `tradinginfotool*` und Nicht-`.jsonl`; Vorgabe = eigene Datei neben dem Skript |
+| P2 = Quelltext | 9 Merkmale **aus dem Quelltext** von `sichten_quellen` abgeleitet (Regex auf `_gdelt_fenster`), nicht abgeschrieben; 4 Mutationen (Abstand, Abfrage, Pause, Fenster) je genau ein Merkmal rot |
+| P3 Zeitplan | Startrunde, keine Doppelung, verschlafene Runde → nur die jüngste nachgeholt, 56 Runden in 14 T |
+| P4 eine Runde | Sperre, Sperre zweimal, Netzfehler, 200 ohne JSON (gilt als Fehler, nie als leere Reihe); Wartezeiten genau 600/120; **Abstand über Runden** (500 s Rest) |
+| P5/P6 14 Tage mit Absturz | Neustart nach 11 h Ausfall: Startzeit bleibt, genau die verschlafene Runde fehlt und wird von der Auswertung gezählt; endet von selbst; **einzige neue Datei = die eigene `.jsonl`** |
+| P7 Auswertung gegen bekannte Wahrheit | saubere Welt → HÄLT (13 Live-Tage, Verzug ≤ 1 h, K2 52/52) · Sperre 30 h → genau 1 Lücke, K1 noch grün · 60 h → 2 Lücken, rot · gepflanzte Revision genau gefunden (1 Ton-Tag, 3,0) · Rückspiel +4 → K2 rot · eine Stundenauflösung → K3 rot · ohne Rückspiel → **offen, nicht grün** |
+
+Bei der Prüfung gefunden und behoben: (1) eine Runde, die in die nächste Rundenzeit läuft, hätte **ohne** 600 s Abstand weitergefragt; (2) im
+Klassenvergleich hätte die Historie eine **Lücke der Probe aufgefüllt** und versteckt — sie zählt jetzt nur vor dem ersten Probetag; (3) die
+Auswertung meldete ohne einen einzigen erfolgreichen Abruf „K3 NICHT erfüllt“ statt „noch kein Abruf mit Werten“.
+
+### 7.3 Gegenprüfung im echten Netz — die Desktop-Adresse ist gesperrt
+
+Eine echte Runde mit **dem NB-Skript** (`--einmal`, Wegwerfdatei; `gdelt_probe_gegenprobe_desktop*.txt`):
+
+| | |
+|---|---|
+| Ergebnis | **8 von 8 Abfragen HTTP 429** (je Ton beide Versuche), 17:02–17:41 UTC |
+| Vorgeschichte | letzte GDELT-Abfrage vom Desktop **01.11. 16:34 UTC** — die Sperre hält also **über 24 h ohne jede neue Anfrage** |
+| Mechanik | richtig: Abstände 600/120 s, jede Abfrage protokolliert, Auswertung läuft auf einer Datei aus lauter Sperren durch, Prüfsumme der Kopie im Austauschordner = geprüfte Fassung (`75caf5849b327086`) |
+| **nicht** belegt | der **Erfolgsweg im echten Netz** (Zerlegung einer echten Antwort mit `urllib`) — nur gegen nachgebaute Antworten im Format, das der Desktop-Abrufer bis 01.11. verarbeitet hat. → nach der **ersten NB-Runde** liest der Desktop die Datei (Austauschordner) und prüft genau das |
+| bewusst unterlassen | ein Abruf mit fremder Browser-Kennung, um Adresse von Kennung zu trennen — das wäre ein Umgehen der Sperre. Die Probe fragt mit der Kennung, die auch der Betrieb hätte |
+
+**Was das für die Entscheidung heißt:** Ist das NB hinter **derselben** öffentlichen Adresse wie der Desktop, wird die Probe vermutlich
+ebenfalls gesperrt — dann ist K1 rot, und das ist ein **echtes** Ergebnis: GDELT wäre im Betrieb nicht verlässlich (→ c neu vorlegen, oder
+GKG-Rohdateien, G4). Die Sperrmeldung nennt selbst einen Ansprechpartner bei GDELT; eine Anfrage dort könnte nur der Nutzer stellen.
+
+### 7.4 Offen für G8 (nicht Teil der Probe)
+
+`sichten_quellen.lade` setzt GDELT **ab dem letzten vorhandenen Tag** fort — im laufenden Betrieb ein Fenster von 1–2 Tagen. GDELT liefert
+für kurze Fenster vermutlich **Viertelstunden- statt Tageswerte**; `_gdelt_fenster` nähme dann je Tag den **letzten** Viertelstundenwert
+(Wörterbuch überschreibt). **Ungeprüft** (heute gesperrt) — die Probe fragt bewusst das 14-T-Fenster, das Tageswerte liefert. Vor dem
+Bau G8 mit einem Abruf klären; bis dahin ist es eine Vermutung.
