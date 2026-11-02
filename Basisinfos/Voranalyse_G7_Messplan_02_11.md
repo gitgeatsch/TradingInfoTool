@@ -8,7 +8,7 @@ messbar ist“) und §6 Schritt 3 · [`Bauplan_Dashboard_A3_A4_28_10.md`](Baupla
 Prüfer ≥ 1.000 je Art) · [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §4 (Blöcke des finalen LLM), §5 (Takt), §6 Schritt 5 ·
 [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) T4–T7 (Budget, Modelle) ·
 [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) (Ereignisse) · Gesamtplan G3 (Modelle, Reihenfolge) · G7.
-**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9); Kurse eingelesen (§9.5); Voranalyse REGEL0-Einstiege aus der Betriebsrechnung (§10), §10.4 → a; Stufe-3-Anlage gebaut, Selbsttest bestanden (§11) — FRAGE §11.4 offen (a oder b nach gemessener Auflösung).** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
+**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9); Kurse eingelesen (§9.5); Voranalyse REGEL0-Einstiege aus der Betriebsrechnung (§10), §10.4 → a; Stufe-3-Anlage gebaut, Selbsttest bestanden (§11) — §11.4 → **b** (§11.5, Menge festgeschrieben).** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
 mit `Rechenkern_02_10/g7_voranalyse.py` → `g7_voranalyse.txt`.
 
 ---
@@ -479,7 +479,7 @@ Kontrolltag (4 %): das Groq-Kontingent ist vom A1-Volllauf belegt. **Beide sind 
 | | |
 |---|---|
 | NB-Auszug Kurse | ✔ **eingelesen 02.11.** (§9.5) |
-| danach | REGEL0-Einstiege aus der Betriebsrechnung ✔ (§10) · §10.4 → a · Stufe-3-Anlage ✔ (§11) — **Frage §11.4** · Stufe 1, sobald die A1-Nachrichten fertig sind |
+| danach | §10.4 → a · Stufe-3-Anlage ✔ (§11) · §11.4 → **b**, Menge festgeschrieben (§11.5) · Stufe 1, sobald die A1-Nachrichten fertig sind |
 | G8-Bündel | Z-1-Zahlenerkennung (§6.2) · GDELT-Abruf mit zwei Wochen Nachweis (9.2) · S7 live mit Beständen (9.1) |
 
 ### 9.5 Kurse Sep./Okt. eingelesen (02.11.2026)
@@ -634,3 +634,16 @@ die Kosten bei 0,48 %. Ein **wirtschaftlich** nützlicher Unterschied liegt also
 **Empfehlung b** — a bleibt darin vollständig enthalten und wird für sich ausgewiesen; b kostet drei Gemini-Tage mehr und entscheidet
 Unterschiede halber Größe. c lohnt nicht, solange das Urteil von gemeinsamen Sichten lebt. Entscheidung **vor** Stufe 3, Stufe 3 läuft ohnehin
 erst nach Stufe 1/2.
+
+### 11.5 Entschieden: b (Nutzer 02.11.: *„Ok dann b wie empfohlen“*)
+
+Die Menge ist **vor jedem LLM-Urteil festgeschrieben**: `Rechenkern_02_10/g7_stufe3_menge_b.csv` (SHA-256 `62a0641aeb643b46…`, 2.435
+Zeilen: **903 `a_gemailt`** + **1.532 `b_stichprobe`**, 5 je Tag aus den übrigen, `random_state=1` je Tag; 322 Tage, 551 Assets).
+Gegenprobe: dieselbe Menge wie im Auflösungslauf (§11.3).
+
+| | |
+|---|---|
+| gemessen werden | **2.379** — 56 Einstiege der Stichprobe haben keine Zielgröße (Asset jünger als 60 Tage, kein σ); in a fehlt keiner. Nur diese 2.379 bekommen einen LLM-Aufruf |
+| ausgewiesen | **zweimal:** auf a allein (gilt für den Betrieb) und auf b (kann das Urteil trennen) — je Arm HANDEL (entscheidet) und TAG (Auskunft), beide Richtungen (§11.1) |
+| Budget | ≈ 2.379 Aufrufe ≈ 5 Gemini-Tage, dazu A4 (Ü7) in eigenem Modelltopf |
+| ⚠ nicht ändern | die Datei wird nicht neu gezogen; eine andere Menge wäre eine neue Messung (R-R11) |
