@@ -1,0 +1,66 @@
+A  MESSBARKEIT — Blöcke nach messnorm._block (max(15, 3 H)); unter 20 Blöcken KEIN BEFUND
+   Zeitraum                             Tage  H=1   H=3   H=5   H=7   H=10  H=14
+   2025 (gpt-oss)                        334    22     22     22     15✖    11✖     7✖
+   Dez. 2025 – Okt. 2026 (Gemini)        335    22     22     22     15✖    11✖     7✖
+   beide zusammen                        669    44     44     44     31     22     15✖
+
+B  ZIELGRÖSSE „EINBRUCH“ — Ertrag Schluss T -> T+H unter -2 Sigma·√H (Sigma: 60 T davor); BTC und Median der 127 REGEL0-Werte
+   Breite: im Mittel 120 von 127 Werten je Tag mit Kurs (ab 2025), letzter Tag mit >= 100 Werten 2026-09-14 (Desktop-Daten)
+   Zeitraum                           Reihe    H     Tage  Episoden Blöcke mit Einbruch
+   2025 (gpt-oss)                     BTC      1   13/334        13         10 von 22
+   2025 (gpt-oss)                     BTC      3   14/334         9          8 von 22
+   2025 (gpt-oss)                     BTC      7   13/334         6          4 von 15
+   2025 (gpt-oss)                     Breite   1   15/334        15         13 von 22
+   2025 (gpt-oss)                     Breite   3   10/334         6          6 von 22
+   2025 (gpt-oss)                     Breite   7   11/334         4          4 von 15
+   Dez. 2025 – Okt. 2026 (Gemini)     BTC      1    9/335         8          3 von 22
+   Dez. 2025 – Okt. 2026 (Gemini)     BTC      3   11/335         4          4 von 22
+   Dez. 2025 – Okt. 2026 (Gemini)     BTC      7   16/335         2          3 von 15
+   Dez. 2025 – Okt. 2026 (Gemini)     Breite   1   13/304        12          8 von 22
+   Dez. 2025 – Okt. 2026 (Gemini)     Breite   3    9/304         6          5 von 22
+   Dez. 2025 – Okt. 2026 (Gemini)     Breite   7   19/304         4          3 von 15
+
+C  TAKT (Fütterung §5) am echten Modul: neues Gutachten, wenn ein Zustand der Sicht die KLASSE wechselt (gegen den Vortag), ein Ereignis der Sicht eintrifft (A1, bekannt im letzten Tag) oder das letzte 7 T alt ist
+   A1-Ereignisse in sichten.db: 6701 (davon Nachrichten 0 — der Volllauf läuft, die Nachrichten-Ereignisse fehlen noch) · Watchlist HEUTE 46 Krypto-Werte (⚠ nicht die damalige)
+   2025 (gpt-oss) — 334 Tage
+     S1:  300 Gutachten (90 % der Tage) · Anlass Klasse 299, Ereignis 0, Alter 1 · Eingabe ≈ 828 Token (Zustände + Ereignisse)
+     S2:  169 Gutachten (51 % der Tage) · Anlass Klasse 165, Ereignis 0, Alter 4 · Eingabe ≈ 290 Token (Zustände + Ereignisse)
+     S3:  205 Gutachten (61 % der Tage) · Anlass Klasse 201, Ereignis 0, Alter 4 · Eingabe ≈ 396 Token (Zustände + Ereignisse)
+     S4:  101 Gutachten (30 % der Tage) · Anlass Klasse 89, Ereignis 0, Alter 12 · Eingabe ≈ 212 Token (Zustände + Ereignisse)
+     S7:  166 Gutachten (50 % der Tage) · Anlass Klasse 148, Ereignis 15, Alter 3 · Eingabe ≈ 105 Token (Zustände + Ereignisse)
+     S8:   51 Gutachten (15 % der Tage) · Anlass Klasse 27, Ereignis 0, Alter 24 · Eingabe ≈ 246 Token (Zustände + Ereignisse)
+     zusammen 992 Gutachten ≈ 1.9 Mio. Token (je Gutachten + 1.500 für Anweisung und Antwort, geschätzt) · je Tag 3.0 Aufrufe
+   Dez. 2025 – Okt. 2026 (Gemini) — 335 Tage
+     S1:  305 Gutachten (91 % der Tage) · Anlass Klasse 304, Ereignis 0, Alter 1 · Eingabe ≈ 811 Token (Zustände + Ereignisse)
+     S2:  187 Gutachten (56 % der Tage) · Anlass Klasse 185, Ereignis 0, Alter 2 · Eingabe ≈ 294 Token (Zustände + Ereignisse)
+     S3:  198 Gutachten (59 % der Tage) · Anlass Klasse 197, Ereignis 0, Alter 1 · Eingabe ≈ 392 Token (Zustände + Ereignisse)
+     S4:   82 Gutachten (24 % der Tage) · Anlass Klasse 65, Ereignis 0, Alter 17 · Eingabe ≈ 204 Token (Zustände + Ereignisse)
+     S7:  165 Gutachten (49 % der Tage) · Anlass Klasse 129, Ereignis 33, Alter 3 · Eingabe ≈ 132 Token (Zustände + Ereignisse)
+     S8:   53 Gutachten (16 % der Tage) · Anlass Klasse 30, Ereignis 0, Alter 23 · Eingabe ≈ 242 Token (Zustände + Ereignisse)
+     zusammen 990 Gutachten ≈ 1.9 Mio. Token (je Gutachten + 1.500 für Anweisung und Antwort, geschätzt) · je Tag 3.0 Aufrufe
+
+D  FINALES LLM — REGEL0-Einstiege (Referenz kern48jbz, Menge bestand; endet 2026-08-31)
+   2025 (gpt-oss)                      4466 Einstiege an 261 Tagen (Median 6 je Tag, höchstens 97) · 127 Werte · ≈ 15.6 Mio. Token bei 3.000 + 500 je Aufruf, A4 Gegenanwalt noch einmal so viel
+   Dez. 2025 – Okt. 2026 (Gemini)      3942 Einstiege an 236 Tagen (Median 10 je Tag, höchstens 111) · 127 Werte · ≈ 13.8 Mio. Token bei 3.000 + 500 je Aufruf, A4 Gegenanwalt noch einmal so viel
+   ⚠ Dez. 2025 – Okt. 2026: die Referenz reicht nur bis 2026-08-31 — Sep./Okt. sind neu zu rechnen
+
+E  SELBSTTEST DES TREUE-PRÜFERS Z-1 an ECHTEN Eingaben (zustaende.text an 30 Tagen, Dez. 2025 – Okt. 2026), je Art 1.000 Fälle
+   Z-1 prüft, ob jede genannte Zahl IRGENDWO in der Eingabe steht (Toleranz ±0.55 absolut, harmlos: [0, 1, 2, 3, 4, 5, 10, 21, 50, 60, 100, 200, 250])
+   ⚠ ZAHLENERKENNUNG von Z-1 (_ZAHL) zerlegt große Zahlen: 71211.95 -> [712.0, 11.95]; 2061501 -> [206.0, 150.0, 1.0]; 5808 -> [580.0, 8.0]
+   verschiedene Zahlen je Eingabe: Median 170 (156–179) — gegen DIESE Menge wird jede genannte Zahl gehalten
+   gepflanzter Fehler                                         erkannt
+   Wert verfälscht um ±1 %                                     376/1000 = 38 %
+   Wert verfälscht um ±5 %                                     441/1000 = 44 %
+   Wert verfälscht um ±20 %                                    407/1000 = 41 %
+   Wert verfälscht um ±50 %                                    412/1000 = 41 %
+   Wert verfälscht um ±100 %                                   219/1000 = 22 %
+   Rang verfälscht um ±10 (P14 -> P24)                         395/1000 = 40 %
+   Wert eines ANDEREN Zustands genannt (falscher Bezug)         14/1000 = 1 %
+   frei erfundene Zahl (log-gleichverteilt 0,001–100.000)      402/1000 = 40 %
+   KORREKTE Wiedergabe (darf NICHT anschlagen)                Fehlalarm
+   wie in der Eingabe                                            6/1000 = 1 %
+   auf 1 Nachkommastelle                                         0/1000 = 0 %
+   ganzzahlig gerundet                                           7/1000 = 1 %
+   deutsches Komma (53,3)                                       14/1000 = 1 %
+   Tausenderpunkt (71.212), nur Werte ≥ 1.000                   75/260 = 29 %
+   in Tausend/Mrd. umgerechnet (83,5 Tsd.)                      52/268 = 19 %

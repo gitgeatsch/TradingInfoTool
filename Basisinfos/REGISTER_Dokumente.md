@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 90 |
+| Voranalyse / Recherche | 91 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **233** |
+| **gesamt** | **234** |
 
 ## Plan
 
@@ -174,6 +174,7 @@
 | [`Voranalyse_Dashboard_LLM_28_10.md`](Voranalyse_Dashboard_LLM_28_10.md) | Voranalyse Dashboard mit Fakten und LLM-Bewertung — Bestandsaufnahme und Expertenkonzept (28.10.2026) | **laufend** |
 | [`Voranalyse_Datenbasis_alle_Assets_01_10.md`](Voranalyse_Datenbasis_alle_Assets_01_10.md) | Voranalyse — Datenbasis: alle abrufbaren Krypto-Assets stündlich (01.10.2026) | Arbeitsblatt |
 | [`Voranalyse_Einstieg_EA_23_10.md`](Voranalyse_Einstieg_EA_23_10.md) | Voranalyse E-A — REGEL0 als Kaufzeitpunkt für ohnehin geplante Spot-Käufe auf Bitpanda (ab 23.10.2026) | Arbeitsblatt |
+| [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | Voranalyse G7 — Messplan: Faktentreue der Prüfer und Wert der Sichten (02.11.2026) | **laufend** |
 | [`Voranalyse_Hebel_M1_23_09.md`](Voranalyse_Hebel_M1_23_09.md) | Voranalyse M1 / Hebel — der Hebel ist heute ein Ein-Aus-Schalter | Arbeitsblatt |
 | [`Voranalyse_Hebelgrundlage_23_09.md`](Voranalyse_Hebelgrundlage_23_09.md) | Voranalyse — woraus darf der Hebel kommen? | Arbeitsblatt |
 | [`Voranalyse_J_Mindesthistorie_30_09.md`](Voranalyse_J_Mindesthistorie_30_09.md) | Voranalyse J — der SHOWSTOPPER Mindesthistorie beheben (30.09.2026) | Arbeitsblatt |
