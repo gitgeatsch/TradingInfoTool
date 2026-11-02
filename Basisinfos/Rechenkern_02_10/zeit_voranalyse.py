@@ -2,7 +2,8 @@
 dass wir hier auf die alte Groq Schiene setzen müssen.“*) — Voranalyse_Laufzeit_02_11.md.
 
 Nur lesend gegen Projektdaten; die LLM-Antworten gehen in eine EIGENE Ablage ``data/_a1/a1_stichprobe_llm_gemini.db`` (nie sichten.db,
-nie die Produktion). Schlüssel: GEMINI_API_KEY_2 (eigener Desktop-Topf, 500/Tag je Modell), nie der NB-Schlüssel.
+nie die Produktion). Schlüssel: GEMINI_API_KEY_2 (eigener Desktop-Topf; Tagesgrenze JE MODELL verschieden — 3.5-flash 20,
+flash-lite 500 laut Fehlerkörper), nie der NB-Schlüssel.
 
   w  WISSENSSTAND je Gemini-2.5-Modell über 2025 (erzwungene BTC-Schätzung je Monat, wie g7_stufe0 d) — ist 2025 damit sauber?
   a  A1 PROMPT 3 AUF GEMINI gegen die festgeschriebene Handeinordnung der Stichprobe 3 (dieselben 60 Titel, auf denen gpt-oss-120b
@@ -35,7 +36,8 @@ from agent import ereignisse as E  # noqa: E402
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 DB = os.path.join(PROJ, "data", "_a1", "a1_stichprobe_llm_gemini.db")
-A1_MODELLE = ("gemini-3.5-flash", "gemini-3.6-flash")
+# 02.11. nachmittags: 3.5-flash hat nur 20 Aufrufe/Tag (Fehlerkörper) -> weitere Kandidaten per Aufruf: zeit_voranalyse.py a|r <modell> ...
+A1_MODELLE = tuple(a for a in sys.argv[2:] if not a.startswith("-")) or ("gemini-3.5-flash", "gemini-3.6-flash")
 W_MODELLE = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
 AUS = []
 
@@ -153,7 +155,7 @@ def main():
     t = sys.argv[1]
     {"w": teil_w, "a": teil_a, "r": teil_r}[t]()
     if t != "a":
-        open(os.path.join(HIER, "zeit_voranalyse_%s.txt" % t), "w", encoding="utf-8").write("\n".join(AUS) + "\n")
+        open(os.path.join(HIER, "zeit_voranalyse_%s%s.txt" % (t, "" if len(sys.argv) <= 2 else "_2")), "w", encoding="utf-8").write("\n".join(AUS) + "\n")
 
 
 if __name__ == "__main__":

@@ -46,9 +46,12 @@ QUELLEN = {"binance": os.path.join(DATEN, "_a1", "binance_ankuendigungen_alle.db
 # 02.11.2026 (Voranalyse_Laufzeit_02_11.md §4.1, Nutzer: „Ok A1“): gemini-3.5-flash statt gpt-oss-120b (Groq, ≈ 10 T Restlaufzeit).
 # Die Groq-Regel galt für Rückspiele VOR dem Wissenshorizont; A1 liest ab Dez. 2025 (gemessen sauber, G7 §7). Auf Stichprobe 3 liest
 # 3.5-flash mindestens so gut (Fehlalarm/Verlust 3/3 gg. 2/4, Typ richtig 85 gg. 77 %). gemini-2.5 ist für beide Schlüssel gesperrt (404).
-# Schlüssel 2 = eigener Desktop-Topf (500 Aufrufe/Tag je Modell), nie der NB-Schlüssel. Die gpt-oss-Antworten bleiben unter ihrem
-# Modellnamen in der Ablage (zweiter Weg).
-MODELL = "gemini-3.5-flash"
+# Schlüssel 2 = eigener Desktop-Topf, nie der NB-Schlüssel. Die gpt-oss-Antworten bleiben unter ihrem Modellnamen in der Ablage
+# (zweiter Weg).
+# ⚠️ 02.11. nachmittags GEGENGEPRÜFT: gemini-3.5-flash hat im freien Tarif nur 20 Aufrufe/Tag (Fehlerkörper: PerDay, quotaValue 20) —
+# die 500 galten nur für die flash-LITE-Modelle. Darum 3.5-flash-lite: auf Stichprobe 3 Fehlalarm/Verlust 3/1, Sicht relevant 93 %
+# (Regel vorab bestanden); am Schlüssel 2 im N4-Lauf 05.-07.10. je 480 gültige Antworten am Tag (Deckel des Skripts).
+MODELL = "gemini-3.5-flash-lite"
 URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
 SCHLUESSEL = "GEMINI_API_KEY_2"
 STAPEL = 25

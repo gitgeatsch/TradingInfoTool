@@ -116,3 +116,31 @@ unsicher, entscheide du wenn kein negativer Impakt dann ja bei 3. Bitte um info 
 | **§4.1 → a, umgesetzt** | `agent/ereignisse.py`: `MODELL = gemini-3.5-flash`, `SCHLUESSEL = GEMINI_API_KEY_2`; leerer Tagestopf (`PerDay`) wartet je 15 min, sonst `retryDelay`. Groq-Lauf **angehalten** bei Stapel 67/1.009; seine **2.133 Antworten** (25 unlesbar) bleiben unter `openai/gpt-oss-120b` in der Ablage — **zweiter Weg** (Übereinstimmung beider Modelle auf denselben Titeln). Neuer Lauf gestartet 02.11. 11:24 (`data/_a1/a1_volllauf_gemini.txt`), ≈ 1.023 Stapel bei 500/Tag → **≈ 2–2,5 Tage**, danach `--nachfassen` ist im Lauf enthalten. Prüfpakete Ereignisse 15/15, Zustaende 15/15 |
 | **§4.2 → a, durch die Probe entschieden** | vom Nutzer an mich übertragen: *„wenn kein negativer Impakt dann ja“*. „Kein negativer Impakt“ ist die **vorab festgelegte Gleichheitsprobe**: Bündel nur, wenn Bündel ↔ einzeln höchstens 5 Pp seltener gleich ist als einzeln ↔ einzeln. Fällt sie durch, läuft Stufe 3 **einzeln** — ohne neue Rückfrage |
 | **§4.3** | Erklärung an den Nutzer, Entscheidung offen (s. Gesprächsverlauf 02.11.) |
+
+---
+
+## 6. ⚠️ Korrektur nach der Gegenprüfung (02.11. nachmittags, Nutzer: *„Ok prüfen und gegenprüfen“*)
+
+**Befund L-1 war falsch.** Der Lauf auf gemini-3.5-flash stand nach ≈ 20 Aufrufen still. Der Fehlerkörper sagt:
+`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, **`quotaValue 20`**. Die „500 je Modell“ aus der Dashboard-Voranalyse §1.5a waren
+am 09.08. für die **flash-lite**-Modelle gemessen; ich habe sie ohne Prüfung auf alle Flash-Modelle übertragen. Mit 20/Tag hätte A1
+≈ 50 Tage gebraucht. Der Lauf ist angehalten; seine 148 Antworten bleiben unter `gemini-3.5-flash` in der Ablage und werden nicht verwendet.
+
+| Gegenprüfung | Ergebnis |
+|---|---|
+| Tagesgrenze 3.5-flash (Schlüssel 2) | **20** (Fehlerkörper) |
+| Tagesgrenze 3.5-flash-lite (Schlüssel 2) | **≥ 480 belegt**: N4-Lauf 05.–07.10. je 479–480 gültige Antworten am Tag (Deckel des Skripts) |
+| weitere Kandidaten, dieselbe Regel vorab, dieselben 60 Titel | **3.5-flash-lite TAUGT** (Typ 82 %, Sicht relevant **93 %**, Fehlalarm/Verlust **3 / 1**, Wiederholung 95 %) · 3.1-flash-lite taugt (78 %, 88 %, 3 / 4, 100 %) · gemma-4-31b: Fehler 400/500 über die Schnittstelle, nicht prüfbar |
+| gemini-2.5 | für beide Schlüssel gesperrt (§5) |
+
+**Umgesetzt:** A1 läuft seit 02.11. ≈ 12:50 auf **gemini-3.5-flash-lite** (`agent/ereignisse.MODELL`, Log `data/_a1/a1_volllauf_gemini_lite.txt`).
+≈ 1.023 Stapel bei ≈ 500/Tag (Rücksetzen 09:00 MEZ) → **≈ 2–2,5 Tage**.
+
+**Folge für §3 (Töpfe):** am Schlüssel 2 tragen nur die **flash-lite**-Modelle (3.1, 3.5) große Läufe; die vollen Flash-Modelle sind mit
+≈ 20/Tag nur für Stichproben brauchbar (Grenzen von 3.6/3.7/3.8/3-flash-preview **ungemessen** — nicht annehmen). Stufe 1 (≈ 2.010 Aufrufe)
+und Stufe 3 (gebündelt ≈ 322 je Rolle) müssen sich damit **zwei** 500er-Töpfe teilen, solange A1 einen belegt → Stufe 1 ≈ 4 T nach A1,
+oder ≈ 2 T, wenn beide flash-lite-Töpfe genommen werden (dann Modell je Sicht fest, nicht gemischt). Das gehört in die Voranalyse Stufe 1.
+Der kritische Weg wird damit ≈ **1,5–2 Wochen** statt ≈ 1–1,5 (§3) — immer noch weit unter ≈ 4 Wochen.
+
+**Lehre:** eine Grenze, die für **ein** Modell gemessen ist, gilt nicht für ein anderes — vor jedem großen Lauf die Grenze **des Modells**
+belegen (Fehlerkörper oder eigener früherer Lauf), nie aus einer Tabelle übertragen.
