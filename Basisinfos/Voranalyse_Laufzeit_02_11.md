@@ -144,3 +144,17 @@ Der kritische Weg wird damit ≈ **1,5–2 Wochen** statt ≈ 1–1,5 (§3) — 
 
 **Lehre:** eine Grenze, die für **ein** Modell gemessen ist, gilt nicht für ein anderes — vor jedem großen Lauf die Grenze **des Modells**
 belegen (Fehlerkörper oder eigener früherer Lauf), nie aus einer Tabelle übertragen.
+
+### 6.1 Gegenprüfung im laufenden Betrieb des Laufs — Börsentitel
+
+Die ersten 610 Antworten auf flash-lite hatten **73 unlesbar (12 %)** — alle im **Börsen-Rest** (Upbit 23/23, Binance 50/337; Nachrichten
+0/250). flash-lite erfand Typen (`delisting_spot`, `net_upgrade`); `nachfassen` fragt diese Stapel am Ende kleiner neu. Weil Stichprobe 3
+**nur Nachrichten** enthielt, zwei Gegenproben:
+
+| | Ergebnis |
+|---|---|
+| **Übereinstimmung beider Modelle** auf denselben Titeln (lesbar) | Nachrichten 250: Sicht relevant gleich **84 %** (nur Gemini 24, nur gpt-oss 16) · Binance-Rest 337: **83 %** (nur Gemini 40, nur gpt-oss 18). Bei ≈ 90 % Treffer je Modell sind ≈ 82 % Übereinstimmung zu erwarten |
+| **Hand gegen beide Modelle**, Stichprobe 1 (Börsentitel, Hand festgeschrieben), Prompt 3; Regel vorab: flash-lite taugt, wenn Fehlalarm und Verlust höchstens +1 gegen gpt-oss | binance_rest (30): gpt-oss **73 %**, Fehlalarm/Verlust 3/5 · flash-lite **83 %**, 3/2 · Upbit (30): beide 100 % · regelbasierte Binance (50): gpt-oss 82 %, flash-lite **96 %** · flash-lite Wiederholung 96 %, 0 unlesbar → **TAUGT** |
+
+→ Das häufigere „relevant“ von Gemini auf dem Binance-Rest sind eher **Verluste von gpt-oss** als Fehlalarme von Gemini. Skript:
+`zeit_voranalyse.py b` / `rb` → `zeit_voranalyse_rb.txt`.

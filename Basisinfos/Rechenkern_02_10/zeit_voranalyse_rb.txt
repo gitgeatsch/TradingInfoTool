@@ -1,0 +1,110 @@
+b  BÖRSENTITEL: Prompt 3 (7b94d07d7d1d) auf Stichprobe 1 (Hand festgeschrieben) — gemini-3.5-flash-lite gegen gpt-oss-120b
+
+openai/gpt-oss-120b · binance_rest (30 Titel; unlesbar im ganzen Lauf 0)
+  Typ richtig 14/30 = 47 % [30–64] · Ereignis ja/nein 22/30 = 73 % [56–86] · Asset (Hand-Ereignis) 7/11 = 64 % [35–85]
+  Sicht relevant ja/nein gleich 22/30 = 73 % [56–86] · beide relevant, gleiche Sicht 4/7 = 57 % [25–84] · FEHLALARM 3 · VERLUST 5
+  hochgerechnet auf alle Nachrichten: Fehlalarm nan % · Verlust nan % · Sicht relevant gleich nan %
+     51 produkt              -> marktbericht_meinung Sicht nan   -> nan   Announcement on Binance's New Community Co-Governance Mechanism for Li
+     52 aktion               -> produkt              Sicht nan   -> nan   Boost Capital Efficiency with 5% Extra APR on BFUSD in Binance Futures
+     53 netz_upgrade         -> marktbericht_meinung Sicht S7    -> nan   Binance Has Completed the Sei (SEI) EVM Integration
+     55 produkt              -> monitoring           Sicht nan   -> S7    Notice Regarding the Removal of BTC & ETH From Binance DeFi Staking (2
+     57 netz_upgrade         -> monitoring           Sicht S7    -> S7    Binance Will Support ETH 2.0 Staking Withdrawals
+     58 netz_upgrade         -> listing_spot         Sicht S7    -> S1    Binance Completes Xai (XAI) Mainnet Integration, Opens Deposits
+     59 regulierung_klage    -> marktbericht_meinung Sicht S1    -> nan   MiCA Stablecoin Rules Implementation Announcement
+     60 netz_upgrade         -> marktbericht_meinung Sicht S7    -> nan   The 22nd Quarterly BNB Burn Completed via BNB Auto-Burn
+     62 sonstiges            -> marktbericht_meinung Sicht S7    -> nan   Price Volatility of MANTRA (OM)
+     63 aktion               -> produkt              Sicht nan   -> nan   Extended 5% APR Boost on BFUSD in Binance Futures and Portfolio Margin
+     68 netz_upgrade         -> monitoring           Sicht S7    -> S1    Binance Will Support the Ronin (RONIN) Network Migration (2026-05-12)
+     69 produkt              -> paar_entfernt        Sicht nan   -> S1    Notice Regarding the Removal of Selected Liquidity Pools on Binance Li
+     70 aktion               -> marktbericht_meinung Sicht nan   -> nan   Binance Blockchain Week Dubai 2024 Ticket Prices Are Now 150 USD (Excl
+     71 listing_futures      -> listing_futures      Sicht S7    -> S1    Binance Futures Will List USDⓈ-M & COIN-M Quarterly 1227 Delivery Cont
+     73 produkt              -> paar_entfernt        Sicht nan   -> S7    Binance Will Open Spot Grid Trading for ARKM/USDT, PEPE/USDT, USTC/USD
+     74 netz_upgrade         -> marktbericht_meinung Sicht S7    -> nan   The 25th Quarterly BNB Burn Completed via BNB Auto-Burn
+     76 aktion               -> produkt              Sicht nan   -> nan   Binance Blockchain Week Dubai 2024 Ticket Prices Are Now 300 USD (Excl
+
+openai/gpt-oss-120b · upbit (30 Titel; unlesbar im ganzen Lauf 0)
+  Typ richtig 22/30 = 73 % [56–86] · Ereignis ja/nein 30/30 = 100 % [89–100] · Asset (Hand-Ereignis) 27/30 = 90 % [74–97]
+  Sicht relevant ja/nein gleich 30/30 = 100 % [89–100] · beide relevant, gleiche Sicht 30/30 = 100 % [89–100] · FEHLALARM 0 · VERLUST 0
+  hochgerechnet auf alle Nachrichten: Fehlalarm nan % · Verlust nan % · Sicht relevant gleich nan %
+     81 delisting_token      -> paar_entfernt        Sicht S7    -> S7    노미나(NOM) 거래지원 종료 안내(3/30 15:00)
+     82 delisting_token      -> paar_entfernt        Sicht S7    -> S7    스톰엑스(STMX) 거래지원 종료 안내 (7/3 15:00)
+     84 delisting_token      -> paar_entfernt        Sicht S7    -> S7    스트라이크(STRIKE) 거래지원 종료 안내 (8/21 15:00)
+     90 delisting_token      -> paar_entfernt        Sicht S7    -> S7    유엑스링크(UXLINK) 거래지원 종료 안내 (11/3 15:00)
+     91 delisting_token      -> paar_entfernt        Sicht S7    -> S7    봉크(BONK) 거래지원 종료 안내 (9/7 15:00)
+     95 delisting_token      -> paar_entfernt        Sicht S7    -> S7    비트코인골드(BTG) 거래지원 종료 안내 (1/23 14:30)
+     98 verschoben           -> listing_spot         Sicht S7    -> S7    아이리스(IRYS) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)
+    103 verschoben           -> listing_spot         Sicht S7    -> S7    오리진트레일(TRAC) 신규 거래지원 안내 (KRW, BTC, USDT 마켓) (거래지원 개시 시점 변경 안내)
+
+openai/gpt-oss-120b · binance_regel (50 Titel; unlesbar im ganzen Lauf 0)
+  Typ richtig 23/50 = 46 % [33–60] · Ereignis ja/nein 41/50 = 82 % [69–90] · Asset (Hand-Ereignis) 8/14 = 57 % [33–79]
+  Sicht relevant ja/nein gleich 41/50 = 82 % [69–90] · beide relevant, gleiche Sicht 8/12 = 67 % [39–86] · FEHLALARM 1 · VERLUST 8
+  hochgerechnet auf alle Nachrichten: Fehlalarm nan % · Verlust nan % · Sicht relevant gleich nan %
+      7 delisting_margin     -> delisting_margin     Sicht S7    -> S1    Notice of Removal of Margin Trading Pairs - 2026-06-26
+      8 aktion               -> produkt              Sicht nan   -> nan   Balkans New Earn User Special: Subscribe to USDT Simple Earn to Enjoy 
+      9 margin_neu           -> listing_spot         Sicht S7    -> S7    Binance Will Add Nillion (NIL) on Earn, Buy Crypto, Convert, Margin & 
+     11 paar_entfernt        -> paar_entfernt        Sicht S7    -> S1    Notice of Removal of Spot Trading Pairs - 2025-08-22
+     14 aktion               -> produkt              Sicht nan   -> nan   BABY Locked Products: Enjoy Up to 29.9% APR in Rewards!
+     17 listing_spot         -> airdrop              Sicht S7    -> S7    Introducing Berachain (BERA) on Binance HODLer Airdrops! Earn BERA Wit
+     19 netz_upgrade         -> monitoring           Sicht S7    -> S7    Binance Will Cease Support for Deposits and Withdrawals of MANTRA (OM)
+     21 netz_upgrade         -> produkt              Sicht S7    -> nan   Wallet Maintenance Extension for BNB Smart Chain (BEP20) - 2023-03-30
+     24 aktion               -> produkt              Sicht nan   -> nan   Brazil New User Exclusive: Subscribe to USDC Simple Earn to Enjoy 15% 
+     26 listing_spot         -> marktbericht_meinung Sicht S7    -> nan   Notice on New Trading Pairs & Trading Bots Services on Binance Spot - 
+     27 listing_futures      -> marktbericht_meinung Sicht S7    -> nan   Binance Futures Will Launch USDⓈ-Margined ARCUSDT and AVAAIUSDT Perpet
+     28 listing_futures      -> marktbericht_meinung Sicht S3    -> nan   Binance Futures Will Launch USDⓈ-Margined TSLAUSDT Equity Perpetual Co
+     29 listing_futures      -> marktbericht_meinung Sicht S7    -> nan   Binance Futures Will Launch USDⓈ-M TON Perpetual Contract With Up to 5
+     30 produkt              -> marktbericht_meinung Sicht nan   -> nan   Updates on Tick Size for Spot Trading Pairs (2024-11-04)
+     31 delisting_margin     -> delisting_margin     Sicht S7    -> S1    Notice of Removal of Margin Trading Pairs - 2025-05-07
+     32 aktion               -> marktbericht_meinung Sicht nan   -> nan   Binance Academy Bitcoin Page: Complete Quiz to Earn BTC Rewards!
+     33 listing_spot         -> marktbericht_meinung Sicht S7    -> nan   Notice on New Trading Pairs & Trading Bots Services on Binance Spot - 
+     35 aktion               -> marktbericht_meinung Sicht nan   -> nan   Grab a Share of 2,000,000 FOGO Token Voucher Rewards on CreatorPad!
+     36 aktion               -> marktbericht_meinung Sicht nan   -> nan   Binance KOL Introduction Program Season 2: Introduce KOLs to Join Bina
+     38 paar_entfernt        -> paar_entfernt        Sicht S7    -> S1    Notice of Removal of Spot Trading Pairs - 2024-02-09
+     40 aktion               -> marktbericht_meinung Sicht nan   -> nan   Binance P2P Learn & Trade Challenge: Complete a Quiz and Buy Crypto to
+     41 aktion               -> marktbericht_meinung Sicht nan   -> nan   Join the Binance Feed Fever Challenge to Grab a Share of 3,500 USDT in
+     42 listing_futures      -> marktbericht_meinung Sicht S7    -> nan   Binance Futures Will Launch USDⓈ-M AGLD Perpetual Contract With Up to 
+     43 aktion               -> marktbericht_meinung Sicht nan   -> nan   #HalvingWithBinance: Refer Friends to Binance to Share a $50,250 BTC R
+     44 listing_futures      -> marktbericht_meinung Sicht S7    -> nan   Binance Futures Will Launch USDⓈ-Margined AZTECUSDT Perpetual Contract
+     45 aktion               -> marktbericht_meinung Sicht nan   -> nan   Join Binance Traders League Discord Challenges & Share 4,000 USDC in R
+     46 aktion               -> marktbericht_meinung Sicht nan   -> nan   Auto-Invest Adds HFT: Complete a Quiz to Receive a Free Auto-Invest HF
+     47 produkt              -> marktbericht_meinung Sicht nan   -> nan   Binance Futures Updates Trading Fee Discount for TradFi Perps (2026-03
+     48 aktion               -> marktbericht_meinung Sicht nan   -> nan   BABY Trading Tournament: Trade to Share Up to 30,000,000 BABY Token Vo
+     49 aktion               -> marktbericht_meinung Sicht nan   -> nan   Futures Grand Tournament: Trade Futures to Grab a Share of Up to $2M a
+     50 produkt              -> verschoben           Sicht nan   -> S7    Binance Futures Will Postpone the Minimum Trade Amount Adjustment of U
+
+gemini-3.5-flash-lite · binance_rest (30 Titel; unlesbar im ganzen Lauf 0)
+  Typ richtig 24/30 = 80 % [63–90] · Ereignis ja/nein 25/30 = 83 % [66–93] · Asset (Hand-Ereignis) 8/11 = 73 % [43–90]
+  Sicht relevant ja/nein gleich 25/30 = 83 % [66–93] · beide relevant, gleiche Sicht 8/10 = 80 % [49–94] · FEHLALARM 3 · VERLUST 2
+  hochgerechnet auf alle Nachrichten: Fehlalarm nan % · Verlust nan % · Sicht relevant gleich nan %
+     55 produkt              -> paar_entfernt        Sicht nan   -> S7    Notice Regarding the Removal of BTC & ETH From Binance DeFi Staking (2
+     57 netz_upgrade         -> produkt              Sicht S7    -> nan   Binance Will Support ETH 2.0 Staking Withdrawals
+     62 sonstiges            -> marktbericht_meinung Sicht S7    -> nan   Price Volatility of MANTRA (OM)
+     68 netz_upgrade         -> verschoben           Sicht S7    -> S7    Binance Will Support the Ronin (RONIN) Network Migration (2026-05-12)
+     69 produkt              -> paar_entfernt        Sicht nan   -> S1    Notice Regarding the Removal of Selected Liquidity Pools on Binance Li
+     71 listing_futures      -> listing_futures      Sicht S7    -> S1    Binance Futures Will List USDⓈ-M & COIN-M Quarterly 1227 Delivery Cont
+     73 produkt              -> paar_entfernt        Sicht nan   -> S7    Binance Will Open Spot Grid Trading for ARKM/USDT, PEPE/USDT, USTC/USD
+     78 listing_spot         -> listing_spot         Sicht S7    -> S1    Binance Exchange Adds bStocks Tokenized Securities SK Hynix (SKHYB) on
+
+gemini-3.5-flash-lite · upbit (30 Titel; unlesbar im ganzen Lauf 0)
+  Typ richtig 30/30 = 100 % [89–100] · Ereignis ja/nein 30/30 = 100 % [89–100] · Asset (Hand-Ereignis) 27/30 = 90 % [74–97]
+  Sicht relevant ja/nein gleich 30/30 = 100 % [89–100] · beide relevant, gleiche Sicht 30/30 = 100 % [89–100] · FEHLALARM 0 · VERLUST 0
+  hochgerechnet auf alle Nachrichten: Fehlalarm nan % · Verlust nan % · Sicht relevant gleich nan %
+
+gemini-3.5-flash-lite · binance_regel (50 Titel; unlesbar im ganzen Lauf 0)
+  Typ richtig 45/50 = 90 % [79–96] · Ereignis ja/nein 48/50 = 96 % [87–99] · Asset (Hand-Ereignis) 10/14 = 71 % [45–88]
+  Sicht relevant ja/nein gleich 48/50 = 96 % [87–99] · beide relevant, gleiche Sicht 12/19 = 63 % [41–81] · FEHLALARM 1 · VERLUST 1
+  hochgerechnet auf alle Nachrichten: Fehlalarm nan % · Verlust nan % · Sicht relevant gleich nan %
+      7 delisting_margin     -> delisting_margin     Sicht S7    -> S1    Notice of Removal of Margin Trading Pairs - 2026-06-26
+      9 margin_neu           -> listing_spot         Sicht S7    -> S7    Binance Will Add Nillion (NIL) on Earn, Buy Crypto, Convert, Margin & 
+     11 paar_entfernt        -> paar_entfernt        Sicht S7    -> S1    Notice of Removal of Spot Trading Pairs - 2025-08-22
+     17 listing_spot         -> airdrop              Sicht S7    -> S7    Introducing Berachain (BERA) on Binance HODLer Airdrops! Earn BERA Wit
+     19 netz_upgrade         -> depeg_aussetzung     Sicht S7    -> S7    Binance Will Cease Support for Deposits and Withdrawals of MANTRA (OM)
+     21 netz_upgrade         -> produkt              Sicht S7    -> nan   Wallet Maintenance Extension for BNB Smart Chain (BEP20) - 2023-03-30
+     26 listing_spot         -> listing_spot         Sicht S7    -> S1    Notice on New Trading Pairs & Trading Bots Services on Binance Spot - 
+     28 listing_futures      -> listing_futures      Sicht S3    -> S7    Binance Futures Will Launch USDⓈ-Margined TSLAUSDT Equity Perpetual Co
+     31 delisting_margin     -> delisting_margin     Sicht S7    -> S1    Notice of Removal of Margin Trading Pairs - 2025-05-07
+     33 listing_spot         -> listing_spot         Sicht S7    -> S1    Notice on New Trading Pairs & Trading Bots Services on Binance Spot - 
+     38 paar_entfernt        -> paar_entfernt        Sicht S7    -> S1    Notice of Removal of Spot Trading Pairs - 2024-02-09
+     50 produkt              -> verschoben           Sicht nan   -> S7    Binance Futures Will Postpone the Minimum Trade Amount Adjustment of U
+
+  gemini Wiederholung (Lauf 32): gleicher Typ 106/110 = 96 % [91–99]
+  ENTSCHEIDUNG (vorab, binance_rest + upbit): Fehlalarm gpt-oss 3 / gemini 3 · Verlust gpt-oss 5 / gemini 2 => flash-lite TAUGT für den Börsen-Rest

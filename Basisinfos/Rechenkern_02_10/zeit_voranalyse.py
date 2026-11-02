@@ -147,14 +147,74 @@ def teil_r():
     c.close()
 
 
+def _stichprobe1_boerse():
+    """Stichprobe 1 (Handeinordnung festgeschrieben), nur die Börsentitel: binance_rest (= was das LLM im Lauf bekommt), binance_regel,
+    upbit. Prompt 3 ist NICHT aus diesen Fehlern hergeleitet (Stichprobe 2); Prompt 1->2 schon — das trifft beide Modelle gleich."""
+    S = pd.read_csv(os.path.join(HIER, "a1_stichprobe.csv")).merge(
+        pd.read_csv(os.path.join(HIER, "a1_stichprobe_hand.csv"), sep=";", keep_default_na=False), on="nr")
+    return S[S.quelle.isin(["binance", "upbit"])].reset_index(drop=True)
+
+
+def teil_b():
+    """VORAB (02.11., vor dem Lauf): gemini-3.5-flash-lite TAUGT für den Börsen-Rest, wenn auf binance_rest + upbit
+    Fehlalarm <= gpt-oss + 1 UND Verlust <= gpt-oss + 1 (beide Prompt 3, dieselben Titel). Sonst liest gpt-oss den Börsen-Rest."""
+    env = _env()
+    S = _stichprobe1_boerse()
+    M = pd.DataFrame({"quelle": "stichprobe1_boerse", "meldung": S.nr.astype(str), "titel": S.titel})
+    c = E.verbinde(DB)
+    alt = (E.URL, E.MODELL)
+    try:
+        for url, m, key, laeufe in ((GEMINI_URL, "gemini-3.5-flash-lite", env.get("GEMINI_API_KEY_2"), (31, 32)),
+                                    ("https://api.groq.com/openai/v1/chat/completions", "openai/gpt-oss-120b", env.get("GROQ_API_KEY"), (31,))):
+            E.URL, E.MODELL = url, m
+            for lauf in laeufe:
+                print(m, "Lauf", lauf, E.llm_lauf(c, M, key, lauf=lauf), flush=True)
+    finally:
+        E.URL, E.MODELL = alt
+        c.close()
+
+
+def teil_rb():
+    import a1_validierung3 as V
+    V.p = p
+    V.GG = {}
+    W, A = E.welt(), E.alias()
+    S = _stichprobe1_boerse()
+    S["h_ereignis"] = ~S.typ.isin(E.KEIN_EREIGNIS)
+    S["h_assets_w"] = [None if str(x).strip() == "?" else json.dumps(sorted({k for k in str(x).split() if k in W})) for x in S.assets]
+    S["h_sicht"] = pd.Series([E.sicht(json.loads(a) if a else [], b) if (e and b != "sonstiges") else None
+                              for a, b, e in zip(S.h_assets_w.fillna("[]"), S.bereich, S.h_ereignis)], index=S.index)
+    c = sqlite3.connect("file:%s?mode=ro" % DB.replace("\\", "/"), uri=True)
+    p("b  BÖRSENTITEL: Prompt 3 (%s) auf Stichprobe 1 (Hand festgeschrieben) — gemini-3.5-flash-lite gegen gpt-oss-120b" % E.PROMPT_SHA)
+    erg = {}
+    for m, lauf in (("openai/gpt-oss-120b", 31), ("gemini-3.5-flash-lite", 31)):
+        L = pd.read_sql("SELECT meldung, typ, assets, bereich FROM llm_antwort WHERE quelle='stichprobe1_boerse' AND lauf=? AND modell=? AND prompt_sha=?",
+                        c, params=(lauf, m, E.PROMPT_SHA)).set_index("meldung")
+        un = int((L.typ == "unlesbar").sum())
+        for schicht in ("binance_rest", "upbit", "binance_regel"):
+            T = S[S.schicht == schicht].reset_index(drop=True)
+            _R, fa, ve = V.bewerte(T, L, W, A, "%s · %s (%d Titel; unlesbar im ganzen Lauf %d)" % (m, schicht, len(T), un))
+            erg[(m, schicht)] = (fa, ve)
+    L2 = pd.read_sql("SELECT meldung, typ FROM llm_antwort WHERE quelle='stichprobe1_boerse' AND lauf=32 AND modell='gemini-3.5-flash-lite'", c).set_index("meldung")
+    L1 = pd.read_sql("SELECT meldung, typ FROM llm_antwort WHERE quelle='stichprobe1_boerse' AND lauf=31 AND modell='gemini-3.5-flash-lite'", c).set_index("meldung")
+    p("\n  gemini Wiederholung (Lauf 32): gleicher Typ %s" % V.fmt(int((L1.typ == L2.typ.reindex(L1.index)).sum()), len(L1)))
+    fo = sum(erg[("openai/gpt-oss-120b", s)][0] for s in ("binance_rest", "upbit"))
+    vo = sum(erg[("openai/gpt-oss-120b", s)][1] for s in ("binance_rest", "upbit"))
+    fg = sum(erg[("gemini-3.5-flash-lite", s)][0] for s in ("binance_rest", "upbit"))
+    vg = sum(erg[("gemini-3.5-flash-lite", s)][1] for s in ("binance_rest", "upbit"))
+    p("  ENTSCHEIDUNG (vorab, binance_rest + upbit): Fehlalarm gpt-oss %d / gemini %d · Verlust gpt-oss %d / gemini %d => %s" % (
+        fo, fg, vo, vg, "flash-lite TAUGT für den Börsen-Rest" if (fg <= fo + 1 and vg <= vo + 1) else "Börsen-Rest bleibt bei gpt-oss"))
+    c.close()
+
+
 def main():
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:  # noqa: BLE001
         pass
     t = sys.argv[1]
-    {"w": teil_w, "a": teil_a, "r": teil_r}[t]()
-    if t != "a":
+    {"w": teil_w, "a": teil_a, "r": teil_r, "b": teil_b, "rb": teil_rb}[t]()
+    if t not in ("a", "b"):
         open(os.path.join(HIER, "zeit_voranalyse_%s%s.txt" % (t, "" if len(sys.argv) <= 2 else "_2")), "w", encoding="utf-8").write("\n".join(AUS) + "\n")
 
 
