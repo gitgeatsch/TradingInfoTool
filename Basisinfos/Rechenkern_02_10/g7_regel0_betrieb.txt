@@ -1,0 +1,33 @@
+G7 REGEL0-Einstiege aus der Betriebsrechnung · 2026-11-02 09:38 · Arbeitskopie D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_g7\kurse
+
+A  REPRODUKTION der Referenz kern48jbz (bestand) auf der Arbeitskopie (R-R11)
+   Zusatz 11 · Referenz 10732 Zeilen · nachgerechnet 10734 · gemeinsam 10732 · nur Referenz 0 · nur neu 2 · 103 s
+     nur neu:      MORPHO;58407;2026;22;999
+     nur neu:      ROSE;58432;2026;999;26
+   => ⚠ NICHT zeilengleich
+
+B  BETRIEBSMENGE: Zusatz = betriebs_zusatz(Arbeitskopie), Monate bis 2026-10
+   Assets: Messbasis 116, Zusatz 537 (davon nicht in der Messbasis 537) · Anker 11780909 · Laden 111 s · Rechnen 95 s
+   Einstiege 2025-12-01 .. 2026-10-31: 20069 · davon Fenster-Bedingung verletzt (< 500 h vor dem Signal): 0 -> ausgeschlossen
+   Messbasis-Assets mit < 2.001 h vor dem Signal (assets_am zählt sie nicht, der Betrieb schon): 2 Einstiege
+
+C  ZWEITER WEG: Signale des Rückspiels gegen die ECHTEN NB-Signale (Kopie 14.10., T440)
+   Zeitraum 2026-10-03 02:00 .. 2026-10-14 03:00 · NB 559 Signale · Rückspiel 558 · gemeinsam 558 · nur NB 1 · nur Rückspiel 0
+   v-dach gemeinsam: |NB - Rückspiel| Median 0.00e+00, max 0.00e+00
+   nur NB: 1 (davon Stunde ohne NB-Lauf 0) · Beispiele: 1000000BOB 2026-10-04 06:00
+
+D  HEBELSTUFE je Einstieg (ATR-Modell je Quartal wie der Monatsjob; Q4 2026 aus dem NB-Paket)
+   Modelle (Quartal, Stufe): ['2025-10/3x', '2025-10/5x', '2026-01/2x', '2026-01/3x', '2026-01/5x', '2026-04/2x', '2026-04/3x', '2026-04/5x', '2026-07/2x', '2026-07/3x', '2026-07/5x', '2026-10/2x', '2026-10/3x', '2026-10/5x']
+   Stufe je Einstieg: {2: np.int64(447), 3: np.int64(13347), 5: np.int64(6275)} · ohne ATR 0
+
+E  HEBEL-SCHALTER (NB-Diagnose 01.11.) - live geht nur 'Schalter an und Stufe > 0' an Mail und LLM
+   Schalter an: 25 Bitpanda-Symbole · Einstiege mit Schalter an 903 von 20069 (4.5 %) · davon Stufe > 0: 903
+
+F  ZAHLEN JE MENGE (2025-12-01 .. 2026-10-31) - Zielgröße wie die REGEL0-Messung: A24 = +5 % vor -5 % binnen 24 h, B24 umgekehrt
+   Menge                                       Einst.   Tage  je Tag Md      max     A24     B24  Gemini-Tage
+   alle (Betriebsmenge)                         20069    322         42      378   28.1%   19.2%         40.1
+   Referenz-Menge (127)                          4707    289          9      111   25.7%   15.3%          9.4
+   nur Zusatz-Assets                            15766    322         34      275   28.8%   20.3%         31.5
+   Stufe > 0                                    20069    322         42      378   28.1%   19.2%         40.1
+   Schalter an + Stufe > 0 (= live gemailt)       903    204          3       24   23.3%   13.7%          1.8
+   Blöcke (messnorm, H = 24 h -> Block 15 T): 335 Kalendertage = 22 Blöcke

@@ -8,7 +8,7 @@ messbar ist“) und §6 Schritt 3 · [`Bauplan_Dashboard_A3_A4_28_10.md`](Baupla
 Prüfer ≥ 1.000 je Art) · [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §4 (Blöcke des finalen LLM), §5 (Takt), §6 Schritt 5 ·
 [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) T4–T7 (Budget, Modelle) ·
 [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) (Ereignisse) · Gesamtplan G3 (Modelle, Reihenfolge) · G7.
-**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9).** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
+**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); §8 fachlich geprüft und a umgesetzt (§9); Kurse eingelesen (§9.5); Voranalyse REGEL0-Einstiege aus der Betriebsrechnung (§10) — FRAGE §10.4 offen.** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
 mit `Rechenkern_02_10/g7_voranalyse.py` → `g7_voranalyse.txt`.
 
 ---
@@ -479,7 +479,7 @@ Kontrolltag (4 %): das Groq-Kontingent ist vom A1-Volllauf belegt. **Beide sind 
 | | |
 |---|---|
 | NB-Auszug Kurse | ✔ **eingelesen 02.11.** (§9.5) |
-| danach | REGEL0-Einstiege Sep./Okt. **aus der Betriebsrechnung** (9.1) → Stufe 1, sobald die A1-Nachrichten fertig sind |
+| danach | REGEL0-Einstiege aus der Betriebsrechnung ✔ gerechnet (§10) — **Frage §10.4** (Menge für Stufe 3) · Stufe 1, sobald die A1-Nachrichten fertig sind |
 | G8-Bündel | Z-1-Zahlenerkennung (§6.2) · GDELT-Abruf mit zwei Wochen Nachweis (9.2) · S7 live mit Beständen (9.1) |
 
 ### 9.5 Kurse Sep./Okt. eingelesen (02.11.2026)
@@ -500,3 +500,67 @@ Desktop-Stunde je Symbol zu und ersetzt sie (`INSERT OR REPLACE`); jede andere A
 
 **Gegenprobe:** jede NB-Stunde steht in der Arbeitskopie, Schlusskurse gleich (0 ungleich), **keine Lücke > 1 h** ab 01.09. bei
 keinem Symbol, Marke `_g7_rueckspiel` gesetzt. Messbasis-Dateien unberührt (Dateidatum 25.09. / 01.10.).
+
+---
+
+## 10. Voranalyse: REGEL0-Einstiege des Rückspiels aus der Betriebsrechnung (02.11.2026)
+
+**Auftrag (Nutzer 02.11.):** *„Ja voranalyse starten prüfen und gegenprüfen“* — Folge aus §9.1: die Einstiege für Stufe 3 aus der
+**Betriebsrechnung** über die **Betriebsmenge**, nicht aus der 127er-Referenz. Nur lesend gerechnet (`Rechenkern_02_10/g7_regel0_betrieb.py`
+→ `g7_regel0_betrieb.txt`, Tabellen in `data/_g7/regel0/`), kein LLM, Betrieb unberührt.
+
+### 10.1 Wie es gerechnet ist
+
+`agent/regel0_rechnung` selbst (`anker` + `rechne`, dieselben Bausteine wie Betrieb und Messung) auf der Arbeitskopie (§9.5), Zusatz =
+`betriebs_zusatz` (alle Werte aus `stundenkurse_alle.db` mit ≥ 500 Stunden, ohne gesperrte), Monatsmodelle bis 2026-10. Ein Einstieg zählt
+nur, wenn das Asset bis zur Signalstunde ≥ 500 Stunden hatte (die Fensterbedingung des Stundenlaufs) — das traf **keinen**. Die Zusatz-Werte
+werden **bewertet, nie trainiert**: Modelle und Schrumpfung hängen nur an der Messbasis, die Menge ändert also nicht die Rechnung, nur wer
+bewertet wird.
+
+### 10.2 Geprüft und gegengeprüft — drei Wege
+
+| Prüfung | Ergebnis |
+|---|---|
+| **A Reproduktion (R-R11):** Referenz `kern48jbz` (Menge bestand, 127 Werte) auf der Arbeitskopie nachgerechnet | alle **10.732** Zeilen gleich, **2 neu**: MORPHO 30.08. 15:00 und ROSE 31.08. 16:00 — ihre Desktop-Reihen enden am 01.09. 22:00 bzw. 03.09. 10:00, den Einstiegen fehlten dort die 72 h Zukunft der Messmaske. Mit den NB-Daten sind sie da. **Erklärt, kein Rechenunterschied** |
+| **C Zweiter Weg:** Signale des Rückspiels gegen die **echten NB-Signale** 03.10. 02:00 – 14.10. 03:00 (`regel0_kopie_T440`) | NB 559 · Rückspiel 558 · **gemeinsam 558, v-dach bitgleich** (Abweichung max 0) · 1 nur am NB: 1000000BOB 04.10. 06:00 — die Reihe **endet 25 h später**; der Betrieb kennt die Zukunft nicht und gab das Signal, die Messmaske verlangt 72 h danach. Bekannter Unterschied Messung/Betrieb am Reihenende (0,2 %) |
+| **Zählprobe** gegen die NB-Diagnose 01.11. (`regel0_messstand` seit 03.10.) | Signale: Rückspiel **1.626**, Betrieb 1.642 abgeschlossen + 20 offen (**−2 %**, Rest = Reihenende und die letzten Stunden) · gemailt: Rückspiel mit Schalter **64 an 17 Tagen**, Betrieb **67 an 17 Tagen** |
+
+→ **Die Rückspiel-Einstiege sind die Betriebs-Einstiege.** Zwei kleine, benannte Abweichungen: (1) Signale in den letzten 72 h vor dem
+**Ende einer Reihe** fehlen im Rückspiel (Messmaske) — im Zeitraum enden 7 Reihen; (2) 2 Einstiege an Messbasis-Werten mit < 2.001 Stunden
+vor T (der Betrieb zählt die Messbasis über die ganze Datei; `ereignisse.assets_am` korrekt nur vor T) — vernachlässigbar.
+
+### 10.3 Die Zahlen (Dez. 2025 – Okt. 2026, 335 Tage = 22 Blöcke à 15 T)
+
+| Menge | Einstiege | Tage | je Tag Median (max) | A24 | B24 | Gemini-Tage (500/Tag) |
+|---|---|---|---|---|---|---|
+| **alle = Betriebsmenge** | **20.069** | 322 | 42 (378) | 28,1 % | 19,2 % | 40 |
+| Referenz-Menge (127) | 4.707 | 289 | 9 (111) | 25,7 % | 15,3 % | 9,4 |
+| nur Zusatz-Werte | 15.766 | 322 | 34 (275) | 28,8 % | 20,3 % | 31,5 |
+| Hebelstufe > 0 | 20.069 | — | — | — | — | — |
+| **Schalter an + Stufe > 0 = live gemailt** | **903** | **204** | 3 (24) | 23,3 % | 13,7 % | **1,8** |
+
+(A24 = +5 % vor −5 % binnen 24 h, B24 umgekehrt — die Zielgröße der REGEL0-Messung.) Dazu je Aufruf der Gegenanwalt A4 (Ü7) noch einmal.
+
+**Was daraus folgt — geprüft am Code (`regel0_mail.versende`, `background._regel0_mails`):**
+1. **Live sieht das finale LLM nur gemailte Signale:** `hebel_schalter = 1` **und** Stufe > 0. Die Stufe ist **nie** 0 (alle 20.069
+   Rückspiel-Einstiege und alle 559 NB-Signale > 0) — der Filter ist praktisch **nur der Hebel-Schalter** (heute 25 Bitpanda-Werte,
+   darunter BTC/ETH/SOL). Das sind **4,5 %** der Einstiege.
+2. **Die Mengen sind verschieden** (*Grundgesamtheit ist keine Stellschraube*): die Zusatz-Werte schwanken stärker (A24 **und** B24 höher),
+   die Schalter-Werte schwächer (B24 13,7 % gegen 19,2 %). Ein Urteil des LLM, gemessen auf allen 20.069, gälte für eine andere Menge als
+   die, auf der es live wirkt.
+3. **Alle 20.069 sind nicht machbar:** 40 Gemini-Tage, mit A4 doppelt.
+4. **Der Schalter-Stand ist der von heute.** Im Oktober waren 2 Werte (KAITO, QNT) an, die heute aus sind; 0 umgekehrt. Für Dez.–Sep.
+   gibt es keinen historischen Stand. Der Schalter ist eine **Verfügbarkeits**-Auswahl (Hebel bei Bitpanda), kein Urteil über den Erfolg —
+   ein Vorgriff entstünde nur, wenn Werte **wegen** ihres Verlaufs an- oder ausgeschaltet wurden.
+
+### 10.4 Zur Abstimmung: Auf welcher Menge misst Stufe 3?
+
+| | Menge | Für | Gegen |
+|---|---|---|---|
+| **a** | **gemailt** (Schalter an + Stufe > 0): **903** an 204 Tagen | **Betrieb = Rückspiel** (Ü8) genau: die Menge, auf der das LLM live wirkt · 1,8 Gemini-Tage (+ A4) | wenige Einstiege je Tag (Median 3) — ob 903 für eine Aussage reichen, zeigt erst der **Selbsttest der Stufe-3-Anlage** (Auflösung) · Schalter-Stand von heute |
+| b | a **plus** Stichprobe je Tag aus den übrigen (z. B. 5/Tag ≈ 1.600) | zweite Messung, ob das LLM **überhaupt** trennen kann, mit mehr Einstiegen | die Stichprobe ist eine andere Grundgesamtheit — ihr Ergebnis gilt nicht für den Betrieb · ≈ 5 Gemini-Tage |
+| c | alle 20.069 | volle Betriebsmenge | 40 Gemini-Tage (+ A4); misst überwiegend Werte, die das LLM live nie sieht |
+
+**Empfehlung a**, mit dem Selbsttest der Stufe-3-Anlage **auf genau diesen 903** vor dem ersten LLM-Aufruf (Nullwelt Tagesblock, geballte
+Einstiege, Pflanzung als Auflösungskurve — Memory *Selbsttest vor dem ersten Blick*). Zeigt er, dass 903 zu grob auflösen, wird **b** neu
+vorgelegt — mit der gemessenen Auflösung, nicht vorab.
