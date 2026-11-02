@@ -1,0 +1,4 @@
+c2 GEGENPROBE DER SUCHE — gemeinsame Verschiebung aller Zustände (globale Nullwelt), Vorab-Regel wie in c
+   Reproduktion von c: 1458 Tests, außerhalb 163, Befunde 15
+   globale Nullwelt (166 Verschiebungen): außerhalb Mittel 75, 95. Perzentil 121, max 143 · Befunde Mittel 2.0, 95. Perzentil 7, max 12
+   beobachtet: außerhalb 163 (Anteil der Nullwelten mit ≥ so vielen: 0.0 %) · Befunde 15 (Anteil ≥: 0.0 %)

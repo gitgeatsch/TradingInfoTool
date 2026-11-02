@@ -33911,6 +33911,108 @@ def paket_ereignisse() -> None:
            and zweit["unlesbar_vorher"] == 1 and zweit["unlesbar_nachher"] == 1, "%s rest=%s fragen=%s" % (r, rest, fragen))
 
 
+def paket_gutachtenpruefer() -> None:
+    """Prüfer v2 ``agent/gutachten_pruefer.py`` (G7 Stufe 0a, Voranalyse_G7_Messplan_02_11.md G7-5, Nutzer 02.11.2026: *"a/a/a, Stufe 0
+    bauen – pruefen, gegenpruefen und doku"*). OHNE Netz, an Handfaellen. Der grosse Selbsttest (je Fehlerart 1.000 Faelle auf echten
+    Eingaben) steht in ``Basisinfos/Rechenkern_02_10/g7_stufe0.py a`` -> ``g7_stufe0_a.txt``."""
+    P = "Gutachtenpruefer"
+    from agent import gutachten_pruefer as _GP
+    from agent import zustaende as _Z
+    import pandas as _pd
+
+    # 1 Rundung: was gerundet ist, gilt; was abweicht, nicht - ohne absolute Toleranz
+    soll = [((53, 53.3), True), ((55.9, 53.3), False), ((100, 100.36), True), ((70000, 71211.95), False), ((71000, 71211.95), True),
+            ((6, 5.71), True), ((-0.0031, -0.00307), True), (("53,3", 53.3), True), ((53.4, 53.3), False), ((30000, 30276.35), True),
+            ((304, 304.0), True), ((300, 304.0), True), ((0.05, 0.0501), True), ((0.06, 0.0501), False)]
+    falsch = [(g, e) for (g, e), s in soll if _GP.ist_rundung(g, e) != s]
+    pruefe(P, "Rundung: 53 aus 53,3 und 100 aus 100,36 gelten, 55,9 und 70000 aus 71211,95 nicht (%d Faelle)" % len(soll), not falsch,
+           str(falsch))
+    # 2 Zahlenerkennung: grosse Zahlen bleiben EINE Zahl (Z-1 zerlegt sie: 71211.95 -> 712, 11.95)
+    pruefe(P, "Zahlenerkennung: 71211.95 und 2061501 bleiben je EINE Zahl; P37 ist keine Zahl im Text",
+           _GP.ZAHL.findall("BTC 71211.95 und OI 2061501, Rang P37") == ["71211.95", "2061501"])
+    # 3 Pruefung gegen GENAU den genannten Zustand
+    z1 = _Z.Zustand("S1", "dvol", "BTC", "DVOL BTC (Optionsmarkt)", "niveau",
+                    "[S1] DVOL BTC (Optionsmarkt) 53.3 · Rang P37 der letzten 5.0 J · Fakt", False, "normal", 37.2)
+    z2 = _Z.Zustand("S1", "kurs", "BTC", "BTC", "abstand", "[S1] BTC 71211.95 USD, -24.4 % zum 200-T-Schnitt · Rang P14 · Fakt", True,
+                    "tief", 14.0)
+    z3 = _Z.Zustand("S2", "fred", "DGS2", "Rendite 2 J", "niveau", "[S2] Rendite 2 J 3.76 % · Rang P45 · Fakt", False, "normal", 45.0)
+    t8 = _Z.Zustand("S8", "termin", "fomc", "Zinsentscheid Fed", "termin", "[S8] ...", False, stand="2026-03-18")
+    ev = _pd.DataFrame({"sicht": ["S1"], "beleg": ["https://x/1"], "typ": ["hack_exploit"]})
+    ein = _GP.eingabe([z1, z2, z3, t8], ev, "S1")
+    gut = {"horizont_t": 3, "treiber": [
+        {"schluessel": "S1.dvol.BTC", "wert": 53, "rang": "P37", "klasse": "normal", "aussage": "DVOL bei 53,3"},
+        {"schluessel": "S1.kurs.BTC", "wert": 71000, "rang": 14, "klasse": "tief", "aussage": "BTC bei rund 71000"},
+        {"ereignis": "https://x/1", "typ": "hack_exploit", "aussage": "Hack"}], "kippt_wenn": "wenn DVOL über 53.3 bleibt in 3 Tagen"}
+    r_gut = _GP.pruefe(gut, ein)
+    pruefe(P, "korrektes Gutachten (gerundet, Rang als 'P37', deutsches Komma, Horizont im Text): keine Beanstandung",
+           r_gut["ok"] and r_gut["geprueft"] >= 9, str(r_gut["verstoesse"])[:200])
+
+    def mit(i, **neu):
+        import json as _j
+        g = _j.loads(_j.dumps(gut))
+        g["treiber"][i].update(neu)
+        return g
+
+    def art(g):
+        return sorted({v["art"] for v in _GP.pruefe(g, ein)["verstoesse"]})
+    faelle = {"wert": mit(0, wert=55.9), "rang": mit(0, rang=38), "klasse": mit(1, klasse="normal"),
+              "schluessel": mit(0, schluessel="S1.dvol.SOL"), "fremd": mit(0, schluessel="S2.fred.DGS2"),
+              "bezug": mit(0, wert=71211.95), "ereignis": mit(2, ereignis="https://erfunden"), "ereignis_typ": mit(2, typ="listing_spot"),
+              "text": dict(gut, kippt_wenn="wenn DVOL über 61 steigt")}
+    erwartet = {"wert": ["wert"], "rang": ["rang"], "klasse": ["klasse"], "schluessel": ["schluessel", "zahl_ohne_beleg"], "fremd": ["schluessel", "zahl_ohne_beleg"],
+                "bezug": ["wert"], "ereignis": ["ereignis"], "ereignis_typ": ["ereignis_typ"], "text": ["zahl_ohne_beleg"]}
+    ist = {k: art(g) for k, g in faelle.items()}
+    pruefe(P, "jede Fehlerart wird als GENAU diese erkannt: Wert, Rang, Klasse, erfundener/fremder Schluessel (dann hat auch die Zahl im Text keinen Beleg), falscher Bezug (Wert eines "
+           "anderen Zustands), Ereignis-Beleg, Ereignis-Typ, Zahl im Freitext", ist == erwartet,
+           str({k: v for k, v in ist.items() if v != erwartet[k]}))
+    ein8 = _GP.eingabe([t8], None, "S8")
+    pruefe(P, "Termin: richtiger Tag gilt, falscher nicht",
+           _GP.pruefe({"treiber": [{"termin": "fomc", "tag": "2026-03-18"}]}, ein8)["ok"]
+           and not _GP.pruefe({"treiber": [{"termin": "fomc", "tag": "2026-03-19"}]}, ein8)["ok"])
+    pruefe(P, "angezeigter Wert = die Zahl der Zeile, nicht der Rohwert (Breite 0,28 steht als 28 %)",
+           _GP.angezeigt(z2) == 71211.95 and _GP.angezeigt(z1) == 53.3 and _GP.angezeigt(t8) is None
+           and _GP.angezeigt(_Z.Zustand("S1", "breite", "TOP50", "Breite", "anteil", "[S1] Breite 28 % · Rang P30 · Fakt", False, "normal",
+                                        30.0, wert=0.28)) == 28.0)
+    pruefe(P, "der Pruefer schreibt nichts und verwirft nichts (zaehlt nur) - kein sqlite, kein requests im Modul",
+           all(w not in open(_GP.__file__, encoding="utf-8").read() for w in ("import sqlite3", "import requests", "open(")))
+
+
+def paket_g7_messanlage() -> None:
+    """Messanlage ``g7_messanlage.py`` (G7 Stufe 0b). Ohne Netz, auf Kunstreihen mit bekannter Wahrheit. Der Selbsttest auf den ECHTEN
+    Zielgroessen (1.000 Ziehungen, geballte Null-Urteile, Pflanzung) steht in ``g7_stufe0.py b`` -> ``g7_stufe0_b.txt``."""
+    P = "G7Messanlage"
+    import numpy as _np
+    import pandas as _pd
+
+    import g7_messanlage as _M
+    import messnorm as _MN
+
+    rng = _np.random.default_rng(7)
+    idx = _pd.date_range("2020-01-01", periods=900, freq="D")
+    k = _pd.Series(_np.exp(_np.cumsum(rng.normal(0, 0.03, 900))) * 100, index=idx)
+    z = _M.zielgroesse(k, 3)
+    k2 = k.copy()
+    k2.iloc[500:] *= 1.5                                          # Zukunft aendern: sigma am Tag 400 darf sich NICHT aendern
+    z2 = _M.zielgroesse(k2, 3)
+    pruefe(P, "Zielgroesse: sigma nur aus den 60 Tagen VOR T (eine geaenderte Zukunft aendert Tag 400 nicht); die letzten H Tage leer",
+           abs(z.iloc[400] - z2.iloc[400]) < 1e-12 and z.iloc[-3:].isna().all() and z.iloc[:60].isna().all())
+    t = _M.zielgroesse(k, 3, "tief").dropna()
+    pruefe(P, "tief_s ist nie positiv", bool((t <= 1e-12).all()))
+    pruefe(P, "Block wie messnorm (max(15, 3 H)); unter 20 Bloecken KEIN BEFUND",
+           _M.messe(_pd.Series(rng.integers(0, 2, 250), index=idx[:250]), z.iloc[:250], 3, rng, 50)["urteil"] == "KEIN BEFUND"
+           and _M.messe(_pd.Series(rng.integers(0, 2, 900), index=idx), z, 3, rng, 50)["block"] == _MN._block(3))
+    u = _pd.Series(_M.geballt(900, 0.2, 3, rng), index=idx)
+    perfekt = _M.messe(u, z - 1.0 * u, 3, rng, 300, "unten")
+    pruefe(P, "eine gepflanzte Wirkung von 1 sigma wird gefunden (einseitig unten)", perfekt["urteil"] == "TRÄGT", str(perfekt)[:160])
+    falsch = sum(_M.messe(_pd.Series(_M.geballt(900, 0.2, 5, rng), index=idx), z, 3, rng, 200, "unten")["urteil"] == "TRÄGT"
+                 for _ in range(100))
+    pruefe(P, "geballte Null-Urteile (Lauflaenge 5): Fehlalarm in 100 Ziehungen <= 12 (Soll 5 %, Streuung)", falsch <= 12, str(falsch))
+    x = _M.geballt(20000, 0.2, 10, rng)
+    laeufe = _np.diff(_np.flatnonzero(_np.diff(_np.r_[0, x, 0])))[::2]
+    pruefe(P, "geballt(): Rate und mittlere Lauflaenge wie bestellt (0,2 / 10)", abs(x.mean() - 0.2) < 0.03 and 8 < laeufe.mean() < 12,
+           "%.3f / %.1f" % (x.mean(), laeufe.mean()))
+
+
 def paket_gesamtplan() -> None:
     """Der LAUFENDE PLAN Basisinfos/Gesamtplan.md (28.10.2026, Nutzer: *"ja 1, neuer Gesamtplan - bau auf allen Ebenen einen Link-Verweis
     ein, damit wir die Plaene und Informationen immer finden und beruecksichtigen koennen"*).
@@ -34021,6 +34123,8 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "SichtenQuellen": paket_sichten_quellen,
           "Zustaende": paket_zustaende,
           "Ereignisse": paket_ereignisse,
+          "Gutachtenpruefer": paket_gutachtenpruefer,
+          "G7Messanlage": paket_g7_messanlage,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,

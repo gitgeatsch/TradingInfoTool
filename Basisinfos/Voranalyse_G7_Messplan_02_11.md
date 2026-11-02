@@ -8,7 +8,7 @@ messbar ist“) und §6 Schritt 3 · [`Bauplan_Dashboard_A3_A4_28_10.md`](Baupla
 Prüfer ≥ 1.000 je Art) · [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) §4 (Blöcke des finalen LLM), §5 (Takt), §6 Schritt 5 ·
 [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) T4–T7 (Budget, Modelle) ·
 [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) (Ereignisse) · Gesamtplan G3 (Modelle, Reihenfolge) · G7.
-**Stand:** Voranalyse — **nichts gebaut, kein LLM-Aufruf, Betrieb unberührt.** Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
+**Stand:** ✔ **§6 entschieden a/a/a (02.11.) → Stufe 0 gebaut und gemessen (§7); Fragen §8 offen.** Betrieb unberührt. *(Vorlage-Stand:)* Voranalyse — nichts gebaut, kein LLM-Aufruf. Gemessen nur lesend (`sichten.db`, Kursdaten, REGEL0-Referenz)
 mit `Rechenkern_02_10/g7_voranalyse.py` → `g7_voranalyse.txt`.
 
 ---
@@ -268,3 +268,157 @@ Bedarf mit der Haltebedingung neu entschieden — dann mit den Daten aus Stufe 2
 
 Mit a/a/a beginnt **Stufe 0** (0a Prüfer v2 + Selbsttest, 0b Zielgröße und Nullwelt mit Selbsttest, 0c Vergleichsarm ohne LLM inkl. GDELT-Ton,
 0d Positivkontrolle, 0e Daten) — alles ohne Groq, parallel zum A1-Volllauf.
+
+✔ **Entschieden (Nutzer 02.11.): „a/a/a, Stufe 0 bauen – prüfen, gegenprüfen und doku“** — dazu die Rückfrage *„bei 6.3 warum per USB
+können wir das nicht über den Austauschordner Google drive erledigen?“* → **ja, über den Austauschordner** (§7.5): USB war die
+Gewohnheit für ganze Dateien (~1 GB); gebraucht werden nur die Wochen ab August, das sind ~70–100 MB in einer Datei.
+
+---
+
+## 7. Ausführung Stufe 0 (02.11.2026) — gebaut, geprüft, gegengeprüft
+
+Skript `Rechenkern_02_10/g7_stufe0.py a|b|c|c2|d` → `g7_stufe0_<teil>.txt`. **Nichts im Betrieb; Groq nur für 10 Kontrollfragen.**
+
+### 7.1 Stufe 0a — Prüfer v2 `agent/gutachten_pruefer.py`
+
+Das Gutachten nennt je Treiber den **Schlüssel** (`S1.dvol.BTC`), der Prüfer vergleicht mit **genau diesem** Zustand: Wert als Rundung des
+angezeigten Werts (keine absolute Toleranz), Rang und Klasse gleich, Ereignis über den Beleg, Termin über Art und Tag, jede Zahl im
+Freitext muss zu einem **genannten** Zustand gehören. Gezählt, nicht verworfen.
+
+**Selbsttest auf echten Eingaben** (30 Tage Dez. 2025 – Okt. 2026, je Art 1.000; daneben Z-1 auf denselben Fällen):
+
+| gepflanzter Fehler | Prüfer v2 | Z-1 |
+|---|---|---|
+| Wert ±1 % · ±5 % · ±20 % · ±50 % · ±100 % | **100 %** je | 35 · 35 · 37 · 34 · 23 % |
+| Rang ±1 · ±10 | **100 %** | 44 · 52 % |
+| **Wert eines anderen Zustands** (falscher Bezug) | **100 %** | **0 %** |
+| Klasse falsch · Schlüssel erfunden · Schlüssel aus anderer Sicht | **100 %** | — |
+| Ereignis-Beleg erfunden · Ereignis-Typ falsch · Termin-Tag falsch | **100 %** | — |
+| Zahl im Freitext ohne Beleg | **100 %** | — |
+| **korrekte Wiedergabe:** genau · 2/3 Stellen · ganzzahlig · 1 Nachkommastelle · Rang als „P37“ · deutsches Komma | **0 Fehlalarme** von 5.000 | — |
+
+→ **Soll (Bauplan §6) erfüllt: 13.915/13.915 erkannt, 0/5.000 Fehlalarme.**
+
+**Gegenprüfung:** der Selbsttest hat **zwei Fehler** gefunden, bevor das Soll stand —
+1. im Prüfer: die Rundungsprüfung brach bei der **ersten** bedeutsamen Stelle ab (100 aus 100,36 galt als falsch; 6,1 % Fehlalarm bei
+   „ganzzahlig“) → behoben;
+2. im Prüfstand: er pflanzte Zahlen in Exponentenschreibweise („1.5e+03“) und Werte, die per Regel erlaubt sind (1, Horizont) → behoben.
+
+Prüfpaket **`Gutachtenpruefer` 8/8**; drei Mutationen (Toleranz ±0,55 wie Z-1 · Klasse ungeprüft · Freitext gegen alle Werte) **alle rot**.
+
+### 7.2 Stufe 0b — Messanlage `g7_messanlage.py`
+
+Zielgröße stetig in σ (`ertrag_s`, `tief_s`, σ aus den 60 Tagen davor); Block und Mindestzahl wie `messnorm` (max(15, 3 H), < 20 Blöcke
+kein Befund); Nullwelt = **Kreisverschiebung** des Urteils (erhält die Ballung); Nullpunkt = Mittel; Band 5./95. bzw. 2,5./97,5.
+
+**Selbsttest VOR dem ersten Blick** (geballte Null-Urteile, Rate 20 %, mittlere Lauflänge 1/3/10 T, 1.000 Ziehungen, einseitig; Soll ≤ 5 %):
+
+| Zielgröße | Zeitraum | Blöcke | Fehlalarm L1 · L3 · L10 | Fund bei 0,1 · 0,2 · 0,3 · 0,5 σ |
+|---|---|---|---|---|
+| BTC ertrag H=3 | Dez. 2025 – Okt. 2026 | 22 | 4,3 · 4,9 · 6,3 % | 12 · 24 · 40 · 69 % |
+| BTC tief H=3 | dto. | 22 | 5,7 · 5,6 · 5,5 % | 12 · 30 · 36 · 86 % |
+| BTC ertrag H=1 | dto. | 22 | 6,3 · 5,4 · 4,2 % | 16 · 34 · 65 · 91 % |
+| BTC ertrag H=7 | 2025 – Okt. 2026 | 31 | 6,1 · 5,7 · 5,9 % | 10 · 26 · 54 · 86 % |
+| BTC ertrag H=3 | 2021-03 – Okt. 2026 | 137 | 4,5 · 5,3 · 5,0 % | 38 · 82 · 98 · 100 % |
+| Breite ertrag H=3 | Dez. 2025 – Sep. 2026 | **18** | kein Befund möglich (Daten fehlen, §7.5) | — |
+
+→ **Bestanden** (alle ≤ 6,5 % = 5 % + 2 Standardfehler). **Auflösung:** im Gemini-Zeitraum wird erst eine Wirkung von **≈ 0,5 σ**
+sicher gefunden, über 2021–2026 schon **0,2–0,3 σ**. Ein Sicht-Gutachten muss im Rückspiel also **stark** sein, um gesehen zu werden.
+
+**Gegenprüfung:** der erste Selbsttest fiel **durch** (6,3–8,8 % Fehlalarm). Die Ursache ist gemessen, nicht vermutet: die Nullwelt zog
+**zufällige** Verschiebungen ab einer Blocklänge. Mit der **vollen Bahn** (alle n − 1 Verschiebungen = exakter Randomisierungstest) sind es
+4,5–6,2 %. Prüfpaket **`G7Messanlage` 7/7**.
+
+### 7.3 Stufe 0c — Vergleichsarm ohne LLM: tragen die Zustände allein?
+
+Rang je Zustand (35), GDELT-Ton als 7-T-Mittel (4) und Zahl der auffälligen Zustände je Sicht (5) gegen `ertrag_s`/`tief_s` von BTC und
+Breite, H = 1/3/7, **zweiseitig**, je Epoche 2021-22 · 2023-24 · 2025-26. **Vorab-Regel:** Befund nur, wenn ≥ 2 von 3 Epochen mit gleichem
+Vorzeichen außerhalb des Bands liegen.
+
+| | |
+|---|---|
+| Tests | 1.458 |
+| außerhalb des Bands | **163** (ohne Wirkung erwartet ≈ 73) |
+| **Befunde** nach Vorab-Regel | **15** |
+| **Gegenprobe (c2): alle Zustände GEMEINSAM verschoben**, 166 Verschiebungen — derselbe Zusammenhang zwischen den Tests, kein Bezug zur Zukunft | außerhalb im Mittel 75, **höchstens 143** · Befunde im Mittel 2,0, **höchstens 12** → beobachtet 163 / 15 liegen **über jeder** Nullwelt (Reproduktion von c vorab: 1.458 / 163 / 15 ✔) |
+
+→ **Die Zustände tragen als Ganzes etwas**, vor allem über die **Abwärtsbewegung der Breite** (Altcoins).
+
+Die 15 Befunde (Rangkorrelation; + heißt: höherer Rang → höhere Zielgröße):
+
+| Zustand | Ziel | H | außerhalb (Wert) | Lesart |
+|---|---|---|---|---|
+| Funding ETH | Breite tief | 1 · 3 · 7 | 2023-24 −0,07/−0,11/−0,17 · 2025-26 −0,09/−0,15/−0,23 | hohe Finanzierung der Long-Seite → tieferer Rückgang |
+| Funding BTC | Breite tief | 7 | −0,13 · −0,20 | dto. |
+| BTC (Abstand zum 200-T-Schnitt) | Breite tief | 7 | −0,12 · −0,16 | weit gelaufen → tieferer Rückgang |
+| ETH (dto.) | Breite tief | 3 | −0,11 · −0,08 | dto. |
+| S&P 500 · Nasdaq 100 (dto.) | Breite ertrag | 3 · 7 | −0,11 … −0,20 | Aktien weit über dem Schnitt → Altcoins danach schwächer |
+| Finanzlage NFCI | Breite tief | 1 · 3 · 7 | +0,07 … +0,18 | ⚠ straffer → **flacherer** Rückgang — fachlich unerwartet; Fakt, nicht gedeutet |
+| Nachrichtenton Aktienmarkt (GDELT) | BTC ertrag | 3 | −0,10 · −0,10 | freundlicher Ton → danach schwächer (gegenläufig) |
+| dto., 7-T-Mittel | Breite ertrag | 3 | −0,18 · −0,19 | dto. |
+| Zahl auffälliger Zustände in S4 | Breite ertrag | 1 | +0,08 · +0,07 | |
+
+**Hinweise** (nur eine Epoche, fast alle **2025-26** — genau der Rückspiel-Zeitraum): Kreditaufschlag Baa (BTC/Breite, H 1–7,
++0,08 … +0,30), Halbleiter SOXX (−0,07 … −0,21), Nachrichtenton Fed (−0,09 … −0,21), Breite selbst (−0,10 … −0,17).
+
+⚠ **Was das ist und was nicht:**
+- Es ist der **Vergleichsarm**, kein Signal: ein Sicht-Gutachten muss im Rückspiel **mehr** tragen als diese Zustände allein — sonst bringt
+  das LLM nichts (Stufe 2).
+- Einzelne Befunde aus einer Suche über 1.458 Tests sind **Hinweise auf Stärke**, keine registrierten Kandidaten. Bevor einer davon
+  irgendwo **gewichtet** wird, braucht er eine eigene Vorab-Messung nach `messnorm` (R-R11, Memory *TRÄGT braucht Band + zweiten Weg*).
+- Die Wirkungen sind **klein** (|ρ| 0,07–0,23).
+
+**GDELT-Ton (Auftrag 01.11.):** **Aktienmarkt trägt** (2 Befunde, gegenläufig), **Fed** zeigt nur Hinweise in 2025-26, **Krypto** und
+**Krieg/Sanktionen/Zölle** nichts. Das 7-T-Mittel flackert nicht (G7-3) und trägt mindestens so gut wie der Tageswert. → Frage §8.2.
+
+### 7.4 Stufe 0d — Positivkontrolle Wissensstand
+
+Erzwungene Schätzung des BTC-Schlusskurses, Fehler zum echten Kurs (die Kontrolltage 2023/24 müssen klein sein, sonst taugt die Probe nicht):
+
+| Modell | 2023-06 · 2024-03 · 2024-11 (Kontrolle) | 2025-04 · 2025-08 · 2025-10 | **2025-11** · **2025-12** · 2026-02 · 2026-06 | Lesart |
+|---|---|---|---|---|
+| gemini-3.1-flash-lite | 2 · 0 · 7 % | 50 · **2** · **2** % | 67 · 68 · 130 · 127 % | kennt Kurse **bis Okt. 2025**, ab Nov. nicht → **sauber ab Dez. 2025** |
+| gemini-3.5-flash | 0 · 0 · 0 % | 24 · **7** · 29 % | 56 · 68 · 88 · 127 % | Wissen bis etwa Aug. 2025 → sauber |
+| gemini-3.5-flash-lite | 0 · 3 · 4 % | **7** · **2** · **10** % | 44 · 45 · 47 · 96 % | bis Okt. 2025 → sauber |
+| gemini-3.6-flash | 0 · 0 · 1 % | 33 · 15 · **2** % | 33 · 56 · 130 · 123 % | bis Okt. 2025 → sauber |
+| gemini-3.7-flash | — | — | — | **keine Antwort** an Schlüssel 2 (Kontingent/Freigabe) — nicht verwendbar, solange das so bleibt |
+| gemini-3.8-flash · gpt-oss-120b | NACHTRAG | | | |
+
+→ **Kein erreichbares Gemini-Modell kennt den Kurs ab Nov. 2025** (Fehler ≥ 33 %, bei einer üblichen Monatsschwankung von 10–20 %). Der
+Gemini-Zeitraum ab **Dez. 2025** ist damit für alle vier geprüften Modelle sauber; für **2025** sind sie es **nicht** (Aug./Okt. 2025 auf
+2–10 % genau). ⚠ Die Probe prüft **Kurswissen**, nicht Ereigniswissen — ein Modell könnte Nachrichten kennen, ohne Kurse zu kennen.
+
+### 7.5 Stufe 0e — Daten
+
+| | |
+|---|---|
+| **Kurse Sep./Okt. über den Austauschordner** | `nb_auszug_kurse.py` liegt in `Claude_Austauschordner\G7_Kurse\`. Am NB liest es **nur** (`mode=ro`) die zwei REGEL0-Kursdateien ab 01.08. und schreibt **eine** Datei neben sich; es wartet auf Minute 20–50 (der `regel0_nachlader` schreibt ab Minute 5) und verweigert `tradinginfotool.db`. Am Desktop prüft `g7_kurse_einlesen.py` zuerst die **Überlappung** (Betrieb und Messbasis müssen dieselbe Reihe sein) und baut erst dann eine **Arbeitskopie** `data/_g7/kurse/` mit der Marke `_g7_rueckspiel`; die Messbasis bleibt unberührt. **Probelauf am Desktop:** 132.618 + 766.100 Stunden, **0 Abweichungen**, 67 MB |
+| **Watchlist zum Zeitpunkt** | Die Grundliste (`Basisinfos/config.yaml`) hat eine Git-Historie erst **ab 30.06.2026**, die Ergänzung am NB genau **einen** Eintrag (KAITO, 15.10.). Für Dez. 2025 – Juni 2026 gibt es **keine** damalige Watchlist — die heutige wäre ein **Vorgriff** (gewählt, als 2025/26 bekannt war). Gemessen Dez. 2025 – Sep. 2026: S7-Börsenereignisse mit der heutigen Watchlist **45**, mit der **REGEL0-Grundgesamtheit zum Zeitpunkt** (127 Werte + Kern) **131**; 72 Werte kämen hinzu, 1 (AIOZ) fiele weg → Frage §8.1 |
+
+---
+
+## 8. Zur Abstimmung (02.11.2026)
+
+### 8.1 Welche Assets bekommt S7 — im Rückspiel und live (Ü8)?
+
+| | Weg | Folge |
+|---|---|---|
+| **a** | **REGEL0-Grundgesamtheit zum Zeitpunkt + Kern BTC/ETH/SOL** | kein Vorgriff; dieselben Werte, auf die sich die Handlungen beziehen (REGEL0-Einstiege); live wie im Rückspiel; S7-Ereignisse ×2,9 (45 → 131) |
+| b | Watchlist von heute | einfacher; im Rückspiel ein Vorgriff (Auswahl nach dem Ergebnis), live ≠ Rückspiel |
+| c | Watchlist ab 30.06.2026 aus der Git-Historie, davor die REGEL0-Menge | zeitgetreu, aber ein Bruch mitten im Rückspiel |
+
+**Empfehlung a.** Es ist dieselbe Lösung wie bei G6a (Breite in der Betriebsmenge zum Zeitpunkt). ⚠ Sie ändert die Grundgesamtheit von
+S7 — deshalb gemessen (45 → 131) und hier vorgelegt, nicht beiläufig gesetzt.
+
+### 8.2 GDELT-Ton am NB (Entscheidung 01.11.: *erst messen, ob er trägt*)
+
+| | Weg | Folge |
+|---|---|---|
+| **a** | **in G8 den täglichen GDELT-Abruf am NB bauen, alle vier Töne**, das 7-T-Mittel als zusätzlicher Zustand | live = Rückspiel (Ü8); ein Mechanismus; Aktienmarkt trägt, Fed als Hinweis. ⚠ der Abruf war 29.10.–01.11. oft stundenlang gesperrt (429) — er braucht ein Nachholen über mehrere Tage |
+| b | nur den Aktienmarkt-Ton | weniger Abrufe; S2/S7 verlören live ihren Ton-Zustand — Rückspiel ≠ live |
+| c | kein GDELT live | die Sichten laufen ohne Ton; der Befund bliebe ungenutzt |
+
+**Empfehlung a.**
+
+**Danach:** NB-Auszug → Kurse einlesen → REGEL0-Einstiege Sep./Okt. nachrechnen → Stufe 1 (Sicht-Gutachten im Rückspiel auf Gemini),
+sobald der A1-Volllauf die Nachrichten-Ereignisse fertig hat.

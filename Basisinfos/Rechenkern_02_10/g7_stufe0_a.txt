@@ -1,0 +1,25 @@
+a  SELBSTTEST PRÜFER v2 an ECHTEN Eingaben (30 Tage Dez. 2025 – Okt. 2026), je Art 1.000 Fälle — daneben Z-1 auf denselben Fällen
+   Ereignisse an den 30 Tagen (nur Börsen, Nachrichten laufen noch): 38
+   gepflanzter Fehler                                   erkannt                   
+   Wert ±1 %                                            v2 1000/1000 = 100.0 %    Z-1 354/1000 = 35.4 %
+   Wert ±5 %                                            v2 1000/1000 = 100.0 %    Z-1 349/1000 = 34.9 %
+   Wert ±20 %                                           v2 1000/1000 = 100.0 %    Z-1 372/1000 = 37.2 %
+   Wert ±50 %                                           v2 1000/1000 = 100.0 %    Z-1 342/1000 = 34.2 %
+   Wert ±100 %                                          v2 1000/1000 = 100.0 %    Z-1 227/1000 = 22.7 %
+   Rang ±1                                              v2 1000/1000 = 100.0 %    Z-1 436/1000 = 43.6 %
+   Rang ±10                                             v2 1000/1000 = 100.0 %    Z-1 519/1000 = 51.9 %
+   Bezug: Wert eines anderen Zustands derselben Sicht   v2 1000/1000 = 100.0 %    Z-1 0/1000 = 0.0 %
+   Klasse falsch                                        v2 1000/1000 = 100.0 %    Z-1 —
+   Schlüssel erfunden                                   v2 1000/1000 = 100.0 %    Z-1 —
+   Schlüssel aus einer anderen Sicht                    v2 1000/1000 = 100.0 %    Z-1 —
+   Ereignis-Beleg erfunden                              v2 1000/1000 = 100.0 %    Z-1 —
+   Ereignis-Typ falsch (Beleg echt)                     v2 429/429 = 100.0 %      Z-1 —
+   Termin-Tag falsch (±1 / +7 T)                        v2 486/486 = 100.0 %      Z-1 —
+   Zahl im Freitext ohne Beleg                          v2 1000/1000 = 100.0 %    Z-1 —
+   KORREKTE Wiedergabe (darf NICHT anschlagen)          Fehlalarm                
+   korrekt, genau                                       v2 0/1000 = 0.0 %         Z-1 —
+   korrekt, 2 Stellen (Rang als 'P37')                  v2 0/1000 = 0.0 %         Z-1 —
+   korrekt, 3 Stellen (deutsches Komma im Text)         v2 0/1000 = 0.0 %         Z-1 —
+   korrekt, ganzzahlig                                  v2 0/1000 = 0.0 %         Z-1 —
+   korrekt, 1 Nachkommastelle                           v2 0/1000 = 0.0 %         Z-1 —
+   ZUSAMMEN: erkannt 13915/13915 = 100.0 % · Fehlalarm 0/5000 = 0.0 %  ->  SOLL ERFÜLLT (100 % / 0)

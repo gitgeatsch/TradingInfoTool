@@ -88,6 +88,8 @@ Gemessen (Voranalyse_Luecken B): **≈ 3.000 Token**. Der **Gegenanwalt A4** ist
 
 > **Ein Sicht-Gutachten wird neu erstellt, wenn ein Zustand der Sicht die Klasse wechselt oder ein Ereignis der Sicht eintrifft — sonst gilt das letzte weiter, mit seinem Alter, spätestens 7 Tage.**
 
+⚠️ **Abgelöst 02.11.2026 (Nutzer: „a/a/a“, G7 §6.1):** **täglich je Sicht ein Gutachten**, live und im Rückspiel. Gemessen: die Regel oben ließ S1 an 91 % der Tage neu erstellen, 55 % der Klassenwechsel kehrten binnen 3 T zurück (GDELT-Tageston) — und auf Gemini kostet täglich nur 6 Aufrufe ([`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) G7-3). Die Regel bleibt als Historie stehen.
+
 | | |
 |---|---|
 | Warum | Ü5: ein Gutachten über unveränderte Zustände bringt keine neue Information. Und die Regel halbiert etwa den Bedarf im Rückspiel (T6), **ohne** dass live und Rückspiel verschieden laufen (Ü8) — ein fester Wochentakt für S2/S4 hätte genau das gebrochen |
