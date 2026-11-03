@@ -487,6 +487,11 @@ class HebelTab(ttk.Frame):
         conn = self._conn_factory()
         try:
             neu = not db.get_hebel_pruefung_erlaubt(conn, sym)
+            # G14 (E-167): einen KERNWERT nur nach Rueckfrage ausschalten - derselbe Helfer wie im Watchlist-Knopf
+            from agent import kernwerte as _KW
+            _frage = _KW.rueckfrage(sym, neu)
+            if _frage and not messagebox.askyesno("Kernwert ausschalten?", _frage, icon="warning", default="no"):
+                return
             db.set_hebel_pruefung_erlaubt(conn, sym, neu)
         finally:
             conn.close()

@@ -98,8 +98,16 @@ def _kurs_markt(ordner: str) -> dict:
         c.close()
 
 
+SCHALTER_FEHLER: list = []          # G14 L4 (03.11.2026, E-167): der letzte Lesefehler der Schalter - betrieb_lauf meldet ihn
+
+
 def _hebel_schalter(ordner: str) -> dict:
-    """{Bitpanda-Symbol: an?} aus der Produktion - NUR LESEN (mode=ro). Fehlt die Datei oder Tabelle: leer (dann *unbekannt*)."""
+    """{Bitpanda-Symbol: an?} aus der Produktion - NUR LESEN (mode=ro). Fehlt die Datei: leer (dann *unbekannt*; Probe am Desktop).
+
+    ⚠️ G14 L4 (03.11.2026, E-167): ein LESEFEHLER bei vorhandener Datei war bis heute still - alle Signale der Stunde kamen mit
+    `hebel_schalter` NULL in die Ablage, die Mail waehlt nur `hebel_schalter=1`, also keine Mail und auch kein *verpasst*. Jetzt
+    landet der Fehler in SCHALTER_FEHLER; `betrieb_lauf` macht daraus eine Meldung (Fehlermail ueber den bestehenden Weg)."""
+    SCHALTER_FEHLER.clear()
     p = os.path.join(ordner, "tradinginfotool.db")
     if not os.path.exists(p):
         return {}
@@ -109,7 +117,8 @@ def _hebel_schalter(ordner: str) -> dict:
             return {str(r[0]).upper(): bool(r[1]) for r in c.execute("SELECT symbol, hebel_pruefung_erlaubt FROM asset_hebel_settings")}
         finally:
             c.close()
-    except sqlite3.Error:
+    except sqlite3.Error as exc:
+        SCHALTER_FEHLER.append("%s: %s" % (type(exc).__name__, str(exc)[:160]))
         return {}
 
 
@@ -194,6 +203,10 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
         veraltet_gemeldet = True
         meldung = "%d von %d aktiven Assets ohne die Stunde %s - Datenbasis veraltet (Nachlader?)" % (
             len(fr["veraltet"]), fr["aktiv"], _stunde_txt(jetzt - 1))
+    schalter_fehler = list(SCHALTER_FEHLER)
+    if schalter_fehler:                         # G14 L4 (E-167): nicht still - ein Fehler, keine 'nachgeholt'-Auskunft
+        meldung = (meldung + " · " if meldung else "") + (
+            "Hebel-Schalter nicht lesbar (%s) - Signale dieser Stunde ohne Schalter abgelegt, KEINE Signalmail" % schalter_fehler[0])
     c = _ablage(ordner_ablage)
     try:
         jetzt_txt = datetime.now(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d %H:%M")
@@ -236,7 +249,7 @@ def betrieb_lauf(ordner: str, jetzt: int | None = None, ordner_ablage: str | Non
                                     schalter.get(zu_bp.get(x["symbol"], x["symbol"]).upper())),
                 aktiv=fr["aktiv"], frisch=fr["frisch"], veraltet=len(fr["veraltet"]), trainiert=neu_trainiert, meldung=meldung,
                 veraltet_gemeldet=veraltet_gemeldet, nachholen_ausgelassen=list(B.get("nachholen_ausgelassen") or []),
-                nachgeholt_signale=len(B.get("nachgeholt") or []))
+                nachgeholt_signale=len(B.get("nachgeholt") or []), schalter_fehler=schalter_fehler)
     ausgabe("REGEL0-ERGEBNIS " + json.dumps(zus_, ensure_ascii=False))
     return zus_
 

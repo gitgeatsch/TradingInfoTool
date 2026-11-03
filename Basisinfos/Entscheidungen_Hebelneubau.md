@@ -2322,3 +2322,28 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **Fällt weg:** die Messung der Alt-Signale, die TVL-/Entwickler-Reihe (≈ 195 CoinGecko-Abrufe/Monat). Keine Mail, die heute ankommt.
 
 **NB:** mit dem Bündel G8, Kontrolle K-W3-S2.
+
+# E-167 · G14 Weg a gebaut: Kern BTC/ETH/SOL für REGEL0/Hebel abgesichert — Rückfrage, Warnzeile, Schalter-Lesefehler gemeldet (03.11.2026)
+
+**03.11.2026** · Nutzer: *„Ok, G14-Voranalyse angehen“* · *„prüfen gegenprüfen und doku“* · *„Ok a – bauen, prüfen, gegenprüfen und doku“*
+
+**Voranalyse:** `Voranalyse_G14_Kern_Regel_03_11.md`.
+- Der Bau E-69 ist durch E-148 ersetzt (Aufbau = Sparplan des Nutzers). K-4 ist gebaut (E-152).
+- Die Zulassung des Kerns ist **belegt**: 103 REGEL0-Einstiege Dez.–Okt., Schalter an, live gemailt.
+- Sie war aber **nicht abgesichert**:
+  - L1: Schalter per Klick ohne Rückfrage.
+  - L3: keine Suite-Prüfung im neuen Betrieb.
+  - L4 (Gegenprüfung): Ein Lesefehler der Schalter verschluckte eine Stunde Mails still, für alle Werte.
+
+**Gebaut (Weg a, keine harte Sperre):**
+- Rückfrage beim Ausschalten eines Kernwerts in beiden Knöpfen.
+- `kern_luecke`: rot auf der Statusseite, dazu in Teilexport und Diagnose.
+- L4 als Fehlermail über den bestehenden REGEL0-Weg.
+- Die Kopien der Kern-Liste lesen jetzt `kernwerte.KERN`.
+
+**Prüfung:**
+- `pruefe_g14.py` **11/11** am Seiteneffekt: echte Handler, Mutationsprobe, echter `betrieb_lauf` mit kaputter Schalterdatei.
+- Im Paket Kernwerte.
+- Gegenprüfung: kein schwerer Befund. G8 von Textreihenfolge auf echten Lauf umgestellt, die Diagnose rechnet wie die Statusseite. Stündliche Fehlermail bei bleibendem Lesefehler bewusst gelassen.
+
+**NB:** mit dem Bündel G8, Kontrolle K-G14-1.

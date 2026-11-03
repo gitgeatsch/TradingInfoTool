@@ -1311,7 +1311,7 @@ def _get_neuaufnahme() -> dict:
 
     na = BL.neuaufnahme_und_abgleich(_daten_ordner())
     return {"neuaufnahme": (na.get("neuaufnahme") or [None])[0], "ohne_daten": na.get("ohne_daten"),
-            "gesperrt": len(na.get("gesperrt") or [])}
+            "gesperrt": len(na.get("gesperrt") or []), "kern_luecke": na.get("kern_luecke")}
 
 
 @_gecacht_frist(300)

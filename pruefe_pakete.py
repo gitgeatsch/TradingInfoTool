@@ -22561,6 +22561,16 @@ def paket_kernwerte() -> None:
     pruefe(P, "REGEL0 unberuehrt: _hebel_schalter liest asset_hebel_settings, kein Bezug auf kernwerte",
            "asset_hebel_settings" in _quelltext("agent/regel0_stundenlauf.py") and "kernwerte" not in _quelltext("agent/regel0_stundenlauf.py")
            and "kernwerte" not in _quelltext("agent/regel0_mail.py") and callable(getattr(_R0S, "_hebel_schalter", None)))
+    # G14 (03.11.2026, E-167): die Zulassung im NEUEN Betrieb - Rueckfrage an beiden Knoepfen, Warnzeile Statusseite/Teilexport/
+    # Diagnose, Kern in Zuordnung und REGEL0-Datenbestand, Lesefehler der Schalter gemeldet (L4), eine Liste. Am Seiteneffekt.
+    import os as _os
+    import subprocess as _sp
+    _r = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_g14.py")],
+                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    pruefe(P, "⚠️⚠️ G14 am Seiteneffekt: Kern-Schalter nur nach Rueckfrage aus (beide Knoepfe, Mutationsprobe), Warnzeile wenn ein Kernwert "
+              "nicht an ist, Kern nicht gesperrt und im REGEL0-Datenbestand, Lesefehler der Schalter -> Fehlermail statt still, eine Liste, "
+              "Standard-DB unveraendert, Diagnose wie Statusseite", "11 von 11 bestanden" in (_r.stdout or ""),
+           " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
 
 
 def paket_w1_reihenbeginn() -> None:

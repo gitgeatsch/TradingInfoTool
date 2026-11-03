@@ -38,7 +38,7 @@ from ui.sortable_tree import make_sortable
 logger = logging.getLogger(__name__)
 
 LANGSAM_S = 60
-KERN = ("BTC", "ETH", "SOL")
+from agent.kernwerte import KERN  # noqa: E402  G14 L2 (E-167): EINE Liste statt einer Kopie
 SPALTEN = ("symbol", "name", "assetklasse", "rolle", "frei", "gestakt", "price_eur", "value_eur", "avg_buy_price_eur", "pl_pct",
            "b1_x", "b1_bis", "b1_status", "upbit", "b4")
 KOPF = {"symbol": "Symbol", "name": "Name", "assetklasse": "Assetklasse", "rolle": "Rolle", "frei": "frei", "gestakt": "gestakt",

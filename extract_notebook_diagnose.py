@@ -3364,6 +3364,20 @@ def _groq_erschoepfung_aus_log(zeilen: list[str]) -> list[dict]:
     return treffer
 
 
+def _kern_hebel_luecke(toggles: list) -> list:
+    """G14 (03.11.2026, E-167): Kernwerte ohne REGEL0/Hebel - DIESELBE Rechnung wie Statusseite und Teilexport
+    (``betriebslage.neuaufnahme_und_abgleich``: Schalter UND REGEL0-Daten). Faellt sie aus, nur der Schalter (Vermerk)."""
+    try:
+        from agent import betriebslage as _BL
+        kl = _BL.neuaufnahme_und_abgleich().get("kern_luecke")
+        if kl is not None:
+            return kl
+    except Exception as exc:                                 # noqa: BLE001
+        print("  Kern-Luecke ueber betriebslage nicht lesbar: %s" % exc)
+    from agent import kernwerte as _KW
+    return _KW.luecke([t.get("symbol") for t in toggles if t.get("hebel_pruefung_erlaubt")]) + ["(nur Schalter geprueft)"]
+
+
 def _auffaelligkeiten(hebel_rows: list[dict], spot_rows: list[dict]) -> list[dict]:
     """Leichte, regelbasierte Sanity-Checks (KEIN Ersatz fuer eine echte
     inhaltliche Bewertung, siehe Modul-Docstring) - filtert Kandidaten vor,
@@ -4160,6 +4174,8 @@ def main() -> None:
         "kategorie_synthese_ergebnisse_alle": kategorie_synthese_ergebnisse_alle,
         "oi_abdeckung_status_alle": oi_abdeckung_status_alle,
         "hebel_pruefung_toggles": hebel_pruefung_toggles,
+        # G14 (E-167): Kernwerte ohne Schalter an (aus oder ohne Zeile) - leer heisst: BTC/ETH/SOL fuer REGEL0/Hebel zugelassen
+        "kern_hebel_luecke": _kern_hebel_luecke(hebel_pruefung_toggles),
         "kandidaten_warteschlangen_status": kandidaten_warteschlangen_status,
         "marktscan_discovery_llm_delta": marktscan_discovery_llm_delta,
         "hebel_erstmalige_erkennung_delta": hebel_erstmalige_erkennung_delta,
@@ -4329,6 +4345,8 @@ def main() -> None:
     print(f"  Auffaelligkeiten (regelbasierter Vorfilter): {len(auffaelligkeiten)}")
     print(f"  Thesen: {len(thesen_alle)}, OI-Abdeckungs-Status-Eintraege: {len(oi_abdeckung_status_alle)}, "
           f"Hebel-Pruefung-Toggles: {len(hebel_pruefung_toggles)}")
+    _kl = _kern_hebel_luecke(hebel_pruefung_toggles)
+    print("  Kernwerte ohne REGEL0/Hebel (G14): " + (("!! " + ", ".join(_kl)) if _kl else "keiner"))
     print(f"  #333 Schicht 2: {len(kategorie_synthese_ergebnisse_alle)} Tages-Synthese-Ergebnisse, "
           f"{len(these_aenderungsvorschlaege_alle)} Aenderungsvorschlaege gesamt "
           f"({haeufigkeit(these_aenderungsvorschlaege_alle, 'status')})")

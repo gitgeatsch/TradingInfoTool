@@ -383,7 +383,7 @@ def mit_binance_spot(namen, daten: str = DATEN) -> set:
 
 def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dict:
     """Neuaufnahme (3 Laeufe), Datenbestand, gesperrte Mails, Hebel-Schalter ohne Daten (Teilexport REGEL0-NEUAUFNAHME)."""
-    erg = {"neuaufnahme": None, "gesperrt": None, "ohne_daten": None}
+    erg = {"neuaufnahme": None, "gesperrt": None, "ohne_daten": None, "kern_luecke": None}
     pa = os.path.join(daten, "stundenkurse_alle.db")
     if os.path.exists(pa):
         c = ro(pa)
@@ -415,6 +415,10 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
         finally:
             c.close()
         erg["ohne_daten"] = [s for s in an if zu.get(s, s) not in bestand]
+        # G14 (E-167): Kernwerte ohne Schalter an (aus oder ohne Zeile) - dann kommt fuer sie keine REGEL0-Mail; dazu Kern ohne Daten
+        from agent import kernwerte as _KW
+        _an = {str(s).strip().upper() for s in an}             # Gross-/Kleinschreibung wie in luecke() (Gegenpruefung 03.11.)
+        erg["kern_luecke"] = _KW.luecke(_an) + ["%s ohne REGEL0-Daten" % k for k in _KW.KERN if k in _an and zu.get(k, k) not in bestand]
     return erg
 
 

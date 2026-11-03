@@ -81,3 +81,48 @@ Im Gesamtplan steht: *„Kern-Regel E-69 (BTC/ETH/SOL immer zugelassen) beschlos
 **H15:** ohne Symbol-, Kern- oder Schalterfilter (`hebelfuehrung.py:494-545`), läuft vor der Sperre der alten Kette ⇒ für den Kern sicher.
 
 **Urteil zur Frage *„Kern immer zugelassen?“*:** heute **ja**, belegt in Code, Rechnung und Live-Ablage — aber nur, weil die Daten stimmen und eine Schalterzeile 1 trägt. **Abgesichert** ist es nicht (L1, L3, L4). Daher die Entscheidung §4.
+
+## 7. GEBAUT — Weg a (03.11.2026; Nutzer: *„Ok a – bauen, prüfen, gegenprüfen und doku"*, E-167)
+
+| Teil | Ort | Wirkung |
+|---|---|---|
+| **Rückfrage** | `agent/kernwerte.rueckfrage`; `ui/app.py` `_toggle_hebel_pruefung_erlaubt`, `ui/hebel_tab.py` `_umschalten` | Einen **Kernwert ausschalten** geht nur nach *„… ist ein Kernwert … Wirklich ausschalten?"* (Vorgabe *Nein*). Einschalten und Nicht-Kern bleiben ohne Frage. Der Schalter bleibt beim Nutzer |
+| **Warnzeile** | `agent/kernwerte.luecke`; `betriebslage.neuaufnahme_und_abgleich` → `kern_luecke` (Schalter **aus oder fehlt**, dazu *„X ohne REGEL0-Daten"*) | Statusseite Betriebskarte **rot**; Teilexport *„Kernwerte ohne REGEL0/Hebel"*; Diagnose `kern_hebel_luecke` (dieselbe Rechnung, Rückfall nur Schalter mit Vermerk) |
+| **L4** | `regel0_stundenlauf._hebel_schalter` → `SCHALTER_FEHLER`; `betrieb_lauf` → `meldung` + Feld `schalter_fehler`; `background.regel0_meldung_art` | Ein Lesefehler der Schalter ist eine **Fehlermail** über den bestehenden REGEL0-Weg (*„Hebel-Schalter nicht lesbar … KEINE Signalmail"*), nicht mehr still. Fehlende Datei (Probe am Desktop) bleibt still |
+| **Eine Liste** | `agent/ereignisse.py`, `ui/bestand_tab.py` | lesen `kernwerte.KERN` |
+
+**Prüfung am Seiteneffekt** `Rechenkern_02_10/pruefe_g14.py` **11/11** (`pruefe_g14.txt`), im Suite-Paket **Kernwerte**:
+- G1 Rückfrage-Regel.
+- G2 **beide echten Knopf-Handler** ohne Fenster, auf einer Speicher-DB: *Nein* lässt an, *Ja* schaltet aus, Einschalten und LINK ohne Frage. G3 **Mutationsprobe**: ohne die Regel ungefragt aus.
+- G4/G5 Warnzeile: ETH aus + SOL ohne Zeile ⇒ `['ETH','SOL']`, alle an ⇒ `[]`, BTC ohne Daten ⇒ Vermerk; Statusseite reicht durch und zeigt rot.
+- G6 Kern in `symbol_zuordnung.csv` nicht gesperrt und im REGEL0-Datenbestand (Desktop).
+- G7/G8 L4 **am echten `betrieb_lauf`**: kaputte Schalterdatei ⇒ Meldung, Art *fehler* (Fehlermail), Signal mit Schalter NULL abgelegt; gute Datei ⇒ Art *keine*, Schalter 1.
+- G9 eine Liste. G11 Diagnose rechnet wie die Statusseite. G10 Standard-DB sha256 (`.db`/`-wal`) unverändert.
+
+**Gegenprüfung** (unabhängig, nur Diff gelesen): kein schwerer Befund.
+
+| Befund | Schwere | erledigt |
+|---|---|---|
+| G8 prüfte L4 nur über die **Textreihenfolge** — eine vertauschte Zeile wäre grün geblieben | mittel | G8 läuft jetzt den **echten** `betrieb_lauf` mit kaputter Schalterdatei |
+| Bleibender Lesefehler ⇒ etwa **stündlich** eine Fehlermail (Cooldown 60 min) | mittel | **bewusst so gelassen**: dasselbe Muster wie *„Datenbasis veraltet"*; solange der Fehler besteht, geht für **keinen** Wert eine Signalmail raus — das soll nicht leise werden |
+| Diagnose prüfte nur den Schalter, nicht die Daten | niedrig | Diagnose nutzt dieselbe Rechnung wie die Statusseite (G11) |
+| Datenprüfung ohne Groß-/Kleinschreibung | niedrig | vereinheitlicht |
+| `MIN_STUNDEN ={` (Leerzeichen) | kosmetisch | korrigiert |
+| `pruefe_s74/s75` ersetzen `_hebel_schalter` — ein alter Fehler könnte dort im selben Prozess durchsickern | niedrig | im Betrieb ausgeschlossen (eigener Prozess je Stunde, Liste wird je Aufruf geleert); vermerkt |
+
+**Volle Suite** zuerst **1 rot**, durch diesen Bau: Die Diagnose-Konsole muss ASCII sein (NB: CP1252), meine neue Zeile trug *„⛔"* ⇒ durch *„!!"* ersetzt. Endstand: §7 unten.
+
+**NB:** mit dem Bündel G8, Kontrolle **K-G14-1**.
+
+**Endstand der vollen Suite (03.11., 08:25):** 3.494 Prüfungen, **1 rot, nicht durch G14**: `Regel0Betrieb` *R-R11-1* (der Rechenkern trifft die Betriebsreferenz zeilengleich). Die Nachrechnung 2024-01..2026-08 ergibt seit diesem Lauf **10.735 statt 10.732** Einstiege (6 Zeilen in 2025: CVC, CFX, PENDLE, BANANA, TURBO, BRETT).
+
+Belegt, dass G14 nicht die Ursache ist:
+- **Derselbe Code** (sauberer Checkout HEAD ohne G14) **und der Stand vom 27.10.** (`037c6df7`) ergeben jetzt ebenfalls 10.735.
+- Alle 9 Suite-Läufe 30.10.–03.11. 08:08 ergaben 10.732.
+- Die Rechnung liest laut Audit-Hook nur `stundenkurse.db`, `stundenkurse_alle.db` und `kern48jbz_gruppe_bestand.csv`. Zeitstempel 25.09. / 01.10. / 01.10., keine WAL-Datei.
+- Ein Thread statt mehrerer (OpenBLAS) und feste Hash-Seeds ändern nichts: Die Rechnung ist jetzt deterministisch 10.735.
+- Python-Installation unverändert.
+
+Prüfsummen am 03.11. (sha256, Anfang): `stundenkurse.db` 52d287c67bd6fe99 · `stundenkurse_alle.db` 2298688661872660 · Gruppe e84d782b87ca9009 · Referenz 942999ada5888c0a.
+
+**Ursache offen** ⇒ Gesamtplan **G17**.

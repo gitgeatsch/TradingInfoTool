@@ -27,3 +27,22 @@ GRUND_SPOT = ("Kernwert: kein Spot in der alten Kette - der Aufbau laeuft per Sp
 
 def ist_kern(symbol) -> bool:
     return str(symbol or "").strip().upper() in KERN
+
+
+# ⚠️ G14 (03.11.2026, E-167, Nutzer: *"Ok a"*): die Zulassung des Kerns fuer REGEL0/Hebel hing bis heute nur an einer Datenzeile
+# (`asset_hebel_settings.hebel_pruefung_erlaubt`) - ein Klick ohne Rueckfrage nahm BTC still aus allen REGEL0-Mails. Der Schalter
+# bleibt beim Nutzer (Weg a, keine Sperre); er faellt nur nicht mehr VERSEHENTLICH und nicht mehr UNSICHTBAR.
+def rueckfrage(symbol, neu_an: bool) -> str | None:
+    """Text der Rueckfrage, wenn ein KERNWERT ausgeschaltet werden soll - sonst None (Einschalten und Nicht-Kern ohne Frage)."""
+    if neu_an or not ist_kern(symbol):
+        return None
+    s = str(symbol).strip().upper()
+    return ("%s ist ein Kernwert (BTC, ETH, SOL - Nutzerregel: immer fuer REGEL0 und Hebel zugelassen).\n\n"
+            "Ausgeschaltet kommt fuer %s keine REGEL0-Signalmail und kein Hebelvorschlag mehr, bis du ihn wieder einschaltest.\n\n"
+            "Wirklich ausschalten?" % (s, s))
+
+
+def luecke(an_symbole) -> list:
+    """Kernwerte, deren Hebel-Schalter NICHT an ist (aus oder ohne Zeile) - in der Reihenfolge von KERN."""
+    an = {str(x).strip().upper() for x in (an_symbole or ())}
+    return [k for k in KERN if k not in an]

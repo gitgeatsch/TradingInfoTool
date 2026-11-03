@@ -1,0 +1,14 @@
+G1   bestanden Kern aus -> Frage, Kern an -> keine, LINK aus -> keine
+G2   bestanden je Knopf (Name, nach Nein, nach Ja, wieder an, LINK aus, Fragen bis aus, Fragen gesamt): [('Watchlist', 1, 0, 1, 0, 2, 2), ('Hebel-Reiter', 1, 0, 1, 0, 2, 2)]
+G3   bestanden MUTATION ohne Rueckfrage: BTC nach zwei Klicks 1 (aus, wieder an - ungefragt), Fragen 0 - die Pruefung G2 haengt also an der Regel
+G4   bestanden ETH aus + SOL ohne Zeile -> ['ETH', 'SOL'] · alle an -> [] · BTC ohne Daten -> ['BTC ohne REGEL0-Daten']
+G5   bestanden Statusseite reicht die Luecke durch (['ETH']) und zeigt sie ROT; Teilexport und Diagnose fuehren sie
+G6   bestanden symbol_zuordnung: Kern {'BTC': 'BTC', 'ETH': 'ETH', 'SOL': 'SOL'} (nicht gesperrt) · REGEL0-Datenbestand am Rechner enthaelt ['BTC', 'ETH', 'SOL']
+G7   bestanden kaputte Datei -> {} + Fehler ['DatabaseError: file is not a database'] · gute Datei -> kein Fehler · fehlende Datei (Probe) -> still
+G8   bestanden betrieb_lauf mit KAPUTTER Schalterdatei: Meldung 'Hebel-Schalter nicht lesbar (DatabaseError: file is not a da' -> Art fehler (Fehlermail), Signal mit Schalter (None,) abgelegt · mit GUTER Datei: Art keine, Schalter (1,) · Meldungsart-Tabelle ('fehler', 'fehler', 'nachgeholt')
+G9   bestanden ereignisse, bestand_tab, spot_mitnahme lesen kernwerte.KERN
+  Kern-Luecke ueber betriebslage nicht lesbar: weg
+G11  bestanden Diagnose: ueber betriebslage ['SOL ohne REGEL0-Daten'] · Rueckfall bei Fehler ['ETH', 'SOL', '(nur Schalter geprueft)']
+G10  bestanden Standard-DB sha256 (.db/-wal) gleich · umgebogener Pfad nie angelegt · Wegwerf D:\CLAUDE_Temp\TradingInfoTool\g14_mf3zz35p
+
+G14 am Seiteneffekt: 11 von 11 bestanden

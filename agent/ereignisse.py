@@ -121,7 +121,7 @@ SICHT_JE_BEREICH = {"asset": "S7", "krypto_gesamt": "S1", "makro_usa": "S2", "ak
 # ``betriebs_zusatz`` (Messbasis > 2.000 Stunden, Zusatz >= 500 Stunden, ohne die gesperrten aus symbol_zuordnung.csv), gezählt nur
 # Stunden VOR dem Stichtag. Dazu der Kern (immer zugelassen, E-69) und live die Bestände (Spot-Handlungen; im Rückspiel gibt es keine).
 # Gemessen Dez. 2025 - Sep. 2026: S7-Börsenereignisse Watchlist heute 45 · Referenz 127 + Kern 131 · DIESE Menge 236 (487-621 Werte).
-KERN = ("BTC", "ETH", "SOL")
+from agent.kernwerte import KERN  # noqa: E402  G14 L2 (E-167): EINE Liste statt einer Kopie
 MIN_STUNDEN = {"stundenkurse.db": 2001, "stundenkurse_alle.db": 500}
 _STUNDEN: dict = {}
 

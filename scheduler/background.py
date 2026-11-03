@@ -1837,7 +1837,9 @@ def regel0_meldung_art(erg: dict) -> str:
     if not m:
         return "keine"
     if "veraltet_gemeldet" in erg:
-        nur = bool(erg.get("nachgeholt")) and not erg.get("veraltet_gemeldet") and not erg.get("nachholen_ausgelassen")
+        # G14 L4 (E-167): ein Lesefehler der Hebel-Schalter ist immer ein Fehler, auch neben 'nachgeholt'
+        nur = (bool(erg.get("nachgeholt")) and not erg.get("veraltet_gemeldet") and not erg.get("nachholen_ausgelassen")
+               and not erg.get("schalter_fehler"))
     else:
         nur = m.startswith("nachgeholt:") and "NICHT nachholbar" not in m and "veraltet" not in m
     return "nachgeholt" if nur else "fehler"

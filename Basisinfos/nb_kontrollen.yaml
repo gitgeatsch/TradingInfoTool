@@ -643,6 +643,14 @@ kontrollen:
     art: ereignis
     nachweis: "Ereignis = Pull des NB-Buendels G8. Export danach: Log 03:20 'Lebendigkeit uebersprungen - alte Kette stillgelegt (W-3 S-2, E-166)', 06:00 'Backward-Tracking uebersprungen', 07:15 'Ausstiegs-Empfehlungen uebersprungen' (keine Zeilen 'Fuehrung protokolliert'/'Ausstiege verfolgt'); beim Neustart KEIN 'hole sofort nach' fuer Backward-Tracking/Multi-Asset-Batch; joblaeufe: alle vier mit Alter < 26 h; Statusseite Karte Ausstieg 'stillgelegt'; Diagnose lebendigkeit.stillgelegt gesetzt; Thesen/Marktscan weiter 'pausiert/deaktiviert' wie bisher"
     status: offen
+  - id: K-G14-1
+    titel: "G14 (E-167): Kern BTC/ETH/SOL fuer REGEL0/Hebel abgesichert - Rueckfrage beim Ausschalten, Warnzeile, Lesefehler der Schalter gemeldet - erst mit dem NB-Buendel G8"
+    seit: "2026-11-03"
+    paket: Kernwerte
+    commit: ""
+    art: ereignis
+    nachweis: "Ereignis = Pull des NB-Buendels G8. Danach: Statusseite Betriebskarte OHNE rote Zeile 'Kernwert ohne REGEL0/Hebel' (BTC/ETH/SOL an); Teilexport 'Kernwerte ohne REGEL0/Hebel: keiner'; Diagnose kern_hebel_luecke = []; GUI: Klick auf Hebel-Schalter von BTC fragt nach (mit Nein abbrechen); REGEL0-ERGEBNIS-Zeilen im Log mit Feld schalter_fehler = [] und keine neue Fehlermail"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

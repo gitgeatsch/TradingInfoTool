@@ -890,6 +890,9 @@ function renderBetrieb(b) {
   if (b.ohne_daten) x += '<div class="unter' + (b.ohne_daten.length ? " stale" : "") + '">Hebel-Schalter an ohne REGEL0-Daten: ' +
        b.ohne_daten.length + (b.ohne_daten.length ? " - " + esc(b.ohne_daten.join(", ")) : "") + "</div>";
   if (b.gesperrt) x += '<div class="unter stale">Signale nicht gemailt wegen Zuordnung (zuletzt 10): ' + b.gesperrt + "</div>";
+  // G14 (E-167): Kernwerte immer fuer REGEL0/Hebel zugelassen - steht einer nicht an, ROT (keine REGEL0-Mail fuer ihn)
+  if (b.kern_luecke && b.kern_luecke.length) x += '<div class="unter err">⚠ Kernwert ohne REGEL0/Hebel: ' + esc(b.kern_luecke.join(", ")) +
+       " - Hebel-Schalter aus oder fehlt (Watchlist / Hebel-Reiter)</div>";
   return x;
 }
 

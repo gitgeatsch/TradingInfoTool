@@ -1000,6 +1000,11 @@ class TradingInfoToolApp(tk.Tk):
         conn = self._db_conn_factory()
         try:
             neuer_wert = not db.get_hebel_pruefung_erlaubt(conn, symbol)
+            # G14 (E-167): einen KERNWERT nur nach Rueckfrage ausschalten - sonst faellt er still aus allen REGEL0-Mails
+            from agent import kernwerte as _KW
+            _frage = _KW.rueckfrage(symbol, neuer_wert)
+            if _frage and not messagebox.askyesno("Kernwert ausschalten?", _frage, icon="warning", default="no"):
+                return
             db.set_hebel_pruefung_erlaubt(conn, symbol, neuer_wert)
         finally:
             conn.close()

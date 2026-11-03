@@ -409,6 +409,9 @@ def _inhalt() -> int:
         if na["ohne_daten"] is not None:
             ohne = na["ohne_daten"]
             print("Hebel-Schalter AN, aber OHNE REGEL0-Daten (kein Signal moeglich): %d - %s" % (len(ohne), ", ".join(ohne) or "-"))
+        if na.get("kern_luecke") is not None:            # G14 (E-167): Kernwerte immer zugelassen
+            kl = na["kern_luecke"]
+            print("Kernwerte ohne REGEL0/Hebel: %s" % (("⛔ " + ", ".join(kl)) if kl else "keiner (BTC/ETH/SOL Schalter an, mit Daten)"))
     except Exception as ex:                                      # noqa: BLE001
         print("  ⛔ REGEL0-Abgleich nicht lesbar: %s %s" % (ex.__class__.__name__, ex))
     # P14 Spot B1 (11.10.2026): Mitnahme x3 - Fenster, Ausloesungen, letzte Protokollzeilen (data/spot_betrieb.db, nur lesend; K-SP-1)
