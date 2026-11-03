@@ -1,0 +1,38 @@
+{
+ "herkunft": "Kopie von data/_usb_schritt7/manifest.json (USB-Uebertragung Desktop -> NB, pruefe_uebertragung.py --erstellen, 02.10.2026). Referenz fuer den Abgleich der Kursdateien am Desktop (pruefe_uebertragung.py --abgleich, Paket Kursdateien) - G17, 03.11.2026.",
+ "erstellt": "2026-10-02 06:40",
+ "dateien": {
+  "stundenkurse.db": {
+   "sha256": "420f8197d32d7f5e56b24348759782dc1edd194c39c93aab517336bdcdac4291",
+   "bytes": 346107904,
+   "zeilen": 3244186,
+   "symbole": 116,
+   "von": "2021-12-01 00:00",
+   "bis": "2026-09-24 15:00"
+  },
+  "stundenkurse_alle.db": {
+   "sha256": "229868866187266037a79395d4247b3ddc20390f32aaa3b7732db5efef481749",
+   "bytes": 897933312,
+   "zeilen": 8356982,
+   "symbole": 537,
+   "von": "2023-01-01 00:00",
+   "bis": "2026-10-01 17:00"
+  },
+  "markpreis_historie.db": {
+   "sha256": "82f61fa04e37a0d12c68b657cc5311ba632735d6b495e90eda112bc883483f05",
+   "bytes": 721829888,
+   "zeilen": 6582872,
+   "symbole": 253,
+   "von": "2021-12-01 00:00",
+   "bis": "2026-08-31 23:00"
+  },
+  "markpreis_alle.db": {
+   "sha256": "9c53a3f9e94b57b4170fd2c0efabc682ac87fad556c38837033d4d4af8647daf",
+   "bytes": 721891328,
+   "zeilen": 6537641,
+   "symbole": 411,
+   "von": "2023-01-01 00:00",
+   "bis": "2026-08-31 23:00"
+  }
+ }
+}

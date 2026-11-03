@@ -32748,6 +32748,120 @@ def paket_zaehlung() -> None:
     finally:
         wegwerf.aufraeumen(tmpz)
 
+def paket_kursdateien() -> None:
+    """G17 (03.11.2026): die vier Kursdateien der REGEL0 am Desktop gegen die Referenz vom 02.10. - bitgenau.
+
+    ⚠️⚠️ ANLASS: R-R11-1 fiel am 03.11. auf 10.735 statt 10.732 Einstiege, ohne Code- oder Datenaenderung. Ursache war EIN
+    gekipptes Bit im Windows-Dateicache (Arbeitsspeicher) von `data/stundenkurse.db`: der Indexeintrag ADA 2024-01-04 22:00
+    zeigte auf eine fremde Zeile. Auf der SSD stand das richtige Byte, der Zeitstempel blieb gleich - erst der Abgleich mit
+    der USB-Kopie fand es, nach einem halben Tag. Dieses Paket sagt es in Sekunden und laeuft VOR Regel0Betrieb (Alphabet).
+
+    Am Desktop schreibt niemand in diese Dateien (der Stundenjob nur am NB) - darum gilt hier Bitgleichheit. Am NB wachsen sie
+    stuendlich; dort ist der Block uebersprungen, nicht rot (Regel 1, CLAUDE.md). Beide Bedingungen stehen im HELFER
+    (`pruefe_uebertragung.abgleich_erlaubt` / `abgleich`), den auch `--abgleich` benutzt - nachgewiesen an einer WEGWERFDATEI:
+    ein Bit in einem Wert (Struktur ok), ein Bit in der rowid eines Indexeintrags wie am 03.11. (Struktur DEFEKT), 0 Byte
+    (DEFEKT), gesperrt (nicht pruefbar - kein Defekt, am NB schreibt der Stundenjob).
+    ⚠️ Gegenpruefung 03.11.: `betrieb_erlaubt` sagt im Zweifel NEIN - ist am NB terminmarkt_historie.db kurz gesperrt, liefe der
+    Abgleich und waere rot statt uebersprungen. Die Suite laeuft am NB nicht; R-R11-1 haengt am selben Kriterium."""
+    import json as _js
+    import os
+    import sqlite3 as _sq
+    import struct as _st
+    import tempfile as _tf
+    P = "Kursdateien"
+    import pruefe_uebertragung as U
+    import agent.regel0_nachlader as _NL
+    import agent.regel0_rechnung as RK
+
+    pruefe(P, "die Referenz liegt im Repo (%s)" % os.path.relpath(U.REFERENZ), os.path.exists(U.REFERENZ),
+           "data/ steht in .gitignore - eine Referenz nur dort ginge mit dem naechsten Aufraeumen verloren")
+    if not os.path.exists(U.REFERENZ):
+        return
+    man = _js.load(open(U.REFERENZ, encoding="utf-8"))
+    pruefe(P, "⚠️ sie deckt genau die Dateien ab, die uebertragen UND im Betrieb nachgeladen werden (eine Liste: regel0_nachlader.DATEIEN)",
+           set(man["dateien"]) == set(_NL.DATEIEN) and U.DATEIEN is _NL.DATEIEN,
+           "Referenz %s · Nachlader %s" % (sorted(man["dateien"]), sorted(_NL.DATEIEN)))
+
+    # ---- ⚠️⚠️ der Helper FINDET: Wegwerfdatei, zwei gekippte Bits -----------------------------
+    T = _tf.mkdtemp(prefix="kursdateien_")
+    try:
+        db = os.path.join(T, "k.db")
+        c = _sq.connect(db)
+        c.execute("CREATE TABLE stundenkurse (symbol TEXT, stunde TEXT, close REAL, PRIMARY KEY (symbol, stunde))")
+        # rowid ab 1000: zwei Byte am Ende jedes Indexeintrags (bei 1..127 haette sie gar kein Datenbyte - Gegenpruefung 03.11.)
+        c.executemany("INSERT INTO stundenkurse (rowid, symbol, stunde, close) VALUES (?,?,?,?)",
+                      [(1000 + i, "S%02d" % (i % 40), "2024-01-%02d %02d:00" % (i // 960 + 1, (i // 40) % 24), 1.0 + i / 7.0) for i in range(3800)])
+        c.execute("UPDATE stundenkurse SET close = 1234.56789 WHERE rowid = 2900")
+        c.commit()
+        c.close()
+        roh = bytearray(open(db, "rb").read())
+        m = {"dateien": {"k.db": {"sha256": U.sha(db), "bytes": len(roh)}, "fehlt.db": {"sha256": "0" * 64, "bytes": 1}}}
+        vorher = sorted(os.listdir(T)), os.path.getmtime(db)
+        r0 = {z["datei"]: z["urteil"] for z in U.abgleich(T, m)}
+        nachher = sorted(os.listdir(T)), os.path.getmtime(db)
+        # Wert: das letzte Byte des Doubles 1234.56789 (nur in der Tabelle, nicht im Index)
+        w = bytearray(roh)
+        i = w.find(_st.pack(">d", 1234.56789))
+        w[i + 7] ^= 0x01
+        open(db, "wb").write(w)
+        liste1, zeit1 = sorted(os.listdir(T)), os.path.getmtime(db)
+        r1 = U.abgleich(T, m)[0]
+        nach1 = sorted(os.listdir(T)), os.path.getmtime(db)
+        # Index wie am 03.11.: letztes Byte (rowid) der ersten Zelle eines Index-Blattes (Seitentyp 0x0a)
+        x = bytearray(roh)
+        gs = _st.unpack(">H", x[16:18])[0]
+        seite = next(n for n in range(1, len(x) // gs) if x[n * gs] == 0x0A)
+        zelle = seite * gs + _st.unpack(">H", x[seite * gs + 8: seite * gs + 10])[0]
+        rowid = _st.unpack(">H", x[zelle + x[zelle] - 1: zelle + x[zelle] + 1])[0]
+        x[zelle + x[zelle]] ^= 0x04
+        open(db, "wb").write(x)
+        liste2, zeit2 = sorted(os.listdir(T)), os.path.getmtime(db)
+        r2 = U.abgleich(T, m)[0]
+        nach2 = sorted(os.listdir(T)), os.path.getmtime(db)
+        open(db, "wb").close()
+        r3 = U.abgleich(T, m)[0]
+        open(db, "wb").write(w)
+        _sperre = _sq.connect(db)
+        _sperre.execute("BEGIN EXCLUSIVE")
+        r4 = U.abgleich(T, m)[0]
+        _sperre.rollback()
+        _sperre.close()
+        pruefe(P, "⚠️⚠️ Helfer: unveraendert -> gleich, fehlende Datei -> fehlt", r0 == {"k.db": "gleich", "fehlt.db": "fehlt"}, str(r0))
+        pruefe(P, "⚠️⚠️ Helfer: ein Bit in einem WERT -> abweichend, Struktur ok (integrity_check sieht es nicht, die Pruefsumme schon)",
+               i > 0 and r1["urteil"] == "abweichend, Struktur ok", "%s · %s" % (r1["urteil"], r1.get("struktur")))
+        pruefe(P, "⚠️⚠️ Helfer: ein Bit in der ROWID eines Indexeintrags wie am 03.11. -> abweichend, Struktur DEFEKT",
+               1000 <= rowid < 4800 and r2["urteil"] == "abweichend, Struktur DEFEKT",
+               "rowid %d · %s · %s" % (rowid, r2["urteil"], str(r2.get("struktur"))[:200]))
+        pruefe(P, "⚠️ Helfer: 0 Byte -> Struktur DEFEKT (SQLite selbst haelt eine leere Datei fuer gueltig)",
+               r3["urteil"] == "abweichend, Struktur DEFEKT", "%s · %s" % (r3["urteil"], r3.get("struktur")))
+        pruefe(P, "⚠️ Helfer: gesperrt -> nicht pruefbar, KEIN Defekt (am NB schreibt der Stundenjob)",
+               r4["urteil"] == "abweichend, Struktur nicht pruefbar (gesperrt)", "%s · %s" % (r4["urteil"], r4.get("struktur")))
+        pruefe(P, "⚠️ Helfer nur lesend, auch mit integrity_check: keine Journal-/WAL-Datei, Zeitstempel gleich",
+               vorher == nachher and (liste1, zeit1) == nach1 and (liste2, zeit2) == nach2,
+               "%s -> %s · %s -> %s · %s -> %s" % (vorher, nachher, (liste1, zeit1), nach1, (liste2, zeit2), nach2))
+    finally:
+        wegwerf.aufraeumen(T)
+
+    # ---- die echten Dateien - nur am Desktop ---------------------------------------------------
+    _erlaubt, _grund = U.abgleich_erlaubt(RK.DATEN_VORGABE)
+    if not _erlaubt:
+        _UEBERSPRUNGEN.append((P, "data/" + ", ".join(U.DATEIEN), _grund))
+        return
+    d = RK.DATEN_VORGABE
+
+    def _stand():
+        return {n: (os.path.getmtime(os.path.join(d, n)) if os.path.exists(os.path.join(d, n)) else None)
+                for n in list(U.DATEIEN) + [x + e for x in U.DATEIEN for e in ("-journal", "-wal", "-shm")]}
+    vorher = _stand()
+    for z in U.abgleich(d, man):
+        pruefe(P, "⚠️⚠️⚠️ %s ist bitgleich zur Referenz vom %s" % (z["datei"], man["erstellt"]), z["urteil"] == "gleich",
+               "" if z["urteil"] == "gleich" else
+               "%s · Pruefsumme %s statt %s%s · NICHT ueberschreiben: erst ungepuffert lesen (G17: gekipptes Bit im Dateicache, "
+               "Voranalyse_G14_Kern_Regel_03_11.md Par. 7), dann Speichertest" % (
+                   z["urteil"], z.get("ist", "-")[:16], z["soll"][:16], " · Struktur: %s" % z["struktur"][:160] if "struktur" in z else ""))
+    pruefe(P, "⚠️ nur lesend: Zeitstempel unveraendert, kein Journal angelegt", _stand() == vorher)
+
+
 def paket_regel0_betrieb() -> None:
     """E-44 (02.10.2026): Positionsgroesse der REGEL0 im Betrieb - agent/regel0_groesse.py + Basisinfos/regel0_betrieb.yaml.
 
@@ -32904,7 +33018,8 @@ def paket_regel0_betrieb() -> None:
                 RK.schreibe_einstiege(_R, os.path.join(d, "e.csv"))
                 gleich = io.open(os.path.join(d, "e.csv"), encoding="utf-8").read() == io.open(_ref, encoding="utf-8").read()
             pruefe(P, "⭐⭐ R-R11-1: der Rechenkern trifft die Betriebsreferenz ZEILENGLEICH (Nachrechnung 2024-01..2026-08)", gleich,
-                   "%d Einstiege · Referenz kern48jbz_einstiege_bestand.csv (= Fassung 0.1, 2.708)" % len(_R["einstiege"]))
+                   "%d Einstiege · Referenz kern48jbz_einstiege_bestand.csv (= Fassung 0.1, 2.708)" % len(_R["einstiege"])
+                   + ("" if gleich else " · ZUERST Paket Kursdateien ansehen (G17, 03.11.: ein gekipptes Bit im Dateicache ergab 10.735)"))
         else:
             pruefe(P, "R-R11-1 uebersprungen: keine volle Messbasis an diesem Geraet (Sollzustand am Notebook)", True)
     except Exception as ex:                                   # noqa: BLE001
@@ -34212,6 +34327,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Protokoll": paket_protokoll,
           "Hebelneubau": paket_hebelneubau,
           "Regel0Betrieb": paket_regel0_betrieb,
+          "Kursdateien": paket_kursdateien,
           "Zaehlung": paket_zaehlung,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,

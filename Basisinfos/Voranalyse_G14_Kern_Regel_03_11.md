@@ -139,3 +139,19 @@ Prüfsummen am 03.11. (sha256, Anfang): `stundenkurse.db` 52d287c67bd6fe99 · `s
 - Das Notebook ist nicht betroffen (anderes Gerät). Was am Desktop zwischen etwa 08:10 und der Bereinigung `stundenkurse.db` las, bekam für diese eine ADA-Stunde falsche Werte.
 
 Lehre: Ändert sich ein deterministisches Ergebnis ohne Code-, Daten- oder Zeitstempeländerung, dann **byteweise gegen die Kopie vergleichen** und `PRAGMA integrity_check` laufen lassen. R-R11-1 hat hier als Frühwarnung gewirkt.
+
+**Nachtrag 03.11. abends — Abgleich gebaut** (Nutzer: *„Ok ja – bauen, prüfen, gegenprüfen und doku“*). Die vier Kursdateien ändern sich am Desktop nie (der Stundenjob schreibt nur am NB). Sie müssen also bitgleich zum 02.10. sein, und genau das prüft jetzt die Suite:
+
+- **Paket `Kursdateien`** (läuft alphabetisch vor Regel0Betrieb): Prüfsumme je Datei gegen die Referenz im Repo, `Rechenkern_02_10/kursdateien_manifest_02_10.json` (Kopie des USB-Manifests; `data/` steht nicht in Git). Bei Abweichung sagt `integrity_check`, ob die **Struktur defekt** ist (so am 03.11.) oder nur ein **Wert** anders ist. Etwa 6 s, nur lesend. Am NB wird der Block übersprungen, nicht rot.
+- **Von Hand:** `python pruefe_uebertragung.py --abgleich`.
+- **Nachweis:** an einer Wegwerfdatei. Ein gekipptes Bit in einem Wert ergibt „Struktur ok“, eines in der rowid eines Indexeintrags wie am 03.11. „Struktur DEFEKT“. Eine 0-Byte-Datei gilt als DEFEKT, eine gesperrte Datei als „nicht prüfbar“, nicht als Defekt. Acht Mutationsproben machen das Paket rot bzw. überspringen es sauber: Helfer meldet immer gleich, integrity_check aus, echte Datei abweichend, Referenz unvollständig oder fehlend, am Betriebsgerät, Sperre als Defekt gewertet, Größenprüfung fehlt. Zeitstempel, Journal- und WAL-Dateien bleiben unverändert, auch mit integrity_check.
+- **Gegenprüfung** (unabhängig, ohne schweren Befund), eingearbeitet:
+  - Die Gerätebedingung steht jetzt im Helfer (`abgleich_erlaubt`). Am NB entfällt `--abgleich`, statt falschen Alarm zu schlagen.
+  - Am Betriebsgerät läuft kein integrity_check, also keine Lesesperre neben dem Stundenjob. Eine Sperre heißt „nicht prüfbar“ statt DEFEKT (timeout 1 s).
+  - Der Seiteneffekt ist jetzt auch für den integrity_check-Pfad nachgewiesen.
+  - Die Indexprobe trifft wirklich die rowid. Vorher war es das letzte Zeichen des Schlüssels, weil die rowids 1–127 kein Datenbyte haben.
+  - Eine 0-Byte-Datei gilt als defekt.
+  - Die Dateiliste gibt es nur noch einmal (`regel0_nachlader.DATEIEN`).
+  - Offen und bewusst so gelassen: `betrieb_erlaubt` sagt im Zweifel NEIN. Ist am NB `terminmarkt_historie.db` kurz gesperrt, wäre das Paket rot statt übersprungen. Die Suite läuft am NB aber nicht.
+- Ist R-R11-1 rot, verweist es jetzt zuerst auf dieses Paket.
+- Eine **neue Referenz** entsteht nur bewusst: `--erstellen`, dann dessen `manifest.json` nach `Rechenkern_02_10/` kopieren.
