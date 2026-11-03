@@ -126,3 +126,16 @@ Belegt, dass G14 nicht die Ursache ist:
 Prüfsummen am 03.11. (sha256, Anfang): `stundenkurse.db` 52d287c67bd6fe99 · `stundenkurse_alle.db` 2298688661872660 · Gruppe e84d782b87ca9009 · Referenz 942999ada5888c0a.
 
 **Ursache offen** ⇒ Gesamtplan **G17**.
+
+**Nachtrag 03.11. nachm. — G17 GELÖST: ein gekipptes Bit im Arbeitsspeicher.**
+
+- `data/stundenkurse.db` wich in **genau einem Byte** von der USB-Kopie vom 02.10. ab (`data/_usb_schritt7/`, sha256 = Manifest 420f8197…). Betroffen war Seite 1611, Versatz 1450: **0x1e statt 0x1a**, ein einzelnes Bit.
+- Das Byte gehört zum Index `sqlite_autoindex_stundenkurse_1`. Der Eintrag ADA 2024-01-04 22:00 zeigte dadurch auf eine fremde Tabellenzeile (Schluss 0,0912 statt 0,5704). `PRAGMA integrity_check` meldete: *rowid not at end-of-record … Multiple uses for byte 1477 of page 1611*.
+- Diese eine falsche Stunde verschiebt über die Schrumpfung und das Monatsmodell 7 Einstiege knapp an der Schwelle. Betroffen waren ADA und CTSI im Januar 2024 sowie ZIL, CVC, CFX, PENDLE, BANANA, TURBO und BRETT 2025. In der Summe ergibt das 10.735.
+- **Ungepuffert gelesen** (am Windows-Dateicache vorbei) stand auf der SSD das **richtige** Byte 0x1a. Der Fehler lag also nur in der Kopie im Arbeitsspeicher. Kein Programm hat geschrieben, deshalb blieb der Zeitstempel unverändert. Der Lesezugriff hat die Cache-Seite verworfen.
+- Danach: Datei = USB-Kopie, `integrity_check` ok, Nachrechnung **10.732 zeilengleich** (R-R11-1 grün). `stundenkurse_alle.db`, `markpreis_alle.db` und `markpreis_historie.db` sind byte-gleich mit ihren Kopien.
+- Ausgeschlossen: Speicherlage im Prozess (Ballast vorab, 4 Läufe gleich), Zeitzone, Zufallszahlen, Bibliotheken (unverändert seit Juli), Windows-Laufzeit (ucrtbase 14.10.).
+- Ereignisprotokoll: keine Datenträger- und keine WHEA-Fehler; ein Bugcheck 0xEF am 27.10. 15:37. ⚠️ **Ein gekipptes Bit im Dateicache weist auf einen Arbeitsspeicherfehler am Desktop hin.** Ein Speichertest (Windows-Speicherdiagnose oder MemTest86, mit Neustart) ist Sache des Nutzers.
+- Das Notebook ist nicht betroffen (anderes Gerät). Was am Desktop zwischen etwa 08:10 und der Bereinigung `stundenkurse.db` las, bekam für diese eine ADA-Stunde falsche Werte.
+
+Lehre: Ändert sich ein deterministisches Ergebnis ohne Code-, Daten- oder Zeitstempeländerung, dann **byteweise gegen die Kopie vergleichen** und `PRAGMA integrity_check` laufen lassen. R-R11-1 hat hier als Frühwarnung gewirkt.
