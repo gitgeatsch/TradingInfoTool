@@ -255,6 +255,8 @@ Bedarf mit der Haltebedingung neu entschieden — dann mit den Daten aus Stufe 2
 | b | jetzt beheben, eigener NB-Pull | ein Pull mehr gegen die Regel *NB-Änderungen bündeln* |
 | c | lassen, Z-1 durch Prüfer v2 ersetzen | Z-1 bleibt bis dahin unzuverlässig |
 
+⚠️ **Korrektur 03.11.** ([`Voranalyse_G8_NB_Buendel_03_11.md`](Voranalyse_G8_NB_Buendel_03_11.md) §3): die Zahl steht **nicht** in der Mail. Sie landet nur in der Spalte `ungedeckt` von `regel0_signale.db`, und die liest niemand. Damit spricht mehr für **c** als für a.
+
 **Empfehlung a.**
 
 ### 6.3 Kurse Sep./Okt. 2026 für Breite und REGEL0-Einstiege
