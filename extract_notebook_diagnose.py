@@ -2054,6 +2054,11 @@ def _kapitel93(conn) -> dict:
             "symbole_mit_wert": symbole,
             "hinweis": ("Auswertbar ab 30 Messungen (tvl) bzw. 12 "
                         "(entwickler) - siehe agent/lebendigkeit.MINDESTREIHE")}
+        # W-3 S-2 (E-166, 03.11.2026): der Job ueberspringt sich - die Reihe endet mit Absicht
+        from scheduler import rollen_job as _RJ_s2
+        if _RJ_s2.alte_kette_stillgelegt():
+            aus["lebendigkeit"]["stillgelegt"] = (
+                _RJ_s2.S2_TEXT + ": keine neuen Zeilen mehr, kein Leser im Betrieb")
         if not n:
             aus["lebendigkeit"]["WARNUNG"] = (
                 "KEINE Zeile. Der Job `lebendigkeit` laeuft nicht - jeder "
@@ -2320,7 +2325,8 @@ def _paket_b(conn) -> dict:
             # verschiedene Aussagen.
             "quelle": {k: ("config.yaml" if k in roh else "Vorgabe im Code")
                        for k in hq},
-            "marktscan_aktiv": bool((datei.get("marktscan") or {}).get("aktiv", True)),
+            # Vorgabe AUS wie in den Jobs seit W-3 S-2 Frage 2 (E-166)
+            "marktscan_aktiv": bool((datei.get("marktscan") or {}).get("aktiv", False)),
             "hebel_screening_aktiv": bool(
                 (datei.get("hebel_screening") or {}).get("aktiv", True)),
         }
@@ -3976,6 +3982,11 @@ def main() -> None:
         # ungesicherten Buchgewinn ueber der Ausloeseschwelle?
         ausstiegs_empfehlungen = compute_ausstiegs_empfehlungen(
             conn, watchlist, config_module.load_config())
+        # W-3 S-2 (E-166): der 07:15-Job laeuft nicht mehr - die Zeilen sind Auskunft ueber Alt-Signale, keine offene Empfehlung
+        from scheduler import rollen_job as _RJ_s2a
+        if _RJ_s2a.alte_kette_stillgelegt() and isinstance(ausstiegs_empfehlungen, dict):
+            ausstiegs_empfehlungen["stillgelegt"] = (
+                _RJ_s2a.S2_TEXT + ": nur Auskunft, nichts davon wird gemailt oder auf der Statusseite gezeigt")
         # CRV-Breakeven-Baender (2026-08-03, Population B). Ebenfalls VOR
         # conn.close(), gleiche Falle wie oben.
         #

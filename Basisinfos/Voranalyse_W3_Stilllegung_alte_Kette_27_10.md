@@ -67,7 +67,7 @@ Nutzer 27.10.: *„ja W-2 und W-3 Voranalyse starten, prüfen gegenprüfen und d
 ## 5. Offene Fachfragen (nicht Teil von S-1)
 
 1. ~~H15-Plan für REGEL0-Positionen~~ **zurückgezogen (27.10., nachgelesen):** `plan_zu` sucht Stop und Ziel eines Signals der alten Kette, für *Schließen / Stop nachziehen / Hebel senken*. Die REGEL0 hat weder Stop noch Ziel, ihre Regel ist *24 h halten*. Die kennt H15 schon: `regel0_messstand.haltedauer_text` (E3, 18.10.) ordnet jeder Position ihr REGEL0-Signal zu (*„seit … h offen (Regel 24 h, überschritten) · REGEL0-Signal …“* bzw. *„eigene Entscheidung“*). Liquidation und Finanzierung laufen ohne Plan. **Für REGEL0-Positionen fehlt nichts.**
-2. **Ende der Alt-Messung:** Backward-Tracking und Ausstiegsverfolgung sind nach den letzten 20 Handelstagen fertig. Danach können sie in S-2 abgemeldet werden.
+2. **Ende der Alt-Messung:** Backward-Tracking und Ausstiegsverfolgung sind nach den letzten 20 Handelstagen fertig. Danach können sie in S-2 abgemeldet werden. ⚠️ **Berichtigt 03.11.** ([`Voranalyse_S2_Jobs_alte_Kette_03_11.md`](Voranalyse_S2_Jobs_alte_Kette_03_11.md) §1): Die 20 Handelstage gelten nur für die Ausstiegsverfolgung (H20). Das Backward-Tracking läuft bis Ziel, Stop oder Ablauf nach 14/45/120/90 Tagen. Die 21 offenen Alt-Signale enden nach dieser Regel erst ~24.11. bis ~13.01.2027.
 3. `_melde_datenfrische` prüft auch Quellen, die nur die alte Kette brauchte. Bei S-2 dürfen keine Frische-Warnungen für abgemeldete Zulieferer kommen.
 
 ## 6. Gegenprüfung dieser Voranalyse

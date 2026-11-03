@@ -732,6 +732,10 @@ def lebendigkeit_job(conn_factory, watchlist_provider) -> bool:
     Faellt der Job aus, fehlt ein Messpunkt - nie ein Signal. Deshalb faengt
     er breit ab und meldet nur.
     """
+    from scheduler import rollen_job as _RJ_s2
+    if _RJ_s2.alte_kette_stillgelegt():                     # W-3 S-2 (E-166): einziger Leser war die alte Kette
+        logger.info("Lebendigkeit uebersprungen - %s: kein Abruf.", _RJ_s2.S2_TEXT)
+        return True
     from agent import lebendigkeit as LB
 
     try:
@@ -775,7 +779,9 @@ def marktscan_job(coingecko_client, kraken_client, conn_factory, watchlist_provi
         from agent.krypto.pipeline import compute_current_regime
 
         config_dict = config_module.load_config()
-        if not config_dict["marktscan"].get("aktiv", True):
+        # ⚠️ W-3 S-2 Frage 2 (03.11.2026, E-166): fehlt der Schluessel oder der Abschnitt, bleibt er AUS (vorher: an - ein
+        # Dateifehler haette den ruhenden Scan mit CoinGecko-Abrufen und Kaufkandidaten-Mails wieder angeschaltet)
+        if not (config_dict.get("marktscan") or {}).get("aktiv", False):
             logger.info("Marktscan deaktiviert (config.yaml marktscan.aktiv=false) - übersprungen")
             return True
 
@@ -877,7 +883,6 @@ def ausstiegs_job(conn_factory, watchlist_provider) -> None:
     from agent.krypto.ausstiegsregel import parameter_aus_config
     from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
 
-    cfg = config_module.load_config()
     # DEN LAUF VERMERKEN, UND ZWAR BEI JEDEM AUSGANG (16.08.2026).
     #
     # Der Nachholer in `build_scheduler()` fragt "lief er heute schon?". Wuerde
@@ -889,6 +894,12 @@ def ausstiegs_job(conn_factory, watchlist_provider) -> None:
         db.merke_joblauf(_c0, "ausstiegs_empfehlungen")
     finally:
         _c0.close()
+    from scheduler import rollen_job as _RJ_s2
+    if _RJ_s2.alte_kette_stillgelegt():                     # W-3 S-2 (E-166): rechnet nur Signale der alten Kette
+        logger.info("Ausstiegs-Empfehlungen uebersprungen - %s: keine Fuehrung, keine Ausstiegsverfolgung, keine Mail.",
+                    _RJ_s2.S2_TEXT)
+        return
+    cfg = config_module.load_config()           # erst NACH der Sperre: eine kaputte config.yaml stoert den stillgelegten Job nicht
 
     _ausloese, _abstand, aktiv = parameter_aus_config(cfg)
     if not aktiv:
@@ -1213,6 +1224,15 @@ def backward_tracking_job(conn_factory, watchlist_provider) -> None:
     derselbe taegliche Lauf, dieselbe Fehlerbehandlung, kein zweiter Scheduler-
     Eintrag noetig (identisches Timing, identische Konfiguration).
     `watchlist_provider` siehe refresh_prices_job()-Docstring (2026-07-23)."""
+    from scheduler import rollen_job as _RJ_s2
+    if _RJ_s2.alte_kette_stillgelegt():                     # W-3 S-2 (E-166): misst nur Signale der alten Kette
+        logger.info("Backward-Tracking uebersprungen - %s: die offenen Alt-Signale bleiben unveraendert.", _RJ_s2.S2_TEXT)
+        _c = conn_factory()                                  # der Nachholer fragt "lief er heute?" - wie im `finally` unten
+        try:
+            db.merke_joblauf(_c, "backward_tracking")
+        finally:
+            _c.close()
+        return
     watchlist = watchlist_provider()
     conn = conn_factory()
     try:
@@ -1266,7 +1286,7 @@ def marktscan_backward_tracking_job(
         from agent.krypto.marktscan_backward_tracking import run_marktscan_backward_tracking
 
         config_dict = config_module.load_config()
-        if not config_dict.get("marktscan", {}).get("aktiv", True):
+        if not (config_dict.get("marktscan") or {}).get("aktiv", False):     # W-3 S-2 Frage 2 (E-166): im Zweifel AUS
             logger.info("Marktscan-Erfolgsmessung: Marktscan deaktiviert - übersprungen")
             return
         # ⚠️ MISTRAL IST RAUS - DIESELBE BEHANDLUNG WIE BEI DER
@@ -2483,6 +2503,9 @@ def backward_tracking_catchup_if_missed(conn_factory, watchlist_provider) -> Non
     aufgeloeste `watchlist`-Liste weiter, backward_tracking_job() ruft ihren
     zweiten Parameter aber als Funktion auf - Absturz direkt beim App-Start,
     TypeError: 'list' object is not callable)."""
+    from scheduler import rollen_job as _RJ_s2
+    if _RJ_s2.alte_kette_stillgelegt():                     # W-3 S-2 (E-166): VOR der Meldung "hole sofort nach"
+        return
     conn = conn_factory()
     try:
         last_run = db.get_backward_tracking_last_run_date(conn)
@@ -2538,6 +2561,9 @@ def multi_asset_batch_catchup_if_missed(
     JEDEM Neustart ausserhalb der Handelszeiten feuern) - nur ein GENUIN
     verpasster Slot loest den Nachhol-Lauf aus, kein Neustart innerhalb eines
     bereits erledigten Zeitfensters."""
+    from scheduler import rollen_job as _RJ_s2
+    if _RJ_s2.alte_kette_stillgelegt():                     # W-3 S-2 (E-166): sonst bei JEDEM Start "hole sofort nach" (seit 14.08.)
+        return
     letzter_faelliger_termin = _letzter_faelliger_multi_asset_termin(datetime.now())
     conn = conn_factory()
     try:

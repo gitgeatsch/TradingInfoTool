@@ -34,8 +34,9 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                hebelfuehrung_aktiv=True,
                liquidations_warnung_abstand=0.15,
                # O42/P10 (11.10.2026, Nutzer: *"pausieren, aber nicht vergessen"*): Thesen-Abgleich und -Synthese der alten
-               # Kette (Multi-Asset) ruhen - Vorgabe: sie laufen wie bisher. Wieder einschalten mit O39, vorher die Kandidaten pruefen
-               thesen_pausiert=False,
+               # Kette (Multi-Asset) ruhen. Wieder einschalten mit O39, vorher die Kandidaten pruefen. ⚠️ Vorgabe seit W-3 S-2 Frage 2
+               # (E-166, 03.11.2026) PAUSIERT wie in der Datei: fehlt die Datei oder der Schluessel, laufen sie nicht still wieder an
+               thesen_pausiert=True,
                # P14 Spot B1 (11.10.2026): Mitnahme x3 - MAIL nur mit Schalter (das Protokoll laeuft immer); mit ihm geht die alte
                # Stop-Nachzieh-Mail fuer Spot aus (A6). Vorgabe AUS: eingeschaltet nach der Pruefung mit Nutzer-Ja (Muster O29)
                spot_mitnahme_aktiv=False,
@@ -93,12 +94,17 @@ def lade(pfad: str | None = None) -> dict:
 
 
 def thesen_pausiert(werte: dict | None = None) -> bool:
-    """Ruhen Thesen-Abgleich und -Synthese (O42/P10)? - im Zweifel (Datei unlesbar) NEIN: dann laufen beide wie vor P10.
-    Ein stiller Halt waere hier harmlos, aber er waere unsichtbar - die Vorgabe ist das bisherige Verhalten."""
+    """Ruhen Thesen-Abgleich und -Synthese (O42/P10)? - im Zweifel (Datei unlesbar) JA.
+
+    ⚠️ W-3 S-2 Frage 2 (03.11.2026, E-166, Nutzer: *"Frage 2 ja"*): bis heute hiess es hier "im Zweifel NEIN", damit ein Halt nicht
+    unsichtbar ist. Das war dieselbe Luecke wie W-3 §2: ein Dateifehler haette die ruhende Synthese wieder angeschaltet - taeglich ein
+    Gemini-Aufruf, Thesen-Abgleich, Mail "schneller Wechsel". Sichtbar bleibt der Halt trotzdem: beide Jobs schreiben ihn je Lauf ins
+    Log, die Statusseite zeigt den Schalter. Auch die VORGABE (Datei oder Schluessel fehlt) ist seither pausiert. Die Thesen sind
+    PAUSIERT, nicht stillgelegt - wieder an: false in der yaml."""
     try:
         return bool((werte if werte is not None else lade())["thesen_pausiert"])
     except Exception:                                          # noqa: BLE001
-        return False
+        return True
 
 
 def spot_abbau_aktiv(werte: dict | None = None) -> bool:

@@ -8,8 +8,8 @@ zaehlen; ``conn_factory`` und der Gemini-Client zaehlen ebenfalls. So ist nachge
 
   T1 Schalter AN: beide Jobs enden sofort - keine Verbindung, kein Abgleich, kein LLM-Aufruf; Logzeile "Thesen pausiert"
   T2 Schalter AUS: beide Jobs arbeiten wie vor P10 (Verbindung, Abgleich, Synthese mit dem Gemini-Client)
-  T3 Schluessel FEHLT: wie AUS (Vorgabe = bisheriges Verhalten)
-  T4 Datei UNLESBAR / falscher Typ: thesen_pausiert() = NEIN (laeuft weiter), lade() bricht laut ab (wie bei jedem Schalter)
+  T3 Schluessel FEHLT: wie AN - pausiert (seit W-3 S-2 Frage 2, E-166, 03.11.2026; vorher: wie AUS)
+  T4 Datei UNLESBAR / falscher Typ: thesen_pausiert() = JA (ruht; seit E-166, vorher NEIN), lade() bricht laut ab
   T5 die echte Basisinfos/regel0_betrieb.yaml: alle Leser laufen (lade, VORGABE = Datei, Schalterkarte, H15-Grenze), Schalter AN
   T6 die Wache im Scheduler bleibt: Zeile llm_clients = [("gemini", gemini_client)] unveraendert, Pruefung VOR dem Client
 """
@@ -101,7 +101,7 @@ z, l = lauf("thesen_pausiert: false\n")
 pruefe("T2", z.get("verbindung") == 2 and z.get("abgleich_vorschlaege") == 1 and z.get("synthese") == 1 and "pausiert" not in l,
        "Zaehler %s" % z)
 z, l = lauf("positionswert_eur: 1500\n")
-pruefe("T3", z.get("abgleich_vorschlaege") == 1 and z.get("synthese") == 1 and "pausiert" not in l, "ohne Schluessel: %s" % z)
+pruefe("T3", z == {} and l.count("Thesen pausiert (O42") == 2, "ohne Schluessel (seit E-166 pausiert): %s" % z)
 with tempfile.TemporaryDirectory() as t:
     p = os.path.join(t, "x.yaml")
     open(p, "w", encoding="utf-8").write("thesen_pausiert: ja\n")
@@ -114,7 +114,7 @@ with tempfile.TemporaryDirectory() as t:
     G.DATEI = p
     still = G.thesen_pausiert()
     G.DATEI = alt
-pruefe("T4", laut and still is False, "falscher Typ: lade() bricht ab %s · thesen_pausiert() %s (laeuft weiter)" % (laut, still))
+pruefe("T4", laut and still is True, "falscher Typ: lade() bricht ab %s · thesen_pausiert() %s (ruht, seit E-166)" % (laut, still))
 
 import agent.betriebslage as BL  # noqa: E402
 import agent.hebelfuehrung as HF  # noqa: E402

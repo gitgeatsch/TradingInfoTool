@@ -22637,6 +22637,17 @@ def paket_w3_stilllegung() -> None:
     pruefe(P, "⚠️⚠️ am Seiteneffekt: yaml kaputt / aktiv_fuer leer -> kein Umlauf, kein Allocator, kein Batch; Waechter 1x; H15 laeuft; "
               "GUI gesperrt; Statusseite zeigt es; umkehrbar", "8 von 8 bestanden" in (_r.stdout or ""),
            " | ".join(z for z in (_r.stdout or "").splitlines() if " FEHLER " in z) or (_r.stderr or "")[-300:])
+    # W-3 S-2 (03.11.2026, E-166): die Jobs der alten Kette ueberspringen sich; Frage 2: Thesen/Marktscan im Zweifel AUS
+    _r2 = _sp.run([sys.executable, "-X", "utf8", _os.path.join("Basisinfos", "Rechenkern_02_10", "pruefe_w3_s2.py")],
+                  capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
+    pruefe(P, "⚠️⚠️ S-2 am Seiteneffekt: lebendigkeit, Backward-Tracking, 07:15 und beide Nachholer ueberspringen sich (job_laeufe "
+              "bleibt frisch), Statusseite 'stillgelegt'; Marktscan/Thesen fallen bei fehlender/kaputter Datei auf AUS; umkehrbar; "
+              "Standard-DB unveraendert", "14 von 14 bestanden" in (_r2.stdout or ""),
+           " | ".join(z for z in (_r2.stdout or "").splitlines() if " FEHLER " in z) or (_r2.stderr or "")[-300:])
+    _qb = _quelltext("scheduler/background.py")
+    pruefe(P, "S-2: die Jobs bleiben REGISTRIERT (sonst faerbt die Statusseite sie nach 26 h dauerhaft rot)",
+           all('id="%s"' % j in _qb for j in ("lebendigkeit", "backward_tracking", "ausstiegs_empfehlungen", "multi_asset_batch"))
+           and "backward_tracking_catchup_if_missed(db_conn_factory, watchlist_provider)" in _qb)
 
 
 def paket_gesamtmarkt() -> None:
@@ -22724,8 +22735,10 @@ def paket_season_ampel() -> None:
     pruefe(P, "Diagnose season_ampel, Teilexport SEASON-AMPEL, Reiter Spot + Markt (Krypto) hinter Hebel, Reiter Regime bleibt (GUI-5)",
            '"season_ampel": _season_ampel()' in _qd and "SEASON-AMPEL (C1)" in _qt and 'text="Markt (Krypto)"' in _qa and 'text="Spot"' in _qa
            and 'text="Regime"' in _qa and _qa.index('text="Hebel"') < _qa.index('text="Spot"') < _qa.index('text="Regime"'))
-    pruefe(P, "O43: Marktscan ruht (config.yaml marktscan.aktiv false) - der Job prueft den Schalter je Lauf",
-           _C.load_config()["marktscan"]["aktiv"] is False and 'if not config_dict["marktscan"].get("aktiv", True):' in _qb)
+    # Seit W-3 S-2 Frage 2 (E-166, 03.11.2026) ist die Vorgabe AUS - am Verhalten geprueft in pruefe_w3_s2.py (T9/T10), hier die Stelle
+    pruefe(P, "O43: Marktscan ruht (config.yaml marktscan.aktiv false) - der Job prueft den Schalter je Lauf (fehlt er: AUS, E-166)",
+           _C.load_config()["marktscan"]["aktiv"] is False
+           and 'if not (config_dict.get("marktscan") or {}).get("aktiv", False):' in _qb)
     # ---- Mail-Lage synthetisch: Startmarke, Haltezeit, Schalter aus = nicht nachgeholt, Revision ohne Scheinwechsel
     _T = _tf.mkdtemp(prefix="sampel_")
     try:

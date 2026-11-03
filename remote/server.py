@@ -1114,7 +1114,11 @@ async function refreshStatus() {
     var ae = data.ausstiegs_empfehlungen;
     var liste = ae.empfehlungen || [];
     var html = "";
-    if (!ae.parameter || ae.parameter.aktiv === false) {
+    if (ae.stillgelegt) {
+      // W-3 S-2 (E-166): der 07:15-Job laeuft nicht mehr - keine Alt-Signal-Zeilen
+      html = '<div class="row"><span class="muted-text">' + esc(ae.stillgelegt)
+           + " - der Spot-Bestand wird von B1/B3/B4 gefuehrt, Hebel von H15</span></div>";
+    } else if (!ae.parameter || ae.parameter.aktiv === false) {
       html = '<div class="row"><span class="muted-text">'
            + "über config abgeschaltet (risiko.ausstieg_trailing_*)</span></div>";
     } else if (!liste.length) {
@@ -1144,7 +1148,8 @@ async function refreshStatus() {
     // P9: die Kopfzeile in *Betrieb* - Anzahl und letzter Lauf des Ausstiegsjobs (Sammelmail 07:15)
     const jobA = ((data.betrieb || {}).jobs || []).find(j => j.job === "ausstiegs_empfehlungen");
     document.getElementById("ausstieg-kopf").textContent =
-      (!ae.parameter || ae.parameter.aktiv === false) ? "abgeschaltet"
+      ae.stillgelegt ? "stillgelegt"
+      : (!ae.parameter || ae.parameter.aktiv === false) ? "abgeschaltet"
       : liste.length + " von " + (ae.geprueft || 0) + (jobA ? " · Lauf " + fmtAlter(jobA.alter_min) : "");
   }
 

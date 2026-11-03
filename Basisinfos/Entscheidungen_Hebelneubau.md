@@ -2293,3 +2293,32 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Nachtrag 28.10. (Nutzer: „ja, bitte bauen prüfen und gegenprüfen“ · „und doku - hast du unser Konzept mit dem Gesamtplan abgeglichen bzw. adaptiert?“):** Nein, bis dahin nicht. Der Abgleich fand: **H-1a = V-1** (E-158, Bremse nicht trennbar) → **gestrichen**; **marktweiter Rückenwind = L2-a** (E-151/E-153, nicht entscheidbar) → Auskunft. H-1b (je Asset, Tagesklammer, kein Einstiegsfilter) und H-1c sind neu. **Messplan Fassung 2** vor jedem Werkzeug. Nachgezogen: `Plan_Schritt59` Nachträge 83/84, `Arbeitsstand_Schritt59` Stand 27.10. abends/28.10., `Plan_Hebel_fuenf_Phasen` Stand-Zeile 28.10.
 - **Nachtrag 28.10. Ergebnis H-1 (Nutzer: „Ok prüfen und gegenprüfen“):** Messplan Fassung 4 (Log-Differenz, t-Band), Selbsttest 1.000 Welten ✔, Gegenprobe ✔. **H-1b trägt nicht** (eigener 50-T-Trend ändert den Wert längeren Haltens nicht, X 1–2 Pp); Auskunft c (Stärke gegen BTC) durchgehend negativ, nur Hinweis. **H-1c trägt nicht** nach Vorab-Regel; D6 an der Nachweisgrenze (2/4 TRÄGT, 12/12 Jahre und 8/8 zweiter Weg positiv, je Handel kein Vorteil). Zwischenfazit: Die Wie-Schicht trägt beim **Risiko** (K6), nicht beim **Ertrag**. ➤ Zur Abstimmung (Messplan §9). Register erst nach Abstimmung.
 - **Nachtrag 28.10. abends (Nutzer: *„auf Basis der Durchführung sicher nicht falsch. Aber mir fehlt die Intelligenz in der Bewertung, mit statischen mathematischen Berechnungen kommen wir nicht weiter“*):** H-1 abgeschlossen, Register E-165-h1b/-h1c. Nullpunkt nicht nachträglich neu gezogen. Das Zwischenfazit „Wert nur in Risiko und Fakten“ wird **nicht** als Richtung festgeschrieben. ➤ Voranalyse `Voranalyse_Dashboard_LLM_28_10.md` (Bestandsaufnahme + LLM-Aufgaben A1–A6), Frage §8 zur Abstimmung.
+
+# E-166 · W-3 S-2 gebaut: die Jobs der alten Kette überspringen sich (dieselbe Konstante wie S-1); Thesen und Marktscan fallen im Zweifel auf AUS (03.11.2026)
+
+**03.11.2026** · Nutzer: *„Ok, S-2-Voranalyse angehen“* · *„Ok a und Frage 2 ja – bauen, prüfen, gegenprüfen und doku“*
+
+**Voranalyse:** `Voranalyse_S2_Jobs_alte_Kette_03_11.md`.
+- **Befund:** `lebendigkeit`, Backward-Tracking, 07:15 (Stop-Nachzieh, Führung, Ausstiegsverfolgung) und die Nachholer haben keinen Leser im neuen Betrieb.
+  - Die 21 offenen Alt-Signale (HYPE 15, ASTER 5, VSN 1) tragen nach dem Messregelwerk keinen Befund.
+  - Sie laufen nach den Ablaufregeln (14/45/120/90 T) erst ~24.11.–13.01. aus. W-3 §5.2 („nach 20 Handelstagen“) war zu früh.
+- **Abmelden** hätte die Statusseite dauerhaft rot gefärbt (26-h-Grenze). Darum **Weg a**: Die Jobs bleiben registriert und überspringen sich.
+
+**Gebaut:**
+- `rollen_job.ALTE_KETTE_STILLGELEGT` sperrt jetzt auch `lebendigkeit_job`, `backward_tracking_job`, `ausstiegs_job` und die beiden Start-Nachholer.
+- Statusseite und Diagnose zeigen „stillgelegt“.
+- **Frage 2:** `thesen_pausiert()` und `VORGABE` sind im Zweifel *pausiert*. `marktscan.aktiv` hat die Vorgabe *aus*.
+- `makro_analog`, `lagebild_reihen` und `externe_reihen` **bleiben** (REGEL0-LLM-Block).
+
+**Prüfung:**
+- `pruefe_w3_s2.py` **14/14** am Seiteneffekt, umkehrbar, Standard-DB sha256-gleich.
+- S-1 8/8. Paket W3Stilllegung erweitert.
+- **Gegenprüfung** (unabhängig): 7 Befunde, alle bearbeitet.
+  - Darunter `p14_pruefstand` S9 (wäre rot gewesen).
+  - Der WAL-blinde Schutz der Produktion.
+  - H15 liest `signals.outcome_*` gekoppelter Hebel-Alt-Signale. Folgenlos, am NB keines offen.
+- Nebenbei `o54_pruefstand` M6 (Bindestrich-Umbruch im Vergleich, nicht S-2).
+
+**Fällt weg:** die Messung der Alt-Signale, die TVL-/Entwickler-Reihe (≈ 195 CoinGecko-Abrufe/Monat). Keine Mail, die heute ankommt.
+
+**NB:** mit dem Bündel G8, Kontrolle K-W3-S2.

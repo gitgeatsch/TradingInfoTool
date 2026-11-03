@@ -1,0 +1,16 @@
+﻿T1   bestanden stillgelegt: lebendigkeit sammelt nicht (Aufrufe 0, DB-Verbindungen 0), Rueckgabe True, Logzeile True
+T2   bestanden UMKEHRBAR: Konstante False -> lebendigkeit sammelt (Aufrufe 1)
+T3   bestanden stillgelegt: keine Messung (Spot 0, Hebel 0, Datum 0) - job_laeufe vermerkt True
+T4   bestanden UMKEHRBAR: Spot 1, Hebel 1, Datum 1
+T5   bestanden stillgelegt, sogar bei kaputter config.yaml (Wurf None): Rechnung/Fuehrung/Verfolgung/Mail [0, 0, 0, 0] - job_laeufe vermerkt True
+T6   bestanden UMKEHRBAR: Rechnung/Fuehrung/Verfolgung/Mail [1, 1, 1, 1]
+T7   bestanden stillgelegt: nichts nachgeholt (BT 0, Batch 0), keine DB-Verbindung (0), keine Zeile 'hole sofort nach'
+T8   bestanden UMKEHRBAR: BT 1, Batch 1 nachgeholt
+T9   bestanden Statusseite: stillgelegt -> alte Kette stillgelegt (W-3 S-2, E-166) ohne Rechnung; aus -> rechnet (Aufrufe 1); Seite kennt den Zweig
+T10  bestanden Marktscan + Erfolgsmessung je Konfiguration (ohne Abschnitt / leer / None / false / true): Scan, Messung, Fehlermail [(0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (0, 0, 0, 0), (1, 1, 0, 1)]
+T11  bestanden Marktscan-Sperre nach allen Laeufen frei
+T12  bestanden Thesen: yaml kaputt -> pausiert True, Synthese 0, Vorschlaege 0, DB 0 · Datei fehlt -> True · Schluessel fehlt -> True
+T13  bestanden UMKEHRBAR: thesen_pausiert: false -> Synthese 1, Vorschlaege 1
+T14  bestanden Standard-DB unveraendert (sha256 .db/-wal: gleich) · umgebogener Pfad nie angelegt True · Fehlermails 0 · Wegwerf D:\CLAUDE_Temp\TradingInfoTool\w3s2_g40ek_w4
+
+W-3 S-2 am Seiteneffekt: 14 von 14 bestanden

@@ -878,7 +878,13 @@ def _get_ausstiegs_empfehlungen(conn, watchlist: list) -> dict:
 
     Reiner Lesezugriff auf backward_tracking.py::
     compute_ausstiegs_empfehlungen(). Advisory-only (P-7) - die
-    Empfehlung wird angezeigt, nicht ausgefuehrt."""
+    Empfehlung wird angezeigt, nicht ausgefuehrt.
+
+    ⚠️ W-3 S-2 (03.11.2026, E-166): bei stillgelegter alter Kette KEINE Rechnung - die Karte zeigte sonst Stop-Empfehlungen fuer
+    Alt-Signale, die niemand mehr fuehrt (NB 01.11.: 21 Zeilen HYPE/ASTER/VSN)."""
+    from scheduler import rollen_job as _RJ
+    if _RJ.alte_kette_stillgelegt():
+        return {"stillgelegt": _RJ.S2_TEXT, "empfehlungen": [], "geprueft": 0}
     from agent.krypto.backward_tracking import compute_ausstiegs_empfehlungen
     import config as _config
     return compute_ausstiegs_empfehlungen(conn, watchlist, _config.load_config())

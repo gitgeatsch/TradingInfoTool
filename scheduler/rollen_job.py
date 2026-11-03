@@ -53,11 +53,16 @@ VORGABE_AKTIV_FUER: tuple[str, ...] = ()
 ALTE_KETTE_STILLGELEGT = True
 STILLGELEGT_TEXT = ("die alte Spot-Kette ist stillgelegt (W-3 S-1, E-164): Hebel-Signale kommen aus der REGEL0, die Spot-Fuehrung "
                     "aus B1/B3/B4")
+# ⚠️ W-3 S-2 (03.11.2026, E-166, Nutzer: *"Ok a"*): dieselbe Konstante sperrt auch die JOBS, die nur der alten Kette dienten -
+# `lebendigkeit` (03:20), Backward-Tracking (06:00), Stop-Nachzieh/Ausstiegsverfolgung (07:15) und die beiden Nachholer beim Start
+# (Voranalyse_S2_Jobs_alte_Kette_03_11.md). Sie bleiben REGISTRIERT und ueberspringen sich: `job_laeufe` bleibt frisch, die
+# Statusseite faerbt sie nicht rot (26-h-Grenze). Die offenen Alt-Signale bleiben `offen` stehen - umgeschrieben wird nichts.
+S2_TEXT = "alte Kette stillgelegt (W-3 S-2, E-166)"
 
 
 def alte_kette_stillgelegt() -> bool:
     """W-3 S-1: True = Umlauf, Allocator, Multi-Asset-Batch und die Knoepfe der alten Pipelines laufen NICHT - egal was in
-    regel0_betrieb.yaml oder config.yaml steht."""
+    regel0_betrieb.yaml oder config.yaml steht. Seit S-2 auch `lebendigkeit`, Backward-Tracking, 07:15 und die Nachholer."""
     return bool(ALTE_KETTE_STILLGELEGT)
 
 

@@ -172,7 +172,9 @@ pruefe("M5", r5["gesamt_kurz"] == d["gesamt_kurz"] and r5["fehler"] and KEY not 
            r5["gesamt_kurz"] == d["gesamt_kurz"], (r5["fehler"] or "")[:60], KEY not in (r5["fehler"] or ""), ML.zustand(ML.lade(z5b))))
 
 # ══ M6 Mails ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-_fl = lambda x: " ".join(x.split())  # noqa: E731
+# 03.11.2026: der Zeilenumbruch der Textmail darf an einem Bindestrich trennen ("Aktien-" / "Angst") - flach gelegt wurde daraus
+# "Aktien- Angst", und M6 fiel, sobald der Treiber "Aktien-Angst (VIX)" in der Zeile stand. Der Inhalt war gleich, nur der Vergleich nicht
+_fl = lambda x: __import__("re").sub(r"-\s+(?=\w)", "-", " ".join(x.split()))  # noqa: E731
 mt = ML.mailteil(d)
 _rf = dict(symbol="TAO", bitpanda="TAO", signalstunde="2026-10-14 10:00", einstieg="2026-10-14 11:00", ausstieg="2026-10-15 11:00",
            kurs=300.0, kurs_markt="spot", p2=0.001, p3=0.007, p5=0.107, vh=0.0411, kurs_eur=260.0)

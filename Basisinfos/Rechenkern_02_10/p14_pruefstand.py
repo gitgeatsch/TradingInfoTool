@@ -177,10 +177,14 @@ AV.verfolge = lambda *a_, **k_: lief.append("verfolgung") or {}
 import agent.krypto.ausstiegsregel as AR  # noqa: E402
 _par = AR.parameter_aus_config
 AR.parameter_aus_config = lambda cfg: (1.0, 1.0, True)
+import scheduler.rollen_job as RJ  # noqa: E402
+_s2 = RJ.ALTE_KETTE_STILLGELEGT
+RJ.ALTE_KETTE_STILLGELEGT = False          # W-3 S-2 (E-166): der 07:15-Job ueberspringt sich sonst - A6 gilt fuer den Fall der Umkehr
 schalter["an"] = True
 BG.ausstiegs_job(fab, lambda: WL)
 schalter["an"] = False
 BG.ausstiegs_job(fab, lambda: WL)
+RJ.ALTE_KETTE_STILLGELEGT = _s2
 BT.compute_ausstiegs_empfehlungen, BG._sende_ausstiegs_email, FP.schreibe, AV.verfolge = _alt
 AR.parameter_aus_config = _par
 pruefe("S9", gesendet == [["Y"], ["X", "Y"]] and lief.count("protokoll") == 2 and lief.count("verfolgung") == 2,
