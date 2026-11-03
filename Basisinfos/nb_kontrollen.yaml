@@ -651,6 +651,15 @@ kontrollen:
     art: ereignis
     nachweis: "Ereignis = Pull des NB-Buendels G8. Danach: Statusseite Betriebskarte OHNE rote Zeile 'Kernwert ohne REGEL0/Hebel' (BTC/ETH/SOL an); Teilexport 'Kernwerte ohne REGEL0/Hebel: keiner'; Diagnose kern_hebel_luecke = []; GUI: Klick auf Hebel-Schalter von BTC fragt nach (mit Nein abbrechen); REGEL0-ERGEBNIS-Zeilen im Log mit Feld schalter_fehler = [] und keine neue Fehlermail"
     status: offen
+  - id: K-Z1-1
+    titel: "Z-1 Fassung 2 (G8 Weg b): REGEL0-Pruefblock erkennt grosse Zahlen als EINE Zahl, Spalte ungedeckt traegt die Fassung - mit dem NB-Buendel G8a"
+    seit: "2026-11-03"
+    paket: Zahlendeckung
+    commit: ""
+    art: manuell
+    faellig_bis: "2026-11-30"
+    nachweis: "Nach dem Pull G8a, bei der naechsten Kopie von data/regel0_signale.db (mode=ro, wie regel0_kopie_T440): Zeilen der Tabelle pruefung mit am nach dem Pull, rolle markt/trader und ergebnis IS NOT NULL (Fehler, Sperre und fehlende Eingabe bleiben NULL wie bisher) tragen in ungedeckt {\"fassung\": 2, \"ungedeckt\": [...]}, auch bei leerer Liste; Entscheider NULL; aeltere Zeilen unveraendert (Liste oder NULL). Keine sichtbare Wirkung in Mail oder Statusseite - die Spalte liest niemand (Voranalyse G8 Par. 3)"
+    status: offen
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}

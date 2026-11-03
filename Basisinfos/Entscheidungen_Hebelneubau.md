@@ -2347,3 +2347,29 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - Gegenprüfung: kein schwerer Befund. G8 von Textreihenfolge auf echten Lauf umgestellt, die Diagnose rechnet wie die Statusseite. Stündliche Fehlermail bei bleibendem Lesefehler bewusst gelassen.
 
 **NB:** mit dem Bündel G8, Kontrolle K-G14-1.
+
+# E-168 · G8 Weg b: Bündel G8a ans NB, Z-1 im REGEL0-Prüfblock mit eigener Zahlenerkennung (03.11.2026)
+
+**03.11.2026** · Nutzer: *„ja G8 prüfen und gegenprüfen und doku“* · *„Ok b“*
+
+**Voranalyse:** `Voranalyse_G8_NB_Buendel_03_11.md`.
+- G8 wird geteilt. **G8a** geht jetzt ans NB: S-2 (E-166), G14 (E-167) und Z-1. **G8b** folgt nach G7 und dem GDELT-Urteil: B1–B6, GDELT live, S7 live und Prüfer v2.
+- Weg b statt a: Z-1 kommt mit, obwohl die Spalte `ungedeckt` im Betrieb niemand liest.
+
+**Gebaut:**
+- `regel0_llm` hat eine **eigene** Zahlenerkennung: die alte Regel mit vertauschter Reihenfolge, die lange Ziffernfolge zuerst. Sie zerlegt große Zahlen nicht mehr (`71211.95` statt `712 | 11.95`).
+- Die gemeinsame `gegenpruefer_rollen._ZAHL` bleibt unverändert. Die Messskripte und die G7-Reproduktion hängen daran (R-R11).
+- In der Spalte `ungedeckt` steht jetzt **immer** `{"fassung": 2, "ungedeckt": [...]}`, auch wenn die Liste leer ist. Der Entscheider schreibt weiter NULL.
+
+**Prüfung:**
+- Paket **Zahlendeckung** 6/6, über den **echten Weg** `pruefe_signal` mit gestelltem Modell in eine Wegwerfablage.
+- Zufallsprobe über 17.156 Zeichenfolgen ohne vierstellige Zahl: Sie liest **gleich wie vorher**.
+- Fünf Mutationen erkannt.
+- Echte NB-Prüfungen (Kopie 14.10., 27 Zeilen): alt = neu = gespeichert.
+
+**Gegenprüfung:** kein schwerer Befund. Eingearbeitet:
+- Die erste Fassung las auch Daten, Spannen und Tausenderpunkte anders und hatte einen Exponenten. Ersetzt durch die umgestellte alte Regel.
+- Die Pfadprüfung lief per Textsuche. Ersetzt durch den echten Weg.
+- K-Z1-1 auf `ergebnis IS NOT NULL` eingeschränkt.
+
+**NB:** Bündel G8a, Kontrollen K-W3-S2, K-G14-1 und K-Z1-1.

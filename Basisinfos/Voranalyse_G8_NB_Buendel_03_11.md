@@ -91,3 +91,12 @@ Der Fehler ist echt. `_ZAHL = [-+]?\d{1,3}(?:[.,]\d+)?|\d{4,}` greift immer zuer
 | `cycles.py` und `nb_kontrollen.yaml` werden im Betrieb gelesen | leicht | §2 (folgenlos bzw. nur Anzeige) |
 | Frage 2 von E-166 fehlte | leicht | §2 |
 | `git status` vor dem Pull; was beim Neustart läuft | leicht | §5 Punkte 3 und 5 |
+
+## 7. Entscheid und Bau (03.11.)
+
+Nutzer: *„Ok b“*. **G8a = S-2 + G14 + Z-1 lokal in `regel0_llm` mit Fassungsmarke**, gebaut als **E-168**.
+- Die Erkennung ist die alte Regel mit der langen Ziffernfolge zuerst. Ohne vierstellige Zahl liest sie gleich wie vorher (Zufallsprobe 17.156).
+- Die gemeinsame `_ZAHL` ist unverändert.
+- Paket Zahlendeckung prüft den echten Weg bis in die Ablage. Kontrolle K-Z1-1.
+
+⚠️ Am 03.11. hat der Nutzer schon **vor** dem Push gezogen. Angekommen ist nur der GitHub-Stand vom 02.11. 13:42 (`62d7d556`): neue Module, die nicht geladen werden, die FOMC-Liste und `nb_kontrollen.yaml`. Folgenlos laut §2. S-2, G14 und Z-1 kommen mit dem nächsten Pull nach dem Push (Ablauf §5).

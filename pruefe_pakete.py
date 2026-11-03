@@ -32748,6 +32748,75 @@ def paket_zaehlung() -> None:
     finally:
         wegwerf.aufraeumen(tmpz)
 
+def paket_zahlendeckung() -> None:
+    """G8 Weg b (03.11.2026): Z-1 im REGEL0-Pruefblock mit EIGENER Zahlenerkennung, Fassung 2.
+
+    `gegenpruefer_rollen._ZAHL` zerlegt grosse Zahlen (71211.95 -> 712 | 11.95). Behoben NUR in `regel0_llm` - die gemeinsame
+    Erkennung bleibt fuer die Messskripte (R-R11). Geprueft am VERHALTEN: ganze Zahlen, sonst gleich wie vorher (Buchstaben
+    daneben), Fehlalarm und Fehldeckung aus G7-5 behoben, und die Fassung steht in JEDER gespeicherten Zeile."""
+    import json as _js
+    import os
+    import tempfile as _tf
+    P = "Zahlendeckung"
+    import agent.regel0_llm as L
+    import agent.regel0_ablage as AB
+    from agent import gegenpruefer_rollen as Z1
+
+    pruefe(P, "⚠️ die gemeinsame Erkennung (gegenpruefer_rollen._ZAHL) ist UNVERAENDERT - Messskripte und G7-Reproduktion (R-R11)",
+           Z1._ZAHL.pattern == r"[-+]?\d{1,3}(?:[.,]\d+)?|\d{4,}", Z1._ZAHL.pattern)
+    ganz = {"71211.95": [71211.95], "2061501": [2061501.0], "5808": [5808.0], "Kurs 7600.": [7600.0], "-71211": [-71211.0],
+            "2026-09-14": [2026.0, -9.0, -14.0]}
+    falsch = {t: L._zahlen(t) for t, soll in ganz.items() if L._zahlen(t) != soll}
+    pruefe(P, "⚠️⚠️ grosse Zahlen bleiben EINE Zahl (vorher 71211.95 -> 712 | 11.95, 2026 -> 202 | 6)", not falsch, str(falsch))
+    # ⚠️ Gegenpruefung 03.11.: eine Handvoll Beispiele haette die erste Fassung durchgelassen (Daten, 12-15, 1.234,5 lasen anders).
+    # Deshalb eine ZUFALLSPROBE ueber alle Zeichen, die eine Zahl bilden: ohne Ziffernfolge ab vier Stellen muss sie GLEICH lesen.
+    import random as _rd
+    _g = _rd.Random(11)
+    _abc = "0123456789" * 3 + ".,-+eE %[]_aP: "
+    _proben = ["2026-09-14 10:00", "12-15 Tage", "1.234,5", "12.345.678", "3.2.1", "[1,2,3]", ".5", "1e-05", "7e5", "S2 h24 P14 5er 3-fach",
+               "-0.00307 %", "1,5 Prozent", "rang 3 von 41"] + ["".join(_g.choice(_abc) for _ in range(_g.randint(1, 24))) for _ in range(40000)]
+    _kurz = [t for t in _proben if not re.search(r"\d{4}", t)]
+    anders = [(t, L._zahlen(t), Z1._zahlen(t)) for t in _kurz if L._zahlen(t) != Z1._zahlen(t)]
+    pruefe(P, "⚠️⚠️ ohne Ziffernfolge ab vier Stellen liest sie GENAU wie vorher (%d Proben: Daten, Spannen, Tausenderpunkte, "
+           "Vorzeichen, Exponent, Zufall)" % len(_kurz), len(_kurz) > 15000 and not anders, str(anders[:3]))
+    _f = L.zahlendeckung({"belege": [{"fakt": "S&P bei 7600"}], "begruendung": ""}, {"spx": 7599.85})
+    _d = L.zahlendeckung({"belege": [{"fakt": "Wert 5808"}], "begruendung": ""}, {"a": 580, "b": 8})
+    pruefe(P, "⚠️⚠️ G7-5 behoben: 7600 bei Eingabe 7599,85 ist gedeckt (vorher Fehlalarm), 5808 bei Eingabe 580 und 8 nicht (vorher gedeckt)",
+           _f == [] and _d == [5808.0], "%s · %s" % (_f, _d))
+    e0 = L.deckung_eintrag({"belege": [{"fakt": "Wert 5808"}], "begruendung": ""}, {"a": 5808})
+    pruefe(P, "die Fassung steht auch, wenn ALLES gedeckt ist", e0 == {"fassung": L.ZAHLENDECKUNG_FASSUNG, "ungedeckt": []}
+           and L.ZAHLENDECKUNG_FASSUNG == 2, str(e0))
+    # ---- der ECHTE Weg (pruefe_signal mit gestelltem Modell), nicht eine Textsuche nach der Aufrufstelle (Gegenpruefung 03.11.)
+    class _Modell:
+        def chat(self, msgs, model=None, temperature=None, response_format=None):
+            if "bestaetigt|mit_vorbehalt|einwand" in msgs[0]["content"]:
+                return '{"urteil": "bestaetigt", "begruendung": "b", "gegengrund": "g"}'
+            return ('{"belege": [{"fakt": "Wert 5808, S&P bei 7600", "richtung": "dafuer"}], "urteil": "neutral", '
+                    '"begruendung": "b", "gegengrund": "g"}')
+    _k = L.lade()
+    _k3 = dict(_k, stimmen=1, rollen=dict(_k["rollen"], entscheider=dict(_k["rollen"]["entscheider"], an=True)))
+    _r = dict(symbol="ZZZ", bitpanda="ZZZ", signalstunde="2026-11-03 10:00", einstieg="2026-11-03 11:00", ausstieg="2026-11-04 11:00",
+              stufe=3, kurs=1.0, vh=0.04, p2=0.0, p3=0.0, p5=0.0)
+    T = _tf.mkdtemp(prefix="zahlendeckung_")
+    _alt_t, _alt_m = L.trader_eingabe, L.markt_eingabe
+    try:
+        L.trader_eingabe = lambda r, o, k, db=None: {"geplant": "p", "lage": "Werte 580 und 8, Index 7599,85"}
+        L.markt_eingabe = lambda r, db: {"geplant": "p", "marktlage": "Werte 5808 und 7600"}
+        L.pruefe_signal(_r, _Modell(), T, T, "x", _k3)
+        c = AB.oeffne(T)
+        try:
+            z = dict(c.execute("SELECT rolle, ungedeckt FROM pruefung").fetchall())
+        finally:
+            c.close()
+        pruefe(P, "⚠️⚠️ echter Weg in die Ablage: Trader {fassung 2, [5808]}, Markt {fassung 2, []} (vorher NULL), Entscheider NULL",
+               z.get("trader") and _js.loads(z["trader"]) == {"fassung": 2, "ungedeckt": [5808.0]}
+               and z.get("markt") and _js.loads(z["markt"]) == {"fassung": 2, "ungedeckt": []}
+               and "entscheider" in z and z["entscheider"] is None, str(z))
+    finally:
+        L.trader_eingabe, L.markt_eingabe = _alt_t, _alt_m
+        wegwerf.aufraeumen(T)
+
+
 def paket_kursdateien() -> None:
     """G17 (03.11.2026): die vier Kursdateien der REGEL0 am Desktop gegen die Referenz vom 02.10. - bitgenau.
 
@@ -34328,6 +34397,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Hebelneubau": paket_hebelneubau,
           "Regel0Betrieb": paket_regel0_betrieb,
           "Kursdateien": paket_kursdateien,
+          "Zahlendeckung": paket_zahlendeckung,
           "Zaehlung": paket_zaehlung,
           "Trennung": paket_trennung,
           "Zellen": paket_zellen,

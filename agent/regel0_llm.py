@@ -29,6 +29,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import time
 from datetime import datetime, timedelta, timezone
@@ -544,13 +545,34 @@ def validiere(rolle: str, a) -> dict:
     return aus
 
 
+# Z-1 im REGEL0-Pruefblock, FASSUNG 2 (03.11.2026, G8 Weg b): eine EIGENE Zahlenerkennung. `gegenpruefer_rollen._ZAHL` zerlegt grosse
+# Zahlen - die kurze Alternative greift immer zuerst: 71211.95 -> 712 | 11.95, 2026 -> 202 | 6, 5808 -> 580 | 8 (G7 G7-5). Dort bleibt sie
+# UNVERAENDERT, weil die Messskripte g7_stufe0/g7_voranalyse daran haengen (R-R11: "Z-1 erkennt ~40 %"). Die Fassung steht in jeder
+# Zeile der Spalte `ungedeckt` - die Zaehlung vorher und nachher ist nicht vergleichbar (Jahreszahlen zaehlen jetzt als EINE Zahl).
+# ⚠️ Gegenpruefung 03.11.: eine erste Fassung las auch Daten, Spannen (12-15) und Tausenderpunkte anders. Jetzt ist es die ALTE Regel
+# mit vertauschter Reihenfolge: ohne Ziffernfolge ab vier Stellen liest sie Zeichen fuer Zeichen gleich (Paket Zahlendeckung, Zufallsprobe).
+# ⚠️ Bleibt offen: deutsche Tausenderpunkte (71.212) lesen sich als 71,212; Z-1 haelt weiter gegen ALLE Zahlen der Eingabe (G7-5) -
+# ersetzt wird beides erst durch den Pruefer v2 (agent/gutachten_pruefer.py) mit G8b.
+ZAHLENDECKUNG_FASSUNG = 2
+_ZAHL = re.compile(r"[-+]?\d{4,}(?:[.,]\d+)?|[-+]?\d{1,3}(?:[.,]\d+)?")   # die alte, nur die LANGE Folge zuerst
+
+
+def _zahlen(text: str) -> list:
+    return [float(t.replace(",", ".")) for t in _ZAHL.findall(text or "")]
+
+
 def zahlendeckung(antwort: dict, eingabe: dict) -> list:
     """Z-1 der Treuepruefung: Zahlen der Belege, die in der Eingabe NICHT stehen - gezaehlt, nicht verworfen."""
     from agent import gegenpruefer_rollen as Z1
-    quelle = json.dumps(eingabe, ensure_ascii=False)
-    da = Z1._zahlen(quelle)
+    da = _zahlen(json.dumps(eingabe, ensure_ascii=False))
     text = " ".join([b["fakt"] for b in antwort.get("belege") or []] + [antwort.get("begruendung") or ""])
-    return [z for z in Z1._zahlen(text) if abs(z) not in Z1._HARMLOS and not any(abs(z - x) <= Z1.TOLERANZ for x in da)]
+    return [z for z in _zahlen(text) if abs(z) not in Z1._HARMLOS and not any(abs(z - x) <= Z1.TOLERANZ for x in da)]
+
+
+def deckung_eintrag(antwort: dict, eingabe: dict) -> dict:
+    """Was in die Spalte `ungedeckt` geht: IMMER mit Fassung, auch wenn alles gedeckt ist - sonst ist eine leere Zeile nicht von
+    einer Zeile der Fassung 1 zu unterscheiden."""
+    return {"fassung": ZAHLENDECKUNG_FASSUNG, "ungedeckt": zahlendeckung(antwort, eingabe)}
 
 
 def anonym_verletzt(eingabe: dict, r: dict) -> list:
@@ -656,7 +678,7 @@ def _schluessel(r: dict) -> tuple:
 
 
 def _merke(c, r: dict, rolle: str, katalog: dict, eingabe: dict | None, ergebnis: dict | None, roh: dict | None,
-           sekunden: float, fehler: str | None, deckung: list | None = None, gefragt: bool = False,
+           sekunden: float, fehler: str | None, deckung: dict | None = None, gefragt: bool = False,
            aufrufe: int = 1) -> None:
     ein = json.dumps(eingabe, ensure_ascii=False) if eingabe is not None else None
     c.execute("INSERT OR REPLACE INTO pruefung (symbol, signalstunde, rolle, fassung, modell, prompt_pruefsumme, eingabe_pruefsumme, "
@@ -749,7 +771,7 @@ def pruefe_signal(r: dict, client, ordner_ablage: str, ordner_daten: str, db: st
             else:
                 erg = dict(gueltig[0], urteil="uneinig")
             erg["stimmen"] = [g_["urteil"] for g_ in gueltig]
-            deck = zahlendeckung(erg, eingabe) if name != "entscheider" else []
+            deck = deckung_eintrag(erg, eingabe) if name != "entscheider" else None
             aus[name] = dict(erg, quelle="neu")
             _merke(c, r, name, katalog, eingabe, erg, rohe, time.time() - t0, None, deck, gefragt=True, aufrufe=len(rohe))
 
