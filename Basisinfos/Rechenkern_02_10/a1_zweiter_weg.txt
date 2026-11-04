@@ -1,0 +1,21 @@
+Prompt 7b94d07d7d1d | Antworten je Modell: {'gemini-3.5-flash': 148, 'gemini-3.5-flash-lite': 25563, 'openai/gpt-oss-120b': 2035}
+gemeinsame Titel 2035 | gpt-oss unlesbar 25 | flash-lite unlesbar auf gem. 0
+
+-- 1. Reproduktion 02.11. (flash-lite geholt am 02.11.) --
+02.11. nachricht           n  1600 (unlesbar 25) | Sicht relevant gleich  78.4 % | nur Gemini  217 | nur gpt-oss  128 | beide relevant  577, gleiche Sicht  89.1 %, gleiche Assets  93.4 % | Typ gleich  70.7 %
+02.11. binance             n   287 (unlesbar 0) | Sicht relevant gleich  82.2 % | nur Gemini   35 | nur gpt-oss   16 | beide relevant   71, gleiche Sicht  91.5 %, gleiche Assets  91.5 % | Typ gleich  53.0 %
+
+-- 2. voller Ueberschnitt --
+binance                    n   337 (unlesbar 0) | Sicht relevant gleich  81.9 % | nur Gemini   42 | nur gpt-oss   19 | beide relevant   91, gleiche Sicht  92.3 %, gleiche Assets  92.3 % | Typ gleich  55.2 %
+nachricht                  n  1650 (unlesbar 25) | Sicht relevant gleich  78.5 % | nur Gemini  223 | nur gpt-oss  132 | beide relevant  600, gleiche Sicht  88.8 %, gleiche Assets  93.0 % | Typ gleich  70.6 %
+upbit                      n    23 (unlesbar 0) | Sicht relevant gleich  65.2 % | nur Gemini    8 | nur gpt-oss    0 | beide relevant    5, gleiche Sicht 100.0 %, gleiche Assets  80.0 % | Typ gleich  39.1 %
+ALLE                       n  2010 (unlesbar 25) | Sicht relevant gleich  78.9 % | nur Gemini  273 | nur gpt-oss  151 | beide relevant  696, gleiche Sicht  89.4 %, gleiche Assets  92.8 % | Typ gleich  67.7 %
+
+-- 3. Nachrichten nach Vorfilter --
+Vorfilter-Treffer          n  1650 (unlesbar 25) | Sicht relevant gleich  78.5 % | nur Gemini  223 | nur gpt-oss  132 | beide relevant  600, gleiche Sicht  88.8 %, gleiche Assets  93.0 % | Typ gleich  70.6 %
+uebrige                    n     0 (unlesbar 0) | Sicht relevant gleich   0.0 % | nur Gemini    0 | nur gpt-oss    0 | beide relevant    0, gleiche Sicht   0.0 %, gleiche Assets   0.0 % | Typ gleich   0.0 %
+
+-- 4. Reproduktion 02.11. eng: die ersten 250 Nachrichten-Antworten von flash-lite --
+erste 250 Nachrichten      n   225 (unlesbar 25) | Sicht relevant gleich  84.4 % | nur Gemini   23 | nur gpt-oss   12 | beide relevant   63, gleiche Sicht  90.5 %, gleiche Assets  96.8 % | Typ gleich  79.1 %
+flash-lite Antworten gesamt nach Teil: Counter({'uebrige': 21670, 'vorfilter': 3533, 'boerse': 360})
+flash-lite relevant je Teil: {('boerse', False): 214, ('boerse', True): 146, ('vorfilter', False): 1703, ('vorfilter', True): 1829, ('uebrige', False): 16107, ('uebrige', True): 5562}

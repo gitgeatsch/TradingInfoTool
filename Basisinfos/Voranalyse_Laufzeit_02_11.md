@@ -227,3 +227,42 @@ Bau G8 mit einem Abruf klären; bis dahin ist es eine Vermutung.
 **gesperrt** (versucht, keiner erfolgreich: 429, Netzfehler, Unsinn) · **Quelle fehlt** (mindestens ein Abruf erfolgreich, der Tag war nicht
 darin) · **kein Abruf** (gar kein Versuch, Rechner aus). Prüfung **44/44** (neu: Sperre → 2 × gesperrt; GDELT ohne 3 Tage → 3 × Quelle fehlt,
 andere Töne frei; Rechner 36 h aus → 1 × kein Abruf bei allen Tönen; saubere Welt ohne Ursache).
+
+---
+
+## 8. A1 fertig, zweiter Weg gerechnet (04.11.2026, Nutzer: *„Entscheide du wähle die sinnvollste Variante“*)
+
+**Lauf:** am 04.11. 08:05 wieder aufgenommen. 1.009/1.009 Stapel durch, Nachfassen 498 → **2 unlesbar**, **25.561 Ereignisse** in
+`data/_sichten/sichten.db` (letzte Schreibung 09:36:40, danach nur lesend). Prompt `7b94d07d7d1d` unverändert, Fehlerdatei leer.
+Stehen geblieben war der Lauf am 03.11. bei 898/1.009, weil der Tagestopf leer war (02.11. 432, 03.11. 479 Aufrufe). Dass er beim
+App-Neustart am 03.11. um 22:16 endete, ist erschlossen, nicht belegt.
+
+**Zweiter Weg:** gpt-oss-120b (Groq) gegen flash-lite auf denselben Titeln, nur lesend, ohne Netz.
+Skript `Rechenkern_02_10/a1_zweiter_weg.py`, Ausgabe `a1_zweiter_weg.txt`. „Relevant“ heißt: Ereignistyp und eine Sicht, gerechnet wie
+`llm_ereignisse` (Assets gegen Universum und Alias).
+
+| | Titel | Relevanz gleich | nur flash-lite | nur gpt-oss | beide relevant: Sicht / Assets gleich |
+|---|---|---|---|---|---|
+| **Nachbildung 02.11.**, erste 250 Nachrichten | 225 | **84,4 %** (02.11.: 84 %) | 23 (24) | 12 (16) | 90,5 / 96,8 % |
+| **Nachbildung 02.11.**, Binance-Rest | 337 | **81,9 %** (02.11.: 83 %) | 42 (40) | 19 (18) | 92,3 / 92,3 % |
+| Vorfilter-Nachrichten, alle | 1.650 | 78,5 % | 223 | 132 | 88,8 / 93,0 % |
+| Upbit | 23 | 65,2 % | 8 | 0 | 100 / 80 % |
+| **Alle gemeinsamen** | **2.010** | **78,9 %** | **273** | **151** | 89,4 / 92,8 % |
+
+⚠️ **Nur nachgebildet.** Die Rechnung vom 02.11. ist nicht aufbewahrt. Die Nachbildung trifft sie bis auf wenige Titel; beim Rest der
+Binance-Titel ändert das Nachfassen seither einige Antworten.
+
+**Was daraus folgt:**
+1. Auf dem vollen Überschnitt sind es **78,9 %**, also etwas **unter** den ≈ 82 %, die bei ≈ 90 % Treffer je Modell zu erwarten sind
+   (das entspricht ≈ 88 % je Modell). Der Abstand stammt aus den Nachrichten nach den ersten 250 (78 % statt 84 %).
+2. flash-lite meldet **häufiger „relevant“** (273 gegen 151). Auf den Börsentiteln sind das nach der Handprüfung vom 02.11. (§6.1) eher
+   **Verluste von gpt-oss**. Für die Nachrichten ist das **nicht** von Hand geprüft.
+3. Wenn beide Modelle „relevant“ sagen, stimmen Sicht (89 %) und Assets (93 %) meist überein. Der Unterschied liegt im **Ob**, nicht im **Was**.
+4. ⚠️⚠️ **Der zweite Weg deckt nur 8 % von A1 ab** (2.010 von 25.563). Die **21.670 übrigen Nachrichten (Weg b)** hat gpt-oss nie
+   gelesen. flash-lite stuft dort **26 %** als relevant ein (5.562), auf den Vorfilter-Treffern 52 %. Für Weg b gibt es nur die Handprüfung
+   auf Stichprobe 3 (§6). Ein zweites Modell hat ihn nicht gelesen.
+
+**Urteil:** A1 ist **benutzbar für Stufe 1**. Die Übereinstimmung liegt in der erwarteten Größenordnung, und die Unterschiede liegen beim
+„Ob“, wo die Handprüfung flash-lite den Vorzug gibt. **Nicht belegt** ist der Fehlalarm auf Weg b über Stichprobe 3 hinaus. Stufe 1 muss
+deshalb Weg b getrennt ausweisen (Vorfilter-Treffer gegen übrige Nachrichten). Trägt eine Sicht nur auf Weg b, ist sie vorher an einer
+Handstichprobe der übrigen Nachrichten zu prüfen.
