@@ -639,6 +639,7 @@ kontrollen:
     nachweis: "Vor dem Pull 'git diff Basisinfos/config.yaml' leer (sonst stash). Nach Pull + Neustart im Export: watchlist_stammdaten AERO krypto taktisch (Grundliste); im Log keine Zeile 'Position ohne Watchlist-Eintrag - Aerodrome Finance (AERO)' mehr (bis zum Pull alle 30 min); price_cache AERO (aerodrome-finance); B1-Kreis 30 L-Bestaende statt 29. Anlass: NB-Export 04.11. 07:38, Warnung seit 02.11. 18:43"
     faellig_bis: "2026-11-15"
     status: offen
+    teilbeleg_04_11: "NB-Export 04.11. 18:43 (NB auf 1867e54c, git geaendert leer, Neustart 18:33:50): watchlist_stammdaten AERO krypto taktisch, aerodrome-finance, Grundliste; letzte Warnung 'Position ohne Watchlist-Eintrag - AERO' 18:24, danach keine mehr; 18:34:29 'Aenderung AERO: frei 0 -> 141,02524 (Zuwachs)', holdings AERO 141,02524; Preis-Refresh 46/63 -> 47/64 (AERO-Kurs von CoinGecko); Umlauf-Zusatz 'Erstabruf AERO ok'; Spot-Upbit 18:40 '30 L-Bestaende' statt 29. Kein ERROR nach dem Neustart (die drei Tracebacks im Fenster sind EIN Netzfehler beim Preis-Refresh 09:23). OFFEN: B1-Zeile Spot-Mitnahme (naechster Lauf 05.11. 07:10, erwartet 30) und Kursreihe AERO (datenfrische kursreihe ohne_reihe AERO, refresh_ohlc Stand 03.11. - kommt mit dem naechsten OHLC-Lauf, wie bei HBAR 13.10.); spot_b4_fuenftel bleibt bei 29 bis Stichtag 01.12. (Monatsrechnung, und AERO hat bei Binance nur Futures)"
   - id: K-GD-1
     titel: "GDELT-Probe am NB (G7 §9.2 Bedingung 1): eigenstaendiges Skript im Austauschordner, 14 Tage, vier Toene viermal am Tag - KEIN Pull, kein Betriebscode"
     seit: "2026-11-02"
@@ -674,7 +675,9 @@ kontrollen:
     art: manuell
     faellig_bis: "2026-11-30"
     nachweis: "Nach dem Pull G8a, bei der naechsten Kopie von data/regel0_signale.db (mode=ro, wie regel0_kopie_T440): Zeilen der Tabelle pruefung mit am nach dem Pull, rolle markt/trader und ergebnis IS NOT NULL (Fehler, Sperre und fehlende Eingabe bleiben NULL wie bisher) tragen in ungedeckt {\"fassung\": 2, \"ungedeckt\": [...]}, auch bei leerer Liste; Entscheider NULL; aeltere Zeilen unveraendert (Liste oder NULL). Keine sichtbare Wirkung in Mail oder Statusseite - die Spalte liest niemand (Voranalyse G8 Par. 3)"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-11-04"
+    beleg: "Kopie regel0_signale.db vom NB 04.11. 18:11 (Austauschordner, sha256 66667715..., integrity ok, mode=ro): 13 Zeilen nach dem Neustart 03.11. 22:53 (04.11. 10:09 bis 17:11, markt 2, trader 11), alle mit ergebnis und ungedeckt {fassung: 2, ...}, 12 mit leerer Liste; 97 aeltere Zeilen unveraendert (NULL, eine Liste); keine Entscheider-Zeile. NEBENBEFUND: NEAR 04.11. 14:00 ungedeckt [8.6] ist ein Fehlalarm - Eingabe -8,6 %, Antwort 'um 8,6 % gefallen'; Z-1 vergleicht mit Vorzeichen. Ohne Wirkung (Spalte liest niemand), Prueferfrage fuer G8b (Pruefer v2)"
   # ---- Historie (erfuellt / abgeloest), aus dem Memory uebernommen mit Beleg ---------------------------------------------
   - {id: K1-K14, titel: "Kontrollen nach den Pulls 15.-17.09. (Kursreihen-Job 05:30, Tageswert, Portfoliowert-Job, Schlusskurs-Rueckfall, Hebelstufen, Cash, ETF-Knoepfe, Gruppe)", seit: "2026-09-15", art: manuell, status: erfuellt, erfuellt_am: "2026-09-23", beleg: "Befunde 2.541-2.543; Memory 23.09.: 'Kontrollliste aus dem 15.09. vollstaendig abgearbeitet' (K6 nicht faellig geworden - kein Hebelsignal der alten Kette; abgeloest durch K-S7-4)"}
   - {id: K17-K18, titel: "Kontrollen 18.09.", seit: "2026-09-17", art: manuell, status: erfuellt, erfuellt_am: "2026-09-18", beleg: "Basisinfos: 'K17/K18 BESTAETIGT 18.09.'"}
