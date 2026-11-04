@@ -988,6 +988,11 @@ watchlist:
     rolle: taktisch
     beobachtungsstatus: beobachtung
     coingecko_id: hedera-hashgraph
+  - symbol: AERO                   # Nutzer 04.11.2026: echter Kauf (Bitpanda seit 02.11., 141,03 St.) -> aufnehmen
+    name: Aerodrome Finance
+    rolle: taktisch
+    beobachtungsstatus: beobachtung
+    coingecko_id: aerodrome-finance  # 04.11. geprueft: CoinGecko 0,5576 EUR = Bitpanda 0,5571 EUR; Binance nur Futures AEROUSDT (kein Spot)
 
 # --- Strategie-Katalog (siehe Spezifikation Kap. 6) ---
 strategien:

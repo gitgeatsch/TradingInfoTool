@@ -13,7 +13,7 @@
 #   3. kein Betriebs-Commit ohne Eintrag: die Suite verlangt, dass diese Datei nicht aelter ist als der juengste Commit an
 #      Betriebscode (agent/, scheduler/, importer/, remote/, ui/, database/, Basisinfos/regel0_*.yaml).
 #   4. eine Quelle: das Memory verweist nur noch hierher.
-stand: "2026-11-03"
+stand: "2026-11-04"
 kontrollen:
   # ---- offen ------------------------------------------------------------------------------------------------------------
   - id: K-ANK-1
@@ -276,7 +276,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach dem 02.11. 07:25: Logzeile 'Spot-Abbau: Stichtag 2026-11-01 · fertig · ... neu X' (art neu); Mail nur, wenn 'neu' nicht leer; Teilexport Laeufe 2; der Umlauf der Vormonate kommt dann zum Teil schon aus der eigenen NB-Reihe (Ersatzregel nur noch fuer 01.09.)"
     faellig_bis: "2026-11-04"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-11-04"
+    beleg: "NB-Export 04.11. 07:38 (NB auf e776ada0): Log 02.11. 07:25 'Spot-Abbau: Stichtag 2026-11-01 - fertig - 29 L-Bestaende - Universum 353 - unten HYPE,MORPHO,PLUME,SUI,TAO - neu - - gemailt nein' (keiner neu im unteren Fuenftel -> richtig keine Mail); 03./04.11. 07:25 'schon' (einmal je Stichtag)"
   - id: K-VW-1
     titel: "P22 Verwaesserung: Diagnose liest die Mengendatei (messbasen turnover = betriebskopie, nicht 'nicht lesbar'); Teilexport zeigt die Zeile 'Verwaesserung 90 T (P22)'; naechste REGEL0-/B1-/B3-/B4-Mail traegt die Verwaesserungszeile"
     seit: "2026-10-15"
@@ -521,7 +523,9 @@ kontrollen:
     art: manuell
     nachweis: "Diagnose nach Pull: Abschnitt spot_b4_fuenftel mit je_bestand (stichtag, fuenftel, klasse, grund) fuer alle gehaltenen Coins inkl. HYPE, KAS, SUPRA, XDC u. a.; universum_stichtag = juengster B4-Stichtag; oberes_fuenftel H/M/S gefuellt; kein 'fehler'"
     faellig_bis: "2026-11-08"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-11-04"
+    beleg: "NB-Export 04.11. 07:38 (NB auf e776ada0): spot_b4_fuenftel universum_stichtag 2026-11-01, oberes_fuenftel H 6 / M 17 / S 49 gefuellt, je_bestand 29 Bestaende (alle Stichtag 2026-11-01, ASTER 'zu jung'), kein fehler"
     teilbeleg: "NB-Export 27.10. 07:51: je_bestand mit 29 Bestaenden, auch HYPE, KAS, SUPRA, XDC (ausserhalb Binance), ohne Fehler. OFFEN nur universum_stichtag/oberes_fuenftel: die Tabelle abbau_universum entstand mit P19 (17.10.), der B4-Lauf fuer den Stichtag 01.10. lief davor (Status schon) - sie fuellt sich beim Lauf 02.11. (mit K-SP-3c pruefen)"
   - id: K-K4-1
     titel: "K-4 Kernwerte: Pull + Neustart laeuft ohne Importfehler, Rollen-Kette weiter angehalten, B1/B3/B4/REGEL0 unveraendert"
@@ -626,6 +630,15 @@ kontrollen:
     status: erfuellt
     erfuellt_am: "2026-11-01"
     beleg: "Export 01.11. 11:36: git_stand fe1bf509 sauber; GOOGL aktien taktisch (Grundliste); seit Neustart 11:30 keine GOOGL-Warnung (davor 83), Bestand 'Aenderung GOOGL: frei 0 -> 0,59839357'; refresh_securities_prices erfolgreich; 143 Logzeilen ohne WARNING/ERROR/Traceback"
+  - id: K-WL-5
+    titel: "AERO (Aerodrome Finance) in der Watchlist (Nutzer 04.11.: echter Kauf, Bitpanda seit 02.11.): Bestand zugeordnet, Kurs ueber CoinGecko aerodrome-finance, Warnung 'Position ohne Watchlist-Eintrag' verschwindet"
+    seit: "2026-11-04"
+    paket: Watchlist
+    commit: ""
+    art: manuell
+    nachweis: "Vor dem Pull 'git diff Basisinfos/config.yaml' leer (sonst stash). Nach Pull + Neustart im Export: watchlist_stammdaten AERO krypto taktisch (Grundliste); im Log keine Zeile 'Position ohne Watchlist-Eintrag - Aerodrome Finance (AERO)' mehr (bis zum Pull alle 30 min); price_cache AERO (aerodrome-finance); B1-Kreis 30 L-Bestaende statt 29. Anlass: NB-Export 04.11. 07:38, Warnung seit 02.11. 18:43"
+    faellig_bis: "2026-11-15"
+    status: offen
   - id: K-GD-1
     titel: "GDELT-Probe am NB (G7 §9.2 Bedingung 1): eigenstaendiges Skript im Austauschordner, 14 Tage, vier Toene viermal am Tag - KEIN Pull, kein Betriebscode"
     seit: "2026-11-02"
@@ -643,6 +656,7 @@ kontrollen:
     art: ereignis
     nachweis: "Ereignis = Pull des NB-Buendels G8. Export danach: Log 03:20 'Lebendigkeit uebersprungen - alte Kette stillgelegt (W-3 S-2, E-166)', 06:00 'Backward-Tracking uebersprungen', 07:15 'Ausstiegs-Empfehlungen uebersprungen' (keine Zeilen 'Fuehrung protokolliert'/'Ausstiege verfolgt'); beim Neustart KEIN 'hole sofort nach' fuer Backward-Tracking/Multi-Asset-Batch; joblaeufe: alle vier mit Alter < 26 h; Statusseite Karte Ausstieg 'stillgelegt'; Diagnose lebendigkeit.stillgelegt gesetzt; Thesen/Marktscan weiter 'pausiert/deaktiviert' wie bisher"
     status: offen
+    teilbeleg_04_11: "NB-Export 04.11. 07:38 (NB auf e776ada0, Neustart 03.11. 22:53 nach dem REGEL0-Lauf 22:08): Log 04.11. 03:20 'Lebendigkeit uebersprungen', 06:00 'Backward-Tracking uebersprungen', 07:15 'Ausstiegs-Empfehlungen uebersprungen' (W-3 S-2, E-166); letzte 'Fuehrung protokolliert'/'Ausstiege verfolgt' 03.11. 07:15 (alter Code); Neustart 22:53 ohne 'hole sofort nach' (19:20 noch mit); joblaeufe alle vier < 26 h (multi_asset_batch 12,6 h); Diagnose ausstiegs_empfehlungen.stillgelegt und kapitel93.lebendigkeit.stillgelegt gesetzt; Thesen pausiert, Marktscan deaktiviert. Offen nur: Statusseite Karte Ausstieg 'stillgelegt' (Nutzerblick)"
   - id: K-G14-1
     titel: "G14 (E-167): Kern BTC/ETH/SOL fuer REGEL0/Hebel abgesichert - Rueckfrage beim Ausschalten, Warnzeile, Lesefehler der Schalter gemeldet - erst mit dem NB-Buendel G8"
     seit: "2026-11-03"
@@ -651,6 +665,7 @@ kontrollen:
     art: ereignis
     nachweis: "Ereignis = Pull des NB-Buendels G8. Danach: Statusseite Betriebskarte OHNE rote Zeile 'Kernwert ohne REGEL0/Hebel' (BTC/ETH/SOL an); Teilexport 'Kernwerte ohne REGEL0/Hebel: keiner'; Diagnose kern_hebel_luecke = []; GUI: Klick auf Hebel-Schalter von BTC fragt nach (mit Nein abbrechen); REGEL0-ERGEBNIS-Zeilen im Log mit Feld schalter_fehler = [] und keine neue Fehlermail"
     status: offen
+    teilbeleg_04_11: "NB-Export 04.11. 07:38 (NB auf e776ada0, Neustart 03.11. 22:53): kern_hebel_luecke = []; REGEL0-ERGEBNIS seit dem Neustart 10 von 10 mit schalter_fehler = []; seit dem Neustart kein ERROR/Traceback (nur WARNING AERO ohne Watchlist-Eintrag und einmal Statusaufbau 15 s). Offen nur: Statusseite ohne rote Zeile 'Kernwert ohne REGEL0/Hebel' und GUI-Rueckfrage beim Klick auf den BTC-Hebel-Schalter (Nutzerblick)"
   - id: K-Z1-1
     titel: "Z-1 Fassung 2 (G8 Weg b): REGEL0-Pruefblock erkennt grosse Zahlen als EINE Zahl, Spalte ungedeckt traegt die Fassung - mit dem NB-Buendel G8a"
     seit: "2026-11-03"
