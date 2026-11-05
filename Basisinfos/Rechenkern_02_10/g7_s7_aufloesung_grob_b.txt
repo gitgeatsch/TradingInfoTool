@@ -1,0 +1,10 @@
+S7 GROB b · ASSET-EREIGNIS · 2026-11-05 07:57 · 9552 Ereigniszellen
+Fehlalarm in % (Soll <= 5), je 200 Ziehungen: ASSET-EREIGNIS | ASSET-ZEIT
+  G-Lauf 2/Tag    10.0 |   7.5   (29 s)
+  G-Lauf 5/Tag     6.0 |   6.0   (53 s)
+  G-Asset 5 %     36.5 |   5.5   (73 s)
+  G-Markt L=3     12.5 |   5.5   (95 s)
+  G-Markt L=10    14.0 |   2.0   (118 s)
+Auflösung ASSET-EREIGNIS (Fundquote %, je 200 Ziehungen): z + s an stützt, z − s an belastet
+  2 Zellen/Tag  0.1 σ:  30 · 0.2 σ:  70 · 0.3 σ:  90 · 0.5 σ: 100
+  5 Zellen/Tag  0.1 σ:  52 · 0.2 σ:  96 · 0.3 σ: 100 · 0.5 σ: 100

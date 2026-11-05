@@ -13,7 +13,12 @@ Ereignisse (``agent.ereignisse``, A1). Jedes Gutachten wird von Prüfer v2 auf F
 
 ⚠️⚠️ Schreibt NUR in ``data/_g7/gutachten.db`` (oder ``--pfad``) — nie in die Produktions-DB, nie in ``sichten.db``.
 ⚠️ Stichtag T = 00:00 UTC des Tages, wie der Vergleichsarm (g7_stufe0 c): Zustände mit Stand ≤ T−1, Ereignisse mit bekannt_ab ≤ T.
-⚠️ Kein Blick gegen Kurse in diesem Modul — gemessen wird erst in Stufe 2, nach dem ganzen Lauf (Voranalyse §5.1).
+⚠️ Kein Blick gegen KÜNFTIGE Kurse in diesem Modul — gemessen wird erst in Stufe 2, nach dem ganzen Lauf (Voranalyse §5.1).
+
+S7 in zwei Armen (Voranalyse_G7_S7_Anlage_05_11.md §4a/§4b; Nutzer 05.11.2026: *„Ja, d + Wort-Arm“*):
+  S7  (Form d, HAUPTARM)  das LLM sieht KEINEN Kurs, ``eingepreist`` = 'unbekannt'. Die Kursreaktion seit jeder Meldung (bis T, Fakt,
+                          ``agent.kursreaktion``) wird je E-Nummer und Asset in die Ablage NEBEN das Urteil gelegt - für das finale LLM.
+  S7w (Arm e)             dieselbe Eingabe, je Ereigniszeile zusätzlich nur das WORT (gestiegen / gefallen / unverändert, gegen BTC).
 """
 from __future__ import annotations
 
@@ -32,6 +37,7 @@ import pandas as pd
 
 from agent import ereignisse as EV
 from agent import gutachten_pruefer as GP
+from agent import kursreaktion as KR
 from agent import zustaende as Z
 
 PROJ = Z.PROJ
@@ -41,7 +47,9 @@ MODELL = EV.MODELL                       # gemini-3.5-flash-lite: einziges Model
 URL = EV.URL
 SCHLUESSEL = EV.SCHLUESSEL               # GEMINI_API_KEY_2 - nie der NB-Schlüssel
 ZEITRAUM = ("2025-12-01", "2026-10-31")  # 335 Tage, Voranalyse §0
-REIHENFOLGE = ("S1", "S3", "S8", "S2", "S4", "S7")   # §5.1: S7 zuletzt - seine Anlage entsteht während des Laufs
+REIHENFOLGE = ("S1", "S3", "S8", "S2", "S4", "S7", "S7w")   # §5.1: S7 zuletzt; S7w = Arm e (§4b)
+BASIS = {"S7w": "S7"}                    # S7w liest dieselben Zustände und Ereignisse wie S7
+MIT_KURS = ("S7", "S7w")                 # Kursreaktion als Fakt in der Ablage; im Text nur bei S7w (als Wort)
 WDH_ANTEIL = 0.05                        # S1-6: Eigenrauschen
 SAAT = 20261105
 VERSUCHE = 3                             # Formfehler -> nachfassen, danach als unlesbar abgelegt
@@ -65,21 +73,41 @@ SICHT = {
            "übergreifen kann?"),
     "S4": ("Dollar und Rohstoffe", "Bewegt sich Dollar, Gold, Öl oder Kupfer ungewöhnlich, und auf welchem Weg träfe das Krypto in den "
            "nächsten Wochen?"),
-    "S7": ("Ereignisse je Asset, Konflikte", "Welche Meldung betrifft ein Asset direkt, ist sie neu, und hat der Kurs schon reagiert? "
+    "S7": ("Ereignisse je Asset, Konflikte", "Welche Meldung betrifft ein Asset direkt, und ist sie neu? "
            "Belastet oder stützt sie dieses Asset in den nächsten 1–5 Tagen? Dazu: verschärft die Konfliktlage (Krieg, Sanktionen, "
            "Zölle) das Risiko für Krypto insgesamt?"),
+    "S7w": ("Ereignisse je Asset, Konflikte", "Welche Meldung betrifft ein Asset direkt, ist sie neu, und hat der Kurs schon reagiert? "
+            "Belastet oder stützt sie dieses Asset in den nächsten 1–5 Tagen? Dazu: verschärft die Konfliktlage (Krieg, Sanktionen, "
+            "Zölle) das Risiko für Krypto insgesamt?"),
     "S8": ("Termine", "Steht in den nächsten 1–3 Tagen ein Termin an, der nach seinem gemessenen Faktor die Schwankung erhöht, und in "
            "welche Richtung kann er kippen?"),
 }
 
 
+def basis(sicht: str) -> str:
+    return BASIS.get(sicht, sicht)
+
+
+_EINGEPREIST = ("- eingepreist: ob der Markt schon reagiert hat (ja / teilweise / nein); 'unbekannt', wenn die Eingabe dazu nichts zeigt. "
+                "eingepreist_beleg: worauf du das stützt, ein kurzer Satz.\n")
+_EINGEPREIST_S7 = ("- eingepreist: hier IMMER 'unbekannt' - du siehst keine Kurse; ob und wie der Kurs seit der Meldung reagiert hat, legt "
+                   "das System als Fakt neben deine Einschätzung. eingepreist_beleg: leer.\n")
+_EINGEPREIST_S7W = ("- eingepreist: ob der Kurs seit der Meldung schon reagiert hat (ja / teilweise / nein); die Angabe 'Kurs seit "
+                    "Meldung' in der Ereigniszeile zeigt je Asset die Richtung (gestiegen / gefallen / unverändert, gegen BTC, gemessen "
+                    "an der üblichen Schwankung des Assets). 'unbekannt' bei 'kein Kurs'. eingepreist_beleg: worauf du das stützt, ein "
+                    "kurzer Satz.\n")
+
+
 def prompt(sicht: str) -> str:
     name, frage = SICHT[sicht]
-    s7 = (' "assets": [{"asset": "<Ticker>", "wirkung": "belastet|stützt|keine", "ereignis": "E<n>", "neu": true|false, '
-          '"eingepreist": "ja|teilweise|nein|unbekannt"}],' if sicht == "S7" else "")
+    s7 = (' "assets": [{"asset": "<Ticker>", "wirkung": "belastet|stützt|keine", "ereignis": "E<n>", "neu": true|false}],'
+          if sicht == "S7" else
+          ' "assets": [{"asset": "<Ticker>", "wirkung": "belastet|stützt|keine", "ereignis": "E<n>", "neu": true|false, '
+          '"eingepreist": "ja|teilweise|nein|unbekannt"}],' if sicht == "S7w" else "")
     s7_regel = ("- assets: je Asset, das von einer Meldung DIREKT betroffen ist und bei dem du eine Wirkung siehst, ein Eintrag mit der "
                 "Meldung (E-Nummer), auf die er sich stützt. Nicht genannte Assets gelten als 'keine'. Leere Liste, wenn nichts davon "
-                "zutrifft.\n" if sicht == "S7" else "")
+                "zutrifft.\n" if sicht in MIT_KURS else "")
+    eing = {"S7": _EINGEPREIST_S7, "S7w": _EINGEPREIST_S7W}.get(sicht, _EINGEPREIST)
     return (
         "Du bist ein erfahrener, nüchterner Beobachter der Kryptomärkte. Du bekommst die Lage EINER Sicht (%s) an einem Stichtag. "
         "Alles in der Eingabe war zu diesem Zeitpunkt bekannt und ist ein FAKT über die Gegenwart. Deine Aufgabe ist die EINSCHÄTZUNG, "
@@ -91,8 +119,7 @@ def prompt(sicht: str) -> str:
         "noch keine ungewöhnliche Lage. 'auffällig' nur, wenn die Lage als Ganzes vom Normalen abweicht; 'kritisch' nur, wenn sie das "
         "deutlich tut und das Risiko für Krypto im Horizont der Frage erheblich erhöht.\n"
         "- wirkung_krypto: belastet / stützt / keine - die Richtung der Wirkung auf Krypto im Horizont der Frage.\n"
-        "- eingepreist: ob der Markt schon reagiert hat (ja / teilweise / nein); 'unbekannt', wenn die Eingabe dazu nichts zeigt. "
-        "eingepreist_beleg: worauf du das stützt, ein kurzer Satz.\n"
+        "%s"
         "- treiber: höchstens 3, die deine Einschätzung tragen. Jeder in GENAU einer dieser Formen, Werte EXAKT wie in der Eingabe:\n"
         '    Zustand:  {"schluessel": "<der Text in den eckigen Klammern, OHNE die Klammern, z. B. S1.dvol.BTC>", '
         '"wert": <die erste Zahl der Zeile>, '
@@ -110,7 +137,7 @@ def prompt(sicht: str) -> str:
         '{"zustand": "normal|auffällig|kritisch", "wirkung_krypto": "belastet|stützt|keine", "horizont": "stunden|tage|wochen", '
         '"horizont_t": <Tage als ganze Zahl>, "neu_seit": "JJJJ-MM-TT oder leer", "eingepreist": "ja|teilweise|nein|unbekannt", '
         '"eingepreist_beleg": "...", "treiber": [...],%s "aussage": "ein Satz", "kippt_wenn": "...", "gegenargument": "..."}'
-        % (name, frage, s7_regel, s7))
+        % (name, frage, eing, s7_regel, s7))
 
 
 def prompt_sha(sicht: str) -> str:
@@ -135,10 +162,18 @@ def herkunft(e) -> str:
 class Quelle:
     """Zustände und Ereignisse einmal geladen (beides ``mode=ro``)."""
 
-    def __init__(self, ablage: Z.Ablage | None = None, E: pd.DataFrame | None = None):
+    def __init__(self, ablage: Z.Ablage | None = None, E: pd.DataFrame | None = None, kurse: KR.Kurse | None = None):
         self.ablage = ablage or Z.Ablage()
         self.E = EV.lade() if E is None else E
         self._tag: dict = {}
+        self._kurse = kurse
+
+    @property
+    def kurse(self) -> KR.Kurse:
+        """Nur für S7/S7w und erst beim ersten Gebrauch (S1–S4/S8 lesen nie einen Kurs)."""
+        if self._kurse is None:
+            self._kurse = KR.Kurse()
+        return self._kurse
 
     def tag(self, tag: str):
         """-> (Zustände, Ereignisse am Stichtag) - je Tag einmal, für alle sechs Sichten."""
@@ -151,32 +186,41 @@ class Quelle:
 def eingabe(q: Quelle, tag: str, sicht: str) -> dict:
     """-> {"text", "sha", "ereignisse" (E-Nr -> beleg, typ, herkunft), "pruef" (Prüfer-v2-Eingabe), "vorgriff" (Liste)}."""
     T = _T(tag)
+    b = basis(sicht)
     liste, ev = q.tag(tag)
-    zs = [z for z in liste if z.sicht == sicht]
+    zs = [z for z in liste if z.sicht == b]
     zeilen, vorgriff = [], []
     for z in zs:
         k = "termin %s" % z.symbol if z.quelle == "termin" else GP.schluessel(z)
-        zeilen.append(("● " if z.auffaellig else "  ") + re.sub(r"^\[%s\]" % sicht, "[%s]" % k, z.satz))
+        zeilen.append(("● " if z.auffaellig else "  ") + re.sub(r"^\[%s\]" % b, "[%s]" % k, z.satz))
         if z.quelle != "termin" and z.stand and z.stand[:10] >= tag:
             vorgriff.append("%s Stand %s" % (k, z.stand))
-    x = ev[ev.sicht == sicht]
-    evz = EV.zeilen(ev, sicht, T)
+    x = ev[ev.sicht == b]
+    evz = EV.zeilen(ev, b, T)
     gruppen = list(x.groupby(["typ", "assets"], sort=False))
     if len(gruppen) != len(evz):
         raise RuntimeError("Ereigniszeilen %d gegen Gruppen %d" % (len(evz), len(gruppen)))
     emap, ez = {}, []
-    for i, ((typ, _a), g) in enumerate(gruppen):
+    for i, ((typ, a_), g) in enumerate(gruppen):
         nr = "E%d" % (i + 1)
         emap[nr] = {"beleg": g.iloc[0].beleg, "typ": typ, "herkunft": sorted({herkunft(e) for e in g.itertuples()})}
-        teil = re.sub(r"^\[%s\]" % sicht, "[%s]" % nr, evz[i]).split(" · ")
+        teil = re.sub(r"^\[%s\]" % b, "[%s]" % nr, evz[i]).split(" · ")
         # Probe 2 (05.11.): ohne Beschriftung übernahm das Modell den BEREICH (makro_usa) als Typ - Feld 1 = betrifft, Feld 2 = Typ
         teil[1], teil[2] = "betrifft: " + teil[1], "Typ: " + teil[2]
         if teil[2] != "Typ: " + typ:
             raise RuntimeError("Ereigniszeile %s: Typ %r statt %r" % (nr, teil[2], typ))
+        if sicht in MIT_KURS:
+            # Form d / Arm e: je Asset der Meldung die Kursreaktion seit Bekanntwerden bis T - Fakt, in die Ablage NEBEN das Urteil
+            kr = [KR.reaktion(q.kurse, a, min(g.bekannt_ab), T) for a in json.loads(a_)]
+            emap[nr]["kurs"] = kr
+            vorgriff += ["%s Kurs %s bis %s" % (nr, r["asset"], r["bis"]) for r in kr if r["bis"] > T[:10] + " 00:00"]
+            if sicht == "S7w" and kr:
+                teil.insert(len(teil) - 1, "Kurs seit Meldung (gegen BTC; BTC selbst absolut): " +
+                            ", ".join("%s %s" % (r["asset"], r["wort"]) for r in kr))
         ez.append(" · ".join(teil))
-        vorgriff += ["%s bekannt %s" % (nr, b) for b in g.bekannt_ab if b > T]
+        vorgriff += ["%s bekannt %s" % (nr, x_) for x_ in g.bekannt_ab if x_ > T]
     teile = ["Stichtag: %s 00:00 UTC (alles unten war zu diesem Zeitpunkt bekannt)" % tag,
-             "Sicht %s — %s" % (sicht, SICHT[sicht][0]), ""]
+             "Sicht %s — %s" % (b, SICHT[sicht][0]), ""]
     if sicht == "S8":
         teile += ["TERMINE (Fakt, mit gemessenem Faktor):"] + zeilen
     else:
@@ -184,7 +228,7 @@ def eingabe(q: Quelle, tag: str, sicht: str) -> dict:
         teile += ["", "EREIGNISSE (am Stichtag bekannt, höchstens %d Tage alt; Fakt):" % EV.FENSTER_T] + (ez or ["  (keine)"])
     text = "\n".join(teile)
     return {"text": text, "sha": hashlib.sha256(text.encode("utf-8")).hexdigest()[:16], "ereignisse": emap,
-            "pruef": GP.eingabe(zs, x, sicht), "vorgriff": vorgriff}
+            "pruef": GP.eingabe(zs, x, b), "vorgriff": vorgriff}
 
 
 # ══ Antwortleser ════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -230,7 +274,9 @@ def lies(roh: str, sicht: str, emap: dict) -> tuple[dict | None, list]:
         g["treiber"] = []
     elif len(tr) > 3:
         fehler.append("%d Treiber statt höchstens 3" % len(tr))
-    if sicht == "S7":
+    if sicht == "S7" and _norm(g.get("eingepreist")) not in ("unbekannt", ""):
+        fehler.append("eingepreist %r ohne Kurs (S7 sieht keinen)" % g.get("eingepreist"))
+    if sicht in MIT_KURS:
         a = g.get("assets")
         if not isinstance(a, list):
             fehler.append("assets keine Liste")
@@ -262,6 +308,9 @@ def fuer_pruefer(g: dict, emap: dict) -> dict:
             "gegenargument": g.get("gegenargument"), "zustand_text": g.get("eingepreist_beleg")}
 
 
+WARTEN: dict = {}                        # Wartegründe seit Start (Statuscode -> [Zahl, Sekunden]) - fürs Protokoll, 05.11.: Lauf wurde langsamer
+
+
 # ══ LLM ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 def rufe(key: str, system: str, nutzer: str, http=None) -> tuple[str, int]:
     """Ein Aufruf; wartet geduldig auf Minuten- und Tageskontingent (Logik wie ``ereignisse.frage``)."""
@@ -273,11 +322,15 @@ def rufe(key: str, system: str, nutzer: str, http=None) -> tuple[str, int]:
         try:
             r = http.post(URL, headers={"Authorization": "Bearer %s" % key}, json=body, timeout=240)
         except Exception:                                      # noqa: BLE001 - Netzaussetzer: warten statt abbrechen
+            w_ = WARTEN.setdefault("netz", [0, 0.0])
+            w_[0], w_[1] = w_[0] + 1, w_[1] + 60
             time.sleep(60)
             continue
         if r.status_code == 429 or r.status_code >= 500:
             g = re.search(r'"retryDelay"\s*:\s*"([\d.]+)s"', r.text)
             warte = 900.0 if "PerDay" in r.text else float(g.group(1)) if g else float(r.headers.get("retry-after") or 30)
+            w_ = WARTEN.setdefault("%d%s" % (r.status_code, "-Tag" if "PerDay" in r.text else ""), [0, 0.0])
+            w_[0], w_[1] = w_[0] + 1, w_[1] + min(max(warte + 2, 5), 900)
             time.sleep(min(max(warte + 2, 5), 900))
             continue
         r.raise_for_status()
@@ -373,9 +426,10 @@ def lauf(c: sqlite3.Connection, key: str, probe: bool = False, protokoll=print, 
         z["unlesbar"] += not r["form_ok"]
         z["treue_beanstandet"] += bool(r["pruefung"] and not r["pruefung"]["ok"])
         if i % 25 == 0 or not r["form_ok"] or probe:
-            protokoll("%s %s %s wdh %d · %s · %s · %s" % (_jetzt()[:19], t, s, w, r["zustand"] or "UNLESBAR",
-                                                         GP.satz(r["pruefung"]) if r["pruefung"] else r["formfehler"],
-                                                         "Formfehler %s" % r["formfehler"] if r["formfehler"] else "Form ok"))
+            protokoll("%s %s %s wdh %d · %s · %s · %s · Warten %s" % (
+                _jetzt()[:19], t, s, w, r["zustand"] or "UNLESBAR", GP.satz(r["pruefung"]) if r["pruefung"] else r["formfehler"],
+                "Formfehler %s" % r["formfehler"] if r["formfehler"] else "Form ok",
+                {k_: "%d x / %.0f min" % (v_[0], v_[1] / 60) for k_, v_ in WARTEN.items()} or "keins"))
     return z
 
 

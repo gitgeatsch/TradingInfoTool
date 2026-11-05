@@ -1,0 +1,32 @@
+G7 S7-ANLAGE SELBSTTEST · 2026-11-05 11:37 · Panel 379 Assets x 335 Tage · Ereigniszellen 9552 (mit Zielgröße 9398) · Läufe 1065 · 1000 Ziehungen
+KEIN LLM-Urteil gelesen: alle Urteile künstlich, Zielgrößen echt (H = 3, Start T 01:00).
+Gegenprobe FFT-Bahn gegen naive Schleife (334 Verschiebungen): größte Abweichung 2.7e-15
+
+1 FEHLALARM der Hauptstatistik (Nullwelt Asset-Zeit, Soll ≤ 5 %, Toleranz 6.5 %, Standardfehler bei 1000 Ziehungen ≈ 0,7 Pp)
+  G-Lauf 2/Tag     5.9 %   (49 s)
+  G-Lauf 5/Tag     6.3 %   (105 s)
+  G-Asset 5 %      4.5 %   (138 s)
+  G-Markt L=3      6.0 %   (175 s)
+  G-Markt L=10     4.4 %   (213 s)
+
+2 FEHLALARM des gepaarten Vergleichs (zwei Arme mit GLEICHER Information, 'BESSER' darf ≤ 5 % fallen)
+  G-Paar 2/Tag, mit Wirkung 0,2 σ                            6.2 %   (410 s)
+  G-Paar 2/Tag, ohne Wirkung                                 5.0 %   (410 s)
+  G-Typ (zwei gleich große Zufallsauswahlen der Typ-Regel)   4.6 %   (410 s)
+
+3 EICHUNG: nicht nötig - alle Erzeuger ≤ 6.5 %; Band bleibt das 95. Perzentil
+
+4 AUFLÖSUNG der Hauptstatistik (Fundquote %, 500 Ziehungen, Band 95.0): z + s an stützt, z − s an belastet, Urteile je Lauf
+  2 Urteile/Tag  0.1 σ:  33 · 0.2 σ:  79 · 0.3 σ:  95   (469 s)
+  5 Urteile/Tag  0.1 σ:  64 · 0.2 σ:  98 · 0.3 σ: 100   (548 s)
+
+5 AUFLÖSUNG des gepaarten Vergleichs (Fundquote 'BESSER'): A trägt s, B ist A mit einem Teil der Läufe neu gelost (weniger Info)
+  Wirkung 0.2 σ  B  30 % neu:  26 · B  50 % neu:  42 · B 100 % neu:  58   (603 s)
+  Wirkung 0.3 σ  B  30 % neu:  50 · B  50 % neu:  66 · B 100 % neu:  81   (656 s)
+
+6 VERGLEICHSARME auf den echten Zielgrößen (Auskunft, KEIN LLM): Typ-Regel voll, Kurs-Regel Fortsetzung / Gegenrichtung
+  Typ-Regel voll             t +0.24 · Grenze +5.47 · Rang 0.365 · stützt 3188 / belastet 2293 · Blöcke 23 · trägt nicht
+  Kurs-Regel Fortsetzung     t -2.93 · Grenze +4.11 · Rang 0.141 · stützt 1414 / belastet 2625 · Blöcke 23 · trägt nicht
+  Kurs-Regel Gegenrichtung   t +2.93 · Grenze +4.69 · Rang 0.859 · stützt 2625 / belastet 1414 · Blöcke 23 · trägt nicht
+
+fertig 656 s · Band für die Messung: 95.0. Perzentil

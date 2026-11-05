@@ -1,0 +1,10 @@
+S7 GROB · 2026-11-05 07:51 · Panel 379 Assets x 335 Tage · Ereigniszellen 9552 (mit Zielgröße 9398) · Läufe 1065 · 7 s
+Fehlalarm in % (Soll <= 5), je 200 Ziehungen: ASSET-ZEIT | TAGE (nur 20 Ziehungen) | NAIV
+  G-Lauf 2/Tag     7.5 |  10.0 |  15.0   (35 s)
+  G-Lauf 5/Tag     9.0 |   5.0 |  20.5   (66 s)
+  G-Asset 5 %      4.5 |   0.0 |  14.5   (92 s)
+  G-Markt L=3      5.5 |   0.0 |  18.0   (120 s)
+  G-Markt L=10     5.0 |   0.0 |  21.0   (148 s)
+Auflösung ASSET-ZEIT (Fundquote %, je 200 Ziehungen): z + s an stützt, z − s an belastet
+  2 Zellen/Tag  0.1 σ:  34 · 0.2 σ:  78 · 0.3 σ:  96 · 0.5 σ: 100
+  5 Zellen/Tag  0.1 σ:  66 · 0.2 σ:  96 · 0.3 σ: 100 · 0.5 σ: 100

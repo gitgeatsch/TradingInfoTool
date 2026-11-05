@@ -34249,9 +34249,10 @@ def paket_sichten_gutachten() -> None:
     pl = _G.plan()
     folge = list(dict.fromkeys(s for _, s, _ in pl))
     w = _G.wdh_tage()
-    pruefe(P, "Plan: S1, S3, S8, S2, S4, S7 (S7 zuletzt), je 335 Tage + 17 Wiederholungen = 2.112; Wiederholungstage fest (Saat)",
-           folge == ["S1", "S3", "S8", "S2", "S4", "S7"] and len(pl) == 2112 and len(w) == 17 and w == _G.wdh_tage()
-           and len(set(pl)) == len(pl) and len(_G.plan(probe=True)) == 18, "%s %d %d" % (folge, len(pl), len(w)))
+    pruefe(P, "Plan: S1, S3, S8, S2, S4, S7, S7w (S7 und sein Wort-Arm zuletzt, Nutzer 05.11.: \"Ja, d + Wort-Arm\"), je 335 Tage + "
+           "17 Wiederholungen = 2.464; Wiederholungstage fest (Saat)",
+           folge == ["S1", "S3", "S8", "S2", "S4", "S7", "S7w"] and len(pl) == 2464 and len(w) == 17 and w == _G.wdh_tage()
+           and len(set(pl)) == len(pl) and len(_G.plan(probe=True)) == 21, "%s %d %d" % (folge, len(pl), len(w)))
 
     # 3 Prompt-SHA je Sicht: eine Aenderung an S7 laesst die anderen gueltig
     vorher = {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE}
@@ -34261,9 +34262,17 @@ def paket_sichten_gutachten() -> None:
         nachher = {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE}
     finally:
         _G.SICHT["S7"] = alt
-    pruefe(P, "Prompt-SHA je Sicht: S7 geaendert -> nur S7 neu, die fuenf anderen gleich; alle sechs verschieden",
+    pruefe(P, "Prompt-SHA je Sicht: S7 geaendert -> nur S7 neu, die anderen gleich; alle sieben verschieden",
            nachher["S7"] != vorher["S7"] and all(nachher[s] == vorher[s] for s in vorher if s != "S7")
-           and len(set(vorher.values())) == 6 and vorher == {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE})
+           and len(set(vorher.values())) == 7 and vorher == {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE})
+    # der laufende Rueckspiel-Lauf (seit 05.11. 07:36) hat S1-S4/S8 mit DIESEN Pruefsummen abgelegt - der S7-Umbau darf sie nicht aendern
+    fest = {"S1": "62578b8c9a98", "S3": "6d524389486d", "S8": "03d10f22fdb6", "S2": "31f7526e934c", "S4": "e8502a4bed81"}
+    pruefe(P, "S7-Umbau (Form d + Wort-Arm) laesst die Prompts von S1, S3, S8, S2, S4 byte-gleich (keine Doppelaufrufe im Lauf)",
+           all(vorher[k_] == v_ for k_, v_ in fest.items()), str({k_: vorher[k_] for k_ in fest}))
+    p7, p7w = _G.prompt("S7"), _G.prompt("S7w")
+    pruefe(P, "S7 (Form d) fragt nicht nach dem Kurs und verlangt eingepreist = unbekannt; S7w fragt danach und liest das Wort",
+           "hat der Kurs schon reagiert" not in p7 and "IMMER 'unbekannt'" in p7 and '"eingepreist": "ja|' not in p7.split('"assets"')[1]
+           and "hat der Kurs schon reagiert" in p7w and "Kurs seit Meldung" in p7w and '"eingepreist": "ja|' in p7w.split('"assets"')[1])
 
     # 4 Antwortleser: kaputt -> None (nachfassen), erfundene Felder / zu viele Treiber / fremdes Ereignis -> GEZAEHLT
     emap = {"E1": {"beleg": "https://x/1", "typ": "hack_exploit", "herkunft": ["weg_b"]}}
@@ -34275,8 +34284,13 @@ def paket_sichten_gutachten() -> None:
               "zustand falsch": _G.lies(_json.dumps(dict(gut, zustand="bullish")), "S1", emap)[0],
               "wirkung fehlt": _G.lies(_json.dumps({k: v for k, v in gut.items() if k != "wirkung_krypto"}), "S1", emap)[0]}
     _, e_fremd = _G.lies(_json.dumps(dict(gut, prognose=1, treiber=[{}] * 4)), "S1", emap)
-    _, e_s7 = _G.lies(_json.dumps(dict(gut, assets=[{"asset": "FOO", "wirkung": "stuetzt", "ereignis": "E9"}])), "S7", emap)
-    _, e_s7b = _G.lies(_json.dumps(dict(gut, assets=[{"asset": "FOO", "wirkung": "stützt", "ereignis": "E1"}])), "S7", emap)
+    gut7 = dict(gut, eingepreist="unbekannt", eingepreist_beleg="")
+    _, e_s7 = _G.lies(_json.dumps(dict(gut7, assets=[{"asset": "FOO", "wirkung": "stuetzt", "ereignis": "E9"}])), "S7", emap)
+    _, e_s7b = _G.lies(_json.dumps(dict(gut7, assets=[{"asset": "FOO", "wirkung": "stützt", "ereignis": "E1"}])), "S7", emap)
+    _, e_s7k = _G.lies(_json.dumps(dict(gut, assets=[])), "S7", emap)
+    _, e_s7w = _G.lies(_json.dumps(dict(gut, assets=[{"asset": "FOO", "wirkung": "belastet", "ereignis": "E1"}])), "S7w", emap)
+    pruefe(P, "Antwortleser S7: eingepreist 'teilweise' ohne Kurs wird GEZAEHLT (S7 sieht keinen); bei S7w ist es erlaubt, assets wie S7",
+           len(e_s7k) == 1 and "ohne Kurs" in e_s7k[0] and not e_s7w, "%s %s" % (e_s7k, e_s7w))
     f_kl, _ = _G.lies(_json.dumps(dict(gut, treiber=[{"schluessel": " [S1.dvol.BTC] "}])), "S1", emap)
     pruefe(P, "Antwortleser: Schluessel in eckigen Klammern (Probe 2) wird zur Schreibweise ohne Klammern",
            f_kl["treiber"][0]["schluessel"] == "S1.dvol.BTC", str(f_kl["treiber"]))
@@ -34391,15 +34405,92 @@ def paket_sichten_gutachten() -> None:
                 vg += e["vorgriff"]
                 if s == "S8" and set(re.findall(r"\[termin (\w+)\]", e["text"])) != set(e["pruef"]["termin"]):
                     fehl.append((tag, s, "Termine"))
-        pruefe(P, "echte Eingabe an 3 Tagen x 6 Sichten: angezeigte Schluessel = Pruefer-Schluessel, E-Nummern = Belege, Termine = "
-               "Termine; kein Vorgriff (%d Ereigniszeilen)" % n_ev, not fehl and not vg and n_ev > 0, str(fehl or vg)[:300])
+                if s in _G.MIT_KURS:
+                    for nr, v in e["ereignisse"].items():
+                        ln = [x_ for x_ in e["text"].splitlines() if x_.startswith("[%s] " % nr)][0]
+                        if any(r_["bis"] != tag + " 00:00" or r_["ab"] > r_["bis"] for r_ in v["kurs"]):
+                            fehl.append((tag, s, nr, "Kurs nach T"))
+                        if s == "S7" and "Kurs seit" in ln:
+                            fehl.append((tag, s, nr, "Kurs im S7-Text"))
+                        if s == "S7w":
+                            soll = ", ".join("%s %s" % (r_["asset"], r_["wort"]) for r_ in v["kurs"])
+                            m_ = re.search(r"Kurs seit Meldung \(gegen BTC; BTC selbst absolut\): ([^·]+) · Ereignis$", ln)
+                            if not m_ or m_.group(1).strip() != soll or re.search(r"\d", m_.group(1).replace(soll, "").strip()):
+                                fehl.append((tag, s, nr, "Wort"))
+                    ohne_wort = re.sub(r" · Kurs seit Meldung \(gegen BTC; BTC selbst absolut\): [^·]+(?= · Ereignis$)", "", e["text"],
+                                       flags=re.M)
+                    if s == "S7w" and ohne_wort != _G.eingabe(q, tag, "S7")["text"]:
+                        fehl.append((tag, s, "S7w ohne das Wort ist nicht die S7-Eingabe"))
+        pruefe(P, "echte Eingabe an 3 Tagen x 7 Sichten: angezeigte Schluessel = Pruefer-Schluessel, E-Nummern = Belege, Termine = "
+               "Termine; kein Vorgriff; S7/S7w: Kursfakt je Meldung und Asset bis genau T, im S7-Text KEIN Kurs, im S7w-Text je Asset "
+               "genau das Wort (%d Ereigniszeilen)" % n_ev, not fehl and not vg and n_ev > 0, str(fehl or vg)[:300])
+
+        class _KeinKurs:
+            def reihe(self, sym):
+                raise AssertionError("Kurs gelesen")
+        q2 = _G.Quelle(ablage=q.ablage, E=q.E, kurse=_KeinKurs())
+        try:
+            for s in ("S1", "S3", "S8", "S2", "S4"):
+                _G.eingabe(q2, "2026-03-18", s)
+            ohne = True
+        except AssertionError:
+            ohne = False
+        pruefe(P, "S1, S3, S8, S2, S4 lesen beim Bau der Eingabe KEINEN Kurs (nur S7/S7w, und nur bis T)", ohne)
     else:
         pruefe(P, "echte Eingabe: sichten.db fehlt hier - Pruefung gehoert an den Desktop", True, "uebersprungen")
 
     # 7 Kein Blick gegen Kurse in Stufe 1 (Voranalyse §5.1)
     quelle = open(_G.__file__, encoding="utf-8").read()
-    pruefe(P, "das Modul liest keine Kurse und keine Messanlage (kein stundenkurse, kein g7_messanlage, kein data/_g7/kurse)",
-           all(w not in quelle for w in ("stundenkurse", "import g7_messanlage", "_g7/kurse", "zielgroesse")))
+    pruefe(P, "das Modul liest Kurse nur ueber agent.kursreaktion (Fakt bis T) und keine Messanlage (kein stundenkurse, kein "
+           "g7_messanlage, keine Zielgroesse)",
+           all(w not in quelle for w in ("stundenkurse", "import g7_messanlage", "_g7/kurse", "zielgroesse", "ertrag_s")))
+
+    # 8 agent.kursreaktion auf Kunstreihen: nur Kurse <= T, Wortgrenze, BTC absolut
+    import sqlite3 as _sq
+
+    from agent import kursreaktion as _KR
+    w2 = _tf.mkdtemp(prefix="kr_")
+    try:
+        def baue(ordner, sprung):
+            c_ = _sq.connect(_os.path.join(ordner, "stundenkurse.db"))
+            c_.execute("CREATE TABLE stundenkurse (symbol TEXT, stunde TEXT, close REAL)")
+            st = _pd.date_range("2026-01-01", "2026-04-01", freq="h")
+            r_ = __import__("numpy").random.default_rng(3)
+            for sym, sd in (("BTC", 0.004), ("FOO", 0.008)):
+                kk = 100 * __import__("numpy").exp(__import__("numpy").cumsum(r_.normal(0, sd, len(st))))
+                for t_, v_ in zip(st, kk):
+                    c_.execute("INSERT INTO stundenkurse VALUES (?,?,?)", (sym, t_.strftime("%Y-%m-%d %H:%M:%S"),
+                                                                          float(v_ * (sprung if t_ >= _pd.Timestamp("2026-03-18") else 1))))
+            c_.commit()
+            c_.close()
+        _os.makedirs(_os.path.join(w2, "a"))
+        _os.makedirs(_os.path.join(w2, "b"))
+        baue(_os.path.join(w2, "a"), 1.0)
+        baue(_os.path.join(w2, "b"), 3.0)                      # die Zukunft ab T verdreifacht - das Ergebnis am T darf sich nicht aendern
+        ka, kb = _KR.Kurse(_os.path.join(w2, "a")), _KR.Kurse(_os.path.join(w2, "b"))
+        ra = _KR.reaktion(ka, "FOO", "2026-03-16T09:30:00+00:00", "2026-03-18T00:00:00+00:00")
+        rb = _KR.reaktion(kb, "FOO", "2026-03-16T09:30:00+00:00", "2026-03-18T00:00:00+00:00")
+        rt = _KR.reaktion(ka, "FOO", "2026-03-18T00:00:00+00:00", "2026-03-18T00:00:00+00:00")
+        rbtc = _KR.reaktion(ka, "BTC", "2026-03-16T09:30:00+00:00", "2026-03-18T00:00:00+00:00")
+        rn = _KR.reaktion(ka, "BAR", "2026-03-16T09:30:00+00:00", "2026-03-18T00:00:00+00:00")
+        pruefe(P, "Kursreaktion: eine verdreifachte Zukunft ab T aendert nichts; Meldung genau um T -> 0 h, Wert 0; Ausgangskurs = "
+               "Schluss der Meldungsstunde (10:00); BTC absolut; ohne Reihe 'kein Kurs'",
+               ra == rb and ra["ab"] == "2026-03-16 10:00" and ra["bis"] == "2026-03-18 00:00" and rt["stunden"] == 0 and rt["pct"] == 0
+               and rbtc["bezug"] == "absolut" and rbtc["pct_btc"] is None and rbtc["z"] is not None and rn["wort"] == "kein Kurs"
+               and ra["wort"] in _KR.WORTE, "%s | %s" % (ra, rt))
+        wo = {z_: ("gestiegen" if z_ > _KR.GRENZE else "gefallen" if z_ < -_KR.GRENZE else "unverändert") for z_ in (0.51, -0.51, 0.49)}
+        pruefe(P, "Kursreaktion: Wortgrenze vorab 0,5 uebliche Schwankungen (Voranalyse §4b); das Wort folgt z, nicht dem Prozentwert",
+               _KR.GRENZE == 0.5 and wo == {0.51: "gestiegen", -0.51: "gefallen", 0.49: "unverändert"}
+               and (ra["z"] is None or ra["wort"] == wo.get(ra["z"], ("gestiegen" if ra["z"] > 0.5 else "gefallen" if ra["z"] < -0.5
+                                                                        else "unverändert"))))
+        pruefe(P, "Kursreaktion fuer das finale LLM: Satz nennt Asset, Alter, Ausgangszeit, %, gegen BTC und uebliche Schwankungen",
+               all(x_ in _KR.satz(ra) for x_ in ("FOO", "seit Meldung", "2026-03-16 10:00", "gegen BTC", "übliche Schwankungen", "Fakt")),
+               _KR.satz(ra))
+        for k_ in (ka, kb):
+            for c_ in k_._con.values():
+                c_.close()
+    finally:
+        wegwerf.aufraeumen(w2)
 
 
 def paket_g7_messanlage() -> None:

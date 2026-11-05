@@ -1,0 +1,10 @@
+S7 GROB c · ASSET-ZEIT STUDENTISIERT · 2026-11-05 08:01
+Fehlalarm in % (Soll <= 5), je 200 Ziehungen: ASSET-ZEIT t | ASSET-ZEIT Mittelwertdifferenz
+  G-Lauf 2/Tag     6.5 |   8.0   (36 s)
+  G-Lauf 5/Tag     5.5 |   5.0   (68 s)
+  G-Asset 5 %      4.0 |   5.5   (96 s)
+  G-Markt L=3      3.0 |   3.5   (126 s)
+  G-Markt L=10     5.0 |   5.0   (156 s)
+Auflösung ASSET-ZEIT t (Fundquote %, je 200 Ziehungen)
+  2 Zellen/Tag  0.1 σ:  42 · 0.2 σ:  82 · 0.3 σ:  98 · 0.5 σ: 100
+  5 Zellen/Tag  0.1 σ:  65 · 0.2 σ:  98 · 0.3 σ: 100 · 0.5 σ: 100

@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 96 |
+| Voranalyse / Recherche | 97 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **240** |
+| **gesamt** | **241** |
 
 ## Plan
 
@@ -177,6 +177,7 @@
 | [`Voranalyse_Einstieg_EA_23_10.md`](Voranalyse_Einstieg_EA_23_10.md) | Voranalyse E-A — REGEL0 als Kaufzeitpunkt für ohnehin geplante Spot-Käufe auf Bitpanda (ab 23.10.2026) | Arbeitsblatt |
 | [`Voranalyse_G14_Kern_Regel_03_11.md`](Voranalyse_G14_Kern_Regel_03_11.md) | Voranalyse G14: Kern-Regel und „Kern immer zugelassen“ (03.11.2026) | **laufend** |
 | [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | Voranalyse G7 — Messplan: Faktentreue der Prüfer und Wert der Sichten (02.11.2026) | **laufend** |
+| [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) | Voranalyse G7 S7-Anlage — wie die Asset-Urteile von S7 gemessen werden (05.11.2026) | **laufend** |
 | [`Voranalyse_G7_Stufe1_04_11.md`](Voranalyse_G7_Stufe1_04_11.md) | Voranalyse G7 Stufe 1 — Sicht-Gutachten im Rückspiel (04.11.2026) | **laufend** |
 | [`Voranalyse_G8_NB_Buendel_03_11.md`](Voranalyse_G8_NB_Buendel_03_11.md) | Voranalyse G8: was jetzt ans Notebook kann (03.11.2026) | **laufend** |
 | [`Voranalyse_Hebel_M1_23_09.md`](Voranalyse_Hebel_M1_23_09.md) | Voranalyse M1 / Hebel — der Hebel ist heute ein Ein-Aus-Schalter | Arbeitsblatt |

@@ -157,6 +157,27 @@ Nullwelt.
 - Faktentreue: Hauptlauf mit allen Gutachten (S1-7).
 - Auflösung vorab: ≈ 0,5 σ (S1-1). Unterhalb heißt es „nicht trennbar“.
 
+### 4.1 Vorabfestlegung S7 — nachgetragen 05.11.2026, VOR dem ersten S7-Aufruf
+
+Grundlage: `Voranalyse_G7_S7_Anlage_05_11.md` (§1–§4b), Nutzer 05.11.: *„Ja, d + Wort-Arm“*. Anlage und Selbsttest:
+`Rechenkern_02_10/g7_s7_anlage.py` → `g7_s7_anlage.txt`.
+
+| | Festlegung |
+|---|---|
+| **Arme** | **S7 = Form d (HAUPTARM)**: das LLM sieht keinen Kurs, `eingepreist` = unbekannt; die Kursreaktion je Meldung und Asset liegt als Fakt daneben (`agent/kursreaktion.py`, geht an das finale LLM). **S7w = Arm e**: dieselbe Eingabe, je Asset nur das Wort gestiegen / gefallen / unverändert (gegen BTC, Grenze ±0,5 übliche Schwankungen, vorab) |
+| **Einheit** | Zelle Asset × Stichtag, nur Ereigniszellen (in der S7-Eingabe betrifft eine Zeile das Asset), nur `wdh` 0 |
+| **Urteil** | je Zelle: stützt +1, belastet −1, keine 0; mehrere Einträge → Vorzeichen der Summe, Gleichstand 0; nicht genannte Assets 0 |
+| **Zielgröße** | `ertrag_s = ln(P[T 01:00 + 72 h] / P[T 01:00]) / (σ_a · √3)`, σ_a aus 60 Tagen vor T (S7-5) |
+| **Statistik** | t = (Mittel stützt − Mittel belastet) / Standardfehler, **einseitig oben** (= unten bei belastet, oben bei stützt) |
+| **Nullwelt** | **Asset-Zeit**: Urteilsreihe jedes Assets um dasselbe k im Kreis, k = 1 … 334 (volle Bahn) |
+| **Band** | 95. Perzentil der Nullwelt — oder das **im Selbsttest geeichte** Band, falls ein Erzeuger über 6,5 % lag (steht in `g7_s7_anlage.txt`, Zeile „Band für die Messung“) |
+| **Mindestmaß** | ≥ 20 Blöcke à 15 Tage mit Urteilen, sonst KEIN BEFUND |
+| **Holm** | S7 ist einer der vier Haupttests (S1, S3, S8, S7). Der Platz S7 hat **zwei Schüsse** (d und e): der Platz gilt als getroffen, wenn **d** trägt; trägt nur **e**, muss e das **97,5. Perzentil** (Bonferroni im Platz) schlagen |
+| **Vergleichsarm** | Typ-Regel (S7-4) auf gleicher Zahl Zellen je Seite wie S7, gewählt nach Zahl der Meldungen. S7 **bringt etwas** nur, wenn die gepaarte Differenz t(S7) − t(Typ) über ihrem Nullband liegt (beide um dasselbe k verschoben) |
+| **Wahl d / e** | e **ersetzt** d nur, wenn (e trägt nach der Holm-Zeile und d nicht) **oder** die gepaarte Differenz t(e) − t(d) über ihrem Nullband liegt. Sonst bleibt d. Die Wahl wird **berichtet**, nicht still getroffen |
+| **Auskunft, nie hochgestuft** | H = 1 und H = 5 · Kern getrennt · nur Meldungen < 24 h · Weg b getrennt · Kurs-Regel (das Wort selbst als Urteil, Fortsetzung und Gegenrichtung) · Eigenrauschen aus `wdh` 1 |
+| **Reihenfolge** | gemessen wird erst, wenn S7 **und** S7w vollständig abgelegt sind (`--messen` verweigert sich vorher) |
+
 ---
 
 ## 5. Zur Abstimmung — eine Frage: Umfang von Stufe 1
@@ -224,6 +245,10 @@ Laufende Prompt-SHA (Durchgang 3), gelten für den Lauf: S1 `62578b8c9a98` · S3
 S4 `e8502a4bed81` · S7 `8fe0759a2510` (S7 kann sich nach §5.1 noch ändern).
 
 Kontingent heute: 46 Aufrufe für die Probe. Lauf **2.112 Aufrufe**, bei ≈ 480 am Tag ≈ 4,4 Tage; rund 40 s je Aufruf.
+
+## 5.4 Lauf-Beobachtung 05.11. (nur Form und Treue)
+
+Nach 98 S1-Gutachten: alle lesbar, 6 beanstandet — 5 × der **zweite** Wert der Zeile unter `wert` (Feld vertauscht, kein Faktenfehler), 1 × **Fehler in Prüfer v2** (`-2.43e-05` als −2 gelesen). Kein Abbruch, alles roh abgelegt; Neurechnung mit Prüfer v2.1 in Stufe 2. Ausführlich: [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) S7-7.
 
 ## 6. Gegenprüfung dieser Voranalyse
 
