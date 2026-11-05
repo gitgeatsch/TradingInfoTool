@@ -34219,6 +34219,189 @@ def paket_gutachtenpruefer() -> None:
            all(w not in open(_GP.__file__, encoding="utf-8").read() for w in ("import sqlite3", "import requests", "open(")))
 
 
+def paket_sichten_gutachten() -> None:
+    """Sicht-Gutachten ``agent/sichten_gutachten.py`` (G7 Stufe 1 B5, Voranalyse_G7_Stufe1_04_11.md, Nutzer 05.11.2026: *"ja hoert sich
+    vernuenftig an also deine Empfehlung"*). OHNE Netz: das LLM ist ein Zaehler mit festen Antworten, die Ablage ein Wegwerfordner.
+    Gelesen wird ``data/_sichten/sichten.db`` (mode=ro) fuer die Eingabe echter Tage - nur am Desktop (Suite laeuft nicht am NB)."""
+    P = "SichtenGutachten"
+    import json as _json
+    import os as _os
+    import tempfile as _tf
+
+    import pandas as _pd
+
+    from agent import gutachten_pruefer as _GP
+    from agent import sichten_gutachten as _G
+    from agent import zustaende as _Z
+
+    # 1 Ablage: nie Produktion, nie sichten.db; Vorgabe unter data/_g7
+    verweigert = []
+    for name in ("tradinginfotool.db", "sichten.db"):
+        try:
+            _G.verbinde(_os.path.join(_tf.gettempdir(), "x", name))
+        except SystemExit:
+            verweigert.append(name)
+    pruefe(P, "Ablage: verweigert tradinginfotool.db und sichten.db; Vorgabe und Probe liegen unter data/_g7, getrennt",
+           verweigert == ["tradinginfotool.db", "sichten.db"] and _G.ABLAGE.replace("\\", "/").endswith("data/_g7/gutachten.db")
+           and _G.ABLAGE_PROBE != _G.ABLAGE and _os.path.dirname(_G.ABLAGE_PROBE) == _os.path.dirname(_G.ABLAGE), str(verweigert))
+
+    # 2 Plan: Reihenfolge (S7 zuletzt), Umfang, Wiederholung fest ausgelost
+    pl = _G.plan()
+    folge = list(dict.fromkeys(s for _, s, _ in pl))
+    w = _G.wdh_tage()
+    pruefe(P, "Plan: S1, S3, S8, S2, S4, S7 (S7 zuletzt), je 335 Tage + 17 Wiederholungen = 2.112; Wiederholungstage fest (Saat)",
+           folge == ["S1", "S3", "S8", "S2", "S4", "S7"] and len(pl) == 2112 and len(w) == 17 and w == _G.wdh_tage()
+           and len(set(pl)) == len(pl) and len(_G.plan(probe=True)) == 18, "%s %d %d" % (folge, len(pl), len(w)))
+
+    # 3 Prompt-SHA je Sicht: eine Aenderung an S7 laesst die anderen gueltig
+    vorher = {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE}
+    alt = _G.SICHT["S7"]
+    try:
+        _G.SICHT["S7"] = (alt[0], alt[1] + " (geaendert)")
+        nachher = {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE}
+    finally:
+        _G.SICHT["S7"] = alt
+    pruefe(P, "Prompt-SHA je Sicht: S7 geaendert -> nur S7 neu, die fuenf anderen gleich; alle sechs verschieden",
+           nachher["S7"] != vorher["S7"] and all(nachher[s] == vorher[s] for s in vorher if s != "S7")
+           and len(set(vorher.values())) == 6 and vorher == {s: _G.prompt_sha(s) for s in _G.REIHENFOLGE})
+
+    # 4 Antwortleser: kaputt -> None (nachfassen), erfundene Felder / zu viele Treiber / fremdes Ereignis -> GEZAEHLT
+    emap = {"E1": {"beleg": "https://x/1", "typ": "hack_exploit", "herkunft": ["weg_b"]}}
+    gut = {"zustand": "auffaellig", "wirkung_krypto": "belastet", "horizont": "tage", "horizont_t": 3, "neu_seit": "2026-03-17",
+           "eingepreist": "teilweise", "eingepreist_beleg": "BTC schon tief", "treiber": [], "aussage": "x", "kippt_wenn": "y",
+           "gegenargument": "z"}
+    f_ok, e_ok = _G.lies("```json\n%s\n```" % _json.dumps(gut), "S1", emap)
+    faelle = {"kein JSON": _G.lies("leider nein", "S1", emap)[0],
+              "zustand falsch": _G.lies(_json.dumps(dict(gut, zustand="bullish")), "S1", emap)[0],
+              "wirkung fehlt": _G.lies(_json.dumps({k: v for k, v in gut.items() if k != "wirkung_krypto"}), "S1", emap)[0]}
+    _, e_fremd = _G.lies(_json.dumps(dict(gut, prognose=1, treiber=[{}] * 4)), "S1", emap)
+    _, e_s7 = _G.lies(_json.dumps(dict(gut, assets=[{"asset": "FOO", "wirkung": "stuetzt", "ereignis": "E9"}])), "S7", emap)
+    _, e_s7b = _G.lies(_json.dumps(dict(gut, assets=[{"asset": "FOO", "wirkung": "stützt", "ereignis": "E1"}])), "S7", emap)
+    f_kl, _ = _G.lies(_json.dumps(dict(gut, treiber=[{"schluessel": " [S1.dvol.BTC] "}])), "S1", emap)
+    pruefe(P, "Antwortleser: Schluessel in eckigen Klammern (Probe 2) wird zur Schreibweise ohne Klammern",
+           f_kl["treiber"][0]["schluessel"] == "S1.dvol.BTC", str(f_kl["treiber"]))
+    pruefe(P, "Antwortleser: Codeblock gelesen, Umlaut-Schreibweise normalisiert; kaputtes JSON / falscher zustand / fehlende wirkung "
+           "-> unbrauchbar; erfundenes Feld, 4 Treiber, Ereignis E9 nicht in der Eingabe -> GEZAEHLT, nicht verworfen",
+           f_ok is not None and f_ok["zustand"] == "auffällig" and not e_ok and all(v is None for v in faelle.values())
+           and len(e_fremd) == 2 and any("prognose" in x for x in e_fremd) and any("4 Treiber" in x for x in e_fremd)
+           and len(e_s7) == 1 and "E9" in e_s7[0] and not e_s7b, "%s %s %s %s" % (e_ok, e_fremd, e_s7, e_s7b))
+
+    # 5 Lauf gegen ein Kunst-LLM: Treue end-to-end, Nachfassen, Wiederaufnahme ohne Doppelaufruf, Vorgriff bricht VOR dem Aufruf ab
+    z1 = _Z.Zustand("S1", "dvol", "BTC", "DVOL BTC (Optionsmarkt)", "niveau",
+                    "[S1] DVOL BTC (Optionsmarkt) 53.3 · Rang P37 der letzten 5.0 J · Stand 2026-03-17 · Fakt", False, "normal", 37.2,
+                    stand="2026-03-17")
+    t8 = _Z.Zustand("S8", "termin", "fomc", "US-Zinsentscheid (FOMC)", "termin", "[S8] US-Zinsentscheid (FOMC) 2026-03-18 · Fakt", False,
+                    stand="2026-03-18")
+    ev = _pd.DataFrame({"quelle": ["nachricht"], "meldung": ["m1"], "zeit": ["2026-03-17T10:00:00+00:00"],
+                        "bekannt_ab": ["2026-03-17T11:00:00+00:00"], "typ": ["hack_exploit"], "ereignis": [1], "assets": ["[]"],
+                        "assets_alle": ["[]"], "bereich": ["krypto_gesamt"], "sicht": ["S1"], "schwere": ["ungemessen"],
+                        "beleg": ["https://x/1"], "titel": ["Exchange reports record volume"], "methode": ["llm"], "modell": ["m"]})
+    _NS = __import__("types").SimpleNamespace
+    pruefe(P, "Herkunft je Ereigniszeile: Boersenregel / Vorfilter-Treffer / Weg b getrennt (S1-4)",
+           [_G.herkunft(_NS(quelle=q_, methode=m_, titel=t_)) for q_, m_, t_ in (
+               ("binance", "regel", ""), ("nachricht", "llm", "Exchange hacked"), ("nachricht", "llm", "Exchange reports record volume"))]
+           == ["boerse_regel", "vorfilter", "weg_b"])
+
+    class _Q:
+        def __init__(self, ev_):
+            self.ev = ev_
+
+        def tag(self, tag):
+            return [z1, t8], self.ev
+
+    antwort = dict(gut, treiber=[{"schluessel": "S1.dvol.BTC", "wert": 53, "rang": 37, "klasse": "normal", "aussage": "DVOL 53"},
+                                 {"ereignis": "E1", "typ": "hack_exploit", "aussage": "Hack"}])
+    falsch = dict(gut, treiber=[{"schluessel": "S1.dvol.BTC", "wert": 55.9, "rang": 37, "aussage": "DVOL"}])
+
+    class _A:
+        status_code, text, headers = 200, "", {}
+
+        def __init__(self, inhalt):
+            self._i = inhalt
+
+        def json(self):
+            return {"choices": [{"message": {"content": self._i}}], "usage": {"total_tokens": 10}}
+
+        def raise_for_status(self):
+            pass
+
+    class _Http:
+        def __init__(self, folge):
+            self.folge, self.n, self.system = list(folge), 0, []
+
+        def post(self, url, headers=None, json=None, timeout=None):
+            self.n += 1
+            self.system.append(json["messages"][0]["content"])
+            return _A(self.folge.pop(0) if self.folge else "kaputt")
+
+    w_ = _tf.mkdtemp(prefix="sg_")
+    try:
+        c = _G.verbinde(_os.path.join(w_, "g.db"))
+        h = _Http([_json.dumps(antwort), "kaputt", _json.dumps(falsch)])
+        r1 = _G.gutachten(c, _Q(ev), "2026-03-18", "S1", "k", 0, h)
+        r2 = _G.gutachten(c, _Q(ev), "2026-03-19", "S1", "k", 0, h)
+        n_vor = h.n
+        h3 = _Http(["kaputt"] * 5)
+        r3 = _G.gutachten(c, _Q(ev), "2026-03-20", "S1", "k", 0, h3)
+        zeilen = c.execute("SELECT tag, form_ok, zustand, wirkung, treue_verstoesse, versuche, ereignisse FROM gutachten ORDER BY tag"
+                           ).fetchall()
+        pruefe(P, "Treue end-to-end: E1 -> Beleg, gerundeter Wert gilt (0 Beanstandungen); falscher Wert 55,9 -> 1 Beanstandung, "
+               "trotzdem abgelegt; Herkunft der Ereigniszeile (weg_b) steht in der Ablage; zustand/wirkung als Zahl 1/+1",
+               r1["pruefung"]["ok"] and r2["pruefung"] and len(r2["pruefung"]["verstoesse"]) == 1 and zeilen[0][2:4] == (1, 1)
+               and zeilen[1][4] == 1 and _json.loads(zeilen[0][6])["E1"]["herkunft"] == ["weg_b"], str(zeilen)[:300])
+        pruefe(P, "Nachfassen: kaputte Antwort -> zweiter Aufruf; nach %d Versuchen als unlesbar ABGELEGT (form_ok 0), nicht endlos"
+               % _G.VERSUCHE, n_vor == 3 and zeilen[1][5] == 2 and h3.n == _G.VERSUCHE and zeilen[2][1] == 0 and not r3["form_ok"],
+               "%d %s %d" % (n_vor, zeilen, h3.n))
+        pruefe(P, "Wiederaufnahme: was mit diesem Modell und dieser Prompt-SHA abgelegt ist (auch unlesbar), wird nicht noch einmal "
+               "gefragt; eine andere Wiederholungsnummer schon",
+               _G.vorhanden(c, "2026-03-18", "S1", 0) and _G.vorhanden(c, "2026-03-20", "S1", 0)
+               and not _G.vorhanden(c, "2026-03-18", "S1", 1) and not _G.vorhanden(c, "2026-03-18", "S3", 0))
+        ev_spaet = ev.assign(bekannt_ab="2026-03-18T05:00:00+00:00")
+        h4 = _Http([_json.dumps(antwort)])
+        try:
+            _G.gutachten(c, _Q(ev_spaet), "2026-03-18", "S1", "k", 1, h4)
+            abbruch = False
+        except RuntimeError as e:
+            abbruch = "VORGRIFF" in str(e)
+        pruefe(P, "Vorgriff (Ereignis nach dem Stichtag bekannt) bricht ab, BEVOR das LLM gefragt wird - nichts abgelegt",
+               abbruch and h4.n == 0 and not _G.vorhanden(c, "2026-03-18", "S1", 1))
+        pruefe(P, "der Prompt des Aufrufs ist der der Sicht (Prompt-SHA passt zum gesendeten Text)",
+               all(s == _G.prompt("S1") for s in h.system))
+        c.close()
+    finally:
+        wegwerf.aufraeumen(w_)
+
+    # 6 Echte Eingabe (Desktop, sichten.db mode=ro): jeder angezeigte Schluessel ist ein Pruefer-Schluessel und umgekehrt, kein Vorgriff
+    if _os.path.exists(_Z.ABLAGE):
+        q = _G.Quelle()
+        fehl, vg, n_ev = [], [], 0
+        for tag in ("2025-12-01", "2026-03-18", "2026-10-31"):
+            for s in _G.REIHENFOLGE:
+                e = _G.eingabe(q, tag, s)
+                im_text = set(re.findall(r"^[● ] \[(S\d\.[^\]]+)\]", e["text"], re.M))
+                if im_text != set(e["pruef"]["zustand"]):
+                    fehl.append((tag, s, sorted(im_text ^ set(e["pruef"]["zustand"]))[:3]))
+                ez = set(re.findall(r"^\s*\[(E\d+)\]", e["text"], re.M))
+                if any(" · Typ: %s · " % v["typ"] not in ln for nr, v in e["ereignisse"].items()
+                       for ln in e["text"].splitlines() if ln.startswith("[%s] " % nr)):
+                    fehl.append((tag, s, "Typ-Beschriftung"))
+                if ez != set(e["ereignisse"]) or any(v["beleg"] not in e["pruef"]["ereignis"] for v in e["ereignisse"].values()):
+                    fehl.append((tag, s, "Ereignisse"))
+                n_ev += len(ez)
+                vg += e["vorgriff"]
+                if s == "S8" and set(re.findall(r"\[termin (\w+)\]", e["text"])) != set(e["pruef"]["termin"]):
+                    fehl.append((tag, s, "Termine"))
+        pruefe(P, "echte Eingabe an 3 Tagen x 6 Sichten: angezeigte Schluessel = Pruefer-Schluessel, E-Nummern = Belege, Termine = "
+               "Termine; kein Vorgriff (%d Ereigniszeilen)" % n_ev, not fehl and not vg and n_ev > 0, str(fehl or vg)[:300])
+    else:
+        pruefe(P, "echte Eingabe: sichten.db fehlt hier - Pruefung gehoert an den Desktop", True, "uebersprungen")
+
+    # 7 Kein Blick gegen Kurse in Stufe 1 (Voranalyse §5.1)
+    quelle = open(_G.__file__, encoding="utf-8").read()
+    pruefe(P, "das Modul liest keine Kurse und keine Messanlage (kein stundenkurse, kein g7_messanlage, kein data/_g7/kurse)",
+           all(w not in quelle for w in ("stundenkurse", "import g7_messanlage", "_g7/kurse", "zielgroesse")))
+
+
 def paket_g7_messanlage() -> None:
     """Messanlage ``g7_messanlage.py`` (G7 Stufe 0b). Ohne Netz, auf Kunstreihen mit bekannter Wahrheit. Der Selbsttest auf den ECHTEN
     Zielgroessen (1.000 Ziehungen, geballte Null-Urteile, Pflanzung) steht in ``g7_stufe0.py b`` -> ``g7_stufe0_b.txt``."""
@@ -34367,6 +34550,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Ereignisse": paket_ereignisse,
           "Gutachtenpruefer": paket_gutachtenpruefer,
           "G7Messanlage": paket_g7_messanlage,
+          "SichtenGutachten": paket_sichten_gutachten,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,
