@@ -34718,6 +34718,53 @@ def paket_g7_messanlage() -> None:
            "%.3f / %.1f" % (x.mean(), laeufe.mean()))
 
 
+_GP_ZEILE_MAX, _GP_TEXT_MAX = 1500, 25000      # 06.11.2026: der Plan ist Zustand; der Verlauf gehoert in den Arbeitsstand
+
+
+def _gesamtplan_lange_zeilen(text: str) -> list:
+    """Tabellenzeilen des Plans ueber der Grenze -> ['G7 (6594)', ...]."""
+    import re as _re
+    aus = []
+    for z in text.split("\n"):
+        if z.startswith("|") and len(z) > _GP_ZEILE_MAX:
+            m = _re.match(r"\|\s*\**([^|*]{1,40}?)\**\s*\|", z)
+            aus.append("%s (%d)" % (m.group(1).strip() if m else z[:20], len(z)))
+    return aus
+
+
+def _datum(t: str, tag: str, monat: str, jahr: str | None, heute):
+    """dd.mm.[yyyy] -> date; ohne Jahr das juengste Jahr, das nicht mehr als 7 Tage in der Zukunft liegt."""
+    import datetime as _d
+    try:
+        if jahr:
+            return _d.date(int(jahr), int(monat), int(tag))
+        d = _d.date(heute.year, int(monat), int(tag))
+        return d if d <= heute + _d.timedelta(days=7) else _d.date(heute.year - 1, int(monat), int(tag))
+    except ValueError:
+        return None
+
+
+def _arbeitsstand_rueckstand(plan: str, arbeitsstand: str, heute):
+    """None, wenn der juengste '### Stand'-Block im Arbeitsstand nicht aelter ist als das juengste Datum in Plan §5 (1 Tag Spiel);
+    sonst 'Plan §5 bis X, Arbeitsstand bis Y'. Ein Datum in der Zukunft (Frist '30.11.') zaehlt nicht."""
+    import datetime as _d
+    import re as _re
+    a = plan.find("## 5.")
+    b = plan.find("## 6.", a)
+    abschnitt = plan[a:b] if a >= 0 else ""
+    rx = r"\b(\d{2})\.(\d{2})\.(\d{4})?"
+    p = [d for d in (_datum(m.group(0), *m.groups(), heute) for m in _re.finditer(rx, abschnitt)) if d and d <= heute]
+    s = []
+    for z in arbeitsstand.split("\n"):
+        if z.startswith("### Stand"):
+            s += [d for d in (_datum(m.group(0), *m.groups(), heute) for m in _re.finditer(rx, z)) if d]
+    if not p:
+        return None
+    if not s:
+        return "Plan §5 bis %s, Arbeitsstand ohne Stand-Block" % max(p)
+    return None if max(s) >= max(p) - _d.timedelta(days=1) else "Plan §5 bis %s, Arbeitsstand bis %s" % (max(p), max(s))
+
+
 def paket_gesamtplan() -> None:
     """Der LAUFENDE PLAN Basisinfos/Gesamtplan.md (28.10.2026, Nutzer: *"ja 1, neuer Gesamtplan - bau auf allen Ebenen einen Link-Verweis
     ein, damit wir die Plaene und Informationen immer finden und beruecksichtigen koennen"*).
@@ -34726,6 +34773,7 @@ def paket_gesamtplan() -> None:
     Befund, der abgeloest ist, aber im Plan steht; ein Betriebsschalter, der im Plan als laufend steht und aus ist; die alte Kette,
     die wieder liefe. Der Zustand wird aus der QUELLE gelesen (yaml, rollen_job), nicht aus einer Aufzaehlung im Text."""
     P = "Gesamtplan"
+    import datetime as _dt
     import os as _os
     import re as _re
 
@@ -34764,7 +34812,22 @@ def paket_gesamtplan() -> None:
     pruefe(P, "⚠️ zeilentreue Dokumente: der Verweis steht am ENDE, keine Zeile verschoben", not verschoben, ", ".join(verschoben))
     pruefe(P, "das Dokumenten-Register ist aktuell (python dokumente.py)",
            _os.path.exists(_DK.ZIEL) and open(_DK.ZIEL, encoding="utf-8").read() == _DK.erzeuge())
-    hist = ("Plan_Schritt59_Gesamtkette_17_09.md", "Gesamtplan_Wo_wir_stehen_28_08.md", "Kette_Landkarte.md")
+    # 06.11.2026 (Nutzer: *"ja zu 1."*): der Plan war von 11.902 auf 33.157 Zeichen gewachsen, weil der Verlauf jedes Pakets an die
+    # G-Zeile ANGEHAENGT wurde statt in den Arbeitsstand - und keine Pruefung sah es, weil hier nur Verweise geprueft wurden.
+    ar_pfad = _os.path.join("Basisinfos", "Arbeitsstand_Schritt59.md")
+    ar_text = open(ar_pfad, encoding="utf-8").read() if _os.path.exists(ar_pfad) else ""
+    lang = _gesamtplan_lange_zeilen(text)
+    pruefe(P, "⚠️ der Plan ist ZUSTAND: keine Tabellenzeile ueber %d Zeichen (ersetzen, nicht verlaengern)" % _GP_ZEILE_MAX, not lang,
+           ", ".join(lang[:6]))
+    pruefe(P, "⚠️ der Plan ist ZUSTAND: hoechstens %d Zeichen (heute %d)" % (_GP_TEXT_MAX, len(text)), len(text) <= _GP_TEXT_MAX)
+    rueck = _arbeitsstand_rueckstand(text, ar_text, _dt.date.today())
+    pruefe(P, "⚠️ der Verlauf steht im Arbeitsstand: sein juengster Stand-Block ist nicht aelter als das juengste Datum in Plan §5",
+           rueck is None, str(rueck))
+    lang_probe = _gesamtplan_lange_zeilen(text.replace("| **G7** |", "| **G7** | " + "x" * _GP_ZEILE_MAX, 1))
+    rueck_probe = _arbeitsstand_rueckstand(text, ar_text.replace("### Stand ", "### Altstand "), _dt.date.today())
+    pruefe(P, "Gegenprobe: eine verlaengerte Zeile und ein Arbeitsstand ohne Stand-Block werden ERKANNT", bool(lang_probe) and rueck_probe is not None,
+           "%s / %s" % (lang_probe[:1], rueck_probe))
+    hist = ("Plan_Schritt59_Gesamtkette_17_09.md", "Gesamtplan_Wo_wir_stehen_28_08.md", "Kette_Landkarte.md", "Uebergabe_Sitzung_04_11.md")
     ohne_h = [h for h in hist if "HISTORIE – nicht fortschreiben" not in open(_os.path.join("Basisinfos", h), encoding="utf-8").read()[:3000]]
     pruefe(P, "die alten Plaene sind oben als HISTORIE gekennzeichnet", not ohne_h, ", ".join(ohne_h))
     pruefe(P, "CLAUDE.md verweist auf den laufenden Plan", "Basisinfos/Gesamtplan.md" in open("CLAUDE.md", encoding="utf-8").read()[:2000])

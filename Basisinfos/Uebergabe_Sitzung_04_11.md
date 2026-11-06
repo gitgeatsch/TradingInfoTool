@@ -1,5 +1,7 @@
 # Übergabe an die nächste Sitzung (04.11.2026)
 
+> ⛔ **HISTORIE – nicht fortschreiben**, abgelöst am 06.11.2026: der Zustand steht im [`Gesamtplan.md`](Gesamtplan.md), Verlauf und Übergaben stehen im [`Arbeitsstand_Schritt59.md`](Arbeitsstand_Schritt59.md).
+
 > 🧭 **Laufender Plan:** [`Gesamtplan.md`](Gesamtplan.md). Diese Datei ergänzt ihn um den Stand **zwischen** den Plänen: was gerade läuft, was als Nächstes kommt, was eine neue Sitzung sonst nicht wüsste.
 
 **Warum gewechselt wird:** Das Protokoll der Sitzung `db18e928` ist 340 MB groß. Am 02.11. und am 04.11. kam deshalb je eine Antwort nicht mehr an, und die App hat die Sitzung abgebrochen (Memory `reference_sitzungsabbruch_unvollstaendige_antwort.md`). Nutzerregel 02.11.: beim zweiten Abbruch wird gewechselt.

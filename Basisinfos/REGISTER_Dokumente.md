@@ -40,7 +40,7 @@
 | [`Reparaturliste_Umbau_23_08.md`](Reparaturliste_Umbau_23_08.md) | Reparaturliste — was der Umbau offen gelassen hat | vor Messstandard (2026-08-24) |
 | [`UEBERGABE_Hebelneubau_27_09.md`](UEBERGABE_Hebelneubau_27_09.md) | Übergabe an die nächste Session — Hebelneubau | Arbeitsblatt |
 | [`Uebergabe_11_08.md`](Uebergabe_11_08.md) | Übergabe — Stand 11.08.2026 | vor Messstandard (2026-08-11) |
-| [`Uebergabe_Sitzung_04_11.md`](Uebergabe_Sitzung_04_11.md) | Übergabe an die nächste Sitzung (04.11.2026) | Arbeitsblatt |
+| [`Uebergabe_Sitzung_04_11.md`](Uebergabe_Sitzung_04_11.md) | Übergabe an die nächste Sitzung (04.11.2026) | HISTORIE |
 | [`Umbauplan_Gesamtsystem_12_08.md`](Umbauplan_Gesamtsystem_12_08.md) | – | vor Messstandard (2026-08-23) |
 | [`Umbauplan_Hebel_eigene_Bewertung_24_09.md`](Umbauplan_Hebel_eigene_Bewertung_24_09.md) | Umbauplan — der Hebel bekommt seine eigene Bewertung | Arbeitsblatt |
 
@@ -235,7 +235,7 @@
 | [`Voranalyse_Vorsprung_Restquellen_26_10.md`](Voranalyse_Vorsprung_Restquellen_26_10.md) | Voranalyse (b): Was könnte überhaupt noch einen Vorsprung liefern? (26.10.2026) | Arbeitsblatt |
 | [`Voranalyse_Vorsprungs_Atlas_25_10.md`](Voranalyse_Vorsprungs_Atlas_25_10.md) | Voranalyse Vorsprungs-Atlas (25.10.2026) | Arbeitsblatt |
 | [`Voranalyse_W2_Wetter_Gewicht_29_09.md`](Voranalyse_W2_Wetter_Gewicht_29_09.md) | Voranalyse W2 — ist das Wetter ein Gewicht auf rsi? Der Nachweis ab 2024 (29.09.2026) | Arbeitsblatt |
-| [`Voranalyse_W3_Stilllegung_alte_Kette_27_10.md`](Voranalyse_W3_Stilllegung_alte_Kette_27_10.md) | Voranalyse W-3: Die alte Spot-Kette stilllegen statt nur anhalten (27.10.2026) | Arbeitsblatt |
+| [`Voranalyse_W3_Stilllegung_alte_Kette_27_10.md`](Voranalyse_W3_Stilllegung_alte_Kette_27_10.md) | Voranalyse W-3: Die alte Spot-Kette stilllegen statt nur anhalten (27.10.2026) | **laufend** |
 | [`Voranalyse_Wale_29_10.md`](Voranalyse_Wale_29_10.md) | Voranalyse Wale — welche Größe zeigt welches Verhalten (29.10.2026) | **laufend** |
 | [`Voranalyse_Wale_Stufe2_31_10.md`](Voranalyse_Wale_Stufe2_31_10.md) | Voranalyse G16 Stufe 2 — der Wal-Fluss als Gewicht in der REGEL0 (31.10.2026) | **laufend** |
 | [`Voranalyse_Weiterentwicklung_Fuehrung_26_10.md`](Voranalyse_Weiterentwicklung_Fuehrung_26_10.md) | Voranalyse: Das Fakten- und Führungssystem weiterentwickeln (26.10.2026) | Arbeitsblatt |
