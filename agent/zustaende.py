@@ -270,6 +270,7 @@ def termine(ablage: Ablage, T) -> list[Zustand]:
     from agent import termin_fakt as TF
     T = _T(T)
     t = pd.Timestamp(T)
+    f2, f24, lage = TF.faktoren_am(T)                  # G7 P-1: im Rückspiel nur, was vor dem Stichtag gemessen war
     aus = []
     for art in ("fomc", "cpi", "nfp"):
         s = ablage.stand_am("termin", art, T)
@@ -286,7 +287,7 @@ def termine(ablage: Ablage, T) -> list[Zustand]:
             if art in SHUTDOWN_ARTEN and SHUTDOWN_2025[0] <= tag <= SHUTDOWN_2025[1] else ""
         satz = ("[S8] %s %s UTC, in %.1f T · BTC bewegt sich in den 2 h ab dem Termin im Mittel %s× so stark wie sonst zur selben "
                 "Uhrzeit (über 24 h %s×; %s)%s · Fakt" % (name, u.strftime("%Y-%m-%d %H:%M"), in_t,
-                                                          TF._komma(TF.FAKTOR_2H[art]), TF._komma(TF.FAKTOR_24H), TF.MESSLAGE, kz))
+                                                          TF._komma(f2[art]), TF._komma(f24), lage, kz))
         aus.append(Zustand("S8", "termin", art, name, "termin", satz, False, wert=float(in_t), stand=tag, kennzeichen=kz.strip()))
     return aus
 

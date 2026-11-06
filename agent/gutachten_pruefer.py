@@ -21,6 +21,13 @@ Regeln (alle gezählt, nichts verworfen — wie Z-1: ein Wächter, der selbst ve
     DIESEM Gutachten genannten (vorhandenen) Zustands sein, oder der Horizont; sonst „Zahl ohne Beleg“
 
 ⚠️ Gelesen wird nur, was übergeben wird (Zustände, Ereignisse). Kein Netz, keine Datenbank.
+
+FASSUNG v2.1 (05.11.2026, Voranalyse_G7_S7_Anlage_05_11.md S7-7; ``fassung="v2.1"``, für die Neurechnung in Stufe 2):
+  * Zahlen in e-Schreibweise (``-2.43e-05``) werden ganz gelesen - v2 las daraus −2 und meldete den exakt übernommenen Wert als falsch
+  * ``wert`` = eine ANDERE Zahl derselben Zeile (z. B. der Abstand zum 200-T-Schnitt statt des Werts) -> eigene Art ``wert_feld``
+    („Feld vertauscht“), getrennt von ``wert`` (falscher Wert). Die Zahl steht in der zitierten Zeile, sie sitzt nur im falschen Feld.
+  ⚠️ Der laufende Rückspiel-Lauf zählt mit v2 (Vorgabe), damit alle Zeilen einer Sicht dieselbe Fassung tragen; v2.1 rechnet in
+  Stufe 2 aus der abgelegten Eingabe neu.
 """
 from __future__ import annotations
 
@@ -28,6 +35,8 @@ import json
 import re
 
 ZAHL = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+)?(?![\w])")    # 71211.95 bleibt EINE Zahl (anders als Z-1 _ZAHL)
+ZAHL21 = re.compile(r"(?<![\w.])[-+]?\d+(?:[.,]\d+)?(?:[eE][-+]?\d+)?(?!\w)(?!\.\d)")   # v2.1: auch -2.43e-05 als EINE Zahl
+FASSUNG = "v2"
 FREITEXT = ("aussage", "kippt_wenn", "gegenargument", "zustand_text", "wirkung_text")
 HARMLOS = {0.0, 1.0}                                            # „1 Tag“, „0“ - tragen keine Aussage über einen Wert
 
@@ -37,12 +46,21 @@ def schluessel(z) -> str:
     return "%s.%s.%s" % (z.sicht, z.quelle, z.symbol)
 
 
-def angezeigt(z) -> float | None:
+def angezeigt(z, fassung: str = "v2") -> float | None:
     """Der WERT, wie die Zeile ihn zeigt (erste Zahl nach dem Namen) — Breite 0,28 steht dort als 28 %, Funding als -0.00307 %."""
     if z.rang is None or z.name not in z.satz:
         return None
-    m = ZAHL.search(z.satz.split(z.name, 1)[1])
+    m = (ZAHL21 if fassung == "v2.1" else ZAHL).search(z.satz.split(z.name, 1)[1])
     return float(m.group().replace(",", ".")) if m else None
+
+
+def zeilenzahlen(z) -> list[float]:
+    """v2.1: alle Zahlen der Zeile nach dem Namen (ohne Rang, Jahre, Datum) - für die Art „Feld vertauscht“."""
+    if z.name not in z.satz:
+        return []
+    rest = re.sub(r"Rang P\d+|der letzten [\d.]+ J|\(ab \d{4}-\d{2}\)|Stand \d{4}-\d{2}-\d{2}|\d{4}-\d{2}-\d{2}", " ",
+                  z.satz.split(z.name, 1)[1])
+    return [float(m.replace(",", ".")) for m in ZAHL21.findall(rest)]
 
 
 def _stellen(x) -> int:
@@ -71,7 +89,7 @@ def ist_rundung(gesagt, echt: float) -> bool:
     return d < 10 and abs(round(echt, d) - g) <= 1e-9 * max(1.0, abs(g))
 
 
-def eingabe(zustaende: list, ereignisse=None, sicht: str | None = None) -> dict:
+def eingabe(zustaende: list, ereignisse=None, sicht: str | None = None, fassung: str = "v2") -> dict:
     """Was der Prüfer gegen die Antwort hält: je Schlüssel Wert, Rang, Klasse; je Beleg der A1-Typ; je Termin-Art der Tag."""
     z_ = {schluessel(z): z for z in zustaende if sicht is None or z.sicht == sicht}
     ev = {}
@@ -79,9 +97,13 @@ def eingabe(zustaende: list, ereignisse=None, sicht: str | None = None) -> dict:
         x = ereignisse if sicht is None else ereignisse[ereignisse.sicht == sicht]
         ev = {b: t for b, t in zip(x.beleg, x.typ)}
     termine = {z.symbol: (z.stand or "")[:10] for z in z_.values() if z.quelle == "termin"}
-    return {"zustand": {k: (angezeigt(z), None if z.rang is None else int(round(z.rang)), z.klasse) for k, z in z_.items()
-                        if z.quelle != "termin"},
-            "ereignis": ev, "termin": termine}
+    aus = {"zustand": {k: (angezeigt(z, fassung), None if z.rang is None else int(round(z.rang)), z.klasse) for k, z in z_.items()
+                       if z.quelle != "termin"},
+           "ereignis": ev, "termin": termine}
+    if fassung == "v2.1":
+        aus["fassung"] = "v2.1"
+        aus["zeile"] = {k: zeilenzahlen(z) for k, z in z_.items() if z.quelle != "termin"}
+    return aus
 
 
 def pruefe(gutachten: dict, ein: dict) -> dict:
@@ -104,7 +126,12 @@ def pruefe(gutachten: dict, ein: dict) -> dict:
             if "wert" in t:
                 n += 1
                 if not ist_rundung(t["wert"], w):
-                    v.append({"art": "wert", "wo": wo, "grund": "%s: %s genannt, die Eingabe zeigt %s" % (k, t["wert"], w)})
+                    andere = [x for x in ein.get("zeile", {}).get(k, []) if x != w]
+                    if ein.get("fassung") == "v2.1" and any(ist_rundung(t["wert"], x) for x in andere):
+                        v.append({"art": "wert_feld", "wo": wo, "grund": "%s: %s ist eine andere Zahl derselben Zeile, der Wert ist %s"
+                                  % (k, t["wert"], w)})
+                    else:
+                        v.append({"art": "wert", "wo": wo, "grund": "%s: %s genannt, die Eingabe zeigt %s" % (k, t["wert"], w)})
             if "rang" in t:
                 n += 1
                 try:
@@ -138,7 +165,7 @@ def pruefe(gutachten: dict, ein: dict) -> dict:
     texte = [(f, gutachten.get(f)) for f in FREITEXT] + [("treiber %d" % (i + 1), t.get("aussage"))
                                                          for i, t in enumerate(gutachten.get("treiber") or []) if isinstance(t, dict)]
     for wo, txt in texte:
-        for m in ZAHL.findall(str(txt or "")):
+        for m in (ZAHL21 if ein.get("fassung") == "v2.1" else ZAHL).findall(str(txt or "")):
             x = float(m.replace(",", "."))
             if abs(x) in HARMLOS or (horizont is not None and x == horizont):
                 continue

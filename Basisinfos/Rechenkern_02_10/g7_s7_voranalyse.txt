@@ -1,14 +1,14 @@
-G7 S7-ANLAGE VORANALYSE · 2026-11-05 07:47 · nur lesend, kein LLM-Urteil gelesen
-Zellen (Tag x Asset x Ereigniszeile): 15542 · Tage mit S7-Asset-Ereignis 335 von 335 · Assets 379 · 146 s
-Zellen (Tag x Asset): 9552 · je Tag Median 26, P90 51, max 70
-Ballung: Zelle schon am Vortag da 88.9 % · jüngste Meldung der Zelle < 24 h alt 11.4 % (1087 Zellen)
-Läufe je Asset (aufeinanderfolgende Tage): 1065 · Länge Median 7, Mittel 9.0, P90 12
-Zellen je Asset: Top 10 {'BTC': np.int64(327), 'ETH': np.int64(326), 'SOL': np.int64(297), 'XRP': np.int64(283), 'HYPE': np.int64(209), 'BNB': np.int64(170), 'ADA': np.int64(161), 'ZEC': np.int64(139), 'LINK': np.int64(135), 'SUI': np.int64(135)} · Anteil der Top 5 15.1 %
-Typen (Zeilen): {'paar_entfernt': 2861, 'unternehmen': 2460, 'netz_upgrade': 1634, 'etf_fonds': 1546, 'delisting_margin': 1531, 'regulierung_klage': 1021, 'listing_spot': 1003, 'hack_exploit': 879, 'sonstiges': 574, 'listing_futures': 391, 'makro_zentralbank': 346, 'monitoring': 321, 'listing_alpha': 238, 'airdrop': 160}
-Quellen (Zeilen): {'upbit': 636, 'binance': 5509, 'nachricht': 9397}
-Kursabdeckung: Asset mit Kursreihe 100.0 % · mit Zielgröße ertrag_s(H=3) 98.4 % (9398 Zellen) · mit Kursreaktion 99.8 %
+G7 S7-ANLAGE VORANALYSE · 2026-11-05 14:37 · nur lesend, kein LLM-Urteil gelesen
+Zellen (Tag x Asset x Ereigniszeile): 16365 · Tage mit S7-Asset-Ereignis 335 von 335 · Assets 422 · 145 s
+Zellen (Tag x Asset): 10296 · je Tag Median 27, P90 55, max 75
+Ballung: Zelle schon am Vortag da 88.7 % · jüngste Meldung der Zelle < 24 h alt 11.5 % (1183 Zellen)
+Läufe je Asset (aufeinanderfolgende Tage): 1162 · Länge Median 7, Mittel 8.9, P90 11
+Zellen je Asset: Top 10 {'BTC': np.int64(327), 'ETH': np.int64(326), 'SOL': np.int64(297), 'XRP': np.int64(283), 'HYPE': np.int64(209), 'BNB': np.int64(170), 'ADA': np.int64(161), 'ZEC': np.int64(139), 'LINK': np.int64(135), 'SUI': np.int64(135)} · Anteil der Top 5 14.0 %
+Typen (Zeilen): {'paar_entfernt': 2994, 'unternehmen': 2495, 'netz_upgrade': 1679, 'delisting_margin': 1578, 'etf_fonds': 1546, 'regulierung_klage': 1021, 'listing_spot': 1003, 'hack_exploit': 879, 'sonstiges': 588, 'monitoring': 478, 'delisting_token': 392, 'listing_futures': 391, 'makro_zentralbank': 346, 'listing_alpha': 238}
+Quellen (Zeilen): {'upbit': 706, 'binance': 6210, 'nachricht': 9449}
+Kursabdeckung: Asset mit Kursreihe 100.0 % · mit Zielgröße ertrag_s(H=3) 98.5 % (10137 Zellen) · mit Kursreaktion 99.8 %
 ohne Zielgröße, häufigste Assets: {'OPG': np.int64(21), 'GENIUS': np.int64(14), 'CAP': np.int64(14), 'PTB': np.int64(9), 'STABLE': np.int64(7), 'SKR': np.int64(7), 'PRL': np.int64(7), 'BILL': np.int64(7), 'STAR': np.int64(7), 'SLX': np.int64(7)}
 Blöcke à 15 T mit Zielgröße: 23 (MIN 20)
-ertrag_s (alle Zellen, NUR Verteilung, kein Urteil): Mittel -0.146, Std 1.142, P5 -1.76, P95 +1.50
-Kursreaktion seit Meldung gegen BTC (Fakt): |Median| 3.1 %, P10 -9.7 %, P90 +5.8 % · Alter der Meldung Median 101 h
-geschrieben D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_g7\s7_zellen.csv · 169 s
+ertrag_s (alle Zellen, NUR Verteilung, kein Urteil): Mittel -0.179, Std 1.220, P5 -1.87, P95 +1.51
+Kursreaktion seit Meldung gegen BTC (Fakt): |Median| 3.3 %, P10 -10.7 %, P90 +5.9 % · Alter der Meldung Median 99 h
+geschrieben D:\CLAUDE_Projects\SoftwareProjekte\TradingInfoTool\data\_g7\s7_zellen.csv · 164 s

@@ -36,6 +36,20 @@ UHR = {"cpi": "08:30", "nfp": "08:30", "fomc": "14:00"}
 FAKTOR_2H = {"cpi": 1.83, "nfp": 1.49, "fomc": 2.28}
 FAKTOR_24H = 1.10
 MESSLAGE = "gemessen 2023-2026 an 127 Terminen (Schritt7 §23.53); für REGEL0-Trades mit Termin im Fenster kein Unterschied belegt"
+# ⚠️ G7 P-1 (Gegenprüfung 05.11.2026): die Messung oben schließt Dez. 2025 – Sep. 2026 ein. Ein Stichtag IN diesem Zeitraum (Rückspiel)
+# bekommt die Werte, die NUR mit Daten VOR 2025-12-01 gemessen sind (g7_termin_faktor_vor.py: Reproduktion 1,83/1,45/2,31, davor
+# 1,84/1,45/2,27 - praktisch gleich). Regel: jede Zahl in einer Eingabe stammt aus Daten vor dem Stichtag.
+MESSUNG_ENDE = "2026-09-25"                      # p59 lief auf BTC bis 2026-09-24 15:00 UTC
+FAKTOR_2H_VOR = {"cpi": 1.84, "nfp": 1.45, "fomc": 2.27}
+FAKTOR_24H_VOR = 1.16
+MESSLAGE_VOR = "gemessen 2023-09 bis 2025-11 an 70 Terminen, nur Daten vor dem Rückspiel (G7 P-1)"
+
+
+def faktoren_am(tag) -> tuple[dict, float, str]:
+    """-> (FAKTOR_2H, FAKTOR_24H, MESSLAGE), wie sie an diesem Stichtag OHNE Vorgriff bekannt sein durften."""
+    return (FAKTOR_2H, FAKTOR_24H, MESSLAGE) if str(tag)[:10] >= MESSUNG_ENDE else (FAKTOR_2H_VOR, FAKTOR_24H_VOR, MESSLAGE_VOR)
+
+
 _SPEICHER: dict = {}
 
 

@@ -1,0 +1,8 @@
+G7 P-2 GEGENPRÜFUNG · 2026-11-05 14:37
+geladen 91 Symbole (Spot 56, Futures 35)
+davon eingestellt (Reihe endet vor 2026-10-01) und damit benutzt: 58 (Spot 56, Futures 2); die übrigen leben weiter und bleiben draußen (andere Grundgesamtheit)
+(1) Tagesschluss aus Stunden gegen Messbasis-Tageskurs: 55 Symbole verglichen, 3 ohne Vergleich ['A2Z', 'AERGO', 'BDXN']
+    Abweichung Median über Symbole 0.0000 % · Symbole mit > 1 % an mehr als 5 % der Tage: 0 []
+(2) Stundenlücken: 0 Symbole mit Lücken; größte []
+(3) Reihenende nach der Delisting-Meldung: 42 Fälle · Tage Median 13, Min 10, Max 466 (erwartet: einige Tage bis Wochen)
+    auffällig (< 0 oder > 60 Tage): [['AERGO', '2025-03-21', '2026-06-30', 466]]

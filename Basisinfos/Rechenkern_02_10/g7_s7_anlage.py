@@ -15,6 +15,7 @@ Gepaarter Vergleich A − B (S7w − S7, S7 − Typ-Regel): D = t(A) − t(B), N
 
 ⚠️ Nur lesend: Kurs-Arbeitskopie data/_g7/kurse (mode=ro), s7_zellen.csv, beim Messen gutachten.db (mode=ro).
 """
+import collections
 import json
 import math
 import os
@@ -64,11 +65,16 @@ def zielgroesse(k: pd.Series, H: int = 3) -> np.ndarray:
 def panel(H=(1, 3, 5)):
     C = pd.read_csv(ZELLEN, sep=";")
     assets = sorted(C.asset.unique())
-    mb = {r[0] for r in _ro(os.path.join(KOPIE, "stundenkurse.db")).execute("SELECT DISTINCT symbol FROM stundenkurse")}
-    con = {f: _ro(os.path.join(KOPIE, f)) for f in ("stundenkurse.db", "stundenkurse_alle.db")}
+    dateien = [f for f in ("stundenkurse.db", "stundenkurse_alle.db", "stundenkurse_eingestellt.db")      # Reihenfolge wie kursreaktion
+               if os.path.exists(os.path.join(KOPIE, f))]
+    con = {f: _ro(os.path.join(KOPIE, f)) for f in dateien}
+    hat = {f: {r[0] for r in con[f].execute("SELECT DISTINCT symbol FROM stundenkurse")} for f in dateien}
     Z = {h: np.full((len(assets), len(TAGE)), np.nan) for h in H}
     for i, s in enumerate(assets):
-        c = con["stundenkurse.db" if s in mb else "stundenkurse_alle.db"]
+        f = next((f for f in dateien if s in hat[f]), None)
+        if f is None:
+            continue
+        c = con[f]
         k = pd.Series(dict(c.execute("SELECT stunde, close FROM stundenkurse WHERE symbol=? AND stunde >= '2025-08-01'", (s,)).fetchall()))
         if len(k):
             k.index = pd.to_datetime(k.index)
@@ -130,21 +136,26 @@ def bloecke(U: np.ndarray, Z: np.ndarray) -> int:
 
 
 def arm(U, Z, band=BAND) -> dict:
+    """Entschieden wird über den RANG (Anteil der Nullwelt unter dem Wert) > band/100 - dieselbe Regel wie im Selbsttest
+    (Gegenprüfung 11: vorher interpoliertes Perzentil, ≈ 1 Nullwert großzügiger). Leere Seite (t = NaN) -> KEIN BEFUND."""
     b = t_bahn(U, Z)
     nb = bloecke(U, Z)
     n = b[1:][np.isfinite(b[1:])]
     grenze = float(np.percentile(n, band)) if len(n) else np.nan
-    urteil = "KEIN BEFUND" if nb < MIN_BLOECKE else "TRÄGT" if b[0] > grenze else "trägt nicht"
-    return {"t": float(b[0]), "grenze": grenze, "rang": rang(b), "stuetzt": int((U == 1).sum()), "belastet": int((U == -1).sum()),
+    r = rang(b)
+    urteil = "KEIN BEFUND" if nb < MIN_BLOECKE or not np.isfinite(r) else "TRÄGT" if r > band / 100 else "trägt nicht"
+    return {"t": float(b[0]), "grenze": grenze, "rang": r, "stuetzt": int((U == 1).sum()), "belastet": int((U == -1).sum()),
             "bloecke": nb, "urteil": urteil}
 
 
 def paar(UA, UB, Z, band=BAND) -> dict:
-    """A besser als B? D = t(A) − t(B), beide um dasselbe k verschoben."""
+    """A besser als B? D = t(A) − t(B), beide um dasselbe k verschoben; entschieden über den Rang wie arm()."""
     d = t_bahn(UA, Z) - t_bahn(UB, Z)
     n = d[1:][np.isfinite(d[1:])]
     grenze = float(np.percentile(n, band)) if len(n) else np.nan
-    return {"D": float(d[0]), "grenze": grenze, "rang": rang(d), "urteil": "BESSER" if d[0] > grenze else "nicht besser"}
+    r = rang(d)
+    return {"D": float(d[0]), "grenze": grenze, "rang": r,
+            "urteil": "KEIN BEFUND" if not np.isfinite(r) else "BESSER" if r > band / 100 else "nicht besser"}
 
 
 # ══ Vergleichsarme ohne LLM ═════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -157,12 +168,12 @@ def typ_seite(typ: str) -> int:
 
 
 def typ_regel(E, M) -> tuple[np.ndarray, np.ndarray]:
-    """-> (Urteil, Gewicht = Zahl der Meldungszeilen) je Zelle."""
+    """-> (Urteil, Gewicht = Zahl der MELDUNGEN der Zelle, §4.1; ältere Zellentabelle ohne n_meld: Zahl der Zeilen) je Zelle."""
     U, W = np.zeros(E.shape, dtype=int), np.zeros(E.shape)
     for (i, j), r in M.items():
         s = sum(typ_seite(t) for t in str(r.typen).split(","))
         U[i, j] = int(np.sign(s))
-        W[i, j] = r.n_zeilen
+        W[i, j] = getattr(r, "n_meld", r.n_zeilen)
     return U, W
 
 
@@ -178,16 +189,20 @@ def gleiche_rate(U_regel, W, n_st, n_bel, rng) -> np.ndarray:
     return V
 
 
-def kurs_regel(E, M, fortsetzung=True) -> np.ndarray:
-    """Auskunft: das WORT (Kursreaktion gegen BTC in üblichen Schwankungen, Grenze wie agent.kursreaktion) als Urteil."""
+_KR_CACHE: dict = {}
+
+
+def kurs_regel(E, M, fortsetzung=True, assets=None) -> np.ndarray:
+    """Auskunft: das WORT als Urteil - gerechnet mit ``agent.kursreaktion`` selbst (BTC absolut, Alter ab der Meldungsstunde, wie S7w
+    es sieht; Gegenprüfung 12), je Zelle ab der frühesten Meldung."""
     from agent import kursreaktion as KR
+    if "k" not in _KR_CACHE:
+        _KR_CACHE["k"] = KR.Kurse(KOPIE)
     U = np.zeros(E.shape, dtype=int)
     for (i, j), r in M.items():
-        if np.isfinite(r.reaktion_btc) and np.isfinite(r.sigma) and r.sigma > 0:
-            alter = max((pd.Timestamp(r.tag).tz_localize("UTC") - pd.Timestamp(r.erst)).total_seconds() / 86400, 1 / 24)
-            z = r.reaktion_btc / (r.sigma * math.sqrt(alter))
-            s = 1 if z > KR.GRENZE else -1 if z < -KR.GRENZE else 0
-            U[i, j] = s if fortsetzung else -s
+        w = KR.reaktion(_KR_CACHE["k"], r.asset, r.erst, r.tag + "T00:00:00+00:00")["wort"]
+        s_ = 1 if w == "gestiegen" else -1 if w == "gefallen" else 0
+        U[i, j] = s_ if fortsetzung else -s_
     return U
 
 
@@ -365,32 +380,97 @@ def urteile(sicht: str, ai, ti, E) -> np.ndarray:
     if n_alle < n_soll:
         raise SystemExit("%s: %d von %d Tagen - gemessen wird erst nach dem GANZEN Lauf (Stufe 1 §5.1)" % (sicht, n_alle, n_soll))
     U = np.zeros(E.shape)
+    zaehl = {"gutachten_lesbar": len(zeilen), "gutachten_unlesbar": n_alle - len(zeilen), "eintraege": 0, "verworfen_fremd": 0,
+             "verworfen_ohne_ereigniszelle": 0}
     for tag, f in zeilen:
         for e in (json.loads(f).get("assets") or []):
-            if isinstance(e, dict) and e.get("asset") in ai and tag in ti:
-                w = {"stützt": 1, "stuetzt": 1, "belastet": -1}.get(str(e.get("wirkung")).lower(), 0)
-                U[ai[e["asset"]], ti[tag]] += w
+            if not isinstance(e, dict):
+                continue
+            zaehl["eintraege"] += 1
+            a = str(e.get("asset") or "").strip().upper()
+            w = {"stützt": 1, "stuetzt": 1, "belastet": -1}.get(str(e.get("wirkung") or "").strip().lower(), 0)
+            if a not in ai or tag not in ti:
+                zaehl["verworfen_fremd"] += 1
+            elif not E[ai[a], ti[tag]]:
+                zaehl["verworfen_ohne_ereigniszelle"] += 1
+            else:
+                U[ai[a], ti[tag]] += w
+    URTEIL_ZAEHLUNG[sicht] = zaehl
     return (np.sign(U) * E).astype(int)
 
 
+URTEIL_ZAEHLUNG: dict = {}
+SOLL_EINGEPREIST = {"gestiegen": ("ja", "teilweise"), "gefallen": ("ja", "teilweise"), "unverändert": ("nein",),
+                    "kein Kurs": ("unbekannt",), "zu frisch": ("unbekannt",)}
+
+
+def wort_treue(sicht: str = "S7w") -> dict:
+    """§6.2 (Probe 05.11.): passt ``eingepreist`` je Asset zum gezeigten WORT? gestiegen/gefallen -> ja/teilweise, unverändert -> nein,
+    kein Kurs/zu frisch -> unbekannt. Gezählt, nicht verworfen; Prüfer v2 sieht Wörter nicht. Kein Kurs gegen das Urteil."""
+    from agent import sichten_gutachten as G
+    c = _ro(G.ABLAGE)
+    z = collections.Counter()
+    for f, em in c.execute("SELECT felder, ereignisse FROM gutachten WHERE sicht=? AND wdh=0 AND modell=? AND prompt_sha=? AND form_ok=1",
+                           (sicht, G.MODELL, G.prompt_sha(sicht))):
+        em = json.loads(em)
+        for e in (json.loads(f).get("assets") or []):
+            if not isinstance(e, dict) or e.get("ereignis") not in em:
+                continue
+            w = {r["asset"]: r["wort"] for r in em[e["ereignis"]].get("kurs", [])}.get(str(e.get("asset") or "").strip().upper())
+            if w is None:
+                z["ohne_wort"] += 1
+                continue
+            ok = str(e.get("eingepreist") or "").strip().lower() in SOLL_EINGEPREIST.get(w, ())
+            z["passt" if ok else "passt_nicht"] += 1
+            z["passt_nicht_" + w] += not ok
+    return dict(z)
+
+
 def messen(band: float):
+    """Stufe 2 für S7 nach §4.1 der Vorabfestlegung (Voranalyse_G7_Stufe1_04_11.md). Holm über S1/S3/S8/S7 rechnet die
+    Gesamtauswertung - hier stehen die Ränge (p = 1 − Rang) und die Wahl d/e mit der Bonferroni-Regel im Platz S7."""
     rng = np.random.default_rng(SAAT + 9)
     Z, E, A, ai, ti, M = panel()
     U7, U7w = urteile("S7", ai, ti, E), urteile("S7w", ai, ti, E)
     U_typ, W = typ_regel(E, M)
-    p("G7 S7 MESSUNG · %s · Band %.1f" % (time.strftime("%Y-%m-%d %H:%M"), band))
-    for name, U in (("S7 (Form d, HAUPTARM)", U7), ("S7w (Wort-Arm e)", U7w),
-                    ("Typ-Regel, Rate wie S7", gleiche_rate(U_typ, W, int((U7 == 1).sum()), int((U7 == -1).sum()), rng))):
-        a_ = arm(U, Z[3], band)
-        p("  %-24s %s" % (name, a_))
-    p("  S7 − Typ-Regel   %s" % paar(U7, gleiche_rate(U_typ, W, int((U7 == 1).sum()), int((U7 == -1).sum()), rng), Z[3], band))
-    p("  S7w − S7         %s" % paar(U7w, U7, Z[3], band))
-    p("Auskunft (nie hochgestuft): H = 1, H = 5")
+    V = gleiche_rate(U_typ, W, int((U7 == 1).sum()), int((U7 == -1).sum()), rng)       # EINE Auswahl für Arm und Paar
+    p("G7 S7 MESSUNG · %s · Band %.1f · Zählung %s" % (time.strftime("%Y-%m-%d %H:%M"), band, URTEIL_ZAEHLUNG))
+    a7, a7w, aty = arm(U7, Z[3], band), arm(U7w, Z[3], band), arm(V, Z[3], band)
+    for name, a_ in (("S7 (Form d, HAUPTARM)", a7), ("S7w (Wort-Arm e)", a7w), ("Typ-Regel, Rate wie S7", aty)):
+        p("  %-24s %s · p = %.4f" % (name, a_, 1 - a_["rang"] if np.isfinite(a_["rang"]) else float("nan")))
+    if (V == 1).sum() < (U7 == 1).sum() or (V == -1).sum() < (U7 == -1).sum():
+        p("  ⚠ Typ-Regel hat weniger Zellen als S7 (stützt %d/%d, belastet %d/%d) - Rate NICHT gleich" % (
+            (V == 1).sum(), (U7 == 1).sum(), (V == -1).sum(), (U7 == -1).sum()))
+    d_typ, d_e = paar(U7, V, Z[3], band), paar(U7w, U7, Z[3], band)
+    p("  S7 − Typ-Regel   %s" % d_typ)
+    p("  S7w − S7         %s" % d_e)
+    # Platz S7 (Holm-Haupttest): d trägt -> getroffen; nur e -> e muss P97,5 schlagen (zwei Schüsse, Bonferroni im Platz)
+    # Bonferroni im Platz auf dem (ggf. geeichten) Band: 95 -> 97,5; geeicht 96,5 -> 98,25 (Nachtrag §4.1, 05.11.)
+    streng = 1 - (1 - band / 100) / 2
+    e_traegt_streng = a7w["urteil"] != "KEIN BEFUND" and a7w["rang"] > streng
+    if a7["urteil"] == "TRÄGT":
+        platz, p_platz = "getroffen durch d", 1 - a7["rang"]
+    elif e_traegt_streng:
+        platz, p_platz = "getroffen durch e (über P%.2f)" % (100 * streng), 2 * (1 - a7w["rang"])
+    else:
+        platz, p_platz = "nicht getroffen", min(1.0, 2 * min(1 - a7["rang"], 1 - a7w["rang"]))
+    wahl = "e" if ((e_traegt_streng and a7["urteil"] != "TRÄGT") or d_e["urteil"] == "BESSER") else "d"
+    p("  PLATZ S7: %s · p für Holm %.4f · WAHL DER FORM: %s (Regel §4.1) · S7 bringt etwas über die Typ-Regel: %s" % (
+        platz, p_platz, wahl, "ja" if d_typ["urteil"] == "BESSER" else "nein"))
+    p("Auskunft (nie hochgestuft):")
     for h in (1, 5):
         p("  H=%d  S7 %s · S7w %s" % (h, arm(U7, Z[h], band)["urteil"], arm(U7w, Z[h], band)["urteil"]))
     kern = np.zeros(E.shape, dtype=bool)
     kern[[ai[k] for k in KERN if k in ai]] = True
-    p("  Kern getrennt: S7 %s · ohne Kern %s" % (arm(U7 * kern, Z[3], band), arm(U7 * ~kern, Z[3], band)))
+    p("  Kern getrennt: S7 %s · ohne Kern %s" % (arm(U7 * kern, Z[3], band)["urteil"], arm(U7 * ~kern, Z[3], band)["urteil"]))
+    neu = np.zeros(E.shape, dtype=bool)
+    for (i, j), r in M.items():
+        neu[i, j] = bool(getattr(r, "neu24", False))
+    p("  nur Meldungen < 24 h: S7 %s · S7w %s" % (arm(U7 * neu, Z[3], band), arm(U7w * neu, Z[3], band)))
+    for name, U in (("Kurs-Regel Fortsetzung", kurs_regel(E, M, True)), ("Kurs-Regel Gegenrichtung", kurs_regel(E, M, False))):
+        p("  %-26s %s" % (name, arm(U, Z[3], band)))
+    p("  Wort-Treue S7w (eingepreist passt zum gezeigten Wort): %s" % wort_treue("S7w"))
+    p("  ⚠ Weg b getrennt und Eigenrauschen (wdh 1) rechnet die Gesamtauswertung aus der Ablage (Herkunft je E-Nummer)")
     open(os.path.join(HIER, "g7_s7_messung.txt"), "w", encoding="utf-8").write("\n".join(TXT) + "\n")
 
 

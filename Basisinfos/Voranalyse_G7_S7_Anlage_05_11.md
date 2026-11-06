@@ -316,3 +316,68 @@ Je Meldungstyp (± 0,5 σ) fällt `listing_spot` in 45 % (!), `monitoring` 40 %,
 **Ein Befund für Stufe 2 (Auskunft, nicht hier entschieden):** S7w schreibt am 12.02. bei BTC „teilweise eingepreist — der Kurs hat reagiert“, obwohl das gezeigte Wort **unverändert** war. Prüfer v2 sieht das nicht (er prüft Zahlen, Schlüssel und Belege, keine Wörter). Weil Wort und Antwort abgelegt sind, wird in Stufe 2 als **Wort-Treue** gezählt: gestiegen/gefallen → ja/teilweise, unverändert → nein. Drei Tage sind dafür keine Zahl.
 
 STAR am 25.10. zeigt, warum das Wort am σ hängt: −6,7 % gegen BTC ist bei diesem Wert **unverändert** (kleiner als eine halbe übliche Schwankung).
+
+---
+
+## 7. Unabhängige Gegenprüfung 05.11.2026 (Prüfer ohne meine Begründungen; nur gelesen, kein LLM, kein Kursblick auf Urteile)
+
+**Zwei schwere Befunde — beide von mir nachgeprüft und bestätigt:**
+
+| # | Befund | Nachprüfung | Folge |
+|---|---|---|---|
+| **P-1 Vorgriff über Schwere- und Faktortexte** | Die Börsen-Ereigniszeilen tragen gemessene Wirkungen (Upbit-Listing „7 T −10,0 Pp gegen BTC … SCHADET“ C2-b, Binance-Listing C2-c, Delisting/Monitoring E-1). Diese Messungen schließen **Dez. 2025 – Okt. 2026 ein** — das LLM liest also eine Richtung, die aus späteren Kursen derselben Art geschätzt ist, über genau die Größe, an der S7 gemessen wird. Dasselbe bei **S8**: Terminfaktor „gemessen 2023-2026 an 127 Terminen“ | jeder 5. Tag aller Sichten durchsucht: **S7 181 Zeilen, S8 201 Zeilen, S1–S4 keine** | S7, S7w, S8 **gesperrt** (`GESPERRT` in `sichten_gutachten.py`), Lauf neu angestoßen 05.11. (`_g7_stufe1_lauf3.txt`), S1–S4 laufen weiter und sind **nicht** betroffen |
+| **P-2 Überlebensauswahl** | Die Stundenkurse (Arbeitskopie und `data/`) enthalten **kein** Asset, das vor Okt. 2026 endet. Delistete Werte (DENT, ICX, LRC, DEGO, …) fehlen → `EV.am` wirft ihre Ereignisse aus der S7-Eingabe (Token-Delisting 47 von 58 Nennungen). Das verletzt „eingestellte Werte gehören dazu“ — und gerade die klarsten „belastet“-Fälle fehlen | Arbeitskopie: 556 bzw. 116 Symbole, 0 enden vor Okt.; die Messbasis `messdaten.db` hat **Tageskurse** für 51 im Zeitraum eingestellte Werte | S7 bleibt gesperrt bis behoben |
+
+**Weitere Befunde (mittel/niedrig), werden mit dem Umbau behoben:** Antwortleser nimmt Asset-Namen ungeprüft an (Groß-/Kleinschreibung, „Arbitrum“, nicht in der Eingabe) — `messen` verwirft sie still · `messen` bildet §4.1 nur teilweise ab (Holm, P97,5 für e, Wahl d/e, < 24 h, Weg b, Eigenrauschen fehlen) · kein Prüfpaket für die Anlage · Wiederaufnahme prüft `eingabe_sha` nicht · zwei Prüfungen im Paket sind tautologisch (Kurs-„bis“ wird aus T gebildet) · Meldung in der Stunde 23:xx → 0 h, Wort „unverändert“ ohne Zeit zum Reagieren (13 Zellen) · `arm()` sagt „trägt nicht“ statt KEIN BEFUND bei leerer Seite · Kurs-Regel ≠ gezeigtes Wort (BTC, Alter, je Zelle statt je Zeile) · `gleiche_rate` nach Zeilen statt Meldungen, zwei verschiedene Lose · `rufe()` bricht bei 4xx ab · 1 Ereignis mit bekannt_ab vor der Zeit (Verdacht).
+
+**Behebung (Vorschlag):**
+- **P-1:** jede gemessene Zahl in einer Eingabe stammt aus Daten **vor dem Stichtag**. Rückspiel: C2-b/-c, E-1 und der Terminfaktor werden auf **Jan. 2023 – Nov. 2025** neu gemessen und so angezeigt; live gilt dieselbe Regel (Messung bis T). Gleiche Form, kein Vorgriff (Ü8).
+- **P-2:** Stundenkurse der im Zeitraum eingestellten Werte aus dem öffentlichen Binance-Archiv laden (Liste aus `messreihen_status` = eingestellt), per Tageskurs der Messbasis gegenprüfen; danach Zellen und Selbsttest neu.
+
+### 7.1 Behebung 05.11.2026 (Nutzer: *„ja laden immer prüfen und gegenprüfen“*)
+
+| Befund | Behoben durch | Nachweis |
+|---|---|---|
+| **P-1 S8** Terminfaktor über den Rückspielzeitraum gemessen | `g7_termin_faktor_vor.py`: erst **reproduziert** (R-R11: cpi 1,83 = 1,83 · nfp 1,45 statt 1,49 · fomc 2,31 statt 2,28 — Abweichung aus den Ersatzziehungen), dann **nur vor 2025-12-01** gemessen: **1,84 / 1,45 / 2,27**, 24 h 1,16, 70 Termine. `termin_fakt.faktoren_am(T)`: Stichtag vor dem Ende der alten Messung (2026-09-25) → Werte von vorher; live unverändert | Der Vorgriff war **echt, aber zahlenmäßig klein** (Faktoren praktisch gleich). Paket `SichtenGutachten` prüft beide Fälle. **S8 wieder freigegeben**, Lauf neu angestoßen (`_g7_stufe1_lauf4.txt`) |
+| **P-1 S7** Schwere-Texte („SCHADET −10 Pp“) | aus der S7/S7w-**Eingabe entfernt**, als Fakt in der Ablage (`ereignisse` → `schwere`) fürs finale LLM — folgt aus Form d (S7 liest nur die Meldung, keine Zahl) | Paket: kein „Schwere:“ in S7/S7w-Zeilen, Schwere in der Ablage. ⚠ Für das **finale LLM** im Rückspiel (Stufe 4) muss die Schwere dann ebenfalls vor 2025-12-01 gemessen sein — beim Bau von Stufe 4 |
+| **P-2** Überlebensauswahl | `g7_lade_eingestellt.py` lädt Stundenkurse eingestellter Werte (Binance-Archiv, SHA-256 je Datei) nach `data/_g7/kurse/stundenkurse_eingestellt.db`; `kursreaktion.eingestellte_am(T)`: dieselbe Regel wie `assets_am` (≥ 500 h vorher) **und am Vortag noch gehandelt**; nur Reihen, die vor 2026-10-01 enden | → §7.2 |
+| 3 Leser | Asset normalisiert (` arb ` → ARB), Asset nicht in der Meldung → **gezählt**; `urteile()` mit derselben Schreibweise, Fremde/ohne Zelle/unlesbar gezählt | Pakete `SichtenGutachten`, `G7S7Anlage` |
+| 4 `messen` unvollständig | Platz S7 mit Bonferroni (e über P97,5), p für Holm, **Wahl d/e berichtet**, EINE Typ-Auswahl für Arm und Paar, < 24 h, Kurs-Regel, **Wort-Treue** | dto. |
+| 5 kein Paket | neues Paket **`G7S7Anlage`** (FFT = Schleife, Pflanzung, leere Seite = KEIN BEFUND, gleiche Rate, Typ-Regel, `urteile()`) | 8/8 |
+| 7 tautologische Prüfung | Kursfakt wird mit einer **an T gekappten** Kursreihe neu gerechnet und muss gleich sein | Paket |
+| 8 Meldung 23:xx | Wort **„zu frisch“** statt „unverändert“ (S7w-Prompt neu, SHA `df87663abf7a`) | Paket |
+| 11 Entscheidung | über den **Rang** wie im Selbsttest; leere Seite → KEIN BEFUND | Paket |
+| 12 Kurs-Regel | rechnet mit `kursreaktion` selbst (BTC absolut, wie S7w) | — |
+| 13 gleiche Rate | Gewicht = Zahl der **Meldungen** (`n_meld`), Hinweis wenn die Typ-Regel weniger Zellen hat | — |
+| 14 Abruf | 400/404/413/422 → einmal, als unlesbar abgelegt, Lauf geht weiter; 401/403 → anhalten; Antwort ohne `choices` → nachfassen | Paket |
+| 6 Wiederaufnahme / 9 bekannt_ab / 10 | 6: Laufwache-Abgleich der `eingabe_sha` folgt; 9: 1 Fall, offen (Verdacht); 10 = P-1 S8 | — |
+
+**Prüfer v2.1** (`fassung="v2.1"`, nur für die Neurechnung in Stufe 2; der Lauf zählt weiter mit v2) — Selbsttest `g7_pruefer21_selbsttest.txt`:
+12.730 Zustände an 335 Tagen gelesen, **10** weichen von v2 ab (alle e-Schreibweise, Funding), 0 passen nicht zum Rohwert ·
+„Feld vertauscht“ 998/998 als `wert_feld` erkannt, fremde Zahl bleibt `wert` 998/998 · der v2-Selbsttest mit v2.1: **14.470/14.470
+erkannt, 0/5.000 Fehlalarm** · die 142 abgelegten Gutachten: v2 7 beanstandet (9× „wert“), v2.1 6 (**8× wert_feld, 0× wert**) — es gab
+**keinen einzigen echten Falschwert**, nur vertauschte Felder.
+
+**Selbsttest S8** (`g7_s8_selbsttest.txt`, |ertrag_s| H = 1, 22 Blöcke): Fehlalarm 4,0–6,3 % über Raten 10/20/40 % und Lauflängen
+1/3/10 → **bestanden**. Auflösung schwach: bei 20 % Rate 0,3 σ → 59 %, 0,5 σ → 98 %.
+
+### 7.2 P-2 geladen und gegengeprüft (05.11.2026)
+
+| | |
+|---|---|
+| Kandidaten | 92 (51 in der Messbasis „eingestellt“, 41 nur aus Börsen-Ereignissen) · geladen 91 (AIOZ ohne Archiv) |
+| **benutzt** | **58**, deren Reihe vor 2026-10-01 endet (56 Spot, 2 Futures). Die übrigen 33 leben weiter und bleiben **draußen** — sie stünden nicht in der Betriebsmenge; sie aufzunehmen hieße die Grundgesamtheit ändern |
+| Gegenprüfung 1: Tagesschluss aus Stunden gegen Messbasis-Tageskurs | 55 von 58 verglichen (A2Z, AERGO, BDXN ohne Messbasis), Abweichung Median **0,0000 %**, **kein** Wert mit > 1 % an mehr als 5 % der Tage (der erste Lauf zeigte MDT abweichend — das war **Medtronic** in der Messbasis; die Prüfung filtert jetzt `assetklasse='krypto'`) |
+| Gegenprüfung 2: Stundenlücken | **0** |
+| Gegenprüfung 3: Reihenende nach der Delisting-Meldung | 42 Fälle, Median 13 Tage (10–14, wie bei Binance üblich); AERGO 466 Tage = Spot-Delisting 03/2025, die Futures liefen bis 06/2026 |
+
+**Wirkung auf die S7-Menge (gemessen, Regel „Grundgesamtheit ist keine Stellschraube“):** Zellen 9.552 → **10.296** (+744, +7,8 %),
+Assets 379 → 422. **Keine** bisherige Zelle fällt weg oder ändert ihre Typen (3 ändern die Zeilenzahl). Die neuen Zellen sind fast
+nur Delisting-Token 293, Monitoring 217, Paar entfernt 133, Margin-Delisting 47, Futures-Delisting 35 — genau die „belastet“-Fälle,
+die gefehlt hatten. Zielgröße für 98,5 %, 23 Blöcke.
+
+**⚠ Nebenwirkung auf S1 — gefunden und behoben:** Eine Nachricht zu einem Asset, das NICHT in der S7-Menge steht, geht an S1 (Krypto
+allgemein). Mit den eingestellten Werten wandern deren Nachrichten von S1 nach S7 — **35 der 144 abgelegten S1-Gutachten** hatten
+damit eine Eingabe, die von der Überlebensauswahl abhing. Dazu hatte der Lauf nach dem Neustart die halb geladene Datei im Speicher.
+→ Lauf angehalten; **Befund 6 gebaut** (`veraltet()`: abgelegte Gutachten mit anderer Eingabe-Prüfsumme werden neu gefragt, die alte
+Fassung bleibt in `gutachten_alt`); Lauf neu angestoßen (`_g7_stufe1_lauf5.txt`): **35 werden neu gefragt**. Kosten 35 Aufrufe.

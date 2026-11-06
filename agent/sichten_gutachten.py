@@ -47,9 +47,14 @@ MODELL = EV.MODELL                       # gemini-3.5-flash-lite: einziges Model
 URL = EV.URL
 SCHLUESSEL = EV.SCHLUESSEL               # GEMINI_API_KEY_2 - nie der NB-Schlüssel
 ZEITRAUM = ("2025-12-01", "2026-10-31")  # 335 Tage, Voranalyse §0
-REIHENFOLGE = ("S1", "S3", "S8", "S2", "S4", "S7", "S7w")   # §5.1: S7 zuletzt; S7w = Arm e (§4b)
+REIHENFOLGE = ("S1", "S3", "S8", "S7", "S7w", "S2", "S4")   # §5.5 (Nutzer 05.11.: Haupttests zuerst, S2/S4 = Auskunft zuletzt)
+#                                                              S7w = Arm e (§4b); gesperrte Sichten überspringt der Lauf
 BASIS = {"S7w": "S7"}                    # S7w liest dieselben Zustände und Ereignisse wie S7
-MIT_KURS = ("S7", "S7w")                 # Kursreaktion als Fakt in der Ablage; im Text nur bei S7w (als Wort)
+MIT_KURS = ("S7", "S7w")
+# GESPERRT 05.11.2026 (Gegenprüfung): S7/S7w-Eingabe trägt Schwere-Messungen über den Rückspielzeitraum (C2-b/-c, E-1), S8 den
+# Terminfaktor "gemessen 2023-2026" - Vorgriff. Dazu fehlen in S7 delistete Werte (Überlebensauswahl). Bis behoben fragt der Lauf
+# diese Sichten NICHT; der Plan bleibt gleich, nichts geht verloren.
+GESPERRT = ("S7", "S7w")                 # S8 freigegeben 05.11.: Terminfaktor im Rückspiel nur aus Daten vor 2025-12-01 (P-1)                 # Kursreaktion als Fakt in der Ablage; im Text nur bei S7w (als Wort)
 WDH_ANTEIL = 0.05                        # S1-6: Eigenrauschen
 SAAT = 20261105
 VERSUCHE = 3                             # Formfehler -> nachfassen, danach als unlesbar abgelegt
@@ -94,8 +99,8 @@ _EINGEPREIST_S7 = ("- eingepreist: hier IMMER 'unbekannt' - du siehst keine Kurs
                    "das System als Fakt neben deine Einschätzung. eingepreist_beleg: leer.\n")
 _EINGEPREIST_S7W = ("- eingepreist: ob der Kurs seit der Meldung schon reagiert hat (ja / teilweise / nein); die Angabe 'Kurs seit "
                     "Meldung' in der Ereigniszeile zeigt je Asset die Richtung (gestiegen / gefallen / unverändert, gegen BTC, gemessen "
-                    "an der üblichen Schwankung des Assets). 'unbekannt' bei 'kein Kurs'. eingepreist_beleg: worauf du das stützt, ein "
-                    "kurzer Satz.\n")
+                    "an der üblichen Schwankung des Assets). 'unbekannt' bei 'kein Kurs' oder 'zu frisch'. eingepreist_beleg: worauf du "
+                    "das stützt, ein kurzer Satz.\n")
 
 
 def prompt(sicht: str) -> str:
@@ -179,8 +184,17 @@ class Quelle:
         """-> (Zustände, Ereignisse am Stichtag) - je Tag einmal, für alle sechs Sichten."""
         if tag not in self._tag:
             T = _T(tag)
-            self._tag = {tag: (Z.zustaende(T, self.ablage), EV.am(self.E, T, assets=EV.assets_am(T)))}
+            self._tag = {tag: (Z.zustaende(T, self.ablage), EV.am(self.E, T, assets=EV.assets_am(T) | eingestellte_am(T)))}
         return self._tag[tag]
+
+
+EINGESTELLT = KR.EINGESTELLT
+EINGESTELLT_VOR = KR.EINGESTELLT_VOR
+
+
+def eingestellte_am(T) -> set:
+    """G7 P-2: die im Rückspiel eingestellten Werte, die am Stichtag in der S7-Menge gestanden hätten (``KR.eingestellte_am``)."""
+    return KR.eingestellte_am(T) - EV.gesperrt()
 
 
 def eingabe(q: Quelle, tag: str, sicht: str) -> dict:
@@ -204,7 +218,16 @@ def eingabe(q: Quelle, tag: str, sicht: str) -> dict:
     for i, ((typ, a_), g) in enumerate(gruppen):
         nr = "E%d" % (i + 1)
         emap[nr] = {"beleg": g.iloc[0].beleg, "typ": typ, "herkunft": sorted({herkunft(e) for e in g.itertuples()})}
-        teil = re.sub(r"^\[%s\]" % b, "[%s]" % nr, evz[i]).split(" · ")
+        zeile = evz[i]
+        if sicht in MIT_KURS:
+            # G7 P-1 (Gegenprüfung 05.11.): die SCHWERE ist eine gemessene Typ-Wirkung samt Urteil ("SCHADET"), gemessen über den
+            # Rückspielzeitraum. Form d: S7 liest nur die Meldung, keine Zahl - die Schwere bleibt als Fakt in der Ablage (fürs finale LLM)
+            emap[nr]["schwere"] = g.iloc[0].schwere
+            emap[nr]["assets"] = json.loads(a_)
+            zeile = zeile.replace(" · Schwere: %s · " % g.iloc[0].schwere, " · ", 1)
+            if "Schwere:" in zeile:
+                raise RuntimeError("Ereigniszeile %s: Schwere nicht entfernt" % nr)
+        teil = re.sub(r"^\[%s\]" % b, "[%s]" % nr, zeile).split(" · ")
         # Probe 2 (05.11.): ohne Beschriftung übernahm das Modell den BEREICH (makro_usa) als Typ - Feld 1 = betrifft, Feld 2 = Typ
         teil[1], teil[2] = "betrifft: " + teil[1], "Typ: " + teil[2]
         if teil[2] != "Typ: " + typ:
@@ -287,6 +310,11 @@ def lies(roh: str, sicht: str, emap: dict) -> tuple[dict | None, list]:
                     fehler.append("assets %d: Form/Wirkung" % (i + 1))
                 elif e.get("ereignis") not in emap:
                     fehler.append("assets %d: Ereignis %r nicht in der Eingabe" % (i + 1, e.get("ereignis")))
+                else:
+                    e["wirkung"] = _norm(e.get("wirkung"))
+                    e["asset"] = str(e.get("asset") or "").strip().upper()
+                    if "assets" in emap[e["ereignis"]] and e["asset"] not in emap[e["ereignis"]]["assets"]:
+                        fehler.append("assets %d: %r steht nicht in %s" % (i + 1, e.get("asset"), e["ereignis"]))
     elif "assets" in g:
         fehler.append("assets bei %s" % sicht)
     return g, fehler
@@ -309,6 +337,32 @@ def fuer_pruefer(g: dict, emap: dict) -> dict:
 
 
 WARTEN: dict = {}                        # Wartegründe seit Start (Statuscode -> [Zahl, Sekunden]) - fürs Protokoll, 05.11.: Lauf wurde langsamer
+# ANFRAGEBUCH 05.11.2026: Google meldete "PerDay 500" erreicht, abgelegt waren an dem Kontingenttag aber nur 52 Gutachten. Ob 503-
+# Fehlversuche mitzählen, ist so nicht zu sehen - deshalb wird JEDE echte Anfrage gebucht (Zeit, Kontingenttag Pazifik, Schlüsselname,
+# Status). Nur echte Anfragen (http is None): Prüfungen mit Attrappe schreiben nichts. Kein Schlüsselwert, kein Inhalt.
+ANFRAGEN = os.path.join(PROJ, "data", "_g7", "anfragen.csv")
+
+
+def kontingent_tag(jetzt: datetime | None = None) -> str:
+    """Google zählt nach Mitternacht Pazifik (= 09:00 MEZ), nicht nach UTC (wie ``api.gemini._kontingent_tag``)."""
+    from zoneinfo import ZoneInfo
+    return (jetzt or datetime.now(timezone.utc)).astimezone(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+
+
+def _buche(art: str, pfad: str | None = None) -> None:
+    pfad = pfad or ANFRAGEN
+    try:
+        neu_ = not os.path.exists(pfad)
+        with open(pfad, "a", encoding="utf-8") as f:
+            if neu_:
+                f.write("zeit_utc;kontingent_tag;schluessel;art;pid" + chr(10))
+            f.write("%s;%s;%s;%s;%d" % (_jetzt(), kontingent_tag(), SCHLUESSEL, art, os.getpid()) + chr(10))
+    except OSError:                                            # das Buch darf den Lauf nie anhalten
+        pass
+
+
+class HttpDauerfehler(RuntimeError):
+    """Eine Anfrage, die so nie gelingt (400/404/413/422 …): das Gutachten wird als unlesbar abgelegt, der Lauf geht weiter."""
 
 
 # ══ LLM ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -318,24 +372,40 @@ def rufe(key: str, system: str, nutzer: str, http=None) -> tuple[str, int]:
     http = http or requests
     body = {"model": MODELL, "temperature": 0, "reasoning_effort": "medium",
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": nutzer}]}
+    folge503 = 0
+    echt = http is requests                                    # nur echte Anfragen ins Anfragebuch
     for _ in range(2000):
         try:
             r = http.post(URL, headers={"Authorization": "Bearer %s" % key}, json=body, timeout=240)
         except Exception:                                      # noqa: BLE001 - Netzaussetzer: warten statt abbrechen
+            if echt:
+                _buche("netz")
             w_ = WARTEN.setdefault("netz", [0, 0.0])
             w_[0], w_[1] = w_[0] + 1, w_[1] + 60
             time.sleep(60)
             continue
+        if echt:
+            _buche("%d%s" % (r.status_code, "-Tag" if r.status_code == 429 and "PerDay" in r.text else ""))
         if r.status_code == 429 or r.status_code >= 500:
             g = re.search(r'"retryDelay"\s*:\s*"([\d.]+)s"', r.text)
             warte = 900.0 if "PerDay" in r.text else float(g.group(1)) if g else float(r.headers.get("retry-after") or 30)
+            if r.status_code >= 500:                            # 05.11.: 503 "high demand" in Serie - nicht alle 30 s nachhaken,
+                folge503 += 1                                   # sondern ansteigend warten (30, 60, 120 … höchstens 600 s); falls
+                warte = max(warte, min(30 * 2 ** (folge503 - 1), 600))   # Fehlversuche zählen, verbrennen sie kein Kontingent
             w_ = WARTEN.setdefault("%d%s" % (r.status_code, "-Tag" if "PerDay" in r.text else ""), [0, 0.0])
             w_[0], w_[1] = w_[0] + 1, w_[1] + min(max(warte + 2, 5), 900)
             time.sleep(min(max(warte + 2, 5), 900))
             continue
-        r.raise_for_status()
+        if r.status_code in (401, 403):
+            r.raise_for_status()                               # Schlüssel ungültig/gesperrt: anhalten, nicht alles als unlesbar ablegen
+        if r.status_code >= 400:
+            raise HttpDauerfehler("HTTP %d: %s" % (r.status_code, r.text[:200]))
         j = r.json()
-        return j["choices"][0]["message"].get("content") or "", int((j.get("usage") or {}).get("total_tokens") or 0)
+        try:
+            inhalt = j["choices"][0]["message"].get("content") or ""
+        except (KeyError, IndexError, TypeError):
+            inhalt = ""                                        # Antwort ohne choices -> Formfehler, wird nachgefasst
+        return inhalt, int((j.get("usage") or {}).get("total_tokens") or 0)
     raise RuntimeError("LLM %s: keine Antwort" % MODELL)
 
 
@@ -350,8 +420,19 @@ def verbinde(pfad: str = ABLAGE) -> sqlite3.Connection:
             tag TEXT, sicht TEXT, wdh INTEGER, modell TEXT, prompt_sha TEXT, eingabe_sha TEXT, eingabe TEXT, ereignisse TEXT,
             roh TEXT, versuche INTEGER, form_ok INTEGER, formfehler TEXT, zustand INTEGER, wirkung INTEGER, felder TEXT,
             treue_geprueft INTEGER, treue_verstoesse INTEGER, pruefung TEXT, tokens INTEGER, am TEXT,
-            PRIMARY KEY (tag, sicht, wdh, modell, prompt_sha));""")
+            PRIMARY KEY (tag, sicht, wdh, modell, prompt_sha));
+        CREATE TABLE IF NOT EXISTS gutachten_alt AS SELECT *, '' AS ersetzt_am, '' AS grund FROM gutachten WHERE 0;""")
     return c
+
+
+def veraltet(c: sqlite3.Connection, q: "Quelle", sichten=None) -> set:
+    """Gegenprüfung 6 (05.11.2026): abgelegte Gutachten, deren EINGABE heute anders aussieht (geänderter Eingabe-Code oder Daten,
+    z. B. P-2) - die Prüfsumme des Prompts allein sieht das nicht. -> {(tag, sicht, wdh)}"""
+    aus = set()
+    for t, s_, w, h in c.execute("SELECT tag, sicht, wdh, eingabe_sha FROM gutachten WHERE modell=?", (MODELL,)).fetchall():
+        if (sichten is None or s_ in sichten) and s_ in SICHT and h != eingabe(q, t, s_)["sha"]:
+            aus.add((t, s_, w))
+    return aus
 
 
 def _jetzt() -> str:
@@ -370,12 +451,19 @@ def gutachten(c: sqlite3.Connection, q: Quelle, tag: str, sicht: str, key: str, 
         raise RuntimeError("VORGRIFF %s %s: %s" % (tag, sicht, ein["vorgriff"][:3]))
     roh, tok, felder, fehler, n = "", 0, None, [], 0
     for n in range(1, VERSUCHE + 1):
-        roh, t = rufe(key, prompt(sicht), ein["text"], http)
+        try:
+            roh, t = rufe(key, prompt(sicht), ein["text"], http)
+        except HttpDauerfehler as e:
+            roh, t, felder, fehler = "", 0, None, [str(e)[:200]]
+            break
         tok += t
         felder, fehler = lies(roh, sicht, ein["ereignisse"])
         if felder is not None:
             break
     pr = GP.pruefe(fuer_pruefer(felder, ein["ereignisse"]), ein["pruef"]) if felder is not None else None
+    # eine alte Fassung (andere Eingabe) wird nicht überschrieben, sondern aufbewahrt
+    c.execute("INSERT INTO gutachten_alt SELECT *, ?, 'Eingabe geändert' FROM gutachten WHERE tag=? AND sicht=? AND wdh=? AND modell=? "
+              "AND prompt_sha=? AND eingabe_sha != ?", (_jetzt(), tag, sicht, wdh, MODELL, prompt_sha(sicht), ein["sha"]))
     c.execute("INSERT OR REPLACE INTO gutachten VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (
         tag, sicht, wdh, MODELL, prompt_sha(sicht), ein["sha"], ein["text"], json.dumps(ein["ereignisse"], ensure_ascii=False),
         roh, n, int(felder is not None), json.dumps(fehler, ensure_ascii=False),
@@ -406,7 +494,7 @@ def probe_tage() -> list[str]:
 
 
 def plan(probe: bool = False) -> list[tuple[str, str, int]]:
-    """Reihenfolge: je Sicht (S1, S3, S8, S2, S4, S7) erst alle Tage, dann ihre Wiederholungen."""
+    """Reihenfolge (§5.5): je Sicht (S1, S3, S8, S7, S7w, S2, S4) erst alle Tage, dann ihre Wiederholungen."""
     if probe:
         return [(t, s, 0) for s in REIHENFOLGE for t in probe_tage()]
     w = wdh_tage()
@@ -416,9 +504,14 @@ def plan(probe: bool = False) -> list[tuple[str, str, int]]:
 def lauf(c: sqlite3.Connection, key: str, probe: bool = False, protokoll=print, http=None, q: Quelle | None = None) -> dict:
     """Wiederaufnehmbar: was mit diesem Modell und dieser Prompt-SHA schon abgelegt ist, wird nicht noch einmal gefragt."""
     q = q or Quelle()
-    offen = [(t, s, w) for t, s, w in plan(probe) if not vorhanden(c, t, s, w)]
-    protokoll("Lauf %s: %d offen von %d · Prompt-SHA %s" % ("PROBE" if probe else "voll", len(offen), len(plan(probe)),
-                                                          {s: prompt_sha(s) for s in REIHENFOLGE}))
+    alt = veraltet(c, q)
+    offen = [(t, s, w) for t, s, w in plan(probe) if (not vorhanden(c, t, s, w) or (t, s, w) in alt) and (probe or s not in GESPERRT)]
+    if alt:
+        protokoll("Eingabe geändert seit dem Ablegen: %d Gutachten werden neu gefragt (alte Fassung bleibt in gutachten_alt) %s" % (
+            len(alt), sorted(alt)[:8]))
+    protokoll("Lauf %s: %d offen von %d · Prompt-SHA %s · gesperrt %s" % ("PROBE" if probe else "voll", len(offen), len(plan(probe)),
+                                                                        {s: prompt_sha(s) for s in REIHENFOLGE},
+                                                                        "–" if probe else list(GESPERRT)))
     z = {"neu": 0, "unlesbar": 0, "treue_beanstandet": 0}
     for i, (t, s, w) in enumerate(offen):
         r = gutachten(c, q, t, s, key, w, http)

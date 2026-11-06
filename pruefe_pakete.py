@@ -34231,8 +34231,18 @@ def paket_sichten_gutachten() -> None:
     import pandas as _pd
 
     from agent import gutachten_pruefer as _GP
+    from agent import kursreaktion as _KR
     from agent import sichten_gutachten as _G
     from agent import zustaende as _Z
+
+    class _Gekappt:
+        """Kursreihen nur VOR dem Stichtag (Gegenpruefung 7: der Vorgriffsschutz am SEITENEFFEKT)."""
+        def __init__(self, k, tag):
+            self.k, self.T = k, _pd.Timestamp(tag)
+
+        def reihe(self, sym):
+            r_, q_ = self.k.reihe(sym)
+            return (None if r_ is None else r_[r_.index < self.T]), q_
 
     # 1 Ablage: nie Produktion, nie sichten.db; Vorgabe unter data/_g7
     verweigert = []
@@ -34291,6 +34301,12 @@ def paket_sichten_gutachten() -> None:
     _, e_s7w = _G.lies(_json.dumps(dict(gut, assets=[{"asset": "FOO", "wirkung": "belastet", "ereignis": "E1"}])), "S7w", emap)
     pruefe(P, "Antwortleser S7: eingepreist 'teilweise' ohne Kurs wird GEZAEHLT (S7 sieht keinen); bei S7w ist es erlaubt, assets wie S7",
            len(e_s7k) == 1 and "ohne Kurs" in e_s7k[0] and not e_s7w, "%s %s" % (e_s7k, e_s7w))
+    emap7 = {"E1": dict(emap["E1"], assets=["ARB", "OP"])}
+    f_n, e_n = _G.lies(_json.dumps(dict(gut7, assets=[{"asset": " arb ", "wirkung": " Stützt", "ereignis": "E1"},
+                                                     {"asset": "Arbitrum", "wirkung": "belastet", "ereignis": "E1"}])), "S7", emap7)
+    pruefe(P, "Antwortleser S7 (Gegenpruefung 3): ' arb ' / ' Stützt' -> ARB / stützt; ein Asset, das nicht in der Meldung steht "
+           "(Arbitrum), wird GEZAEHLT", f_n["assets"][0]["asset"] == "ARB" and f_n["assets"][0]["wirkung"] == "stützt"
+           and len(e_n) == 1 and "ARBITRUM" in e_n[0], "%s %s" % (f_n["assets"], e_n))
     f_kl, _ = _G.lies(_json.dumps(dict(gut, treiber=[{"schluessel": " [S1.dvol.BTC] "}])), "S1", emap)
     pruefe(P, "Antwortleser: Schluessel in eckigen Klammern (Probe 2) wird zur Schreibweise ohne Klammern",
            f_kl["treiber"][0]["schluessel"] == "S1.dvol.BTC", str(f_kl["treiber"]))
@@ -34379,8 +34395,41 @@ def paket_sichten_gutachten() -> None:
             abbruch = "VORGRIFF" in str(e)
         pruefe(P, "Vorgriff (Ereignis nach dem Stichtag bekannt) bricht ab, BEVOR das LLM gefragt wird - nichts abgelegt",
                abbruch and h4.n == 0 and not _G.vorhanden(c, "2026-03-18", "S1", 1))
+        ev_neu = ev.assign(titel=["Exchange reports record volume (neu)"], beleg=["https://x/2"])
+        alt_ = _G.veraltet(c, _Q(ev), {"S1"})
+        neu_ = _G.veraltet(c, _Q(ev_neu), {"S1"})
+        _G.gutachten(c, _Q(ev_neu), "2026-03-18", "S1", "k", 0, _Http([_json.dumps(antwort)]))
+        n_alt = c.execute("SELECT COUNT(*) FROM gutachten_alt WHERE tag='2026-03-18' AND sicht='S1'").fetchone()[0]
+        pruefe(P, "Wiederaufnahme (Gegenpruefung 6): geaenderte EINGABE bei gleichem Prompt wird erkannt und neu gefragt; die alte "
+               "Fassung bleibt in gutachten_alt", ("2026-03-18", "S1", 0) not in alt_ and ("2026-03-18", "S1", 0) in neu_ and n_alt == 1,
+               "%s %s %d" % (sorted(alt_)[:3], sorted(neu_)[:3], n_alt))
         pruefe(P, "der Prompt des Aufrufs ist der der Sicht (Prompt-SHA passt zum gesendeten Text)",
                all(s == _G.prompt("S1") for s in h.system))
+
+        class _A4(_A):
+            def __init__(self, code):
+                self.status_code, self.text, self._i = code, "bad request", ""
+
+            def raise_for_status(self):
+                raise RuntimeError("HTTP %d" % self.status_code)
+
+        class _H4:
+            def __init__(self, code):
+                self.code, self.n = code, 0
+
+            def post(self, url, headers=None, json=None, timeout=None):
+                self.n += 1
+                return _A4(self.code)
+        h400 = _H4(400)
+        r400 = _G.gutachten(c, _Q(ev), "2026-03-21", "S1", "k", 0, h400)
+        try:
+            _G.gutachten(c, _Q(ev), "2026-03-22", "S1", "k", 0, _H4(401))
+            halt = False
+        except RuntimeError:
+            halt = True
+        pruefe(P, "Abruf (Gegenpruefung 14): dauerhafter Fehler 400 -> EIN Versuch, als unlesbar abgelegt, Lauf geht weiter; 401 "
+               "(Schluessel) haelt an, ohne abzulegen", h400.n == 1 and not r400["form_ok"] and "HTTP 400" in r400["formfehler"][0]
+               and halt and not _G.vorhanden(c, "2026-03-22", "S1", 0), "%d %s" % (h400.n, r400["formfehler"]))
         c.close()
     finally:
         wegwerf.aufraeumen(w_)
@@ -34406,10 +34455,16 @@ def paket_sichten_gutachten() -> None:
                 if s == "S8" and set(re.findall(r"\[termin (\w+)\]", e["text"])) != set(e["pruef"]["termin"]):
                     fehl.append((tag, s, "Termine"))
                 if s in _G.MIT_KURS:
+                    gekappt = _Gekappt(q.kurse, tag)
                     for nr, v in e["ereignisse"].items():
                         ln = [x_ for x_ in e["text"].splitlines() if x_.startswith("[%s] " % nr)][0]
-                        if any(r_["bis"] != tag + " 00:00" or r_["ab"] > r_["bis"] for r_ in v["kurs"]):
-                            fehl.append((tag, s, nr, "Kurs nach T"))
+                        # Gegenpruefung 7: nicht "bis" mit T vergleichen (aus T gebildet), sondern NEU rechnen mit Kursen nur < T
+                        for r_ in v["kurs"]:
+                            r2 = _KR.reaktion(gekappt, r_["asset"], _pd.Timestamp(r_["ab"]) - _pd.Timedelta(hours=1), tag)
+                            if {k_: r2[k_] for k_ in ("pct", "pct_btc", "z", "wort")} != {k_: r_[k_] for k_ in ("pct", "pct_btc", "z", "wort")}:
+                                fehl.append((tag, s, nr, r_["asset"], "Kurs braucht Daten ab T"))
+                        if "Schwere:" in ln or "schwere" not in v or sorted(v.get("assets", [])) != sorted(r_["asset"] for r_ in v["kurs"]):
+                            fehl.append((tag, s, nr, "Schwere im Text oder Assets fehlen"))
                         if s == "S7" and "Kurs seit" in ln:
                             fehl.append((tag, s, nr, "Kurs im S7-Text"))
                         if s == "S7w":
@@ -34438,6 +34493,26 @@ def paket_sichten_gutachten() -> None:
         pruefe(P, "S1, S3, S8, S2, S4 lesen beim Bau der Eingabe KEINEN Kurs (nur S7/S7w, und nur bis T)", ohne)
     else:
         pruefe(P, "echte Eingabe: sichten.db fehlt hier - Pruefung gehoert an den Desktop", True, "uebersprungen")
+
+    # 6b S8-Terminfaktor ohne Vorgriff (Gegenpruefung P-1) und eingestellte Werte in der S7-Menge (P-2)
+    from agent import termin_fakt as _TF
+    f_in, _, l_in = _TF.faktoren_am("2026-03-18")
+    f_li, _, l_li = _TF.faktoren_am("2026-11-05")
+    pruefe(P, "S8 (P-1): ein Stichtag im Rueckspiel bekommt den Terminfaktor, der NUR vor 2025-12-01 gemessen ist; live der volle",
+           f_in == _TF.FAKTOR_2H_VOR and "vor dem Rückspiel" in l_in and f_li == _TF.FAKTOR_2H and l_li == _TF.MESSLAGE
+           and _TF.MESSUNG_ENDE > _G.ZEITRAUM[0])
+    if _os.path.exists(_G.EINGESTELLT):
+        m1, m2 = _G.eingestellte_am("2026-03-01"), _G.eingestellte_am("2026-10-30")      # am 30.10. handelt keiner mehr -> leer
+        import sqlite3 as _sq0
+        c0 = _sq0.connect("file:%s?mode=ro" % _G.EINGESTELLT.replace("\\", "/"), uri=True)
+        ende = dict(c0.execute("SELECT symbol, MAX(stunde) FROM stundenkurse GROUP BY 1").fetchall())
+        c0.close()
+        pruefe(P, "S7-Menge (P-2): eingestellte Werte stehen drin, solange sie gehandelt wurden (%d am 01.03., %d am 30.10.); nur Reihen, "
+               "die vor %s ENDEN - lebende Werte ausserhalb der Stundendateien nie" % (len(m1), len(m2), _G.EINGESTELLT_VOR),
+               len(m1) > 0 and all(ende[x_] < _G.EINGESTELLT_VOR and ende[x_] >= "2026-02-28" for x_ in m1) and not m2,
+               str(sorted(m1))[:200])
+    else:
+        pruefe(P, "S7-Menge (P-2): Datei der eingestellten Werte fehlt - Pruefung gehoert an den Desktop", True, "uebersprungen")
 
     # 7 Kein Blick gegen Kurse in Stufe 1 (Voranalyse §5.1)
     quelle = open(_G.__file__, encoding="utf-8").read()
@@ -34491,6 +34566,120 @@ def paket_sichten_gutachten() -> None:
                 c_.close()
     finally:
         wegwerf.aufraeumen(w2)
+
+    # 9 Beschleunigungspaket §5.5 (Nutzer 05.11.: "ja - paket so übernehmen"): Haupttests zuerst, Anfragebuch ohne Seiteneffekt
+    pruefe(P, "Reihenfolge §5.5: S1, S3, S8, S7, S7w vor den Auskunftssichten S2, S4; der Plan folgt ihr",
+           _G.REIHENFOLGE == ("S1", "S3", "S8", "S7", "S7w", "S2", "S4")
+           and [s_ for s_ in dict.fromkeys(x_[1] for x_ in _G.plan())] == list(_G.REIHENFOLGE))
+    w3 = _tf.mkdtemp(prefix="anfr_")
+    alt_pfad = _G.ANFRAGEN
+    try:
+        _G.ANFRAGEN = _os.path.join(w3, "anfragen.csv")
+
+        class _Antw:
+            status_code, text, headers = 200, "", {}
+
+            def json(self):
+                return {"choices": [{"message": {"content": "{}"}}], "usage": {"total_tokens": 7}}
+
+        class _Http:
+            def post(self, *a, **k):
+                return _Antw()
+        _G.rufe("GEHEIM-xyz", "s", "n", _Http())
+        leer = not _os.path.exists(_G.ANFRAGEN)
+        _G._buche("503")
+        _G._buche("429-Tag")
+        zeilen = open(_G.ANFRAGEN, encoding="utf-8").read().splitlines()
+        pruefe(P, "Anfragebuch: eine Attrappe bucht nichts; eine echte Buchung schreibt Zeit, Kontingenttag (Pazifik), Schluesselname, "
+               "Art - nie den Schluesselwert",
+               leer and zeilen[0] == "zeit_utc;kontingent_tag;schluessel;art;pid" and len(zeilen) == 3
+               and zeilen[1].split(";")[2] == _G.SCHLUESSEL and zeilen[1].split(";")[3] == "503" and "GEHEIM" not in "".join(zeilen)
+               and _G.kontingent_tag(_pd.Timestamp("2026-11-05 07:59", tz="UTC").to_pydatetime()) == "2026-11-04"
+               and _G.kontingent_tag(_pd.Timestamp("2026-11-05 08:01", tz="UTC").to_pydatetime()) == "2026-11-05", str(zeilen))
+    finally:
+        _G.ANFRAGEN = alt_pfad
+        wegwerf.aufraeumen(w3)
+
+
+def paket_g7_s7_anlage() -> None:
+    """S7-Messanlage ``Rechenkern_02_10/g7_s7_anlage.py`` (Gegenpruefung 05.11.2026, Befund 5). Kunstpanel mit bekannter Wahrheit,
+    kein echter Kurs, kein LLM-Urteil. Der Selbsttest auf den echten Zielgroessen steht in ``g7_s7_anlage.txt``."""
+    P = "G7S7Anlage"
+    import importlib.util as _iu
+    import json as _json
+    import os as _os
+    import sqlite3 as _sq
+    import tempfile as _tf
+
+    import numpy as _np
+
+    spec = _iu.spec_from_file_location("g7_s7_anlage", _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "Basisinfos",
+                                                                      "Rechenkern_02_10", "g7_s7_anlage.py"))
+    S = _iu.module_from_spec(spec)
+    spec.loader.exec_module(S)
+    rng = _np.random.default_rng(11)
+    Zk = rng.normal(0, 1, (40, 330))                              # 22 Bloecke à 15 Tage - ueber der Mindestzahl 20
+    Zk[rng.random(Zk.shape) < 0.1] = _np.nan
+    E = rng.random(Zk.shape) < 0.3
+    U = (rng.choice([-1, 1], Zk.shape) * E).astype(int)
+    naiv = _np.array([S.t_naiv(_np.roll(U, k_, axis=1), Zk) for k_ in range(Zk.shape[1])])
+    pruefe(P, "t-Bahn per FFT = naive Schleife ueber alle Verschiebungen (mit 10 % NaN)",
+           float(_np.nanmax(_np.abs(S.t_bahn(U, Zk) - naiv))) < 1e-9)
+    TAGE_ALT = S.TAGE
+    a_null = S.arm(U, Zk)
+    a_pfl = S.arm(U, Zk + 1.0 * U)
+    a_leer = S.arm(_np.where(U == 1, 1, 0), Zk)
+    d0 = S.paar(U, U, Zk)
+    pruefe(P, "Pflanzung 1 sigma -> TRAEGT; leere Seite (nur stuetzt) -> KEIN BEFUND statt 'traegt nicht' (Gegenpruefung 11); "
+           "zwei gleiche Arme -> D = 0, nicht besser", a_pfl["urteil"] == "TRÄGT" and a_leer["urteil"] == "KEIN BEFUND"
+           and d0["D"] == 0 and d0["urteil"] == "nicht besser" and a_null["urteil"] in ("TRÄGT", "trägt nicht"),
+           "%s %s %s" % (a_pfl["urteil"], a_leer["urteil"], d0))
+    pruefe(P, "Entscheidung ueber den Rang (> 0,95) wie im Selbsttest, nicht ueber das interpolierte Perzentil",
+           (a_null["urteil"] == "TRÄGT") == (a_null["rang"] > 0.95))
+    W = rng.random(Zk.shape)
+    UR = (rng.choice([-1, 1], Zk.shape) * E).astype(int)
+    V = S.gleiche_rate(UR, W, 10, 7, rng)
+    top = _np.sort(W[UR == 1])[-10:]
+    pruefe(P, "gleiche Rate: genau 10 stuetzt / 7 belastet, und zwar die mit den meisten Meldungen",
+           (V == 1).sum() == 10 and (V == -1).sum() == 7 and _np.allclose(_np.sort(W[V == 1]), top))
+    pruefe(P, "Typ-Regel: hack/delisting/depeg/monitoring belastet, listing/etf/airdrop/netz_upgrade stuetzt, Rest 0",
+           [S.typ_seite(t_) for t_ in ("hack_exploit", "delisting_token", "listing_spot", "etf_fonds", "paar_entfernt")]
+           == [-1, -1, 1, 1, 0])
+    # urteile(): Schreibweise wie der Leser, Fremde und Zellen ohne Meldung GEZAEHLT, vor dem ganzen Lauf verweigert
+    from agent import sichten_gutachten as _G
+    w_ = _tf.mkdtemp(prefix="s7a_")
+    alt = _G.ABLAGE
+    try:
+        _G.ABLAGE = _os.path.join(w_, "g.db")
+        c = _G.verbinde(_G.ABLAGE)
+        tage = _G.tage()
+        ai, ti = {"ARB": 0, "OP": 1}, {t_: j for j, t_ in enumerate(tage)}
+        E2 = _np.zeros((2, len(tage)), dtype=bool)
+        E2[0, 0] = E2[1, 0] = True
+        for j, t_ in enumerate(tage[:-1]):
+            f = {"assets": [{"asset": " arb ", "wirkung": " Stützt "}, {"asset": "OP", "wirkung": "belastet"},
+                            {"asset": "XYZ", "wirkung": "belastet"}]} if j == 0 else {"assets": []}
+            c.execute("INSERT INTO gutachten (tag, sicht, wdh, modell, prompt_sha, form_ok, felder) VALUES (?,?,?,?,?,?,?)",
+                      (t_, "S7", 0, _G.MODELL, _G.prompt_sha("S7"), 1, _json.dumps(f)))
+        c.commit()
+        try:
+            S.urteile("S7", ai, ti, E2)
+            verweigert = False
+        except SystemExit:
+            verweigert = True
+        c.execute("INSERT INTO gutachten (tag, sicht, wdh, modell, prompt_sha, form_ok, felder) VALUES (?,?,?,?,?,?,?)",
+                  (tage[-1], "S7", 0, _G.MODELL, _G.prompt_sha("S7"), 0, None))
+        c.commit()
+        c.close()
+        U2 = S.urteile("S7", ai, ti, E2)
+        z = S.URTEIL_ZAEHLUNG["S7"]
+        pruefe(P, "urteile(): vor dem ganzen Lauf verweigert; ' arb '/' Stützt ' zaehlt als ARB +1, OP -1; XYZ als fremd GEZAEHLT; "
+               "unlesbare Gutachten ausgewiesen", verweigert and U2[0, 0] == 1 and U2[1, 0] == -1 and z["verworfen_fremd"] == 1
+               and z["gutachten_unlesbar"] == 1, "%s %s" % (verweigert, z))
+    finally:
+        _G.ABLAGE = alt
+        wegwerf.aufraeumen(w_)
+    S.TAGE = TAGE_ALT
 
 
 def paket_g7_messanlage() -> None:
@@ -34642,6 +34831,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Gutachtenpruefer": paket_gutachtenpruefer,
           "G7Messanlage": paket_g7_messanlage,
           "SichtenGutachten": paket_sichten_gutachten,
+          "G7S7Anlage": paket_g7_s7_anlage,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,
           "StandardDB": paket_standard_db,

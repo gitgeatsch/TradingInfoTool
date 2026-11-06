@@ -1,0 +1,11 @@
+G7 P-1 · TERMINFAKTOR VOR DEM RÜCKSPIEL · 2026-11-05 13:58
+(1) REPRODUKTION p59 F1 (BTC 2023-09-01 00:00:00 bis 2026-09-24 15:00:00): cpi 2h n 36 1.83× · nfp 2h n 36 1.45× · fomc 2h n 25 2.31×
+    Soll laut termin_fakt: cpi 1,83 · nfp 1,49 · fomc 2,28 (2 h)
+(2) NUR VOR 2025-12-01 (BTC 2023-09-01 00:00:00 bis 2025-11-30 23:00:00, Ersatztage ebenfalls davor):
+    cpi  2h  n 26 · Faktor 1.84×
+    cpi  24h n 26 · Faktor 0.92×
+    nfp  2h  n 26 · Faktor 1.45×
+    nfp  24h n 26 · Faktor 1.10×
+    fomc 2h  n 18 · Faktor 2.27×
+    fomc 24h n 18 · Faktor 1.45×
+ERGEBNIS für die Rückspiel-Eingabe: FAKTOR_2H = {"cpi": 1.84, "nfp": 1.45, "fomc": 2.27} · FAKTOR_24H ≈ 1.16 (Mittel der drei Arten) · 70 Termine

@@ -53,13 +53,16 @@ def zellen() -> pd.DataFrame:
 
 
 def kurse(symbole) -> dict:
-    mb = {r[0] for r in sqlite3.connect("file:%s?mode=ro" % os.path.join(KOPIE, "stundenkurse.db").replace("\\", "/"), uri=True)
-          .execute("SELECT DISTINCT symbol FROM stundenkurse")}
-    con = {f: sqlite3.connect("file:%s?mode=ro" % os.path.join(KOPIE, f).replace("\\", "/"), uri=True)
-           for f in ("stundenkurse.db", "stundenkurse_alle.db")}
+    dateien = [f for f in ("stundenkurse.db", "stundenkurse_alle.db", "stundenkurse_eingestellt.db")      # G7 P-2: + eingestellte
+               if os.path.exists(os.path.join(KOPIE, f))]
+    con = {f: sqlite3.connect("file:%s?mode=ro" % os.path.join(KOPIE, f).replace("\\", "/"), uri=True) for f in dateien}
+    hat = {f: {r[0] for r in con[f].execute("SELECT DISTINCT symbol FROM stundenkurse")} for f in dateien}
     aus = {}
     for s in symbole:
-        c = con["stundenkurse.db" if s in mb else "stundenkurse_alle.db"]
+        f = next((f for f in dateien if s in hat[f]), None)
+        if f is None:
+            continue
+        c = con[f]
         k = pd.Series(dict(c.execute("SELECT stunde, close FROM stundenkurse WHERE symbol=? AND stunde >= '2025-08-01'", (s,)).fetchall()))
         if len(k):
             k.index = pd.to_datetime(k.index)
@@ -74,6 +77,7 @@ def main():
     p("Zellen (Tag x Asset x Ereigniszeile): %d · Tage mit S7-Asset-Ereignis %d von %d · Assets %d · %.0f s" % (
         len(Z), Z.tag.nunique(), len(G.tage()), Z.asset.nunique(), time.time() - t0))
     C = Z.groupby(["tag", "asset"]).agg(typen=("typ", lambda s: ",".join(sorted(set(s)))), n_zeilen=("typ", "size"),
+                                         n_meld=("n_meld", "sum"),
                                          erst=("bekannt_ab", "min"), quelle=("quelle", lambda s: ",".join(sorted(set(s))))).reset_index()
     p("Zellen (Tag x Asset): %d · je Tag Median %.0f, P90 %.0f, max %d" % (
         len(C), C.groupby("tag").size().median(), C.groupby("tag").size().quantile(0.9), C.groupby("tag").size().max()))

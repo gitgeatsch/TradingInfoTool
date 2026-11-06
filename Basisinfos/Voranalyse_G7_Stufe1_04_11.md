@@ -177,6 +177,7 @@ Grundlage: `Voranalyse_G7_S7_Anlage_05_11.md` (§1–§4b), Nutzer 05.11.: *„J
 | **Wahl d / e** | e **ersetzt** d nur, wenn (e trägt nach der Holm-Zeile und d nicht) **oder** die gepaarte Differenz t(e) − t(d) über ihrem Nullband liegt. Sonst bleibt d. Die Wahl wird **berichtet**, nicht still getroffen |
 | **Auskunft, nie hochgestuft** | H = 1 und H = 5 · Kern getrennt · nur Meldungen < 24 h · Weg b getrennt · Kurs-Regel (das Wort selbst als Urteil, Fortsetzung und Gegenrichtung) · Eigenrauschen aus `wdh` 1 |
 | **Reihenfolge** | gemessen wird erst, wenn S7 **und** S7w vollständig abgelegt sind (`--messen` verweigert sich vorher) |
+| **Nachtrag 05.11. (nach der Gegenprüfung, VOR dem ersten S7-Aufruf)** | Selbsttest auf der um die eingestellten Werte erweiterten Menge (10.296 Zellen): G-Lauf 5/Tag 7,0 % > Toleranz → Band **geeicht auf das 96,5. Perzentil** (alle Erzeuger ≤ 5 %). Damit gilt für e im Platz S7 die Bonferroni-Grenze **1 − (1 − 0,965)/2 = P98,25** statt P97,5. Entschieden wird über den **Rang** (wie im Selbsttest). S7/S7w ohne Schwere-Text, Kursfakt und Schwere in der Ablage; S8 mit Terminfaktor nur aus Daten vor 2025-12-01 (`Voranalyse_G7_S7_Anlage_05_11.md` §7) |
 
 ---
 
@@ -249,6 +250,27 @@ Kontingent heute: 46 Aufrufe für die Probe. Lauf **2.112 Aufrufe**, bei ≈ 480
 ## 5.4 Lauf-Beobachtung 05.11. (nur Form und Treue)
 
 Nach 98 S1-Gutachten: alle lesbar, 6 beanstandet — 5 × der **zweite** Wert der Zeile unter `wert` (Feld vertauscht, kein Faktenfehler), 1 × **Fehler in Prüfer v2** (`-2.43e-05` als −2 gelesen). Kein Abbruch, alles roh abgelegt; Neurechnung mit Prüfer v2.1 in Stufe 2. Ausführlich: [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) S7-7.
+
+## 5.5 Beschleunigung — entschieden 05.11.2026 abends, VOR dem ersten Blick gegen Kurse
+
+Nutzer 05.11.: *„ja - paket so übernehmen“*. Ersetzt in §5.1 „S7 zuletzt“ und „kein Blick, bevor Stufe 1 ganz fertig ist“.
+
+| | Festlegung |
+|---|---|
+| **Reihenfolge** | **S1, S3, S8, S7, S7w**, danach die Auskunftssichten **S2, S4** (`REIHENFOLGE`). Gesperrte Sichten überspringt der Lauf. Grund: Bis zu den vier Haupttests fallen ≈ 700 Aufrufe weniger an |
+| **Messen je Sicht** | Jede Hauptsicht wird **genau einmal** gemessen, sobald sie **vollständig** abgelegt ist (335 Tage + Wiederholungen). Kein Teilblick, kein zweites Mal |
+| **Schutz** | Die erste Messung geschieht erst, wenn **alle** Prompt-SHAs fest sind, S7/S7w also nach Probe 2 freigegeben. Ändert sich danach ein Prompt, ist die betroffene Sicht **nur noch Auskunft**. Das Ergebnis einer Sicht ist **kein Grund**, eine andere abzubrechen oder anzupassen |
+| **Holm** | Gilt am Ende über alle **vier** Haupttests (m = 4 bleibt, auch wenn einer fehlt). Eine früh gemessene Sicht wird bis dahin **roh** berichtet (Rang, p), als „trägt“ erst nach der Holm-Zeile |
+| **Frist** | **30.11.2026.** Reicht sie nicht, werden zuerst S2/S4 nicht mehr gefragt. Eine unvollständige Hauptsicht wird **nicht** gemessen. Ob verlängert wird, entscheidet der Nutzer |
+| **Abbruch** | nur aus vorab festgelegten Gründen: technisch Rot (unlesbar > 5 %) · Messbarkeit Rot (Anteil außerhalb 5–95 % oder < 20 Blöcke je Seite bei vollständiger Sicht) · Frist |
+| **Laufwache** | täglich 08:00, `g7_laufwache.py`, ohne Blick gegen Kurse; Meldung nur bei Gelb oder Rot |
+
+**Kontingent, gemessen 05.11.:** Google nennt die Grenze im Fehlerkörper, `GenerateRequestsPerDayPerProjectPerModel-FreeTier` = **500**
+(Schlüssel 2, `gemini-3.5-flash-lite`). Am Kontingenttag 05.11. (ab 09:00 MEZ) waren beim 429 aber nur **52** Gutachten abgelegt.
+⚠️ Verdacht, **nicht belegt**: Die 503-Fehlversuche zählen mit (bis 15:00 alle 30 s wiederholt, zwei Prozesse parallel). Deshalb gibt es seit
+05.11. 15:24 UTC das **Anfragebuch** `data/_g7/anfragen.csv`: jede echte Anfrage mit Kontingenttag, Schlüsselname und Status, ohne
+Schlüsselwert. Die Laufwache weist aus, nach wie vielen Anfragen die Tagesgrenze kam und wie viele davon 5xx waren. Seit 15:00 wird ein
+503 ansteigend wiederholt (30 s … 600 s).
 
 ## 6. Gegenprüfung dieser Voranalyse
 
