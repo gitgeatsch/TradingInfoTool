@@ -2373,3 +2373,20 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - K-Z1-1 auf `ergebnis IS NOT NULL` eingeschränkt.
 
 **NB:** Bündel G8a, Kontrollen K-W3-S2, K-G14-1 und K-Z1-1.
+
+# E-169 · Eckpunkte des Gesamtplans: drei Stufen, drei Stränge, Signale erst nach der ganzen Kette (06.11.2026)
+
+**06.11.2026** · Nutzer: *„ok also der wichtigste ungeklärte punkt ist das Gesamtkonzept was die Signale also deterministisch und über LLM ein besseres Ergebnis liefern soll hier müssen wir gleich danach einhaken“*
+
+**Entschieden (Vorlage F1–F4 vom 06.11.):**
+- **F1 → 1:** Herkunft des Plans (Auslöser, Weggabelung, Entscheidung 28.10.) und die drei Stufen Dashboard · Bewertung · Signale samt Ausweichregel in den Gesamtplan (§1a, §4.0).
+- **F2:** Spot ist **nicht** Teil der Hebel-Aufgabe (*„hat meines Erachtens nichts direkt mit unserer Hebel Aufgabe zu tun“*) — Eckpunkte jetzt für die Roadmap, Umsetzung erst, wenn Hebel trägt (G20).
+- **F3:** Multiasset offen, erst wenn der Krypto-Ansatz trägt; im System gänzlich anders zu handhaben (G21).
+- **F4 → ja:** Dashboard und spezifische Bewertung **unabhängig und vorgezogen** (G19).
+- **Reihenfolge:** *„Krypto Regel0 Hebel alle Assets sofort und im Detail planen inkl. Dashboard … dann Krypto Spot die wesentlichen Punkte … dann dieselben wesentlichen Punkte für Multiasset“* (G18).
+
+**Neue Vorgabe:** *„bevor wir am Notebook umsetzen, also z. B. Hebel Regel0 ändern, muss alles am Desktop gebaut und nachgewiesen sein. Dashboard und Bewertung sind ausgenommen.“* — Gesamtplan §6 *Signale erst nach der ganzen Kette*. Auslegung: die Ausnahme befreit von der ganzen Kette, nicht vom Funktionsnachweis am Desktop (*Desktop zuerst*).
+
+**Ausweichregel:** was nicht trägt, bleibt Information in Dashboard und Mail — nie Auslöser, nie Gewicht.
+
+**Kernaussage des Nutzers zu G18 (06.11.):** REGEL0 trägt — dafür ist eine **Erfolgsmessung** nötig —, aber *„nur für genau einen spezifischen Fall deterministisch, ohne Markt, ohne Politik etc. – das System ist zu starr, eine Regel, und uns fehlen mehrere Sichten bzw. Schichten, z. B. Marktlage ok für Kauf, Regime, etc. … und dann können in einem Fall Regel0, in einem anderen Regel1 usw. spezifische Aktionen, also Signale, auslösen; das sollte für Einstieg, Positionsführung und Ausstieg sinnvoll sein.“* → Zielbild für G18: **mehrere Regeln, je nach Lage gewählt**, statt einer starren; je Phase Einstieg · Führung · Ausstieg.

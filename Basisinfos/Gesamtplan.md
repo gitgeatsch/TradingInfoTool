@@ -22,6 +22,14 @@ Prüffrage vor jedem Vorschlag: **Bewertung oder Fakt?** Im Wortlaut steht das i
 
 **Nutzerwort 28.10.2026, das den heutigen Plan bestimmt:** *„Auf Basis der Durchführung sicher nicht falsch. Aber mir fehlt die Intelligenz in der Bewertung – mit statischen mathematischen Berechnungen kommen wir nicht weiter.“*
 
+### 1a. Wie es zu diesem Plan kam (abgestimmt 06.11.2026, E-169)
+
+| | |
+|---|---|
+| **Auslöser** | *„Kein Einstiegssignal mit belegtem Vorsprung, weder für Hebel noch für Spot“* ([`Bilanz_Gesamt_25_10.md`](Bilanz_Gesamt_25_10.md)): Spot-Kaufzeitpunkte schlagen regelmäßiges Kaufen nicht, Altcoin-Korb ab 2024 −57 % gegen BTC, REGEL0 hängt an der Datenlänge (E-136), der LLM-Prüfblock trennt nicht (N5). Nutzer 27.10.: Mails *„allgemein gehalten ohne Essenz“*, Signale *„offensichtlich zufällig“*, der Trichter *„eine starre Konstruktion“* |
+| **Weggabelung** 21.–27.10. | **Ende?** (21.10.: *„wenn sich das als Deadend herausstellt, brauchen wir das System so nicht weiterverfolgen“*) → **Grid** geprüft: endet (E-127, Rückkehr zur Mitte ≈ zehnmal zu klein für die Gebühr) · **weiter optimieren** (23.–25.10.: REGEL0 *„noch nicht ausgereizt“*, Spot-Einstieg; M-L, E-A, H-A, L-1/L-2) · **umbauen** (27.10. „Lagegerechte Handlung“, [`Konzept_Lagegerechte_Handlung_27_10.md`](Konzept_Lagegerechte_Handlung_27_10.md), E-165: H-1 trägt nicht) · **andere Lösung: Dashboard** (27.10.: *„mit Informationen zum Markt, einzelnen Assets und u. U. sogar mit logischer und fachlicher Bewertung z. B. über LLM“*) |
+| **Entscheidung** 28.10. | *„Das Dashboard mit Fakten und LLM-Bewertungen brauchen wir ohnehin“* + *„Intelligenz in der Bewertung“* → Weg a: Ebenen 0–4, Sichten aus Schichten und Ereignissen (§4) |
+
 ---
 
 ## 2. Was heute im Betrieb läuft (Notebook)
@@ -67,6 +75,21 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 
 **Leitsatz:** *Das LLM erzeugt Information, die Messung bestimmt ihren Wert.*
 
+### 4.0 Drei Stufen, drei Stränge (abgestimmt 06.11.2026, E-169)
+
+| Stufe | Inhalt | Stand |
+|---|---|---|
+| **I Dashboard** | Fakten, Ampeln, Einordnung je Markt und Asset | teils im Betrieb (Makro-Lage, Season-Ampel, Statusseite); Asset-Karte und Befund-Karte **vorgezogen** (G19) |
+| **II Bewertung** | LLM-Gutachten je Sicht | läuft (G7 Stufe 1–2) |
+| **III Signale** | trägt die Bewertung — deterministisch und/oder über das LLM — für **unsere Signale**? | REGEL0/Hebel: G7 Stufe 3 + **Gesamtkonzept G18** |
+| **Ausweichregel** | was nicht trägt, bleibt **Information** in Dashboard und Mail — nie Auslöser, nie Gewicht | gilt für jede Stufe (Beispiele: G16 Wale, Makro K1–K9) |
+
+| Strang | Umfang | Wann |
+|---|---|---|
+| **1 Krypto · REGEL0 · Hebel · alle Assets** | **im Detail planen**, inkl. Dashboard | **jetzt** (G18, G19) |
+| **2 Krypto · Spot** | Eckpunkte für die Roadmap: Unterschiede zu Hebel, Daten, Zeitraum, Berechnung, Bewertung (G20) | **umgesetzt erst, wenn Hebel trägt** (Nutzer: Spot hat nichts direkt mit der Hebel-Aufgabe zu tun) |
+| **3 Multiasset** | dieselben Eckpunkte (G21) | **offen, erst wenn der Krypto-Ansatz trägt** — im System gänzlich anders zu handhaben |
+
 ### 4.1 Aufbau
 
 | Ebene | Was | Wer |
@@ -86,13 +109,13 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | [`Voranalyse_Dashboard_LLM_28_10.md`](Voranalyse_Dashboard_LLM_28_10.md) | Bestandsaufnahme, Expertenkonzept A1–A6, Prinzipien P1–P9, **Anbieter gemessen §1.5a** |
 | [`Datenbasis_Schichten_Sichten_28_10.md`](Datenbasis_Schichten_Sichten_28_10.md) | Ebenen, Übergaberegeln Ü1–Ü9, Inventar abgerufen/berechnet/LLM-Bedarf, Sichten, **§3a Fragestellung je Sicht und finales LLM** |
 | [`Fuetterung_Satzform_31_10.md`](Fuetterung_Satzform_31_10.md) | **Fütterung Weg a**: Satzform der Zustände SF1–SF8 (an echtem Tag geprüft), Befunde P1–P5, Ereignisse nur über A1, Blöcke des finalen LLM, Takt der Sichten, Reihenfolge, **Frage Historie** |
-| [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) | **S1 ergänzen** (Fütterung §6 Schritt 2): Trend, Breite, Season-Stufe, DVOL, Stablecoins, Funding, OI — Quelle, Tiefe, Maß, live am NB; Befunde V1–V6; entschieden 1a/2a/3 ja; **§5 Ausführung und Nachweis** (G1–G7) · **§6 G6a gelöst**: Breite in der Grundgesamtheit des Betriebs zum Zeitpunkt; `ampel_tag` rechnet rückwirkend |
-| [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md) | **Ebene-1-Modul `agent/zustaende.py`** (Fütterung §6 Schritt 3): Umfang (35 Sicht-Zustände + S8 Termine), Befunde Z1–Z9 der geprüften Probe — **Jahrgangsloch** (59 von 333 Rückspiel-Tagen), Absturz bei leerer Reihe, Season-Stufe/M2-Verzug ohne Wirkung, SF9 *veraltet*; Bauplan, Prüfpaket, Nachweis N1–N5; **✔ a entschieden und gebaut, §7 Ausführung (10/10)** |
-| [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | **G7 Messplan** (Fütterung §6 Schritt 5): Faktentreue F und Wert W getrennt; Befunde G7-1–G7-7 (Blöcke je Horizont, Einbruch zu selten, Takt flackert, finales LLM nur auf Gemini bezahlbar, **Z-1 erkennt ~40 %**, Kontamination, Datenlücken); Stufen 0–5, Budget; Fragen §6.1 Takt, §6.2 Z-1 im Betrieb, §6.3 Kurse Sep./Okt. |
+| [`Voranalyse_S1_Ergaenzung_01_11.md`](Voranalyse_S1_Ergaenzung_01_11.md) | **S1 ergänzen** (Fütterung §6 Schritt 2): Trend, Breite, Season-Stufe, DVOL, Stablecoins, Funding, OI — Quelle, Tiefe, Maß, live am NB; Befunde V1–V6; Ausführung und Nachweis §5; Breite in der Betriebsmenge zum Zeitpunkt §6 |
+| [`Voranalyse_Zustaende_Modul_01_11.md`](Voranalyse_Zustaende_Modul_01_11.md) | **Ebene-1-Modul `agent/zustaende.py`** (Fütterung §6 Schritt 3): Umfang (35 Sicht-Zustände + S8 Termine), Befunde Z1–Z9, Bauplan, Prüfpaket, Nachweis N1–N5; Ausführung §7 |
+| [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | **G7 Messplan**: Faktentreue F und Wert W getrennt, Befunde G7-1–G7-7, Stufen 0–5 und Budget; Stufe 0 §7, REGEL0-Einstiege aus der Betriebsrechnung §10, Stufe-3-Anlage und Menge b §11 |
 | [`Voranalyse_G7_Stufe1_04_11.md`](Voranalyse_G7_Stufe1_04_11.md) | **G7 Stufe 1** Sicht-Gutachten im Rückspiel: Vorabfestlegung §4 (S7 §4.1), Bau und Proben §5, Beschleunigungspaket §5.5 (Reihenfolge, je Hauptsicht einmal messen, Frist 30.11.), Gegenprüfung §6 |
 | [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) | **S7 Ereignisse**: Messanlage und Selbsttest, Form d + Wort-Arm S7w (§4a/§4b, §6), Gegenprüfung §7 (Vorgriff P-1, Überlebensauswahl P-2 behoben, Band P96,5) |
-| [`Voranalyse_Laufzeit_02_11.md`](Voranalyse_Laufzeit_02_11.md) | **Laufzeit verkürzen**: warum A1 auf Groq lief (Pauschalregel für 2025-Rückspiele, greift ab Dez. 2025 nicht), Gemini-Töpfe am Schlüssel 2, **gemini-3.5-flash liest A1 mindestens so gut** wie gpt-oss, gemini-2.5 gesperrt; kritischer Weg ≈ 4 Wo → ≈ 1–1,5 Wo; Fragen §4.1 A1 auf Gemini, §4.2 Stufe 3 je Tag bündeln, §4.3 GDELT-Probe am NB jetzt · §6 Korrektur 3.5-flash 20/Tag → flash-lite · **§7 GDELT-Probe gebaut** (Skript, Auswertung K1–K3, Prüfung 40/40, Desktop-Adresse gesperrt) |
-| [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) | **A1 Ereignis-Leser** (G9): Quellen (Binance 6.276, Upbit 785, Nachrichten 25.193 im Rückspiel), Befunde A1-1–A1-10 — Regeln tragen bei den Börsen (82/83 %), gleich dem Betrieb an den Mail-Arten, `art()` etikettiert 550 Futures als margin (ohne Mail-Wirkung), Nachrichten selten je Asset, LLM-Probe instabil im Typ (35/50), Budget 12–17 Tage oder Vorfilter 2 Tage; Typkatalog, Bauplan, P1–P6; Frage a/b/c → **a, gebaut 01.11. (§7): Vorfilter-Kriterium nicht erfüllt → Weg b; Prompt 2 validiert 77 %; §8 → a: **Prompt 3 auf dritter Stichprobe Sicht-Relevanz 90 %, Fehlalarm 15 → 2, übernommen (§9); Volllauf gestartet** |
+| [`Voranalyse_Laufzeit_02_11.md`](Voranalyse_Laufzeit_02_11.md) | **Laufzeit verkürzen**: Gemini-Töpfe und Modelle je Schlüssel, A1 auf gemini-3.5-flash-lite (§5–§6), GDELT-Probe am NB (§7), A1 fertig und zweiter Weg gpt-oss (§8) |
+| [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) | **A1 Ereignis-Leser** (G9): Quellen, Befunde A1-1–A1-10, Typkatalog, Bauplan; gebaut §7 (Weg b), Prompt 3 §9 |
 | [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) | Lücken je Sicht mit Quellen (A), **Prompt-Umfang gemessen** (B), Entscheid zu diesem Plan (C/D) |
 | [`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashboard_A3_A4_28_10.md) | Bauschritte B1–B6 (Befund-Karte, Fakt-Sammler, LLM-Rolle, Job, Statusseite, Prüfungen), Mail mit beiden Blöcken |
 | [`Konzept_Lagegerechte_Handlung_27_10.md`](Konzept_Lagegerechte_Handlung_27_10.md) | REGEL0 bleibt Auslöser, die Schichten wählen das Wie |
@@ -111,14 +134,18 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 
 ## 5. Offene Punkte und Reihenfolge — die eine Liste
 
-> **Jede Zeile nennt nur den heutigen Zustand, das Nächste und den Verweis.** Der Weg dorthin steht im Arbeitsstand ([`Arbeitsstand_Schritt59.md`](Arbeitsstand_Schritt59.md), ein Block je Paket; die Zeilen dieser Tabelle bis 06.11. dort **wortgleich** im Block *Stand 29.10.–06.11.2026*), die Begründungen in der jeweiligen Voranalyse. Eine Zeile wird **ersetzt, nicht verlängert** — höchstens 1.500 Zeichen, geprüft vom Paket `Gesamtplan`.
+> **Jede Zeile nennt nur den heutigen Zustand, das Nächste und den Verweis.** Der Weg dorthin steht im [`Arbeitsstand_Schritt59.md`](Arbeitsstand_Schritt59.md) (ein Block je Paket; die alte Fassung dieser Tabelle im Block *Stand 29.10.–06.11.2026*), die Begründungen in der Voranalyse. Eine Zeile wird **ersetzt, nicht verlängert** — höchstens 1.500 Zeichen, geprüft vom Paket `Gesamtplan`.
 
 ### 5.1 Offen
 
 | # | Punkt | Stand heute | Nächstes / Bedingung |
 |---|---|---|---|
+| **G18** | ⭐ **Gesamtkonzept Strang 1** (Krypto · REGEL0 · Hebel · alle Assets): was sollen die Signale **deterministisch und über das LLM** besser liefern als heute — und woran messen wir das? Zielbild (E-169): **mehrere Regeln je Lage** für Einstieg, Führung, Ausstieg | **der wichtigste ungeklärte Punkt** (Nutzer 06.11., E-169); heute: REGEL0 Auslöser ohne belegten Vorsprung (§1a), LLM-Prüfblock trennt nicht, G7 Stufe 3 misst das finale LLM je REGEL0-Einstieg | **als Nächstes**: Voranalyse, im Detail, inkl. Dashboard (G19) |
+| **G19** | **Dashboard und spezifische Bewertung vorgezogen** (Stufe I, Asset-Karte + Befund-Karte aus B1–B6) | entschieden 06.11. (E-169): unabhängig von G7, ausgenommen von *Signale erst nach der ganzen Kette* (§6) | Voranalyse mit G18: was ohne LLM-Ergebnis gebaut werden kann; [`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashboard_A3_A4_28_10.md) |
+| **G20** | **Strang 2 Krypto · Spot** — Eckpunkte für die Roadmap | zurückgestellt bis Hebel trägt (E-169) | mit G18 festhalten: Unterschiede zu Hebel, Daten, Zeitraum (Wochen: ein Rückspiel-Zeitraum trägt nur H ≤ 5, G7-Messplan), Berechnung, Bewertung |
+| **G21** | **Strang 3 Multiasset** — Eckpunkte | offen bis der Krypto-Ansatz trägt (E-169); im System gänzlich anders zu handhaben | mit G18 festhalten, dieselben Punkte wie G20 |
 | **G7** | **Messplan**: Faktentreue der Prüfer und Wert der Sichten im Rückspiel | Stufe 0 ✔ 02.11. · **Stufe 1 läuft** seit 05.11.: 2.464 Gutachten, Reihenfolge S1, S3, S8, S7, S7w, S2, S4; **alle Prompts eingefroren seit 06.11.** (Probe 2 bestanden); Lauf `data/_g7_stufe1_lauf9.txt` in eigener Prozessgruppe, Laufwache täglich 08:00, Frist 30.11. · Stand je Stufe: **§5.2** · Grundlagen: [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) (Stufen, Budget) · [`Voranalyse_G7_Stufe1_04_11.md`](Voranalyse_G7_Stufe1_04_11.md) (Vorabfestlegung §4, Paket §5.5) · [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) · [`Voranalyse_Laufzeit_02_11.md`](Voranalyse_Laufzeit_02_11.md) | je Hauptsicht **einmal** messen (Stufe 2), sobald sie vollständig ist; Tageskontingent über das Anfragebuch `data/_g7/anfragen.csv` |
-| **G8** | **NB-Bündel** | ✔ Voranalyse 03.11., entschieden **b** (geteilt): **G8a** = S-2 (E-166) + G14 (E-167) + Z-1 lokal mit Fassungsmarke (E-168), Ablauf eines Pulls Voranalyse §5 · **G8b** = Bau B1–B6 + Ebenen 2/3, Mail mit beiden Blöcken ([`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashboard_A3_A4_28_10.md)); Prüfer v2 ersetzt Z-1; GDELT-Abruf am NB mit zwei Wochen Nachweis (Laufzeit §7, vorher klären: kurzes Fenster = Viertelstundenwerte?, §7.4; sonst c neu vorlegen, G7 §9.2); S7 live mit Beständen (G7 §9.1); Wal-Fünftel als Fakt (G16) · [`Voranalyse_G8_NB_Buendel_03_11.md`](Voranalyse_G8_NB_Buendel_03_11.md) | G8a: Kontrollen K-W3-S2, K-G14-1 am NB · G8b: nach G7, eigene Abstimmung |
+| **G8** | **NB-Bündel** | ✔ Voranalyse 03.11., entschieden **b** (geteilt): **G8a** = S-2 (E-166) + G14 (E-167) + Z-1 lokal mit Fassungsmarke (E-168), Ablauf eines Pulls Voranalyse §5 · **G8b** = Bau B1–B6 + Ebenen 2/3 (Dashboard-Teil vorgezogen → G19), Mail mit beiden Blöcken ([`Bauplan_Dashboard_A3_A4_28_10.md`](Bauplan_Dashboard_A3_A4_28_10.md)); Prüfer v2 ersetzt Z-1; GDELT-Abruf am NB mit zwei Wochen Nachweis (Laufzeit §7, vorher klären: kurzes Fenster = Viertelstundenwerte?, §7.4; sonst c neu vorlegen, G7 §9.2); S7 live mit Beständen (G7 §9.1); Wal-Fünftel als Fakt (G16) · [`Voranalyse_G8_NB_Buendel_03_11.md`](Voranalyse_G8_NB_Buendel_03_11.md) | G8a: Kontrollen K-W3-S2, K-G14-1 am NB · G8b: nach G7 und G18, eigene Abstimmung |
 | **G4** | **Lücken schließen** | ✔ Nachweis für S1–S4, S7, S8 (29.10., [`Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md`](Voranalyse_Luecken_Prompt_Gesamtplan_28_10.md) A2) · ✔ ein Abrufer `api/sichten_quellen.py` für Historie und laufend (Einbinden A), Desktop-Nachweis 7/7 am 30.10. (`g4_nachweis_sichtenquellen.py`: kein Vorgriff, live = Rückspiel) · Quellgrenzen: HY (ICE) erst ab 10/2023; GDELT 38 Tage Quellausfall und Sperre für Vielnutzer → 10 Min. Abstand, ein Wiederholversuch, sonst Quellausfall des Tages | NB-Einbau mit G8b · für S5/S6 später: JGB 10J, Kimchi-Prämie, ECOS (G5) · bei häufiger GDELT-Sperre im Betrieb: GKG-Rohdateien |
 | **G5** | **ECOS-Schlüssel** (Bank of Korea) | **zurückgestellt 29.10.: nur nice to have** — KOSPI/Won über yfinance, Kimchi-Prämie aus Upbit + Won; ECOS brächte nur Korea-Staatsanleihe täglich und amtliches M2 (S5). ⚠️ Anmeldung vermutlich nur mit koreanischer Handynummer (PASS, Drittquelle unbestätigt) | erst bei S5 neu bewerten |
 | **G6** | Frankreich/Italien 10J **täglich** | kein freier Weg gefunden | Suche läuft weiter |
@@ -142,9 +169,7 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 
 | # | Punkt | Ergebnis | Rest offen |
 |---|---|---|---|
-| **G1** | dieser Plan, Verweise auf allen Ebenen | ✔ 28.10. | – |
-| **G2** | Sichten-Reihenfolge | ✔ 29.10. (Nutzer: *„G2 und G3 wie empfohlen“*): S1–S4, S7, S8 zuerst; S5 Asien und S6 Staatsschulden danach | – |
-| **G3** | Modellwahl Rückspiel | ✔ 29.10.: zuerst Gemini (Schlüssel 2) Dez. 2025 – Okt. 2026, danach Groq gpt-oss 2025 als zweiter Zeitraum und zweite Modellfamilie; Wissensstand je Modell vorher prüfen | – |
+| **G1–G3** | Plan · Sichten-Reihenfolge · Modellwahl | ✔ 28./29.10. (Nutzer: *„G2 und G3 wie empfohlen“*): S1–S4, S7, S8 zuerst, S5/S6 danach (§4.1); Gemini (Schlüssel 2) Dez. 2025 – Okt. 2026, danach Groq gpt-oss 2025 als zweiter Weg (§4.3, G7 Stufe 5) | – |
 | **G9** | Binance-Ankündigungen und A1 Ereignis-Leser | ✔ geladen 28.10. (6.276 Meldungen ab 01/2023) · A1 gebaut 01.11. (`agent/ereignisse.py`, Weg b, Prompt 3), **fertig 04.11.** (1.009/1.009, 25.561 Ereignisse; zweiter Weg gpt-oss 78,9 % gleich, deckt Weg b nicht) · [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md), Laufzeit §8 | Stufe 1 weist Weg b getrennt aus · Nutzer: Gegenprüfung der Handeinordnung (V4, drei Dateien) |
 | **G13** | S-2 Jobs der alten Kette | ✔ gebaut 03.11. (E-166): Jobs überspringen sich, Thesen/Marktscan im Zweifel aus · [`Voranalyse_S2_Jobs_alte_Kette_03_11.md`](Voranalyse_S2_Jobs_alte_Kette_03_11.md) | NB: K-W3-S2 (G8a) |
 | **G14** | Kern-Regel, „Kern immer zugelassen“ | ✔ gebaut 03.11. (E-167): Rückfrage beim Ausschalten, Warnzeile, Schalter-Lesefehler als Fehlermail, eine Kern-Liste; Aufbau = Sparplan (E-148, K-4 gebaut E-152) · [`Voranalyse_G14_Kern_Regel_03_11.md`](Voranalyse_G14_Kern_Regel_03_11.md) | NB: K-G14-1 (G8a) |
@@ -164,6 +189,8 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | Grundgesamtheit | in Betrieb und Messung gleich |
 | NB = Produktion | `data/tradinginfotool.db` am NB nie beschreiben, die Suite läuft nicht am NB, Prüfungen gegen eine Kopie |
 | **Desktop zuerst** | eine Änderung geht erst an den NB, wenn ihre **Funktion am Desktop nachgewiesen** ist (Nutzer 09.08.: *„vor der PROD … Prüfung am Desktop“*; nachgetragen 29.10., fehlte in diesem Plan) |
+| **Signale erst nach der ganzen Kette** | eine Änderung an **Signalen** (z. B. REGEL0, Hebel, Spot) geht erst an den NB, wenn **alles** am Desktop gebaut und nachgewiesen ist (Nutzer 06.11., E-169; Nutzer 27.09.: *„die ganze Ablaufkette … inkl. LLMs und Rollen“*). **Ausgenommen: Dashboard und Bewertung** — Information ohne Auslösung, sie dürfen vorgezogen werden; für sie gilt nur *Desktop zuerst* |
+| **Ausweichregel** | was nicht trägt, bleibt Information in Dashboard und Mail (§4.0) |
 | Labor allein ist FAIL | fertig ist erst, was am NB mit den dortigen Daten läuft — die **zweite** Hälfte derselben Reihenfolge: Desktop-Nachweis → NB-Betriebsprüfung |
 | kostenfrei | nur freie Quellen und Dienste |
 | Mail | jede Mail eine Handlung; Information nie nur in der GUI |
