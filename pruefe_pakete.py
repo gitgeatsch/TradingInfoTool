@@ -34255,13 +34255,13 @@ def paket_sichten_gutachten() -> None:
            verweigert == ["tradinginfotool.db", "sichten.db"] and _G.ABLAGE.replace("\\", "/").endswith("data/_g7/gutachten.db")
            and _G.ABLAGE_PROBE != _G.ABLAGE and _os.path.dirname(_G.ABLAGE_PROBE) == _os.path.dirname(_G.ABLAGE), str(verweigert))
 
-    # 2 Plan: Reihenfolge (S7 zuletzt), Umfang, Wiederholung fest ausgelost
+    # 2 Plan: Reihenfolge §5.5 (Hauptsichten vor den Auskunftssichten), Umfang, Wiederholung fest ausgelost
     pl = _G.plan()
     folge = list(dict.fromkeys(s for _, s, _ in pl))
     w = _G.wdh_tage()
-    pruefe(P, "Plan: S1, S3, S8, S2, S4, S7, S7w (S7 und sein Wort-Arm zuletzt, Nutzer 05.11.: \"Ja, d + Wort-Arm\"), je 335 Tage + "
+    pruefe(P, "Plan: S1, S3, S8, S7, S7w, S2, S4 (Paket §5.5, Nutzer 05.11.: \"ja - paket so übernehmen\"), je 335 Tage + "
            "17 Wiederholungen = 2.464; Wiederholungstage fest (Saat)",
-           folge == ["S1", "S3", "S8", "S2", "S4", "S7", "S7w"] and len(pl) == 2464 and len(w) == 17 and w == _G.wdh_tage()
+           folge == ["S1", "S3", "S8", "S7", "S7w", "S2", "S4"] and len(pl) == 2464 and len(w) == 17 and w == _G.wdh_tage()
            and len(set(pl)) == len(pl) and len(_G.plan(probe=True)) == 21, "%s %d %d" % (folge, len(pl), len(w)))
 
     # 3 Prompt-SHA je Sicht: eine Aenderung an S7 laesst die anderen gueltig

@@ -272,6 +272,14 @@ Nutzer 05.11.: *„ja - paket so übernehmen“*. Ersetzt in §5.1 „S7 zuletzt
 Schlüsselwert. Die Laufwache weist aus, nach wie vielen Anfragen die Tagesgrenze kam und wie viele davon 5xx waren. Seit 15:00 wird ein
 503 ansteigend wiederholt (30 s … 600 s).
 
+**Probe 2 und Freigabe S7/S7w, 06.11.2026** (`data/_g7/gutachten_probe2.db`, 3 Tage × 7 Sichten, nur Form und Treue, kein Kurs danach):
+21/21 lesbar, 0 Formfehler, 1 Treue-Beanstandung — S7 am 25.10. schreibt den Typ `pair_entfernt`, die Eingabe sagt `paar_entfernt`
+(Schreibweise, kein Falschwert). S7 setzt `eingepreist` 3 × wie verlangt auf „unbekannt“. S7w folgt dem gezeigten Wort: WAL „gefallen“ → ja,
+ON „gestiegen“ → ja, BTC mit gemischten Wörtern → teilweise. → **`GESPERRT = ()`, alle sieben Prompt-SHAs ab jetzt eingefroren**; Lauf neu
+(`_g7_stufe1_lauf9.txt`). Eine alte Planprüfung im Paket verlangte noch „S7 zuletzt“ und war damit rot; sie folgt jetzt §5.5 (28/28).
+⚠️ Der Lauf war am 06.11. zweimal ohne Fehler beendet (05.11. ≈ 18:25 UTC und 06.11. 11:05 UTC, `^C` im Fehlerprotokoll). Seit lauf9 startet
+er in einer **eigenen Prozessgruppe ohne Konsole** (`CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW`), damit ihn kein Strg+C-Signal erreicht.
+
 ## 6. Gegenprüfung dieser Voranalyse
 
 | Aussage | geprüft wie | Ergebnis |

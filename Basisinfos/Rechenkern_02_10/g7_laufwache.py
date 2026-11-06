@@ -23,7 +23,7 @@ sys.path.insert(0, PROJ)
 from agent import sichten_gutachten as G      # noqa: E402
 
 AUS = os.path.join(PROJ, "data", "_g7_laufwache.txt")
-LOGS = [os.path.join(PROJ, "data", f) for f in ("_g7_stufe1_lauf8.txt", "_g7_stufe1_lauf7.txt", "_g7_stufe1_lauf6.txt", "_g7_stufe1_lauf5.txt", "_g7_stufe1_lauf4.txt", "_g7_stufe1_lauf3.txt", "_g7_stufe1_lauf2.txt", "_g7_stufe1_lauf.txt")]
+LOGS = [os.path.join(PROJ, "data", f) for f in ("_g7_stufe1_lauf9.txt", "_g7_stufe1_lauf8.txt","_g7_stufe1_lauf7.txt", "_g7_stufe1_lauf6.txt", "_g7_stufe1_lauf5.txt", "_g7_stufe1_lauf4.txt", "_g7_stufe1_lauf3.txt", "_g7_stufe1_lauf2.txt", "_g7_stufe1_lauf.txt")]
 BLOCK, MIN_BLOECKE = 15, 20
 # Schwellen VORAB (05.11.), nicht nach Ansicht der Werte:
 GRENZEN = {"unlesbar_rot": 0.05, "treue_gelb": 0.20, "anteil_min": 0.05, "anteil_max": 0.95, "urteile_je_tag_min": 0.5}

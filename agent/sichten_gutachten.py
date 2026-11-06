@@ -54,7 +54,9 @@ MIT_KURS = ("S7", "S7w")
 # GESPERRT 05.11.2026 (Gegenprüfung): S7/S7w-Eingabe trägt Schwere-Messungen über den Rückspielzeitraum (C2-b/-c, E-1), S8 den
 # Terminfaktor "gemessen 2023-2026" - Vorgriff. Dazu fehlen in S7 delistete Werte (Überlebensauswahl). Bis behoben fragt der Lauf
 # diese Sichten NICHT; der Plan bleibt gleich, nichts geht verloren.
-GESPERRT = ("S7", "S7w")                 # S8 freigegeben 05.11.: Terminfaktor im Rückspiel nur aus Daten vor 2025-12-01 (P-1)                 # Kursreaktion als Fakt in der Ablage; im Text nur bei S7w (als Wort)
+GESPERRT = ()                            # S8 freigegeben 05.11.: Terminfaktor im Rückspiel nur aus Daten vor 2025-12-01 (P-1)
+# S7/S7w freigegeben 06.11.2026 nach Probe 2 (§5.5): 21/21 lesbar, 0 Formfehler, 1 Treue-Beanstandung (S7 schreibt den Typ
+# 'pair_entfernt' statt 'paar_entfernt' - Schreibweise, kein Falschwert). Ab hier sind alle sieben Prompt-SHAs eingefroren.
 WDH_ANTEIL = 0.05                        # S1-6: Eigenrauschen
 SAAT = 20261105
 VERSUCHE = 3                             # Formfehler -> nachfassen, danach als unlesbar abgelegt
