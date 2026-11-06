@@ -599,7 +599,9 @@ kontrollen:
     art: ereignis
     nachweis: "naechste H15-Mail (Liquidationsabstand unter Warnschwelle oder neue Meldung): je Position Wochen- und Tageschart; Log 'Hebelfuehrung: ... (Mail zugestellt, Charts n)' mit n = 2 x Positionen; kein 'Hebelfuehrung: Wochen-/Tageschart gescheitert'. Abgespalten aus K-WC-1 (Nutzer 27.10.: 'H15-Teil als eigene Kontrolle offen lassen')"
     faellig_bis: "2026-12-31"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-11-06"
+    beleg: "NB-Export 06.11. 07:32: 06.11. 01:04 'Hebelfuehrung: 1 offen · BTC LIQUIDATION NAHE Abstand 15.0 % · gemeldet 1 (Mail zugestellt, Charts 2)' - n = 2 x 1 Position; keine Zeile 'Hebelfuehrung: Wochen-/Tageschart gescheitert' im 72-h-Fenster. Ob beide Charts in der Mail lesbar sind, sieht nur der Nutzer"
   - id: K-DA-1
     titel: "Datenausfall-Mail erst nach der Nachpruefung: Pull + Neustart; kein Fehler beim Start, und beim naechsten Totalausfall 'Nachpruefung in 3 Min angesetzt' statt sofortiger Mail"
     seit: "2026-10-29"
@@ -609,6 +611,7 @@ kontrollen:
     nachweis: "Export nach Pull + Neustart: keine Tracebacks aus staleness_watchdog. Beim naechsten Netzausfall im Log 'Totalausfall - Nachpruefung in 3 Min angesetzt', danach entweder 'kein Totalausfall mehr, keine Meldung' (kurzer Ausfall, KEINE Mail) oder 'Datenausfall gemeldet ... (auch nach dem Nachhol-Lauf)' (Mail). Anlass: 28.10. 08:48:08 Mail 'alle Kurse veraltet' eine Sekunde NACH dem erfolgreichen Nachhol-Lauf"
     faellig_bis: "2026-12-31"
     status: offen
+    teilbeleg_06_11: "NB-Export 06.11. 07:32 (72-h-Fenster seit 03.11. 07:40, drei Neustarts): kein Traceback aus staleness_watchdog (alle 10 Tracebacks sind drei Netzfehler beim Preis-Refresh 04.11. 09:23 / 23:18, 06.11. 01:34 DNS); kein 'Totalausfall' - der Ausfall-Fall ist noch nicht eingetreten"
   - id: K-WL-3
     titel: "CANTON aus der Kernposition (Nutzer 01.11.: nicht versorgbar, nicht auf Binance): nach dem Pull steht CANTON mit rolle taktisch; ASTER und MON kommen mit 400 Tagen von selbst in die Betriebsreihen"
     seit: "2026-11-01"
@@ -619,6 +622,7 @@ kontrollen:
     nachweis: "Vor dem Pull am NB 'git diff Basisinfos/config.yaml' leer (sonst stash, nicht verwerfen). Danach Diagnose watchlist_stammdaten: CANTON rolle taktisch, keine Zeile fuer CANTON in watchlist_ergaenzung mit rolle core. Spaeter: ASTER (um den 11.11.) und MON (um den 30.12.) in messdaten.db (Betriebskopie) mit >= 400 Tagen"
     faellig_bis: "2027-01-15"
     status: offen
+    teilbeleg_06_11: "NB-Export 06.11. 07:32: watchlist_stammdaten CANTON krypto rolle TAKTISCH, Grundliste; watchlist_ergaenzung ohne CANTON (nur KAITO ausgemustert) - Teil 1 erfuellt. spot_b4_fuenftel: ASTER 'zu jung (392 Tage Daten, Regel ab 400)', MON 343 Tage - Teil 2 kommt von selbst (ASTER um den 14.11.)"
   - id: K-WL-4
     titel: "GOOGL (Alphabet) in der Watchlist (Nutzer 01.11.: echter Kauf, Bitpanda seit 30.10.): Bestand zugeordnet, Kurs ueber yfinance, Warnung 'Position ohne Watchlist-Eintrag' verschwindet"
     seit: "2026-11-01"
@@ -638,7 +642,9 @@ kontrollen:
     art: manuell
     nachweis: "Vor dem Pull 'git diff Basisinfos/config.yaml' leer (sonst stash). Nach Pull + Neustart im Export: watchlist_stammdaten AERO krypto taktisch (Grundliste); im Log keine Zeile 'Position ohne Watchlist-Eintrag - Aerodrome Finance (AERO)' mehr (bis zum Pull alle 30 min); price_cache AERO (aerodrome-finance); B1-Kreis 30 L-Bestaende statt 29. Anlass: NB-Export 04.11. 07:38, Warnung seit 02.11. 18:43"
     faellig_bis: "2026-11-15"
-    status: offen
+    status: erfuellt
+    erfuellt_am: "2026-11-06"
+    beleg: "NB-Export 06.11. 07:32 (NB auf 6d020570, git geaendert leer): B1 'Spot-Mitnahme: 30 L-Bestaende' (06.11. 07:10, vorher 29); seit dem Neustart 04.11. 18:33 keine Warnung 'Position ohne Watchlist-Eintrag - AERO' mehr (letzte 18:24); watchlist_stammdaten AERO krypto taktisch, aerodrome-finance, Grundliste; holdings AERO 141,02524; Kursreihe seit 05.11. (Teilbelege 04.11./05.11.)"
     teilbeleg_04_11: "NB-Export 04.11. 18:43 (NB auf 1867e54c, git geaendert leer, Neustart 18:33:50): watchlist_stammdaten AERO krypto taktisch, aerodrome-finance, Grundliste; letzte Warnung 'Position ohne Watchlist-Eintrag - AERO' 18:24, danach keine mehr; 18:34:29 'Aenderung AERO: frei 0 -> 141,02524 (Zuwachs)', holdings AERO 141,02524; Preis-Refresh 46/63 -> 47/64 (AERO-Kurs von CoinGecko); Umlauf-Zusatz 'Erstabruf AERO ok'; Spot-Upbit 18:40 '30 L-Bestaende' statt 29. Kein ERROR nach dem Neustart (die drei Tracebacks im Fenster sind EIN Netzfehler beim Preis-Refresh 09:23). OFFEN: B1-Zeile Spot-Mitnahme (naechster Lauf 05.11. 07:10, erwartet 30) und Kursreihe AERO (datenfrische kursreihe ohne_reihe AERO, refresh_ohlc Stand 03.11. - kommt mit dem naechsten OHLC-Lauf, wie bei HBAR 13.10.); spot_b4_fuenftel bleibt bei 29 bis Stichtag 01.12. (Monatsrechnung, und AERO hat bei Binance nur Futures)"
     teilbeleg_05_11: "NB-Export 05.11. 07:07 (NB auf 6d020570, git geaendert leer): KURSREIHE AERO da - ohlc_aktualitaet AERO 112 Tage 2026-07-17 bis 2026-11-05, datenfrische ohne_reihe = [] (04.11.: AERO); keine Warnung 'Position ohne Watchlist-Eintrag - AERO' mehr (nur Staub NIGHT/SPC); Preis-Refresh durchgehend 47/64. Seit 04.11. 18:43: 2 ERROR - yfinance ^IXIC 'possibly delisted' (bekannt, ohne Folge) und EIN Preis-Refresh 23:18:50 (SSL-Lesefehler, Netz; Job-Mail 'refresh_prices fehlgeschlagen' ging raus; die 31 Laeufe danach ok). OFFEN NUR NOCH: B1-Zeile 'Spot-Mitnahme: 30 L-Bestaende' - der Export lief 07:07, der B1-Lauf ist 07:10 (04.11.: 29). Neuaufnahme-Pruefung am Desktop meldet 'AERO GEHALTEN ohne Messreihe' (112 USD-Tage, Messbasis ohne AERO) - Messbasis-Frage, nicht Betrieb"
   - id: K-GD-1
@@ -650,6 +656,7 @@ kontrollen:
     nachweis: "Am NB in eigener Konsole: C:\\Python313\\python.exe \"G:\\Meine Ablage\\Claude_Austauschordner\\GDELT_Probe\\gdelt_probe.py\" (Anleitung LIESMICH.txt daneben). Datei gdelt_probe_<Rechnername>.jsonl waechst; nach 14 Tagen Zeile 'fertig'. Danach Desktop: gdelt_probe_auswertung.py --rueckspiel -> Urteil K1-K3 (vorab festgelegt). Waehrend der Probe fragt der Desktop GDELT NICHT ab"
     faellig_bis: "2026-11-20"
     status: offen
+    teilbeleg_06_11: "Austauschordner 06.11. 08:09: gdelt_probe_T440.jsonl waechst (132 Zeilen, 16 Runden seit 02.11. 18:30, alle 6 h); 115 Abrufe, davon 21 x 200 und 94 x 429 (Sperre - genau das zaehlt die Probe, Urteil erst nach 14 Tagen); Desktop fragt GDELT nicht ab"
   - id: K-W3-S2
     titel: "W-3 S-2 (E-166): lebendigkeit, Backward-Tracking, 07:15 und die Start-Nachholer ueberspringen sich; Thesen/Marktscan im Zweifel AUS - erst mit dem NB-Buendel G8"
     seit: "2026-11-03"
