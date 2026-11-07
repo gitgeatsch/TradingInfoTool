@@ -2390,3 +2390,15 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 **Ausweichregel:** was nicht trägt, bleibt Information in Dashboard und Mail — nie Auslöser, nie Gewicht.
 
 **Kernaussage des Nutzers zu G18 (06.11.):** REGEL0 trägt — dafür ist eine **Erfolgsmessung** nötig —, aber *„nur für genau einen spezifischen Fall deterministisch, ohne Markt, ohne Politik etc. – das System ist zu starr, eine Regel, und uns fehlen mehrere Sichten bzw. Schichten, z. B. Marktlage ok für Kauf, Regime, etc. … und dann können in einem Fall Regel0, in einem anderen Regel1 usw. spezifische Aktionen, also Signale, auslösen; das sollte für Einstieg, Positionsführung und Ausstieg sinnvoll sein.“* → Zielbild für G18: **mehrere Regeln, je nach Lage gewählt**, statt einer starren; je Phase Einstieg · Führung · Ausstieg.
+
+# E-170 · Gesamtkonzept G18: Erfolgsmessung beschreibend, Regelwahl nach neuer Information, Katalog nach E-156, Dashboard vorgezogen (07.11.2026)
+
+**07.11.2026** · Nutzer: *„ok - dann 1 1 1 1“* · Vorlage: [`Voranalyse_G18_Gesamtkonzept_06_11.md`](Voranalyse_G18_Gesamtkonzept_06_11.md) §9 (gegengeprüft, §10)
+
+**Entschieden:**
+- **F-A → 1 · Erfolgsmessung REGEL0 (M0):** Kriterium vorab festlegen, dann **beschreibend** auswerten — vorwärts ab 03.10. (alle Signale, gemailt, Trades in EUR), rückwärts nur Sep./Okt. 2026 (R-R11: nur das ist neu); als laufende Zeile auf Statusseite und Mail. Ein Urteil über das Niveau ist damit **nicht** möglich (MDE 1,01 Pp nach ≈ 2 Jahren, Effekt ≈ 0,55 %) — dafür gilt weiter **E-139/E-140** (brutto positiv, nicht robust). Voraussetzung: NB-Kopie von `regel0_signale.db` im Austauschordner (Prüfung gegen Kopie, nie am NB).
+- **F-B → 1 · Regelwahl:** mehrere Regeln, gewählt nach **neuer Information** — Tageszustand des Markts (Sichten, G7) und Ereignisse je Asset (A1/S7). Die **langsame** Marktlage (Regime, Trend, Makro) ist nur Information (E-133, E-151: nicht nachweisbar). Schutz bleibt die **eigene ATR des Assets** (2.681); kein Deckel aus Markt oder Makro. Erweitert E-165: die Schichten wählen künftig auch **ob und welche** Regel auslöst.
+- **F-C → 1 · Regel-Katalog:** Kandidaten nur aus neuer Information (E-156) — Tageszustände aus G7 Stufe 1, Ereignistypen aus A1/S7, die Spur „REGEL0 an marktweiten Tagen“ (E-138) nur auf Daten ab 25.10. Füllbar erst, wenn die ersten Sichten vollständig sind. Keine alten Kandidaten (O13, Kern-Short) ohne ausdrückliche Änderung von E-156.
+- **F-D → 1 · Dashboard (G19):** B1 Befund-Karte, B2 Fakt-Sammler (ohne Wal-Fünftel), B4 Job, B5 Statusseite, B6 Prüfungen am Desktop bauen und nachweisen, dann **ein** NB-Bündel; B3 (LLM-Rolle) getrennt danach, mit zwei Modellen für A3/A4 (Ü7). Ausgenommen von *Signale erst nach der ganzen Kette* (E-169), nicht von *Desktop zuerst*.
+
+**Reihenfolge danach:** G19 Voranalyse/Bau B1–B6 (läuft ohne G7) · F-A sobald die NB-Kopie vorliegt · F-C nach den ersten vollständigen Sichten aus G7 Stufe 1.

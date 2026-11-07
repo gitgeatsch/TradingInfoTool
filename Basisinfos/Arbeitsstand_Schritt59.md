@@ -726,6 +726,7 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Neue Vorgabe** (Gesamtplan §6): Signaländerungen erst an den NB, wenn alles am Desktop gebaut und nachgewiesen ist; Dashboard und Bewertung ausgenommen.
 - **Kernaussage zu G18** (E-169): REGEL0 trägt nur für einen deterministischen Fall ohne Markt und Politik → mehrere Regeln je Lage (Marktlage, Regime …), je für Einstieg, Führung, Ausstieg; dazu eine **Erfolgsmessung** von REGEL0.
 - ➤ **Nächster Schritt:** Voranalyse G18 (Gliederung abgestimmt, Nutzer: *„ja 1“*).
+- ✔ **Voranalyse G18** (`Voranalyse_G18_Gesamtkonzept_06_11.md`): drei Bestandsaufnahmen, Fassung 1, unabhängige Gegenprüfung (3 schwer: Marktlage-Deckel verletzt Regel 4/Ausweichregel, E-155/E-156/2.604/H2 fehlten, Marktlage zu breit), Fassung 2. Ergebnis: Plus von REGEL0 an marktweiten Tagen (E-138), Erfolgsmessung kann beschreiben, nicht entscheiden; Vorschlag: mehrere Regeln nach **neuer** Information (Tageszustand, Ereignisse je Asset), langsame Marktlage informiert, ATR des Assets schützt. ➤ F-A–F-D zur Abstimmung.
 - Damit der Plan unter 25.000 Zeichen bleibt (Paket `Gesamtplan` schlug an: 26.323), sind fünf Zeilen der Dokumentliste §4.2 auf den Inhalt gekürzt; die alte Fassung steht hier:
 
 #### Gesamtplan §4.2 vor dem Kürzen — wortgleich
@@ -737,6 +738,16 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 | [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | **G7 Messplan** (Fütterung §6 Schritt 5): Faktentreue F und Wert W getrennt; Befunde G7-1–G7-7 (Blöcke je Horizont, Einbruch zu selten, Takt flackert, finales LLM nur auf Gemini bezahlbar, **Z-1 erkennt ~40 %**, Kontamination, Datenlücken); Stufen 0–5, Budget; Fragen §6.1 Takt, §6.2 Z-1 im Betrieb, §6.3 Kurse Sep./Okt. |
 | [`Voranalyse_Laufzeit_02_11.md`](Voranalyse_Laufzeit_02_11.md) | **Laufzeit verkürzen**: warum A1 auf Groq lief (Pauschalregel für 2025-Rückspiele, greift ab Dez. 2025 nicht), Gemini-Töpfe am Schlüssel 2, **gemini-3.5-flash liest A1 mindestens so gut** wie gpt-oss, gemini-2.5 gesperrt; kritischer Weg ≈ 4 Wo → ≈ 1–1,5 Wo; Fragen §4.1 A1 auf Gemini, §4.2 Stufe 3 je Tag bündeln, §4.3 GDELT-Probe am NB jetzt · §6 Korrektur 3.5-flash 20/Tag → flash-lite · **§7 GDELT-Probe gebaut** (Skript, Auswertung K1–K3, Prüfung 40/40, Desktop-Adresse gesperrt) |
 | [`Voranalyse_A1_Ereignisleser_01_11.md`](Voranalyse_A1_Ereignisleser_01_11.md) | **A1 Ereignis-Leser** (G9): Quellen (Binance 6.276, Upbit 785, Nachrichten 25.193 im Rückspiel), Befunde A1-1–A1-10 — Regeln tragen bei den Börsen (82/83 %), gleich dem Betrieb an den Mail-Arten, `art()` etikettiert 550 Futures als margin (ohne Mail-Wirkung), Nachrichten selten je Asset, LLM-Probe instabil im Typ (35/50), Budget 12–17 Tage oder Vorfilter 2 Tage; Typkatalog, Bauplan, P1–P6; Frage a/b/c → **a, gebaut 01.11. (§7): Vorfilter-Kriterium nicht erfüllt → Weg b; Prompt 2 validiert 77 %; §8 → a: **Prompt 3 auf dritter Stichprobe Sicht-Relevanz 90 %, Fehlalarm 15 → 2, übernommen (§9); Volllauf gestartet** |
+
+### Stand 07.11.2026 — G18 Gesamtkonzept entschieden (E-170)
+
+- Vorlage F-A–F-D aus `Voranalyse_G18_Gesamtkonzept_06_11.md` §9; Nutzer: *„ok - dann 1 1 1 1“* — jeweils die Empfehlung.
+- **F-A:** Erfolgsmessung REGEL0 beschreibend (vorwärts ab 03.10., rückwärts nur Sep./Okt.), Urteil bleibt bei E-139/E-140 · braucht NB-Kopie `regel0_signale.db`.
+- **F-B:** Regelwahl nach neuer Information (Tageszustand, Ereignisse je Asset); langsame Marktlage nur Information; ATR des Assets schützt.
+- **F-C:** Regel-Katalog nur nach E-156, füllbar nach den ersten vollständigen Sichten aus G7 Stufe 1.
+- **F-D:** Dashboard B1, B2, B4–B6 vorziehen (Desktop, dann ein NB-Bündel); B3 getrennt.
+- Vorher offengelegt: Fassung 1 der Voranalyse war in drei Punkten falsch (Marktlage als Deckel, E-155/E-156 übersehen, Messgrenze zu breit) — die Gegenprüfung §10 hat sie korrigiert.
+- ➤ Nächstes: Voranalyse Bau G19 · F-A nach Eingang der NB-Kopie · G7 Stufe 1 läuft (lauf9).
 
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
