@@ -4592,6 +4592,43 @@ def spot_abbau_job(conn_factory, watchlist_provider, versand=None, heute=None, o
     return aus
 
 
+def asset_lage_job(art: str = "tag", ordner=None, jetzt=None, termine=None, erzwingen: bool = False) -> dict:
+    """G19 B2/B4 (E-171, 07.11.2026): Fakt-Sammler der Asset-Karte - ``art`` 'tag' (taeglich 07:45, alle Karten, holt die Termine)
+    oder 'signal' (stuendlich :35 UTC, nur Signale ohne Karte, ueber den Schluessel symbol+signalstunde).
+
+    Schreibt NUR ``data/asset_lage.db`` (Protokoll; wie jeder Job bucht der Listener den Lauf in ``job_laeufe``, ein Misfire meldet er
+    per Mail, und der FRED-Abruf der Termine vermerkt seinen API-Zustand in ``api_health_status``); liest alle Quellen nur ``mode=ro``. KEINE Mail, KEINE Anzeige (E-171). Laeuft nur mit
+    Schalter ``asset_lage_aktiv`` UND am Betriebsgeraet (``regel0_nachlader.betrieb_erlaubt`` - sonst schaltete ein Pull den Desktop mit ein).
+    ``erzwingen`` (Pruefstand): Schalter und Geraet uebergehen; ``termine`` ersetzt den FRED-Abruf. Scheitert nie nach aussen."""
+    aus = {"gelaufen": False, "art": art}
+    try:
+        import agent.asset_lage as _AL
+        import agent.regel0_groesse as _G
+        import agent.regel0_nachlader as _NL
+
+        ordner = ordner or _NL.DATEN_VORGABE
+        if not erzwingen:
+            if not _G.asset_lage_aktiv():
+                aus["grund"] = "Schalter asset_lage_aktiv aus"
+                return aus
+            erlaubt, grund = _NL.betrieb_erlaubt(ordner)
+            if not erlaubt:
+                logger.info("Asset-Lage (%s): uebersprungen - %s", art, grund)
+                aus["grund"] = grund
+                return aus
+        erg = _AL.lauf(ordner, art, jetzt, termine=termine)
+        logger.info("Asset-Lage (%s): %s Karten%s", art, erg.get("karten"), (" - " + erg["grund"]) if erg.get("grund") else "")
+        if erg.get("fehler"):                                       # der Lauf steht mit Fehler im Protokoll (lauf.fehler) - und geht als Fehlermail raus
+            logger.warning("Asset-Lage (%s) mit Fehler: %s", art, erg["fehler"])
+            _notify_job_failure("asset_lage", "%s: %s" % (art, erg["fehler"]))
+        aus.update(gelaufen=True, **erg)
+    except Exception as exc:                                         # noqa: BLE001
+        logger.exception("Asset-Lage (%s) gescheitert", art)
+        _notify_job_failure("asset_lage", "%s: %s" % (art, exc))
+        aus["fehler"] = str(exc)
+    return aus
+
+
 def season_ampel_job(conn_factory, versand=None, heute=None, ordner=None, http=None, quellen=None) -> dict:
     """P19 Spot C1 (17.10.2026, Spot §49): Season-Ampel als FAKT - taeglich 07:30 und beim Start (idempotent).
 
@@ -6042,6 +6079,31 @@ def build_scheduler(
         args=[db_conn_factory],
         id="season_ampel",
         **_nachholen("season_ampel", 330, stunde=7, minute=30),
+    )
+    # G19 B2/B4 (E-171, 07.11.2026): Fakt-Sammler der Asset-Karte - taeglich 07:45 (NACH season_ampel 07:30) und stuendlich :35 UTC fuer
+    # neue Signale (nach regel0_nachlader :05 und der Rechnung, vor spot_upbit :40). Nur Protokoll data/asset_lage.db; Schalter
+    # asset_lage_aktiv (Vorgabe AUS) und nur am Betriebsgeraet - beides prueft der Job selbst
+    scheduler.add_job(
+        asset_lage_job,
+        "cron",
+        hour=7,
+        minute=45,
+        args=["tag"],
+        id="asset_lage",
+        coalesce=True,
+        max_instances=1,
+        **_nachholen("asset_lage", 600, stunde=7, minute=45),
+    )
+    scheduler.add_job(
+        asset_lage_job,
+        "cron",
+        minute=35,
+        timezone=timezone.utc,
+        args=["signal"],
+        id="asset_lage_signal",
+        coalesce=True,
+        max_instances=1,
+        misfire_grace_time=1800,
     )
     scheduler.add_job(
         ausstiegs_job,

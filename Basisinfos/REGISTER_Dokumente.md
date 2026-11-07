@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 98 |
+| Voranalyse / Recherche | 99 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **242** |
+| **gesamt** | **243** |
 
 ## Plan
 
@@ -177,6 +177,7 @@
 | [`Voranalyse_Einstieg_EA_23_10.md`](Voranalyse_Einstieg_EA_23_10.md) | Voranalyse E-A — REGEL0 als Kaufzeitpunkt für ohnehin geplante Spot-Käufe auf Bitpanda (ab 23.10.2026) | Arbeitsblatt |
 | [`Voranalyse_G14_Kern_Regel_03_11.md`](Voranalyse_G14_Kern_Regel_03_11.md) | Voranalyse G14: Kern-Regel und „Kern immer zugelassen“ (03.11.2026) | **laufend** |
 | [`Voranalyse_G18_Gesamtkonzept_06_11.md`](Voranalyse_G18_Gesamtkonzept_06_11.md) | Voranalyse G18 — Gesamtkonzept Strang 1: Krypto · REGEL0 · Hebel (06.11.2026) | **laufend** |
+| [`Voranalyse_G19_Dashboard_Bau_07_11.md`](Voranalyse_G19_Dashboard_Bau_07_11.md) | Voranalyse G19 — Dashboard und spezifische Bewertung vorziehen: Bau B1, B2, B4–B6 (07.11.2026) | **laufend** |
 | [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | Voranalyse G7 — Messplan: Faktentreue der Prüfer und Wert der Sichten (02.11.2026) | **laufend** |
 | [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) | Voranalyse G7 S7-Anlage — wie die Asset-Urteile von S7 gemessen werden (05.11.2026) | **laufend** |
 | [`Voranalyse_G7_Stufe1_04_11.md`](Voranalyse_G7_Stufe1_04_11.md) | Voranalyse G7 Stufe 1 — Sicht-Gutachten im Rückspiel (04.11.2026) | **laufend** |

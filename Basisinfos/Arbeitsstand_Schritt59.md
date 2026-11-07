@@ -749,6 +749,32 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - Vorher offengelegt: Fassung 1 der Voranalyse war in drei Punkten falsch (Marktlage als Deckel, E-155/E-156 übersehen, Messgrenze zu breit) — die Gegenprüfung §10 hat sie korrigiert.
 - ➤ Nächstes: Voranalyse Bau G19 · F-A nach Eingang der NB-Kopie · G7 Stufe 1 läuft (lauf9).
 
+### Stand 07.11.2026 — Voranalyse G19 Bau (Dashboard, B1/B2/B4–B6), gegengeprüft
+
+- Nutzer: *„ok 1. prüfen gegenprüfen und Doku“* → [`Voranalyse_G19_Dashboard_Bau_07_11.md`](Voranalyse_G19_Dashboard_Bau_07_11.md), Fassung 2.
+- Code-Inventar je Fakt (Datei:Zeile): fast alles hat Lesefunktionen; neu: Upbit-Leser je Asset, Termin-Ablage (FRED nur im Job), Vereinigung Bestände ∪ Signale ∪ Hebel (Menge wie `hebelfuehrung.lade`), übergebbare Pfade.
+- Befund-Karte: nur registrierte Kennungen und Zahlen (brutto), Anzeige „im Geltungsbereich“, kein Richtungsfeld; `gilt_wenn` nur mit Schlüsseln mit Bezugszeitpunkt (ohne `verw_fuenftel`, `season_stufe`).
+- Job `asset_lage`: eigene `data/asset_lage.db`, Tageskarten 07:45, Signalkarten stündlich :35 UTC über `(symbol, signalstunde)`; Mail nach Weg 2 (28.10.) mit neuem Mailteil in `_regel0_mails`.
+- Prüfstand auf NB-Kopien im Austauschordner (`regel0_signale.db` 04.11., `spot_betrieb.db` 01.11., Sicherung 06.11.), je Quelle ein echter Fakt, Seiteneffekt in drei Armen mit je eigener Gegenprobe.
+- Gegenprüfung: 20 Befunde (2 schwer: Desktop ohne Betriebsquellen → leere Karten wären grün; Diagnosezahlen netto ohne Band als „Zahl“), alle eingearbeitet (§10).
+- ⚠️ **Berichtigt in G18:** die „99 %“ aus E-138 sind der Anteil an der Differenz zweier Fassungen, nicht am Plus; K-b (Bilanz B.6) ist nicht die E-138-Spur. Aussage „Plus nur an marktweiten Tagen, nicht robust“ bleibt; E-170 unberührt.
+- ➤ Nächstes: Bau B1–B6 auf Ja (~4 Tage); Befundliste vor dem NB-Bündel zur Abnahme · F-A Erfolgsmessung kann mit der Kopie vom 04.11. beginnen.
+
+### Stand 07.11.2026 nachm. — G19 nur als Unterbau (E-171)
+
+- Nutzer fragte nach Ziel und Nutzen von B1–B6: *„Was hilft mir ‚im Geltungsbereich von E 139‘ oder FOMC in 5 Tagen …“* — berechtigt: Fakten und Befund-Verweise ohne Bewertung leiten keine Handlung ab; eine deterministische Bewertung je Asset ist dünn (fast nichts trägt, was trägt, läuft schon als Handlung).
+- Eingeordnet: B2 = Ebene 1 je Asset · A1 = Ereignisse für Ebene 2 (S7) · G7 Stufe 1/2 = Gutachten je Sicht (Ebene 3) und ihr Wert · G7 Stufe 3 / B3 = Abwägung je Asset (Ebene 4) — erst das ist die gewünschte Bewertung, frühestens Dezember und nur, wenn sie trägt.
+- Entschieden **Möglichkeit 1** (*„OK dann Möglichkeit1“*, E-171): jetzt nur B2 + B4 (+ Prüfungen, Diagnose K-AL-1); B1, B5 und Mailblock mit B3.
+- ➤ Nächstes: Bau B2/B4 am Desktop, Prüfstand auf NB-Kopien.
+
+### Stand 07.11.2026 abends — G19 Unterbau gebaut (B2/B4, E-171)
+
+- **Gebaut:** Fakt-Sammler `agent/asset_lage.py` (B2) und Job `asset_lage` (B4: täglich 07:45, stündlich :35 UTC, eigene Ablage `data/asset_lage.db`, Schalter `asset_lage_aktiv: false`, nur am Betriebsgerät); Diagnose `asset_lage`; NB-Kontrollen K-AL-1, K-AL-2. Keine Mail, keine Anzeige.
+- **Prüfstand** `pruefstand_asset_lage.py` / Paket `AssetLage`: 26/26 auf der neuen Prüfgrundlage `Pruefgrundlagen/asset_lage_2026-11-04` (NB-Kopien 04./06.11., Produktion verkleinert auf 8,6 MB) — je Quelle ein echter Fakt mit Entfernen-Gegenprobe, Seiteneffekt in drei Armen mit Gegenproben, Betriebsreihenfolge der Läufe, laufende WAL-Produktion.
+- **Code-Gegenprüfung:** 16 Befunde (1 schwer: doppelte Signalkarten, wenn der Tageslauf nach den Stundenläufen kommt — der Prüfstand fuhr die andere Reihenfolge), alle eingearbeitet (Voranalyse G19 §11.1).
+- **Suite:** grün bis auf die bekannte Anleitung-Datei; Paket StandardDB grün (eine Gegenprobe schrieb zunächst `api_health_status` in die Standard-DB — DB_PATH jetzt auf Wegwerfdatei).
+- ➤ Nächstes: Commit auf Ja · NB-Bündel (mit G8a, falls noch nicht gezogen): Pull, K-AL-1; Einschalten erst auf Nutzer-Ja, dann K-AL-2 · offen vor B3: Aufbewahrungsgrenze der Ablage.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

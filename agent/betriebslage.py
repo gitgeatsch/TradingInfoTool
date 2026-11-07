@@ -342,8 +342,9 @@ def zuordnung_bitpanda() -> dict:
     zu = {}
     pz = os.path.join(HIER, "Basisinfos", "symbol_zuordnung.csv")
     if os.path.exists(pz):
-        for r in _csv.DictReader(open(pz, encoding="utf-8"), delimiter=";"):
-            zu[r["bitpanda"]] = None if r["markt"] == "gesperrt" else r["binance"]
+        with open(pz, encoding="utf-8") as f:
+            for r in _csv.DictReader(f, delimiter=";"):
+                zu[r["bitpanda"]] = None if r["markt"] == "gesperrt" else r["binance"]
     return zu
 
 
@@ -424,7 +425,8 @@ def neuaufnahme_und_abgleich(daten: str = DATEN, prod: str | None = None) -> dic
 
 # ══ Schalter, Jobs, Bestand, Kontingent ════════════════════════════════════════════════════════════════════════════════════
 SCHALTER = ("testwoche_freigegeben", "alter_hebelweg_aus", "spot_kette_angehalten", "ankuendigung_aktiv", "hebelfuehrung_aktiv",
-            "thesen_pausiert", "spot_mitnahme_aktiv", "spot_upbit_aktiv", "spot_abbau_aktiv", "season_ampel_aktiv")
+            "thesen_pausiert", "spot_mitnahme_aktiv", "spot_upbit_aktiv", "spot_abbau_aktiv", "season_ampel_aktiv",
+            "asset_lage_aktiv")
 
 
 def schalter() -> dict:

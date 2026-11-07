@@ -491,12 +491,16 @@ def _nach_wallet(p, lage: dict | None, einzige: bool) -> tuple:
                                   % (w, float(m), quelle))
 
 
-def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze: float | None = None, wallet: bool = True) -> list:
+def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze: float | None = None, wallet: bool = True,
+         daten: str | None = None) -> list:
     """Alle OFFENEN Hebelpositionen, gefuehrt - dringendste zuerst.
 
     P11c (16.10.2026): ``wallet`` (Vorgabe an) - die Positionen werden gegen die Bitpanda-Wallets gefuehrt (``wallet_lage``): laut
     Wallet geschlossene fallen heraus (``laut_bitpanda_geschlossen``), abweichende Mengen werden auf das Wallet gebracht. Alle Leser
     (Mail, Statusseite, GUI, Aggregat-Deckel) sehen dieselben Zahlen.
+
+    ``daten`` (G19 B2, E-171, 07.11.2026): Datenordner fuer die Haltedauer; Vorgabe ``regel0_nachlader.DATEN_VORGABE`` (Betrieb
+    unveraendert). Der Fakt-Sammler gibt hier seinen Ordner mit - sonst laese ein Pruefstand gegen Kopien die echte Ablage.
 
     ⚠️ `conn` wird uebergeben, nie hier geoeffnet (dieselbe Regel wie
     `positionsfuehrung.lade`)."""
@@ -533,7 +537,7 @@ def lade(conn, symbole=None, jetzt=None, marge: float | None = None, nahe_grenze
         try:                                                     # E3 (18.10.2026): Haltedauer gegen die Regel 24 h, Signal oder eigene Entscheidung
             from agent import regel0_messstand as _MS
             from agent import regel0_nachlader as _NL
-            t["haltedauer_text"] = _MS.haltedauer_text(_NL.DATEN_VORGABE, p.symbol, p.eroeffnet_am, jetzt)
+            t["haltedauer_text"] = _MS.haltedauer_text(daten or _NL.DATEN_VORGABE, p.symbol, p.eroeffnet_am, jetzt)
         except Exception as exc:                                 # noqa: BLE001
             t["haltedauer_text"] = None
             logger.warning("Haltedauer zu Hebelposition %s nicht lesbar: %s", p.symbol, exc)

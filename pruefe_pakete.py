@@ -34765,6 +34765,17 @@ def _arbeitsstand_rueckstand(plan: str, arbeitsstand: str, heute):
     return None if max(s) >= max(p) - _d.timedelta(days=1) else "Plan §5 bis %s, Arbeitsstand bis %s" % (max(p), max(s))
 
 
+def paket_asset_lage() -> None:
+    """G19 B2/B4 (E-171, 07.11.2026, Nutzer: *"OK dann Möglichkeit1"*): Fakt-Sammler ``agent/asset_lage.py`` und Job ``asset_lage`` -
+    gegen NB-KOPIEN (Pruefgrundlage ``asset_lage_2026-11-04``), Seiteneffekt in drei Armen mit Gegenproben, je Quelle ein echter Fakt.
+    Die Pruefungen stehen in ``pruefstand_asset_lage.py`` (auch einzeln lauffaehig)."""
+    P = "AssetLage"
+    import pruefstand_asset_lage as _PA
+
+    for name, ok, detail in _PA.pruefungen():
+        pruefe(P, name, ok, detail)
+
+
 def paket_gesamtplan() -> None:
     """Der LAUFENDE PLAN Basisinfos/Gesamtplan.md (28.10.2026, Nutzer: *"ja 1, neuer Gesamtplan - bau auf allen Ebenen einen Link-Verweis
     ein, damit wir die Plaene und Informationen immer finden und beruecksichtigen koennen"*).
@@ -34849,7 +34860,7 @@ def paket_gesamtplan() -> None:
 PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "2": paket_2, "3": paket_3, "4": paket_4, "5": paket_5,
           "6": paket_6, "7": paket_7, "8": paket_8, "9": paket_9,
-          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "Datenausfall": paket_13_datenausfall, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": _ohne_statusbuchung(paket_15), "Mail": paket_mail, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
+          "10": paket_10, "11": paket_11, "12": paket_12, "13": paket_13, "14": paket_14, "12c": paket_12c, "12b": paket_12b, "12d": paket_12d, "Datenausfall": paket_13_datenausfall, "gesamt": gesamtpruefung, "B1": paket_b1, "Export": paket_export, "15": _ohne_statusbuchung(paket_15), "Mail": paket_mail, "AssetLage": paket_asset_lage, "Belege": paket_belege, "Lesbar": paket_lesbar, "BTC": paket_btcmail, "Marken": paket_marken, "Provider": paket_provider, "Luecken": paket_luecken, "Fett": paket_fett, "Andrang": paket_andrang, "Ausfall": paket_ausfall, "Dimension": paket_dimension,
           "Frische": paket_frische,
           "Auswahl": paket_auswahl,
           "Kostenbezug": paket_kostenbezug,

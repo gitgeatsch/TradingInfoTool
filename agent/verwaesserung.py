@@ -177,13 +177,13 @@ def alle_reihen(ordner: str) -> tuple:
 ZUSATZ_VERMERK = "angewandt, nicht auf diesem Coin gemessen – außerhalb der Binance-Messmenge"
 
 
-def fakt(ordner: str, symbol: str, heute: date | None = None, reihen: dict | None = None) -> dict | None:
+def fakt(ordner: str, symbol: str, heute: date | None = None, reihen: dict | None = None, zusatz: set | None = None) -> dict | None:
     """Die Verwaesserung eines Coins als Fakt: {'heute', 'fuenftel', 'klasse', 'stichtag', 'v_stichtag', 'q_stichtag', 'text'} oder
     {'text': Grund} wenn nichts da ist. ``symbol`` = Bestand- oder Binance-Symbol (Zuordnung wie B4). Scheitert nie."""
     try:
         heute = heute or datetime.now(timezone.utc).date()
         b = _binance(symbol)
-        zusatz = set()
+        zusatz = set(zusatz or ())                              # G19 (07.11.2026): wer ``reihen`` mitgibt, gibt die Zusatz-Menge mit (P22b-Vermerk)
         if reihen is None:
             reihen, zusatz = alle_reihen(ordner)
         r = (reihen.get(b) if reihen else None)

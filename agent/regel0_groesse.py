@@ -48,7 +48,10 @@ VORGABE = dict(positionswert_eur=1500.0, einsatz_min_eur=300.0, einsatz_max_eur=
                spot_abbau_aktiv=False,
                # P19 Spot C1 (17.10.2026): Season-Ampel - die Anzeige (Statusseite, Reiter, Zeile in B1/B3/B4) laeuft immer, die MAIL beim
                # Wechsel der geltenden Stufe nur mit Schalter. Vorgabe AUS (sicher); EINGESCHALTET in regel0_betrieb.yaml seit E-124 (18.10.2026)
-               season_ampel_aktiv=False)
+               season_ampel_aktiv=False,
+               # G19 B2/B4 (E-171, 07.11.2026): Fakt-Sammler der Asset-Karte - Job asset_lage (taeglich 07:45 + stuendlich :35 UTC),
+               # schreibt NUR data/asset_lage.db (Protokoll, keine Mail, keine Anzeige). Vorgabe AUS: eingeschaltet nach K-AL-1 mit Nutzer-Ja
+               asset_lage_aktiv=False)
 
 
 def lade(pfad: str | None = None) -> dict:
@@ -84,6 +87,8 @@ def lade(pfad: str | None = None) -> dict:
         raise ValueError("regel0_betrieb.yaml: spot_abbau_aktiv muss true oder false sein")
     if not isinstance(werte["season_ampel_aktiv"], bool):
         raise ValueError("regel0_betrieb.yaml: season_ampel_aktiv muss true oder false sein")
+    if not isinstance(werte["asset_lage_aktiv"], bool):
+        raise ValueError("regel0_betrieb.yaml: asset_lage_aktiv muss true oder false sein")
     if not (0 < float(werte["liquidations_warnung_abstand"]) < 1):
         raise ValueError("regel0_betrieb.yaml: liquidations_warnung_abstand als Anteil zwischen 0 und 1 (z. B. 0.15)")
     werte["liquidations_warnung_abstand"] = float(werte["liquidations_warnung_abstand"])
@@ -119,6 +124,14 @@ def season_ampel_aktiv(werte: dict | None = None) -> bool:
     """Spot C1 Season-Ampel-Mail an? (P19) - im Zweifel (Datei unlesbar) NEIN: dann laeuft nur die Anzeige."""
     try:
         return bool((werte if werte is not None else lade())["season_ampel_aktiv"])
+    except Exception:                                          # noqa: BLE001
+        return False
+
+
+def asset_lage_aktiv(werte: dict | None = None) -> bool:
+    """G19 B4 Job asset_lage an? (E-171) - im Zweifel (Datei unlesbar) NEIN."""
+    try:
+        return bool((werte if werte is not None else lade())["asset_lage_aktiv"])
     except Exception:                                          # noqa: BLE001
         return False
 

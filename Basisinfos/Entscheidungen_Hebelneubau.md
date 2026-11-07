@@ -2402,3 +2402,15 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **F-D → 1 · Dashboard (G19):** B1 Befund-Karte, B2 Fakt-Sammler (ohne Wal-Fünftel), B4 Job, B5 Statusseite, B6 Prüfungen am Desktop bauen und nachweisen, dann **ein** NB-Bündel; B3 (LLM-Rolle) getrennt danach, mit zwei Modellen für A3/A4 (Ü7). Ausgenommen von *Signale erst nach der ganzen Kette* (E-169), nicht von *Desktop zuerst*.
 
 **Reihenfolge danach:** G19 Voranalyse/Bau B1–B6 (läuft ohne G7) · F-A sobald die NB-Kopie vorliegt · F-C nach den ersten vollständigen Sichten aus G7 Stufe 1.
+
+# E-171 · G19 nur als Unterbau: Fakt-Sammler (B2) und Job mit Protokoll (B4) jetzt; Befund-Karte und Anzeige mit B3 (07.11.2026)
+
+**07.11.2026** · Nutzer: *„OK dann Möglichkeit1“* · Vorlage: Antwort vom 07.11. auf die Frage *„was hilft mir ‚im Geltungsbereich von E-139‘ oder ‚FOMC in 5 Tagen‘ …“* · Grundlage [`Voranalyse_G19_Dashboard_Bau_07_11.md`](Voranalyse_G19_Dashboard_Bau_07_11.md)
+
+**Anlass:** Der Nutzer hält Fakten ohne Bewertung für nicht hilfreich (*Information ohne Handlungsableitung ist bei 30+ Assets nur Arbeit*). Befund: eine deterministische Bewertung je Asset ist dünn, weil fast nichts trägt; was trägt, läuft schon als Handlung (Mitnahme, Abbau, Upbit, ATR-Stufe). Die gewünschte spezifische Bewertung kann nur aus Ebene 3/4 kommen (Sicht-Gutachten G7, Ereignisse A1, finales LLM je Asset) — und nur, wenn G7 Stufe 2/3 zeigt, dass sie trägt.
+
+**Entschieden (Möglichkeit 1 von 3):**
+- **Jetzt:** B2 Fakt-Sammler `agent/asset_lage.py` (Eingabe des späteren Abwägungs-LLM, Fütterung §4 Block 2/3) und B4 Job mit eigener Ablage `data/asset_lage.db` (Protokoll ab Inbetriebnahme), dazu die Prüfungen aus B6 für diese beiden und ein Diagnose-Abschnitt für die NB-Kontrolle K-AL-1.
+- **Keine** Mailzeilen, **keine** eigene Statusseiten-Karte jetzt.
+- **Mit B3, nach G7 Stufe 2:** B1 Befund-Karte und B5 Anzeige (Statusseite, Mail) — dann mit Bewertung (Ebene 4), wenn sie trägt.
+- Ändert E-170 F-D (dort: B1, B2, B4–B6 vorziehen). Nicht gewählt: G19 wie geplant (Möglichkeit 2) und ganz zurückstellen (Möglichkeit 3).

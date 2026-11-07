@@ -37,6 +37,8 @@ spot_abbau_aktiv: true         # EINGESCHALTET 14.10.2026 (Nutzer-Ja, K-SP-3 erf
                                # "Wenn du abbaust: zuerst X" (Erstliste, danach nur Neue). Protokoll laeuft immer. Einschalten nach K-SP-3 + Nutzer-Ja (Spot §48)
 season_ampel_aktiv: true       # EINGESCHALTET 18.10.2026 (E-124, Nutzer-Ja nach O47: Holdout 2017/18 traegt, Spot §59) - P19 Spot C1: Season-Ampel - Anzeige
                                # laeuft immer (Statusseite, Reiter Markt (Krypto), Zeile in B1/B3/B4); MAIL beim Wechsel der geltenden Stufe in eine Stufe mit Handlung
+asset_lage_aktiv: false        # G19 B2/B4 (E-171, 07.11.2026): Job asset_lage - Fakt-Sammler der Asset-Karte, taeglich 07:45 + stuendlich :35 UTC,
+                               # schreibt NUR data/asset_lage.db (Protokoll; keine Mail, keine Anzeige). Nur am Betriebsgeraet. Einschalten nach K-AL-1 + Nutzer-Ja
 spot_kette_angehalten: true    # GESETZT 05.10.2026 (Nutzer: *Schalter A setzen*, E-67) - true = die Rollen-Kette (Spot, alle Gruppen) laeuft NICHT - der alte Weg bleibt trotzdem aus (aktiv_fuer
                                # unveraendert). Es entstehen keine Spot-Signale, keine Spot-/Bestands-Verkaufsmails, keine Lagebilder; die
                                # REGEL0 (Rechnung, Mails, LLM-Block) und der Ausstiegsjob (Stop-Nachzieh-Sammelmail) laufen weiter.

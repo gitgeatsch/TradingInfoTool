@@ -86,6 +86,7 @@ Muster (Stand 15.09.2026, 57 Dateien):
 |---|---|---|---|
 | `agent/ausstiegsrechnung.py` | **hebel_positions:** sammel_mail | Sammelmail liest Hebelpositionen | Stufe 3 gegenpruefen |
 | `agent/betriebslage.py` | **hebel_positions:** hebel_positions · **Stempel:** bestand_meta | Betriebslage fuer Statusseite und Teilexport (P9, 10.10.), NUR LESEND (`mode=ro` bzw. Verbindung der Seite) | kein Schreiber, keine Umstellung noetig |
+| `agent/asset_lage.py` | **Bestand liest:** get_all_holdings, staked_quantity, compute_cost_basis_view · **Stempel:** bitpanda_holdings_synced_at (Stand des Bestands, gelesen) · **hebel_positions:** hebel_positions (Quellenname; gelesen ueber `hebelfuehrung.lade`) | G19 B2 Fakt-Sammler der Asset-Karte (E-171, 07.11.2026), NUR LESEND (`mode=ro`), schreibt nur `data/asset_lage.db` | kein Schreiber, keine Umstellung noetig |
 | `agent/hebel_wallet_abgleich.py` | **hebel_positions:** pruefe | P11 (11.10.): Bitpanda-Hebel-Wallets gegen die offenen Positionen, NUR LESEND | kein Schreiber; meldet den Importerfehler (P11b) |
 | `agent/spot_mitnahme.py` | **Bestand liest:** kreis | P14 (11.10.): Spot B1 Mitnahme ×3 – Kreis aus holdings frei + gestakt, NUR LESEND (Fenster in `data/spot_betrieb.db`) | kein Schreiber; nach Umstellung Bestand gegenprüfen |
 | `agent/hebel_aggregat.py` | **hebel_positions:** Modulebene | Hebelpositionen aggregiert | Stufe 3 gegenpruefen |

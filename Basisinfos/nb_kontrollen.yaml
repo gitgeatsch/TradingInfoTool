@@ -675,6 +675,23 @@ kontrollen:
     nachweis: "Ereignis = Pull des NB-Buendels G8. Danach: Statusseite Betriebskarte OHNE rote Zeile 'Kernwert ohne REGEL0/Hebel' (BTC/ETH/SOL an); Teilexport 'Kernwerte ohne REGEL0/Hebel: keiner'; Diagnose kern_hebel_luecke = []; GUI: Klick auf Hebel-Schalter von BTC fragt nach (mit Nein abbrechen); REGEL0-ERGEBNIS-Zeilen im Log mit Feld schalter_fehler = [] und keine neue Fehlermail"
     status: offen
     teilbeleg_04_11: "NB-Export 04.11. 07:38 (NB auf e776ada0, Neustart 03.11. 22:53): kern_hebel_luecke = []; REGEL0-ERGEBNIS seit dem Neustart 10 von 10 mit schalter_fehler = []; seit dem Neustart kein ERROR/Traceback (nur WARNING AERO ohne Watchlist-Eintrag und einmal Statusaufbau 15 s). Offen nur: Statusseite ohne rote Zeile 'Kernwert ohne REGEL0/Hebel' und GUI-Rueckfrage beim Klick auf den BTC-Hebel-Schalter (Nutzerblick)"
+  - id: K-AL-1
+    titel: "G19 B2/B4 (E-171): Job asset_lage nach dem Pull vorhanden, Schalter AUS, nichts geschrieben"
+    seit: "2026-11-07"
+    paket: AssetLage
+    commit: ""
+    art: ereignis
+    nachweis: "Ereignis = Pull des NB-Buendels mit G19. Danach: joblaeufe asset_lage und asset_lage_signal vorhanden, Log 'Asset-Lage' ohne Fehler; Diagnose asset_lage: zustand 'fehlt' (keine data/asset_lage.db), schalter false, geraet [true, 'Betriebsgeraet ...']; keine neue Mail; Paket StandardDB unveraendert gruen (Desktop)"
+    status: offen
+  - id: K-AL-2
+    titel: "G19 B2/B4: nach dem Einschalten (Nutzer-Ja) Tageskarten taeglich, Signalkarten stuendlich, jede Betriebsquelle mit echten Fakten"
+    seit: "2026-11-07"
+    paket: AssetLage
+    commit: ""
+    art: manuell
+    faellig_bis: "2026-11-30"
+    nachweis: "Nach asset_lage_aktiv: true und einem Tag Betrieb, Diagnose asset_lage: tag.alter_h < 26 und tag.fehler null; signal.alter_h < 2 (jeder Stundenlauf steht im Protokoll, auch mit 0 Karten); fehler_24h = 0; signalkarte_verzug_min.median <= 90; Zustaende je Quelle: kurs, bestand, regel0_signal, ankuendigung, season, makro, gesamtmarkt, termine je mindestens ein 'ok' (hebel nur bei offener Position; verwaesserung am NB bis ~Dez. 'leer' = SOLL, G11; sichten 'nicht abgefragt' = SOLL bis G8b); data/asset_lage.db waechst ohne Fehler; keine Mail"
+    status: offen
   - id: K-Z1-1
     titel: "Z-1 Fassung 2 (G8 Weg b): REGEL0-Pruefblock erkennt grosse Zahlen als EINE Zahl, Spalte ungedeckt traegt die Fassung - mit dem NB-Buendel G8a"
     seit: "2026-11-03"

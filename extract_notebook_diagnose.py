@@ -3050,6 +3050,20 @@ def _regel0_messstand() -> dict:
         return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
 
 
+def _asset_lage() -> dict:
+    """G19 B4 (E-171, 07.11.2026, K-AL-1): Stand des Jobs asset_lage - letzter Lauf je Art (tag/signal) mit Alter, Karten und Zustaenden je
+    Quelle, Verzug der Signalkarten, Schalter. Nur lesend (``asset_lage.stand``)."""
+    try:
+        from agent import asset_lage as _AL
+        from agent import regel0_nachlader as _NL
+        d = _AL.stand(_NL.DATEN_VORGABE)
+        d["schalter"] = __import__("agent.regel0_groesse", fromlist=["x"]).asset_lage_aktiv()
+        d["geraet"] = list(_NL.betrieb_erlaubt(_NL.DATEN_VORGABE))
+        return d
+    except Exception as exc:                                     # noqa: BLE001
+        return {"fehler": "%s: %s" % (type(exc).__name__, exc)}
+
+
 def _season_ampel() -> dict:
     """P19 (17.10.2026, K-SP-4): die Season-Ampel so, wie Statusseite und Mails sie zeigen (agent.season_ampel.uebersicht), dazu die
     letzten Laeufe, die Meldungen und die Einstiegs-Kandidaten (A3) - nur lesend."""
@@ -4226,6 +4240,7 @@ def main() -> None:
         "spot_b4_fuenftel": _spot_b4_fuenftel(),           # L-1 25.10.: B4-Fuenftel aller Bestaende, auch ausserhalb Binance (K-B4-D1)
         "regel0_reihenbeginn": _regel0_reihenbeginn(),     # W-1 26.10.: Reihenbeginn je Asset aus dem Monatspaket (K-R0-ST0, E-139)
         "regel0_messstand": _regel0_messstand(),           # O21 17.10.: wie Statusseite/Mail (K-O21-1)
+        "asset_lage": _asset_lage(),                       # G19 B4 07.11.: Job asset_lage, Protokoll data/asset_lage.db (K-AL-1)
         "groq_erschoepfung_ereignisse": groq_erschoepfung,
         "auffaelligkeiten": auffaelligkeiten,
     }
