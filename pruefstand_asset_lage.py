@@ -278,6 +278,37 @@ def pruefungen() -> list:
                   st.get("laeufe") == n_laeufe and "tag" in st and "signal" in st and "signalkarte_verzug_min" in st,
                   "Läufe %s von %d · %s" % (st.get("laeufe"), n_laeufe, {k: st.get(k) for k in ("karten_gesamt", "signalkarten_nachgeholt",
                                                                                                  "signalkarte_verzug_min")})))
+        # E-172: schlank (Signalangabe nur mit den Feldern, die sich aendern koennen), Groesse und Wachstum in der Diagnose
+        ca = sqlite3.connect("file:%s?mode=ro" % os.path.join(J, _EIGEN).replace("\\", "/"), uri=True)
+        felder = {tuple(sorted(__import__("json").loads(r[0]).keys())) for r in ca.execute("SELECT wert FROM fakt WHERE schluessel='regel0_signal'")}
+        ohne_kb = ca.execute("SELECT COUNT(*) FROM lauf WHERE datei_kb IS NULL").fetchone()[0]
+        ca.close()
+        R.append(("E-172: Signalangabe schlank (nur %s), jeder Lauf mit Dateigröße, Diagnose mit Größe/Wachstum/Warngrenze"
+                  % ", ".join(AL.SIGNAL_FELDER), felder == {tuple(sorted(AL.SIGNAL_FELDER))} and not ohne_kb
+                  and st.get("groesse", {}).get("mb", 0) > 0 and st["groesse"].get("grenze_mb") == AL.GROESSE_WARNUNG_MB,
+                  "Feldmengen %d · Läufe ohne Größe %d · %s" % (len(felder), ohne_kb, st.get("groesse"))))
+        # E-172: woechentliche Sicherung des Protokolls im Export (Online-Backup, integrity_check, Rotation 4)
+        import extract_notebook_diagnose as EX
+        B = _neu(T, "sicherung")
+        j0 = datetime(2026, 11, 7, 7, 0, tzinfo=timezone.utc)
+        b0 = EX._asset_lage_backup(ordner=B, daten=_neu(T, "ohne"), jetzt=j0)
+        b1 = EX._asset_lage_backup(ordner=B, daten=J, jetzt=j0)
+        b2 = EX._asset_lage_backup(ordner=B, daten=J, jetzt=j0 + timedelta(hours=1))
+        alt_t = time.time() - 40 * 86400
+        for i in range(1, 6):                                    # fuenf aeltere Staende (Namen sortieren VOR dem neuen), alle > 6 Tage alt
+            q = os.path.join(B, "asset_lage_2026-10-0%d_0000.db.gz" % i)
+            with open(q, "wb") as f:
+                f.write(b"x")
+            os.utime(q, (alt_t, alt_t))
+        for q in __import__("pathlib").Path(B).glob("asset_lage_2026-11-*.db.gz"):
+            os.utime(q, (alt_t, alt_t))
+        b3 = EX._asset_lage_backup(ordner=B, daten=J, jetzt=datetime.now(timezone.utc))
+        anzahl = len(list(__import__("pathlib").Path(B).glob("asset_lage_*.db.gz")))
+        R.append(("E-172: Sicherung des Protokolls - ohne Ablage nichts, sonst gesichert und geprüft, höchstens einmal je Woche, Rotation hält %d"
+                  % EX.ASSET_LAGE_SICHERUNG_BEHALTEN, not b0.get("erfolg") and b1.get("erfolg") and not b2.get("erfolg")
+                  and b3.get("erfolg") and anzahl == EX.ASSET_LAGE_SICHERUNG_BEHALTEN,
+                  "ohne: %s · erste: %s · gleich danach: %s · mit 6 alten Ständen: %d Dateien, entfernt %s"
+                  % (b0.get("grund"), b1.get("erfolg"), b2.get("grund"), anzahl, b3.get("geloescht"))))
         # ein Fehler im Lauf: protokolliert (lauf.fehler), kein Abbruch, als Fehler im Ergebnis
         F = _vorbereiten(_neu(T, "f"))
         alt_s = AL.sammle

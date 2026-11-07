@@ -11,7 +11,7 @@
 > ⛔ **Entschieden 07.11.2026 (E-171), Nutzer *„OK dann Möglichkeit1“*: G19 wird nur als UNTERBAU gebaut.**
 > Jetzt **B2** (Fakt-Sammler, §4) und **B4** (Job mit Protokoll `data/asset_lage.db`, §5.1), dazu ihre Prüfungen aus §6 und ein Diagnose-Abschnitt für K-AL-1.
 > **Zurückgestellt bis B3** (nach G7 Stufe 2): **B1** Befund-Karte (§3), **B5** Statusseite (§5.2) und der Befundblock in der Mail (§5.3).
-> ✔ **Gebaut und geprüft 07.11. → §11** (Prüfstand 26/26 auf NB-Kopien, Code-Gegenprüfung 16 Befunde eingearbeitet). NB: K-AL-1, K-AL-2.
+> ✔ **Gebaut und geprüft 07.11. → §11** (Prüfstand 26/26, mit E-172 28/28 auf NB-Kopien, Code-Gegenprüfung 16 Befunde eingearbeitet). NB: K-AL-1, K-AL-2.
 > Grund: Fakten und Befund-Verweise ohne Bewertung helfen dem Nutzer nicht (*Information ohne Handlungsableitung ist nur Arbeit*); die spezifische Bewertung kommt erst aus Ebene 3/4 (G7, A1, finales LLM) — und nur, wenn sie trägt. Die Abschnitte zu B1/B5 bleiben als Vorlage für B3 stehen.
 
 ## 0. In sechs Sätzen
@@ -279,7 +279,7 @@ Fundstellen geprüft, bis auf einen Aufruf alle richtig; Registerzahlen und die 
 
 **Nebenwirkungen im Betrieb, vollständig:** `data/asset_lage.db` (eigene Ablage) · `job_laeufe` und ggf. Misfire-Mail (wie jeder Job) · `api_health_status` beim FRED-Abruf der Termine (wie jeder FRED-Abruf). Der Tagesspeicher von `termin_fakt` behält einen Fehlschlag des Jobs **nicht**. Keine Mail, keine Anzeige.
 
-**Offen, nicht blockierend:** keine Aufbewahrungsgrenze der Ablage (≈ 1,5 KB je Karte, ≈ 100 MB im Jahr) — vor B3 festlegen.
+~~**Offen, nicht blockierend:** keine Aufbewahrungsgrenze der Ablage (≈ 1,5 KB je Karte, ≈ 100 MB im Jahr) — vor B3 festlegen.~~ → ✔ **E-172 (07.11.):** alles behalten, Signalangabe schlank, Größe in der Diagnose (Warnung > 500 MB), wöchentliche Sicherung im NB-Export (4 Stände). Prüfstand 28/28.
 
 ### 11.1 Code-Gegenprüfung (07.11., unabhängig) — 16 Befunde, alle eingearbeitet
 

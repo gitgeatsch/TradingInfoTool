@@ -775,6 +775,14 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Suite:** grün bis auf die bekannte Anleitung-Datei; Paket StandardDB grün (eine Gegenprobe schrieb zunächst `api_health_status` in die Standard-DB — DB_PATH jetzt auf Wegwerfdatei).
 - ➤ Nächstes: Commit auf Ja · NB-Bündel (mit G8a, falls noch nicht gezogen): Pull, K-AL-1; Einschalten erst auf Nutzer-Ja, dann K-AL-2 · offen vor B3: Aufbewahrungsgrenze der Ablage.
 
+### Stand 07.11.2026 spät — Push, NB-Pull, Ablage asset_lage.db (E-172)
+
+- Push `2c928f3a..100b8696` (sieben Commits); Nutzer hat am NB gezogen und neu gestartet. NB-Export 09:55: NB auf 100b8696, keine lokalen Änderungen; beide Jobs `asset_lage_job` eingetragen, Nachholen in 600 s, Diagnose `asset_lage` zustand fehlt / Schalter false / Gerät erkannt → **K-AL-1 Teilbeleg** (offen: joblaeufe nach dem ersten Lauf). **K-G14-1 Teilbeleg:** `kern_hebel_luecke` [], 73/73 REGEL0-ERGEBNIS mit `schalter_fehler` [] (offen: Nutzerblick Statusseite/GUI).
+- **E-172** (*„JA nimm Möglichkeit 1“*): Ablage behalten, Signalangabe schlank, Größe/Wachstum/Warnung 500 MB in der Diagnose, wöchentliche Sicherung im Export (4 Stände). Prüfstand 28/28.
+- GDELT-Probe am NB: Tag 5 von 14 (seit 02.11. 18:30), 20 Runden, 145 Abrufe (23 × 200, 122 × 429); Urteil nach 14 Tagen (K-GD-1, bis 20.11.).
+- G7 Stufe 1 (lauf9) läuft nach dem Tageswechsel weiter: **S1 und S3 vollständig** (je 335 Tage + 17 Wiederholungen), S8 bei 184/352.
+- ➤ Nächstes: Commit E-172 auf Ja · nächster NB-Export: K-AL-1 abschließen · **Stufe 2 für S1 und S3** (je Hauptsicht genau einmal, Vorabfestlegung Stufe 1 §4) zur Abstimmung.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

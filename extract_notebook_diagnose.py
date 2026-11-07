@@ -3529,7 +3529,7 @@ def papierkorb_zeile(stand: dict) -> str:
             % (gb, seit))
 
 
-def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
+def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN, praefix: str = "tradinginfotool") -> dict:
     """Konsistentes, geprueftes und rotiertes Backup der Produktiv-DB (2026-08-06).
 
     WOFUER. Der Export enthaelt das Analyse-relevante Extrakt, aber nicht die
@@ -3575,7 +3575,7 @@ def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
     try:
         ziel.mkdir(parents=True, exist_ok=True)
         stempel = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M")
-        name = f"tradinginfotool_{stempel}.db.gz"
+        name = f"{praefix}_{stempel}.db.gz"
 
         # 1) Online-Backup in eine temporaere Datei
         fd, tmp_pfad = tempfile.mkstemp(suffix=".db")
@@ -3605,7 +3605,7 @@ def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
         ergebnis["erfolg"] = True
 
         # 4) Rotation - ERST JETZT, nach bestandener Pruefung
-        vorhanden = sorted(ziel.glob("tradinginfotool_*.db.gz"))
+        vorhanden = sorted(ziel.glob(f"{praefix}_*.db.gz"))
         for alt in vorhanden[:-behalten] if behalten > 0 else []:
             try:
                 _groesse = alt.stat().st_size
@@ -3624,6 +3624,33 @@ def _db_backup(conn, ordner=None, behalten: int = DB_BACKUP_BEHALTEN) -> dict:
                 os.unlink(tmp_pfad)
             except OSError:
                 pass
+
+
+ASSET_LAGE_SICHERUNG_TAGE = 6       # hoechstens einmal je Woche (der Export laeuft taeglich) - Drive-Papierkorb (2.455)
+ASSET_LAGE_SICHERUNG_BEHALTEN = 4
+
+
+def _asset_lage_backup(ordner=None, daten=None, jetzt=None) -> dict:
+    """G19 B4 (E-172, 07.11.2026): das Protokoll ``data/asset_lage.db`` - die einzige Quelle einer spaeteren Wertmessung der
+    Asset-Karte - wird WOECHENTLICH mitgesichert, gleiche Online-Backup-API, Integritaetspruefung und Rotation wie die Produktion
+    (4 Staende). Quelle nur ``mode=ro``. Fehlt die Datei (Schalter aus), passiert nichts. Scheitert nie nach aussen."""
+    try:
+        from agent import regel0_nachlader as _NL
+        quelle = Path(daten or _NL.DATEN_VORGABE) / "asset_lage.db"
+        ziel = Path(ordner) if ordner else DB_BACKUP_ORDNER
+        if not quelle.is_file():
+            return {"erfolg": False, "grund": "keine Ablage (Job aus)"}
+        jetzt = jetzt or datetime.now(timezone.utc)
+        alt = sorted(ziel.glob("asset_lage_*.db.gz"))
+        if alt and (jetzt - datetime.fromtimestamp(alt[-1].stat().st_mtime, timezone.utc)).days < ASSET_LAGE_SICHERUNG_TAGE:
+            return {"erfolg": False, "grund": "letzte Sicherung %s juenger als %d Tage" % (alt[-1].name, ASSET_LAGE_SICHERUNG_TAGE)}
+        c = sqlite3.connect("file:%s?mode=ro" % str(quelle).replace("\\", "/"), uri=True, timeout=10)
+        try:
+            return _db_backup(c, ordner=ziel, behalten=ASSET_LAGE_SICHERUNG_BEHALTEN, praefix="asset_lage")
+        finally:
+            c.close()
+    except Exception as exc:                                   # noqa: BLE001
+        return {"erfolg": False, "grund": "%s: %s" % (type(exc).__name__, exc)}
 
 
 def main() -> None:
@@ -4497,10 +4524,14 @@ def main() -> None:
     else:
         print(f"  DB-Backup FEHLGESCHLAGEN: {sicherung['grund']} "
               f"- der Export ist davon unberuehrt")
+    al_sicherung = _asset_lage_backup()                        # G19 (E-172): Protokoll asset_lage.db woechentlich mitsichern
+    print("  Asset-Lage-Sicherung: " + (("%s (%.2f MB komprimiert, integrity_check ok)" % (Path(al_sicherung["datei"]).name,
+                                                                                          al_sicherung["bytes"] / 1e6))
+                                        if al_sicherung.get("erfolg") else str(al_sicherung.get("grund"))))
     try:
         _eintraege = [("export_version", "notebook_diagnose.json", _export_alt_bytes)]
-        _eintraege += [("sicherung_rotiert", n, b) for n, b in
-                       zip(sicherung.get("geloescht") or [], sicherung.get("geloescht_bytes") or [])]
+        _eintraege += [("sicherung_rotiert", n, b) for s in (sicherung, al_sicherung) for n, b in
+                       zip(s.get("geloescht") or [], s.get("geloescht_bytes") or [])]
         print(papierkorb_zeile(papierkorb_vermerke(_eintraege)))
     except Exception as exc:                                   # noqa: BLE001
         print(f"  Google-Drive-Papierkorb: Buchfuehrung nicht moeglich ({type(exc).__name__}: {exc})")

@@ -39,6 +39,7 @@ MAKRO_NAME = "makro_lage.json"
 SICHTEN_REL = os.path.join("_sichten", "sichten.db")
 FMT = "%Y-%m-%d %H:%M"
 KRYPTO_GRUPPEN = ("coin", "token")                      # bitpanda_katalog.gruppe
+SIGNAL_FELDER = ("symbol", "signalstunde", "stufe_vorlaeufig", "stufe", "hebel_schalter", "mail_signal_am")
 
 
 # ══ Grundbausteine ═════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -285,7 +286,8 @@ def _signale(k, jetzt) -> list:
                  "Hebel-Schalter %s" % ("an" if s.get("hebel_schalter") else "aus")]
         if s.get("mail_signal_am"):
             teile.append("gemailt %s" % s["mail_signal_am"])
-        aus.append(fakt("regel0_signal", " · ".join(teile), "regel0_signale.db/signal", wert=s,
+        w = {x: s.get(x) for x in SIGNAL_FELDER}                  # E-172: nur was sich nachtraeglich aendern kann + Schluessel (Rest steht in regel0_signale.db)
+        aus.append(fakt("regel0_signal", " · ".join(teile), "regel0_signale.db/signal", wert=w,
                         stand=s.get("endgueltig_am") or s["signalstunde"], jetzt=jetzt, bezug=s["signalstunde"]))
     return aus
 
@@ -514,6 +516,7 @@ def text(erg: dict, je_karte: int | None = None) -> str:
 # ══ B4: Ablage und Lauf (E-171) - schreibt NUR <ordner>/asset_lage.db ══════════════════════════════════════════════════════
 ABLAGE_NAME = "asset_lage.db"
 NACHGEHOLT_H = 2.0          # Signalkarte spaeter als 2 h nach Schluss der Signalstunde -> 'nachgeholt' (nie in eine Wertmessung)
+GROESSE_WARNUNG_MB = 500    # E-172: alles wird behalten; ueber dieser Groesse meldet die Diagnose (K-AL-2) - Entscheidung neu vorlegen
 _SPERRE = threading.Lock()  # Tages- und Stundenlauf schreiben nie gleichzeitig
 
 
@@ -521,7 +524,7 @@ def oeffne_ablage(ordner: str) -> sqlite3.Connection:
     """Die EIGENE Ablage - die einzige Datei, in die dieses Modul schreibt."""
     c = sqlite3.connect(os.path.join(ordner, ABLAGE_NAME), timeout=30)
     c.execute("CREATE TABLE IF NOT EXISTS lauf (id INTEGER PRIMARY KEY AUTOINCREMENT, am TEXT, art TEXT, karten INTEGER, "
-              "zustaende TEXT, fehler TEXT, sekunden REAL, grund TEXT)")
+              "zustaende TEXT, fehler TEXT, sekunden REAL, grund TEXT, datei_kb INTEGER)")
     c.execute("CREATE TABLE IF NOT EXISTS karte (id INTEGER PRIMARY KEY AUTOINCREMENT, lauf INTEGER, am TEXT, schluessel TEXT, "
               "bitpanda TEXT, binance TEXT, anlass TEXT, symbol TEXT, signalstunde TEXT, nachgeholt INTEGER)")
     c.execute("CREATE TABLE IF NOT EXISTS fakt (karte INTEGER, schluessel TEXT, zustand TEXT, satz TEXT, wert TEXT, quelle TEXT, "
@@ -605,6 +608,12 @@ def schreibe(c, erg: dict, art: str, sekunden: float, fehler: str | None = None,
                           (kid, f["schluessel"], f["zustand"], f["satz"], _json(f["wert"]), f["quelle"], f["stand"], f["alter_h"]))
     c.execute("UPDATE lauf SET karten=? WHERE id=?", (n, lauf_id))
     c.commit()
+    try:                                                         # E-172: Groesse je Lauf - die Diagnose rechnet daraus das Wachstum
+        p = c.execute("PRAGMA database_list").fetchone()[2]
+        c.execute("UPDATE lauf SET datei_kb=? WHERE id=?", (os.path.getsize(p) // 1024, lauf_id))
+        c.commit()
+    except (OSError, sqlite3.Error, TypeError):
+        pass
     return lauf_id
 
 
@@ -686,6 +695,11 @@ def stand(ordner: str, jetzt: datetime | None = None) -> dict:
         aus["fehler_24h"] = c.execute("SELECT COUNT(*) FROM lauf WHERE fehler IS NOT NULL AND am >= ?",
                                       ((jetzt - timedelta(hours=24)).isoformat(timespec="seconds"),)).fetchone()[0]
         aus["karten_gesamt"] = c.execute("SELECT COUNT(*) FROM karte").fetchone()[0]
+        mb = os.path.getsize(p) / 1e6
+        vor = c.execute("SELECT datei_kb FROM lauf WHERE datei_kb IS NOT NULL AND am <= ? ORDER BY id DESC LIMIT 1",
+                        ((jetzt - timedelta(days=7)).isoformat(timespec="seconds"),)).fetchone()
+        aus["groesse"] = {"mb": round(mb, 2), "wachstum_mb_7t": round(mb - vor[0] / 1000.0, 2) if vor else None,
+                          "warnung": mb > GROESSE_WARNUNG_MB, "grenze_mb": GROESSE_WARNUNG_MB}
         aus["signalkarten_nachgeholt"] = c.execute("SELECT COUNT(*) FROM karte WHERE nachgeholt=1").fetchone()[0]
         verz = c.execute("SELECT k.signalstunde, k.am FROM karte k JOIN lauf l ON l.id = k.lauf WHERE l.art = 'signal' "
                          "AND k.signalstunde IS NOT NULL AND COALESCE(k.nachgeholt, 0) = 0 ORDER BY k.id DESC LIMIT 200").fetchall()

@@ -2414,3 +2414,16 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Keine** Mailzeilen, **keine** eigene Statusseiten-Karte jetzt.
 - **Mit B3, nach G7 Stufe 2:** B1 Befund-Karte und B5 Anzeige (Statusseite, Mail) — dann mit Bewertung (Ebene 4), wenn sie trägt.
 - Ändert E-170 F-D (dort: B1, B2, B4–B6 vorziehen). Nicht gewählt: G19 wie geplant (Möglichkeit 2) und ganz zurückstellen (Möglichkeit 3).
+
+# E-172 · Ablage asset_lage.db: alles behalten, schlanker schreiben, Größe überwachen, wöchentlich sichern (07.11.2026)
+
+**07.11.2026** · Nutzer: *„JA nimm Möglichkeit 1“* · Vorlage: Antwort vom 07.11. (drei Möglichkeiten, gemessen an der Prüfgrundlage: 416 KB an einem Tag mit ~200 Signalen, ~130 KB an einem durchschnittlichen Tag, ~50–100 MB im Jahr)
+
+**Entschieden (Möglichkeit 1 von 3):**
+- **Nichts löschen** — das Protokoll ist die einzige Grundlage einer späteren Wertmessung der Asset-Karte (Ü6/Ü8); Gelöschtes ist nicht nachholbar.
+- **Schlanker:** die Signalangabe trägt nur `symbol, signalstunde, stufe_vorlaeufig, stufe, hebel_schalter, mail_signal_am` (`asset_lage.SIGNAL_FELDER`) — der Rest steht in `regel0_signale.db`.
+- **Größe überwachen:** jeder Lauf vermerkt die Dateigröße (`lauf.datei_kb`); Diagnose `asset_lage.groesse` mit MB, Wachstum über 7 Tage und Warnung über **500 MB** (`GROESSE_WARNUNG_MB`) → dann neu vorlegen.
+- **Sichern:** der NB-Export sichert `asset_lage.db` höchstens **einmal je Woche** nach `DB_Backups/asset_lage_<datum>.db.gz` (Online-Backup, `integrity_check`, Rotation **4** Stände, Drive-Papierkorb mitgebucht) — `extract_notebook_diagnose._asset_lage_backup`.
+- Nicht gewählt: Tageskarten nur 90 Tage (Möglichkeit 2: Spot-Führung verlöre ihre Messbasis), Monatsdateien (Möglichkeit 3: mehr Code ohne Gewinn).
+
+**Nachweis:** Paket `AssetLage` 28/28 (zwei neue Prüfpunkte E-172). **NB:** im nächsten Bündel; K-AL-2 um Größe und Sicherung ergänzt.
