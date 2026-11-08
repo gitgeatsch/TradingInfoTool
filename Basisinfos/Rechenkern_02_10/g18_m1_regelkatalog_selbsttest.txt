@@ -1,0 +1,44 @@
+G18 M1 SELBSTTEST · 2026-11-07 18:33 · KEIN echter Zustand/kein echtes Ereignis gegen den Vorsprung · gepoolt 2024-01-01..2026-08-31
+Einstiege 10732 · Tage 671 · Blöcke 57 · Werkzeug 397c0cd495ef13f1
+
+A  Zustände als Ersatzreihen (zufällige Phase, Werteverteilung erhalten) aus der echten Reihe, gegen den ECHTEN Tages-Vorsprung
+  Gegenprobe Bahn (FFT) gegen scipy.spearmanr an 5 Verschiebungen: größte Abweichung 3.1e-17
+  S1.funding.BTC           Beständigkeit 0.85 · Fehlalarm roh 6.9 % (nur Auskunft seit §6.3)
+  S1.funding.ETH           Beständigkeit 0.81 · Fehlalarm roh 6.0 % (nur Auskunft seit §6.3)
+  S1.coinbase_praemie.BTC  Beständigkeit 0.80 · Fehlalarm roh 6.1 % (nur Auskunft seit §6.3)
+  S1.coinbase_praemie.ETH  Beständigkeit 0.81 · Fehlalarm roh 6.0 % (nur Auskunft seit §6.3)
+  S1.oi.BTC                Beständigkeit 0.87 · Fehlalarm roh 5.5 % (nur Auskunft seit §6.3)
+  S1.oi.ETH                Beständigkeit 0.90 · Fehlalarm roh 5.1 % (nur Auskunft seit §6.3)
+  S1.funding.BTC           geeicht: Fehlalarm 4.3 % (Auskunft)
+  S1.funding.ETH           geeicht: Fehlalarm 4.9 % (Auskunft)
+  S1.coinbase_praemie.BTC  geeicht: Fehlalarm 6.8 % (Auskunft)
+  S1.coinbase_praemie.ETH  geeicht: Fehlalarm 4.5 % (Auskunft)
+  S1.oi.BTC                geeicht: Fehlalarm 7.0 % (Auskunft)
+  S1.oi.ETH                geeicht: Fehlalarm 5.0 % (Auskunft)
+  Mittel über 6000 Einzelziehungen: Fehlalarm 5.42 % (Grenze 5.56 %)
+  Familie (6, Holm, geeicht): Fehlalarm 5.7 % (Grenze 6.4 % = 5 % + 2 Standardfehler bei 1000 Ziehungen)
+  Auflösung S1.funding.BTC           (erste Holm-Stufe α/6): 0.1 Pp   3 % · 0.2 Pp  10 % · 0.3 Pp  14 % · 0.5 Pp  50 %
+  Auflösung S1.funding.ETH           (erste Holm-Stufe α/6): 0.1 Pp   1 % · 0.2 Pp   9 % · 0.3 Pp  16 % · 0.5 Pp  57 %
+  Auflösung S1.coinbase_praemie.BTC  (erste Holm-Stufe α/6): 0.1 Pp   3 % · 0.2 Pp   7 % · 0.3 Pp  16 % · 0.5 Pp  57 %
+  Auflösung S1.coinbase_praemie.ETH  (erste Holm-Stufe α/6): 0.1 Pp   3 % · 0.2 Pp   6 % · 0.3 Pp  17 % · 0.5 Pp  55 %
+  Auflösung S1.oi.BTC                (erste Holm-Stufe α/6): 0.1 Pp   1 % · 0.2 Pp   7 % · 0.3 Pp  16 % · 0.5 Pp  52 %
+  Auflösung S1.oi.ETH                (erste Holm-Stufe α/6): 0.1 Pp   1 % · 0.2 Pp   6 % · 0.3 Pp  15 % · 0.5 Pp  59 %
+  Streuung des Tages-Vorsprungs: 3.39 Pp
+  => A BESTANDEN
+
+B  echte Ereignisse, je Asset um ein eigenes zufälliges k verschoben; Nullwelt der Messung: alle Assets um dasselbe k
+  stuetzend  markiert 67 · Blöcke mit Marke 36 · Fehlalarm eigenes k 5.0 % · gemeinsames k 5.7 %
+    Auflösung gepflanzt 0.5 Pp: Fund 24 %
+    Auflösung gepflanzt 1.0 Pp: Fund 79 %
+    Auflösung gepflanzt 2.0 Pp: Fund 100 %
+  belastend  markiert 34 · Blöcke mit Marke 21 · Fehlalarm eigenes k 5.3 % · gemeinsames k 5.0 %
+    Auflösung gepflanzt 0.5 Pp: Fund 15 %
+    Auflösung gepflanzt 1.0 Pp: Fund 51 %
+    Auflösung gepflanzt 2.0 Pp: Fund 97 %
+  irgendein  markiert 195 · Blöcke mit Marke 52 · Fehlalarm eigenes k 3.7 % · gemeinsames k 6.0 %
+    Auflösung gepflanzt 0.5 Pp: Fund 52 %
+    Auflösung gepflanzt 1.0 Pp: Fund 98 %
+    Auflösung gepflanzt 2.0 Pp: Fund 100 %
+  => B BESTANDEN (1368 s)
+
+SELBSTTEST BESTANDEN · Prüfsumme Werkzeug 397c0cd495ef13f1

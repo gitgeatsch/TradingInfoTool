@@ -2427,3 +2427,16 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - Nicht gewählt: Tageskarten nur 90 Tage (Möglichkeit 2: Spot-Führung verlöre ihre Messbasis), Monatsdateien (Möglichkeit 3: mehr Code ohne Gewinn).
 
 **Nachweis:** Paket `AssetLage` 28/28 (zwei neue Prüfpunkte E-172). **NB:** im nächsten Bündel; K-AL-2 um Größe und Sicherung ergänzt.
+
+# E-173 · G18 M1 Regel-Katalog: Messung auf der Referenzmenge 2024-01 – 2026-08, gegen die Drift (07.11.2026)
+
+**07.11.2026** · Nutzer: *„1 Referenzmenge“* · Vorlage: [`Voranalyse_G18_M1_Regelkatalog_07_11.md`](Voranalyse_G18_M1_Regelkatalog_07_11.md) §5, Festlegung §6
+
+**Entschieden (Weg 1 von 2):**
+- Hauptmessung auf der **Referenzmenge** (`kern48jbz_einstiege_bestand.csv`, 127 Werte, 2024-01 – 2026-08), Epochen 2024 / 2025–26 als zweiter Weg; die Betriebsmenge Dez. 25 – Okt. 26 nur als Auskunft.
+- Maßstab ist der **Vorsprung gegen die Drift** je Tag (aus M0 §6). Katalog: A sechs schnelle Tageszustände (Funding, Coinbase-Prämie, offene Positionen je BTC/ETH), B drei Ereignisgruppen je Asset (nur Binance/Upbit — die Nachrichten sind über die Zeit nicht gleich dicht).
+- Langsame Zustände bleiben Information (M1-1, bestätigt E-170 F-B). GDELT nicht im Katalog (K1). E-138 nur vorwärts.
+- Ein Befund gilt zunächst **nur für die Referenzmenge**. Vor dem Betrieb muss er vorwärts auf der Betriebsmenge bestätigt werden (M7).
+- Nicht gewählt: nur Betriebsmenge (Weg 2: zu kurz, fast sicher „kein Befund“ aus Datenlänge).
+- Dazu als Arbeitsregel: **jeder Schritt prüfen → gegenprüfen → Doku** (Nutzer 07.11.).
+

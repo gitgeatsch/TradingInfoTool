@@ -6,16 +6,16 @@
 | Art | Anzahl |
 |---|---|
 | Plan | 22 |
-| Messplan / Vorabfestlegung | 40 |
+| Messplan / Vorabfestlegung | 42 |
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 99 |
+| Voranalyse / Recherche | 101 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **243** |
+| **gesamt** | **247** |
 
 ## Plan
 
@@ -80,12 +80,14 @@
 | [`Vorabfestlegung_Funding_Form_23_09.md`](Vorabfestlegung_Funding_Form_23_09.md) | Vorabfestlegung — hat der Funding-Beitrag die richtige FORM? | Arbeitsblatt |
 | [`Vorabfestlegung_Funding_Glaettung_23_09.md`](Vorabfestlegung_Funding_Glaettung_23_09.md) | Vorabfestlegung 6 — die Kante ist nicht das Problem, die Schwankung ist es | Arbeitsblatt |
 | [`Vorabfestlegung_Funding_Zustandsschalter_23_09.md`](Vorabfestlegung_Funding_Zustandsschalter_23_09.md) | Vorabfestlegung 5 — ist `funding` ein zustandsabhängiger Schalter? | Arbeitsblatt |
+| [`Vorabfestlegung_G18_M0_Erfolgsmessung_07_11.md`](Vorabfestlegung_G18_M0_Erfolgsmessung_07_11.md) | Vorabfestlegung G18 M0 — Erfolgsmessung REGEL0 im Betrieb (07.11.2026) | Arbeitsblatt |
 | [`Vorabfestlegung_Geometrie_Hebel_24_09.md`](Vorabfestlegung_Geometrie_Hebel_24_09.md) | Vorabfestlegung 9 — die Hebelerzeugung (N19-E über die Horizontachse) | Arbeitsblatt |
 | [`Vorabfestlegung_Hebel_H3_24_09.md`](Vorabfestlegung_Hebel_H3_24_09.md) | Vorabfestlegung 7 — 2.490 auf dem Hebel-Horizont | Arbeitsblatt |
 | [`Vorabfestlegung_N19E_Hebelstufen_25_09.md`](Vorabfestlegung_N19E_Hebelstufen_25_09.md) | Vorabfestlegung 13 — N19-E: die Hebelstufen gegen `barriere` | Arbeitsblatt |
 | [`Vorabfestlegung_P1_Rangfenster_24_09.md`](Vorabfestlegung_P1_Rangfenster_24_09.md) | Vorabfestlegung 11 — P-1: das Rangfenster für den Hebel | Arbeitsblatt |
 | [`Vorabfestlegung_P9_Schicht3_24_09.md`](Vorabfestlegung_P9_Schicht3_24_09.md) | Vorabfestlegung 12 — P-9 Schicht 3: ist die Basisrate VORHERSAGBAR? | Arbeitsblatt |
 | [`Vorabfestlegung_S1_S4_H_Annahmen_25_08.md`](Vorabfestlegung_S1_S4_H_Annahmen_25_08.md) | – | vor Messstandard (2026-08-26) |
+| [`Vorabfestlegung_Scheideweg_Ende_November_08_11.md`](Vorabfestlegung_Scheideweg_Ende_November_08_11.md) | Vorabfestlegung Scheideweg Ende November — welches Ergebnis führt auf welchen Weg (08.11.2026) | **laufend** |
 | [`Vorabfestlegung_Stundenbasis_24_09.md`](Vorabfestlegung_Stundenbasis_24_09.md) | Vorabfestlegung 10 — der Hebel auf der Stundenbasis | Arbeitsblatt |
 | [`Zielgroessen_und_Erfolgsmasse.md`](Zielgroessen_und_Erfolgsmasse.md) | – | vor Messstandard (2026-08-26) |
 
@@ -177,11 +179,13 @@
 | [`Voranalyse_Einstieg_EA_23_10.md`](Voranalyse_Einstieg_EA_23_10.md) | Voranalyse E-A — REGEL0 als Kaufzeitpunkt für ohnehin geplante Spot-Käufe auf Bitpanda (ab 23.10.2026) | Arbeitsblatt |
 | [`Voranalyse_G14_Kern_Regel_03_11.md`](Voranalyse_G14_Kern_Regel_03_11.md) | Voranalyse G14: Kern-Regel und „Kern immer zugelassen“ (03.11.2026) | **laufend** |
 | [`Voranalyse_G18_Gesamtkonzept_06_11.md`](Voranalyse_G18_Gesamtkonzept_06_11.md) | Voranalyse G18 — Gesamtkonzept Strang 1: Krypto · REGEL0 · Hebel (06.11.2026) | **laufend** |
+| [`Voranalyse_G18_M1_Regelkatalog_07_11.md`](Voranalyse_G18_M1_Regelkatalog_07_11.md) | Voranalyse G18 M1 — Regel-Katalog gegen die Drift (07.11.2026) | Arbeitsblatt |
 | [`Voranalyse_G19_Dashboard_Bau_07_11.md`](Voranalyse_G19_Dashboard_Bau_07_11.md) | Voranalyse G19 — Dashboard und spezifische Bewertung vorziehen: Bau B1, B2, B4–B6 (07.11.2026) | **laufend** |
 | [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | Voranalyse G7 — Messplan: Faktentreue der Prüfer und Wert der Sichten (02.11.2026) | **laufend** |
 | [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) | Voranalyse G7 S7-Anlage — wie die Asset-Urteile von S7 gemessen werden (05.11.2026) | **laufend** |
 | [`Voranalyse_G7_Stufe1_04_11.md`](Voranalyse_G7_Stufe1_04_11.md) | Voranalyse G7 Stufe 1 — Sicht-Gutachten im Rückspiel (04.11.2026) | **laufend** |
 | [`Voranalyse_G8_NB_Buendel_03_11.md`](Voranalyse_G8_NB_Buendel_03_11.md) | Voranalyse G8: was jetzt ans Notebook kann (03.11.2026) | **laufend** |
+| [`Voranalyse_GDELT_Rohdaten_07_11.md`](Voranalyse_GDELT_Rohdaten_07_11.md) | Voranalyse GDELT-Rohdaten — Probetag (07.11.2026) | Arbeitsblatt |
 | [`Voranalyse_Hebel_M1_23_09.md`](Voranalyse_Hebel_M1_23_09.md) | Voranalyse M1 / Hebel — der Hebel ist heute ein Ein-Aus-Schalter | Arbeitsblatt |
 | [`Voranalyse_Hebelgrundlage_23_09.md`](Voranalyse_Hebelgrundlage_23_09.md) | Voranalyse — woraus darf der Hebel kommen? | Arbeitsblatt |
 | [`Voranalyse_J_Mindesthistorie_30_09.md`](Voranalyse_J_Mindesthistorie_30_09.md) | Voranalyse J — der SHOWSTOPPER Mindesthistorie beheben (30.09.2026) | Arbeitsblatt |

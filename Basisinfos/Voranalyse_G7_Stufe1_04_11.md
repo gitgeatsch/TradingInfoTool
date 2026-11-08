@@ -179,6 +179,77 @@ Grundlage: `Voranalyse_G7_S7_Anlage_05_11.md` (§1–§4b), Nutzer 05.11.: *„J
 | **Reihenfolge** | gemessen wird erst, wenn S7 **und** S7w vollständig abgelegt sind (`--messen` verweigert sich vorher) |
 | **Nachtrag 05.11. (nach der Gegenprüfung, VOR dem ersten S7-Aufruf)** | Selbsttest auf der um die eingestellten Werte erweiterten Menge (10.296 Zellen): G-Lauf 5/Tag 7,0 % > Toleranz → Band **geeicht auf das 96,5. Perzentil** (alle Erzeuger ≤ 5 %). Damit gilt für e im Platz S7 die Bonferroni-Grenze **1 − (1 − 0,965)/2 = P98,25** statt P97,5. Entschieden wird über den **Rang** (wie im Selbsttest). S7/S7w ohne Schwere-Text, Kursfakt und Schwere in der Ablage; S8 mit Terminfaktor nur aus Daten vor 2025-12-01 (`Voranalyse_G7_S7_Anlage_05_11.md` §7) |
 
+### 4.2 Nachtrag S1/S3 — 07.11.2026, VOR dem ersten Blick gegen Kurse
+
+Nutzer 07.11.: *„OK erst messen dann Ton inkl. beschreibung“*. Werkzeug: `Rechenkern_02_10/g7_stufe2_s1s3.py` (`--selbsttest`, dann
+`--messen`) → `g7_stufe2_s1s3.txt`. Bis hierher wurden die Urteile nur **gezählt** (Rate, Läufe, Blöcke), nie mit Kursen zusammengebracht.
+
+**Was die Ablage zeigt (gezählt, ohne Kurse):**
+
+| | S1 Krypto gesamt | S3 Risikoappetit |
+|---|---|---|
+| Tage (wdh 0) | 335, alle lesbar | 335, alle lesbar |
+| `zustand` ≥ auffällig | **60 %** (201 Tage) | **10 %** (34 Tage) |
+| Phasen (Läufe) · mittlere Länge | 51 · 3,9 Tage | **3 · 11,3 Tage — alle 04.03.–08.04.2026** |
+| Blöcke à 15 T mit „auffällig“ | 22 | **3** |
+| Eigenrauschen (17 Wiederholungen) | 82 % gleich | 100 % gleich |
+| Faktentreue | 12 Tage mit Verstoß | 0 |
+
+**Festlegungen, die §4 offen ließ (fachlich abgeleitet, keine Wahl):**
+
+| | Festlegung | Grund |
+|---|---|---|
+| **Mindestmaß** | wie S7 (§4.1): **≥ 20 Blöcke mit „auffällig“-Tagen**, sonst KEIN BEFUND | Ein Mittelwert, dessen Ja-Seite in 3 Blöcken liegt, hat 3 unabhängige Beobachtungen. Dieselbe Regel für alle vier Haupttests |
+| **S3** | → **KEIN BEFUND** (3 Blöcke). Der Wert wird als **Auskunft** gerechnet und nie hochgestuft. Hauptgröße wird **nicht** nachträglich getauscht | Eine einzige Marktphase. Mehr Phasen bringt erst Stufe 5 (2025). S3 bleibt Eingabe für Stufe 3 |
+| **Holm-Familie** | bleibt **vier** (S1, S3, S8, S7) | vorab festgelegt; ein KEIN BEFUND verkleinert sie nicht |
+| **Zwischenurteil vor S8/S7** | p ≤ 0,0125 (= 0,05/4, erste Holm-Stufe) → hält Holm **unabhängig** von S8/S7. 0,0125 < p ≤ 0,05 → „trägt **vorbehaltlich** Holm“, endgültig, wenn S8 und S7 gemessen sind | Die erste Holm-Stufe ist Bonferroni — sie gilt schon jetzt |
+| **Statistik / Band** | unverändert `g7_messanlage.messe` (Mittel(Ziel \| auffällig) − Mittel(\| normal), Nullwelt volle Kreisbahn, einseitig unten, Band P5) | Anlage aus Stufe 0b |
+| **Selbsttest** | vor dem Messen **mit der echten Rate und Lauflänge** jeder Sicht (S1: 60 %/3,9 T; S3: 10 %/11,3 T) auf ihrer Zielgröße; Soll ≤ 6,5 %, sonst Band eichen wie bei S7 | Stufe 0b prüfte nur Rate 20 %; Breite `tief` H = 3 war noch nicht geprüft |
+| **Vergleichsarm** | „Zahl auffälliger Zustände“ derselben Sicht; die Tage mit der höchsten Zahl werden auffällig, bis **dieselbe Zahl Tage** erreicht ist wie beim LLM; Gleichstand an der Grenze per Los (feste Saat) | §4 („gleiche Rate“) |
+| **Bringt das LLM etwas?** | gepaart: D = Stat(LLM) − Stat(Vergleich), beide um **dasselbe k** verschoben; „bringt etwas“, wenn D unter dem P5 seiner Nullbahn liegt. Selbsttest dafür: zwei Arme mit gleicher Information dürfen ≤ 6,5 % „besser“ zeigen | wie S7 `paar()` |
+| **Auskunft, nie hochgestuft** | H = 1 / 5 · `ertrag` statt `tief` · BTC statt Breite (S1) · ohne Tage mit Treue-Verstoß · `wirkung_krypto` belastet gegen Rest · Anteil „auffällig“ an Tagen mit/ohne Weg-b-Zeilen | §4, S1-4, S1-7 |
+
+**Selbsttest 07.11. (`g7_stufe2_s1s3_selbsttest.txt`, Werkzeug `5baa332976f75137`) — bestanden, VOR dem Messen:**
+
+| | S1 (Breite tief, 333 T, 22 Blöcke) | S3 (BTC tief, 332 T, 22 Blöcke) |
+|---|---|---|
+| Fehlalarm Hauptstatistik | 4,3 · 5,7 · 5,3 % | 5,9 · 5,8 · 4,4 % |
+| Fehlalarm gepaart (gleiche Information) | 5,7 · 4,9 % | 4,3 · 6,2 % |
+| Auflösung 0,1 · 0,2 · 0,3 · 0,5 σ | 32 · 66 · 90 · 100 % | **5 · 10 · 15 · 26 %** |
+
+Drei Korrekturen am Werkzeug, alle **vor** dem Messen und ohne Bezug zum Ergebnis:
+1. **Breite aus der Arbeitskopie** `data/_g7/kurse` (bis 02.11., Messplan §9.5) statt aus der Messbasis (endet 20.09.). Mit der
+   Messbasis hätte S1 nur 19 Blöcke gehabt (KEIN BEFUND). Gleiche Definition. Gegenprobe: bis 31.08. identisch, im September 19 Tage
+   mit bis zu 0,006 Abweichung, weil die Kopie mehr Werte mit Kurs hat.
+2. **Lauf 1 Tag ist bei Rate > 1/3 kein gültiger Erzeuger** (die Ein-Wahrscheinlichkeit wird > 1, die Reihe zur starren Folge
+   0101…). Das ergab 39,8 % Scheinfehlalarm. Kleinster Lauf bei S1 daher 2 Tage.
+3. Gegenprobe zählt 20 **gültige** Ziehungen (eine leere Reihe war übersprungen worden → „19/20“).
+
+S3 bestätigt das Mindestmaß auch von der anderen Seite: Selbst eine Wirkung von 0,5 σ würde nur in 26 % der Fälle gefunden.
+
+**GDELT-Ton (Ü8), festgehalten vor dem Messen:** S1 und S3 enthalten je einen Ton-Zustand (S1 Krypto, S3 Aktienmarkt). Die NB-Probe
+verfehlt K1 bereits (Stand 07.11., `nb_kontrollen.yaml` K-GD-1). Ein Wert aus dieser Messung gilt daher **für die Sicht MIT Ton**. Trägt
+S1, wird vor jeder Verwendung im Betrieb S1 **ohne Ton** neu erzeugt (335 Aufrufe) und **dieselbe** Messung wiederholt; erst dieser Wert
+gilt für den Betrieb. Trägt S1 nicht, entfällt die Ton-Frage für S1.
+
+### 4.3 Ergebnis Stufe 2 S1/S3 — 07.11.2026 (`g7_stufe2_s1s3.txt`, Werkzeug `5baa332976f75137`)
+
+| | Hauptgröße | Vergleichsarm ohne LLM | LLM besser als Vergleich? | Urteil |
+|---|---|---|---|---|
+| **S1** | +0,209 (Band −0,166/+0,165, p 0,988) | +0,214 | D −0,005, p 0,53 | **trägt nicht** |
+| **S3** | +0,240 (Auskunft, 3 Blöcke) | −0,903 (Auskunft, nur 12 Blöcke) | — | **KEIN BEFUND** |
+
+**Lesart, ohne mehr hineinzulegen:**
+- **S1:** Das Vorzeichen ist **entgegen** der Frage. Nach „auffällig“-Tagen fiel die Breite in 3 Tagen **flacher** als nach „normal“-Tagen.
+  Das liegt außerhalb des oberen Bands, ist aber nach Vorabfestlegung (einseitig) nur **Auskunft**, kein Gegenbefund. Alle
+  Auskunftszeilen zeigen dasselbe Vorzeichen (H 1/5, `ertrag`, ohne Treue-Verstöße). Das LLM-Urteil ist praktisch **dasselbe** wie die
+  bloße Zahl auffälliger Zustände (Stat +0,209 gegen +0,214, gepaart −0,005). Das Gutachten **fügt der Zählung nichts hinzu**.
+- **S3:** Eine Phase (März/April 2026). Nichts daraus ist ein Befund. Der Vergleichsarm zeigt auf 12 Blöcken einen starken Wert. Unter dem
+  Mindestmaß ist das nur ein **Hinweis**, der eine eigene Vorab-Messung bräuchte.
+- **Ton-Frage (§4.2):** entfällt für S1 und S3, weil keine der beiden trägt.
+- **Holm:** Familie bleibt vier. S8 und S7 werden nach ihrem Lauf gemessen.
+- Weg b: S1 hatte an 319 von 335 Tagen eine Zeile nur aus Weg b. Eine Trennung nach Weg b ist damit nicht möglich (zu wenige Tage ohne).
+
 ---
 
 ## 5. Zur Abstimmung — eine Frage: Umfang von Stufe 1

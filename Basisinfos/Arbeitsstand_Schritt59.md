@@ -783,6 +783,45 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - G7 Stufe 1 (lauf9) läuft nach dem Tageswechsel weiter: **S1 und S3 vollständig** (je 335 Tage + 17 Wiederholungen), S8 bei 184/352.
 - ➤ Nächstes: Commit E-172 auf Ja · nächster NB-Export: K-AL-1 abschließen · **Stufe 2 für S1 und S3** (je Hauptsicht genau einmal, Vorabfestlegung Stufe 1 §4) zur Abstimmung.
 
+### Stand 07.11.2026 nachts — G7 Stufe 2 S1/S3 gemessen, GDELT-Probe K1 verfehlt
+
+- Commit E-172 `321069da` (Nutzer *„ok ja“*), nicht gepusht.
+- **GDELT-Probe** lokal ausgewertet: K1 auf 4 Live-Tagen 50–75 % Lücken, auf 14 Tagen nicht mehr erreichbar. Sperren kommen schon beim **ersten** Abruf nach 6 h Pause (Abstand 600 s) → Ursache liegt bei GDELT/Netz, nicht bei unserer Abrufrate. Daneben „Quelle fehlt“ (Tag noch nicht bei GDELT). K-GD-1 `zwischenstand_07_11`.
+- Nutzer: *„OK erst messen dann Ton inkl. beschreibung“* → Nachtrag §4.2 (Voranalyse G7 Stufe 1) **vor** dem Messen: Mindestmaß ≥ 20 Blöcke mit „auffällig“, Holm-Zwischenurteil, Vergleichsarm, Selbsttest mit echter Rate. Selbsttest bestanden (drei Werkzeug-Korrekturen vorab, §4.2).
+- **Ergebnis (§4.3):** **S1 trägt nicht** — an „auffällig“-Tagen fiel die Breite danach sogar **flacher** (+0,21 σ, Gegenrichtung, nur Auskunft); das LLM bildet die Zahl auffälliger Zustände nach (gepaart D −0,005). **S3 KEIN BEFUND** (eine Phase, 3 Blöcke). Ton-Frage entfällt für S1/S3 (§4.2-Regel).
+- **GDELT-Rohdaten Probetag** (Nutzer *„Probetag laden“*): Kriterien vorab in `Voranalyse_GDELT_Rohdaten_07_11.md` §2, 03.11.2026, 96 Dateien, 487 MB, Auswertung 15 s; Abstand roh–API 0,18–0,66 bei allen vier Tönen → **GANGBAR** (R1–R3 erfüllt). Ein Tag zeigt nur die Machbarkeit, nicht dass der Ton trägt; gebraucht nur, wenn S2/S7/Stufe 3 tragen. Ablage `data/_gdelt_roh/` bleibt bis Nutzerentscheid.
+- ➤ Nächstes: S8 nach Abschluss messen (lauf9, Tageskontingent 07.11. erschöpft) · Commit Stufe 2 + Probetag auf Ja · Gesamtschau an den Nutzer.
+
+### Stand 07.11.2026 nachts (2) — G18 M0 Erfolgsmessung vorbereitet
+
+- Nutzer: *„ja G18 Beginnen - aber sollten wir nicht die neuesten Daten nehmen und nicht die von 4.11?“* → ja: die Kopie 04.11. dient nur als Prüfstand. Der NB-Export trägt den Messstand nur als Summe; für D2/D3 braucht es die Datei.
+- `Vorabfestlegung_G18_M0_Erfolgsmessung_07_11.md` (D1–D5, Urteilskriterium im Band / UNTER / über, E-138-Spur nur ab 25.10.) · Werkzeug `g18_m0_erfolgsmessung.py`, Prüfstand mit Gegenprobe gegen `regel0_messstand.stand()` gleich, ein Fehler behoben.
+- ➤ Nächstes: Nutzer legt frische NB-Kopie `regel0_signale_2026-11-07.db` in den Austauschordner (Backup-Befehl, Quelle nur lesend) → Messung mit Sicherung `tradinginfotool_2026-11-07_0854.db.gz`.
+- **M0 gemessen** (Kopie 07.11. 17:13, Integrität ok): D1 alle 1.960/34 T **+0,24 % im Band** (04.11. allein 216 Signale −3,37 %) · D3 Vorsprung gegen Drift **−0,08 %** [−0,53; +0,37] bis 31.10. · D2 ab 25.10. marktweit −1,06 % gegen ruhig +0,25 % (kein Befund, gegen E-138) · D4 keine neuen Trades · Vorabfestlegung §6.
+- ➤ Nächstes: M1 Regel-Katalog **gegen die Drift** (Vorlage an den Nutzer) · Commit G7 Stufe 2 + GDELT-Probetag + G18 M0 auf Ja.
+
+### Stand 07.11.2026 nachts (3) — G18 M1 Voranalyse Regel-Katalog
+
+- Nutzer *„Ja, M1 Voranalyse“* → `Voranalyse_G18_M1_Regelkatalog_07_11.md`, ohne Blick auf ein Ergebnis (nur Phasen gezählt). Maßstab: Vorsprung gegen die Drift je Tag, Zustand vom Vortag, Rangkorrelation zweiseitig.
+- Langsame Zustände 1–13 Phasen im Betriebszeitraum → nur Information (bestätigt E-170 F-B, E-133). Schnelle (Funding, Coinbase-Prämie, OI) messbar nur auf 2024–2026. Katalog A 6 Tageszustände, B 3 Ereignisgruppen je Asset (A1). GDELT nicht (K1), E-138 nur vorwärts.
+- ➤ Zur Abstimmung: Grundgesamtheit (1 Referenzmenge 2024-01–2026-08 + Betriebsmenge als Auskunft · 2 nur Betriebsmenge).
+- **E-173** (*„1 Referenzmenge“*) · Vorabfestlegung §6. Nutzer: *„immer prüfen und gegenprüfen dann doku - bei jedem Schritt“* → Grundregel im Memory.
+- **Prüfung vor dem Blick** (`g18_m1_regelkatalog_pruefen.txt`): 10.732 Einstiege mit Ertrag und Drift, Gegenprobe 5/5. Nachrichten über die Zeit ungleich dicht → B nur Binance/Upbit. **Zwei Fehler der eigenen Festlegung** gefunden: 2024 nur 17 Blöcke (die Zwei-Epochen-Regel wäre nie erfüllbar gewesen), B je Epoche zu dünn → §6.1: gepoolt, Epochen als Auskunft, zweiter Weg vorwärts (M7).
+- **Unabhängige Gegenprüfung** (Agent, nur gelesen/gezählt): 3 Muss-Punkte, alle selbst nachgeprüft und behoben (§6.2): Zustand Zeile T statt T−1 (Stand T 00:00, sonst zwei Tage Verzug); **Lücke im Asset-Leser** `ereignisse.binance_assets` (Kürzel erst ab 2 Zeichen, BTC/ETH als Kurswährung ausgeschlossen) → im Werkzeug ergänzt, Leser selbst unverändert (S7 eingefroren) → **offener Punkt**; Docstring. Hinweise übernommen: Ersatzreihen aus echten Zuständen, gemeinsames k bei B, Welch-t.
+- Selbsttest M2 neu gestartet (der erste lief auf dem alten Werkzeug, verworfen).
+- Selbsttest: A zuerst nicht bestanden (Einzelkandidat bis 6,9 %) → Eichung an Ersatzreihen (§6.3); 300 Ziehungen zu grob (§6.4); Prüfkriterium „jeder einzeln“ war selbst ein Mehrfachtest → ganze Regel wie §6 (§6.5). **Bestanden** `397c0cd495ef13f1`.
+- **M3 gemessen (§7): 0 von 9 trägt.** A: alle ρ im Band (Auflösung ≈ 0,5 Pp) → keine Lage-Regel aus Tageszuständen. B stützend p 0,028 roh, hält Holm nicht, hängt an 2024 (26 Einstiege). **Gegenprobe zweiter Weg (scipy, Kurse direkt): gleich auf 4 Stellen.**
+- ➤ Offen: Lücke im Asset-Leser `ereignisse.binance_assets` (1-Zeichen-Kürzel, BTC/ETH) · Commit auf Ja · nächster Schritt zur Abstimmung (M5 Führung/Ausstieg oder Warten auf G7).
+
+### Stand 08.11.2026 früh — Scheideweg Ende November vorab festgelegt
+
+- Nutzer *„ok du kannst gerne 1. Scheideweg vorbereiten und vorschläge machen welche Wege möglich und sinnvoll sind.“* · *„auch hier prüfen und gegenprüfen“* → `Vorabfestlegung_Scheideweg_Ende_November_08_11.md`, **vor** jedem Blick auf S8, S7/S7w, Stufe 3.
+- **Prüfen:** Stand G7 nachgezählt: S8 335 Tage + 1/17 Wiederholungen; 470/507 erfolgreiche Anfragen am 06./07.11.; S7/S7w ≈ 09.11., S2/S4 ≈ 10.11. **Stufe 3 (finales LLM) ist nicht gebaut**, nur die Messanlage. Eigene Korrektur: GDELT-Ton steckt in S1–S3 und S7 (`agent/zustaende.py`).
+- **Gegenprüfen** (unabhängiger Prüfer, nur lesend): 6 Muss-Punkte, alle an der Quelle nachgeprüft und eingearbeitet (§6). Die wichtigsten: Vergleichsarm darf „trägt“ nicht still verschärfen (zwei getrennte Urteile); Nullbefund = „nicht trennbar“ (S1-1); Termin-/Zustands-Bremse auf die Hebelstufe wäre ein Deckel aus Markt/Makro, ausgeschlossen durch **E-170 F-B**; R-b ist E-140 Option B; GDELT ist keine neue Quelle, CryptoCompare (E-155 b) fehlte; ohne Commit keine Vorabfestlegung.
+- **Inhalt:** Fälle 1 (Stufe 3 trägt → Auswahl-Rolle, Zerlegung Tag/Asset), 1-b, 2 (S7 → Ereignis-Rolle, Asset-Leser erst nach Wiederholung), 3 (S8 → bleibt Fakt), 2/3-Z (Zustände tragen, LLM nicht), 4 (nichts → Ursachenanalyse, dann Grundsatz), 5 (KEIN BEFUND). Wege bei Fall 4: W-I Informations- und Schutzsystem, W-II neue Quelle, W-III/W-IV ✖, W-V einfrieren, W-VI bezahlte Daten, W-VII Stufe 5 für Nicht-Trennbares. **Keine Vorfestlegung** auf einen Weg; W-I gegen W-V hängt an der Nutzerfrage, ob ein Dashboard ohne Signal hilft.
+- Gesamtplan G18-Zelle ersetzt (Verweis, kritischer Weg Stufe 3).
+- ➤ Nächstes: **Commit vor der Messung von S8** (auf Ja) · Stufe-3-Voranalyse (Block 2/5 im Rückspiel, Vorgriff, A4-Modell).
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

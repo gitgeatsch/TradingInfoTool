@@ -1,0 +1,32 @@
+G18 M1 PRÜFEN · 2026-11-07 17:36 · nur Zählungen, KEIN Vorsprung gegen Zustand oder Ereignis
+Einstiege 10732 · mit 24-h-Ertrag 10732 · mit Drift 10732 · mit Vorsprung 10732
+Werte je Stunde für die Drift: Median 123, Minimum 73 (Stunden mit Einstieg)
+  Gegenprobe ROSE 2025-04-02 16:00:00: Tabelle -0.13837 · direkt -0.13837
+  Gegenprobe JTO 2025-12-26 15:00:00: Tabelle +0.04826 · direkt +0.04826
+  Gegenprobe APE 2026-08-05 13:00:00: Tabelle -0.00448 · direkt -0.00448
+  Gegenprobe WIF 2025-04-05 01:00:00: Tabelle -0.01550 · direkt -0.01550
+  Gegenprobe POL 2024-10-11 11:00:00: Tabelle +0.00268 · direkt +0.00268
+
+Epoche 2024: Einstiege 2324 · Tage mit Einstieg 174 · Blöcke 17
+  A S1.funding.BTC           Tage mit Zustandswert 174
+  A S1.funding.ETH           Tage mit Zustandswert 174
+  A S1.coinbase_praemie.BTC  Tage mit Zustandswert 174
+  A S1.coinbase_praemie.ETH  Tage mit Zustandswert 174
+  A S1.oi.BTC                Tage mit Zustandswert 174
+  A S1.oi.ETH                Tage mit Zustandswert 174
+  B stuetzend  markierte Einstiege   26 (1.1 %) · Blöcke mit Marke 11
+  B belastend  markierte Einstiege    6 (0.3 %) · Blöcke mit Marke 4
+  B irgendein  markierte Einstiege   58 (2.5 %) · Blöcke mit Marke 14
+
+Epoche 2025-26: Einstiege 8408 · Tage mit Einstieg 497 · Blöcke 41
+  A S1.funding.BTC           Tage mit Zustandswert 497
+  A S1.funding.ETH           Tage mit Zustandswert 497
+  A S1.coinbase_praemie.BTC  Tage mit Zustandswert 497
+  A S1.coinbase_praemie.ETH  Tage mit Zustandswert 497
+  A S1.oi.BTC                Tage mit Zustandswert 497
+  A S1.oi.ETH                Tage mit Zustandswert 497
+  B stuetzend  markierte Einstiege   41 (0.5 %) · Blöcke mit Marke 25
+  B belastend  markierte Einstiege   28 (0.3 %) · Blöcke mit Marke 17
+  B irgendein  markierte Einstiege  137 (1.6 %) · Blöcke mit Marke 38
+
+Ereignisse Binance/Upbit mit Asset: 6178 · davon Asset in der Referenzmenge 1418 · Typen: {'paar_entfernt': 1118, 'aktion': 1070, 'listing_spot': 825, 'netz_upgrade': 666, 'produkt': 596, 'delisting_margin': 537, 'listing_futures': 460, 'monitoring': 219, 'delisting_token': 160, 'airdrop': 108, 'margin_neu': 106, 'monitoring_ende': 83}

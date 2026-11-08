@@ -1,0 +1,19 @@
+G7 STUFE 2 S1/S3 — SELBSTTEST · 2026-11-07 14:53 · KEIN Urteil gegen Kurse: Urteile künstlich mit der ECHTEN Rate/Lauflänge, Zielgrößen echt
+
+S1 gegen Breite tief H=3 · 333 Tage (2025-12-01..2026-10-29) · Rate 59.8 % · mittlere Lauflänge 3.9 T · Blöcke 22
+  0 Gegenprobe Bahn (FFT) gegen messe(): größte Abweichung 1.1e-15 · gleiche Entscheidung 20/20 (davon 0 Gleichstand an der Grenze)
+  1 Fehlalarm Hauptstatistik (Soll ≤ 6.5 %): Lauf 2.0 T: 4.3 % · Lauf 3.9 T: 5.7 % · Lauf 10.0 T: 5.3 %
+  2 Fehlalarm gepaart 'bringt etwas' bei gleicher Information (Soll ≤ 6.5 %): mit Wirkung 0,3 σ: 5.7 % · ohne Wirkung: 4.9 %
+  3 Auflösung Hauptstatistik (Fundquote): 0.1 σ: 32 % · 0.2 σ: 66 % · 0.3 σ: 90 % · 0.5 σ: 100 %
+  4 Auflösung gepaart (Fundquote 'bringt etwas'): 0.3 σ, B  50 % neu: 42 % · 0.3 σ, B 100 % neu: 67 % · 0.5 σ, B  50 % neu: 86 % · 0.5 σ, B 100 % neu: 97 %
+  => BESTANDEN (6 s)
+
+S3 gegen BTC tief H=3 · 332 Tage (2025-12-01..2026-10-28) · Rate 10.2 % · mittlere Lauflänge 11.3 T · Blöcke 22
+  0 Gegenprobe Bahn (FFT) gegen messe(): größte Abweichung 1.8e-15 · gleiche Entscheidung 20/20 (davon 0 Gleichstand an der Grenze)
+  1 Fehlalarm Hauptstatistik (Soll ≤ 6.5 %): Lauf 1.0 T: 5.9 % · Lauf 10.0 T: 5.8 % · Lauf 11.3 T: 4.4 %
+  2 Fehlalarm gepaart 'bringt etwas' bei gleicher Information (Soll ≤ 6.5 %): mit Wirkung 0,3 σ: 4.3 % · ohne Wirkung: 6.2 %
+  3 Auflösung Hauptstatistik (Fundquote): 0.1 σ: 5 % · 0.2 σ: 10 % · 0.3 σ: 15 % · 0.5 σ: 26 %
+  4 Auflösung gepaart (Fundquote 'bringt etwas'): 0.3 σ, B  50 % neu: 13 % · 0.3 σ, B 100 % neu: 6 % · 0.5 σ, B  50 % neu: 13 % · 0.5 σ, B 100 % neu: 24 %
+  => BESTANDEN (11 s)
+
+SELBSTTEST BESTANDEN · Prüfsumme Werkzeug 5baa332976f75137

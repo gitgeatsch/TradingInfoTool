@@ -1,0 +1,34 @@
+G18 M0 ERFOLGSMESSUNG REGEL0 · 2026-11-07 16:44 · PRÜFSTAND (Kopie 04.11., nur Form)
+Kopie regel0_signale.db · Stand der Ausgänge 2026-11-04 05:50:00 · abgeschlossen 1680 · ohne abgeschlossenen Ausgang 235 · Referenz +0.55 % · Kosten +0.48 % (nachgelagert)
+
+D1 Niveau gegen die Referenz (brutto, 24 h, Spanne über Tage)
+  alle                               n  1680 · Tage  31 · Mittel +0.68 % · Spanne 99 % [-1.02 %; +2.37 %] · A24 24.6 % · B24 17.2 % · im Band der Messung
+  gemailt                            n    68 · Tage  18 · Mittel +1.22 % · Spanne 99 % [-1.55 %; +3.99 %] · A24 17.6 % · B24 10.3 % · im Band der Messung
+  Stufe 2                            n    28 · Tage  20 · Mittel -3.68 % · Spanne 99 % [-10.64 %; +3.28 %] · A24 46.4 % · B24 50.0 % · im Band der Messung
+  Stufe 3                            n   859 · Tage  31 · Mittel +0.99 % · Spanne 99 % [-0.72 %; +2.69 %] · A24 31.9 % · B24 22.4 % · im Band der Messung
+  Stufe 5                            n   793 · Tage  31 · Mittel +0.50 % · Spanne 99 % [-1.57 %; +2.56 %] · A24 15.9 % · B24 10.5 % · im Band der Messung
+  netto nach Kosten (nachgelagert): alle +0.20 % je Signal
+
+D2 E-138-Spur ab 2026-10-25: Tage mit > 20 Signalen gegen ≤ 20 (nur Beschreibung, kein Befund)
+  Tage: marktweit 4 · ruhig 5
+  marktweit (> 20 je Tag)            n   247 · Tage   4 · Mittel +0.47 % · Spanne 99 % [-3.62 %; +4.56 %] · A24 20.2 % · B24 10.5 %
+  ruhig (≤ 20 je Tag)                n    67 · Tage   5 · Mittel +0.26 % · Spanne 99 % [-2.10 %; +2.62 %] · A24 25.4 % · B24 29.9 %
+
+D3 Vorsprung gegen die Drift (Auskunft, Kurse der Arbeitskopie bis 02.11.): 24-h-Ertrag minus Mittel der Breite-Menge
+  Signale mit Drift 1662 von 1680 (bis 2026-10-31)
+  Drift der Breite-Menge             n  1662 · Tage  29 · Mittel +0.76 % · Spanne 99 % [-0.90 %; +2.43 %] · A24 24.7 % · B24 17.0 %
+  Vorsprung alle                     n  1662 · Tage  29 · Mittel -0.08 % · Spanne 99 % [-0.53 %; +0.37 %] · A24 24.7 % · B24 17.0 %
+  Vorsprung gemailt                  n    67 · Tage  17 · Mittel +0.40 % · Spanne 99 % [-1.18 %; +1.97 %] · A24 17.9 % · B24 9.0 %
+
+D4 echte Hebel-Trades seit 2026-10-03 (Ergebnis zum Schlusskurs, nie 'realisiert')
+  Sicherung tradinginfotool_2026-11-04_1742.db.gz · Trades 2 (offen 1, ohne Rechnung 0) · Eigenkapital 1160.00 € · Ergebnis -162.57 € · Gebühren 32.23 €
+   ETH    auf 2026-10-09 08:29 zu 2026-10-15 13:59 geschlossen   149 h · Signal 2026-10-09 06:00 · EK   500.00 € · Ergebnis -127.41 €
+   BTC    auf 2026-10-09 04:38 zu – offen         707 h · Signal eigene Entscheidung · EK   660.00 € · Ergebnis -35.17 €
+
+D5 rückwärts Sep./Okt. 2026 (Betriebsrechnung G7 §10, 24 h aus der Kurs-Arbeitskopie) — Auskunft, stößt E-139 nicht um
+  alle 2026-09                       n  1798 · Tage  29 · Mittel +0.74 % · Spanne 99 % [-1.41 %; +2.89 %] · A24 30.9 % · B24 17.3 % · im Band der Messung
+  alle 2026-10                       n  1668 · Tage  28 · Mittel +0.61 % · Spanne 99 % [-1.20 %; +2.41 %] · A24 24.4 % · B24 17.7 % · im Band der Messung
+  Schalter-Werte 2026-09             n    72 · Tage  17 · Mittel +1.03 % · Spanne 99 % [-2.20 %; +4.25 %] · A24 26.4 % · B24 12.5 % · im Band der Messung
+  Schalter-Werte 2026-10             n    67 · Tage  18 · Mittel +1.13 % · Spanne 99 % [-2.02 %; +4.27 %] · A24 17.9 % · B24 10.4 % · im Band der Messung
+
+fertig 8 s

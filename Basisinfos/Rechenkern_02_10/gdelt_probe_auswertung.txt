@@ -1,0 +1,35 @@
+GDELT-PROBE AM NB — Auswertung 2026-11-07T12:39+00:00
+Probe: Rechner T440 · Python 3.13.14 · Fassung 1 (02.11.2026) · Prüfsumme 75caf5849b327086 · Start 2026-11-02T18:07:56+00:00 · Ende 2026-11-16T18:07:56+00:00
+
+Gleichheit mit dem Quelltext von api/sichten_quellen (Ü8):
+  ✔ Abfragen (4 Töne)                
+  ✔ Abstand zwischen Abfragen (s)    
+  ✔ Fenster --laufend (Tage)         
+  ✔ Kopfzeile                        
+  ✔ Adresse                          
+  ✔ Versuche je Abfrage              
+  ✔ Pause vor dem 2. Versuch (s)     
+  ✔ mode                             
+  ✔ format                           
+
+Runden: 20 von 21 (fehlen: 2026-11-07T12:30:00+00:00) · Abrufe 147, davon mit Werten 23 · HTTP {'429': 124, '200': 23} · Neustarts 0 · kaputte Zeilen 0
+
+K1 Abdeckung (Wert spätestens 24 h nach Tagesende; Soll Lücken ≤ 10 %) — 4 Live-Tage
+  aktien   Lücken 2 von 4 (50 %) · Verzug bis zum ersten Wert: Median 0.9 h, max 24.9 h
+           davon gesperrt 1 · Quelle fehlt 1 · kein Abruf 0   (Tage: 11-02 gesperrt, 11-04 quelle_fehlt)
+  fed      Lücken 2 von 4 (50 %) · Verzug bis zum ersten Wert: Median 6.7 h, max 24.7 h
+           davon gesperrt 1 · Quelle fehlt 1 · kein Abruf 0   (Tage: 11-02 quelle_fehlt, 11-04 gesperrt)
+  konflikt Lücken 2 von 4 (50 %) · Verzug bis zum ersten Wert: Median 1.1 h, max 25.1 h
+           davon gesperrt 0 · Quelle fehlt 2 · kein Abruf 0   (Tage: 11-02 quelle_fehlt, 11-04 quelle_fehlt)
+  krypto   Lücken 3 von 4 (75 %) · Verzug bis zum ersten Wert: Median 12.5 h, max 12.5 h
+           davon gesperrt 2 · Quelle fehlt 1 · kein Abruf 0   (Tage: 11-02 quelle_fehlt, 11-04 gesperrt, 11-05 gesperrt)
+  → NICHT erfüllt
+
+K3 Form: Abrufe ohne Tagesauflösung 0 → erfüllt
+
+K2 Gleichheit: offen — Rückspiel erst nach dem Probeende holen (--rueckspiel)
+
+Auskunft — Fensterprobe (14-T-Fenster der Probe gegen die Jahresfenster der Historie): 159 gemeinsame Werte, abweichend 0, größte Abweichung 0.0000
+Auskunft — Revision (erster gegen letzten Wert desselben Tages in der Probe): 10 Ton-Tage, geändert 0, größte Änderung 0.0000
+
+URTEIL: offen (K2 fehlt)

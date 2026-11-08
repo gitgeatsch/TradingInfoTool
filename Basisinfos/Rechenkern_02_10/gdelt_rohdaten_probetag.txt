@@ -1,0 +1,11 @@
+GDELT-ROHDATEN PROBETAG · 2026-11-07 15:58 · Tag 03.11.2026 · Vorabfestlegung Voranalyse_GDELT_Rohdaten_07_11.md §2
+Dateien 96 von 96 · komprimiert 487.2 MB · Artikel 113571 (Ton im Mittel -0.55) · kaputte Zeilen 0 · Auswertung 15 s
+R1 Machbarkeit (≤ 500 MB und ≤ 15 min): erfüllt · Hochrechnung 335 Tage 163 GB · 2021-03..2026-10 (≈ 2.070 Tage) 1009 GB
+Ton        Artikel  Ton roh      API  Abstand nur Text (Artikel / Ton)
+krypto         620    -3.12    -3.78     0.66       89 / -2.19
+fed            347    -0.75    -0.40     0.35      347 / -0.75
+aktien        6862     0.24     0.68     0.44      288 / 1.00
+konflikt     14038    -2.16    -1.98     0.18     2272 / -1.91
+R2 Treffer (≥ 100 je Ton): 4 von 4 · erfüllt
+R3 Nähe (|roh − API| ≤ 1,0 bei ≥ 3 von 4): 4 von 4 · erfüllt
+URTEIL: GANGBAR — nächster Schritt 14-Tage-Abgleich (eigene Frage)
