@@ -1,0 +1,6 @@
+G7 STUFE 3 — vorläufige Hebelstufe (ATR der Signalstunde) · 2026-11-08 07:07
+Einstiege 2435
+GEGENPROBE endgültige Stufe nachgerechnet = Mengendatei: 2435 von 2435 ✔
+vorläufig ≠ endgültig: 65 (2.7 %) · Übergänge {(2, 2): np.int64(60), (2, 3): np.int64(5), (3, 2): np.int64(5), (3, 3): np.int64(1583), (3, 5): np.int64(22), (5, 3): np.int64(33), (5, 5): np.int64(727)}
+vorläufig 0 (kein Handel zum Signal), endgültig > 0: 0
+Rechenzeit 453 s

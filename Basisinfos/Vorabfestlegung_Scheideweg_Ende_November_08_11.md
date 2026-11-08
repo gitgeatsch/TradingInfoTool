@@ -208,6 +208,16 @@ Vorschlag: **R-a in Fall 1**. In Fall 4 wird R-a gegen R-b neu vorgelegt.
 
 ---
 
+### 5.1 Nachtrag 08.11.2026 — Stufe 3 zweistufig (E-174), VOR jedem Urteil
+
+- Stufe 3 läuft zuerst als **Vorprüfung 3a** (321 Einstiege, 1 je Tag, bevorzugt gemailt) mit Abbruchregel **p ≤ 0,40 über die
+  ganze Vorauswahl oder ihren gemailten Teil → weiter**, sonst Ende
+  ([`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md) §4).
+- **Lesart hier** (Voranalyse §4.3): ENDE gilt für M-St3 als **„nicht trennbar“** (§3.1; Auflösung von 3a: ab ≈ 0,9 % sicher), bei
+  p ≥ 0,95 als **„verkehrt“** — beides **Fall 4**. Nur „nicht messbar“ (Anteil Bedenken außerhalb 5–95 %) ist KEIN BEFUND, **Fall 5**.
+  Damit kann Fall 4 schon ≈ 12.11. eintreten, sobald auch M-S8 und M-S7 gelesen sind.
+- Der Zeitplan §2.2 verkürzt sich bei ENDE um ≈ 4 Kontingenttage; bei WEITER bleibt er.
+
 ## 6. Gegenprüfung (08.11.2026, unabhängig, nur lesend)
 
 Ein Prüfer ohne Kenntnis eines Ergebnisses hat die erste Fassung gegen die Quellen geprüft. Ich habe jeden Muss-Punkt an der Quelle

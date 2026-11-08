@@ -1,0 +1,30 @@
+G7 STUFE 3 — SELBSTTEST DER VORPRÜFUNG · 2026-11-08 06:31 · Werkzeug-Prüfsumme siehe Doku
+Menge b: 2379 Einstiege mit Zielgröße · 321 Tage · 23 Blöcke · σ Median 4.68 %
+  Vorprüfung k = 1 je Tag: 321 Einstiege · 321 Tage · 23 Blöcke · Rest 2058
+  Vorprüfung k = 2 je Tag: 634 Einstiege · 321 Tage · 23 Blöcke · Rest 1745
+  Gegenprobe gegen g7_stufe3_anlage.messe: p 0.8875 gegen 0.8875 · trägt False gegen False
+
+1  OHNE WIRKUNG (1000 Ziehungen): Anteil WEITER je c · Fehlalarm voll / mit Vorprüfung (Soll ≤ 5 %, Toleranz 6,5 %)
+   G-Tag Lauf 1 T  k=1  weiter: c0.20  22 % c0.30  31 % c0.40  40 % c0.50  51 % · Fehlalarm voll 4.8 % · mit Vorprüfung 3.2 3.4 3.6 4.2
+   G-Tag Lauf 1 T  k=2  weiter: c0.20  20 % c0.30  31 % c0.40  39 % c0.50  49 % · Fehlalarm voll 4.8 % · mit Vorprüfung 2.8 3.4 3.8 4.3
+   G-Tag Lauf 3 T  k=1  weiter: c0.20  19 % c0.30  30 % c0.40  40 % c0.50  50 % · Fehlalarm voll 4.9 % · mit Vorprüfung 3.3 3.9 4.1 4.1
+   G-Tag Lauf 3 T  k=2  weiter: c0.20  20 % c0.30  30 % c0.40  42 % c0.50  52 % · Fehlalarm voll 4.9 % · mit Vorprüfung 3.2 3.8 4.1 4.7
+   G-Handel 30 %   k=1  weiter: c0.20  19 % c0.30  29 % c0.40  38 % c0.50  51 % · Fehlalarm voll 2.6 % · mit Vorprüfung 1.4 1.9 1.9 1.9
+   G-Handel 30 %   k=2  weiter: c0.20  21 % c0.30  31 % c0.40  42 % c0.50  50 % · Fehlalarm voll 2.6 % · mit Vorprüfung 1.0 1.5 1.9 1.9
+
+2  MIT WIRKUNG (500 Ziehungen je Stärke): Fundquote voll · Anteil WEITER je c · Fundquote mit Vorprüfung je c
+   G-Handel 30 %   0.1σ (≈0.47 %) k=1  voll  58 % · weiter c0.20  50 c0.30  65 c0.40  73 c0.50  82 · mit Vorprüfung  33  42  46  51
+   G-Handel 30 %   0.1σ (≈0.47 %) k=2  voll  58 % · weiter c0.20  64 c0.30  75 c0.40  83 c0.50  89 · mit Vorprüfung  45  49  53  56
+   G-Handel 30 %   0.2σ (≈0.94 %) k=1  voll  98 % · weiter c0.20  79 c0.30  87 c0.40  93 c0.50  97 · mit Vorprüfung  78  86  92  95
+   G-Handel 30 %   0.2σ (≈0.94 %) k=2  voll  98 % · weiter c0.20  92 c0.30  96 c0.40  97 c0.50  99 · mit Vorprüfung  90  94  96  97
+   G-Handel 30 %   0.3σ (≈1.40 %) k=1  voll 100 % · weiter c0.20  96 c0.30  99 c0.40  99 c0.50  99 · mit Vorprüfung  96  99  99  99
+   G-Handel 30 %   0.3σ (≈1.40 %) k=2  voll 100 % · weiter c0.20 100 c0.30 100 c0.40 100 c0.50 100 · mit Vorprüfung 100 100 100 100
+   G-Tag Lauf 3 T  0.1σ (≈0.47 %) k=1  voll  37 % · weiter c0.20  50 c0.30  64 c0.40  73 c0.50  83 · mit Vorprüfung  25  30  32  35
+   G-Tag Lauf 3 T  0.1σ (≈0.47 %) k=2  voll  37 % · weiter c0.20  59 c0.30  69 c0.40  77 c0.50  86 · mit Vorprüfung  30  32  35  36
+   G-Tag Lauf 3 T  0.2σ (≈0.94 %) k=1  voll  81 % · weiter c0.20  78 c0.30  87 c0.40  92 c0.50  95 · mit Vorprüfung  68  75  77  79
+   G-Tag Lauf 3 T  0.2σ (≈0.94 %) k=2  voll  81 % · weiter c0.20  91 c0.30  96 c0.40  98 c0.50  98 · mit Vorprüfung  77  78  80  80
+   G-Tag Lauf 3 T  0.3σ (≈1.40 %) k=1  voll  97 % · weiter c0.20  95 c0.30  97 c0.40  99 c0.50  99 · mit Vorprüfung  93  95  96  96
+   G-Tag Lauf 3 T  0.3σ (≈1.40 %) k=2  voll  97 % · weiter c0.20  99 c0.30 100 c0.40 100 c0.50 100 · mit Vorprüfung  96  97  97  97
+
+3  AUSWAHL nach der Regel im Kopf: k = 1 je Tag, c = 0.40
+   Rechenzeit 53 s

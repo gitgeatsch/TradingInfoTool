@@ -2440,3 +2440,27 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - Nicht gewählt: nur Betriebsmenge (Weg 2: zu kurz, fast sicher „kein Befund“ aus Datenlänge).
 - Dazu als Arbeitsregel: **jeder Schritt prüfen → gegenprüfen → Doku** (Nutzer 07.11.).
 
+
+# E-174 · G7 Stufe 3 zweistufig: Vorprüfung mit Abbruchregel vor dem langen Lauf (08.11.2026)
+
+**08.11.2026** · Nutzer: *„können wir die Prüfung so anlegen, dass die langen läufe nur erfolgen wenn wir einen Hinweis darauf haben, dass es funktioniert. Das sind weitere Tage die vergehen und wir ggf. am Ende ohne Lösung dastehen.“* → *„1 Vorprüfung“* · Vorlage: [`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md) §4
+
+**Entschieden (Weg 1 von 2):**
+- **3a Vorprüfung** auf 1 Einstieg je Tag, bevorzugt ein gemailter (321, davon 204 aus a; festgeschrieben `g7_stufe3_vorauswahl_d3.csv`); **weiter nur, wenn p ≤ 0,40 über die ganze Vorauswahl ODER über ihren gemailten Teil** (dieselbe Statistik wie die Messung). Sonst endet Stufe 3 als „nicht trennbar“ (bzw. „verkehrt“ bei p ≥ 0,95; „nicht messbar“ bei Anteil Bedenken außerhalb 5–95 %).
+- Entwurf und Hürde **aus zwei Selbsttests** nach je vorab festgelegter Regel, nicht gewählt. Fassung 2 nach der Gegenprüfung (sie fand: Fassung 1 verlor den Betriebsfall „Wirkung nur auf den gemailten“). Bei ≈ 1,4 % kommen alle geprüften Fälle zu ≥ 94 % weiter, auch der Betriebsfall (97 %); bei ≈ 0,9 % 93–94 %; ohne Wirkung endet rund die Hälfte nach 3a; der Fehlalarm sinkt (Abbruch nur für Vergeblichkeit).
+- **3b** nur bei WEITER; ausgewertet auf allen 2.379 wie Messplan §11.5. Die Vorprüfung meldet nie „trägt“.
+- **Nicht Teil dieser Entscheidung, zur Abstimmung:** die Vorschläge der Voranalyse zum Inhalt (A4 und Block 5 nicht in dieser Messung; Block 2 nur, was es im Rückspiel gibt, live gleich, Ü8).
+- Nicht gewählt: zusätzlich ein Tor über S7/S8 vor dem Bau (Weg 2) — spart Bauarbeit, aber kaum Kalendertage, und der Signaltest aus der Kombination fiele weg.
+- Gilt sinngemäß als Arbeitsregel: **lange Läufe nur nach einer Vorprüfung mit vorab bestimmter Abbruchregel** (Memory *lange Messung nur nach Vorprüfung*).
+
+# E-175 · G7 Stufe 3: Inhalt des finalen LLM — ohne A4 und Befund-Karte, Block 2 nur Rückspiel-fähig, ein Informationszeitpunkt (08.11.2026)
+
+**08.11.2026** · Nutzer: *„Ja, alle vier“* · Vorlage: [`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md) §0 Punkte 2–5, §2
+
+**Entschieden:**
+- **A4 Gegenanwalt nicht** in der Bedenken-Messung (läuft nach dem finalen LLM, Fütterung §4). Eine eigene A4-Messung nur auf eigene Abstimmung.
+- **Block 5 Befund-Karte nicht** — im Rückspiel ein Vorgriff; live ebenso nicht, bis „mit/ohne A3“ gemessen ist (Ü6, Ü8).
+- **Block 2** nur Kurs-Lage (Abstand 200 T), REGEL0-Lage, Hebel-Abstand; Verwässerung, Wal-Zustand, Bestand weg — im Rückspiel und live (Ü8).
+- **Block 3** ohne Schwere-Texte (Vorgriff P-1), Asset-Zuordnung um Kürzel in Klammern ergänzt; `agent/ereignisse.py` unverändert.
+- **Ein Informationszeitpunkt** t = Signalstunde + 1 h für alle Blöcke; Gutachten vom Tag T erst ab T 02:00 UTC.
+- **Beim Bau festgestellt und nach dieser Regel umgesetzt:** die Mengendatei trägt v̂ und Hebelstufe der **Einstiegsstunde** (eine Stunde nach t). Live geht die Mail beim Signal mit der **vorläufigen** Stufe hinaus → das finale LLM sieht die vorläufige Stufe (`g7_stufe3_stufe_vorlaeufig.py`, Gegenprobe der endgültigen 2.435/2.435; Abweichung 2,7 %) und keinen v̂-Wert.

@@ -10,12 +10,12 @@
 | Regelwerk / Methodik | 9 |
 | Entscheidungen / Fakten | 8 |
 | Konzept | 20 |
-| Voranalyse / Recherche | 101 |
+| Voranalyse / Recherche | 102 |
 | Lage / Bilanz / Bericht | 12 |
 | Betrieb / Technik | 5 |
 | Befund / Ergebnis | 25 |
 | Sonstiges | 3 |
-| **gesamt** | **247** |
+| **gesamt** | **248** |
 
 ## Plan
 
@@ -184,6 +184,7 @@
 | [`Voranalyse_G7_Messplan_02_11.md`](Voranalyse_G7_Messplan_02_11.md) | Voranalyse G7 — Messplan: Faktentreue der Prüfer und Wert der Sichten (02.11.2026) | **laufend** |
 | [`Voranalyse_G7_S7_Anlage_05_11.md`](Voranalyse_G7_S7_Anlage_05_11.md) | Voranalyse G7 S7-Anlage — wie die Asset-Urteile von S7 gemessen werden (05.11.2026) | **laufend** |
 | [`Voranalyse_G7_Stufe1_04_11.md`](Voranalyse_G7_Stufe1_04_11.md) | Voranalyse G7 Stufe 1 — Sicht-Gutachten im Rückspiel (04.11.2026) | **laufend** |
+| [`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md) | Voranalyse G7 Stufe 3 — das finale LLM je REGEL0-Einstieg, mit Vorprüfung (08.11.2026) | **laufend** |
 | [`Voranalyse_G8_NB_Buendel_03_11.md`](Voranalyse_G8_NB_Buendel_03_11.md) | Voranalyse G8: was jetzt ans Notebook kann (03.11.2026) | **laufend** |
 | [`Voranalyse_GDELT_Rohdaten_07_11.md`](Voranalyse_GDELT_Rohdaten_07_11.md) | Voranalyse GDELT-Rohdaten — Probetag (07.11.2026) | Arbeitsblatt |
 | [`Voranalyse_Hebel_M1_23_09.md`](Voranalyse_Hebel_M1_23_09.md) | Voranalyse M1 / Hebel — der Hebel ist heute ein Ein-Aus-Schalter | Arbeitsblatt |

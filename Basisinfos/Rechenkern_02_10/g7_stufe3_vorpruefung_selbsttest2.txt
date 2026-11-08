@@ -1,0 +1,49 @@
+G7 STUFE 3 — SELBSTTEST DER VORPRÜFUNG, FASSUNG 2 · 2026-11-08 06:44
+Menge b 2379 Einstiege, davon a 903 · Tage 321 (a: 204)
+  D1: 321 Aufrufe · a-Teil 83 · Tage 321 · Regel p_b
+  D2: 321 Aufrufe · a-Teil 83 · Tage 321 · Regel p_b ODER p_a
+  D3: 321 Aufrufe · a-Teil 204 · Tage 321 · Regel p_b ODER p_a
+  D4: 524 Aufrufe · a-Teil 204 · Tage 321 · Regel p_b ODER p_a
+
+1  OHNE WIRKUNG (1000 Ziehungen): Anteil WEITER je c · Fehlalarm voll b / a · mit Vorprüfung b
+   G-Tag Lauf 1 T  D1  weiter c0.30  28 % c0.40  38 % c0.50  49 % · Fehlalarm voll b 2.9 % / a 2.5 % · mit Vorprüfung b 2.0 2.5 2.7
+   G-Tag Lauf 1 T  D2  weiter c0.30  41 % c0.40  53 % c0.50  66 % · Fehlalarm voll b 2.9 % / a 2.5 % · mit Vorprüfung b 2.2 2.6 2.8
+   G-Tag Lauf 1 T  D3  weiter c0.30  38 % c0.40  49 % c0.50  60 % · Fehlalarm voll b 2.9 % / a 2.5 % · mit Vorprüfung b 2.1 2.2 2.6
+   G-Tag Lauf 1 T  D4  weiter c0.30  39 % c0.40  50 % c0.50  61 % · Fehlalarm voll b 2.9 % / a 2.5 % · mit Vorprüfung b 2.4 2.5 2.7
+   G-Handel 30 %   D1  weiter c0.30  34 % c0.40  45 % c0.50  54 % · Fehlalarm voll b 3.2 % / a 1.5 % · mit Vorprüfung b 2.2 2.8 2.9
+   G-Handel 30 %   D2  weiter c0.30  48 % c0.40  60 % c0.50  70 % · Fehlalarm voll b 3.2 % / a 1.5 % · mit Vorprüfung b 2.5 3.0 3.0
+   G-Handel 30 %   D3  weiter c0.30  40 % c0.40  51 % c0.50  61 % · Fehlalarm voll b 3.2 % / a 1.5 % · mit Vorprüfung b 3.0 3.0 3.1
+   G-Handel 30 %   D4  weiter c0.30  42 % c0.40  54 % c0.50  64 % · Fehlalarm voll b 3.2 % / a 1.5 % · mit Vorprüfung b 2.9 3.0 3.1
+
+2  MIT WIRKUNG (500 Ziehungen): Fund voll (b / a) · WEITER je c
+   W1 G-Handel 30 %   0.2σ D1  voll b  98 % / a  56 % · weiter c0.30  89 c0.40  92 c0.50  95 · mit Vorprüfung b  88  91  94 / a  51  52  53
+   W1 G-Handel 30 %   0.2σ D2  voll b  98 % / a  56 % · weiter c0.30  91 c0.40  94 c0.50  96 · mit Vorprüfung b  91  93  95 / a  53  54  55
+   W1 G-Handel 30 %   0.2σ D3  voll b  98 % / a  56 % · weiter c0.30  87 c0.40  93 c0.50  95 · mit Vorprüfung b  86  91  94 / a  51  54  54
+   W1 G-Handel 30 %   0.2σ D4  voll b  98 % / a  56 % · weiter c0.30  94 c0.40  97 c0.50  98 · mit Vorprüfung b  93  95  97 / a  54  55  55
+   W1 G-Handel 30 %   0.3σ D1  voll b 100 % / a  89 % · weiter c0.30  97 c0.40  98 c0.50  99 · mit Vorprüfung b  97  98  99 / a  86  87  88
+   W1 G-Handel 30 %   0.3σ D2  voll b 100 % / a  89 % · weiter c0.30  98 c0.40  98 c0.50  99 · mit Vorprüfung b  98  98  99 / a  87  88  88
+   W1 G-Handel 30 %   0.3σ D3  voll b 100 % / a  89 % · weiter c0.30  98 c0.40  99 c0.50 100 · mit Vorprüfung b  98  99 100 / a  87  88  89
+   W1 G-Handel 30 %   0.3σ D4  voll b 100 % / a  89 % · weiter c0.30  99 c0.40 100 c0.50 100 · mit Vorprüfung b  99 100 100 / a  88  89  89
+   W2 G-Tag Lauf 3 T  0.2σ D1  voll b  79 % / a  47 % · weiter c0.30  89 c0.40  92 c0.50  94 · mit Vorprüfung b  72  74  75 / a  44  44  45
+   W2 G-Tag Lauf 3 T  0.2σ D2  voll b  79 % / a  47 % · weiter c0.30  90 c0.40  93 c0.50  96 · mit Vorprüfung b  73  74  76 / a  44  45  46
+   W2 G-Tag Lauf 3 T  0.2σ D3  voll b  79 % / a  47 % · weiter c0.30  89 c0.40  94 c0.50  95 · mit Vorprüfung b  73  76  76 / a  45  46  47
+   W2 G-Tag Lauf 3 T  0.2σ D4  voll b  79 % / a  47 % · weiter c0.30  92 c0.40  95 c0.50  98 · mit Vorprüfung b  75  77  78 / a  46  47  47
+   W2 G-Tag Lauf 3 T  0.3σ D1  voll b  96 % / a  68 % · weiter c0.30  97 c0.40  98 c0.50  99 · mit Vorprüfung b  94  95  96 / a  67  68  68
+   W2 G-Tag Lauf 3 T  0.3σ D2  voll b  96 % / a  68 % · weiter c0.30  97 c0.40  99 c0.50 100 · mit Vorprüfung b  94  95  96 / a  67  68  68
+   W2 G-Tag Lauf 3 T  0.3σ D3  voll b  96 % / a  68 % · weiter c0.30  97 c0.40  99 c0.50  99 · mit Vorprüfung b  93  95  95 / a  67  68  68
+   W2 G-Tag Lauf 3 T  0.3σ D4  voll b  96 % / a  68 % · weiter c0.30  99 c0.40 100 c0.50 100 · mit Vorprüfung b  95  96  96 / a  68  68  68
+   W3 nur a, 30 %     0.3σ D1  voll b  70 % / a  92 % · weiter c0.30  58 c0.40  68 c0.50  76 · mit Vorprüfung b  45  51  56 / a  54  63  71
+   W3 nur a, 30 %     0.3σ D2  voll b  70 % / a  92 % · weiter c0.30  85 c0.40  90 c0.50  93 · mit Vorprüfung b  62  65  67 / a  79  83  87
+   W3 nur a, 30 %     0.3σ D3  voll b  70 % / a  92 % · weiter c0.30  94 c0.40  97 c0.50  98 · mit Vorprüfung b  68  69  70 / a  88  90  91
+   W3 nur a, 30 %     0.3σ D4  voll b  70 % / a  92 % · weiter c0.30  95 c0.40  97 c0.50  99 · mit Vorprüfung b  69  69  70 / a  88  90  91
+   W4 G-Handel 10 %   0.3σ D1  voll b  98 % / a  58 % · weiter c0.30  86 c0.40  91 c0.50  95 · mit Vorprüfung b  85  89  93 / a  51  54  56
+   W4 G-Handel 10 %   0.3σ D2  voll b  98 % / a  58 % · weiter c0.30  90 c0.40  94 c0.50  97 · mit Vorprüfung b  88  92  95 / a  52  55  57
+   W4 G-Handel 10 %   0.3σ D3  voll b  98 % / a  58 % · weiter c0.30  88 c0.40  94 c0.50  96 · mit Vorprüfung b  86  92  94 / a  55  57  57
+   W4 G-Handel 10 %   0.3σ D4  voll b  98 % / a  58 % · weiter c0.30  94 c0.40  96 c0.50  98 · mit Vorprüfung b  93  94  96 / a  57  57  58
+   W5 G-Handel 85 %   0.3σ D1  voll b 100 % / a  61 % · weiter c0.30  93 c0.40  96 c0.50  97 · mit Vorprüfung b  93  96  97 / a  57  59  59
+   W5 G-Handel 85 %   0.3σ D2  voll b 100 % / a  61 % · weiter c0.30  94 c0.40  97 c0.50  97 · mit Vorprüfung b  94  97  97 / a  58  59  59
+   W5 G-Handel 85 %   0.3σ D3  voll b 100 % / a  61 % · weiter c0.30  94 c0.40  97 c0.50  98 · mit Vorprüfung b  94  97  98 / a  59  60  60
+   W5 G-Handel 85 %   0.3σ D4  voll b 100 % / a  61 % · weiter c0.30  98 c0.40  99 c0.50 100 · mit Vorprüfung b  98  99 100 / a  60  61  61
+
+3  AUSWAHL nach der Regel im Kopf: D3, c = 0.40 (321 Aufrufe in der Vorprüfung)
+   Rechenzeit 91 s

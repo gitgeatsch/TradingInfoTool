@@ -34219,6 +34219,247 @@ def paket_gutachtenpruefer() -> None:
            all(w not in open(_GP.__file__, encoding="utf-8").read() for w in ("import sqlite3", "import requests", "open(")))
 
 
+def paket_finales_llm() -> None:
+    """Finales LLM ``agent/finales_llm.py`` (G7 Stufe 3, Voranalyse_G7_Stufe3_finales_LLM_08_11.md, E-174/E-175, Nutzer 08.11.2026:
+    *"1 Vorpruefung"*, *"Ja, alle vier"*). OHNE Netz: das LLM ist eine Attrappe, jede Ablage ein Wegwerfordner. Liest Kurs-Arbeitskopie,
+    sichten.db und die Gutachten-Ablagen nur mode=ro - nur am Desktop. Fassung 2 nach der Gegenpruefung 08.11. (M1, S2, S4, S5)."""
+    P = "FinalesLLM"
+    import json as _json
+    import os as _os
+    import tempfile as _tf
+
+    import numpy as _np
+    import pandas as _pd
+
+    from agent import finales_llm as _F
+
+    def _fuss(pfad):
+        return (_os.path.getsize(pfad), _os.path.getmtime(pfad)) if _os.path.exists(pfad) else None
+
+    buch = _os.path.join(_F.PROJ, "data", "_g7", "anfragen.csv")
+    vorher = {f: _fuss(f) for f in (_F.ABLAGE, _F.ABLAGE_PROBE)}     # das Anfragebuch schreibt lauf9 parallel -> eigene PID pruefen
+
+    # 1 Ablage: NUR finales_llm*.db
+    verweigert = []
+    for name in ("tradinginfotool.db", "sichten.db", "gutachten.db", "gutachten_probe2.db", "stundenkurse.db"):
+        try:
+            _F.verbinde(_os.path.join(_tf.gettempdir(), "x", name))
+        except SystemExit:
+            verweigert.append(name)
+    pruefe(P, "Ablage: schreibt NUR in finales_llm*.db (verweigert Produktion, sichten, Gutachten, Kurse); Probe getrennt",
+           len(verweigert) == 5 and _F.ABLAGE.replace("\\", "/").endswith("data/_g7/finales_llm.db") and _F.ABLAGE_PROBE != _F.ABLAGE,
+           str(verweigert))
+
+    # 2 Festgeschriebene Mengen (Pruefsummen, nicht neu gezogen)
+    M, V = _F.menge(), _F.vorauswahl()
+    ta = set(M[M.teil == "a_gemailt"].stunde.str[:10])
+    v_tage = V.stunde.str[:10]
+    pruefe(P, "Menge b 2.379 (62a0641a…), Vorauswahl D3 (314c47c3…): 321, je Tag genau 1, an jedem Tag mit gemailten ein gemailter; "
+           "vorlaeufige Stufe (f6bef1ce…) und Zielgroesse (c9a0b0e6…) per Pruefsumme gepinnt",
+           len(M) == 2379 and len(V) == 321 and v_tage.is_unique and v_tage.nunique() == M.stunde.str[:10].nunique()
+           and all((V[v_tage == t_].teil == "a_gemailt").all() for t_ in ta) and len(V.merge(M, on=["symbol", "stunde"])) == 321
+           and _F._sha(_F.STUFE_VORL) == _F.STUFE_VORL_SHA and _F._sha(_F.ZIELGROESSE) == _F.ZIELGROESSE_SHA,
+           "%d %d" % (len(M), len(V)))
+    pruefe(P, "vorlaeufige Stufe: vorhanden fuer alle, weicht in 2–4 % von der endgueltigen ab (Live-Mail beim Signal, Ue8)",
+           M.stufe_vorlaeufig.notna().all() and 0.02 <= (M.stufe_vorlaeufig != M.stufe).mean() <= 0.04,
+           "%.1f %%" % (100 * (M.stufe_vorlaeufig != M.stufe).mean()))
+
+    # 3 Informationszeitpunkt
+    pruefe(P, "Gutachten-Tag: 01:00 -> Vortag, 02:00 -> derselbe Tag (S3-5)",
+           _F.gutachten_tag(_pd.Timestamp("2026-03-04 01:00")) == "2026-03-03" and _F.gutachten_tag(_pd.Timestamp("2026-03-04 02:00")) == "2026-03-04")
+
+    # 4 Vorgriff am SEITENEFFEKT ueber ALLE Einstiege: Kurse ab t, Meldungen nach t, Gutachten nach der Regel -> Quelle VERWEIGERT
+    class _Kurse:
+        def __init__(self, k):
+            self.k, self.t = k, None
+
+        def reihe(self, sym):
+            r_, q_ = self.k.reihe(sym)
+            return (None if r_ is None else r_[r_.index < self.t]), q_
+
+    class _QKapp(_F.Quelle):
+        t = None
+
+        def gutachten(self, tag, sicht):
+            frei = _pd.Timestamp(tag) + _pd.Timedelta(hours=_F.GUTACHTEN_AB_H if tag == self.t.strftime("%Y-%m-%d") else 0)
+            if frei > self.t:
+                raise RuntimeError("Gutachten %s nach t %s" % (tag, self.t))
+            return super().gutachten(tag, sicht)
+
+    def _seiteneffekt(gutachten, rows):
+        q = _F.Quelle(gutachten=gutachten)
+        kk = _Kurse(q.kurse)
+        q2 = _QKapp(gutachten=gutachten, kurse=kk, E=q.E.iloc[:0].drop(columns=["liste", "klammer"]))
+        n_, gleich = 0, 0
+        for r in rows.itertuples():
+            t = _F._t(r.stunde)
+            kk.t, q2.t = t, t
+            q2.E = q.E[q.E.bekannt_ab <= _F._iso(t)]
+            e1, e2 = _F.eingabe(q, r), _F.eingabe(q2, r)
+            n_ += 1
+            gleich += e1["sha"] == e2["sha"] and not e1["vorgriff"] and ("Hebel %d-fach" % int(r.stufe_vorlaeufig)) in e1["text"] \
+                and "v̂ =" not in e1["text"] and "Gegenbewegung nach einem Rückgang" in e1["text"]
+        return n_, gleich
+
+    n1, g1 = _seiteneffekt(_F.GUTACHTEN, M)
+    n2, g2 = _seiteneffekt(_F.GUTACHTEN_PROBE, _F.probe_menge())
+    pruefe(P, "Vorgriff am Seiteneffekt, ALLE 2.379 Einstiege + 5 Probe-Einstiege mit allen Sichten: Kurse ab t und Meldungen nach t "
+           "abgeschnitten, Gutachten nach der 02:00-Regel verweigert -> Eingabe byte-gleich; vorlaeufige Stufe, kein v̂, Wette wie im Betrieb",
+           (n1, g1, n2, g2) == (2379, 2379, 5, 5), "%d/%d · %d/%d" % (g1, n1, g2, n2))
+
+    # 5 Leser
+    gut = {"bedenken": 1, "handlung": "vorsichtiger", "gruende": [{"grund": "a", "beleg": "S3"}, {"grund": "b", "beleg": "[E1]"}],
+           "umstimmen": "c"}
+    k_ = list(_F.KENNUNG_FEST) + ["E1"]
+    g_ok, f_ok, gep, ohne = _F.lies("```json\n%s\n```" % _json.dumps(gut), k_)
+    falsch = [_F.lies(_json.dumps(dict(gut, handlung="nicht")), k_)[0], _F.lies(_json.dumps(dict(gut, bedenken=3)), k_)[0],
+              _F.lies(_json.dumps(dict(gut, bedenken=1.7)), k_)[0], _F.lies(_json.dumps(dict(gut, bedenken=True)), k_)[0],
+              _F.lies(_json.dumps(dict(gut, gruende=gut["gruende"][:1])), k_)[0], _F.lies("nein", k_)[0],
+              _F.lies(_json.dumps(dict(gut, umstimmen="")), k_)[0]]
+    _g2, _f2, _gep2, ohne2 = _F.lies(_json.dumps(dict(gut, gruende=[{"grund": "a", "beleg": "E7"}, {"grund": "b", "beleg": "S5"}])), k_)
+    _g3, f3, _gep3, _o3 = _F.lies(_json.dumps(dict(gut, gruende=[{"grund": "a", "beleg": "S3"}, {"grund": "b", "beleg": "S3"}])), k_)
+    pruefe(P, "Leser: gute Antwort lesbar; Stufe/Handlung widersprechend, Stufe 3, 1,7, true, ein Grund, kein JSON, kein 'umstimmen' -> "
+           "unlesbar; Belege ohne Stelle und gleicher Beleg zweimal GEZAEHLT",
+           g_ok is not None and gep == 2 and ohne == 0 and not f_ok and all(x is None for x in falsch) and ohne2 == 2
+           and _g3 is not None and any("demselben Beleg" in x for x in f3))
+
+    # 6 Lauf mit Attrappe: Modellkennung der Antwort abgelegt, wiederaufnehmbar
+    class _Antwort:
+        def __init__(self, b):
+            self.status_code, self.text, self.headers, self._b = 200, "", {}, b
+
+        def json(self):
+            return {"model": "attrappe-1", "usage": {"total_tokens": 10},
+                    "choices": [{"message": {"content": _json.dumps(dict(gut, bedenken=self._b, handlung=_F.BEDENKEN[self._b]))}}]}
+
+    class _Http:
+        n = 0
+
+        def post(self, *a, **k):
+            _Http.n += 1
+            return _Antwort(_Http.n % 3)
+
+    d = _tf.mkdtemp(prefix="finales_llm_")
+    q = _F.Quelle(gutachten=_F.GUTACHTEN_PROBE)
+    c = _F.verbinde(_os.path.join(d, "finales_llm_probe.db"))
+    z = _F.lauf(c, q, _F.probe_menge(), "x", "probe", protokoll=lambda s: None, http=_Http())
+    z2 = _F.lauf(c, q, _F.probe_menge(), "x", "probe", protokoll=lambda s: None, http=_Http())
+    ma = {m for (m,) in c.execute("SELECT DISTINCT modell_antwort FROM urteil")}
+    pruefe(P, "Lauf (Attrappe): 5 Urteile lesbar, Modellkennung der Antwort abgelegt, zweiter Lauf fragt nichts erneut",
+           z == {"neu": 5, "unlesbar": 0} and z2 == {"neu": 0, "unlesbar": 0} and _Http.n == 5 and ma == {"attrappe-1"},
+           "%s %s %s" % (z, z2, ma))
+    # Eingabe-Schutz (M1): eine abgelegte Eingabe mit anderer Pruefsumme wird erkannt
+    c.execute("UPDATE urteil SET phase='3a'")
+    c.execute("UPDATE urteil SET eingabe_sha='verfaelscht' WHERE rowid = (SELECT MIN(rowid) FROM urteil)")
+    c.commit()
+    ge = _F.eingaben_geaendert(c, q, ("3a",))
+    pruefe(P, "Eingabe-Schutz (R-R11): eine geaenderte Eingabe wird erkannt, die unveraenderten nicht", len(ge) == 1, str(ge))
+    c.close()
+
+    # 7 Vorpruefung: alle Zweige, genau EINMAL, 3b nur nach WEITER
+    def _neu(name):
+        return _F.verbinde(_os.path.join(d, "finales_llm_%s.db" % name))
+
+    def _fuelle(c_, b, lesbar=None):
+        for i, ((sym, st_), b_) in enumerate(zip(zip(V.symbol, V.stunde), b)):
+            ok_ = 1 if lesbar is None else int(lesbar[i])
+            c_.execute("INSERT INTO urteil (symbol, stunde, phase, modell, prompt_sha, form_ok, bedenken) VALUES (?,?,?,?,?,?,?)",
+                       (sym, st_, "3a", _F.MODELL, _F.prompt_sha(), ok_, int(b_) if ok_ else None))
+        c_.commit()
+
+    ia = (V.teil == "a_gemailt").to_numpy()
+    schlecht = (V.ertrag_s.to_numpy() < _np.quantile(V.ertrag_s, 0.3)).astype(int)
+    rng = _np.random.default_rng(1)
+    u = (rng.random(len(V)) < 0.3).astype(int)
+    nur_a = _np.where(ia, (V.ertrag_s.to_numpy() < _np.quantile(V.ertrag_s[ia], 0.3)).astype(int), rng.random(len(V)) < 0.3).astype(int)
+    lesbar = _np.ones(len(V), int)
+    lesbar[:20] = 0
+    erg = {}
+    for name, b, les in (("konst", _np.zeros(len(V)), None), ("wirk", schlecht, None), ("verk", 1 - schlecht, None),
+                         ("null", u, None), ("rot", u, lesbar), ("nura", nur_a, None)):
+        c_ = _neu(name)
+        _fuelle(c_, b, les)
+        erg[name] = _F.vorpruefung(c_)
+        try:
+            _F.vorpruefung(c_)
+            erg[name + "_zweimal"] = True
+        except SystemExit:
+            erg[name + "_zweimal"] = False
+        erg[name + "_3b"] = _F.darf_3b(c_)[0]
+        c_.close()
+    pruefe(P, "Vorpruefung (echte Rechnung): konstant -> nicht messbar; Wirkung -> WEITER; umgekehrt -> verkehrt; > 5 % unlesbar -> "
+           "technisch Rot; starke Wirkung auf a -> WEITER; jede Vorpruefung genau EINMAL; 3b nur nach WEITER",
+           erg["konst"]["lesart"].startswith("nicht messbar") and erg["wirk"]["ergebnis"] == "WEITER"
+           and erg["verk"]["lesart"].startswith("verkehrt") and erg["rot"]["lesart"].startswith("technisch Rot")
+           and erg["nura"]["ergebnis"] == "WEITER" and not any(erg[k + "_zweimal"] for k in ("konst", "wirk", "verk", "null", "rot", "nura"))
+           and erg["wirk_3b"] and erg["nura_3b"] and not erg["konst_3b"] and not erg["verk_3b"] and not erg["null_3b"],
+           "%s · %s · %s · %s · nur a %s (p_b %.2f, p_a %.3f)" % (erg["konst"]["lesart"][:13], erg["wirk"]["ergebnis"], erg["verk"]["lesart"][:8],
+                                                             erg["rot"]["lesart"][:14], erg["nura"]["ergebnis"], erg["nura"]["p_b"], erg["nura"]["p_a"]))
+
+    # zweiter Weg fuer p: NAIVE Tagesverschiebung (Schleife, ohne g7_stufe3_anlage)
+    L = V.sort_values(["stunde", "symbol"]).reset_index(drop=True)
+    uu = u[V.sort_values(["stunde", "symbol"]).index.to_numpy()].astype(float)
+    z_ = L.ertrag_s.to_numpy()
+    tage = list(dict.fromkeys(L.stunde.str[:10]))
+    grp = {t_: _np.flatnonzero(L.stunde.str[:10].to_numpy() == t_) for t_ in tage}
+    s0 = z_[uu == 1].mean() - z_[uu == 0].mean()
+    null = []
+    for k in range(1, len(tage)):
+        v = _np.empty(len(L))
+        for dd, t_ in enumerate(tage):
+            qq = grp[tage[(dd + k) % len(tage)]]
+            v[grp[t_]] = uu[qq[_np.arange(len(grp[t_])) % len(qq)]]
+        if 0 < v.sum() < len(v):
+            null.append(z_[v == 1].mean() - z_[v == 0].mean())
+    p_naiv = float((_np.array(null) <= s0).mean())
+    pruefe(P, "p der Vorpruefung = naive Tagesverschiebung (Schleife, zweiter Weg ohne die Messanlage)",
+           abs(erg["null"]["p_b"] - p_naiv) < 1e-12, "%.6f / %.6f" % (erg["null"]["p_b"], p_naiv))
+
+    # Entscheidungsregel direkt, mit vorgegebenen p (Grenze 0,40, nur p_a, NaN, verkehrt)
+    import math as _m
+    alt_p = _F._p
+    regel = {}
+    try:
+        for name, (pb, pa) in {"nur_pa": (0.6, 0.3), "grenze": (0.40, 0.9), "nan_b": (_m.nan, 0.35), "beide_nan": (_m.nan, _m.nan),
+                               "verkehrt_a": (0.5, 0.97), "ueber": (0.41, 0.41)}.items():
+            folge = iter([pb, pa])
+            _F._p = lambda *a_, _f=folge: next(_f)
+            c_ = _neu("regel_" + name)
+            _fuelle(c_, u)
+            _F.vorpruefung(c_)
+            regel[name] = c_.execute("SELECT ergebnis, lesart FROM vorpruefung").fetchone()
+            c_.close()
+    finally:
+        _F._p = alt_p
+    pruefe(P, "Entscheidungsregel: nur p_a 0,30 -> WEITER; p_b genau 0,40 -> WEITER; p_b NaN, p_a 0,35 -> WEITER; beide NaN -> ENDE; "
+           "p_a 0,97 -> verkehrt; 0,41/0,41 -> nicht trennbar",
+           regel["nur_pa"][0] == "WEITER" and regel["grenze"][0] == "WEITER" and regel["nan_b"][0] == "WEITER"
+           and regel["beide_nan"][0] == "ENDE" and regel["verkehrt_a"][1].startswith("verkehrt") and regel["ueber"][1].startswith("nicht trennbar"),
+           str({k: v[0] for k, v in regel.items()}))
+
+    # Eingefrorener Prompt (Probe 08.11.): der laufende Prompt IST der eingefrorene, und lauf() verweigert 3a mit einem anderen
+    alt_prompt = _F.prompt
+    try:
+        _F.prompt = lambda *a_, **k_: alt_prompt(*a_, **k_) + " "
+        try:
+            _F.lauf(None, None, _pd.DataFrame(columns=["symbol", "stunde"]), "", "3a")
+            sperre = False
+        except SystemExit as e_:
+            sperre = "eingefroren" in str(e_)
+    finally:
+        _F.prompt = alt_prompt
+    pruefe(P, "Prompt eingefroren: prompt_sha() = a7d1c5048eb0 (Probe 08.11.), lauf() verweigert 3a bei geaendertem Prompt",
+           _F.prompt_sha() == _F.PROMPT_EINGEFROREN == "a7d1c5048eb0" and sperre, "%s · Sperre %s" % (_F.prompt_sha(), sperre))
+
+    nachher = {f: _fuss(f) for f in vorher}
+    eigene = 0
+    if _os.path.exists(buch):
+        with open(buch, encoding="utf-8") as f_:
+            eigene = sum(1 for z_ in f_ if z_.rstrip().endswith(";%d" % _os.getpid()))
+    pruefe(P, "Seiteneffekt: echte Ablage und Probe-Ablage unveraendert, KEINE Zeile dieses Prozesses im Anfragebuch",
+           nachher == vorher and eigene == 0, "Buch %d · %s" % (eigene, {_os.path.basename(k): 1 for k in vorher if vorher[k] != nachher[k]}))
+
+
 def paket_sichten_gutachten() -> None:
     """Sicht-Gutachten ``agent/sichten_gutachten.py`` (G7 Stufe 1 B5, Voranalyse_G7_Stufe1_04_11.md, Nutzer 05.11.2026: *"ja hoert sich
     vernuenftig an also deine Empfehlung"*). OHNE Netz: das LLM ist ein Zaehler mit festen Antworten, die Ablage ein Wegwerfordner.
@@ -34905,6 +35146,7 @@ PAKETE = {"0": paket_0, "1": lambda: (paket_1(), paket_1_schema()),
           "Gutachtenpruefer": paket_gutachtenpruefer,
           "G7Messanlage": paket_g7_messanlage,
           "SichtenGutachten": paket_sichten_gutachten,
+          "FinalesLLM": paket_finales_llm,
           "G7S7Anlage": paket_g7_s7_anlage,
           "SpotMitnahme": paket_spot_mitnahme,
           "SpotUpbit": paket_spot_upbit, "AssetAufnahme": paket_asset_aufnahme, "WatchlistErgaenzung": paket_watchlist_ergaenzung, "SpotAbbau": paket_spot_abbau, "GitStand": paket_gitstand, "Wegwerf": paket_wegwerf, "Verwaesserung": paket_verwaesserung, "Termin": paket_termin, "Makro": paket_makro, "Gesamtmarkt": paket_gesamtmarkt, "Kernwerte": paket_kernwerte, "W1Reihenbeginn": paket_w1_reihenbeginn, "W3Stilllegung": paket_w3_stilllegung, "SeasonAmpel": paket_season_ampel, "Nachgeholt": paket_nachgeholt, "Messstand": paket_messstand, "Haltedauer": paket_haltedauer, "WalletFuehrung": paket_wallet_fuehrung, "Hebelbuch": paket_hebelbuch,

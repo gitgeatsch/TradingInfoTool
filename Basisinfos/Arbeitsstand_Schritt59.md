@@ -821,6 +821,36 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Inhalt:** Fälle 1 (Stufe 3 trägt → Auswahl-Rolle, Zerlegung Tag/Asset), 1-b, 2 (S7 → Ereignis-Rolle, Asset-Leser erst nach Wiederholung), 3 (S8 → bleibt Fakt), 2/3-Z (Zustände tragen, LLM nicht), 4 (nichts → Ursachenanalyse, dann Grundsatz), 5 (KEIN BEFUND). Wege bei Fall 4: W-I Informations- und Schutzsystem, W-II neue Quelle, W-III/W-IV ✖, W-V einfrieren, W-VI bezahlte Daten, W-VII Stufe 5 für Nicht-Trennbares. **Keine Vorfestlegung** auf einen Weg; W-I gegen W-V hängt an der Nutzerfrage, ob ein Dashboard ohne Signal hilft.
 - Gesamtplan G18-Zelle ersetzt (Verweis, kritischer Weg Stufe 3).
 - ➤ Nächstes: **Commit vor der Messung von S8** (auf Ja) · Stufe-3-Voranalyse (Block 2/5 im Rückspiel, Vorgriff, A4-Modell).
+- Commit `6070cb09` (Nutzer *„Committe die Änderungen“*), nicht gepusht.
+
+### Stand 08.11.2026 morgens — G7 Stufe 3 zweistufig (E-174), Voranalyse finales LLM
+
+- Nutzer *„können wir die Prüfung so anlegen, dass die langen läufe nur erfolgen wenn wir einen Hinweis darauf haben …“* → Vorschlag Vorprüfung mit Abbruchregel (ODER Tor über S7/S8) → *„1 Vorprüfung“* = **E-174**.
+- `Voranalyse_G7_Stufe3_finales_LLM_08_11.md`: Stufe 3 ist entworfen, nicht gebaut. Vorschläge zum Inhalt (zur Abstimmung): A4 und Befund-Karte nicht in diese Messung; Block 2 nur Kurs-Lage, REGEL0-Lage, Hebel-Abstand; Block 3 ohne Schwere-Texte; ein Informationszeitpunkt t = Signalstunde + 1 h für alle Blöcke.
+- **Prüfen:** Selbsttest Fassung 1 (`g7_stufe3_vorpruefung_selbsttest.py`, Regel vorab im Kopf) → k = 1, c = 0,40; Gegenprobe gegen `messe` gleich; Menge b Prüfsumme wie 02.11.
+- **Gegenprüfen** (unabhängig, mit eigenen Simulationen): 4 Muss-Punkte, alle nachgeprüft und eingearbeitet — Schwere-Texte in Block 3 wären Vorgriff; die Vorprüfung verlor den **Betriebsfall** (Wirkung nur auf den gemailten: 62–70 % weiter); Wal-Begründung falsch; ENDE-Lesart widersprüchlich. Abbruchregel und Simulation selbst korrekt.
+- **Selbsttest Fassung 2** (`…selbsttest2.py`, Regel vorab, fünf Erzeuger inkl. „nur a“ und Raten 10/85 %) → **D3**: 1 je Tag, bevorzugt gemailt, weiter bei p ≤ 0,40 über alle **oder** den gemailten Teil. Betriebsfall 97 % weiter, ≈ 0,9 % 93–94 %, ohne Wirkung endet rund die Hälfte; Fehlalarm sinkt. Vorauswahl `g7_stufe3_vorauswahl_d3.csv` festgeschrieben (Fassung-1-Datei entfernt, nie committet).
+- Scheideweg-Vorlage §5.1 nachgezogen (ENDE → Fall 4, nur „nicht messbar“ → Fall 5) · Gesamtplan §5.2 Stufe 3.
+- ➤ Zur Abstimmung: die Inhalts-Vorschläge der Voranalyse (§0 Punkte 2–5) · danach Bau B1–B6 · Commit auf Ja (vor dem ersten Urteil) · S8 messen, sobald vollständig.
+
+### Stand 08.11.2026 vormittags — Stufe 3 gebaut (E-175), zweimal gegengeprüft, Probe läuft
+
+- Nutzer *„Ja, alle vier“* = **E-175** (ohne A4 und Befund-Karte, Block 2 nur Rückspiel-fähig, Block 3 ohne Schwere, ein Informationszeitpunkt).
+- **Bau** `agent/finales_llm.py` (Eingabe Block 1–4, Prompt, Leser, Ablage, Lauf 3a/3b, Vorprüfung) · Prüfpaket `FinalesLLM`.
+- **Beim Bau gefunden:** Mengendatei trägt v̂ und Stufe der **Einstiegsstunde** (Vorgriff gegen t); live mailt der Betrieb beim Signal mit der **vorläufigen** Stufe → `g7_stufe3_stufe_vorlaeufig.py` (Gegenprobe endgültig 2.435/2.435; **NB-Abgleich Okt. 199/199** vorläufig und endgültig gleich); v̂ nicht gezeigt.
+- **Prüfen:** 0 Vorgriffe über alle 2.379 Eingaben; zweiter Weg aus dem Text (606 Zeitangaben, keine nach t). 88 % der Einstiege ohne Meldung zum Asset.
+- **Zweite Gegenprüfung (Modul):** 2 Muss — **die Wette** war als Trendhandel formuliert (P1-Fehler vom 03.10. wiederholt) → Wortlaut des Betriebs, Stufen als Abwägung; **Eingabe nicht eingefroren** → Eingabe-Schutz vor Vorprüfung und 3b. Dazu Kursreaktion ab gezeigter Meldung, Seiteneffekt-Test über alle 2.379, eine Vorprüfung je Prompt, Modellkennung aus der Antwort. Probe mit dem fehlerhaften Prompt angehalten (1 Urteil, verworfen). Paket **13/13**.
+- Offen benannt: Live-Weg (G8b), Treue nur über Kennungen, Messung B5 vor 3b bauen.
+- ➤ Probe (5 Einstiege, Prompt `a7d1c5048eb0`) läuft ab Kontingentwechsel 09:00 MEZ → danach Form/Treue/Verteilung der Bedenken prüfen (ohne Kurs), Prompt einfrieren, Commit auf Ja, dann 3a nach S2/S4.
+
+### Stand 08.11.2026 09:15 — Probe Stufe 3 durch, Prompt eingefroren
+
+- **Probe** (5 Aufrufe, gemini-3.5-flash-lite, ohne Kurse angesehen): **5/5 lesbar** im ersten Versuch, Belege ohne Stelle 0, Modellkennung = angefragtes Modell.
+- **Treue, zwei Wege:** gelesen — jeder Grund steht in der zitierten Sicht (z. B. NIGHT: Auszahlungsstopp aus S1, Liquidationskaskade aus S7); gezählt — 64–90 % der Inhaltswörter je Grund in der zitierten Sichtzeile, was fehlt, sind Wertungswörter („drastisch“, „kurzfristig“), keine Tatsachen. Ein Grund (SEI) ordnet „Abwärtsdruck“ S1 statt S7 zu.
+- **Verteilung:** bedenken 1/1/1/1/2 — **kein 0**. Gleicher Tag → fast gleiche Gründe (NIGHT/SEI, TURBO/ZEN); alle Gründe aus **Marktsichten** (S1, S7, S2), keiner aus Block 2/3. Erwartet bei 88 % ohne Meldung zum Asset.
+- ⚠️ **Risiko benannt, nicht behoben:** liegt der Anteil „bedenken ≥ 1“ über 95 %, endet die Vorprüfung als **„nicht messbar“** (Fall 5). Aus 3 Probetagen nicht schätzbar (die Sichten gelten je Tag, 25 mögliche Probe-Einstiege an nur 3 Tagen). Kosten, wenn es eintritt: ein Tag Kontingent; die Vorprüfung fängt es ab.
+- **Eingefroren:** `PROMPT_EINGEFROREN = "a7d1c5048eb0"`; `lauf()` verweigert 3a/3b mit anderem Prompt. Paket `FinalesLLM` **14/14**.
+- ➤ Commit auf Ja (vor dem ersten 3a-Urteil) · S8 messen, sobald vollständig · 3a nach S7 und S2/S4.
 
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
