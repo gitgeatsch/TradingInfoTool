@@ -852,6 +852,14 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Eingefroren:** `PROMPT_EINGEFROREN = "a7d1c5048eb0"`; `lauf()` verweigert 3a/3b mit anderem Prompt. Paket `FinalesLLM` **14/14**.
 - ➤ Commit auf Ja (vor dem ersten 3a-Urteil) · S8 messen, sobald vollständig · 3a nach S7 und S2/S4.
 
+### Stand 08.11.2026 abends — M-S8 gemessen: KEIN BEFUND
+
+- Commit **6229e286** (Stufe 3, ohne Push). lauf9: S1, S3, S8, S7 vollständig; S7w 119/352; Kontingent ab 10:23 MEZ erschöpft (498 Aufrufe).
+- **M-S8** (`g7_stufe2_s8.py` → `g7_stufe2_s8.txt`, Werkzeug `1911312f3c48df43`): zuerst gezählt — **7 von 335 Tagen** „auffällig“, **7 Blöcke < 20** → **KEIN BEFUND**. Auskunft gegen BTC |ertrag_s| H=1: +0,170, p 0,231; zweiter Weg von Hand gleich.
+- **Ursache:** das LLM flaggt fast nur **FOMC** (6/7); im Zeitraum nur 8 FOMC-Termine. CPI/NFP (24-h-Faktor ≈ 1,1×) liest es als normal. Struktur, kein Lauffehler; mehr Blöcke nur über Stufe 5 (2025).
+- **Folgen:** Holm bleibt vier → **S7 trägt nur mit p ≤ 0,0125**. Scheideweg Fall 5 für M-S8; der Termin bleibt Fakt (O52). „Termin ≤ 1 T“ ohne LLM: 30 Tage / 20 Blöcke — gezählt, nicht gemessen.
+- ➤ S7/S7w messen, sobald S7w vollständig (≈ 09.11.) · danach Holm-Zeile · 3a nach S2/S4.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

@@ -1,0 +1,25 @@
+G7 STUFE 2 S8 — MESSUNG · 2026-11-08 18:11 · Werkzeug 1911312f3c48df43 · Vorabfestlegung Voranalyse_G7_Stufe1_04_11.md §4/§4.2
+Geltungsbereich: Dez. 2025 – Okt. 2026, gemini-3.5-flash-lite. Hauptgröße zustand ≥ auffällig gegen BTC |ertrag_s| H=1, oben.
+
+1  GEZÄHLT, OHNE KURSE
+   Tage wdh 0: 335 lesbar von 335 · zustand {0: np.int64(328), 1: np.int64(7)} · wirkung {0: np.int64(334), 1: np.int64(1)} · Treue-Verstöße 0
+   'auffällig': 7 Tage (2.1 %) · 7 Läufe, mittlere Länge 1.0 T
+   Blöcke à 15 T mit 'auffällig': 7 (über Positionen) · 7 (über Kalendertage, zweiter Weg) · Mindestmaß 20
+   => KEIN BEFUND — Mindestmaß verfehlt (7 < 20 Blöcke). Alles unten ist AUSKUNFT, nie hochgestuft
+   Ursache: Treiber an den 'auffällig'-Tagen {'fomc': 6, 'nfp': 1, 'cpi': 1} · Tage mit Termin ≤ 1 T je Art {'fomc': 8, 'nfp': 11, 'cpi': 11}, davon 'auffällig' {'fomc': 4, 'nfp': 1, 'cpi': 0}
+     2026-01-28  ['fomc']  nächster Termin in {'fomc': 0.8}
+     2026-02-11  ['nfp', 'cpi']  nächster Termin in {'cpi': 2.6, 'nfp': 0.6}
+     2026-04-29  ['fomc']  nächster Termin in {'fomc': 0.8}
+     2026-06-17  ['fomc']  nächster Termin in {'fomc': 0.8}
+     2026-07-27  ['fomc']  nächster Termin in {'fomc': 2.8}
+     2026-07-29  ['fomc']  nächster Termin in {'fomc': 0.8}
+     2026-10-26  ['fomc']  nächster Termin in {'fomc': 2.8}
+   Zum Vergleich ohne LLM (nur gezählt, NICHT gemessen): Tage mit irgendeinem Termin ≤ 1 T: 30 in 20 Blöcken
+   Eigenrauschen: 17 Wiederholungen, 'auffällig' gleich 94 %
+
+2  GEGEN DEN KURS (einmal) — AUSKUNFT
+   messe(): Stat +0.170 · Nullpunkt -0.001 · Band -0.416/+0.678 · p 0.231 · Anteil ja 0.021 · 334 Tage · trägt nicht (Auskunft)
+   zweiter Weg (von Hand): Stat +0.170 · P95 +0.678 · p 0.231 · Mittel |ertrag_s| ja 0.880 (n 7) / nein 0.710 (n 327) · 334 Tage
+   Gegenprobe messe() = von Hand: GLEICH
+
+ERGEBNIS M-S8: KEIN BEFUND (Mindestmaß, 7 Blöcke) · Holm-Familie bleibt vier (S1, S3, S8, S7) · 0 s

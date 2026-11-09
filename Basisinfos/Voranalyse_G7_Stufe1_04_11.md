@@ -250,6 +250,28 @@ gilt für den Betrieb. Trägt S1 nicht, entfällt die Ton-Frage für S1.
 - **Holm:** Familie bleibt vier. S8 und S7 werden nach ihrem Lauf gemessen.
 - Weg b: S1 hatte an 319 von 335 Tagen eine Zeile nur aus Weg b. Eine Trennung nach Weg b ist damit nicht möglich (zu wenige Tage ohne).
 
+### 4.4 Ergebnis Stufe 2 S8 — 08.11.2026 (`g7_stufe2_s8.txt`, Werkzeug `1911312f3c48df43`)
+
+Zuerst **nur gezählt** (ohne Kurse), dann **einmal** gegen den Kurs. Regeln unverändert aus §4/§4.2.
+
+| | |
+|---|---|
+| Tage (wdh 0) | 335, alle lesbar, Treue-Verstöße 0, Eigenrauschen 94 % gleich (17 Wiederholungen) |
+| `zustand` ≥ auffällig | **7 Tage (2,1 %)**, 7 Läufe à 1 Tag |
+| Blöcke mit „auffällig“ | **7** (über Positionen und, zweiter Weg, über Kalendertage) — Mindestmaß 20 |
+| **Urteil** | **KEIN BEFUND** (Mindestmaß verfehlt, dieselbe Regel wie S3) |
+| Auskunft gegen BTC \|ertrag_s\| H = 1 | Stat +0,170 (Band −0,416/+0,678, p 0,231) — nie hochgestuft. Zweiter Weg von Hand: gleich |
+
+**Ursache, gezählt:** das LLM urteilt „auffällig“ fast nur vor **FOMC** (6 der 7 Tage; FOMC ≤ 1 T: 4 von 8 Tagen). CPI und NFP
+(je 11 Tage ≤ 1 T) liest es bei einem 24-h-Faktor von rund 1,1× als „normal“ — wie schon in der Probe B6 (§5.3). Im Zeitraum gibt
+es nur **8 FOMC-Termine**: Die Frage kann in 11 Monaten gar keine 20 Blöcke erreichen. Kein Fehler des Laufs, sondern die Seltenheit
+des Ereignisses. Mehr Blöcke bringt nur ein längerer Zeitraum (Stufe 5, 2025).
+
+**Folgen:** Holm-Familie bleibt **vier** — für S7 heißt das: trägt nur mit p ≤ 0,0125 (erste Holm-Stufe, S1 p 0,988, S3 und S8 ohne
+Befund). Scheideweg (Vorabfestlegung §3.2): **Fall 5** für M-S8 (< 20 Blöcke, Zeitraum fest). Der Termin bleibt, was er ist: ein
+**Fakt** in Mail und Statusseite (O52). Der deterministische Arm „Termin ≤ 1 T“ hätte 30 Tage in genau 20 Blöcken — gezählt, **nicht**
+gemessen; er wäre eine eigene Vorab-Messung (R-R11) und wird nicht beiläufig nachgeschoben.
+
 ---
 
 ## 5. Zur Abstimmung — eine Frage: Umfang von Stufe 1
