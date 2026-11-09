@@ -1,0 +1,17 @@
+G7 STUFE 2 S7 GEGENPROBE · 2026-11-09 11:27 · Werkzeug 54dbda73cf2f9d30
+1  GEZÄHLT, OHNE KURSE
+Ereigniszellen 10296 Assets 422 Tage mit Zellen 335
+S7 {'gutachten_lesbar': 335, 'gutachten_unlesbar': 0, 'eintraege': 816, 'verworfen_fremd': 0, 'verworfen_ohne_ereigniszelle': 0} | stuetzt 418 belastet 394 | Tage mit Urteil 333 | Bloecke (Pos.) 23 | Bloecke je Seite st/bel 23 23 | Assets mit Urteil 63
+   Bloecke (Kalender, zweiter Weg) 23
+S7w {'gutachten_lesbar': 335, 'gutachten_unlesbar': 0, 'eintraege': 704, 'verworfen_fremd': 0, 'verworfen_ohne_ereigniszelle': 0} | stuetzt 364 belastet 338 | Tage mit Urteil 335 | Bloecke (Pos.) 23 | Bloecke je Seite st/bel 23 23 | Assets mit Urteil 58
+   Bloecke (Kalender, zweiter Weg) 23
+Uebereinstimmung S7/S7w auf Zellen mit Urteil in einem der beiden: 1051 gleich 415 | Gegenrichtung 48
+Kern-Urteile S7 461 S7w 372
+
+2  ZWEITER WEG (gegen g7_s7_messung.txt)
+S7 Urteile direkt = urteile(): True
+   naiv: t +0.1806  Rang 0.5359  p 0.4641  P96,5 +4.157
+   Zellentabelle ertrag_s: t +0.1806 (n 416/389) · Mittel stuetzt -0.059 belastet -0.077 · max |csv - panel| 1.78e-15
+S7w Urteile direkt = urteile(): True
+   naiv: t -0.2702  Rang 0.4371  p 0.5629  P96,5 +3.135
+   Zellentabelle ertrag_s: t -0.2702 (n 362/337) · Mittel stuetzt -0.046 belastet -0.017 · max |csv - panel| 1.78e-15

@@ -159,8 +159,8 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | Stufe | Inhalt | Stand |
 |---|---|---|
 | 0 | Prüfer v2, Messanlage, Vergleichsarm 0c (Zustände ohne LLM), Wissensstand der Modelle, Daten | ✔ 02.11. — Zustände allein tragen (15 Befunde), GDELT Aktienmarkt trägt, Gemini sauber ab Nov. 2025 (Messplan §7–§11) |
-| 1 | Sicht-Gutachten je Tag, Dez. 2025 – Okt. 2026 | **läuft** — S1, S3 ✔ vollständig 07.11. |
-| 2 | Wert je Sicht gegen die Zielgröße und gegen den Vergleichsarm 0c | ✔ 07.11.: S1 **trägt nicht**, S3 KEIN BEFUND · 08.11.: S8 KEIN BEFUND (7 Blöcke) · S7 offen |
+| 1 | Sicht-Gutachten je Tag, Dez. 2025 – Okt. 2026 | **läuft** — S1, S3, S8, S7, S7w ✔, S2/S4 offen |
+| 2 | Wert je Sicht gegen die Zielgröße und gegen den Vergleichsarm 0c | ✔ 09.11.: S1, S7 **tragen nicht**, S3, S8 KEIN BEFUND → keiner der vier trägt |
 | 3 | finales LLM je REGEL0-Einstieg, Menge b (903 gemailt + 1.532 Stichprobe, `g7_stufe3_menge_b.csv`) | **zweistufig (E-174)**: Vorprüfung 321 ([`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md)) · gebaut, Prompt eingefroren 08.11. |
 | 4 | Beitrag je Sicht mit/ohne | nur bei Befund in Stufe 2 |
 | 5 | zweiter Weg: Groq gpt-oss auf 2025 (G3) — für H = 7/10 (S2/S4) und als Bestätigung | nur für das, was in Stufe 2/3 trug |

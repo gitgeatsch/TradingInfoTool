@@ -272,6 +272,41 @@ Befund). Scheideweg (Vorabfestlegung §3.2): **Fall 5** für M-S8 (< 20 Blöcke,
 **Fakt** in Mail und Statusseite (O52). Der deterministische Arm „Termin ≤ 1 T“ hätte 30 Tage in genau 20 Blöcken — gezählt, **nicht**
 gemessen; er wäre eine eigene Vorab-Messung (R-R11) und wird nicht beiläufig nachgeschoben.
 
+### 4.5 Ergebnis Stufe 2 S7/S7w — 09.11.2026 (`g7_s7_messung.txt`, Werkzeug `g7_s7_anlage.py` `57a0cbffdca70abc`, vorab gebaut 05.11.)
+
+Gemessen mit dem **vorab gebauten** `g7_s7_anlage.py --messen`, Band **P96,5** aus dem Selbsttest (§4.1). Davor **nur gezählt**, danach
+auf einem **zweiten Weg** nachgerechnet (`g7_stufe2_s7_gegenprobe.py` → `.txt`).
+
+| | S7 (Form d, Hauptarm) | S7w (Wort-Arm e) | Typ-Regel ohne LLM, Rate wie S7 |
+|---|---|---|---|
+| Gutachten | 335 lesbar, 816 Einträge, 0 verworfen | 335 lesbar, 704 Einträge, 0 verworfen | — |
+| Urteile stützt / belastet | 418 / 394 (63 Assets, davon 461 auf BTC/ETH/SOL) | 364 / 338 (58 Assets) | 418 / 394 |
+| Blöcke mit Urteil | **23** (Positionen und Kalendertage) — Mindestmaß erreicht | 23 | 22 |
+| t (stützt − belastet, `ertrag_s` H = 3) | **+0,18** · Grenze P96,5 +4,16 · p **0,464** | −0,27 · Grenze +3,14 · p 0,563 | +0,00 · p 0,566 |
+| Urteil 1 | **trägt nicht** — im Band → **nicht trennbar** | trägt nicht | trägt nicht |
+
+| | |
+|---|---|
+| Mittel `ertrag_s` (Zellentabelle) | stützt −0,059 · belastet −0,077 — Unterschied **+0,018 σ**. Auflösung bei rund 2 Urteilen/Tag: 0,2 σ zu 71 %, 0,3 σ zu 93 % (`g7_s7_anlage.txt` §4) |
+| Urteil 2 (bringt das LLM mehr als die Typ-Regel?) | **nein** (D +0,18, Rang 0,55) |
+| Wahl d/e (§4.1) | **d** bleibt (S7w − S7: D −0,45, Rang 0,35) |
+| **Platz S7 für Holm** | nicht getroffen · p **0,928** (2 × min, zwei Schüsse) |
+| Zweiter Weg | Urteile direkt aus dem JSON = `urteile()`; Rang per naiver `np.roll`-Schleife über 334 Verschiebungen = FFT (t, Rang, P96,5 gleich); Zielgröße aus der Zellentabelle = `panel()` (max. Abweichung 1,8e−15) |
+
+**Holm-Zeile (m = 4), vollständig:** S1 p 0,988 · S3 KEIN BEFUND · S8 KEIN BEFUND · S7 p 0,928. **Keiner der vier Haupttests trägt**;
+die erste Holm-Stufe (p ≤ 0,0125) erreicht keiner, auch ohne Korrektur (p ≤ 0,05) keiner.
+
+**Auskunft, nie hochgestuft:** H = 1 und H = 5 trägt nicht · Kern getrennt und ohne Kern trägt nicht · Kurs-Regel Fortsetzung t −2,11,
+Gegenrichtung +2,11, beide im Band · Wort-Treue S7w: 454 passend, 248 nicht (229 davon „unverändert“ ohne „eingepreist = nein“).
+⚠️ **Nur Meldungen < 24 h:** S7 t +3,11 (Rang 0,982), S7w +1,86 (Rang 0,985) — über P96,5 auf 90 bzw. 82 Zellen. Das ist **eine von
+zehn Auskunftszeilen** (H 1/5, Kern/ohne Kern, < 24 h, Kurs-Regel, je zwei); bei zehn Blicken ist ein Treffer über P96,5 auch ohne Wirkung zu erwarten. Es ist ein **Hinweis**, kein
+Befund. Verwendbar nur über eine **eigene Vorab-Messung** (R-R11) und den zweiten Weg Stufe 5 (2025), nicht beiläufig.
+
+**Folgen (Vorabfestlegung Scheideweg §3.1/§3.2):** M-S7 = **nicht trennbar**, kein Fall 2. Damit trägt aus Stufe 2 nichts. Offen ist nur
+noch **M-St3** (Stufe 3, Vorprüfung ≈ 11.11.). Da M-S8 KEIN BEFUND ist, gilt die Mischregel: trägt auch M-St3 nicht, wird **zuerst die
+Frage aus Fall 5** entschieden (S8: < 20 Blöcke, Zeitraum fest), dann Fall 4. S7 bleibt Eingabe des finalen LLM (Stufe 3) — an der
+S7-Eingabe wird vor Ende G7 nichts geändert.
+
 ---
 
 ## 5. Zur Abstimmung — eine Frage: Umfang von Stufe 1

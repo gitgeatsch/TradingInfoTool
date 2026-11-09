@@ -1,0 +1,16 @@
+G7 S7 MESSUNG · 2026-11-09 11:25 · Band 96.5 · Zählung {'S7': {'gutachten_lesbar': 335, 'gutachten_unlesbar': 0, 'eintraege': 816, 'verworfen_fremd': 0, 'verworfen_ohne_ereigniszelle': 0}, 'S7w': {'gutachten_lesbar': 335, 'gutachten_unlesbar': 0, 'eintraege': 704, 'verworfen_fremd': 0, 'verworfen_ohne_ereigniszelle': 0}}
+  S7 (Form d, HAUPTARM)    {'t': 0.18057112736353656, 'grenze': 4.156818021972426, 'rang': 0.5359281437125748, 'stuetzt': 418, 'belastet': 394, 'bloecke': 23, 'urteil': 'trägt nicht'} · p = 0.4641
+  S7w (Wort-Arm e)         {'t': -0.2702027351735723, 'grenze': 3.135405988386451, 'rang': 0.437125748502994, 'stuetzt': 364, 'belastet': 338, 'bloecke': 23, 'urteil': 'trägt nicht'} · p = 0.5629
+  Typ-Regel, Rate wie S7   {'t': 0.0013790250933469028, 'grenze': 3.267624505757054, 'rang': 0.4341317365269461, 'stuetzt': 418, 'belastet': 394, 'bloecke': 22, 'urteil': 'trägt nicht'} · p = 0.5659
+  S7 − Typ-Regel   {'D': 0.17919210227018967, 'grenze': 3.5906924753279448, 'rang': 0.5508982035928144, 'urteil': 'nicht besser'}
+  S7w − S7         {'D': -0.4507738625371088, 'grenze': 2.386625576499753, 'rang': 0.3532934131736527, 'urteil': 'nicht besser'}
+  PLATZ S7: nicht getroffen · p für Holm 0.9281 · WAHL DER FORM: d (Regel §4.1) · S7 bringt etwas über die Typ-Regel: nein
+Auskunft (nie hochgestuft):
+  H=1  S7 trägt nicht · S7w trägt nicht
+  H=5  S7 trägt nicht · S7w trägt nicht
+  Kern getrennt: S7 trägt nicht · ohne Kern trägt nicht
+  nur Meldungen < 24 h: S7 {'t': 3.110923258185254, 'grenze': 2.4657999519488776, 'rang': 0.9820359281437125, 'stuetzt': 41, 'belastet': 49, 'bloecke': 23, 'urteil': 'TRÄGT'} · S7w {'t': 1.856052502109818, 'grenze': 1.6938049302468439, 'rang': 0.9850299401197605, 'stuetzt': 41, 'belastet': 41, 'bloecke': 22, 'urteil': 'TRÄGT'}
+  Kurs-Regel Fortsetzung     {'t': -2.1103249872365506, 'grenze': 4.355803073115445, 'rang': 0.19760479041916168, 'stuetzt': 1658, 'belastet': 3127, 'bloecke': 23, 'urteil': 'trägt nicht'}
+  Kurs-Regel Gegenrichtung   {'t': 2.1103249872365506, 'grenze': 4.6128066240364305, 'rang': 0.8023952095808383, 'stuetzt': 3127, 'belastet': 1658, 'bloecke': 23, 'urteil': 'trägt nicht'}
+  Wort-Treue S7w (eingepreist passt zum gezeigten Wort): {'passt': 454, 'passt_nicht_unverändert': 229, 'passt_nicht_gefallen': 2, 'passt_nicht': 248, 'passt_nicht_zu frisch': 16, 'passt_nicht_gestiegen': 1, 'ohne_wort': 2}
+  ⚠ Weg b getrennt und Eigenrauschen (wdh 1) rechnet die Gesamtauswertung aus der Ablage (Herkunft je E-Nummer)

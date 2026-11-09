@@ -656,6 +656,7 @@ kontrollen:
     nachweis: "Am NB in eigener Konsole: C:\\Python313\\python.exe \"G:\\Meine Ablage\\Claude_Austauschordner\\GDELT_Probe\\gdelt_probe.py\" (Anleitung LIESMICH.txt daneben). Datei gdelt_probe_<Rechnername>.jsonl waechst; nach 14 Tagen Zeile 'fertig'. Danach Desktop: gdelt_probe_auswertung.py --rueckspiel -> Urteil K1-K3 (vorab festgelegt). Waehrend der Probe fragt der Desktop GDELT NICHT ab"
     faellig_bis: "2026-11-20"
     zwischenstand_07_11: "Auswertung 07.11. 12:39 UTC (lokal, ohne Abruf): 20/21 Runden, 147 Abrufe, 23 x 200, 124 x 429. K1 auf 4 Live-Tagen: Luecken aktien/fed/konflikt 2 von 4, krypto 3 von 4 (gesperrt UND Quelle fehlt) - Soll <=10 % ist auf 14 Tagen bereits NICHT mehr erreichbar (je Ton >=2 Luecken). K3 erfuellt, K2 offen. Folge vorab (G7 §9.2): Weg c neu vorlegen; betrifft S1/S2/S3/S7 (Ton-Zustaende, Ue8)"
+    zwischenstand_09_11: "Austauschordner 09.11. 04:05 MEZ (nur gelesen): 27 Runden, 197 Abrufe, 30 x 200, 167 x 429, letzter 200 am 08.11. 18:30 UTC. Nutzer 09.11.: *Weiterlaufen lassen* - Probe laeuft wie vorab festgelegt bis zum Selbstende 16.11. ~18:10 UTC (Zeile 'fertig'), wegen K2; K1 bleibt rot. Desktop fragt GDELT bis dahin nicht ab"
     status: offen
     teilbeleg_06_11: "Austauschordner 06.11. 08:09: gdelt_probe_T440.jsonl waechst (132 Zeilen, 16 Runden seit 02.11. 18:30, alle 6 h); 115 Abrufe, davon 21 x 200 und 94 x 429 (Sperre - genau das zaehlt die Probe, Urteil erst nach 14 Tagen); Desktop fragt GDELT nicht ab"
   - id: K-W3-S2

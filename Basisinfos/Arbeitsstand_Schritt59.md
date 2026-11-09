@@ -860,6 +860,16 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Folgen:** Holm bleibt vier → **S7 trägt nur mit p ≤ 0,0125**. Scheideweg Fall 5 für M-S8; der Termin bleibt Fakt (O52). „Termin ≤ 1 T“ ohne LLM: 30 Tage / 20 Blöcke — gezählt, nicht gemessen.
 - ➤ S7/S7w messen, sobald S7w vollständig (≈ 09.11.) · danach Holm-Zeile · 3a nach S2/S4.
 
+### Stand 09.11.2026 mittags — M-S7 gemessen: trägt nicht · Holm: keiner der vier
+
+- Commit **f8997ad2** (S8, ohne Push). S7w vollständig 09.11. 09:52 MEZ (335/335); lauf9 weiter auf S2 (64/335). GDELT-Probe am NB läuft bis zum Selbstende 16.11. (Nutzer: *„Weiterlaufen lassen“*, K-GD-1 `zwischenstand_09_11`).
+- **M-S7** mit dem vorab gebauten `g7_s7_anlage.py --messen` (Band P96,5) → `g7_s7_messung.txt`. Zuerst gezählt: S7 418 stützt / 394 belastet, **23 Blöcke** (Mindestmaß erreicht). **S7 t +0,18, p 0,464 → trägt nicht (nicht trennbar)**; S7w p 0,563; Typ-Regel p 0,566; LLM nicht besser als Typ-Regel; Form d bleibt; Platz S7 p 0,928.
+- **Zweiter Weg** (`g7_stufe2_s7_gegenprobe.py`): Urteile direkt aus JSON, naive Verschiebungsschleife, Zielgröße aus der Zellentabelle — alles gleich.
+- **Holm-Zeile:** S1 0,988 · S3 KB · S8 KB · S7 0,928 → **keiner der vier Haupttests trägt**.
+- Auskunft „nur Meldungen < 24 h“ über P96,5 (S7 Rang 0,982, S7w 0,985; 90/82 Zellen) — eine von zehn Auskunftszeilen, **Hinweis**, nur über eigene Vorab-Messung + Stufe 5.
+- **Folge:** Stufe 2 trägt nichts. Offen nur M-St3 (Vorprüfung ≈ 11.11.). Trägt M-St3 nicht → zuerst Fall-5-Frage (S8), dann Fall 4 (Ursachenanalyse).
+- ➤ 3a / Vorprüfung nach S2/S4 · Scheideweg-Vorlage bis 30.11.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
