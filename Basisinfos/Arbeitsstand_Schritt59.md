@@ -870,6 +870,17 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Folge:** Stufe 2 trägt nichts. Offen nur M-St3 (Vorprüfung ≈ 11.11.). Trägt M-St3 nicht → zuerst Fall-5-Frage (S8), dann Fall 4 (Ursachenanalyse).
 - ➤ 3a / Vorprüfung nach S2/S4 · Scheideweg-Vorlage bis 30.11.
 
+### Stand 10.11.2026 vormittags — Stufe 1 vollständig (S2/S4)
+
+- Commit **d82dece4** (S7, ohne Push). lauf9 am 10.11. 10:37 MEZ regulär beendet, Fehlerdatei leer: 2.171 neu, 0 unlesbar, 10 Treue-beanstandet (alle Sichten).
+- **Geprüft:** S2 und S4 je 335 + 17, Form 352/352, ein Prompt-SHA je Sicht, Treue S2 1 Verstoß / 2.694, S4 0 / 2.581; Eigenrauschen Zustand 14/17 bzw. 15/17.
+- **Gegengeprüft** (Rohtext statt Spalten): Zustände gleich; 8 S2-Rohtexte mit ```` ```json ````-Zaun, ohne Zaun gleich der Spalte; Eingabe-SHA 704/704; Wiederholungen byte-gleiche Eingabe; Anfragebuch 718 Abrufe / 704 Gutachten. Kein Blick gegen Kurse.
+- S4 an 84 % der Tage „auffällig“ — trennt wenig; beantwortet erst Stufe 3/4. Voranalyse §4.6.
+- **Stufe 3a gestartet** 10.11. 11:06 MEZ (Nutzer: *„Ja, 3a starten“*), sitzungsunabhängig (WMI, eigene Prozessgruppe), Python-PID 54184, Protokoll `data/_g7_stufe3a_lauf.txt` / `_err.txt`.
+  **Vorher geprüft:** Prompt-SHA = eingefroren `a7d1c5048eb0`; `--vorgriff` auf allen 2.379: Vorgriff 0, fehlende Gutachten 0; Ablage leer; Paket `FinalesLLM` 14/14.
+  **Gegengeprüft am Anlauf** (Ablage nur gelesen, Bedenken nicht angesehen): erste 4 Urteile Eingabe-SHA unabhängig neu gebaut = abgelegt, Prompt-SHA eingefroren, Modellkennung der Antwort gemini-3.5-flash-lite, Form ok, Belege ohne Stelle 0.
+- ➤ nach 321/321: `--vorpruefung` (genau EINE, zeigt nur Messbarkeit, p_b, p_a, WEITER/ENDE) · Scheideweg-Vorlage bis 30.11.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

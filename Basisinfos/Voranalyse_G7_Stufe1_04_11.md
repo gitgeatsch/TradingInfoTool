@@ -307,6 +307,26 @@ noch **M-St3** (Stufe 3, Vorprüfung ≈ 11.11.). Da M-S8 KEIN BEFUND ist, gilt 
 Frage aus Fall 5** entschieden (S8: < 20 Blöcke, Zeitraum fest), dann Fall 4. S7 bleibt Eingabe des finalen LLM (Stufe 3) — an der
 S7-Eingabe wird vor Ende G7 nichts geändert.
 
+### 4.6 Stufe 1 vollständig — 10.11.2026 (S2/S4, nur Form und Treue, kein Blick gegen Kurse)
+
+lauf9 (PID 9888) am 10.11. 10:37 MEZ regulär beendet, Fehlerdatei leer: `{'neu': 2171, 'unlesbar': 0, 'treue_beanstandet': 10}`.
+S2 und S4 sind **Auskunftssichten** (S1-2: Wochenhorizont) — sie werden nicht in Stufe 2 gemessen, sondern sind Eingabe von Stufe 3.
+
+| | S2 | S4 |
+|---|---|---|
+| Tage (wdh 0) + Wiederholungen | 335 + 17, keine Dopplung | 335 + 17, keine Dopplung |
+| Form ok / unlesbar | 352 / 0 | 352 / 0 |
+| Prompt-SHA (eine je Sicht) | `31f7526e934c` | `e8502a4bed81` |
+| Treue: Angaben geprüft / Verstöße | 2.694 / 1 (1 Tag) | 2.581 / 0 |
+| Zustand normal / auffällig / kritisch (wdh 0) | 158 / 174 / 3 | 46 / 281 / 8 |
+| Eigenrauschen (17 Paare): Zustand / Wirkung gleich | 14 / 17 | 15 / 16 |
+
+**Zweiter Weg** (Rohtext neu gelesen statt Auswertungsspalten): Zustände je Sicht gleich der Laufzusammenfassung; 8 S2-Rohtexte
+stehen in einem ```` ```json ````-Zaun — der Leser des Laufs entfernt ihn, ohne Zaun stimmen alle 8 mit der Spalte `zustand` überein.
+Eingabe-SHA bei allen 704 gleich `sha256(eingabe)`; Wiederholungen mit **byte-gleicher** Eingabe wie wdh 0. Anfragebuch: 718 erfolgreiche
+Abrufe für 704 Gutachten (14 Nachfassungen). ⚠️ S4 ist an 84 % der Tage „auffällig“ — das trennt wenig; ob es als Eingabe von Stufe 3
+etwas beiträgt, beantwortet erst Stufe 3/4, nicht dieser Blick.
+
 ---
 
 ## 5. Zur Abstimmung — eine Frage: Umfang von Stufe 1
