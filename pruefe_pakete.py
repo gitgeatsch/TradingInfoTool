@@ -34451,6 +34451,47 @@ def paket_finales_llm() -> None:
     pruefe(P, "Prompt eingefroren: prompt_sha() = a7d1c5048eb0 (Probe 08.11.), lauf() verweigert 3a bei geaendertem Prompt",
            _F.prompt_sha() == _F.PROMPT_EINGEFROREN == "a7d1c5048eb0" and sperre, "%s · Sperre %s" % (_F.prompt_sha(), sperre))
 
+    # 8 Messung B5 (festgeschrieben 11.11. vor 3b): erfundene Urteile auf allen 2.379, Wegwerf-Ablage
+    sperren, b5 = [], {}
+    Vs = set(zip(V.symbol, V.stunde))
+    zb = M.ertrag_s.to_numpy()
+    schl_b = (zb < _np.quantile(zb, 0.3)).astype(int)
+
+    def _b5(name, b, weiter="WEITER", weg=0):
+        c_ = _neu("b5_" + name)
+        for i_, (sym, st_, b_) in enumerate(zip(M.symbol, M.stunde, b)):
+            if i_ >= weg:
+                c_.execute("INSERT INTO urteil (symbol, stunde, phase, modell, prompt_sha, form_ok, bedenken) VALUES (?,?,?,?,?,?,?)",
+                           (sym, st_, "3a" if (sym, st_) in Vs else "3b", _F.MODELL, _F.prompt_sha(), 1, int(b_)))
+        if weiter:
+            c_.execute("INSERT INTO vorpruefung (am, prompt_sha, ergebnis) VALUES ('x', ?, ?)", (_F.prompt_sha(), weiter))
+        c_.commit()
+        return c_
+
+    for name, b in (("wirk", schl_b), ("verk", 1 - schl_b), ("konst", _np.zeros(len(M)))):
+        c_ = _b5(name, b)
+        e_ = _F.messung(c_)
+        b5[name] = (e_["a"]["urteil"], e_["b"]["urteil"])
+        try:
+            _F.messung(c_)
+            sperren.append(False)
+        except SystemExit:
+            sperren.append(True)
+        c_.close()
+    for name, kw in (("fehlt", dict(weg=1)), ("ende", dict(weiter="ENDE")), ("ohne", dict(weiter=None))):
+        c_ = _b5(name, schl_b, **kw)
+        try:
+            _F.messung(c_)
+            sperren.append(False)
+        except SystemExit:
+            sperren.append(True)
+        c_.close()
+    pruefe(P, "Messung B5 festgeschrieben (Quelltext-SHA 3159f80d90e7, Messanlage f60cf967…): Wirkung -> TRAEGT, umgekehrt -> VERKEHRT, "
+           "konstant -> KEIN BEFUND (a und b); verweigert: zweites Mal, ein Urteil fehlt (keine Zwischenblicke), ohne WEITER",
+           _F.messung_sha() == _F.MESSUNG_EINGEFROREN == "3159f80d90e7" and _F._sha(_F.ANLAGE) == _F.ANLAGE_SHA
+           and b5 == {"wirk": ("TRÄGT", "TRÄGT"), "verk": ("VERKEHRT", "VERKEHRT"), "konst": ("KEIN BEFUND", "KEIN BEFUND")}
+           and all(sperren) and len(sperren) == 6, "%s · Sperren %s" % (b5, sperren))
+
     nachher = {f: _fuss(f) for f in vorher}
     eigene = 0
     if _os.path.exists(buch):

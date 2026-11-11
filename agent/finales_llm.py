@@ -23,7 +23,7 @@ Eingabe (E-175, Nutzer 08.11.: *„Ja, alle vier“*):
     python -m agent.finales_llm --prompt
     python -m agent.finales_llm --vorgriff                           # alle 2.379 Eingaben ohne Netz prüfen
     python -m agent.finales_llm --probe                              # 5 Einstiege auf den Probe-2-Tagen, eigene Ablage
-    python -m agent.finales_llm --lauf3a | --vorpruefung | --lauf3b | --stand
+    python -m agent.finales_llm --lauf3a | --vorpruefung | --lauf3b | --messung | --stand
 """
 from __future__ import annotations
 
@@ -72,6 +72,9 @@ UNLESBAR_ROT = 0.05
 PROBE_N = 5
 PROMPT_EINGEFROREN = "a7d1c5048eb0"      # eingefroren 08.11. nach der Probe (5/5 lesbar, treu, Belege ohne Stelle 0); 3a/3b nur damit
 SAAT = 20261108
+ANLAGE = os.path.join(RK, "g7_stufe3_anlage.py")
+ANLAGE_SHA = "f60cf967d8c095ea"          # Messanlage 02.11. (2c4b2d9d), Selbsttest Messplan §11.2
+MESSUNG_EINGEFROREN = "3159f80d90e7"    # B5 festgeschrieben 11.11. vor 3b (Quelltext von _auswerte + messung); geprüft + gegengeprüft
 BEDENKEN = {0: "wie geplant", 1: "vorsichtiger", 2: "nicht"}
 KENNUNG_FEST = ("Handlung", "Kurs-Lage", "REGEL0-Lage", "Hebel-Abstand") + SICHTEN
 KLAMMER = re.compile(r"\(([A-Z0-9]{1,12})\)")
@@ -335,7 +338,8 @@ def verbinde(pfad: str = ABLAGE) -> sqlite3.Connection:
             belege INTEGER, belege_ohne_stelle INTEGER, tokens INTEGER, am TEXT, modell_antwort TEXT,
             PRIMARY KEY (symbol, stunde, modell, prompt_sha));
         CREATE TABLE IF NOT EXISTS vorpruefung (am TEXT, prompt_sha TEXT, n INTEGER, unlesbar INTEGER, anteil REAL, p_b REAL,
-            p_a REAL, ergebnis TEXT, lesart TEXT);""")
+            p_a REAL, ergebnis TEXT, lesart TEXT);
+        CREATE TABLE IF NOT EXISTS messung (am TEXT, prompt_sha TEXT, messung_sha TEXT, ergebnis TEXT);""")
     return c
 
 
@@ -557,6 +561,76 @@ def darf_3b(c) -> tuple[bool, str]:
     return (bool(v) and v[0] == "WEITER"), (v[0] if v else "keine Vorprüfung")
 
 
+# ══ Messung B5 (Voranalyse Stufe 3 §3/§7, Messplan §11.1/§11.5) — festgeschrieben 11.11. VOR dem ersten Urteil aus 3b ═════════════
+def _auswerte(X: pd.DataFrame) -> dict:
+    """Eine Menge (b = alle lesbaren, a = gemailt): Arm HANDEL über die Tagesbahn ENTSCHEIDET, einseitig unten (Band P5, fachliche
+    Richtung Bedenken -> schlechter); das obere Ende wird mit ausgewiesen (P95 -> VERKEHRT, kein Signal); Arm TAG und der rohe
+    24-h-Unterschied sind Auskunft. < 20 Blöcke oder Anteil ja außerhalb 5–95 % -> KEIN BEFUND."""
+    sys.path.insert(0, RK)
+    import g7_stufe3_anlage as A                                       # noqa: E402
+    X = X.sort_values(["stunde", "symbol"]).reset_index(drop=True)
+    X = X.assign(tag=X.stunde.str[:10])
+    u = (X.bedenken >= 1).to_numpy().astype(float)
+    n = len(X)
+    aus = {"n": n, "tage": int(X.tag.nunique()), "bloecke": A.bloecke(X.tag) if n else 0,
+           "anteil": float(u.mean()) if n else float("nan")}
+    if aus["bloecke"] < A.MIN_BLOECKE:
+        return dict(aus, urteil="KEIN BEFUND", grund="%d Blöcke < %d" % (aus["bloecke"], A.MIN_BLOECKE))
+    if not (MESSBAR[0] <= aus["anteil"] <= MESSBAR[1]):
+        return dict(aus, urteil="KEIN BEFUND", grund="nicht messbar (Anteil Bedenken ≥ 1 außerhalb 5–95 %)")
+    m = A.messe(X, u)
+    _s, null = A.arm_handel_tage(u, X.ertrag_s.to_numpy(), A.bahn_tage(X))
+    oben = float(np.percentile(null, 95))
+    aus.update({k: (bool(v) if isinstance(v, (bool, np.bool_)) else float(v)) for k, v in m.items()})
+    aus.update(band_oben=oben, p_oben=float((null >= m["stat"]).mean()), verschiebungen=int(len(null)),
+               roh24_diff=float(X.ertrag24[u == 1].mean() - X.ertrag24[u == 0].mean()))
+    if m["traegt"]:
+        return dict(aus, urteil="TRÄGT", grund="Bedenken ≥ 1 liefen schlechter, unter dem 5. Perzentil der Tagesbahn")
+    if m["stat"] > oben:
+        return dict(aus, urteil="VERKEHRT", grund="Bedenken ≥ 1 liefen BESSER, über dem 95. Perzentil - kein Signal, Ursachenanalyse")
+    return dict(aus, urteil="TRÄGT NICHT", grund="innerhalb des Bandes P5–P95 der Tagesbahn")
+
+
+def messung(c, q: "Quelle | None" = None) -> dict:
+    """B5: genau EINE Messung je Prompt-SHA, erst wenn ALLE 2.379 Urteile (3a + 3b) vorliegen - keine Zwischenblicke in 3b."""
+    if messung_sha() != MESSUNG_EINGEFROREN:
+        raise SystemExit("Messung B5 geändert (%s statt %s) - festgeschrieben 11.11. vor 3b" % (messung_sha(), MESSUNG_EINGEFROREN))
+    if _sha(ANLAGE) != ANLAGE_SHA:
+        raise SystemExit("g7_stufe3_anlage.py geändert (Prüfsumme) - Messanlage 02.11.")
+    ok_, stand_ = darf_3b(c)
+    if not ok_:
+        raise SystemExit("Messung nur nach Vorprüfung WEITER (E-174) - Stand: %s" % stand_)
+    if c.execute("SELECT 1 FROM messung WHERE prompt_sha=?", (prompt_sha(),)).fetchone():
+        raise SystemExit("Messung für diesen Prompt-SHA ist schon gelaufen - genau EINE")
+    M = menge()
+    U = pd.read_sql("SELECT symbol, stunde, form_ok, bedenken FROM urteil WHERE modell=? AND prompt_sha=? AND phase IN ('3a','3b')",
+                    c, params=(MODELL, prompt_sha()))
+    X = M.merge(U, on=["symbol", "stunde"], how="left", validate="1:1")
+    if X.form_ok.isna().any():
+        raise SystemExit("Messung erst, wenn alle %d Urteile vorliegen (fehlen %d) - keine Zwischenblicke" % (len(X), int(X.form_ok.isna().sum())))
+    if q is not None:
+        ge = eingaben_geaendert(c, q, ("3a", "3b"))
+        if ge:
+            raise SystemExit("Eingaben seit dem Ablegen geändert (%d, z. B. %s) - neue Messung (R-R11)" % (len(ge), ge[:3]))
+    R = pd.read_csv(ZIELGROESSE, sep=";")[["symbol", "stunde", "ertrag24"]]
+    X = X.merge(R, on=["symbol", "stunde"], how="left", validate="1:1")
+    unl = int((X.form_ok == 0).sum())
+    erg = {"n": len(X), "unlesbar": unl}
+    if unl / len(X) > UNLESBAR_ROT:
+        erg.update(ergebnis="technisch Rot (> 5 % unlesbar)")
+    else:
+        L = X[X.form_ok == 1]
+        erg.update(b=_auswerte(L), a=_auswerte(L[L.teil == "a_gemailt"]), ergebnis="gemessen")
+    c.execute("INSERT INTO messung VALUES (?,?,?,?)", (_jetzt(), prompt_sha(), messung_sha(), json.dumps(erg, ensure_ascii=False)))
+    c.commit()
+    return erg
+
+
+def messung_sha() -> str:
+    import inspect
+    return hashlib.sha256((inspect.getsource(_auswerte) + inspect.getsource(messung)).encode("utf-8")).hexdigest()[:12]
+
+
 def stand(c) -> pd.DataFrame:
     return pd.read_sql("SELECT phase, teil, prompt_sha, COUNT(*) n, SUM(form_ok) lesbar, SUM(belege_ohne_stelle > 0) beleg_fehlt, "
                        "SUM(tokens) tokens, MAX(am) zuletzt FROM urteil GROUP BY 1, 2, 3 ORDER BY 1, 2", c)
@@ -576,6 +650,7 @@ def main() -> int:
     p.add_argument("--vorpruefung", action="store_true")
     p.add_argument("--lauf3b", action="store_true")
     p.add_argument("--stand", action="store_true")
+    p.add_argument("--messung", action="store_true")
     o = p.parse_args()
     if o.prompt:
         print(prompt(), "\n\nSHA", prompt_sha())
@@ -617,6 +692,12 @@ def main() -> int:
         a = vorpruefung(c, Quelle())
         print("VORPRÜFUNG 3a: %d Urteile · unlesbar %d · Anteil Bedenken ≥ 1 %.1f %% · p_b %.3f · p_a %.3f → %s (%s)" % (
             a["n"], a["unlesbar"], 100 * a["anteil"], a["p_b"], a["p_a"], a["ergebnis"], a["lesart"]))
+    if o.messung:
+        e_ = messung(c, Quelle())
+        print("MESSUNG B5: %d Urteile · unlesbar %d · %s" % (e_["n"], e_["unlesbar"], e_["ergebnis"]))
+        for k_ in ("a", "b"):
+            if k_ in e_:
+                print("  %s: %s" % (k_, json.dumps(e_[k_], ensure_ascii=False)))
     print(stand(c).to_string())
     c.close()
     return 0

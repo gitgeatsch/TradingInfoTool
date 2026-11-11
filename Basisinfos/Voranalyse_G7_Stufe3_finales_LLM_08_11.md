@@ -254,3 +254,39 @@ die Vorprüfung fängt es ab, Kosten ein Tag Kontingent. Der Prompt wird deshalb
 Ausgaben wäre eine neue Fassung ohne Messgrund.
 
 **Eingefroren:** `PROMPT_EINGEFROREN = "a7d1c5048eb0"`, `lauf()` verweigert 3a/3b mit anderem Prompt. Prüfpaket `FinalesLLM`: **14/14**.
+
+## 8. 3a und Vorprüfung — 11.11.2026
+
+| | Ergebnis |
+|---|---|
+| Lauf | 10.11. 11:06 – 11.11. 09:47 MEZ (Desktop-Neustart 11.11. bei 55/321, wiederaufgenommen ohne geänderte Eingabe) |
+| Form | **321/321 lesbar**, je 1 Versuch, Belege ohne Stelle 0, Modellkennung 321 × gemini-3.5-flash-lite, ein Prompt-SHA `a7d1c5048eb0` |
+| Menge | = Vorauswahl D3 (Prüfsumme gleich), 204 a + 117 b, 321 Tage |
+| Eingabe | `eingaben_geaendert` 0; zweiter Weg: Text-SHA 321/321 gleich, Signalzeitpunkt = Stunde 321/321 |
+| Anfragebuch | 321 × 200, 11 × 503 (wiederholt), 88 × 429-Tag, nur Schlüssel 2 |
+| **Vorprüfung** (genau eine) | Anteil Bedenken ≥ 1 **78,8 %** (a: 84,8 %) · **p_b 0,325** · **p_a 0,463** → **WEITER** (p_b ≤ 0,40) |
+| Gegenprüfung | p_b / p_a mit eigener Schleife über 320 Tagesverschiebungen, ohne Anlage und Modul: **identisch**; Urteile durch die Vorprüfung unverändert |
+
+⚠️ **Lesart:** WEITER heißt nur, dass 3b läuft — ohne Wirkung käme die Vorprüfung in rund der Hälfte der Fälle hierhin (§4.2). Ein
+Befund entsteht erst auf allen 2.379 (Messplan §11.5). An Prompt, Eingabe, Vorauswahl und Hürde wird nichts geändert (§4.1).
+
+⚠️ **Vor 3b:** die Messung B5 (`messe` auf a und b) ist noch nicht im Modul; sie wird vor dem ersten Blick auf 3b gebaut und festgeschrieben (§7).
+
+## 9. Messung B5 — gebaut und festgeschrieben vor 3b (11.11.2026, Nutzer: *„Ja, erst B5“*)
+
+| | |
+|---|---|
+| Ort | `agent/finales_llm.py`: `_auswerte` (je Menge) und `messung` (Sperren, Ablage Tabelle `messung`), Aufruf `--messung` |
+| festgeschrieben | Quelltext-SHA `MESSUNG_EINGEFROREN = "3159f80d90e7"`; Messanlage `g7_stufe3_anlage.py` per Prüfsumme `f60cf967d8c095ea` (unverändert seit 02.11.) |
+| Mengen | **b** = alle lesbaren der 2.379, **a** = deren gemailter Teil — getrennt ausgewiesen (Messplan §11.5), keine Korrektur für zwei Tests: es sind zwei verschiedene Fragen (Betrieb / Trennfähigkeit), wie vorab festgelegt |
+| entscheidet | Arm HANDEL über die Tagesbahn (`messe`): **TRÄGT** nur unter P5 (Bedenken → schlechter) |
+| mit ausgewiesen | oberes Ende: über P95 → **VERKEHRT** (kein Signal, Ursachenanalyse); p unten und oben; Arm TAG; roher 24-h-Unterschied |
+| KEIN BEFUND | < 20 Fünfzehn-Tage-Blöcke oder Anteil Bedenken ≥ 1 außerhalb 5–95 % |
+| technisch Rot | > 5 % der 2.379 unlesbar (sonst gemessen auf den lesbaren) |
+| Sperren | genau EINE Messung je Prompt-SHA · erst bei 2.379/2.379 (keine Zwischenblicke in 3b) · nur nach WEITER · Eingaben 3a + 3b unverändert (R-R11) · Quelltext und Anlage per Prüfsumme |
+
+**Geprüft** auf erfundenen Urteilen (Wegwerf-Ablagen): Wirkung → TRÄGT, umgekehrt → VERKEHRT, Zufall → TRÄGT NICHT, konstant → KEIN
+BEFUND, 2 Monate → KEIN BEFUND (5 Blöcke), 130 unlesbar → technisch Rot; jede Sperre greift. Paket `FinalesLLM` 15/15.
+**Gegengeprüft** in reinem Python ohne Modul und Anlage: 12 Größen je Menge **identisch**.
+
+**3b gestartet** 11.11. 18:10 MEZ (PID 22796), 2.058 Aufrufe, ≈ 4–5 Kontingenttage.
