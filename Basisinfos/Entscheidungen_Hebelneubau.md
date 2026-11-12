@@ -2464,3 +2464,24 @@ Die **Diagnose** bekommt `spot_b4_fuenftel` (K-B4-D1).
 - **Block 3** ohne Schwere-Texte (Vorgriff P-1), Asset-Zuordnung um Kürzel in Klammern ergänzt; `agent/ereignisse.py` unverändert.
 - **Ein Informationszeitpunkt** t = Signalstunde + 1 h für alle Blöcke; Gutachten vom Tag T erst ab T 02:00 UTC.
 - **Beim Bau festgestellt und nach dieser Regel umgesetzt:** die Mengendatei trägt v̂ und Hebelstufe der **Einstiegsstunde** (eine Stunde nach t). Live geht die Mail beim Signal mit der **vorläufigen** Stufe hinaus → das finale LLM sieht die vorläufige Stufe (`g7_stufe3_stufe_vorlaeufig.py`, Gegenprobe der endgültigen 2.435/2.435; Abweichung 2,7 %) und keinen v̂-Wert.
+
+# E-176 · A4 Gegenanwalt: entschieden wird mit dem Scheideweg, bis dahin keine Arbeit an A4 (12.11.2026)
+
+**12.11.2026** · Nutzer: *„a) Mit dem Scheideweg“* (Vorlage im Gespräch, drei Möglichkeiten mit Auswirkung) · Anschluss an **E-175** („eigene A4-Messung nur auf eigene Abstimmung“)
+
+**Entschieden (a von 3):**
+- Über eine eigene A4-Messung wird **zusammen mit dem Scheideweg** entschieden (spätestens 30.11., Vorlage G18).
+- **Trägt** das finale LLM in Stufe 3 (Messung B5, Arm HANDEL) → A4 bekommt eine eigene Voranalyse und Messung (anderes Modell Ü7, eingefrorener Prompt, Vorprüfung nach E-174). **Trägt es nicht** → A4 ruht.
+- Bis dahin **keine** Arbeit an A4.
+- Begründung: A4 bekommt das Ergebnis des finalen LLM als Eingabe und widerspricht ihm; ob dieses Ergebnis trägt, zeigt erst die Messung nach 3b. Vorher wäre jede A4-Arbeit auf Verdacht.
+- Nicht gewählt: b) A4-Voranalyse jetzt, während 3b läuft (womöglich Arbeit für einen Aufruf ohne tragende Grundlage) · c) A4 streichen (die Idee müsste später neu vorgelegt werden).
+
+# E-177 · GDELT-Rohdaten `data/_gdelt_roh`: behalten bis zum Scheideweg, dann löschen (12.11.2026)
+
+**12.11.2026** · Nutzer: *„a) Bis Scheideweg, dann weg“* · Bezug: Probetag 03.11.2026 (96 GKG-Dateien, 465 MB), Befund „Rohdatenweg gangbar“ (`Voranalyse_GDELT_Rohdaten_07_11.md`)
+
+**Entschieden (a von 3):**
+- Der Ordner bleibt **bis zum Scheideweg** (spätestens 30.11.) liegen, danach wird er gelöscht.
+- Begründung: Bis dahin klären die Auswertung der NB-Probe (bis 20.11.; API sperrt 245 von 299 Abrufen) und das Ergebnis von Stufe 3, ob der Rohdatenweg gebraucht wird. Solange lässt sich der Befund „gangbar“ ohne neuen Download nachrechnen (R-R11). 465 MB bei 88 GB frei auf D:.
+- Gelöscht wird nach dem Scheideweg **nur nach Ansage** an den Nutzer (Memory: nie still löschen). Ein späterer Neubezug von GDELT braucht ein eigenes Ja zum Download.
+- Nicht gewählt: b) jetzt löschen (jede Nachprüfung bräuchte einen neuen Download) · c) dauerhaft behalten.

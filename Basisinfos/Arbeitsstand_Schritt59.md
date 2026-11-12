@@ -895,6 +895,16 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **3b gestartet** 11.11. 18:10 MEZ, sitzungsunabhängig (WMI), Python-PID **22796**, Protokoll `data/_g7_stufe3b_lauf.txt` / `_err.txt`: „2058 offen von 2058“, Prompt-SHA eingefroren; Eingaben 3a am Start ungeändert (`--lauf3b` prüft es). Anfangs 503 (Überlast), der Lauf wartet ansteigend. Dauer ≈ 4–5 Kontingenttage.
 - ➤ nach 2.058/2.058: prüfen, gegenprüfen, `--messung` genau einmal · Scheideweg-Vorlage bis 30.11.
 
+### Stand 12.11.2026 abends — 3b bei 634/2.058, Push, E-176/E-177
+
+- **3b** 12.11. 18:04 MEZ: **634/2.058**, PID 22796 läuft, `_err.txt` leer, Wache ohne Meldung; Tageskontingent ab 16:49 UTC erschöpft (429-Tag), Neuansatz 08:00 UTC. Rest 1.424 ≈ 3 Kontingenttage → fertig ≈ 15.11. (nur gezählt, kein Blick auf Urteile).
+- **GDELT-Probe NB** (Austauschordner, nur gelesen; am Desktop `K:\My Drive\…`): Tag 10/14, 41 Runden, 299 Abrufe = 53 × 200, 245 × 429, 1 ohne Antwort; 02.–09.11. 3–5 × 200 je Tag, 10./11.11. je 8; Ende 16.11. 18:07 UTC von selbst; K1 seit 07.11. unerreichbar.
+- **Push** auf Nutzer *„a) Jetzt pushen“*: 7 Commits 321069da … c5639e35, `100b8696..c5639e35`. **Gegengeprüft** über `git ls-remote`: origin/main = c5639e35, 0 voraus. Am NB ändert erst ein Pull etwas (gebündelt mit G8a); dabei kämen `agent/asset_lage.py` + `extract_notebook_diagnose.py` (E-172, Schalter aus) und `agent/finales_llm.py` mit.
+- **E-176** (Nutzer *„a) Mit dem Scheideweg“*): A4 Gegenanwalt wird mit dem Scheideweg entschieden — trägt das finale LLM, eigene Voranalyse + Messung; sonst ruht A4; bis dahin keine Arbeit an A4.
+- **E-177** (Nutzer *„a) Bis Scheideweg, dann weg“*): `data/_gdelt_roh` (465 MB) bleibt bis zum Scheideweg, dann löschen nach Ansage.
+- Gesamtplan G18-Zeile ergänzt, G7-Zeile um den erledigten Stufe-1-Lauf gekürzt (Textgrenze 25.000).
+- ➤ unverändert: 3b fertig → prüfen, gegenprüfen, `--messung` genau einmal · GDELT-Probe auswerten ab 16.11. · Scheideweg ≤ 30.11. (mit A4 und `_gdelt_roh`)
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
