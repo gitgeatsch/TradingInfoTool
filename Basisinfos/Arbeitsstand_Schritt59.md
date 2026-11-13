@@ -905,6 +905,27 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - Gesamtplan G18-Zeile ergänzt, G7-Zeile um den erledigten Stufe-1-Lauf gekürzt (Textgrenze 25.000).
 - ➤ unverändert: 3b fertig → prüfen, gegenprüfen, `--messung` genau einmal · GDELT-Probe auswerten ab 16.11. · Scheideweg ≤ 30.11. (mit A4 und `_gdelt_roh`)
 
+### Stand 13.11.2026 abends — 3b bei 1.125/2.058, Neustart abgesichert (Nutzer: *„sorge dafür, sollte es eine Unterbrechung geben, dass wir sofort fortsetzen können“*)
+
+**⛔ NEUSTART-ANLEITUNG G7 3b (gilt bis zur Messung) — in dieser Reihenfolge:**
+
+| # | Schritt | Befehl / Ort |
+|---|---|---|
+| 1 | Lage feststellen (nur zählen, kein Blick auf Urteile) | `python Basisinfos/Rechenkern_02_10/g7_stufe3b_fortsetzen.py --nur-pruefen` |
+| 2 | fortsetzen + sichern: startet `--lauf3b` sitzungsunabhängig per WMI **nur**, wenn kein Lauf da ist, 3b unvollständig und die jüngste `data/_g7_stufe3b_lauf*_err.txt` leer; vorhandene Urteile werden übersprungen; Sicherung ≤ alle 12 h nach `data/_g7/sicherung/` + `Y:\Backup_TradingInfoTool\G7_finales_llm\` (je 3 Stände) | `python Basisinfos/Rechenkern_02_10/g7_stufe3b_fortsetzen.py` · Protokoll `data/_g7_stufe3b_fortsetzen.log` |
+| 3 | Fehlerdatei nicht leer → **nicht** blind neu starten, Ursache ansehen (Memory: Neustart nur bei behebbarem Abbruch) | `data/_g7_stufe3b_lauf*_err.txt` |
+| 4 | bei 2.058/2.058: **prüfen** (Modul) | `python -X utf8 Basisinfos/Rechenkern_02_10/g7_stufe3b_pruefen.py` |
+| 5 | **gegenprüfen** (ohne Modul) | `python -X utf8 Basisinfos/Rechenkern_02_10/g7_stufe3b_gegenpruefen.py` |
+| 6 | Ablage kopieren, dann **Messung GENAU EINMAL** | `python -m agent.finales_llm --messung` |
+| 7 | Messung **gegenrechnen** (reines Python) | `python -X utf8 Basisinfos/Rechenkern_02_10/g7_stufe3_messung_gegen.py` |
+| 8 | Doku (Arbeitsstand, Gesamtplan §5.2, Voranalyse Stufe 3 §10), melden, Commit auf Ja | – |
+
+- **Soll der Prüfungen** (Probelauf 13.11. auf 1.125): Mengen gleich Menge b ohne Vorauswahl (2.058; roh 2.435 → mit Zielgröße 2.379), Text-SHA/Signalzeitpunkt/JSON/Spalte je 0 Abweichungen, `eingaben_geaendert` 0, Vorgriff/fehlende Gutachten 0, 200er im Anfragebuch = **Summe Versuche** (nicht Zeilen: eine Antwort ohne Form wird wiederholt; 13.11.: 1.128 = 1.128 bei 1.125 Zeilen). Probelauf alles grün bis auf „noch nicht vollständig“.
+- **Werkzeuge gebaut und geprüft 13.11.:** `g7_stufe3b_fortsetzen.py` (Prüfstand 6/6 Entscheidungsfälle; WMI-Start echt mit harmlosem Befehl; Fund im Test: die PowerShell-Abfrage zählte sich selbst als Lauf → hätte **nie** neu gestartet; behoben, nur python/cmd) · `g7_stufe3b_pruefen.py` / `g7_stufe3b_gegenpruefen.py` (aus 3a übertragen; zwei Funde im Probelauf behoben: Zielgrößen-Filter, Spalte `zeit_utc`) · `g7_stufe3_messung_gegen.py` (aus gegen_b5; an 6 Wegwerf-Ablagen vom 11.11. gegengerechnet: TRÄGT NICHT/TRÄGT/VERKEHRT je 12 Größen ohne Abweichung, KEIN BEFUND, technisch Rot, 4 % unlesbar).
+- **Sicherung** 13.11. 16:01 UTC: 1.446 Urteile (321 + 1.125), integrity ok; **gegengeprüft** per Fingerabdruck über alle Urteile (Kopie D:, Kopie Y:, Original identisch `2619780300b48f59`).
+- **Selbsttätiger Neustart NICHT eingerichtet:** Windows-Aufgabe (bei Anmeldung + alle 30 Min., bis 20.11.) und Umstellung der Claude-Aufgabe `g7-laufwache-taeglich` auf 3b wurden von der Rechteprüfung abgelehnt (dauerhafte Einrichtung) — **Nutzer 13.11.: *„Nein, nur Anleitung“*** → kein selbsttätiger Neustart; nach einer Unterbrechung setzt die nächste Sitzung mit der Anleitung oben fort. Die Claude-Aufgabe `g7-laufwache-taeglich` prüfte noch **Stufe 1** (hätte ab 14.11. täglich falsch „Prozess fehlt“ gemeldet) → **abgeschaltet 13.11.** (Nutzer: *„Ja, abschalten“*; gegengeprüft: enabled false, kein nächster Lauf; bleibt gespeichert).
+- Stand 3b 13.11. 17:00 MEZ: **1.125/2.058**, unlesbar 0, PID 22796, Fehlerdatei leer; fertig ≈ 15.11. GDELT-Probe NB: 326 Abrufe (62 × 200), Ende 16.11.
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle
