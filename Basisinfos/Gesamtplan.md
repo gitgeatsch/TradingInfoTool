@@ -140,7 +140,7 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 
 | # | Punkt | Stand heute | Nächstes / Bedingung |
 |---|---|---|---|
-| **G18** | ⭐ **Gesamtkonzept Strang 1** (Krypto · REGEL0 · Hebel · alle Assets): was sollen die Signale **deterministisch und über das LLM** besser liefern — woran gemessen? Zielbild (E-169): **mehrere Regeln je Lage** für Einstieg, Führung, Ausstieg | **der wichtigste offene Punkt** (E-169) | ✔ **Voranalyse 06.11.** ([`Voranalyse_G18_Gesamtkonzept_06_11.md`](Voranalyse_G18_Gesamtkonzept_06_11.md)), **E-170** · ✔ M0 07.11.: gegen Drift −0,08 % · ✔ M1 07.11. (E-173): 0/9 trägt · ➤ **Scheideweg ≤ 30.11.**: Ergebnis → Weg vorab ([`Vorabfestlegung_Scheideweg_Ende_November_08_11.md`](Vorabfestlegung_Scheideweg_Ende_November_08_11.md)); dabei A4 (E-176), `_gdelt_roh` weg (E-177) |
+| **G18** | ⭐ **Gesamtkonzept Strang 1** (Krypto · REGEL0 · Hebel · alle Assets): was sollen die Signale **deterministisch und über das LLM** besser liefern — woran gemessen? Zielbild (E-169): **mehrere Regeln je Lage** für Einstieg, Führung, Ausstieg | **der wichtigste offene Punkt** (E-169) | ✔ **Voranalyse 06.11.** ([`Voranalyse_G18_Gesamtkonzept_06_11.md`](Voranalyse_G18_Gesamtkonzept_06_11.md)), **E-170** · ✔ M0 07.11.: gegen Drift −0,08 % · ✔ M1 07.11. (E-173): 0/9 trägt · ➤ **Scheideweg ≤ 30.11.** (alle Messungen da: zuerst Fall 5 S8, dann Fall 4): Ergebnis → Weg vorab ([`Vorabfestlegung_Scheideweg_Ende_November_08_11.md`](Vorabfestlegung_Scheideweg_Ende_November_08_11.md)); dabei A4 (E-176), `_gdelt_roh` weg (E-177) |
 | **G19** | **Dashboard: Unterbau** (Fakt-Sammler B2, Job mit Protokoll B4) | **E-171** (07.11.): nur Unterbau jetzt; Befund-Karte B1 und Anzeige B5/Mail erst mit B3 nach G7 Stufe 2 | ✔ **gebaut 07.11.** ([`Voranalyse_G19_Dashboard_Bau_07_11.md`](Voranalyse_G19_Dashboard_Bau_07_11.md) §11): Paket `AssetLage` 28/28, Schalter aus; Ablage E-172 · NB: K-AL-1 Teilbeleg, K-AL-2 nach Einschalten |
 | **G20** | **Strang 2 Krypto · Spot** — Eckpunkte für die Roadmap | zurückgestellt bis Hebel trägt (E-169) | Eckpunkte in G18 §8 |
 | **G21** | **Strang 3 Multiasset** — Eckpunkte | offen bis der Krypto-Ansatz trägt (E-169); im System gänzlich anders zu handhaben | Eckpunkte in G18 §8 |
@@ -161,7 +161,7 @@ Offene **Kontrollen am NB** stehen nur in [`nb_kontrollen.yaml`](nb_kontrollen.y
 | 0 | Prüfer v2, Messanlage, Vergleichsarm 0c (Zustände ohne LLM), Wissensstand der Modelle, Daten | ✔ 02.11. — Zustände allein tragen (15 Befunde), GDELT Aktienmarkt trägt, Gemini sauber ab Nov. 2025 (Messplan §7–§11) |
 | 1 | Sicht-Gutachten je Tag, Dez. 2025 – Okt. 2026 | ✔ 10.11.: alle 7 Sichten, 2.464, 0 unlesbar (§4.6) |
 | 2 | Wert je Sicht gegen die Zielgröße und gegen den Vergleichsarm 0c | ✔ 09.11.: S1, S7 **tragen nicht**, S3, S8 KEIN BEFUND → keiner der vier trägt |
-| 3 | finales LLM je REGEL0-Einstieg, Menge b (903+1.532, `g7_stufe3_menge_b.csv`) | **E-174**: Vorprüfung 321 ([`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md)) · Prompt fest 08.11. · **3a ✔ 11.11.: WEITER** (kein Befund) · B5 fest, **3b läuft** |
+| 3 | finales LLM je REGEL0-Einstieg, Menge b (903+1.532, `g7_stufe3_menge_b.csv`) | ✔ 15.11. (E-174, [`Voranalyse_G7_Stufe3_finales_LLM_08_11.md`](Voranalyse_G7_Stufe3_finales_LLM_08_11.md) §10): **trägt nicht** auf a (p 0,48) und b (p 0,36) |
 | 4 | Beitrag je Sicht mit/ohne | nur bei Befund in Stufe 2 |
 | 5 | zweiter Weg: Groq gpt-oss auf 2025 (G3) — für H = 7/10 (S2/S4) und als Bestätigung | nur für das, was in Stufe 2/3 trug |
 

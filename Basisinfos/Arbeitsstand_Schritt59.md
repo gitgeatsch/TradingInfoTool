@@ -926,6 +926,18 @@ Behoben am 26.10.: Wegwerf (`p82_gegenprobe`), Kontrollen (K-SP-6 neu befristet,
 - **Selbsttätiger Neustart NICHT eingerichtet:** Windows-Aufgabe (bei Anmeldung + alle 30 Min., bis 20.11.) und Umstellung der Claude-Aufgabe `g7-laufwache-taeglich` auf 3b wurden von der Rechteprüfung abgelehnt (dauerhafte Einrichtung) — **Nutzer 13.11.: *„Nein, nur Anleitung“*** → kein selbsttätiger Neustart; nach einer Unterbrechung setzt die nächste Sitzung mit der Anleitung oben fort. Die Claude-Aufgabe `g7-laufwache-taeglich` prüfte noch **Stufe 1** (hätte ab 14.11. täglich falsch „Prozess fehlt“ gemeldet) → **abgeschaltet 13.11.** (Nutzer: *„Ja, abschalten“*; gegengeprüft: enabled false, kein nächster Lauf; bleibt gespeichert).
 - Stand 3b 13.11. 17:00 MEZ: **1.125/2.058**, unlesbar 0, PID 22796, Fehlerdatei leer; fertig ≈ 15.11. GDELT-Probe NB: 326 Abrufe (62 × 200), Ende 16.11.
 
+### Stand 15.11.2026 vormittags — 3b fertig, M-St3 gemessen: TRÄGT NICHT (a und b)
+
+- **3b vollständig** 15.11. 09:50 MEZ: **2.058/2.058**, ein Prozess (PID 22796) ohne Unterbrechung über 5 Kontingenttage, Fehlerdatei leer; die Neustart-Anleitung vom 13.11. wurde nicht gebraucht (Schritte 4–8 danach genau so ausgeführt).
+- **Geprüft** (`g7_stufe3b_pruefen.py`, Modul): integrity ok, Vorprüfung 1 × WEITER, Messung 0 Zeilen, Prompt-SHA und `messung_sha` = eingefroren; 3b 2.058 eindeutig, alle lesbar, 1 Modell, 1 Prompt-SHA; Menge = b ohne Vorauswahl (fehlen 0, zuviel 0), 3a ∪ 3b = Menge b; unlesbar 3a + 3b 0 von 2.379; `eingaben_geaendert` 0; Vorgriff/fehlende Gutachten 0.
+- **Gegengeprüft** (`g7_stufe3b_gegenpruefen.py`, ohne Modul): Prüfsummen Menge/Vorauswahl = Soll; 2.379 mit Zielgröße; mengengleich; teil, Text-SHA, Signalzeitpunkt, Rohtext-JSON, Spalten je 0 Abweichungen; Wertebereich gültig; Anfragebuch 2.066 × 200 = Summe Versuche 2.066 (503: 142, 429-Tag: 328, Netz: 2; nur Schlüssel 2).
+- **Gesichert vor der Messung:** `finales_llm_vor_messung_20261115.db` in `data/_g7/sicherung/` und auf Y:, Fingerabdruck aller 2.379 Urteile = Original (`5b5ea7117105895e`).
+- **Messung B5 genau einmal** (`python -m agent.finales_llm --messung`, 08:54 UTC) → `Rechenkern_02_10/g7_stufe3_messung.txt`: **a** (903, 23 Blöcke, Anteil Bedenken ≥ 1 78,7 %) Statistik +0,0102 im Band −0,306 … +0,242, p 0,483 → **TRÄGT NICHT**; **b** (2.379, 23 Blöcke, 76,8 %) −0,0333 im Band −0,137 … +0,122, p 0,359 → **TRÄGT NICHT**. Arm TAG (Auskunft) auf beiden nicht tragend.
+- **Gegengerechnet** in reinem Python: `g7_stufe3_messung_gegen.py` 12 Größen je Menge ohne Abweichung; neu `g7_stufe3_messung_gegen_auskunft.py`: `tag_stat`/`tag_traegt`/`einst_traegt` gleich (Ausgabe `g7_stufe3_messung_gegen.txt`). Das Urteil hängt nur an Statistik < P5 — im Code nachgesehen (`g7_stufe3_anlage.messe`).
+- **Lesart (vorab, Scheideweg §3.1):** nicht trennbar, nicht widerlegt. **Folge (§3.2 Mischregel):** keine der drei Messungen trägt, M-S8 ist KEIN BEFUND → **zuerst Fall-5-Frage S8, dann Fall 4** (Ursachenanalyse + Lösungssuche, danach Grundsatzentscheid). Stufe 4/5 entfallen; A4 ruht (E-176); `_gdelt_roh` nach Ansage am Scheideweg (E-177).
+- Doku: Voranalyse Stufe 3 §10, Gesamtplan §5.2 Stufe 3 + G18-Zeile.
+- ➤ Commit auf Ja · GDELT-Probe NB auswerten ab 16.11. · **Scheideweg-Vorlage ≤ 30.11.** (Fall 5 S8, Ursachenanalyse Fall 4, A4, `_gdelt_roh`)
+
 ## Feste Regeln für die Zusammenarbeit (Kurzform)
 
 - Schritt für Schritt: Voranalyse → Abstimmung → bauen → prüfen → gegenprüfen → Doku → Commit nur auf Ja → NB-Kontrolle

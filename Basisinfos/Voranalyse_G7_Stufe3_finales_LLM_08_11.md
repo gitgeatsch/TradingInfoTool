@@ -290,3 +290,34 @@ BEFUND, 2 Monate → KEIN BEFUND (5 Blöcke), 130 unlesbar → technisch Rot; je
 **Gegengeprüft** in reinem Python ohne Modul und Anlage: 12 Größen je Menge **identisch**.
 
 **3b gestartet** 11.11. 18:10 MEZ (PID 22796), 2.058 Aufrufe, ≈ 4–5 Kontingenttage.
+
+## 10. 3b und Messung B5 — 15.11.2026
+
+| | Ergebnis |
+|---|---|
+| Lauf 3b | 11.11. 18:12 – 15.11. 09:50 MEZ, ein Prozess (PID 22796) ohne Unterbrechung, Fehlerdatei leer; 5 Kontingenttage |
+| Form | **2.058/2.058 lesbar** (3a + 3b: 0 von 2.379 unlesbar), 2.066 Versuche, Belege ohne Stelle 1, Modellkennung 2.058 × gemini-3.5-flash-lite, ein Prompt-SHA `a7d1c5048eb0` |
+| Menge | 3b = Menge b mit Zielgröße ohne Vorauswahl (2.058: 699 a + 1.359 b), 3a ∩ 3b leer, 3a ∪ 3b = Menge b (2.379) |
+| Eingabe | `eingaben_geaendert` 3a + 3b: 0 · Vorgriff/fehlende Gutachten 0 · zweiter Weg: Text-SHA und Signalzeitpunkt 2.058/2.058 gleich, Rohtext = Spalte 2.058/2.058 |
+| Anfragebuch | seit Start 3b: 2.066 × 200 (= Summe Versuche), 142 × 503, 328 × 429-Tag, 2 × Netz; nur Schlüssel 2, nur PID 22796 |
+| Sicherung vor der Messung | `data/_g7/sicherung/` und `Y:\Backup_TradingInfoTool\G7_finales_llm\` `finales_llm_vor_messung_20261115.db`, Fingerabdruck aller Urteile = Original (`5b5ea7117105895e`) |
+
+**Messung B5 — genau einmal**, 15.11.2026 08:54 UTC, `messung_sha` `3159f80d90e7` (= eingefroren), Ausgabe
+`Rechenkern_02_10/g7_stufe3_messung.txt`:
+
+| Menge | n | Tage / Blöcke | Anteil Bedenken ≥ 1 | Statistik (ja − nein, `ertrag_s`) | Band P5 … P95 | p unten / oben | Arm TAG (Auskunft) | roh 24 h (Auskunft) | **Urteil** |
+|---|---|---|---|---|---|---|---|---|---|
+| **a** (gemailt, Betrieb) | 903 | 204 / 23 | 78,7 % | +0,0102 | −0,3064 … +0,2423 | 0,483 / 0,517 | −0,033, trägt nicht | −0,0008 | **TRÄGT NICHT** |
+| **b** (alle, Trennfähigkeit) | 2.379 | 321 / 23 | 76,8 % | −0,0333 | −0,1370 … +0,1222 | 0,359 / 0,641 | +0,003, trägt nicht | −0,0046 | **TRÄGT NICHT** |
+
+**Gegengerechnet** in reinem Python ohne Modul und Anlage (`g7_stufe3_messung_gegen.py`): 12 Größen je Menge **ohne Abweichung**;
+dazu die Auskunftsarme TAG und EINSTIEG (`g7_stufe3_messung_gegen_auskunft.py`): `tag_stat`, `tag_traegt`, `einst_traegt` gleich.
+Das Urteil hängt nur an `traegt` = Statistik < P5 (`g7_stufe3_anlage.messe`) — beide Mengen liegen mitten im Band.
+
+**Lesart (vorab festgelegt, Scheideweg §3.1):** **nicht trennbar** — nicht widerlegt. Die Bedenken des finalen LLM trennen die
+REGEL0-Einstiege weder auf a noch auf b nach dem 24-h-Ertrag; auf a liefen die mit Bedenken sogar um Haaresbreite besser.
+Kein VERKEHRT (beide unter P95), kein KEIN BEFUND (23 Blöcke, Anteil in 5–95 %).
+
+**Folge (Scheideweg §3.2, Mischregel):** Damit ist **keine** der Messungen M-S8, M-S7, M-St3 tragend; M-S8 ist KEIN BEFUND (7 Blöcke).
+Also zuerst die **Fall-5-Frage zu S8**, dann **Fall 4**: Ursachenanalyse und Lösungssuche, danach der Grundsatzentscheid (§4 dort).
+Stufe 4 und Stufe 5 entfallen (nur bei Befund). A4 ruht (E-176). Die Vorlage folgt bis 30.11.

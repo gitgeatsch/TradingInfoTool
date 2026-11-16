@@ -1,0 +1,8 @@
+MESSUNG B5: 2379 Urteile · unlesbar 0 · gemessen
+  a: {"n": 903, "tage": 204, "bloecke": 23, "anteil": 0.7873754152823921, "stat": 0.010176287665862649, "null_mitte": 0.008005874832815188, "band_unten": -0.3063965987670747, "traegt": false, "p": 0.4827586206896552, "tag_stat": -0.03345606154681232, "tag_traegt": false, "einst_traegt": false, "band_oben": 0.24229806755895397, "p_oben": 0.5172413793103449, "verschiebungen": 203, "roh24_diff": -0.0008442294688128663, "urteil": "TRÄGT NICHT", "grund": "innerhalb des Bandes P5–P95 der Tagesbahn"}
+  b: {"n": 2379, "tage": 321, "bloecke": 23, "anteil": 0.7679697351828499, "stat": -0.033257105884100045, "null_mitte": -0.0010021016115904315, "band_unten": -0.136964573192628, "traegt": false, "p": 0.359375, "tag_stat": 0.0026547582279661205, "tag_traegt": false, "einst_traegt": false, "band_oben": 0.12222278417700892, "p_oben": 0.640625, "verschiebungen": 320, "roh24_diff": -0.004556033675042044, "urteil": "TRÄGT NICHT", "grund": "innerhalb des Bandes P5–P95 der Tagesbahn"}
+  phase          teil    prompt_sha     n  lesbar  beleg_fehlt   tokens                    zuletzt
+0    3a     a_gemailt  a7d1c5048eb0   204     204            0   727080  2026-11-11T08:47:27+00:00
+1    3a  b_stichprobe  a7d1c5048eb0   117     117            0   406653  2026-11-11T08:47:38+00:00
+2    3b     a_gemailt  a7d1c5048eb0   699     699            1  2500983  2026-11-15T08:48:22+00:00
+3    3b  b_stichprobe  a7d1c5048eb0  1359    1359            0  4754848  2026-11-15T08:50:47+00:00

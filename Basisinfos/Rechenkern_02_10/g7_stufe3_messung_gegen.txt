@@ -1,0 +1,8 @@
+Messungszeilen: 1 (Soll genau 1)
+am 2026-11-15T08:54:16+00:00 · prompt_sha a7d1c5048eb0 · messung_sha 3159f80d90e7 · Ergebnis gemessen · n 2379 · unlesbar 0
+Urteile 3a+3b 2379 · Menge mit Zielgröße 2379 · gleich: True
+unlesbar nachgezählt 0 gegen 0
+b Größen verglichen: 12 · Abweichungen: keine · fehlen in der Messung: keine · Urteil Messung: TRÄGT NICHT
+a Größen verglichen: 12 · Abweichungen: keine · fehlen in der Messung: keine · Urteil Messung: TRÄGT NICHT
+b tag_stat nach 0.002654758228 Messung 0.002654758228 · tag_traegt nach False Messung False · einst_traegt nach False Messung False · stat Einstiegsarm = stat Tagesarm: True
+a tag_stat nach -0.033456061547 Messung -0.033456061547 · tag_traegt nach False Messung False · einst_traegt nach False Messung False · stat Einstiegsarm = stat Tagesarm: True
